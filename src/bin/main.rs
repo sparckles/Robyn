@@ -1,5 +1,5 @@
 use roadrunner::ThreadPool;
-use std::fs;
+// use std::fs;
 use std::io::prelude::*;
 use std::net::TcpListener;
 use std::net::TcpStream;
@@ -14,12 +14,24 @@ fn main() {
         let stream = stream.unwrap();
 
         pool.execute(|| {
-            handle_connection(stream);
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            handle_connection(stream, rt);
         });
     }
 }
 
-fn handle_connection(mut stream: TcpStream) {
+async fn read_file(filename: String) -> String {
+    let con = tokio::fs::read_to_string(filename).await;
+    con.unwrap()
+}
+
+async fn test_helper(contents: &mut String, filename: String) {
+    *contents = tokio::task::spawn(read_file(filename.clone()))
+        .await
+        .unwrap();
+}
+
+fn handle_connection(mut stream: TcpStream, runtime: tokio::runtime::Runtime) {
     let mut buffer = [0; 1024];
     stream.read(&mut buffer).unwrap();
 
@@ -35,7 +47,9 @@ fn handle_connection(mut stream: TcpStream) {
         ("HTTP/1.1 404 NOT FOUND", "404.html")
     };
 
-    let contents = fs::read_to_string(filename).unwrap();
+    let mut contents = String::new();
+    let future = test_helper(&mut contents, String::from(filename));
+    runtime.block_on(future);
 
     let response = format!(
         "{}\r\nContent-Length: {}\r\n\r\n{}",
