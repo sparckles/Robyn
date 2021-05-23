@@ -6,6 +6,31 @@ use std::net::TcpStream;
 use std::thread;
 use std::time::Duration;
 
+// pyO3 module
+use pyo3::prelude::*;
+use pyo3::wrap_pyfunction;
+
+#[pyfunction]
+fn start_server() {
+    let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
+    let pool = ThreadPool::new(4);
+
+    for stream in listener.incoming() {
+        let stream = stream.unwrap();
+
+        pool.execute(|| {
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            handle_connection(stream, rt);
+        });
+    }
+}
+
+#[pymodule]
+fn roadrunner(_: Python<'_>, m: &PyModule) -> PyResult<()> {
+    m.add_wrapped(wrap_pyfunction!(start_server))?;
+    Ok(())
+}
+
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
     let pool = ThreadPool::new(4);

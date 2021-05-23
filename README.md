@@ -14,3 +14,10 @@ All the feature additions/bug fix will go through him. 😤
 
 Also, always refer @sansyrox as your TLS when you open a PR.
 
+## Testing on Python
+
+1. `cargo build --release`
+2. `cp target/release/libroadrunner.dylib ./roadrunner.so`
+3. `python3`
+4. `import roadrunner`
+5. `dir(roadrunner)`
