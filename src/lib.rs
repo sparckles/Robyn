@@ -109,6 +109,8 @@ use std::time::Duration;
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 
+use std::future::Future;
+
 #[pyfunction]
 pub fn start_server() {
     let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
@@ -119,7 +121,8 @@ pub fn start_server() {
 
         pool.execute(|| {
             let rt = tokio::runtime::Runtime::new().unwrap();
-            handle_connection(stream, rt);
+            let mut contents = String::new();
+            handle_connection(stream, rt, &mut contents, &test_helper);
         });
     }
 }
@@ -135,13 +138,39 @@ async fn read_file(filename: String) -> String {
     con.unwrap()
 }
 
-async fn test_helper(contents: &mut String, filename: String) {
+async fn test_helper(
+    contents: &mut String,
+    filename: String,
+    status_line: String,
+    mut stream: TcpStream,
+) {
+    // this function will accept custom function and return
     *contents = tokio::task::spawn(read_file(filename.clone()))
         .await
         .unwrap();
+
+    let len = contents.len();
+
+    let response = format!(
+        "{}\r\nContent-Length: {}\r\n\r\n{}",
+        status_line, len, contents
+    );
+
+    stream.write(response.as_bytes()).unwrap();
+    stream.flush().unwrap();
+    // return String::from(contents.clone());
 }
 
-pub fn handle_connection(mut stream: TcpStream, runtime: tokio::runtime::Runtime) {
+// let mut contents = String::new();
+
+pub fn handle_connection<'a, F>(
+    mut stream: TcpStream,
+    runtime: tokio::runtime::Runtime,
+    contents: &'a mut String,
+    test: &dyn Fn(&'a mut String, String, String, TcpStream) -> F,
+) where
+    F: Future<Output = ()> + 'a,
+{
     let mut buffer = [0; 1024];
     stream.read(&mut buffer).unwrap();
 
@@ -157,17 +186,11 @@ pub fn handle_connection(mut stream: TcpStream, runtime: tokio::runtime::Runtime
         ("HTTP/1.1 404 NOT FOUND", "404.html")
     };
 
-    let mut contents = String::new();
-    let future = test_helper(&mut contents, String::from(filename));
-    runtime.block_on(future);
-
-    let response = format!(
-        "{}\r\nContent-Length: {}\r\n\r\n{}",
-        status_line,
-        contents.len(),
-        contents
+    let future = test(
+        contents,
+        String::from(filename),
+        String::from(status_line),
+        stream,
     );
-
-    stream.write(response.as_bytes()).unwrap();
-    stream.flush().unwrap();
+    runtime.block_on(future);
 }
