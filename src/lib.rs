@@ -107,14 +107,45 @@ use std::time::Duration;
 
 // pyO3 module
 use pyo3::prelude::*;
+use pyo3::types::PyAny;
 use pyo3::wrap_pyfunction;
 
 use std::future::Future;
+
+#[pyclass]
+struct Server {}
+
+#[pymethods]
+impl Server {
+    #[new]
+    fn new() -> Self {
+        Self {}
+    }
+
+    fn start(mut self_: PyRefMut<Self>, test: &PyAny) {
+        // let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
+        // let pool = ThreadPool::new(4);
+
+        test.call0();
+
+        // for stream in listener.incoming() {
+        //     let stream = stream.unwrap();
+
+        //     pool.execute(|| {
+        //         let rt = tokio::runtime::Runtime::new().unwrap();
+        //         let mut contents = String::new();
+        //         handle_connection(stream, rt, &mut contents, &test_helper);
+        //     });
+        // }
+    }
+}
 
 #[pyfunction]
 pub fn start_server() {
     let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
     let pool = ThreadPool::new(4);
+
+    // test()
 
     for stream in listener.incoming() {
         let stream = stream.unwrap();
@@ -130,6 +161,7 @@ pub fn start_server() {
 #[pymodule]
 pub fn roadrunner(_: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(start_server))?;
+    m.add_class::<Server>()?;
     Ok(())
 }
 
