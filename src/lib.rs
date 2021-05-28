@@ -1,104 +1,11 @@
-use std::sync::mpsc;
-use std::sync::Arc;
-use std::sync::Mutex;
+use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
+mod router;
+mod server;
+mod threadpool;
+mod types;
 
-pub struct ThreadPool {
-    workers: Vec<Worker>,
-    sender: mpsc::Sender<Message>,
-}
-
-type Job = Box<dyn FnOnce() + Send + 'static>;
-
-enum Message {
-    NewJob(Job),
-    Terminate,
-}
-
-impl ThreadPool {
-    /// Create a new ThreadPool.
-    ///
-    /// The size is the number of threads in the pool.
-    ///
-    /// # Panics
-    ///
-    /// The `new` function will panic if the size is zero.
-    pub fn new(size: usize) -> ThreadPool {
-        assert!(size > 0);
-
-        let (sender, receiver) = mpsc::channel();
-
-        let receiver = Arc::new(Mutex::new(receiver));
-
-        let mut workers = Vec::with_capacity(size);
-
-        for id in 0..size {
-            workers.push(Worker::new(id, Arc::clone(&receiver)));
-        }
-
-        ThreadPool { workers, sender }
-    }
-
-    pub fn execute<F>(&self, f: F)
-    where
-        F: FnOnce() + Send + 'static,
-    {
-        let job = Box::new(f);
-
-        self.sender.send(Message::NewJob(job)).unwrap();
-    }
-}
-
-impl Drop for ThreadPool {
-    fn drop(&mut self) {
-        println!("Sending terminate message to all workers.");
-
-        for _ in &self.workers {
-            self.sender.send(Message::Terminate).unwrap();
-        }
-
-        println!("Shutting down all workers.");
-
-        for worker in &mut self.workers {
-            println!("Shutting down worker {}", worker.id);
-
-            if let Some(thread) = worker.thread.take() {
-                thread.join().unwrap();
-            }
-        }
-    }
-}
-
-struct Worker {
-    id: usize,
-    thread: Option<thread::JoinHandle<()>>,
-}
-
-impl Worker {
-    fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Message>>>) -> Worker {
-        let thread = thread::spawn(move || loop {
-            let message = receiver.lock().unwrap().recv().unwrap();
-
-            match message {
-                Message::NewJob(job) => {
-                    println!("Worker {} got a job; executing.", id);
-
-                    job();
-                }
-                Message::Terminate => {
-                    println!("Worker {} was told to terminate.", id);
-
-                    break;
-                }
-            }
-        });
-
-        Worker {
-            id,
-            thread: Some(thread),
-        }
-    }
-}
+use threadpool::ThreadPool;
 
 use std::io::prelude::*;
 use std::net::TcpListener;
@@ -126,7 +33,33 @@ impl Server {
         // let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
         // let pool = ThreadPool::new(4);
 
-        test.call0();
+        let f = pyo3_asyncio::into_future(test).unwrap();
+
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        // let rt = pyo3_asyncio::tokio::get_runtime();
+        pyo3_asyncio::tokio::init(rt);
+        // let v = pyo3_asyncio::tokio::get_runtime();
+        Python::with_gil(|py| {
+            // pyo3_asyncio::tokio::run_until_complete(py, async {
+            //     println!("Starting f loop");
+            //     // f.await?;
+            //     Ok(())
+            // })?;
+            pyo3_asyncio::tokio::run_until_complete(py, async move {
+                tokio::time::sleep(Duration::from_secs(1)).await;
+                f.await.unwrap();
+                Ok(())
+            })
+            .unwrap();
+        });
+
+        // rt.spawn(async move {
+        //     let x = f.unwrap().await;
+        //     match &x {
+        //         Ok(_) => (),
+        //         Err(v) => println!("{}", v),
+        //     }
+        // });
 
         // for stream in listener.incoming() {
         //     let stream = stream.unwrap();
@@ -159,9 +92,11 @@ pub fn start_server() {
 }
 
 #[pymodule]
-pub fn roadrunner(_: Python<'_>, m: &PyModule) -> PyResult<()> {
+pub fn roadrunner(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(start_server))?;
     m.add_class::<Server>()?;
+    pyo3_asyncio::try_init(py);
+
     Ok(())
 }
 
