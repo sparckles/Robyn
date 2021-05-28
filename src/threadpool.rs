@@ -6,6 +6,10 @@ use crate::types::Job;
 impl Worker {
     fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Message>>>) -> Worker {
         let thread = thread::spawn(move || loop {
+            // need to create a method to initialize the runtime here
+            // inside that runtime need a way to fetch that message
+            // and complete it
+            // stream will be sent along side
             let message = receiver.lock().unwrap().recv().unwrap();
 
             match message {

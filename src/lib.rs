@@ -1,5 +1,5 @@
-use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
+mod request;
 mod router;
 mod server;
 mod threadpool;

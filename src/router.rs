@@ -1,9 +1,6 @@
+use crate::request::Request;
 use std::collections::HashMap;
-use std::net::TcpStream;
 
-use pyo3::types::PyAny;
-
-use crate::types::AsyncFunction;
 enum RequestType {
     GET,
     POST,
@@ -13,19 +10,17 @@ enum RequestType {
     UPDATE,
 }
 
-struct Response {}
-struct Request {}
-
+#[derive(PartialEq, Eq, Hash)]
 struct Route {}
 
 // this should ideally be a hashmap of hashmaps but not really
-struct Router {
-    get_routes: HashMap<Route, Vec<Request>>,
-    post_routes: HashMap<Route, Vec<Request>>,
-    put_routes: HashMap<Route, Vec<Request>>,
-    patch_routes: HashMap<Route, Vec<Request>>,
-    delete_routes: HashMap<Route, Vec<Request>>,
-    update_routes: HashMap<Route, Vec<Request>>,
+pub struct Router {
+    get_routes: HashMap<Route, Request>,
+    post_routes: HashMap<Route, Request>,
+    put_routes: HashMap<Route, Request>,
+    patch_routes: HashMap<Route, Request>,
+    delete_routes: HashMap<Route, Request>,
+    update_routes: HashMap<Route, Request>,
 }
 // these should be of the type struct and not the type router
 // request_stream: &TcpStream,
@@ -34,13 +29,18 @@ struct Router {
 // body: Vec<String>
 
 impl Router {
-    fn new(request_stream: &TcpStream) -> Self {
+    pub fn new() -> Self {
         Self {
-            routes: HashMap::new(),
+            get_routes: HashMap::new(),
+            post_routes: HashMap::new(),
+            put_routes: HashMap::new(),
+            patch_routes: HashMap::new(),
+            delete_routes: HashMap::new(),
+            update_routes: HashMap::new(),
         }
     }
 
-    fn add_route(&mut self, route: String, request_type: RequestType, request: Request) {
+    fn add_route(&mut self, route: Route, request_type: RequestType, request: Request) {
         match request_type {
             RequestType::GET => self.get_routes.insert(route, request),
             RequestType::POST => self.post_routes.insert(route, request),
