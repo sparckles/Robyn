@@ -22,9 +22,9 @@ impl Server {
         }
     }
 
-    pub fn start(&mut self) {
-        let listener = self.listener;
-        let pool = self.threadpool;
+    pub fn start(&self) {
+        let listener = &self.listener;
+        let pool = &self.threadpool;
 
         // test()
 
