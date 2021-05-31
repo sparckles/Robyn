@@ -53,20 +53,20 @@ use std::future::Future;
 
 #[pyfunction]
 pub fn start_server() {
-    let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
-    let pool = ThreadPool::new(4);
+    let _listener = Server::new();
+    // let pool = ThreadPool::new(4);
 
     // test()
 
-    for stream in listener.incoming() {
-        let stream = stream.unwrap();
+    // for stream in listener.incoming() {
+    //     let stream = stream.unwrap();
 
-        pool.execute(|| {
-            let rt = tokio::runtime::Runtime::new().unwrap();
-            let mut contents = String::new();
-            handle_connection(stream, rt, &mut contents, &test_helper);
-        });
-    }
+    //     pool.execute(|| {
+    //         let rt = tokio::runtime::Runtime::new().unwrap();
+    //         let mut contents = String::new();
+    //         handle_connection(stream, rt, &mut contents, &test_helper);
+    //     });
+    // }
 }
 
 #[pymodule]

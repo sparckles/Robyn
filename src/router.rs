@@ -1,8 +1,8 @@
 use crate::request::{Request, RequestType};
 use std::collections::{HashMap, HashSet};
 // pyo3 modules
+use crate::types::{AsyncFunction, PyFuture};
 use pyo3::prelude::*;
-use types::AsyncFunction;
 
 pub enum RouteType {
     Route(String),
@@ -36,8 +36,10 @@ impl Route {
 }
 
 // this should ideally be a hashmap of hashmaps but not really
+use crate::threadpool::{Message, ThreadPool};
+
 pub struct Router {
-    get_routes: HashMap<Route, AsyncFunction>,
+    get_routes: HashMap<Route, Message<'static>>,
 }
 // these should be of the type struct and not the type router
 // request_stream: &TcpStream,
@@ -47,11 +49,11 @@ pub struct Router {
 
 impl Router {
     pub fn new() -> Self {
-        let hmap: HashMap<Route, AsyncFunction> = HashMap::new();
+        let hmap = HashMap::new();
         Self { get_routes: hmap }
     }
 
-    pub fn add_route(&mut self, route: Route, handler: &PyAny) {
-        self.get_routes.insert(route, Box::new(handler));
-    }
+    // pub fn add_route(&mut self, route: Route, handler: &'static Message) {
+    //     self.get_routes.insert(route, handler);
+    // }
 }

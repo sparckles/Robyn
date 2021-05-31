@@ -58,7 +58,7 @@ impl Worker {
     }
 }
 
-enum Message<'a> {
+pub enum Message<'a> {
     NewJob(PyFuture<'a>),
     Terminate,
 }

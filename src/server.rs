@@ -1,6 +1,7 @@
 use crate::request::Request;
 use crate::router::{Route, RouteType, Router};
-use crate::threadpool::ThreadPool;
+use crate::threadpool::{Message, ThreadPool};
+use std::collections::HashMap;
 use std::io::prelude::*;
 use std::net::{TcpListener, TcpStream};
 
@@ -15,6 +16,7 @@ pub struct Server {
     router: Router, //
     threadpool: ThreadPool,
     listener: TcpListener,
+    get_routes: HashMap<Route, Message<'static>>,
 }
 
 #[pymethods]
@@ -29,6 +31,7 @@ impl Server {
             router: Router::new(),
             threadpool: ThreadPool::new(1),
             listener: TcpListener::bind(url).unwrap(),
+            get_routes: HashMap::new(), // not implemented in router as unable to match lifetimes
         }
     }
 
@@ -58,7 +61,10 @@ impl Server {
 
     pub fn add_route(&mut self, route: String, handler: &PyAny) {
         // not considering abhi and adding everything to the get type
-        self.router
-            .add_route(Route::new(RouteType::Route(route)), handler);
+        let job = pyo3_asyncio::into_future(handler).unwrap();
+        self.get_routes.insert(
+            Route::new(RouteType::Route(route)),
+            Message::NewJob(Box::pin(job)),
+        );
     }
 }
