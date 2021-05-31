@@ -7,6 +7,7 @@ mod types;
 
 use threadpool::ThreadPool;
 
+use server::Server;
 use std::io::prelude::*;
 use std::net::TcpListener;
 use std::net::TcpStream;
@@ -19,59 +20,36 @@ use pyo3::wrap_pyfunction;
 
 use std::future::Future;
 
-#[pyclass]
-struct Server {}
+// #[pyclass]
+// struct Server {}
 
-#[pymethods]
-impl Server {
-    #[new]
-    fn new() -> Self {
-        Self {}
-    }
+// #[pymethods]
+// impl Server {
+//     #[new]
+//     fn new() -> Self {
+//         Self {}
+//     }
 
-    fn start(mut self_: PyRefMut<Self>, test: &PyAny) {
-        // let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
-        // let pool = ThreadPool::new(4);
+//     fn start(mut self_: PyRefMut<Self>, test: &PyAny) {
+//         // let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
+//         // let pool = ThreadPool::new(4);
 
-        let f = pyo3_asyncio::into_future(test).unwrap();
+//         let f = pyo3_asyncio::into_future(test).unwrap();
 
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        // let rt = pyo3_asyncio::tokio::get_runtime();
-        pyo3_asyncio::tokio::init(rt);
-        // let v = pyo3_asyncio::tokio::get_runtime();
-        Python::with_gil(|py| {
-            // pyo3_asyncio::tokio::run_until_complete(py, async {
-            //     println!("Starting f loop");
-            //     // f.await?;
-            //     Ok(())
-            // })?;
-            pyo3_asyncio::tokio::run_until_complete(py, async move {
-                tokio::time::sleep(Duration::from_secs(1)).await;
-                f.await.unwrap();
-                Ok(())
-            })
-            .unwrap();
-        });
-
-        // rt.spawn(async move {
-        //     let x = f.unwrap().await;
-        //     match &x {
-        //         Ok(_) => (),
-        //         Err(v) => println!("{}", v),
-        //     }
-        // });
-
-        // for stream in listener.incoming() {
-        //     let stream = stream.unwrap();
-
-        //     pool.execute(|| {
-        //         let rt = tokio::runtime::Runtime::new().unwrap();
-        //         let mut contents = String::new();
-        //         handle_connection(stream, rt, &mut contents, &test_helper);
-        //     });
-        // }
-    }
-}
+//         let rt = tokio::runtime::Runtime::new().unwrap();
+//         // let rt = pyo3_asyncio::tokio::get_runtime();
+//         pyo3_asyncio::tokio::init(rt);
+//         // let v = pyo3_asyncio::tokio::get_runtime();
+//         Python::with_gil(|py| {
+//             pyo3_asyncio::tokio::run_until_complete(py, async move {
+//                 tokio::time::sleep(Duration::from_secs(1)).await;
+//                 f.await.unwrap();
+//                 Ok(())
+//             })
+//             .unwrap();
+//         });
+//     }
+// }
 
 #[pyfunction]
 pub fn start_server() {
@@ -95,7 +73,7 @@ pub fn start_server() {
 pub fn roadrunner(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(start_server))?;
     m.add_class::<Server>()?;
-    pyo3_asyncio::try_init(py);
+    pyo3_asyncio::try_init(py).unwrap();
 
     Ok(())
 }

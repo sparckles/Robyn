@@ -7,6 +7,6 @@ async def h():
 
 print("Hello world")
 s = roadrunner.Server()
-s.start(h())
+s.start()
 
 

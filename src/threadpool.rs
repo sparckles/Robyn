@@ -17,7 +17,7 @@ impl Worker {
         let t = thread::spawn(move || {
             let rt = tokio::runtime::Runtime::new().unwrap();
             pyo3_asyncio::tokio::init(rt);
-            let v = pyo3_asyncio::tokio::get_runtime();
+            // let v = pyo3_asyncio::tokio::get_runtime();
             loop {
                 let message = receiver.lock().unwrap().recv().unwrap(); // message should be the optional containing the future
 
@@ -27,7 +27,7 @@ impl Worker {
                         Python::with_gil(|py| {
                             pyo3_asyncio::tokio::run_until_complete(py, async move {
                                 // let f = pyo3_asyncio::into_future(job).unwrap();
-                                (job).await;
+                                job.await.unwrap();
                                 Ok(())
                             })
                             .unwrap();
