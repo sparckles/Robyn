@@ -101,10 +101,15 @@ impl ThreadPool {
         // self.sender.send(Message::NewJob(job)).unwrap();
     }
 
-    pub fn push_async(&self, f: &PyAny) {
-        let job = pyo3_asyncio::into_future(f).unwrap();
-        self.sender.send(Message::NewJob(Box::pin(job))).unwrap();
+    pub fn push_async<F>(&self, f: F)
+    where
+        F: FnOnce() + Send + 'static,
+    {
+        // self.sender.send(Message::NewJob(Box::pin(*f))).unwrap();
     }
+    // pub fn push_async(&self, f: &'static PyFuture) {
+    //     // let job = pyo3_asyncio::into_future(f).unwrap();
+    // }
 }
 
 impl Drop for ThreadPool {

@@ -1,6 +1,7 @@
 use crate::request::Request;
 use crate::router::{Route, RouteType, Router};
 use crate::threadpool::{Message, ThreadPool};
+use crate::types::PyFuture;
 use std::collections::HashMap;
 use std::io::prelude::*;
 use std::net::{TcpListener, TcpStream};
@@ -16,7 +17,7 @@ pub struct Server {
     router: Router, //
     threadpool: ThreadPool,
     listener: TcpListener,
-    get_routes: HashMap<Route, Message<'static>>,
+    get_routes: HashMap<Route, PyFuture<'static>>,
 }
 
 #[pymethods]
@@ -25,13 +26,14 @@ impl Server {
     #[new]
     pub fn new() -> Self {
         let url = format!("127.0.0.1:{}", 5000);
+        let get_routes: HashMap<Route, PyFuture<'static>> = HashMap::new();
         Self {
             port: 5000,
             number_of_threads: 1,
             router: Router::new(),
             threadpool: ThreadPool::new(1),
             listener: TcpListener::bind(url).unwrap(),
-            get_routes: HashMap::new(), // not implemented in router as unable to match lifetimes
+            get_routes, // not implemented in router as unable to match lifetimes
         }
     }
 
@@ -49,22 +51,31 @@ impl Server {
             let request = Request::new(stream);
             // yaha pe add a check and dispatch the code and instead of pool.execute
             //  use pool.async
-
             // need to change on how we are passing the functions in the thread
             pool.execute(|| {
                 let rt = tokio::runtime::Runtime::new().unwrap();
                 // let mut contents = String::new();
                 // handle_connection(stream, rt, &mut contents, &test_helper);
             });
+
+            let f = self.get_routes.get(&route).unwrap();
+            // pool.push_async(f);
+
+            // Python::with_gil(|py| {
+            //     pyo3_asyncio::tokio::run_until_complete(py, async {
+            //         println!("{}", (*f).await.unwrap());
+            //         // stream.write()
+            //         Ok(())
+            //     })
+            //     .unwrap();
+            // });
         }
     }
 
     pub fn add_route(&mut self, route: String, handler: &PyAny) {
         // not considering abhi and adding everything to the get type
         let job = pyo3_asyncio::into_future(handler).unwrap();
-        self.get_routes.insert(
-            Route::new(RouteType::Route(route)),
-            Message::NewJob(Box::pin(job)),
-        );
+        self.get_routes
+            .insert(Route::new(RouteType::Route(route)), Box::pin(job));
     }
 }
