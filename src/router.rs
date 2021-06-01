@@ -39,7 +39,7 @@ impl Route {
 use crate::threadpool::{Message, ThreadPool};
 
 pub struct Router {
-    get_routes: HashMap<Route, Message<'static>>,
+    get_routes: HashMap<Route, Message>,
 }
 // these should be of the type struct and not the type router
 // request_stream: &TcpStream,

@@ -17,8 +17,10 @@ pub struct Server {
     router: Router, //
     threadpool: ThreadPool,
     listener: TcpListener,
-    get_routes: HashMap<Route, PyFuture<'static>>,
+    get_routes: HashMap<Route, Py<PyAny>>,
 }
+
+// unsafe impl Send for Server {}
 
 #[pymethods]
 impl Server {
@@ -26,7 +28,7 @@ impl Server {
     #[new]
     pub fn new() -> Self {
         let url = format!("127.0.0.1:{}", 5000);
-        let get_routes: HashMap<Route, PyFuture<'static>> = HashMap::new();
+        let get_routes: HashMap<Route, Py<PyAny>> = HashMap::new();
         Self {
             port: 5000,
             number_of_threads: 1,
@@ -59,23 +61,16 @@ impl Server {
             });
 
             let f = self.get_routes.get(&route).unwrap();
-            // pool.push_async(f);
-
-            // Python::with_gil(|py| {
-            //     pyo3_asyncio::tokio::run_until_complete(py, async {
-            //         println!("{}", (*f).await.unwrap());
-            //         // stream.write()
-            //         Ok(())
-            //     })
-            //     .unwrap();
-            // });
+            pool.push_async(*f);
         }
     }
 
-    pub fn add_route(&mut self, route: String, handler: &PyAny) {
+    pub fn add_route(&mut self, route: String, handler: Py<PyAny>) {
         // not considering abhi and adding everything to the get type
-        let job = pyo3_asyncio::into_future(handler).unwrap();
+        // let job = pyo3_asyncio::into_future(handler).unwrap();
+
+        // let f = handler.into(Py<PyAny>);
         self.get_routes
-            .insert(Route::new(RouteType::Route(route)), Box::pin(job));
+            .insert(Route::new(RouteType::Route(route)), handler);
     }
 }
