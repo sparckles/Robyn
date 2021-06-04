@@ -54,19 +54,7 @@ use std::future::Future;
 #[pyfunction]
 pub fn start_server() {
     let _listener = Server::new();
-    // let pool = ThreadPool::new(4);
-
-    // test()
-
-    // for stream in listener.incoming() {
-    //     let stream = stream.unwrap();
-
-    //     pool.execute(|| {
-    //         let rt = tokio::runtime::Runtime::new().unwrap();
-    //         let mut contents = String::new();
-    //         handle_connection(stream, rt, &mut contents, &test_helper);
     //     });
-    // }
 }
 
 #[pymodule]
@@ -74,6 +62,7 @@ pub fn roadrunner(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(start_server))?;
     m.add_class::<Server>()?;
     pyo3_asyncio::try_init(py).unwrap();
+    pyo3::prepare_freethreaded_python();
 
     Ok(())
 }

@@ -1,4 +1,5 @@
 import roadrunner
+import asyncio
 
 # def helper():
 async def h():
@@ -6,9 +7,15 @@ async def h():
     return "h"
 
 
-# print("Hello world")
+
+print("Hello world")
 s = roadrunner.Server()
 s.add_route("/",h())
 s.start()
 
 
+x = []
+for i in range(4):
+    x.append(asyncio.new_event_loop())
+
+print(x)

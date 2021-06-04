@@ -18,7 +18,7 @@ features = ["extension-module"]
 
 [dependencies.pyo3-asyncio]
 version = "0.13.3"
-features =["tokio-runtime"]
+features =["tokio-runtime", "async-std-runtime"]
 
 [dependencies]
 futures = { version = "0.3.6", default-features = false, features = ["async-await"] }
@@ -29,4 +29,5 @@ bytes = "0.5"
 async-trait = "0.1"
 hyper = { version = "0.14", features = ["full"] }
 tokio = { version = "1", features = ["full"] }
+log = "0.4"
 

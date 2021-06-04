@@ -17,9 +17,7 @@ pub struct Request {
 }
 
 impl Request {
-    pub fn new(mut stream: TcpStream) -> Self {
-        let mut buffer = [0; 1024];
-        stream.read(&mut buffer).unwrap();
+    pub fn new(buffer: &[u8]) -> Self {
         let request_type = if buffer.starts_with(b"GET") {
             RequestType::GET
         } else if buffer.starts_with(b"POST") {

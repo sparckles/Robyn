@@ -1,14 +1,13 @@
 use crate::request::Request;
 use crate::router::{Route, RouteType, Router};
-use crate::threadpool::{Message, ThreadPool};
-use crate::types::PyFuture;
+use crate::threadpool::ThreadPool;
 use std::collections::HashMap;
 use std::io::prelude::*;
-use std::net::{TcpListener, TcpStream};
+use std::net::TcpListener;
 
 // pyO3 module
 use pyo3::prelude::*;
-use pyo3::types::{PyAny, PyLong};
+use pyo3::types::PyAny;
 
 #[pyclass]
 pub struct Server {
@@ -42,6 +41,9 @@ impl Server {
     pub fn start(&mut self) {
         let listener = &self.listener;
         let pool = &self.threadpool;
+        for (k, v) in &self.get_routes {
+            println!("Hello world but {} {}", k.get_route(), v);
+        }
 
         // test()
 
@@ -50,18 +52,39 @@ impl Server {
             let mut buffer = [0; 1024];
             stream.read(&mut buffer).unwrap();
             let route = Route::new(RouteType::Buffer(Box::new(buffer)));
-            let request = Request::new(stream);
+            // let request = Request::new(&buffer);
+            let status_line = "HTTP/1.1 200 OK";
+            let contents = "Hello";
+            let len = contents.len();
+            let response = format!(
+                "{}\r\nContent-Length: {}\r\n\r\n{}",
+                status_line, len, contents
+            );
             // yaha pe add a check and dispatch the code and instead of pool.execute
             //  use pool.async
             // need to change on how we are passing the functions in the thread
-            pool.execute(|| {
-                let rt = tokio::runtime::Runtime::new().unwrap();
-                // let mut contents = String::new();
-                // handle_connection(stream, rt, &mut contents, &test_helper);
-            });
+            // pool.execute(|| {
+            //     let rt = tokio::runtime::Runtime::new().unwrap();
+            //     // let mut contents = String::new();
+            //     // handle_connection(stream, rt, &mut contents, &test_helper);
+            // });
 
-            let f = self.get_routes.get(&route).unwrap();
-            pool.push_async(*f);
+            stream.write(response.as_bytes()).unwrap();
+            stream.flush().unwrap();
+            let f = self.get_routes.get(&route);
+            // pool.push_async(f);
+            match f {
+                Some(a) => {
+                    pool.push_async(&a.clone());
+                }
+                None => {
+                    for (k, v) in &self.get_routes {
+                        println!("Hello world but {} {}", k.get_route(), v);
+                    }
+
+                    println!("issue");
+                }
+            }
         }
     }
 

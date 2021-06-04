@@ -1,7 +1,6 @@
-use crate::request::{Request, RequestType};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 // pyo3 modules
-use crate::types::{AsyncFunction, PyFuture};
+use crate::threadpool::Message;
 use pyo3::prelude::*;
 
 pub enum RouteType {
@@ -33,10 +32,13 @@ impl Route {
             RouteType::Route(route) => Self { route },
         }
     }
+
+    pub fn get_route(&self) -> String {
+        self.route.clone()
+    }
 }
 
 // this should ideally be a hashmap of hashmaps but not really
-use crate::threadpool::{Message, ThreadPool};
 
 pub struct Router {
     get_routes: HashMap<Route, Message>,

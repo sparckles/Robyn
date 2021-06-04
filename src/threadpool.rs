@@ -1,14 +1,9 @@
-use futures::Future;
 use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
-use tokio;
 
 // pyO3 module
 use pyo3::prelude::*;
 
-use crate::types::{AsyncFunction, Job, PyFuture};
-
-#[pyclass]
 struct Worker {
     id: usize,
     thread: Option<thread::JoinHandle<()>>,
@@ -16,45 +11,56 @@ struct Worker {
 
 impl Worker {
     fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Message>>>) -> Worker {
+        // It is recommended to *always* immediately set py to the pool's Python, to help
+        // avoid creating references with invalid lifetimes.
+        // let pool = unsafe { py.new_pool() };
+        // let m = Mutex::new(pool);
+        // let rt = tokio::runtime::Runtime::new().unwrap();
+
         let t = thread::spawn(move || {
-            let rt = tokio::runtime::Runtime::new().unwrap();
-            pyo3_asyncio::tokio::init(rt);
-            // let v = pyo3_asyncio::tokio::get_runtime();
+            // pyo3_asyncio::tokio::init_current_thread();
+            // let py = m.lock().unwrap();
+            // let py = unsafe { pool.python() };
+            // pool.python();
+            // let pool = unsafe { py.new_pool() };
+            // It is recommended to *always* immediately set py to the pool's Python, to help
+            // avoid creating references with invalid lifetimes.
+            // let py = unsafe { pool.python() };
+            let py = unsafe { Python::assume_gil_acquired() };
+            // pyo3_asyncio::tokio::get_runtime();
+
             loop {
+                py.run("print('Hello from python')", None, None);
                 let message = receiver.lock().unwrap().recv().unwrap(); // message should be the optional containing the future
-
                 match message {
-                    Message::NewJob(job) => {
-                        println!("Worker {} got a job; executing.", id);
-                        Python::with_gil(|py| {
-                            pyo3_asyncio::tokio::run_until_complete(py, async {
-                                let j: PyAny = job.into();
-                                let f = pyo3_asyncio::into_future(&job).unwrap();
+                    Message::NewJob(j) => {
+                        println!("Bruhhh");
+                        // py.run("print('hello world')", None, None);
+                        let k = j.as_ref(py);
+                        let f = pyo3_asyncio::into_future(&k).unwrap();
+                        pyo3_asyncio::async_std::run_until_complete(py, async move {
+                            let x = f.await;
+                            match (x) {
+                                Err(x) => println!("Shitt {}", x),
+                                Ok(_) => (),
+                            };
+                            Ok(())
+                        })
+                        .unwrap();
+                        // pyo3_asyncio::tokio::run_until_complete(py, async move {
+                        //     println!("Hello world from rust");
 
-                                f.await;
-                                // (*job).await;
-                                Ok(())
-                            })
-                            .unwrap();
-                        });
+                        //     f.await?;
+                        //     Ok(())
+                        // })
+                        // .unwrap();
                     }
-
                     Message::Terminate => {
-                        println!("Worker {} was told to terminate.", id);
-                        break;
+                        println!("Worker has been told to terminale");
                     }
                 }
             }
         });
-
-        // let thread = thread::spawn(move || loop {
-        //     // need to create a method to initialize the runtime here
-        //     // inside that runtime need a way to fetch that message
-        //     // and complete it
-        //     // stream will be sent along side
-        //     let message = receiver.lock().unwrap().recv().unwrap();
-
-        // });
 
         Worker {
             id,
@@ -63,7 +69,7 @@ impl Worker {
     }
 }
 
-type Test = Box<dyn FnOnce() + Send + 'static>;
+// type Test = Box<dyn FnOnce() + Send + 'static>;
 
 pub enum Message {
     NewJob(Py<PyAny>),
@@ -91,30 +97,28 @@ impl ThreadPool {
         let receiver = Arc::new(Mutex::new(receiver));
 
         let mut workers = Vec::with_capacity(size);
+        // let gil = Python::acquire_gil();
+        // let py = gil.python();
 
         for id in 0..size {
+            // let pool = unsafe { py.new_pool() };
+            // It is recommended to *always* immediately set py to the pool's Python, to help
+            // avoid creating references with invalid lifetimes.
+            // let py = unsafe { pool.python() };
             workers.push(Worker::new(id, Arc::clone(&receiver)));
         }
 
         ThreadPool { workers, sender }
     }
 
-    pub fn execute<F>(&self, f: F)
-    where
-        F: FnOnce() + Send + 'static,
-    {
-        let job = Box::new(f);
-
-        // self.sender.send(Message::NewJob(job)).unwrap();
-    }
-
-    pub fn push_async(&self, f: Py<PyAny>)
+    pub fn push_async(&self, f: &Py<PyAny>)
     // where
     //     F: PyFuture<'static>,
     // F: Future<Output = ()> + Send + 'static + Sync,
     // F: FnOnce() + Send + 'static + Sync
     {
-        self.sender.send(Message::NewJob(f)).unwrap();
+        // println!("Sending a message");
+        self.sender.send(Message::NewJob(f.clone())).unwrap();
     }
     // pub fn push_async(&self, f: &'static PyFuture) {
     //     // let job = pyo3_asyncio::into_future(f).unwrap();
