@@ -23,7 +23,6 @@ pub struct Server {
 
 #[pymethods]
 impl Server {
-    // pub fn new(port: usize, number_of_threads: usize) -> Self {
     #[new]
     pub fn new() -> Self {
         let url = format!("127.0.0.1:{}", 5000);
@@ -45,14 +44,11 @@ impl Server {
             println!("Hello world but {} {}", k.get_route(), v);
         }
 
-        // test()
-
         for stream in listener.incoming() {
             let mut stream = stream.unwrap();
             let mut buffer = [0; 1024];
             stream.read(&mut buffer).unwrap();
             let route = Route::new(RouteType::Buffer(Box::new(buffer)));
-            // let request = Request::new(&buffer);
             let status_line = "HTTP/1.1 200 OK";
             let contents = "Hello";
             let len = contents.len();
@@ -60,14 +56,6 @@ impl Server {
                 "{}\r\nContent-Length: {}\r\n\r\n{}",
                 status_line, len, contents
             );
-            // yaha pe add a check and dispatch the code and instead of pool.execute
-            //  use pool.async
-            // need to change on how we are passing the functions in the thread
-            // pool.execute(|| {
-            //     let rt = tokio::runtime::Runtime::new().unwrap();
-            //     // let mut contents = String::new();
-            //     // handle_connection(stream, rt, &mut contents, &test_helper);
-            // });
 
             stream.write(response.as_bytes()).unwrap();
             stream.flush().unwrap();
@@ -77,22 +65,12 @@ impl Server {
                 Some(a) => {
                     pool.push_async(&a.clone());
                 }
-                None => {
-                    for (k, v) in &self.get_routes {
-                        println!("Hello world but {} {}", k.get_route(), v);
-                    }
-
-                    println!("issue");
-                }
+                None => {}
             }
         }
     }
 
     pub fn add_route(&mut self, route: String, handler: Py<PyAny>) {
-        // not considering abhi and adding everything to the get type
-        // let job = pyo3_asyncio::into_future(handler).unwrap();
-
-        // let f = handler.into(Py<PyAny>);
         self.get_routes
             .insert(Route::new(RouteType::Route(route)), handler);
     }

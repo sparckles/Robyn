@@ -1,3 +1,5 @@
+use crossbeam::channel::{unbounded, Receiver, Sender};
+use std::io::Error;
 use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 
@@ -10,7 +12,7 @@ struct Worker {
 }
 
 impl Worker {
-    fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Message>>>) -> Worker {
+    fn new(id: usize, receiver: Receiver<Message>) -> Worker {
         // It is recommended to *always* immediately set py to the pool's Python, to help
         // avoid creating references with invalid lifetimes.
         // let pool = unsafe { py.new_pool() };
@@ -31,17 +33,15 @@ impl Worker {
 
             loop {
                 py.run("print('Hello from python')", None, None);
-                let message = receiver.lock().unwrap().recv().unwrap(); // message should be the optional containing the future
+                let message = receiver.recv().unwrap(); // message should be the optional containing the future
                 match message {
                     Message::NewJob(j) => {
-                        println!("Bruhhh");
-                        // py.run("print('hello world')", None, None);
                         let k = j.as_ref(py);
                         let f = pyo3_asyncio::into_future(&k).unwrap();
                         pyo3_asyncio::async_std::run_until_complete(py, async move {
                             let x = f.await;
                             match (x) {
-                                Err(x) => println!("Shitt {}", x),
+                                Err(x) => println!(" {}", x), // I am getting the error here
                                 Ok(_) => (),
                             };
                             Ok(())
@@ -49,7 +49,6 @@ impl Worker {
                         .unwrap();
                         // pyo3_asyncio::tokio::run_until_complete(py, async move {
                         //     println!("Hello world from rust");
-
                         //     f.await?;
                         //     Ok(())
                         // })
@@ -78,7 +77,7 @@ pub enum Message {
 
 pub struct ThreadPool {
     workers: Vec<Worker>,
-    sender: mpsc::Sender<Message>,
+    sender: Sender<Message>,
 }
 
 impl ThreadPool {
@@ -92,9 +91,9 @@ impl ThreadPool {
     pub fn new(size: usize) -> ThreadPool {
         assert!(size > 0);
 
-        let (sender, receiver) = mpsc::channel();
+        let (sender, receiver) = unbounded();
 
-        let receiver = Arc::new(Mutex::new(receiver));
+        // let receiver = Arc::new(Mutex::new(receiver));
 
         let mut workers = Vec::with_capacity(size);
         // let gil = Python::acquire_gil();
@@ -105,7 +104,7 @@ impl ThreadPool {
             // It is recommended to *always* immediately set py to the pool's Python, to help
             // avoid creating references with invalid lifetimes.
             // let py = unsafe { pool.python() };
-            workers.push(Worker::new(id, Arc::clone(&receiver)));
+            workers.push(Worker::new(id, receiver.clone()));
         }
 
         ThreadPool { workers, sender }

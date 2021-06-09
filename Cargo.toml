@@ -30,4 +30,6 @@ async-trait = "0.1"
 hyper = { version = "0.14", features = ["full"] }
 tokio = { version = "1", features = ["full"] }
 log = "0.4"
-
+async-std = "1.9.0"
+async-channel = "1.6.1"
+crossbeam = "0.8.1"
