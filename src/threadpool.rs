@@ -20,6 +20,7 @@ impl Worker {
         // let rt = tokio::runtime::Runtime::new().unwrap();
 
         let t = thread::spawn(move || {
+            let py = unsafe { Python::assume_gil_acquired() };
             // pyo3_asyncio::tokio::init_current_thread();
             // let py = m.lock().unwrap();
             // let py = unsafe { pool.python() };
@@ -28,25 +29,31 @@ impl Worker {
             // It is recommended to *always* immediately set py to the pool's Python, to help
             // avoid creating references with invalid lifetimes.
             // let py = unsafe { pool.python() };
-            let py = unsafe { Python::assume_gil_acquired() };
             // pyo3_asyncio::tokio::get_runtime();
 
             loop {
-                py.run("print('Hello from python')", None, None);
                 let message = receiver.recv().unwrap(); // message should be the optional containing the future
                 match message {
                     Message::NewJob(j) => {
-                        let k = j.as_ref(py);
-                        let f = pyo3_asyncio::into_future(&k).unwrap();
+                        let coro = j.as_ref(py).call0().unwrap();
+                        let f = pyo3_asyncio::into_future(&coro).unwrap();
+
                         pyo3_asyncio::async_std::run_until_complete(py, async move {
                             let x = f.await;
-                            match (x) {
+                            match x {
                                 Err(x) => println!(" {}", x), // I am getting the error here
                                 Ok(_) => (),
                             };
                             Ok(())
                         })
                         .unwrap();
+                        // async_std::task::block_on(async move {
+                        //     let x = f.await;
+                        //     match (x) {
+                        //         Err(x) => println!(" {}", x), // I am getting the error here
+                        //         Ok(_) => (),
+                        //     };
+                        // });
                         // pyo3_asyncio::tokio::run_until_complete(py, async move {
                         //     println!("Hello world from rust");
                         //     f.await?;
