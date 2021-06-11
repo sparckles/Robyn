@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 // pyo3 modules
-use crate::threadpool::Message;
 use pyo3::prelude::*;
 
 pub enum RouteType {
@@ -41,7 +40,12 @@ impl Route {
 // this should ideally be a hashmap of hashmaps but not really
 
 pub struct Router {
-    get_routes: HashMap<Route, Message>,
+    get_routes: HashMap<Route, Py<PyAny>>,
+    post_routes: HashMap<Route, Py<PyAny>>,
+    put_routes: HashMap<Route, Py<PyAny>>,
+    update_routes: HashMap<Route, Py<PyAny>>,
+    delete_routes: HashMap<Route, Py<PyAny>>,
+    patch_routes: HashMap<Route, Py<PyAny>>,
 }
 // these should be of the type struct and not the type router
 // request_stream: &TcpStream,
@@ -51,11 +55,29 @@ pub struct Router {
 
 impl Router {
     pub fn new() -> Self {
-        let hmap = HashMap::new();
-        Self { get_routes: hmap }
+        Self {
+            get_routes: HashMap::new(),
+            post_routes: HashMap::new(),
+            put_routes: HashMap::new(),
+            update_routes: HashMap::new(),
+            delete_routes: HashMap::new(),
+            patch_routes: HashMap::new(),
+        }
     }
 
-    // pub fn add_route(&mut self, route: Route, handler: &'static Message) {
-    //     self.get_routes.insert(route, handler);
-    // }
+    pub fn add_route(&mut self, route_type: &str, route: Route, handler: Py<PyAny>) {
+        if route_type == "GET" {
+            self.get_routes.insert(route, handler);
+        } else if route_type == "POST" {
+            self.post_routes.insert(route, handler);
+        } else if route_type == "PUT" {
+            self.put_routes.insert(route, handler);
+        } else if route_type == "UPDATE" {
+            self.update_routes.insert(route, handler);
+        } else if route_type == "DELETE" {
+            self.delete_routes.insert(route, handler);
+        } else if route_type == "PATCH" {
+            self.patch_routes.insert(route, handler);
+        }
+    }
 }

@@ -70,8 +70,8 @@ impl Server {
         }
     }
 
-    pub fn add_route(&mut self, route: String, handler: Py<PyAny>) {
-        self.get_routes
-            .insert(Route::new(RouteType::Route(route)), handler);
+    pub fn add_route(&mut self, route_type: &str, route: String, handler: Py<PyAny>) {
+        let route = Route::new(RouteType::Route(route));
+        self.router.add_route(route_type, route, handler);
     }
 }

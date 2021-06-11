@@ -10,7 +10,7 @@ async def h():
 
 print("This is the message from python")
 s = roadrunner.Server()
-s.add_route("/",h)
+s.add_route("GET", "/", h)
 s.start()
 
 
