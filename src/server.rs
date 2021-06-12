@@ -1,10 +1,11 @@
-use crate::request::Request;
 use crate::router::{Route, RouteType, Router};
 use crate::threadpool::ThreadPool;
 use std::collections::HashMap;
 use std::io::prelude::*;
 use std::net::TcpListener;
-
+use std::process;
+use std::sync::{Arc, Mutex};
+use std::thread;
 // pyO3 module
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
@@ -14,9 +15,8 @@ pub struct Server {
     port: usize,
     number_of_threads: usize,
     router: Router, //
-    threadpool: ThreadPool,
-    listener: TcpListener,
-    get_routes: HashMap<Route, Py<PyAny>>,
+    threadpool: Arc<Mutex<ThreadPool>>,
+    get_routes: Arc<Mutex<HashMap<Route, Py<PyAny>>>>,
 }
 
 // unsafe impl Send for Server {}
@@ -25,53 +25,68 @@ pub struct Server {
 impl Server {
     #[new]
     pub fn new() -> Self {
-        let url = format!("127.0.0.1:{}", 5000);
         let get_routes: HashMap<Route, Py<PyAny>> = HashMap::new();
         Self {
             port: 5000,
             number_of_threads: 1,
             router: Router::new(),
-            threadpool: ThreadPool::new(1),
-            listener: TcpListener::bind(url).unwrap(),
-            get_routes, // not implemented in router as unable to match lifetimes
+            threadpool: Arc::new(Mutex::new(ThreadPool::new(1))),
+            get_routes: Arc::new(Mutex::new(get_routes)), // not implemented in router as unable to match lifetimes
         }
     }
 
-    pub fn start(&mut self) {
-        let listener = &self.listener;
-        let pool = &self.threadpool;
-        for (k, v) in &self.get_routes {
-            println!("Hello world but {} {}", k.get_route(), v);
-        }
+    pub fn start(&mut self, py: Python) {
+        let url = format!("127.0.0.1:{}", &self.port);
+        let get_router = self.get_routes.clone();
+        let pool = self.threadpool.clone();
 
-        for stream in listener.incoming() {
-            let mut stream = stream.unwrap();
-            let mut buffer = [0; 1024];
-            stream.read(&mut buffer).unwrap();
-            let route = Route::new(RouteType::Buffer(Box::new(buffer)));
-            let status_line = "HTTP/1.1 200 OK";
-            let contents = "Hello";
-            let len = contents.len();
-            let response = format!(
-                "{}\r\nContent-Length: {}\r\n\r\n{}",
-                status_line, len, contents
-            );
+        thread::spawn(move || {
+            let listener_ = TcpListener::bind(url).unwrap();
+            let pool = pool.lock().unwrap();
 
-            stream.write(response.as_bytes()).unwrap();
-            stream.flush().unwrap();
-            let f = self.get_routes.get(&route);
-            // pool.push_async(f);
-            match f {
-                Some(a) => {
-                    pool.push_async(&a.clone());
+            for stream in listener_.incoming() {
+                let mut stream = stream.unwrap();
+                let mut buffer = [0; 1024];
+                stream.read(&mut buffer).unwrap();
+                let route = Route::new(RouteType::Buffer(Box::new(buffer)));
+
+                let status_line = "HTTP/1.1 200 OK";
+                let contents = "Hello";
+                let len = contents.len();
+                let response = format!(
+                    "{}\r\nContent-Length: {}\r\n\r\n{}",
+                    status_line, len, contents
+                );
+
+                stream.write(response.as_bytes()).unwrap();
+                stream.flush().unwrap();
+
+                let f = get_router.lock().unwrap();
+                let x = f.get(&route);
+                match x {
+                    Some(a) => {
+                        pool.push_async(&a.clone());
+                    }
+                    None => {
+                        print!("No mathc found");
+                    }
                 }
-                None => {}
             }
-        }
+        });
+
+        let py_loop = pyo3_asyncio::async_std::run_until_complete(py, async move { loop {} });
+        match py_loop {
+            Ok(_) => {}
+            Err(_) => {
+                process::exit(1);
+            }
+        };
     }
 
     pub fn add_route(&mut self, route_type: &str, route: String, handler: Py<PyAny>) {
+        println!("{} {} ", route_type, route);
         let route = Route::new(RouteType::Route(route));
-        self.router.add_route(route_type, route, handler);
+        let mut getr = self.get_routes.lock().unwrap();
+        getr.insert(route, handler);
     }
 }

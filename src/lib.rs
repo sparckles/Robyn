@@ -5,56 +5,20 @@ mod server;
 mod threadpool;
 mod types;
 
-use threadpool::ThreadPool;
-
 use server::Server;
 use std::io::prelude::*;
-use std::net::TcpListener;
 use std::net::TcpStream;
 use std::time::Duration;
 
 // pyO3 module
 use pyo3::prelude::*;
-use pyo3::types::PyAny;
 use pyo3::wrap_pyfunction;
 
 use std::future::Future;
 
-// #[pyclass]
-// struct Server {}
-
-// #[pymethods]
-// impl Server {
-//     #[new]
-//     fn new() -> Self {
-//         Self {}
-//     }
-
-//     fn start(mut self_: PyRefMut<Self>, test: &PyAny) {
-//         // let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
-//         // let pool = ThreadPool::new(4);
-
-//         let f = pyo3_asyncio::into_future(test).unwrap();
-
-//         let rt = tokio::runtime::Runtime::new().unwrap();
-//         // let rt = pyo3_asyncio::tokio::get_runtime();
-//         pyo3_asyncio::tokio::init(rt);
-//         // let v = pyo3_asyncio::tokio::get_runtime();
-//         Python::with_gil(|py| {
-//             pyo3_asyncio::tokio::run_until_complete(py, async move {
-//                 tokio::time::sleep(Duration::from_secs(1)).await;
-//                 f.await.unwrap();
-//                 Ok(())
-//             })
-//             .unwrap();
-//         });
-//     }
-// }
-
 #[pyfunction]
 pub fn start_server() {
     let _listener = Server::new();
-    //     });
 }
 
 #[pymodule]
@@ -65,34 +29,6 @@ pub fn roadrunner(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     pyo3::prepare_freethreaded_python();
 
     Ok(())
-}
-
-async fn read_file(filename: String) -> String {
-    let con = tokio::fs::read_to_string(filename).await;
-    con.unwrap()
-}
-
-async fn test_helper(
-    contents: &mut String,
-    filename: String,
-    status_line: String,
-    mut stream: TcpStream,
-) {
-    // this function will accept custom function and return
-    *contents = tokio::task::spawn(read_file(filename.clone()))
-        .await
-        .unwrap();
-
-    let len = contents.len();
-
-    let response = format!(
-        "{}\r\nContent-Length: {}\r\n\r\n{}",
-        status_line, len, contents
-    );
-
-    stream.write(response.as_bytes()).unwrap();
-    stream.flush().unwrap();
-    // return String::from(contents.clone());
 }
 
 // let mut contents = String::new();

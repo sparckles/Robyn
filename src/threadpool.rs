@@ -1,6 +1,4 @@
 use crossbeam::channel::{unbounded, Receiver, Sender};
-use std::io::Error;
-use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 
 // pyO3 module
@@ -13,53 +11,19 @@ struct Worker {
 
 impl Worker {
     fn new(id: usize, receiver: Receiver<Message>) -> Worker {
-        // It is recommended to *always* immediately set py to the pool's Python, to help
-        // avoid creating references with invalid lifetimes.
-        // let pool = unsafe { py.new_pool() };
-        // let m = Mutex::new(pool);
-        // let rt = tokio::runtime::Runtime::new().unwrap();
-
         let t = thread::spawn(move || {
-            let py = unsafe { Python::assume_gil_acquired() };
-            // pyo3_asyncio::tokio::init_current_thread();
-            // let py = m.lock().unwrap();
-            // let py = unsafe { pool.python() };
-            // pool.python();
-            // let pool = unsafe { py.new_pool() };
-            // It is recommended to *always* immediately set py to the pool's Python, to help
-            // avoid creating references with invalid lifetimes.
-            // let py = unsafe { pool.python() };
-            // pyo3_asyncio::tokio::get_runtime();
-
             loop {
                 let message = receiver.recv().unwrap(); // message should be the optional containing the future
                 match message {
                     Message::NewJob(j) => {
-                        let coro = j.as_ref(py).call0().unwrap();
-                        let f = pyo3_asyncio::into_future(&coro).unwrap();
+                        let f = Python::with_gil(|py| {
+                            let coro = j.as_ref(py).call0().unwrap();
+                            pyo3_asyncio::into_future(&coro).unwrap()
+                        });
 
-                        pyo3_asyncio::async_std::run_until_complete(py, async move {
-                            let x = f.await;
-                            match x {
-                                Err(x) => println!(" {}", x), // I am getting the error here
-                                Ok(_) => (),
-                            };
-                            Ok(())
-                        })
-                        .unwrap();
-                        // async_std::task::block_on(async move {
-                        //     let x = f.await;
-                        //     match (x) {
-                        //         Err(x) => println!(" {}", x), // I am getting the error here
-                        //         Ok(_) => (),
-                        //     };
-                        // });
-                        // pyo3_asyncio::tokio::run_until_complete(py, async move {
-                        //     println!("Hello world from rust");
-                        //     f.await?;
-                        //     Ok(())
-                        // })
-                        // .unwrap();
+                        async_std::task::block_on(async move {
+                            f.await.unwrap();
+                        });
                     }
                     Message::Terminate => {
                         println!("Worker has been told to terminale");
@@ -100,35 +64,19 @@ impl ThreadPool {
 
         let (sender, receiver) = unbounded();
 
-        // let receiver = Arc::new(Mutex::new(receiver));
-
         let mut workers = Vec::with_capacity(size);
-        // let gil = Python::acquire_gil();
-        // let py = gil.python();
 
         for id in 0..size {
-            // let pool = unsafe { py.new_pool() };
-            // It is recommended to *always* immediately set py to the pool's Python, to help
-            // avoid creating references with invalid lifetimes.
-            // let py = unsafe { pool.python() };
             workers.push(Worker::new(id, receiver.clone()));
         }
 
         ThreadPool { workers, sender }
     }
 
-    pub fn push_async(&self, f: &Py<PyAny>)
-    // where
-    //     F: PyFuture<'static>,
-    // F: Future<Output = ()> + Send + 'static + Sync,
-    // F: FnOnce() + Send + 'static + Sync
-    {
+    pub fn push_async(&self, f: &Py<PyAny>) {
         // println!("Sending a message");
         self.sender.send(Message::NewJob(f.clone())).unwrap();
     }
-    // pub fn push_async(&self, f: &'static PyFuture) {
-    //     // let job = pyo3_asyncio::into_future(f).unwrap();
-    // }
 }
 
 impl Drop for ThreadPool {
