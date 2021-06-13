@@ -1,6 +1,5 @@
 use crossbeam::channel::{unbounded, Receiver, Sender};
 use std::io::prelude::*;
-use std::net::TcpListener;
 use std::net::TcpStream;
 use std::thread;
 

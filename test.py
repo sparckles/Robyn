@@ -1,16 +1,21 @@
 import roadrunner
 import asyncio
+import time
 
 # def helper():
 async def h():
     print("This is the message from coroutine")
-    return "h"
+    return "not sleep function"
+
+async def sleeper():
+    await asyncio.sleep(5)
+    return "sleep function"
 
 
 
-print("This is the message from python")
 s = roadrunner.Server()
 s.add_route("GET", "/", h)
+s.add_route("GET", "/sleep", sleeper)
 s.start()
 
 
