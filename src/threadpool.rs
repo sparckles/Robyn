@@ -1,8 +1,12 @@
 use crossbeam::channel::{unbounded, Receiver, Sender};
+use std::io::prelude::*;
+use std::net::TcpListener;
+use std::net::TcpStream;
 use std::thread;
 
 // pyO3 module
 use pyo3::prelude::*;
+use pyo3::types::PyList;
 
 struct Worker {
     id: usize,
@@ -15,14 +19,31 @@ impl Worker {
             loop {
                 let message = receiver.recv().unwrap(); // message should be the optional containing the future
                 match message {
-                    Message::NewJob(j) => {
+                    Message::NewJob(mess) => {
+                        let (handler, stream) = mess;
+                        let mut stream = stream;
                         let f = Python::with_gil(|py| {
-                            let coro = j.as_ref(py).call0().unwrap();
+                            let coro = handler.as_ref(py).call0().unwrap();
                             pyo3_asyncio::into_future(&coro).unwrap()
                         });
 
+                        // let mut buffer = [0; 1024];
+                        // stream.read(&mut buffer).unwrap();
                         async_std::task::block_on(async move {
-                            f.await.unwrap();
+                            let output = f.await.unwrap();
+                            let status_line = "HTTP/1.1 200 OK";
+                            Python::with_gil(|py| {
+                                let contents: &str = output.extract(py).unwrap();
+
+                                let len = contents.len();
+                                let response = format!(
+                                    "{}\r\nContent-Length: {}\r\n\r\n{}",
+                                    status_line, len, contents
+                                );
+
+                                stream.write(response.as_bytes()).unwrap();
+                                stream.flush().unwrap();
+                            });
                         });
                     }
                     Message::Terminate => {
@@ -42,7 +63,7 @@ impl Worker {
 // type Test = Box<dyn FnOnce() + Send + 'static>;
 
 pub enum Message {
-    NewJob(Py<PyAny>),
+    NewJob((Py<PyAny>, TcpStream)),
     Terminate,
 }
 
@@ -73,9 +94,11 @@ impl ThreadPool {
         ThreadPool { workers, sender }
     }
 
-    pub fn push_async(&self, f: &Py<PyAny>) {
+    pub fn push_async(&self, f: &Py<PyAny>, stream: TcpStream) {
         // println!("Sending a message");
-        self.sender.send(Message::NewJob(f.clone())).unwrap();
+        self.sender
+            .send(Message::NewJob((f.clone(), stream)))
+            .unwrap();
     }
 }
 

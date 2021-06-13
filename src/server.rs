@@ -48,24 +48,14 @@ impl Server {
                 let mut stream = stream.unwrap();
                 let mut buffer = [0; 1024];
                 stream.read(&mut buffer).unwrap();
+                // stream.f();
                 let route = Route::new(RouteType::Buffer(Box::new(buffer)));
-
-                let status_line = "HTTP/1.1 200 OK";
-                let contents = "Hello";
-                let len = contents.len();
-                let response = format!(
-                    "{}\r\nContent-Length: {}\r\n\r\n{}",
-                    status_line, len, contents
-                );
-
-                stream.write(response.as_bytes()).unwrap();
-                stream.flush().unwrap();
 
                 let f = get_router.lock().unwrap();
                 let x = f.get(&route);
                 match x {
                     Some(a) => {
-                        pool.push_async(&a.clone());
+                        pool.push_async(&a.clone(), stream);
                     }
                     None => {
                         print!("No mathc found");
