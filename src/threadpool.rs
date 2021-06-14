@@ -28,7 +28,7 @@ impl Worker {
 
                         // let mut buffer = [0; 1024];
                         // stream.read(&mut buffer).unwrap();
-                        async_std::task::block_on(async move {
+                        async_std::task::spawn(async move {
                             let output = f.await.unwrap();
                             let status_line = "HTTP/1.1 200 OK";
                             Python::with_gil(|py| {
