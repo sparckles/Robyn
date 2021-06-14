@@ -36,15 +36,15 @@ impl Server {
         let get_router = self.router.clone();
         let pool = self.threadpool.clone();
 
+        // thread::spawn -> block on
         thread::spawn(move || {
-            let listener_ = TcpListener::bind(url).unwrap();
+            let listener = TcpListener::bind(url).unwrap();
             let pool = pool.lock().unwrap();
 
-            for stream in listener_.incoming() {
+            for stream in listener.incoming() {
                 let mut stream = stream.unwrap();
                 let mut buffer = [0; 1024];
                 stream.read(&mut buffer).unwrap();
-                // stream.f();
                 let route = Route::new(RouteType::Buffer(Box::new(buffer)));
 
                 let f = get_router.lock().unwrap();

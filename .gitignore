@@ -1,1 +1,4 @@
 /target
+
+# ignore pre compiled binaries
+*.so
