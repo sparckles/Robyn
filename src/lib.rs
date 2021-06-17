@@ -22,7 +22,7 @@ pub fn start_server() {
 }
 
 #[pymodule]
-pub fn roadrunner(py: Python<'_>, m: &PyModule) -> PyResult<()> {
+pub fn robyn(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(start_server))?;
     m.add_class::<Server>()?;
     pyo3_asyncio::try_init(py).unwrap();

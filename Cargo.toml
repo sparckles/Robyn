@@ -1,15 +1,15 @@
 [package]
-name = "roadrunner"
+name = "robyn"
 version = "0.1.0"
 authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 edition = "2018"
-description = "The web server that is fast!"
+description = "A web server that is fast!"
 license = "MIT"
-homepage = "https://github.com/sansyrox/roadrunner"
+homepage = "https://github.com/sansyrox/robyn"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
-name = "roadrunner"
+name = "robyn"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies.pyo3]
@@ -33,3 +33,6 @@ log = "0.4"
 async-std = "1.9.0"
 async-channel = "1.6.1"
 crossbeam = "0.8.1"
+
+[package.metadata.maturin]
+name = "robyn"

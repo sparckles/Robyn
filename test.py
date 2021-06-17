@@ -1,31 +1,17 @@
-import roadrunner
+from robyn import Robyn
 import asyncio
-import time
 
-# def helper():
+app = Robyn()
+
+@app.get("/")
 async def h():
     print("This is the message from coroutine")
     return "not sleep function"
 
+@app.get("/sleep")
 async def sleeper():
     await asyncio.sleep(5)
     return "sleep function"
 
+app.start()
 
-
-s = roadrunner.Server()
-s.add_route("GET", "/", h)
-s.add_route("GET", "/sleep", sleeper)
-s.start()
-
-
-x = []
-for i in range(4):
-    x.append(asyncio.new_event_loop())
-
-async def main():
-    while True:
-        pass
-
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
