@@ -32,7 +32,7 @@ app.start()
 
 Feel free to open an issue for any clarification or for any suggestions.
 
-To read about the detailed architecture, you can read [here](https://raw.githubusercontent.com/sansyrox/robyn/main/docs/architecture.md).
+To read about the detailed architecture, you can read [here](https://sansyrox.github.io/robyn/#/architecture).
 
 ## Testing on Python
 
