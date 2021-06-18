@@ -93,11 +93,9 @@ impl ThreadPool {
         ThreadPool { workers, sender }
     }
 
-    pub fn push_async(&self, f: &Py<PyAny>, stream: TcpStream) {
+    pub fn push_async(&self, f: Py<PyAny>, stream: TcpStream) {
         // println!("Sending a message");
-        self.sender
-            .send(Message::NewJob((f.clone(), stream)))
-            .unwrap();
+        self.sender.send(Message::NewJob((f, stream))).unwrap();
     }
 }
 
