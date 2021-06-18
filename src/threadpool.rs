@@ -1,7 +1,9 @@
-use crossbeam::channel::{unbounded, Receiver, Sender};
+use flume::{unbounded, Receiver, Sender};
 use std::io::prelude::*;
-use std::net::TcpStream;
 use std::thread;
+use tokio::io::AsyncWriteExt;
+use tokio::net::TcpStream;
+use tokio::runtime;
 
 // pyO3 module
 use pyo3::prelude::*;
@@ -15,41 +17,16 @@ struct Worker {
 impl Worker {
     fn new(id: usize, receiver: Receiver<Message>) -> Worker {
         let t = thread::spawn(move || {
-            loop {
-                let message = receiver.recv().unwrap(); // message should be the optional containing the future
-                match message {
-                    Message::NewJob(mess) => {
-                        let (handler, stream) = mess;
-                        let mut stream = stream;
-                        let f = Python::with_gil(|py| {
-                            let coro = handler.as_ref(py).call0().unwrap();
-                            pyo3_asyncio::into_future(&coro).unwrap()
-                        });
+            let basic_rt = runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .unwrap();
 
-                        // let mut buffer = [0; 1024];
-                        // stream.read(&mut buffer).unwrap();
-                        async_std::task::spawn(async move {
-                            let output = f.await.unwrap();
-                            let status_line = "HTTP/1.1 200 OK";
-                            Python::with_gil(|py| {
-                                let contents: &str = output.extract(py).unwrap();
-
-                                let len = contents.len();
-                                let response = format!(
-                                    "{}\r\nContent-Length: {}\r\n\r\n{}",
-                                    status_line, len, contents
-                                );
-
-                                stream.write(response.as_bytes()).unwrap();
-                                stream.flush().unwrap();
-                            });
-                        });
-                    }
-                    Message::Terminate => {
-                        println!("Worker has been told to terminale");
-                    }
+            basic_rt.block_on(async {
+                loop {
+                    let message = receiver.recv_async().await.unwrap(); // message should be the optional containing the future
                 }
-            }
+            });
         });
 
         Worker {
@@ -57,6 +34,31 @@ impl Worker {
             thread: Some(t),
         }
     }
+}
+
+pub async fn handle_message(handler: Py<PyAny>, mut stream: TcpStream) {
+    let f = Python::with_gil(|py| {
+        let coro = handler.as_ref(py).call0().unwrap();
+        pyo3_asyncio::into_future(&coro).unwrap()
+    });
+
+    // let mut buffer = [0; 1024];
+    // stream.read(&mut buffer).unwrap();
+    let output = f.await.unwrap();
+    let status_line = "HTTP/1.1 200 OK";
+    let res = Python::with_gil(|py| -> PyResult<String> {
+        let contents: &str = output.extract(py).unwrap();
+
+        let len = contents.len();
+        let response = format!(
+            "{}\r\nContent-Length: {}\r\n\r\n{}",
+            status_line, len, contents
+        );
+
+        Ok(response)
+    })
+    .unwrap();
+    stream.write_all(res.as_bytes()).await.unwrap();
 }
 
 // type Test = Box<dyn FnOnce() + Send + 'static>;

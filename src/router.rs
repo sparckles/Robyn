@@ -40,7 +40,6 @@ impl Route {
                     .nth(0)
                     .unwrap();
 
-                println!("This is the route stream {}", stream);
                 Self {
                     route: stream.to_string(),
                     route_type: String::from(route_type),

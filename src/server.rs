@@ -1,20 +1,20 @@
 use crate::router::{Route, RouteType, Router};
-use crate::threadpool::ThreadPool;
+use crate::threadpool::{handle_message, ThreadPool};
 use std::io::prelude::*;
-use std::net::TcpListener;
 use std::process;
 use std::sync::{Arc, Mutex};
 use std::thread;
 // pyO3 module
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::TcpListener;
 
 #[pyclass]
 pub struct Server {
     port: usize,
     number_of_threads: usize,
     router: Arc<Router>, //
-    threadpool: Arc<ThreadPool>,
 }
 
 // unsafe impl Send for Server {}
@@ -27,37 +27,34 @@ impl Server {
             port: 5000,
             number_of_threads: 1,
             router: Arc::new(Router::new()),
-            threadpool: Arc::new(ThreadPool::new(1)),
         }
     }
 
     pub fn start(&mut self, py: Python) {
         let url = format!("127.0.0.1:{}", &self.port);
         let router = self.router.clone();
-        let pool = self.threadpool.clone();
+        pyo3_asyncio::tokio::init_multi_thread_once();
 
-        // thread::spawn -> block on
-        thread::spawn(move || {
-            let listener = TcpListener::bind(url).unwrap();
-
-            for stream in listener.incoming() {
-                let mut stream = stream.unwrap();
+        let py_loop = pyo3_asyncio::tokio::run_until_complete(py, async move {
+            let listener = TcpListener::bind(url).await.unwrap();
+            while let Ok((mut stream, _addr)) = listener.accept().await {
                 let mut buffer = [0; 1024];
-                stream.read(&mut buffer).unwrap();
+                stream.read(&mut buffer).await.unwrap();
+
                 let route = Route::new(RouteType::Buffer(Box::new(buffer)));
-
                 match router.get_route(route) {
-                    Some(a) => {
-                        pool.push_async(a, stream);
-                    }
+                    Some(a) => tokio::spawn(async move {
+                        handle_message(a, stream).await;
+                    }),
                     None => {
-                        print!("No match found");
+                        println!("No match found");
+                        continue;
                     }
-                }
+                };
             }
-        });
 
-        let py_loop = pyo3_asyncio::async_std::run_until_complete(py, async move { loop {} });
+            Ok(())
+        });
         match py_loop {
             Ok(_) => {}
             Err(_) => {
