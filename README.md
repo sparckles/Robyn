@@ -51,3 +51,7 @@ To read about the detailed architecture, you can read [here](https://raw.githubu
 3. Run `python3 test.py`
 
 4. To measure the performance: `./server_test.sh`
+
+## Contributors/Supporters
+
+Special thanks to the [ PyO3 ](https://pyo3.rs/v0.13.2/) community and [ Andrew from PyO3-asyncio ](awestlake87/pyo3-asyncio) for their amazing libraries and their support for my queries. 💖
