@@ -21,6 +21,7 @@ version = "0.13.3"
 features =["tokio-runtime", "async-std-runtime"]
 
 [dependencies]
+tokio = { version = "1.7.0", features = ["full"] }
 futures = { version = "0.3.6", default-features = false, features = ["async-await"] }
 serde = {version = "1.0", features = ["derive"] }
 serde_json = "1.0"
