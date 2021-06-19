@@ -1,13 +1,11 @@
 use crate::router::{Route, RouteType, Router};
-use crate::threadpool::{handle_message, ThreadPool};
-use std::io::prelude::*;
+use crate::threadpool::handle_message;
 use std::process;
-use std::sync::{Arc, Mutex};
-use std::thread;
+use std::sync::Arc;
 // pyO3 module
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::io::AsyncReadExt;
 use tokio::net::TcpListener;
 
 #[pyclass]
@@ -63,7 +61,7 @@ impl Server {
         };
     }
 
-    pub fn add_route(&mut self, route_type: &str, route: String, handler: Py<PyAny>) {
+    pub fn add_route(&self, route_type: &str, route: String, handler: Py<PyAny>) {
         println!("{} {} ", route_type, route);
         let route = Route::new(RouteType::Route((route, route_type.to_string())));
         self.router.add_route(route_type, route, handler);
