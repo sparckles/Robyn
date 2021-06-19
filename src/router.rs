@@ -109,14 +109,7 @@ impl Router {
     }
 
     pub fn get_route(&self, route: Route) -> Option<Py<PyAny>> {
-        let table = match self.get_relevant_map(route.get_route_type().as_str()) {
-            Some(table) => table,
-            None => return None,
-        };
-
-        match table.get(&route) {
-            Some(res) => Some(res.clone()),
-            None => None,
-        }
+        let table = self.get_relevant_map(route.get_route_type().as_str())?;
+        Some(table.get(&route)?.clone())
     }
 }

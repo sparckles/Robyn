@@ -6,7 +6,7 @@ use std::sync::Arc;
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
 use tokio::io::AsyncReadExt;
-use tokio::net::TcpListener;
+use tokio::net::{TcpListener, TcpStream};
 
 #[pyclass]
 pub struct Server {
@@ -35,22 +35,10 @@ impl Server {
 
         let py_loop = pyo3_asyncio::tokio::run_until_complete(py, async move {
             let listener = TcpListener::bind(url).await.unwrap();
-            while let Ok((mut stream, _addr)) = listener.accept().await {
-                let mut buffer = [0; 1024];
-                stream.read(&mut buffer).await.unwrap();
-
-                let route = Route::new(RouteType::Buffer(Box::new(buffer)));
-                match router.get_route(route) {
-                    Some(a) => tokio::spawn(async move {
-                        handle_message(a, stream).await;
-                    }),
-                    None => {
-                        println!("No match found");
-                        continue;
-                    }
-                };
+            while let Ok((stream, _addr)) = listener.accept().await {
+                let router = router.clone();
+                tokio::spawn(handle_stream(router, stream));
             }
-
             Ok(())
         });
         match py_loop {
@@ -66,4 +54,20 @@ impl Server {
         let route = Route::new(RouteType::Route((route, route_type.to_string())));
         self.router.add_route(route_type, route, handler);
     }
+}
+
+async fn handle_stream(router: Arc<Router>, mut stream: TcpStream) {
+    let mut buffer = [0; 1024];
+    stream.read(&mut buffer).await.unwrap();
+
+    let route = Route::new(RouteType::Buffer(Box::new(buffer)));
+    match router.get_route(route) {
+        Some(a) => tokio::spawn(async move {
+            handle_message(a, stream).await;
+        }),
+        None => {
+            println!("No match found");
+            return;
+        }
+    };
 }
