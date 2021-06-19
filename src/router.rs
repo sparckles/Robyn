@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use dashmap::DashMap;
 // pyo3 modules
 use pyo3::prelude::*;
 
@@ -62,12 +62,12 @@ impl Route {
 // this should ideally be a hashmap of hashmaps but not really
 
 pub struct Router {
-    get_routes: HashMap<Route, Py<PyAny>>,
-    post_routes: HashMap<Route, Py<PyAny>>,
-    put_routes: HashMap<Route, Py<PyAny>>,
-    update_routes: HashMap<Route, Py<PyAny>>,
-    delete_routes: HashMap<Route, Py<PyAny>>,
-    patch_routes: HashMap<Route, Py<PyAny>>,
+    get_routes: DashMap<Route, Py<PyAny>>,
+    post_routes: DashMap<Route, Py<PyAny>>,
+    put_routes: DashMap<Route, Py<PyAny>>,
+    update_routes: DashMap<Route, Py<PyAny>>,
+    delete_routes: DashMap<Route, Py<PyAny>>,
+    patch_routes: DashMap<Route, Py<PyAny>>,
 }
 // these should be of the type struct and not the type router
 // request_stream: &TcpStream,
@@ -78,47 +78,46 @@ pub struct Router {
 impl Router {
     pub fn new() -> Self {
         Self {
-            get_routes: HashMap::new(),
-            post_routes: HashMap::new(),
-            put_routes: HashMap::new(),
-            update_routes: HashMap::new(),
-            delete_routes: HashMap::new(),
-            patch_routes: HashMap::new(),
+            get_routes: DashMap::new(),
+            post_routes: DashMap::new(),
+            put_routes: DashMap::new(),
+            update_routes: DashMap::new(),
+            delete_routes: DashMap::new(),
+            patch_routes: DashMap::new(),
         }
     }
 
-    pub fn add_route(&mut self, route_type: &str, route: Route, handler: Py<PyAny>) {
-        if route_type == "GET" {
-            self.get_routes.insert(route, handler);
-        } else if route_type == "POST" {
-            self.post_routes.insert(route, handler);
-        } else if route_type == "PUT" {
-            self.put_routes.insert(route, handler);
-        } else if route_type == "UPDATE" {
-            self.update_routes.insert(route, handler);
-        } else if route_type == "DELETE" {
-            self.delete_routes.insert(route, handler);
-        } else if route_type == "PATCH" {
-            self.patch_routes.insert(route, handler);
+    #[inline]
+    fn get_relevant_map(&self, route: &str) -> Option<&DashMap<Route, Py<PyAny>>> {
+        match route {
+            "GET" => Some(&self.get_routes),
+            "POST" => Some(&self.post_routes),
+            "PUT" => Some(&self.put_routes),
+            "UPDATE" => Some(&self.update_routes),
+            "DELETE" => Some(&self.delete_routes),
+            "PATCH" => Some(&self.patch_routes),
+            _ => None,
         }
     }
 
-    pub fn get_route(&self, route: Route) -> Option<&Py<PyAny>> {
-        let route_type = route.get_route_type();
-        if route_type == "GET" {
-            self.get_routes.get(&route)
-        } else if route_type == "POST" {
-            self.post_routes.get(&route)
-        } else if route_type == "PUT" {
-            self.put_routes.get(&route)
-        } else if route_type == "UPDATE" {
-            self.update_routes.get(&route)
-        } else if route_type == "DELETE" {
-            self.delete_routes.get(&route)
-        } else if route_type == "PATCH" {
-            self.patch_routes.get(&route)
-        } else {
-            None
+    pub fn add_route(&self, route_type: &str, route: Route, handler: Py<PyAny>) {
+        let table = match self.get_relevant_map(route_type) {
+            Some(table) => table,
+            None => return,
+        };
+
+        table.insert(route, handler);
+    }
+
+    pub fn get_route(&self, route: Route) -> Option<Py<PyAny>> {
+        let table = match self.get_relevant_map(route.get_route_type().as_str()) {
+            Some(table) => table,
+            None => return None,
+        };
+
+        match table.get(&route) {
+            Some(res) => Some(res.clone()),
+            None => None,
         }
     }
 }
