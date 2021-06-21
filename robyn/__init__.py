@@ -1,5 +1,6 @@
 from .robyn import *
 from .robyn import Server
+from asyncio import iscoroutinefunction
 
 class Robyn:
     """This is the python wrapper for the Robyn binaries.
@@ -8,7 +9,17 @@ class Robyn:
         self.server = Server()
 
     def add_route(self, route_type, endpoint, handler):
-        self.server.add_route(route_type, endpoint, handler)
+        if iscoroutinefunction(handler):
+            self.server.add_route(route_type, endpoint, handler)
+        else:
+            handler = self._wrap_async(handler) # converts the handler to an async function
+            self.server.add_route(route_type, endpoint, handler)
+
+    def _wrap_async(self, sync_function):
+        return self._async_wrapper(sync_function)
+
+    async def _async_wrapper(self, sync_function):
+        return sync_function()
 
     def start(self):
         self.server.start()
