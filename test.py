@@ -15,6 +15,8 @@ async def sleeper():
 
 @app.get("/blocker")
 def blocker():
+    import time
+    time.sleep(100)
     return "blocker function"
 
 app.start()
