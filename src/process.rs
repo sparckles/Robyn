@@ -13,7 +13,7 @@ pub async fn handle_message(process_object: Py<PyAny>, mut stream: TcpStream) {
     let function: PyFunction = Python::with_gil(|py| {
         let process_object_wrapper: &PyAny = process_object.as_ref(py);
         let py_dict = process_object_wrapper.downcast::<PyDict>().unwrap();
-        let is_async: bool = py_dict.get_item("is_coroutine").unwrap().extract().unwrap();
+        let is_async: bool = py_dict.get_item("is_async").unwrap().extract().unwrap();
         let handler: &PyAny = py_dict.get_item("handler").unwrap();
         if is_async {
             let coro = handler.call0().unwrap();
