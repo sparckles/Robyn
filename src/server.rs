@@ -5,6 +5,7 @@ use std::sync::Arc;
 // pyO3 module
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
+use pyo3::types::PyDict;
 use tokio::io::AsyncReadExt;
 use tokio::net::{TcpListener, TcpStream};
 
@@ -49,7 +50,16 @@ impl Server {
         };
     }
 
-    pub fn add_route(&self, route_type: &str, route: String, handler: Py<PyAny>) {
+    pub fn add_route(
+        &self,
+        route_type: &str,
+        route: String,
+        handler: Py<PyAny>,
+    ) {
+        // Python::with_gil(|py| {
+        //     let py_dict: &PyDict = py_obj.as_ref(py);
+        //     println!("{}", py_dict.get_item("is_coroutine").unwrap());
+        // });
         println!("{} {} ", route_type, route);
         let route = Route::new(RouteType::Route((route, route_type.to_string())));
         self.router.add_route(route_type, route, handler);

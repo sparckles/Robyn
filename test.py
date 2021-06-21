@@ -13,5 +13,9 @@ async def sleeper():
     await asyncio.sleep(5)
     return "sleep function"
 
+@app.get("/blocker")
+def blocker():
+    return "blocker function"
+
 app.start()
 
