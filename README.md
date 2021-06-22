@@ -34,15 +34,8 @@ Feel free to open an issue for any clarification or for any suggestions.
 
 If you're feeling curious. You can take a look at a more detailed architecture [here](https://github.com/sansyrox/robyn/blob/main/docs/architecture.md).
 
-## Testing on Python
 
-1. `cargo build --release`
-2. `cp target/release/librobyn.dylib ./robyn.so`
-3. `python3`
-4. `import robyn`
-5. `dir(robyn)`
-
-## To Run
+## To Run Locally
 
 1. Add more routes in the test.py file(if you like). It only supports only get requests at the moment
 
