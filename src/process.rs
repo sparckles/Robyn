@@ -19,8 +19,6 @@ pub async fn handle_message(process_object: Py<PyAny>, mut stream: TcpStream) {
             let coro = handler.call0().unwrap();
             PyFunction::CoRoutine(coro.into())
         } else {
-            // let s: &str = handler.call0().unwrap().extract().unwrap();
-            // PyFunction::SyncFunction(String::from(s))
             PyFunction::SyncFunction(handler.into())
         }
     });
@@ -49,7 +47,6 @@ pub async fn handle_message(process_object: Py<PyAny>, mut stream: TcpStream) {
         .unwrap(),
     };
 
-    // let output = op.await.unwrap();
     let status_line = "HTTP/1.1 200 OK";
 
     let len = contents.len();
