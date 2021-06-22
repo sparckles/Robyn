@@ -1,31 +1,39 @@
 # Changelog
 
-## [Unreleased](https://github.com/sansyrox/robyn_/tree/HEAD)
+## [0.4.0](https://github.com/sansyrox/robyn/tree/0.4.0) (2021-06-22)
 
-[Full Changelog](https://github.com/sansyrox/robyn_/compare/v0.1...HEAD)
-
-**Closed issues:**
-
-- Add the ability for python and rust to coexist [\#7](https://github.com/sansyrox/robyn_/issues/7)
-- Make the async function's o/p alter the stream [\#6](https://github.com/sansyrox/robyn_/issues/6)
-- Write docs! [\#5](https://github.com/sansyrox/robyn_/issues/5)
-- Improve the async runtime! [\#3](https://github.com/sansyrox/robyn_/issues/3)
-
-**Merged pull requests:**
-
-- Python integration with rust and maturin [\#9](https://github.com/sansyrox/robyn_/pull/9) ([sansyrox](https://github.com/sansyrox))
-
-## [v0.1](https://github.com/sansyrox/robyn_/tree/v0.1) (2021-06-13)
-
-[Full Changelog](https://github.com/sansyrox/robyn_/compare/c14f52e6faa79917e89de4220590da7bf28f6a65...v0.1)
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.3.0...0.4.0)
 
 **Closed issues:**
 
-- Improve the router! [\#2](https://github.com/sansyrox/robyn_/issues/2)
+- Add support for Sync functions as well! [\#7](https://github.com/sansyrox/robyn/issues/7)
 
 **Merged pull requests:**
 
-- Add some sort of asynchronous code [\#1](https://github.com/sansyrox/robyn_/pull/1) ([sansyrox](https://github.com/sansyrox))
+- Add non blocking sync functions [\#23](https://github.com/sansyrox/robyn/pull/23) ([sansyrox](https://github.com/sansyrox))
+- Add support for sync functions [\#20](https://github.com/sansyrox/robyn/pull/20) ([sansyrox](https://github.com/sansyrox))
+
+## [v0.3.0](https://github.com/sansyrox/robyn/tree/v0.3.0) (2021-06-21)
+
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.2.3...v0.3.0)
+
+**Closed issues:**
+
+- Architecture link in readme redirects to raw content [\#18](https://github.com/sansyrox/robyn/issues/18)
+- Link pointing to the wrong destination [\#6](https://github.com/sansyrox/robyn/issues/6)
+
+**Merged pull requests:**
+
+- Pure tokio [\#17](https://github.com/sansyrox/robyn/pull/17) ([JackThomson2](https://github.com/JackThomson2))
+- Remove Mutex lock on Threadpool and routes [\#15](https://github.com/sansyrox/robyn/pull/15) ([JackThomson2](https://github.com/JackThomson2))
+
+## [v0.2.3](https://github.com/sansyrox/robyn/tree/v0.2.3) (2021-06-18)
+
+[Full Changelog](https://github.com/sansyrox/robyn/compare/c14f52e6faa79917e89de4220590da7bf28f6a65...v0.2.3)
+
+**Closed issues:**
+
+- Improve async runtime [\#3](https://github.com/sansyrox/robyn/issues/3)
 
 
 
