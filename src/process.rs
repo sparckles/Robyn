@@ -6,7 +6,7 @@ use pyo3::types::{PyAny, PyDict};
 
 enum PyFunction {
     CoRoutine(Py<PyAny>),
-    OutPut(String),
+    SyncFunction(Py<PyAny>),
 }
 
 pub async fn handle_message(process_object: Py<PyAny>, mut stream: TcpStream) {
@@ -19,8 +19,9 @@ pub async fn handle_message(process_object: Py<PyAny>, mut stream: TcpStream) {
             let coro = handler.call0().unwrap();
             PyFunction::CoRoutine(coro.into())
         } else {
-            let s: &str = handler.call0().unwrap().extract().unwrap();
-            PyFunction::OutPut(String::from(s))
+            // let s: &str = handler.call0().unwrap().extract().unwrap();
+            // PyFunction::SyncFunction(String::from(s))
+            PyFunction::SyncFunction(handler.into())
         }
     });
 
@@ -37,7 +38,15 @@ pub async fn handle_message(process_object: Py<PyAny>, mut stream: TcpStream) {
             })
             .unwrap()
         }
-        PyFunction::OutPut(x) => x,
+        PyFunction::SyncFunction(x) => tokio::task::spawn_blocking(move || {
+            Python::with_gil(|py| {
+                let y = x.as_ref(py);
+                let s: &str = (&y).call0().unwrap().extract().unwrap();
+                String::from(s)
+            })
+        })
+        .await
+        .unwrap(),
     };
 
     // let output = op.await.unwrap();
