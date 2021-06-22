@@ -1,5 +1,7 @@
 # Robyn
 
+[![Join the chat at https://gitter.im/robyn_/community](https://badges.gitter.im/robyn_/community.svg)](https://gitter.im/robyn_/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Robyn is an async Python backend server with a runtime written in Rust, btw.
 
 Python server running on top of of Rust Async RunTime.
