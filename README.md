@@ -1,5 +1,7 @@
 # Robyn
 
+[![Gitter](https://badges.gitter.im/robyn_/community.svg)](https://gitter.im/robyn_/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+
 Robyn is an async Python backend server with a runtime written in Rust, btw.
 
 Python server running on top of of Rust Async RunTime.
@@ -33,7 +35,6 @@ app.start()
 Feel free to open an issue for any clarification or for any suggestions.
 
 If you're feeling curious. You can take a look at a more detailed architecture [here](https://github.com/sansyrox/robyn/blob/main/docs/architecture.md).
-
 
 ## To Run Locally
 
