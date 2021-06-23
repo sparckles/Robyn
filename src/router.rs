@@ -1,6 +1,8 @@
 use dashmap::DashMap;
 // pyo3 modules
+use crate::types::PyFunction;
 use pyo3::prelude::*;
+use pyo3::types::{PyAny, PyDict};
 
 pub enum RouteType {
     Route((String, String)),
@@ -61,12 +63,12 @@ impl Route {
 // this should ideally be a hashmap of hashmaps but not really
 
 pub struct Router {
-    get_routes: DashMap<Route, Py<PyAny>>,
-    post_routes: DashMap<Route, Py<PyAny>>,
-    put_routes: DashMap<Route, Py<PyAny>>,
-    update_routes: DashMap<Route, Py<PyAny>>,
-    delete_routes: DashMap<Route, Py<PyAny>>,
-    patch_routes: DashMap<Route, Py<PyAny>>,
+    get_routes: DashMap<Route, PyFunction>,
+    post_routes: DashMap<Route, PyFunction>,
+    put_routes: DashMap<Route, PyFunction>,
+    update_routes: DashMap<Route, PyFunction>,
+    delete_routes: DashMap<Route, PyFunction>,
+    patch_routes: DashMap<Route, PyFunction>,
 }
 // these should be of the type struct and not the type router
 // request_stream: &TcpStream,
@@ -87,7 +89,7 @@ impl Router {
     }
 
     #[inline]
-    fn get_relevant_map(&self, route: &str) -> Option<&DashMap<Route, Py<PyAny>>> {
+    fn get_relevant_map(&self, route: &str) -> Option<&DashMap<Route, PyFunction>> {
         match route {
             "GET" => Some(&self.get_routes),
             "POST" => Some(&self.post_routes),
@@ -104,11 +106,22 @@ impl Router {
             Some(table) => table,
             None => return,
         };
-
-        table.insert(route, handler);
+        Python::with_gil(|py| {
+            let process_object_wrapper: &PyAny = handler.as_ref(py);
+            let py_dict = process_object_wrapper.downcast::<PyDict>().unwrap();
+            let is_async: bool = py_dict.get_item("is_async").unwrap().extract().unwrap();
+            let handler: &PyAny = py_dict.get_item("handler").unwrap();
+            let route_function = if is_async {
+                // let coro = handler.call0().unwrap();
+                PyFunction::CoRoutine(handler.into())
+            } else {
+                PyFunction::SyncFunction(handler.into())
+            };
+            table.insert(route, route_function);
+        });
     }
 
-    pub fn get_route(&self, route: Route) -> Option<Py<PyAny>> {
+    pub fn get_route(&self, route: Route) -> Option<PyFunction> {
         let table = self.get_relevant_map(route.get_route_type().as_str())?;
         Some(table.get(&route)?.clone())
     }
