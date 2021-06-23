@@ -16,6 +16,9 @@ crate-type = ["cdylib", "rlib"]
 version = "0.13.2"
 features = ["extension-module"]
 
+[patch.crates-io]
+pyo3 = {git = "https://github.com/PyO3/pyo3/",branch = "main", features = ["extension-module"]}
+
 [dependencies.pyo3-asyncio]
 version = "0.13.3"
 features =["tokio-runtime"]
