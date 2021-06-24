@@ -1,0 +1,181 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  macos:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: aarch64-apple-darwin
+          profile: minimal
+          default: true
+      - name: Build wheels - x86_64
+        uses: messense/maturin-action@v1
+        with:
+          target: x86_64
+          args: -i python --release --out dist
+      - name: Install built wheel - x86_64
+        run: |
+          pip install robyn --no-index --find-links dist --force-reinstall
+          cd ~ && python -c 'import robyn'
+      - name: Build wheels - universal2
+        uses: messense/maturin-action@v1
+        with:
+          args: -i python --release --universal2 --out dist --no-sdist
+      - name: Install built wheel - universal2
+        run: |
+          pip install robyn --no-index --find-links dist --force-reinstall
+          cd ~ && python -c 'import robyn'
+      - name: Upload wheels
+        uses: actions/upload-artifact@v2
+        with:
+          name: wheels
+          path: dist
+
+  windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
+        target: [x64, x86]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: ${{ matrix.target }}
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          default: true
+      - name: Build wheels
+        uses: messense/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          args: -i python --release --out dist --no-sdist
+      - name: Install built wheel
+        run: |
+          pip install robyn --no-index --find-links dist --force-reinstall
+          cd ~ && python -c 'import robyn'
+      - name: Upload wheels
+        uses: actions/upload-artifact@v2
+        with:
+          name: wheels
+          path: dist
+
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
+        target: [x86_64, i686]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        profile: minimal
+        default: true
+    - uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Build Wheels
+      uses: messense/maturin-action@v1
+      with:
+        target: ${{ matrix.target }}
+        manylinux: auto
+        args: -i python${{ matrix.python-version }} --release --out dist --no-sdist
+    - name: Install built wheel
+      if: matrix.target == 'x86_64'
+      run: |
+        pip install robyn --no-index --find-links dist --force-reinstall
+        cd ~ && python -c 'import robyn'
+    - name: Upload wheels
+      uses: actions/upload-artifact@v2
+      with:
+        name: wheels
+        path: dist
+
+  linux-cross:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: [
+          { version: '3.6', abi: 'cp36-cp36m' },
+          { version: '3.7', abi: 'cp37-cp37m' },
+          { version: '3.8', abi: 'cp38-cp38' },
+          { version: '3.9', abi: 'cp39-cp39' },
+        ]
+        target: [aarch64, armv7, s390x, ppc64le]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build Wheels
+      uses: messense/maturin-action@v1
+      env:
+        PYO3_CROSS_LIB_DIR: /opt/python/${{ matrix.python.abi }}/lib
+      with:
+        target: ${{ matrix.target }}
+        manylinux: auto
+        args: -i python3.9 --release --out dist --no-sdist
+    - uses: uraimo/run-on-arch-action@v2.0.5
+      name: Install built wheel
+      with:
+        arch: ${{ matrix.target }}
+        distro: ubuntu20.04
+        githubToken: ${{ github.token }}
+        # Mount the dist directory as /artifacts in the container
+        dockerRunArgs: |
+          --volume "${PWD}/dist:/artifacts"
+        install: |
+          apt-get update
+          apt-get install -y --no-install-recommends python3 python3-pip software-properties-common
+          add-apt-repository ppa:deadsnakes/ppa
+          apt-get update
+          apt-get install -y python3.6 python3.7 python3.9
+        run: |
+          ls -lrth /artifacts
+          PYTHON=python${{ matrix.python.version }}
+          $PYTHON -m pip install -U pip
+          $PYTHON -m pip install robyn --no-index --find-links /artifacts --force-reinstall
+          cd ~ && $PYTHON -c 'import robyn'
+    - name: Upload wheels
+      uses: actions/upload-artifact@v2
+      with:
+        name: wheels
+        path: dist
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    if: "startsWith(github.ref, 'refs/tags/')"
+    needs: [ macos, windows, linux, linux-cross ]
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: wheels
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Publish to PyPi
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        run: |
+          pip install --upgrade twine
+          twine upload --skip-existing *
