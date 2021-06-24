@@ -6,6 +6,7 @@ edition = "2018"
 description = "A web server that is fast!"
 license = "MIT"
 homepage = "https://github.com/sansyrox/robyn"
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
