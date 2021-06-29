@@ -14,8 +14,9 @@ class Robyn:
         }
         self.server.add_route(route_type, endpoint, handler)
 
-    def start(self):
-        self.server.start()
+    def start(self, port):
+        print(f"Starting the server at port: {port}")
+        self.server.start(port)
 
     def get(self, endpoint):
         def inner(handler):

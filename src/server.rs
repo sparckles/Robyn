@@ -11,8 +11,6 @@ use tokio::net::{TcpListener, TcpStream};
 
 #[pyclass]
 pub struct Server {
-    port: usize,
-    number_of_threads: usize,
     router: Arc<Router>, //
 }
 
@@ -23,14 +21,12 @@ impl Server {
     #[new]
     pub fn new() -> Self {
         Self {
-            port: 5000,
-            number_of_threads: 1,
             router: Arc::new(Router::new()),
         }
     }
 
-    pub fn start(&mut self, py: Python) {
-        let url = format!("127.0.0.1:{}", &self.port);
+    pub fn start(&mut self, py: Python, port: usize) {
+        let url = format!("127.0.0.1:{}", port);
         let router = self.router.clone();
         pyo3_asyncio::tokio::init_multi_thread_once();
 
