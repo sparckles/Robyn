@@ -35,6 +35,8 @@ impl Server {
         pyo3_asyncio::tokio::init_multi_thread_once();
 
         let py_loop = pyo3_asyncio::tokio::run_until_complete(py, async move {
+            // this is the dev server equivalent
+            // if we want to add an asgi support, this should be a part of an asgi
             let listener = TcpListener::bind(url).await.unwrap();
             while let Ok((stream, _addr)) = listener.accept().await {
                 let router = router.clone();

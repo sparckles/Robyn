@@ -19,5 +19,6 @@ def blocker():
     time.sleep(10)
     return "blocker function"
 
-app.start()
+if __name__=="__main__":
+    app.start()
 

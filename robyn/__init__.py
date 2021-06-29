@@ -47,7 +47,22 @@ class Robyn:
             self.add_route("PATCH", endpoint, handler)
         return inner
 
+    @staticmethod
+    async def mount_asgi(scope, receive, send):
+        """
+        This is a test method for me to have the ability to add asgi support
+        """
+        assert scope['type'] == 'http'
 
+        await send({
+            'type': 'http.response.start',
+            'status': 200,
+            'headers': [
+                [b'content-type', b'text/plain'],
+            ],
+        })
 
-
-
+        await send({
+            'type': 'http.response.body',
+            'body': b'Hello, world!',
+        })
