@@ -1,5 +1,4 @@
-use std::thread;
-mod process;
+mod processor;
 mod request;
 mod router;
 mod server;
@@ -8,6 +7,7 @@ mod types;
 use server::Server;
 use std::io::prelude::*;
 use std::net::TcpStream;
+use std::thread;
 use std::time::Duration;
 
 // pyO3 module
@@ -18,20 +18,21 @@ use std::future::Future;
 
 #[pyfunction]
 pub fn start_server() {
-    let _listener = Server::new();
+    // this is a wrapper function for python
+    // to start a server
+    Server::new();
 }
 
 #[pymodule]
 pub fn robyn(py: Python<'_>, m: &PyModule) -> PyResult<()> {
+    // the pymodule class to make the rustPyFunctions available
+    // in python
     m.add_wrapped(wrap_pyfunction!(start_server))?;
     m.add_class::<Server>()?;
     pyo3_asyncio::try_init(py).unwrap();
     pyo3::prepare_freethreaded_python();
-
     Ok(())
 }
-
-// let mut contents = String::new();
 
 pub fn handle_connection<'a, F>(
     mut stream: TcpStream,
