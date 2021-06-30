@@ -28,6 +28,9 @@ features =["tokio-runtime"]
 tokio = { version = "1.7.0", features = ["full"] }
 dashmap = "4.0.2"
 flume = "0.10.7"
+httparse = "1.4.1"
+hyper = { version="0.14.9", features = ["full"]}
+futures = "0.3.15"
 
 [package.metadata.maturin]
 name = "robyn"

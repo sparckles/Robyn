@@ -17,34 +17,29 @@ pub struct Route {
 
 impl Route {
     pub fn new(route: RouteType) -> Self {
+        let mut headers = [httparse::EMPTY_HEADER; 1024];
+        let mut req = httparse::Request::new(&mut headers);
+
         match route {
             RouteType::Buffer(buffer) => {
+                let res = req.parse(&buffer).unwrap();
                 let stream = String::from_utf8((&buffer).to_vec()).unwrap();
-
+                println!("{}", stream);
                 let mut route_type = "";
-                if stream.contains("GET") {
-                    route_type = "GET";
-                } else if stream.contains("POST") {
-                    route_type = "POST";
-                } else if stream.contains("PUT") {
-                    route_type = "PUT";
-                } else if stream.contains("UPDATE") {
-                    route_type = "UPDATE";
-                } else if stream.contains("DELETE") {
-                    route_type = "DELETE";
-                } else if stream.contains("PATCH") {
-                    route_type = "PATCH";
-                }
-
-                let stream = stream
-                    .split_whitespace()
-                    .filter(|x| x.starts_with("/"))
-                    .nth(0)
-                    .unwrap();
-
+                let route = if res.is_complete() {
+                    match req.path {
+                        Some(path) => {
+                            route_type = req.method.unwrap();
+                            path
+                        }
+                        None => "",
+                    }
+                } else {
+                    ""
+                };
                 Self {
-                    route: stream.to_string(),
-                    route_type: String::from(route_type),
+                    route: route.to_string(),
+                    route_type: route_type.to_string(),
                 }
             }
             RouteType::Route((route, route_type)) => Self { route, route_type },
@@ -60,21 +55,18 @@ impl Route {
     }
 }
 
-// this should ideally be a hashmap of hashmaps but not really
+// Contains the thread safe hashmaps of different routes
+//
+use hyper::Method;
 
 pub struct Router {
-    get_routes: DashMap<Route, PyFunction>,
-    post_routes: DashMap<Route, PyFunction>,
-    put_routes: DashMap<Route, PyFunction>,
-    update_routes: DashMap<Route, PyFunction>,
-    delete_routes: DashMap<Route, PyFunction>,
-    patch_routes: DashMap<Route, PyFunction>,
+    get_routes: DashMap<String, PyFunction>,
+    post_routes: DashMap<String, PyFunction>,
+    put_routes: DashMap<String, PyFunction>,
+    update_routes: DashMap<String, PyFunction>,
+    delete_routes: DashMap<String, PyFunction>,
+    patch_routes: DashMap<String, PyFunction>,
 }
-// these should be of the type struct and not the type router
-// request_stream: &TcpStream,
-// request_type: Option<RequestType>,
-// headers: Vec<String>,
-// body: Vec<String>
 
 impl Router {
     pub fn new() -> Self {
@@ -89,7 +81,7 @@ impl Router {
     }
 
     #[inline]
-    fn get_relevant_map(&self, route: &str) -> Option<&DashMap<Route, PyFunction>> {
+    fn get_relevant_map(&self, route: &str) -> Option<&DashMap<String, PyFunction>> {
         match route {
             "GET" => Some(&self.get_routes),
             "POST" => Some(&self.post_routes),
@@ -101,7 +93,9 @@ impl Router {
         }
     }
 
-    pub fn add_route(&self, route_type: &str, route: Route, handler: Py<PyAny>) {
+    // Checks if the functions is an async function
+    // Inserts them in the router according to their nature(CoRoutine/SyncFunction)
+    pub fn add_route(&self, route_type: &str, route: &str, handler: Py<PyAny>) {
         let table = match self.get_relevant_map(route_type) {
             Some(table) => table,
             None => return,
@@ -112,17 +106,17 @@ impl Router {
             let is_async: bool = py_dict.get_item("is_async").unwrap().extract().unwrap();
             let handler: &PyAny = py_dict.get_item("handler").unwrap();
             let route_function = if is_async {
-                // let coro = handler.call0().unwrap();
                 PyFunction::CoRoutine(handler.into())
             } else {
                 PyFunction::SyncFunction(handler.into())
             };
-            table.insert(route, route_function);
+            table.insert(route.to_string(), route_function);
         });
     }
 
-    pub fn get_route(&self, route: Route) -> Option<PyFunction> {
-        let table = self.get_relevant_map(route.get_route_type().as_str())?;
-        Some(table.get(&route)?.clone())
+    pub fn get_route(&self, route_method: &Method, route: &str) -> Option<PyFunction> {
+        println!("{}{}", route_method.as_str(), route);
+        let table = self.get_relevant_map(route_method.as_str())?;
+        Some(table.get(route)?.clone())
     }
 }
