@@ -3,10 +3,14 @@ import asyncio
 
 app = Robyn()
 
+callCount = 0
+
 @app.get("/")
 async def h():
-    print("This is the message from coroutine")
-    return "not sleep function"
+    global callCount
+    callCount +=  1
+    message = "Called " + str(callCount) + " times"
+    return message
 
 @app.get("/sleep")
 async def sleeper():
