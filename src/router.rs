@@ -4,11 +4,6 @@ use crate::types::PyFunction;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict};
 
-pub enum RouteType {
-    Route((String, String)),
-    Buffer(Box<[u8]>),
-}
-
 #[derive(PartialEq, Eq, Hash, Debug)]
 pub struct Route {
     route: String,
@@ -16,33 +11,10 @@ pub struct Route {
 }
 
 impl Route {
-    pub fn new(route: RouteType) -> Self {
-        let mut headers = [httparse::EMPTY_HEADER; 1024];
-        let mut req = httparse::Request::new(&mut headers);
-
-        match route {
-            RouteType::Buffer(buffer) => {
-                let res = req.parse(&buffer).unwrap();
-                let stream = String::from_utf8((&buffer).to_vec()).unwrap();
-                println!("{}", stream);
-                let mut route_type = "";
-                let route = if res.is_complete() {
-                    match req.path {
-                        Some(path) => {
-                            route_type = req.method.unwrap();
-                            path
-                        }
-                        None => "",
-                    }
-                } else {
-                    ""
-                };
-                Self {
-                    route: route.to_string(),
-                    route_type: route_type.to_string(),
-                }
-            }
-            RouteType::Route((route, route_type)) => Self { route, route_type },
+    pub fn new(route: &str, route_type: &str) -> Self {
+        Self {
+            route: route.to_string(),
+            route_type: route_type.to_string(),
         }
     }
 
