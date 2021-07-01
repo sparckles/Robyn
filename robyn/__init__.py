@@ -8,11 +8,7 @@ class Robyn:
         self.server = Server()
 
     def add_route(self, route_type, endpoint, handler):
-        handler = {
-            "is_async": iscoroutinefunction(handler),
-            "handler": handler
-        }
-        self.server.add_route(route_type, endpoint, handler)
+        self.server.add_route(route_type, endpoint, handler, iscoroutinefunction(handler))
 
     def start(self, port):
         print(f"Starting the server at port: {port}")
@@ -31,11 +27,6 @@ class Robyn:
     def put(self, endpoint):
         def inner(handler):
             self.add_route("PUT", endpoint, handler)
-        return inner
-
-    def update(self, endpoint):
-        def inner(handler):
-            self.add_route("UPDATE", endpoint, handler)
         return inner
 
     def delete(self, endpoint):
