@@ -564,8 +564,6 @@ version = "0.5.0"
 dependencies = [
  "anyhow",
  "dashmap",
- "futures",
- "httparse",
  "hyper",
  "pyo3",
  "pyo3-asyncio",

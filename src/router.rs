@@ -2,12 +2,11 @@ use dashmap::DashMap;
 // pyo3 modules
 use crate::types::PyFunction;
 use pyo3::prelude::*;
-use pyo3::types::{PyAny, PyDict};
+use pyo3::types::PyAny;
 
-// Contains the thread safe hashmaps of different routes
-//
 use hyper::Method;
 
+/// Contains the thread safe hashmaps of different routes
 pub struct Router {
     get_routes: DashMap<String, PyFunction>,
     post_routes: DashMap<String, PyFunction>,
@@ -51,23 +50,19 @@ impl Router {
 
     // Checks if the functions is an async function
     // Inserts them in the router according to their nature(CoRoutine/SyncFunction)
-    pub fn add_route(&self, route_type: &str, route: &str, handler: Py<PyAny>) {
+    pub fn add_route(&self, route_type: &str, route: &str, handler: Py<PyAny>, is_async: bool) {
         let table = match self.get_relevant_map_str(route_type) {
             Some(table) => table,
             None => return,
         };
-        Python::with_gil(|py| {
-            let process_object_wrapper: &PyAny = handler.as_ref(py);
-            let py_dict = process_object_wrapper.downcast::<PyDict>().unwrap();
-            let is_async: bool = py_dict.get_item("is_async").unwrap().extract().unwrap();
-            let handler: &PyAny = py_dict.get_item("handler").unwrap();
-            let route_function = if is_async {
-                PyFunction::CoRoutine(handler.into())
-            } else {
-                PyFunction::SyncFunction(handler.into())
-            };
-            table.insert(route.to_string(), route_function);
-        });
+
+        let function = if is_async {
+            PyFunction::CoRoutine(handler.into())
+        } else {
+            PyFunction::SyncFunction(handler.into())
+        };
+
+        table.insert(route.to_string(), function);
     }
 
     pub fn get_route(&self, route_method: Method, route: &str) -> Option<PyFunction> {

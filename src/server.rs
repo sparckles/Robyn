@@ -64,9 +64,9 @@ impl Server {
         };
     }
 
-    pub fn add_route(&self, route_type: &str, route: &str, handler: Py<PyAny>) {
+    pub fn add_route(&self, route_type: &str, route: &str, handler: Py<PyAny>, is_async: bool) {
         println!("Route added for {} {} ", route_type, route);
-        self.router.add_route(route_type, route, handler);
+        self.router.add_route(route_type, route, handler, is_async);
     }
 }
 
