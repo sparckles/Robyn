@@ -15,6 +15,12 @@ pub struct Server {
     router: Arc<Router>,
 }
 
+impl Default for Server {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[pymethods]
 impl Server {
     #[new]
@@ -60,7 +66,7 @@ impl Server {
 
     pub fn add_route(&self, route_type: &str, route: &str, handler: Py<PyAny>) {
         println!("Route added for {} {} ", route_type, route);
-        self.router.add_route(route_type, &route, handler);
+        self.router.add_route(route_type, route, handler);
     }
 }
 
@@ -77,14 +83,14 @@ async fn handle_stream(
     // ?? need to check about bad requests || maybe when you start handling headers and post
     // requests
 
-    match router.get_route(req.method(), req.uri().path()) {
+    match router.get_route(req.method().clone(), req.uri().path()) {
         Some(handler_function) => {
-            return handle_request(Some(handler_function), 200).await;
+            handle_request(handler_function).await
         }
         None => {
             let mut not_found = Response::default();
             *not_found.status_mut() = StatusCode::NOT_FOUND;
-            return Ok(not_found);
+            Ok(not_found)
         }
-    };
+    }
 }
