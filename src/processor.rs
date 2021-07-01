@@ -14,7 +14,8 @@ pub async fn handle_request(
 ) -> Result<Response<Body>, hyper::Error> {
     let contents = match execute_function(function).await {
         Ok(res) => res,
-        Err(_err) => {
+        Err(err) => {
+            println!("Error: {:?}", err);
             let mut not_found = Response::default();
             *not_found.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
             return Ok(not_found);
