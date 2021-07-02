@@ -1,28 +1,23 @@
+use actix_web::HttpResponse;
 use anyhow::Result;
 // pyO3 module
 use crate::types::PyFunction;
 use pyo3::prelude::*;
 
-use hyper::{Body, Response, StatusCode};
-
 // Handle message fetches the response function
 // function is the response function fetched from the router
 // tokio task is spawned depending on the type of function fetched (Sync/Async)
 
-pub async fn handle_request(
-    function: PyFunction,
-) -> Result<Response<Body>, hyper::Error> {
+pub async fn handle_request(function: PyFunction) -> HttpResponse {
     let contents = match execute_function(function).await {
         Ok(res) => res,
         Err(err) => {
             println!("Error: {:?}", err);
-            let mut not_found = Response::default();
-            *not_found.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
-            return Ok(not_found);
+            return HttpResponse::InternalServerError().into();
         }
     };
 
-    Ok(Response::new(Body::from(contents)))
+    HttpResponse::Ok().body(contents)
 }
 
 #[inline]
@@ -41,13 +36,15 @@ async fn execute_function(function: PyFunction) -> Result<String> {
 
             Ok(res)
         }
-        PyFunction::SyncFunction(handler) => tokio::task::spawn_blocking(move || {
-            Python::with_gil(|py| {
-                let handler = handler.as_ref(py);
-                let output: &str = handler.call0()?.extract()?;
-                Ok(output.to_string())
+        PyFunction::SyncFunction(handler) => {
+            tokio::task::spawn_blocking(move || {
+                Python::with_gil(|py| {
+                    let handler = handler.as_ref(py);
+                    let output: &str = handler.call0()?.extract()?;
+                    Ok(output.to_string())
+                })
             })
-        })
-        .await?,
+            .await?
+        }
     }
 }

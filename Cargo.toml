@@ -21,14 +21,14 @@ features = ["extension-module"]
 pyo3 = {git = "https://github.com/PyO3/pyo3/",branch = "main", features = ["extension-module"]}
 
 [dependencies.pyo3-asyncio]
-version = "0.13.3"
-features =["tokio-runtime"]
+version = "0.13.4"
+features =[]
 
 [dependencies]
 tokio = { version = "1.7.0", features = ["full"] }
 dashmap = "4.0.2"
-hyper = { version="0.14.9", features = ["full"]}
 anyhow = "1.0.38"
+actix-web = "4.0.0-beta.8"
 
 [package.metadata.maturin]
 name = "robyn"

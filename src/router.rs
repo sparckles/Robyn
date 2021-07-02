@@ -4,7 +4,7 @@ use crate::types::PyFunction;
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
 
-use hyper::Method;
+use actix_web::http::Method;
 
 /// Contains the thread safe hashmaps of different routes
 pub struct Router {
@@ -42,7 +42,7 @@ impl Router {
     fn get_relevant_map_str(&self, route: &str) -> Option<&DashMap<String, PyFunction>> {
         let method = match Method::from_bytes(route.as_bytes()) {
             Ok(res) => res,
-            Err(_) => return None
+            Err(_) => return None,
         };
 
         self.get_relevant_map(method)
@@ -57,9 +57,9 @@ impl Router {
         };
 
         let function = if is_async {
-            PyFunction::CoRoutine(handler.into())
+            PyFunction::CoRoutine(handler)
         } else {
-            PyFunction::SyncFunction(handler.into())
+            PyFunction::SyncFunction(handler)
         };
 
         table.insert(route.to_string(), function);
