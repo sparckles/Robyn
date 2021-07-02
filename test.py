@@ -1,4 +1,4 @@
-from robyn import Robyn
+from robyn import Robyn, static_file
 import asyncio
 
 app = Robyn()
@@ -11,6 +11,13 @@ async def h():
     callCount +=  1
     message = "Called " + str(callCount) + " times"
     return message
+
+@app.get("/test")
+async def test():
+    import os
+    path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "index.html"))
+    return static_file(path)
+
 
 @app.get("/sleep")
 async def sleeper():

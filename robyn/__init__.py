@@ -1,5 +1,6 @@
 from .robyn import Server
 from asyncio import iscoroutinefunction
+from .responses import static_file
 
 class Robyn:
     """This is the python wrapper for the Robyn binaries.
@@ -8,6 +9,8 @@ class Robyn:
         self.server = Server()
 
     def add_route(self, route_type, endpoint, handler):
+        """ We will add the status code here only
+        """
         self.server.add_route(route_type, endpoint, handler, iscoroutinefunction(handler))
 
     def start(self, port):
@@ -38,8 +41,3 @@ class Robyn:
         def inner(handler):
             self.add_route("PATCH", endpoint, handler)
         return inner
-
-
-
-
-
