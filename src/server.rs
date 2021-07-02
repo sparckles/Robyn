@@ -14,7 +14,7 @@ use pyo3::types::PyAny;
 // hyper modules
 use pyo3_asyncio::run_forever;
 
-const STARTED: AtomicBool = AtomicBool::new(false);
+static STARTED: AtomicBool = AtomicBool::new(false);
 
 #[pyclass]
 pub struct Server {
