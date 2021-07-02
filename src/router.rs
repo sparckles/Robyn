@@ -66,7 +66,6 @@ impl Router {
     }
 
     pub fn get_route(&self, route_method: Method, route: &str) -> Option<PyFunction> {
-        println!("{}{}", route_method.as_str(), route);
         let table = self.get_relevant_map(route_method)?;
         Some(table.get(route)?.clone())
     }

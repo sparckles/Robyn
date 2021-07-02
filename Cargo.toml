@@ -22,11 +22,11 @@ pyo3 = {git = "https://github.com/PyO3/pyo3/",branch = "main", features = ["exte
 
 [dependencies.pyo3-asyncio]
 version = "0.13.4"
-features =[]
+features = []
 
 [dependencies]
 tokio = { version = "1.7.0", features = ["full"] }
-dashmap = "4.0.2"
+dashmap = {git = "https://github.com/quake/dashmap", branch = "parking_lot", features = ["parking_lot"]}
 anyhow = "1.0.38"
 actix-web = "4.0.0-beta.8"
 
