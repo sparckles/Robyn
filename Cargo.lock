@@ -1111,6 +1111,7 @@ dependencies = [
  "actix-web",
  "anyhow",
  "dashmap",
+ "futures-util",
  "pyo3",
  "pyo3-asyncio",
  "tokio",

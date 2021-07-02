@@ -1,5 +1,6 @@
 from .robyn import Server
 from asyncio import iscoroutinefunction
+from inspect import signature
 
 
 class Robyn:
@@ -31,6 +32,11 @@ class Robyn:
 
     def post(self, endpoint):
         def inner(handler):
+            sig = signature(handler)
+            params = len(sig.parameters)
+            if params != 1:
+                print("We need one argument on post.")
+                return
             self.add_route("POST", endpoint, handler)
 
         return inner

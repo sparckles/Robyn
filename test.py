@@ -14,6 +14,11 @@ async def h():
     return message
 
 
+@app.post("/post")
+async def postreq(body):
+    return bytearray(body).decode("utf-8")
+
+
 @app.get("/sleep")
 async def sleeper():
     await asyncio.sleep(5)

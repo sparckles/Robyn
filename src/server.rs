@@ -97,10 +97,13 @@ impl Server {
 async fn index(
     router: web::Data<Arc<Router>>,
     headers: web::Data<Arc<Headers>>,
+    mut payload: web::Payload,
     req: HttpRequest,
 ) -> impl Responder {
     match router.get_route(req.method().clone(), req.uri().path()) {
-        Some(handler_function) => handle_request(handler_function, &headers).await,
+        Some(handler_function) => {
+            handle_request(handler_function, &headers, &mut payload, &req).await
+        }
         None => {
             let mut response = HttpResponse::NotFound();
             apply_headers(&mut response, &headers);
