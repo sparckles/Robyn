@@ -2,6 +2,9 @@ use anyhow::Result;
 // pyO3 module
 use crate::types::PyFunction;
 use pyo3::prelude::*;
+use pyo3::types::PyDict;
+
+use std::fs;
 
 use hyper::{Body, Response, StatusCode};
 
@@ -9,9 +12,7 @@ use hyper::{Body, Response, StatusCode};
 // function is the response function fetched from the router
 // tokio task is spawned depending on the type of function fetched (Sync/Async)
 
-pub async fn handle_request(
-    function: PyFunction,
-) -> Result<Response<Body>, hyper::Error> {
+pub async fn handle_request(function: PyFunction) -> Result<Response<Body>, hyper::Error> {
     let contents = match execute_function(function).await {
         Ok(res) => res,
         Err(err) => {
@@ -25,6 +26,11 @@ pub async fn handle_request(
     Ok(Response::new(Body::from(contents)))
 }
 
+// ideally this should be async
+fn read_file(file_path: &str) -> String {
+    fs::read_to_string(file_path).expect("Something went wrong reading the file")
+}
+
 #[inline]
 async fn execute_function(function: PyFunction) -> Result<String> {
     match function {
@@ -35,19 +41,51 @@ async fn execute_function(function: PyFunction) -> Result<String> {
             })?;
             let output = output.await?;
             let res = Python::with_gil(|py| -> PyResult<String> {
-                let contents: &str = output.extract(py)?;
-                Ok(contents.to_string())
+                let string_contents = output.clone();
+                let contents = output.into_ref(py).downcast::<PyDict>();
+                // let contents = contents.into_ref(py);
+                match contents {
+                    Ok(res) => {
+                        // static file or json here
+                        let contains_response_type = res.contains("response_type")?;
+                        match contains_response_type {
+                            true => {
+                                let response_type: &str =
+                                    res.get_item("response_type").unwrap().extract()?;
+                                if response_type == "static_file" {
+                                    // static file here and serve string
+                                    let file_path = res.get_item("file_path").unwrap().extract()?;
+                                    return Ok(read_file(file_path));
+                                } else {
+                                    // json obeject
+                                    return Ok(String::from(""));
+                                }
+                            }
+                            false => {
+                                return Ok(String::from(""));
+                            }
+                        }
+                    }
+                    Err(_) => {
+                        // this means that this is basic string output
+                        let contents: &str = string_contents.extract(py)?;
+                        return Ok(contents.to_string());
+                    }
+                }
             })?;
 
             Ok(res)
         }
-        PyFunction::SyncFunction(handler) => tokio::task::spawn_blocking(move || {
-            Python::with_gil(|py| {
-                let handler = handler.as_ref(py);
-                let output: &str = handler.call0()?.extract()?;
-                Ok(output.to_string())
+        PyFunction::SyncFunction(handler) => {
+            tokio::task::spawn_blocking(move || {
+                Python::with_gil(|py| {
+                    let handler = handler.as_ref(py);
+                    let output: &str = handler.call0()?.extract()?;
+                    Ok(output.to_string())
+                })
             })
-        })
-        .await?,
+            .await?
+        }
     }
 }
+
