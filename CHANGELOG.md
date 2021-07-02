@@ -1,5 +1,43 @@
 # Changelog
 
+## [Unreleased](https://github.com/sansyrox/robyn/tree/HEAD)
+
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.5.0...HEAD)
+
+**Closed issues:**
+
+- Error on import  [\#16](https://github.com/sansyrox/robyn/issues/16)
+
+## [v0.5.0](https://github.com/sansyrox/robyn/tree/v0.5.0) (2021-07-01)
+
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.4.1...v0.5.0)
+
+**Closed issues:**
+
+- QPS drops drastically after processing many requests [\#31](https://github.com/sansyrox/robyn/issues/31)
+- Improve the way you parse TCP streams [\#30](https://github.com/sansyrox/robyn/issues/30)
+- Re-introduce thread pool for the sync functions \(maybe\) [\#22](https://github.com/sansyrox/robyn/issues/22)
+- Add async listener object in rust stream! [\#11](https://github.com/sansyrox/robyn/issues/11)
+
+**Merged pull requests:**
+
+- Make the server http compliant [\#33](https://github.com/sansyrox/robyn/pull/33) ([sansyrox](https://github.com/sansyrox))
+
+## [v0.4.1](https://github.com/sansyrox/robyn/tree/v0.4.1) (2021-06-26)
+
+[Full Changelog](https://github.com/sansyrox/robyn/compare/0.4.0...v0.4.1)
+
+**Closed issues:**
+
+- Add PyPi Metadata [\#5](https://github.com/sansyrox/robyn/issues/5)
+
+**Merged pull requests:**
+
+- Build and publish wheels on GitHub Actions [\#26](https://github.com/sansyrox/robyn/pull/26) ([messense](https://github.com/messense))
+- Code cleanup using PyFunction type [\#25](https://github.com/sansyrox/robyn/pull/25) ([sansyrox](https://github.com/sansyrox))
+- Add non blocking sync functions [\#23](https://github.com/sansyrox/robyn/pull/23) ([sansyrox](https://github.com/sansyrox))
+- Add support for sync functions [\#20](https://github.com/sansyrox/robyn/pull/20) ([sansyrox](https://github.com/sansyrox))
+
 ## [0.4.0](https://github.com/sansyrox/robyn/tree/0.4.0) (2021-06-22)
 
 [Full Changelog](https://github.com/sansyrox/robyn/compare/v0.3.0...0.4.0)
@@ -7,11 +45,6 @@
 **Closed issues:**
 
 - Add support for Sync functions as well! [\#7](https://github.com/sansyrox/robyn/issues/7)
-
-**Merged pull requests:**
-
-- Add non blocking sync functions [\#23](https://github.com/sansyrox/robyn/pull/23) ([sansyrox](https://github.com/sansyrox))
-- Add support for sync functions [\#20](https://github.com/sansyrox/robyn/pull/20) ([sansyrox](https://github.com/sansyrox))
 
 ## [v0.3.0](https://github.com/sansyrox/robyn/tree/v0.3.0) (2021-06-21)
 
