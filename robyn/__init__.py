@@ -1,6 +1,6 @@
 from .robyn import Server
 from asyncio import iscoroutinefunction
-from .responses import static_file
+from .responses import static_file, jsonify
 
 class Robyn:
     """This is the python wrapper for the Robyn binaries.

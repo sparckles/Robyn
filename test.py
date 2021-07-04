@@ -1,4 +1,4 @@
-from robyn import Robyn, static_file
+from robyn import Robyn, static_file, jsonify
 import asyncio
 
 app = Robyn()
@@ -17,6 +17,11 @@ async def test():
     import os
     path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "index.html"))
     return static_file(path)
+
+
+@app.post("/jsonify")
+async def json():
+    return jsonify({"hello": "world"})
 
 
 @app.get("/sleep")
