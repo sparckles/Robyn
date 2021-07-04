@@ -28,7 +28,7 @@ pub async fn handle_request(function: PyFunction) -> Result<Response<Body>, hype
 
 // ideally this should be async
 fn read_file(file_path: &str) -> String {
-    fs::read_to_string(file_path).expect("Something went wrong reading the file")
+    fs::read_to_string(file_path).expect("Something went wrong reading the html response")
 }
 
 #[inline]
@@ -43,7 +43,6 @@ async fn execute_function(function: PyFunction) -> Result<String> {
             let res = Python::with_gil(|py| -> PyResult<String> {
                 let string_contents = output.clone();
                 let contents = output.into_ref(py).downcast::<PyDict>();
-                // let contents = contents.into_ref(py);
                 match contents {
                     Ok(res) => {
                         // static file or json here
@@ -57,17 +56,21 @@ async fn execute_function(function: PyFunction) -> Result<String> {
                                     let file_path = res.get_item("file_path").unwrap().extract()?;
                                     return Ok(read_file(file_path));
                                 } else {
-                                    // json obeject
-                                    return Ok(String::from(""));
+                                    return Err(PyErr::from_instance(
+                                        "Server Error".into_py(py).as_ref(py),
+                                    ));
                                 }
                             }
                             false => {
-                                return Ok(String::from(""));
+                                return Err(PyErr::from_instance(
+                                    "Server Error".into_py(py).as_ref(py),
+                                ));
                             }
                         }
                     }
                     Err(_) => {
                         // this means that this is basic string output
+                        // and a json serialized string will be parsed here
                         let contents: &str = string_contents.extract(py)?;
                         return Ok(contents.to_string());
                     }
@@ -88,4 +91,3 @@ async fn execute_function(function: PyFunction) -> Result<String> {
         }
     }
 }
-
