@@ -1,10 +1,15 @@
 use crate::processor::{apply_headers, handle_request};
 use crate::router::Router;
+<<<<<<< HEAD
 use crate::types::Headers;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::{Relaxed, SeqCst};
 use std::sync::Arc;
 use std::thread;
+=======
+use std::process;
+use std::sync::{mpsc::channel, Arc};
+>>>>>>> 836c79c (Implement a working dev server)
 // pyO3 module
 use actix_web::*;
 use dashmap::DashMap;
@@ -31,12 +36,13 @@ impl Default for Server {
 #[pymethods]
 impl Server {
     #[new]
-    pub fn new() -> Self {
+    pub fn new(file_directory: &str) -> Self {
         Self {
             router: Arc::new(Router::new()),
             headers: Arc::new(DashMap::new()),
         }
     }
+
 
     pub fn start(&mut self, py: Python, port: u16) {
         if STARTED
