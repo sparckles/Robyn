@@ -1,7 +1,7 @@
 from robyn import Robyn, static_file, jsonify
 import asyncio
 
-app = Robyn()
+app = Robyn(__file__)
 
 callCount = 0
 
