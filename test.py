@@ -1,4 +1,5 @@
-from robyn import Robyn, static_file, jsonify
+from robyn import Robyn, static_file, jsonify, async_static_files
+import robyn
 import asyncio
 
 app = Robyn()
@@ -16,7 +17,7 @@ async def h():
 async def test():
     import os
     path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "index.html"))
-    return static_file(path)
+    return await async_static_files(path)
 
 
 @app.post("/jsonify")
@@ -36,5 +37,6 @@ def blocker():
     return "blocker function"
 
 if __name__=="__main__":
+    print(dir(robyn))
     app.start(port=5000)
 

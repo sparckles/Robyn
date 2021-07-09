@@ -4,11 +4,13 @@ use std::process;
 use std::sync::Arc;
 // pyO3 module
 use pyo3::prelude::*;
-use pyo3::types::PyAny;
+use pyo3::types::{PyAny, PyString};
 
 // hyper modules
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Error, Request, Response, Server as HyperServer, StatusCode};
+
+use tokio::fs;
 
 #[pyclass]
 pub struct Server {
@@ -69,6 +71,20 @@ impl Server {
         self.router.add_route(route_type, route, handler, is_async);
     }
 }
+
+// #[pyfunction]
+// pub fn async_static_file(py: Python, file_name: String) -> PyResult<&PyAny> {
+//     pyo3_asyncio::tokio::local_future_into_py(py, async move {
+//         let contents = fs::read(file_name.clone()).await.unwrap();
+//         let foo = String::from_utf8_lossy(&contents);
+//         Ok(Python::with_gil(|py| {
+//             let x = PyString::new(py, &foo);
+//             let any: &PyAny = x.as_ref();
+//             let any = any.to_object(py);
+//             any.clone()
+//         }))
+//     })
+// }
 
 /// This is our service handler. It receives a Request, routes on its
 /// path, and returns a Future of a Response.

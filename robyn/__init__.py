@@ -1,5 +1,4 @@
-from .robyn import Server
-from asyncio import iscoroutinefunction
+from .robyn import Server, async_static_files
 from .responses import static_file, jsonify
 
 class Robyn:
@@ -19,6 +18,7 @@ class Robyn:
 
         """ We will add the status code here only
         """
+        from asyncio import iscoroutinefunction
         self.server.add_route(route_type, endpoint, handler, iscoroutinefunction(handler))
 
     def start(self, port):
