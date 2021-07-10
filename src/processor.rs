@@ -4,7 +4,8 @@ use crate::types::PyFunction;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
-use std::fs;
+use std::fs::File;
+use std::io::Read;
 
 use hyper::{Body, Response, StatusCode};
 
@@ -12,6 +13,17 @@ use hyper::{Body, Response, StatusCode};
 // function is the response function fetched from the router
 // tokio task is spawned depending on the type of function fetched (Sync/Async)
 
+/// This functions handles the incoming request matches it to the function and serves the response
+///
+/// # Arguments
+///
+/// * `function` - a PyFunction matched from the router
+///
+/// # Errors
+///
+/// When the route is not found. It should check if the 404 route exist and then serve it back
+/// There can also be PyError due to any mis processing of the files
+///
 pub async fn handle_request(function: PyFunction) -> Result<Response<Body>, hyper::Error> {
     let contents = match execute_function(function).await {
         Ok(res) => res,
@@ -27,8 +39,17 @@ pub async fn handle_request(function: PyFunction) -> Result<Response<Body>, hype
 }
 
 // ideally this should be async
+/// A function to read lossy files and serve it as a html response
+///
+/// # Arguments
+///
+/// * `file_path` - The file path that we want the function to read
+///
 fn read_file(file_path: &str) -> String {
-    fs::read_to_string(file_path).expect("Something went wrong reading the html response")
+    let mut file = File::open(file_path).unwrap();
+    let mut buf = vec![];
+    file.read_to_end(&mut buf).unwrap();
+    String::from_utf8_lossy(&buf).to_string()
 }
 
 #[inline]
