@@ -1,12 +1,20 @@
 # Changelog
 
-## [Unreleased](https://github.com/sansyrox/robyn/tree/HEAD)
+## [v0.5.1](https://github.com/sansyrox/robyn/tree/HEAD)
 
 [Full Changelog](https://github.com/sansyrox/robyn/compare/v0.5.0...HEAD)
 
 **Closed issues:**
 
+- Make html file serving more robust [\#45](https://github.com/sansyrox/robyn/issues/45)
+- Try to serve individual static files using vanilla rust [\#43](https://github.com/sansyrox/robyn/issues/43)
 - Error on import  [\#16](https://github.com/sansyrox/robyn/issues/16)
+- Add multiple process sharing [\#2](https://github.com/sansyrox/robyn/issues/2)
+
+**Merged pull requests:**
+
+- Improve the HTML file serving [\#46](https://github.com/sansyrox/robyn/pull/46) ([sansyrox](https://github.com/sansyrox))
+- Add the basics to add serving of static files [\#36](https://github.com/sansyrox/robyn/pull/36) ([sansyrox](https://github.com/sansyrox))
 
 ## [v0.5.0](https://github.com/sansyrox/robyn/tree/v0.5.0) (2021-07-01)
 
