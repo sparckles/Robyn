@@ -1,16 +1,14 @@
-<<<<<<< HEAD
-from robyn.robyn import Server
-=======
 # default imports
 import os
 import subprocess
-
 import argparse
+import asyncio
+import inspect
+
 from .robyn import Server
->>>>>>> 836c79c (Implement a working dev server)
-from asyncio import iscoroutinefunction
-from robyn.responses import static_file, jsonify
-from inspect import signature
+from .responses import static_file, jsonify
+from .dev_event_handler import EventHandler
+from .log_colors import Colors
 
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -27,13 +25,8 @@ class MyHandler(FileSystemEventHandler):
                 process.terminate()
         self.processes.append(subprocess.Popen(["python3",self.file_name], start_new_session=False))
 
-class Robyn:
-<<<<<<< HEAD
-    """This is the python wrapper for the Robyn binaries."""
 
-    def __init__(self) -> None:
-        self.server = Server()
-=======
+class Robyn:
     """This is the python wrapper for the Robyn binaries.
     """
     def __init__(self, file_object):
@@ -49,7 +42,6 @@ class Robyn:
         parser.add_argument('--dev', default=False, type=lambda x: (str(x).lower() == 'true'))
         return parser.parse_args().dev
 
->>>>>>> 836c79c (Implement a working dev server)
 
     def add_route(self, route_type, endpoint, handler):
         """
@@ -63,7 +55,7 @@ class Robyn:
         """ We will add the status code here only
         """
         self.server.add_route(
-            route_type, endpoint, handler, iscoroutinefunction(handler)
+            route_type, endpoint, handler, asyncio.iscoroutinefunction(handler)
         )
 
     def add_header(self, key, value):
@@ -71,8 +63,6 @@ class Robyn:
 
     def remove_header(self, key):
         self.server.remove_header(key)
-
-
     
     def start(self, port):
         """
@@ -80,8 +70,6 @@ class Robyn:
 
         :param port [int]: [reperesents the port number at which the server is listening]
         """
-        print(f"Starting the server at port: {port}")
-        self.server.start_dev_server(port)
         if not self.dev:
             self.server.start(port)
         else:
@@ -114,7 +102,7 @@ class Robyn:
         :param endpoint [str]: [endpoint to server the route]
         """
         def inner(handler):
-            sig = signature(handler)
+            sig = inspect.signature(handler)
             params = len(sig.parameters)
             if params != 1:
                 print("We need one argument on post.")
