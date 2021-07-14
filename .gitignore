@@ -2,6 +2,7 @@
 
 # ignore pre compiled binaries
 *.so
+dist/
 
 #python cache
 *__pycache__
