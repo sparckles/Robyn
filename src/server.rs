@@ -84,9 +84,7 @@ async fn handle_stream(
     // requests
 
     match router.get_route(req.method().clone(), req.uri().path()) {
-        Some(handler_function) => {
-            handle_request(handler_function).await
-        }
+        Some(handler_function) => handle_request(handler_function).await,
         None => {
             let mut not_found = Response::default();
             *not_found.status_mut() = StatusCode::NOT_FOUND;
