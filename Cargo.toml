@@ -21,14 +21,15 @@ features = ["extension-module"]
 pyo3 = {git = "https://github.com/PyO3/pyo3/",branch = "main", features = ["extension-module"]}
 
 [dependencies.pyo3-asyncio]
-version = "0.13.3"
-features =["tokio-runtime"]
+version = "0.13.4"
+features = []
 
 [dependencies]
 tokio = { version = "1.7.0", features = ["full"] }
-dashmap = "4.0.2"
-hyper = { version="0.14.9", features = ["full"]}
+dashmap = {git = "https://github.com/quake/dashmap", branch = "parking_lot", features = ["parking_lot"]}
 anyhow = "1.0.38"
+actix-web = "4.0.0-beta.8"
+futures-util = "0.3.15"
 
 [package.metadata.maturin]
 name = "robyn"
