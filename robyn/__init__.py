@@ -1,6 +1,5 @@
 # default imports
 import os
-import subprocess
 import argparse
 import asyncio
 import inspect
@@ -10,32 +9,20 @@ from .responses import static_file, jsonify
 from .dev_event_handler import EventHandler
 from .log_colors import Colors
 
+
 from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
 
-
-class MyHandler(FileSystemEventHandler):
-    def __init__(self, file_name):
-        self.file_name = file_name
-        self.processes = []
-
-    def on_any_event(self, event):
-        if len(self.processes)>0:
-            for process in self.processes:
-                process.terminate()
-        self.processes.append(subprocess.Popen(["python3",self.file_name], start_new_session=False))
 
 
 class Robyn:
     """This is the python wrapper for the Robyn binaries.
     """
     def __init__(self, file_object):
-        directory_path = os.path.dirname(os.path.dirname(file_object))
+        directory_path = os.path.dirname(os.path.abspath(file_object))
         self.file_path = file_object
         self.directory_path = directory_path
         self.server = Server(directory_path)
         self.dev = self._is_dev()
-        print(f"Self is dev {self.dev}")
 
     def _is_dev(self):
         parser = argparse.ArgumentParser()
@@ -73,7 +60,9 @@ class Robyn:
         if not self.dev:
             self.server.start(port)
         else:
-            event_handler = MyHandler(self.file_path)
+            event_handler = EventHandler(self.file_path)
+            event_handler.start_server_first_time()
+            print(f"{Colors.OKBLUE}Dev server initialised with the directory_path : {self.directory_path}{Colors.ENDC}")
             observer = Observer()
             observer.schedule(event_handler, path=self.directory_path, recursive=True)
             observer.start()

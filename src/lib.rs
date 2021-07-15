@@ -10,10 +10,10 @@ use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 
 #[pyfunction]
-pub fn start_server(file_directory: &str) {
+pub fn start_server() {
     // this is a wrapper function for python
     // to start a server
-    Server::new(file_directory);
+    Server::new();
 }
 
 #[pymodule]
