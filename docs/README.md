@@ -18,7 +18,7 @@ pip install robyn
 
 from robyn import Robyn
 
-app = Robyn()
+app = Robyn(__file__)
 
 @app.get("/")
 async def h():
