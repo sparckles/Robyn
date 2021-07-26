@@ -38,6 +38,11 @@ pub async fn handle_request(
 ) -> Result<HttpResponse> {
     let contents = execute_function(function, payload, req).await?;
 
+    if let Some(json) = contents.json {
+        let mut response = HttpResponse::Ok();
+        return Ok(response.json(json));
+    }
+
     if contents.response_type == STATIC_FILE {
         let path: PathBuf = contents.meta.into();
         return Ok(NamedFile::open(path)?.into_response(req));

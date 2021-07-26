@@ -13,10 +13,18 @@ async def h():
     message = "Called " + str(callCount) + " times"
     return text(message)
 
+@app.get("/sync")
+def non():
+    global callCount
+    callCount += 1
+    message = "Called " + str(callCount) + " times"
+    return text(message)
+
+
 @app.get("/test")
 async def test():
     import os
-    path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "index.html"))
+    path = "./index.html"
     return static_file(path)
 
 
