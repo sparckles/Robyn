@@ -96,7 +96,15 @@ async fn index(
 ) -> impl Responder {
     match router.get_route(req.method().clone(), req.uri().path()) {
         Some(handler_function) => {
-            handle_request(handler_function, &headers, &mut payload, &req).await
+            match handle_request(handler_function, &headers, &mut payload, &req).await {
+                Ok(res) => res,
+                Err(err) => {
+                    println!("Error: {:?}", err);
+                    let mut response = HttpResponse::InternalServerError();
+                    apply_headers(&mut response, &headers);
+                    response.finish()
+                }
+            }
         }
         None => {
             let mut response = HttpResponse::NotFound();

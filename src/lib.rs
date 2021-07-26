@@ -4,6 +4,7 @@ mod server;
 mod types;
 
 use server::Server;
+use types::Response;
 
 // pyO3 module
 use pyo3::prelude::*;
@@ -22,6 +23,7 @@ pub fn robyn(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     // in python
     m.add_wrapped(wrap_pyfunction!(start_server))?;
     m.add_class::<Server>()?;
+    m.add_class::<Response>()?;
     pyo3_asyncio::try_init(py)?;
     pyo3::prepare_freethreaded_python();
     Ok(())

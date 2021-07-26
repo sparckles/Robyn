@@ -1,4 +1,4 @@
-from robyn import Robyn, static_file, jsonify
+from robyn import Robyn, static_file, jsonify, text
 import asyncio
 
 app = Robyn(__file__)
@@ -11,7 +11,7 @@ async def h():
     global callCount
     callCount += 1
     message = "Called " + str(callCount) + " times"
-    return message
+    return text(message)
 
 @app.get("/test")
 async def test():
@@ -20,19 +20,19 @@ async def test():
     return static_file(path)
 
 
-@app.post("/jsonify")
+@app.get("/jsonify")
 async def json():
     return jsonify({"hello": "world"})
 
 @app.post("/post")
 async def postreq(body):
-    return bytearray(body).decode("utf-8")
+    return text(bytearray(body).decode("utf-8"))
 
 
 @app.get("/sleep")
 async def sleeper():
     await asyncio.sleep(5)
-    return "sleep function"
+    return text("sleep function")
 
 
 @app.get("/blocker")
@@ -40,7 +40,7 @@ def blocker():
     import time
 
     time.sleep(10)
-    return "blocker function"
+    return text("blocker function")
 
 
 if __name__ == "__main__":

@@ -1,4 +1,15 @@
+
+from .robyn import Response
 import json
+
+def text(text):
+    """
+    [This function will help in serving raw text]
+
+    :param text [str]: [text to reply with]
+    """
+
+    return Response(0,text)
 
 def static_file(file_path):
     """
@@ -7,10 +18,7 @@ def static_file(file_path):
     :param file_path [str]: [file path to serve as a response]
     """
 
-    return {
-        "response_type": "static_file",
-        "file_path": file_path
-    }
+    return Response(1,file_path)
 
 def jsonify(input_dict):
     """
@@ -18,5 +26,5 @@ def jsonify(input_dict):
 
     :param input_dict [dict]: [response of the function]
     """
-    return json.dumps(input_dict)
+    return Response.newjson(0,0, input_dict)
     
