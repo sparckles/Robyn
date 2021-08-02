@@ -24,8 +24,8 @@ async def json(body):
     return jsonify({"hello": "world"})
 
 @app.post("/post")
-async def postreq(body):
-    return bytearray(body).decode("utf-8")
+async def postreq(request):
+    return bytearray(request["body"]).decode("utf-8")
 
 @app.put("/put")
 async def putreq(body):
