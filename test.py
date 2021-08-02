@@ -19,13 +19,25 @@ async def test():
     path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "index.html"))
     return static_file(path)
 
-
 @app.post("/jsonify")
-async def json():
+async def json(body):
     return jsonify({"hello": "world"})
 
 @app.post("/post")
 async def postreq(body):
+    return bytearray(body).decode("utf-8")
+
+@app.put("/put")
+async def putreq(body):
+    return bytearray(body).decode("utf-8")
+
+@app.delete("/delete")
+async def deletereq(body):
+    return bytearray(body).decode("utf-8")
+
+
+@app.patch("/patch")
+async def patchreq(body):
     return bytearray(body).decode("utf-8")
 
 
@@ -38,7 +50,6 @@ async def sleeper():
 @app.get("/blocker")
 def blocker():
     import time
-
     time.sleep(10)
     return "blocker function"
 
