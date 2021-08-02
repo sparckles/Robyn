@@ -2,7 +2,6 @@
 import os
 import argparse
 import asyncio
-import inspect
 
 from .robyn import Server
 from .responses import static_file, jsonify
@@ -91,11 +90,6 @@ class Robyn:
         :param endpoint [str]: [endpoint to server the route]
         """
         def inner(handler):
-            sig = inspect.signature(handler)
-            params = len(sig.parameters)
-            if params != 1:
-                print("We need one argument on post.")
-                return
             self.add_route("POST", endpoint, handler)
 
         return inner
@@ -130,5 +124,5 @@ class Robyn:
         """
         def inner(handler):
             self.add_route("PATCH", endpoint, handler)
-            
+           
         return inner

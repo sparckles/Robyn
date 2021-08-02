@@ -75,13 +75,17 @@ async fn execute_function(
 ) -> Result<String> {
     let mut data: Option<Vec<u8>> = None;
 
-    if req.method() == Method::POST {
+    if req.method() == Method::POST
+        || req.method() == Method::PUT
+        || req.method() == Method::PATCH
+        || req.method() == Method::DELETE
+    {
         let mut body = web::BytesMut::new();
         while let Some(chunk) = payload.next().await {
             let chunk = chunk?;
             // limit max size of in-memory payload
             if (body.len() + chunk.len()) > MAX_SIZE {
-                bail!("Overflow");
+                bail!("Body content Overflow");
             }
             body.extend_from_slice(&chunk);
         }
