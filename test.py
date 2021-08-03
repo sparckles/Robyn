@@ -20,7 +20,7 @@ async def test():
     return static_file(path)
 
 @app.post("/jsonify")
-async def json(body):
+async def json(request):
     return jsonify({"hello": "world"})
 
 @app.post("/post")
@@ -28,18 +28,16 @@ async def postreq(request):
     return bytearray(request["body"]).decode("utf-8")
 
 @app.put("/put")
-async def putreq(body):
-    return bytearray(body).decode("utf-8")
+async def putreq(request):
+    return bytearray(request["body"]).decode("utf-8")
 
 @app.delete("/delete")
-async def deletereq(body):
-    return bytearray(body).decode("utf-8")
-
+async def deletereq(request):
+    return bytearray(request["body"]).decode("utf-8")
 
 @app.patch("/patch")
-async def patchreq(body):
-    return bytearray(body).decode("utf-8")
-
+async def patchreq(request):
+    return bytearray(request["body"]).decode("utf-8")
 
 @app.get("/sleep")
 async def sleeper():
