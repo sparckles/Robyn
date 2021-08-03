@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use actix_web::{http::Method, web, HttpRequest, HttpResponse, HttpResponseBuilder};
@@ -93,6 +94,8 @@ async fn execute_function(
         data = Some(body.to_vec())
     }
 
+    // request object accessible while creating routes
+    let mut request = HashMap::new();
     match function {
         PyFunction::CoRoutine(handler) => {
             let output = Python::with_gil(|py| {
@@ -101,7 +104,8 @@ async fn execute_function(
                 let coro: PyResult<&PyAny> = match data {
                     Some(res) => {
                         let data = res.into_py(py);
-                        handler.call1((&data,))
+                        request.insert("body", data);
+                        handler.call1((request,))
                     }
                     None => handler.call0(),
                 };
@@ -147,6 +151,7 @@ async fn execute_function(
 
             Ok(res)
         }
+
         PyFunction::SyncFunction(handler) => {
             tokio::task::spawn_blocking(move || {
                 Python::with_gil(|py| {
@@ -154,7 +159,8 @@ async fn execute_function(
                     let output: PyResult<&PyAny> = match data {
                         Some(res) => {
                             let data = res.into_py(py);
-                            handler.call1((&data,))
+                            request.insert("body", data);
+                            handler.call1((request,))
                         }
                         None => handler.call0(),
                     };
