@@ -63,6 +63,16 @@ impl Server {
             });
         });
 
+        // let asyncio = py.import("asyncio").unwrap();
+
+        // let event_loop = asyncio.call_method0("new_event_loop").unwrap();
+        // asyncio
+        //     .call_method1("set_event_loop", (event_loop,))
+        //     .unwrap();
+
+        // event_loop.call_method0("run_forever").unwrap();
+        // println!("test test_run_forever ... ok");
+
         run_forever(py).unwrap()
     }
 
