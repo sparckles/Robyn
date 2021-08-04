@@ -1,9 +1,10 @@
 use crate::processor::{apply_headers, handle_request};
 use crate::router::Router;
 use crate::types::Headers;
+use actix_files::Files;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::{Relaxed, SeqCst};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::thread;
 // pyO3 module
 use actix_web::*;
@@ -14,10 +15,19 @@ use pyo3::types::PyAny;
 // hyper modules
 static STARTED: AtomicBool = AtomicBool::new(false);
 
+#[derive(Clone)]
+struct Directory {
+    route: String,
+    directory_path: String,
+    index_file: Option<String>,
+    show_files_listing: bool,
+}
+
 #[pyclass]
 pub struct Server {
     router: Arc<Router>,
     headers: Arc<DashMap<String, String>>,
+    directories: Arc<Mutex<Vec<Directory>>>,
 }
 
 #[pymethods]
@@ -27,6 +37,7 @@ impl Server {
         Self {
             router: Arc::new(Router::new()),
             headers: Arc::new(DashMap::new()),
+            directories: Arc::new(Mutex::new(Vec::new())),
         }
     }
 
@@ -41,6 +52,7 @@ impl Server {
 
         let router = self.router.clone();
         let headers = self.headers.clone();
+        let directories = self.directories.clone();
 
         let asyncio = py.import("asyncio").unwrap();
 
@@ -56,9 +68,29 @@ impl Server {
                 let addr = format!("127.0.0.1:{}", port);
 
                 HttpServer::new(move || {
+                    let mut app = App::new();
+                    let directories = directories.lock().unwrap();
+                    for directory in directories.iter() {
+                        if let Some(index_file) = &directory.index_file {
+                            app = app.service(
+                                Files::new(&directory.route, &directory.directory_path)
+                                    .index_file(index_file)
+                                    .redirect_to_slash_directory(), // .show_files_listing(), // .index_file(index_file),
+                            );
+                        } else if directory.show_files_listing {
+                            app = app.service(
+                                Files::new(&directory.route, &directory.directory_path)
+                                    .redirect_to_slash_directory()
+                                    .show_files_listing(),
+                            );
+                        } else {
+                            app = app
+                                .service(Files::new(&directory.route, &directory.directory_path));
+                        }
+                    }
+
                     let event_loop_hdl = event_loop_hdl.clone();
-                    App::new()
-                        .app_data(web::Data::new(router.clone()))
+                    app.app_data(web::Data::new(router.clone()))
                         .app_data(web::Data::new(headers.clone()))
                         .default_service(web::route().to(move |router, headers, payload, req| {
                             pyo3_asyncio::tokio::scope_local(event_loop_hdl.clone(), async move {
@@ -75,6 +107,21 @@ impl Server {
         });
 
         event_loop.call_method0("run_forever").unwrap();
+    }
+
+    pub fn add_directory(
+        &mut self,
+        route: String,
+        directory_path: String,
+        index_file: Option<String>,
+        show_files_listing: bool,
+    ) {
+        self.directories.lock().unwrap().push(Directory {
+            route,
+            directory_path,
+            index_file,
+            show_files_listing,
+        });
     }
 
     /// Adds a new header to our concurrent hashmap
@@ -110,7 +157,7 @@ async fn index(
             handle_request(handler_function, &headers, &mut payload, &req).await
         }
         None => {
-            let mut response = HttpResponse::NotFound();
+            let mut response = HttpResponse::Ok();
             apply_headers(&mut response, &headers);
             response.finish()
         }

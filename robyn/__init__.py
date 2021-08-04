@@ -44,6 +44,9 @@ class Robyn:
             route_type, endpoint, handler, asyncio.iscoroutinefunction(handler)
         )
 
+    def add_directory(self, route, directory_path, index_file=None, show_files_listing=False):
+        self.server.add_directory(route, directory_path, index_file, show_files_listing)
+
     def add_header(self, key, value):
         self.server.add_header(key, value)
 
