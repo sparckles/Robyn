@@ -37,7 +37,7 @@ jobs:
           args: -i python --release --universal2 --out dist --no-sdist
       - name: Install built wheel - universal2
         run: |
-          pip install --force-reinstall dist/robyn*.whl
+          pip install --force-reinstall dist/robyn*_universal2.whl
           cd ~ && python -c 'import robyn'
       - name: Upload wheels
         uses: actions/upload-artifact@v2
@@ -70,7 +70,8 @@ jobs:
           args: -i python --release --out dist --no-sdist
       - name: Install built wheel
         run: |
-          pip install robyn --no-index --find-links dist --force-reinstall
+          ls -l
+          pip install --force-reinstall dist/robyn*.whl
           cd ~ && python -c 'import robyn'
       - name: Upload wheels
         uses: actions/upload-artifact@v2
