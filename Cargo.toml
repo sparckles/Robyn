@@ -15,7 +15,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies.pyo3]
 version = "0.14"
-features = []
+features = ["extension-module"]
 
 [dependencies]
 tokio = { version = "1.7.0", features = ["full"] }
