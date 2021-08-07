@@ -69,10 +69,9 @@ jobs:
           target: ${{ matrix.target }}
           args: -i python --release --out dist --no-sdist
       - name: Install built wheel
+        shell: bash
         run: |
-          ls
-          ls -al
-          pip install --force-reinstall dist\robyn*.whl
+          pip install --force-reinstall dist/robyn*.whl
           cd ~ && python -c 'import robyn'
       - name: Upload wheels
         uses: actions/upload-artifact@v2
