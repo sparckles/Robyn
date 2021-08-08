@@ -12,8 +12,6 @@ use pyo3::prelude::*;
 use pyo3::types::PyAny;
 
 // hyper modules
-use pyo3_asyncio::run_forever;
-
 static STARTED: AtomicBool = AtomicBool::new(false);
 
 #[pyclass]
@@ -44,16 +42,29 @@ impl Server {
         let router = self.router.clone();
         let headers = self.headers.clone();
 
+        let asyncio = py.import("asyncio").unwrap();
+
+        let event_loop = asyncio.call_method0("new_event_loop").unwrap();
+        asyncio
+            .call_method1("set_event_loop", (event_loop,))
+            .unwrap();
+        let event_loop_hdl = PyObject::from(event_loop);
+
         thread::spawn(move || {
             //init_current_thread_once();
             actix_web::rt::System::new().block_on(async move {
                 let addr = format!("127.0.0.1:{}", port);
 
                 HttpServer::new(move || {
+                    let event_loop_hdl = event_loop_hdl.clone();
                     App::new()
                         .app_data(web::Data::new(router.clone()))
                         .app_data(web::Data::new(headers.clone()))
-                        .default_service(web::route().to(index))
+                        .default_service(web::route().to(move |router, headers, payload, req| {
+                            pyo3_asyncio::tokio::scope_local(event_loop_hdl.clone(), async move {
+                                index(router, headers, payload, req).await
+                            })
+                        }))
                 })
                 .bind(addr)
                 .unwrap()
@@ -63,17 +74,7 @@ impl Server {
             });
         });
 
-        // let asyncio = py.import("asyncio").unwrap();
-
-        // let event_loop = asyncio.call_method0("new_event_loop").unwrap();
-        // asyncio
-        //     .call_method1("set_event_loop", (event_loop,))
-        //     .unwrap();
-
-        // event_loop.call_method0("run_forever").unwrap();
-        // println!("test test_run_forever ... ok");
-
-        run_forever(py).unwrap()
+        event_loop.call_method0("run_forever").unwrap();
     }
 
     /// Adds a new header to our concurrent hashmap

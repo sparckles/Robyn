@@ -17,12 +17,11 @@ pub fn start_server() {
 }
 
 #[pymodule]
-pub fn robyn(py: Python<'_>, m: &PyModule) -> PyResult<()> {
+pub fn robyn(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     // the pymodule class to make the rustPyFunctions available
     // in python
     m.add_wrapped(wrap_pyfunction!(start_server))?;
     m.add_class::<Server>()?;
-    pyo3_asyncio::try_init(py)?;
     pyo3::prepare_freethreaded_python();
     Ok(())
 }
