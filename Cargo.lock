@@ -999,7 +999,7 @@ dependencies = [
 [[package]]
 name = "pyo3-asyncio"
 version = "0.14.0"
-source = "git+https://github.com/awestlake87/pyo3-asyncio?branch=init-fixes#d800b9088d4d129f04cce54d731b7ba16e9187f7"
+source = "git+https://github.com/awestlake87/pyo3-asyncio?rev=dd6f2cc7838a2990ed15447ff9ef9f93fa51423d#dd6f2cc7838a2990ed15447ff9ef9f93fa51423d"
 dependencies = [
  "futures",
  "inventory",
@@ -1013,7 +1013,7 @@ dependencies = [
 [[package]]
 name = "pyo3-asyncio-macros"
 version = "0.14.0"
-source = "git+https://github.com/awestlake87/pyo3-asyncio?branch=init-fixes#d800b9088d4d129f04cce54d731b7ba16e9187f7"
+source = "git+https://github.com/awestlake87/pyo3-asyncio?rev=dd6f2cc7838a2990ed15447ff9ef9f93fa51423d#dd6f2cc7838a2990ed15447ff9ef9f93fa51423d"
 dependencies = [
  "proc-macro2",
  "quote",
