@@ -20,7 +20,7 @@ features = ["extension-module", "auto-initialize"]
 [dependencies]
 tokio = { version = "1.7.0", features = ["full"] }
 dashmap = {git = "https://github.com/quake/dashmap", branch = "parking_lot", features = ["parking_lot"]}
-pyo3-asyncio = { git = "https://github.com/awestlake87/pyo3-asyncio", branch = "init-fixes", features = ["attributes", "tokio-runtime"] }
+pyo3-asyncio = { git = "https://github.com/awestlake87/pyo3-asyncio", rev = "dd6f2cc7838a2990ed15447ff9ef9f93fa51423d", features = ["attributes", "tokio-runtime"] }
 anyhow = "1.0.38"
 actix-web = "4.0.0-beta.8"
 futures-util = "0.3.15"
