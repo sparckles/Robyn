@@ -14,13 +14,13 @@ name = "robyn"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies.pyo3]
-version = "0.14"
-features = ["extension-module"]
+version = "0.14.1"
+features = ["extension-module", "auto-initialize"]
 
 [dependencies]
 tokio = { version = "1.7.0", features = ["full"] }
 dashmap = {git = "https://github.com/quake/dashmap", branch = "parking_lot", features = ["parking_lot"]}
-pyo3-asyncio = { git = "https://github.com/awestlake87/pyo3-asyncio", branch = "init-fixes" }
+pyo3-asyncio = { git = "https://github.com/awestlake87/pyo3-asyncio", branch = "init-fixes", features = ["attributes", "tokio-runtime"] }
 anyhow = "1.0.38"
 actix-web = "4.0.0-beta.8"
 futures-util = "0.3.15"

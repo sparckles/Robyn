@@ -1006,6 +1006,18 @@ dependencies = [
  "lazy_static",
  "once_cell",
  "pyo3",
+ "pyo3-asyncio-macros",
+ "tokio",
+]
+
+[[package]]
+name = "pyo3-asyncio-macros"
+version = "0.14.0"
+source = "git+https://github.com/awestlake87/pyo3-asyncio?branch=init-fixes#d800b9088d4d129f04cce54d731b7ba16e9187f7"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
