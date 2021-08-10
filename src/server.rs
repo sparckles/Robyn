@@ -4,7 +4,7 @@ use crate::types::Headers;
 use actix_files::Files;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::{Relaxed, SeqCst};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, RwLock};
 use std::thread;
 // pyO3 module
 use actix_web::*;
@@ -27,7 +27,7 @@ struct Directory {
 pub struct Server {
     router: Arc<Router>,
     headers: Arc<DashMap<String, String>>,
-    directories: Arc<Mutex<Vec<Directory>>>,
+    directories: Arc<RwLock<Vec<Directory>>>,
 }
 
 #[pymethods]
@@ -37,7 +37,7 @@ impl Server {
         Self {
             router: Arc::new(Router::new()),
             headers: Arc::new(DashMap::new()),
-            directories: Arc::new(Mutex::new(Vec::new())),
+            directories: Arc::new(RwLock::new(Vec::new())),
         }
     }
 
@@ -69,7 +69,7 @@ impl Server {
 
                 HttpServer::new(move || {
                     let mut app = App::new();
-                    let directories = directories.lock().unwrap();
+                    let directories = directories.read().unwrap();
                     for directory in directories.iter() {
                         if let Some(index_file) = &directory.index_file {
                             app = app.service(
@@ -116,7 +116,7 @@ impl Server {
         index_file: Option<String>,
         show_files_listing: bool,
     ) {
-        self.directories.lock().unwrap().push(Directory {
+        self.directories.write().unwrap().push(Directory {
             route,
             directory_path,
             index_file,
