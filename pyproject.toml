@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "robyn"
-version = "0.5.3"
+version = "0.6.0"
 description = ""
 authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 
