@@ -23,6 +23,7 @@ dashmap = {git = "https://github.com/quake/dashmap", branch = "parking_lot", fea
 pyo3-asyncio = { version="0.14.0" , features = ["attributes", "tokio-runtime"] }
 anyhow = "1.0.38"
 actix-web = "4.0.0-beta.8"
+actix-files = "0.6.0-beta.4"
 futures-util = "0.3.15"
 
 [package.metadata.maturin]
