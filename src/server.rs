@@ -11,6 +11,7 @@ use actix_web::*;
 use dashmap::DashMap;
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
+use pyo3_asyncio::run_forever;
 
 // hyper modules
 static STARTED: AtomicBool = AtomicBool::new(false);
@@ -54,14 +55,6 @@ impl Server {
         let headers = self.headers.clone();
         let directories = self.directories.clone();
 
-        let asyncio = py.import("asyncio").unwrap();
-
-        let event_loop = asyncio.call_method0("new_event_loop").unwrap();
-        asyncio
-            .call_method1("set_event_loop", (event_loop,))
-            .unwrap();
-        let event_loop_hdl = PyObject::from(event_loop);
-
         thread::spawn(move || {
             //init_current_thread_once();
             actix_web::rt::System::new().block_on(async move {
@@ -89,14 +82,9 @@ impl Server {
                         }
                     }
 
-                    let event_loop_hdl = event_loop_hdl.clone();
                     app.app_data(web::Data::new(router.clone()))
                         .app_data(web::Data::new(headers.clone()))
-                        .default_service(web::route().to(move |router, headers, payload, req| {
-                            pyo3_asyncio::tokio::scope_local(event_loop_hdl.clone(), async move {
-                                index(router, headers, payload, req).await
-                            })
-                        }))
+                        .default_service(web::route().to(index))
                 })
                 .bind(addr)
                 .unwrap()
@@ -106,7 +94,7 @@ impl Server {
             });
         });
 
-        event_loop.call_method0("run_forever").unwrap();
+        run_forever(py).unwrap()
     }
 
     pub fn add_directory(

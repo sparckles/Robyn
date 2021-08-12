@@ -109,7 +109,7 @@ async fn execute_function(
                     }
                     None => handler.call0(),
                 };
-                pyo3_asyncio::tokio::into_future(coro?)
+                pyo3_asyncio::into_future(coro?)
             })?;
             let output = output.await?;
             let res = Python::with_gil(|py| -> PyResult<String> {
