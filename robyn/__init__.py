@@ -126,3 +126,4 @@ class Robyn:
             self.add_route("PATCH", endpoint, handler)
            
         return inner
+
