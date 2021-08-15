@@ -1,0 +1,151 @@
+version: 2.1
+
+orbs:
+  # The python orb contains a set of prepackaged CircleCI configuration you can use repeatedly in your configuration files
+  # Orb commands and jobs help you with common scripting around a language/tool
+  # so you dont have to copy and paste it everywhere.
+  # See the orb documentation here: https://circleci.com/developer/orbs/orb/circleci/python
+  python: circleci/python@1.2
+  rust: circleci/rust@1.5.0
+
+commands:
+  test:
+    description: |
+      Tests for rust sub section of robyn
+    parameters:
+      cache_version:
+        default: v1
+        description: Cache version to use - increment this to build a fresh cache.
+        type: string
+      package:
+        default: ""
+        description: Package to test.
+        type: string
+      with_cache:
+        default: true
+        description: Whether to restore and save the cache or not - set to no if running multiple commands in one job.
+        type: boolean
+      working_directory:
+        default: ~/project
+        description: Path to the directory containing your Cargo.lock file. Not needed if Cargo.lock lives in the root.
+        type: string
+    steps:
+      - when:
+          condition: <<parameters.with_cache>>
+          steps:
+            - restore_cache:
+                keys:
+                  - cargo-<<parameters.cache_version>>-{{ checksum "Cargo.lock" }}
+      - run:
+          # command: cargo test <<parameters.package>>
+          command: cargo test --no-default-features
+          working_directory: <<parameters.working_directory>>
+      - when:
+          condition: <<parameters.with_cache>>
+          steps:
+            - save_cache:
+                key: cargo-<<parameters.cache_version>>-{{ checksum "Cargo.lock" }}
+                paths:
+                  - ~/.cargo
+
+workflows:
+  sample: # This is the name of the workflow, feel free to change it to better match your workflow.
+    # Inside the workflow, you define the jobs you want to run.
+    # For more details on extending your workflow, see the configuration docs: https://circleci.com/docs/2.0/configuration-reference/#workflows
+    jobs:
+      - rust/lint-test-build:
+          release: true
+      - build-and-test
+
+jobs:
+  lint-test-build:
+    description: |
+      Check the rust sub section
+    executor:
+      name: default
+      tag: << parameters.version >>
+    parameters:
+      cache_version:
+        default: v1
+        description: Cache version to use - increment this to build a fresh cache.
+        type: string
+      clippy_arguments:
+        default: ""
+        description: Arguments to pass to cargo run clippy.
+        type: string
+      release:
+        default: false
+        description: Whether to build the binary for release or debug.
+        type: boolean
+      version:
+        default: 1.49.0
+        description: Version of Rust executor to utilize.
+        type: string
+      with_cache:
+        default: true
+        description: Whether to restore and save the cache or not - set to no if running multiple commands in one job.
+        type: boolean
+      working_directory:
+        default: ~/robyn
+        description: Path to the directory containing your Cargo.lock file. Not needed if Cargo.lock lives in the root.
+        type: string
+    steps:
+      - checkout:
+          path: /home/circleci/robyn
+      - when:
+          condition: <<parameters.with_cache>>
+          steps:
+            - restore_cache:
+                keys:
+                  - cargo-<<parameters.cache_version>>-{{ checksum "Cargo.lock" }}
+      - clippy:
+          flags: <<parameters.clippy_arguments>>
+          with_cache: false
+          working_directory: <<parameters.working_directory>>
+      - test:
+          with_cache: false
+          working_directory: <<parameters.working_directory>>
+          # command: cargo test
+      # - build:
+      # release: <<parameters.release>>
+      # with_cache: false
+      # working_directory: <<parameters.working_directory>>
+      - when:
+          condition: <<parameters.with_cache>>
+          steps:
+            - save_cache:
+                key: cargo-<<parameters.cache_version>>-{{ checksum "Cargo.lock" }}
+                paths:
+                  - ~/.cargo
+    working_directory: <<parameters.working_directory>>
+
+  build-and-test: # This is the name of the job, feel free to change it to better match what you're trying to do!
+    # These next lines defines a Docker executors: https://circleci.com/docs/2.0/executor-types/
+    # You can specify an image from Dockerhub or use one of the convenience images from CircleCI's Developer Hub
+    # A list of available CircleCI Docker convenience images are available here: https://circleci.com/developer/images/image/cimg/python
+    # The executor is the environment in which the steps below will be executed - below will use a python 3.9 container
+    # Change the version below to your required version of python
+    docker:
+      - image: cimg/python:3.8
+    # Checkout the code as the first step. This is a dedicated CircleCI step.
+    # The python orb's install-packages step will install the dependencies from a Pipfile via Pipenv by default.
+    # Here we're making sure we use just use the system-wide pip. By default it uses the project root's requirements.txt.
+    # Then run your tests!
+    # CircleCI will report the results back to your VCS provider.
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+          app-dir: ~/project # If you're requirements.txt isn't in the root directory.
+          pip-dependency-file: robyn/test-requirements.txt # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
+      - run:
+          name: Run tests
+          # This assumes pytest is installed via the install-package step above
+          # https://github.com/rust-lang/rustup/issues/297#issuecomment-589989163
+          command: |
+            curl https://sh.rustup.rs -sSf | sh -s -- -y
+            source $HOME/.cargo/env
+            python3 -m venv venv
+            source venv/bin/activate
+            maturin develop
+            pytest

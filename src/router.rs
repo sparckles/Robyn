@@ -70,3 +70,21 @@ impl Router {
         Some(table.get(route)?.clone())
     }
 }
+
+// #[cfg(test)]
+// mod router_test {
+//     use super::*;
+//     #[test]
+//     fn test_no_route() {
+//         let router = Router::new();
+//         assert_eq!(router.get_route(Method::GET, "/").is_none(), true);
+//         // let handler = Python::with_gil(|py| {
+//         //     let dict = pyo3::types::PyDict::new(py);
+//         //     assert!(dict.is_instance::<PyAny>().unwrap());
+//         //     let any: Py<PyAny> = dict.into_py(py);
+//         //     any
+//         // });
+//         // router.add_route("GET", "/", handler, false);
+//         // assert_eq!(router.get_route(Method::GET, "/").is_some(), true);
+//     }
+// }
