@@ -1,6 +1,6 @@
 [package]
 name = "robyn"
-version = "0.5.3"
+version = "0.6.0"
 authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 edition = "2018"
 description = "A web server that is fast!"
@@ -14,18 +14,16 @@ name = "robyn"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies.pyo3]
-version = "0.13.2"
+version = "0.14.1"
 features = ["extension-module"]
-
-[dependencies.pyo3-asyncio]
-version = "0.13.4"
-features = []
 
 [dependencies]
 tokio = { version = "1.7.0", features = ["full"] }
 dashmap = {git = "https://github.com/quake/dashmap", branch = "parking_lot", features = ["parking_lot"]}
+pyo3-asyncio = { version="0.14.0" , features = ["attributes", "tokio-runtime"] }
 anyhow = "1.0.38"
 actix-web = "4.0.0-beta.8"
+actix-files = "0.6.0-beta.4"
 futures-util = "0.3.15"
 
 [package.metadata.maturin]
