@@ -7,7 +7,8 @@ callCount = 0
 
 
 @app.get("/")
-async def h():
+async def h(request):
+    print(request)
     global callCount
     callCount += 1
     message = "Called " + str(callCount) + " times"

@@ -75,7 +75,7 @@ impl Server {
                             app = app.service(
                                 Files::new(&directory.route, &directory.directory_path)
                                     .index_file(index_file)
-                                    .redirect_to_slash_directory(), // .show_files_listing(), // .index_file(index_file),
+                                    .redirect_to_slash_directory(),
                             );
                         } else if directory.show_files_listing {
                             app = app.service(
