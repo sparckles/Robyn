@@ -101,16 +101,19 @@ async fn execute_function(
             let output = Python::with_gil(|py| {
                 let handler = handler.as_ref(py);
 
-                let coro: PyResult<&PyAny> = match data {
+                match data {
                     Some(res) => {
                         let data = res.into_py(py);
                         request.insert("body", data);
-                        handler.call1((request,))
                     }
-                    None => handler.call0(),
+                    None => {}
                 };
+
+                // this makes the request object to be accessible across every route
+                let coro: PyResult<&PyAny> = handler.call1((request,));
                 pyo3_asyncio::tokio::into_future(coro?)
             })?;
+
             let output = output.await?;
             let res = Python::with_gil(|py| -> PyResult<String> {
                 let string_contents = output.clone();
