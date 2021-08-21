@@ -41,7 +41,7 @@ impl Server {
         }
     }
 
-    pub fn start(&mut self, py: Python, port: u16) {
+    pub fn start(&mut self, py: Python, url: String, port: u16) {
         if STARTED
             .compare_exchange(false, true, SeqCst, Relaxed)
             .is_err()
@@ -65,7 +65,7 @@ impl Server {
         thread::spawn(move || {
             //init_current_thread_once();
             actix_web::rt::System::new().block_on(async move {
-                let addr = format!("127.0.0.1:{}", port);
+                let addr = format!("{}:{}", url, port);
 
                 HttpServer::new(move || {
                     let mut app = App::new();
