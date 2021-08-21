@@ -53,14 +53,14 @@ class Robyn:
     def remove_header(self, key):
         self.server.remove_header(key)
     
-    def start(self, port):
+    def start(self, url="127.0.0.0", port="5000"):
         """
         [Starts the server]
 
         :param port [int]: [reperesents the port number at which the server is listening]
         """
         if not self.dev:
-            self.server.start(port)
+            self.server.start(url, port)
         else:
             event_handler = EventHandler(self.file_path)
             event_handler.start_server_first_time()
