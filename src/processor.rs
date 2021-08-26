@@ -44,13 +44,13 @@ pub async fn handle_request(
         Err(err) => {
             println!("Error: {:?}", err);
             let mut response = HttpResponse::InternalServerError();
-            apply_headers(&mut response, headers);
+            apply_headers(&mut response, &headers);
             return response.finish();
         }
     };
 
     let mut response = HttpResponse::Ok();
-    apply_headers(&mut response, headers);
+    apply_headers(&mut response, &headers);
     response.body(contents)
 }
 
