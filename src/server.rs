@@ -69,7 +69,13 @@ impl Server {
 
                 HttpServer::new(move || {
                     let mut app = App::new();
+                    let event_loop_hdl = event_loop_hdl.clone();
                     let directories = directories.read().unwrap();
+
+                    // this loop matches three types of directory serving
+                    // 1. Serves a build folder. e.g. the build folder generated from yarn build
+                    // 2. Shows file listing
+                    // 3. Just serves the file without any redirection to sub links
                     for directory in directories.iter() {
                         if let Some(index_file) = &directory.index_file {
                             app = app.service(
@@ -89,7 +95,6 @@ impl Server {
                         }
                     }
 
-                    let event_loop_hdl = event_loop_hdl.clone();
                     app.app_data(web::Data::new(router.clone()))
                         .app_data(web::Data::new(headers.clone()))
                         .default_service(web::route().to(move |router, headers, payload, req| {
