@@ -1,6 +1,30 @@
 # Changelog
 
-## [v0.6.0](https://github.com/sansyrox/robyn/tree/HEAD)
+## [v0.6.1](https://github.com/sansyrox/robyn/tree/v0.6.1) (2021-08-30)
+
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.6.0...v0.6.1)
+
+**Closed issues:**
+
+- Make a new release [\#71](https://github.com/sansyrox/robyn/issues/71)
+- Update to the pyo3 v0.14 [\#63](https://github.com/sansyrox/robyn/issues/63)
+- Add the support to serve static directories [\#55](https://github.com/sansyrox/robyn/issues/55)
+- Add support for mounting directory [\#38](https://github.com/sansyrox/robyn/issues/38)
+
+**Merged pull requests:**
+
+- Add the base of http requests [\#78](https://github.com/sansyrox/robyn/pull/78) ([sansyrox](https://github.com/sansyrox))
+- Add default port and a variable url [\#77](https://github.com/sansyrox/robyn/pull/77) ([sansyrox](https://github.com/sansyrox))
+- Make the request object accessible in every route [\#76](https://github.com/sansyrox/robyn/pull/76) ([sansyrox](https://github.com/sansyrox))
+- Add the basics for circle ci and testing framework [\#67](https://github.com/sansyrox/robyn/pull/67) ([sansyrox](https://github.com/sansyrox))
+- Update to pyo3 v0.14 [\#65](https://github.com/sansyrox/robyn/pull/65) ([sansyrox](https://github.com/sansyrox))
+- Add the static directory serving [\#64](https://github.com/sansyrox/robyn/pull/64) ([sansyrox](https://github.com/sansyrox))
+- Create a request object [\#61](https://github.com/sansyrox/robyn/pull/61) ([sansyrox](https://github.com/sansyrox))
+- Add the ability to add body in PUT, PATCH and DELETE [\#60](https://github.com/sansyrox/robyn/pull/60) ([sansyrox](https://github.com/sansyrox))
+- Implement a working dev server [\#40](https://github.com/sansyrox/robyn/pull/40) ([sansyrox](https://github.com/sansyrox))
+- Use Actix as base [\#35](https://github.com/sansyrox/robyn/pull/35) ([JackThomson2](https://github.com/JackThomson2))
+
+## [v0.6.0](https://github.com/sansyrox/robyn/tree/v0.6.0) (2021-08-11)
 
 [Full Changelog](https://github.com/sansyrox/robyn/compare/v0.5.3...v0.6.0)
 
@@ -13,15 +37,6 @@
 - Add a dev server implementation [\#37](https://github.com/sansyrox/robyn/issues/37)
 - Mini Roadmap | A list of issues that would require fixing [\#19](https://github.com/sansyrox/robyn/issues/19)
 - Add support for Object/JSON Return Type! [\#9](https://github.com/sansyrox/robyn/issues/9)
-
-**Merged pull requests:**
-
-- Update to pyo3 v0.14 [\#65](https://github.com/sansyrox/robyn/pull/65) ([sansyrox](https://github.com/sansyrox))
-- Add the static directory serving [\#64](https://github.com/sansyrox/robyn/pull/64) ([sansyrox](https://github.com/sansyrox))
-- Create a request object [\#61](https://github.com/sansyrox/robyn/pull/61) ([sansyrox](https://github.com/sansyrox))
-- Add the ability to add body in PUT, PATCH and DELETE [\#60](https://github.com/sansyrox/robyn/pull/60) ([sansyrox](https://github.com/sansyrox))
-- Implement a working dev server [\#40](https://github.com/sansyrox/robyn/pull/40) ([sansyrox](https://github.com/sansyrox))
-- Use Actix as base [\#35](https://github.com/sansyrox/robyn/pull/35) ([JackThomson2](https://github.com/JackThomson2))
 
 ## [v0.5.3](https://github.com/sansyrox/robyn/tree/v0.5.3) (2021-07-12)
 
