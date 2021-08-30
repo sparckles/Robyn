@@ -13,6 +13,10 @@ pub struct Router {
     put_routes: DashMap<String, PyFunction>,
     delete_routes: DashMap<String, PyFunction>,
     patch_routes: DashMap<String, PyFunction>,
+    head_routes: DashMap<String, PyFunction>,
+    options_routes: DashMap<String, PyFunction>,
+    connect_routes: DashMap<String, PyFunction>,
+    trace_routes: DashMap<String, PyFunction>,
 }
 
 impl Router {
@@ -23,6 +27,10 @@ impl Router {
             put_routes: DashMap::new(),
             delete_routes: DashMap::new(),
             patch_routes: DashMap::new(),
+            head_routes: DashMap::new(),
+            options_routes: DashMap::new(),
+            connect_routes: DashMap::new(),
+            trace_routes: DashMap::new(),
         }
     }
 
@@ -32,8 +40,12 @@ impl Router {
             Method::GET => Some(&self.get_routes),
             Method::POST => Some(&self.post_routes),
             Method::PUT => Some(&self.put_routes),
-            Method::DELETE => Some(&self.delete_routes),
             Method::PATCH => Some(&self.patch_routes),
+            Method::DELETE => Some(&self.delete_routes),
+            Method::HEAD => Some(&self.head_routes),
+            Method::OPTIONS => Some(&self.options_routes),
+            Method::CONNECT => Some(&self.connect_routes),
+            Method::TRACE => Some(&self.trace_routes),
             _ => None,
         }
     }

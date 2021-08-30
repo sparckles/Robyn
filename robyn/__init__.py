@@ -53,7 +53,7 @@ class Robyn:
     def remove_header(self, key):
         self.server.remove_header(key)
     
-    def start(self, url="127.0.0.0", port="5000"):
+    def start(self, url="127.0.0.1", port="5000"):
         """
         [Starts the server]
 
@@ -128,5 +128,50 @@ class Robyn:
         def inner(handler):
             self.add_route("PATCH", endpoint, handler)
            
+        return inner
+
+    def head(self, endpoint):
+        """
+        [The @app.head decorator to add a get route]
+
+        :param endpoint [str]: [endpoint to server the route]
+        """
+        def inner(handler):
+            self.add_route("HEAD", endpoint, handler)
+
+        return inner
+
+    def options(self, endpoint):
+        """
+        [The @app.options decorator to add a get route]
+
+        :param endpoint [str]: [endpoint to server the route]
+        """
+        def inner(handler):
+            self.add_route("OPTIONS", endpoint, handler)
+
+        return inner
+
+
+    def connect(self, endpoint):
+        """
+        [The @app.connect decorator to add a get route]
+
+        :param endpoint [str]: [endpoint to server the route]
+        """
+        def inner(handler):
+            self.add_route("CONNECT", endpoint, handler)
+
+        return inner
+
+    def trace(self, endpoint):
+        """
+        [The @app.trace decorator to add a get route]
+
+        :param endpoint [str]: [endpoint to server the route]
+        """
+        def inner(handler):
+            self.add_route("TRACE", endpoint, handler)
+
         return inner
 

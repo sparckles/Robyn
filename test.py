@@ -22,6 +22,7 @@ async def test():
 
 @app.post("/jsonify")
 async def json(request):
+    print(request)
     return jsonify({"hello": "world"})
 
 @app.post("/post")
@@ -55,5 +56,5 @@ def blocker():
 
 if __name__ == "__main__":
     app.add_header("server", "robyn")
-    app.add_directory(route="/",directory_path="./test_dir/build", index_file="index.html")
+    app.add_directory(route="/test_dir",directory_path="./test_dir/build", index_file="index.html")
     app.start(port=5000)

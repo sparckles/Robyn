@@ -39,18 +39,18 @@ pub async fn handle_request(
     payload: &mut web::Payload,
     req: &HttpRequest,
 ) -> HttpResponse {
-    let contents = match execute_function(function, payload, req).await {
+    let contents = match execute_function(function, payload, &headers, req).await {
         Ok(res) => res,
         Err(err) => {
             println!("Error: {:?}", err);
             let mut response = HttpResponse::InternalServerError();
-            apply_headers(&mut response, headers);
+            apply_headers(&mut response, &headers);
             return response.finish();
         }
     };
 
     let mut response = HttpResponse::Ok();
-    apply_headers(&mut response, headers);
+    apply_headers(&mut response, &headers);
     response.body(contents)
 }
 
@@ -72,6 +72,7 @@ fn read_file(file_path: &str) -> String {
 async fn execute_function(
     function: PyFunction,
     payload: &mut web::Payload,
+    headers: &Headers,
     req: &HttpRequest,
 ) -> Result<String> {
     let mut data: Option<Vec<u8>> = None;
@@ -96,6 +97,10 @@ async fn execute_function(
 
     // request object accessible while creating routes
     let mut request = HashMap::new();
+    let mut headers_python = HashMap::new();
+    for elem in headers.into_iter() {
+        headers_python.insert(elem.key().clone(), elem.value().clone());
+    }
     match function {
         PyFunction::CoRoutine(handler) => {
             let output = Python::with_gil(|py| {
@@ -105,6 +110,7 @@ async fn execute_function(
                     Some(res) => {
                         let data = res.into_py(py);
                         request.insert("body", data);
+                        request.insert("headers", headers_python.into_py(py));
                     }
                     None => {}
                 };
@@ -163,12 +169,13 @@ async fn execute_function(
                         Some(res) => {
                             let data = res.into_py(py);
                             request.insert("body", data);
+                            request.insert("headers", headers_python.into_py(py));
                             handler.call1((request,))
                         }
-                        None => handler.call0(),
+                        None => handler.call1((request,)),
                     };
-                    let output: &str = output?.extract()?;
 
+                    let output: &str = output?.extract()?;
                     Ok(output.to_string())
                 })
             })
