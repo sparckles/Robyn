@@ -1,0 +1,290 @@
+﻿/*!
+* Created by Kroplet (https://www.kroplet.com) 
+* The easiest way to create Bootstrap 4 themes. 
+*/
+
+/*****************
+Custom CSS
+*****************/
+::selection {
+  background-color: $primary;
+  color: $black;
+}
+
+a:not(.heading-brand) {
+  font-weight: 500;  
+}
+
+.font-weight-medium {
+    font-weight: 500;
+}
+
+.heading-brand {
+    font-weight: 800;
+    font-size: 1.75rem;
+}
+
+.svg-icon {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+/* Buttons */
+.btn {
+    box-shadow: 0 4px 6px rgba($primary,.11), 0 1px 3px rgba($black,.08);
+
+    &:active, &:focus, &:focus {
+       box-shadow: none !important;
+    }
+}
+
+/*Forms*/
+.form-control {
+    font-weight: $font-weight-bold;
+}
+
+/*Feature Grid*/
+.feature-grid {
+    margin-top: 3rem;
+
+    .media {
+        display: flex;
+        align-items: center;
+        flex-direction: row;
+        margin-bottom: 2.5rem;
+
+        .media-body {
+            font-size: 1.125rem;
+            font-weight: $font-weight-bold;
+        }
+    }
+}
+
+/*Press Icons*/
+.press-icons img {
+    &:not(:last-child) {
+        margin-right: 4rem;
+        margin-bottom: 1rem;
+    }
+}
+
+/*footer*/
+footer {
+    ul > li:not(:last-child) {
+        margin-right: 1.5rem !important;
+    }
+
+    a {
+        color: $black;
+        font-weight: $font-weight-bold;
+    }
+}
+
+/* Icon Boxes */
+.icon-box {
+    position: relative;
+    border-radius: 50%;
+    display: inline-block;
+    vertical-align: middle;
+    background-color: $white;
+    margin-right: 1rem;
+    color: $success;
+
+    .icon-box-inner {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        padding: 1rem;
+    }
+}
+
+/*Gradients*/
+.bg-gradient {
+    background: linear-gradient($primary, lighten($primary, 15%));
+}
+
+/*Code Window*/
+.code-window {
+    border-radius: .45rem;
+    background-color: $white;
+    padding: 1.52rem;
+    box-shadow: 0 8px 24px 0 rgba($black,.1);
+
+    .dots {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+
+        div{
+            margin-right: .5rem;
+            width: .75rem;
+            height: .75rem;
+            border-radius: 50%;
+            background-color: $gray-200;
+
+            &.red {
+                background-color: $red;
+            }
+            &.orange {
+                background-color: $orange;
+            }
+            &.green {
+                background-color: $green;
+            }
+        }
+    }
+}
+
+/**
+ * okaidia theme for JavaScript, CSS and HTML
+ * Loosely based on Monokai textmate theme by http://www.monokai.nl/
+ * @author ocodia
+ */
+
+code[class*="language-"],
+pre[class*="language-"] {
+	color: $black;
+	background: none;
+	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	word-wrap: normal;
+	line-height: 1.5;
+	tab-size: 4;
+	hyphens: none;
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+	padding: 1em;
+	margin: .5em 0;
+	overflow: auto;
+	border-radius: 0.3em;
+}
+
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+	background: $white;
+}
+
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+	padding: .1em;
+	border-radius: .3em;
+	white-space: normal;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+	color: slategray;
+}
+
+.token.punctuation {
+	color: $gray-500;
+}
+
+.namespace {
+	opacity: .7;
+}
+
+.token.property,
+.token.tag,
+.token.constant,
+.token.symbol,
+.token.deleted {
+	color: #f92672;
+}
+
+.token.boolean,
+.token.number {
+	color: #ae81ff;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+	color: $green;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string,
+.token.variable {
+	color: #f8f8f2;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.function,
+.token.class-name {
+	color: $red;
+}
+
+.token.keyword {
+	color: $purple;
+}
+
+.token.regex,
+.token.important {
+	color: #fd971f;
+}
+
+.token.important,
+.token.bold {
+	font-weight: bold;
+}
+.token.italic {
+	font-style: italic;
+}
+
+.token.entity {
+	cursor: help;
+}
+
+pre[class*="language-"].line-numbers {
+	position: relative;
+	padding-left: 2.5em;
+	counter-reset: linenumber;
+}
+
+pre[class*="language-"].line-numbers > code {
+	position: relative;
+	white-space: inherit;
+}
+
+.line-numbers .line-numbers-rows {
+	position: absolute;
+	pointer-events: none;
+	top: 0;
+	font-size: 100%;
+	left: -3.8em;
+	width: 3em; /* works for line-numbers below 1000 lines */
+	letter-spacing: -1px;
+	user-select: none;
+
+}
+
+.line-numbers-rows > span {
+    pointer-events: none;
+    display: block;
+    counter-increment: linenumber;
+}
+
+.line-numbers-rows > span:before {
+    content: counter(linenumber);
+    color: $gray-400;
+    display: block;
+    padding-right: 0.8em;
+    text-align: right;
+}
