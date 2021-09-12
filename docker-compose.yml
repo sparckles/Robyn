@@ -3,6 +3,15 @@ services:
   web:
     build: .
     ports:
-      - "5000:5000"
-  redis:
-    image: "redis:alpine"
+      - "127.0.0.1:5000:5000"
+    expose:
+      - 5000
+  test:
+    # expose:
+    #   - 5000
+    depends_on: 
+      - web
+    build: test_python/.
+
+
+    
