@@ -67,4 +67,4 @@ def blocker():
 if __name__ == "__main__":
     app.add_header("server", "robyn")
     app.add_directory(route="/test_dir",directory_path="./test_dir/build", index_file="index.html")
-    app.start(port=5000)
+    app.start(port=5000, url='0.0.0.0')

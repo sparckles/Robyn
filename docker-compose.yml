@@ -2,6 +2,7 @@ version: "3.7"
 services:
   web:
     build: .
+    image: localhost:5000/webimage
     ports:
       - "127.0.0.1:5000:5000"
     expose:
