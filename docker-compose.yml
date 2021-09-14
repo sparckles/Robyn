@@ -5,11 +5,9 @@ services:
     image: localhost:5000/webimage
     ports:
       - "127.0.0.1:5000:5000"
+  test:
     expose:
       - 5000
-  test:
-    # expose:
-    #   - 5000
     depends_on: 
       - web
     build: test_python/.
