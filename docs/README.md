@@ -44,13 +44,12 @@ To read about the detailed architecture, you can read [here](https://sansyrox.gi
 
 ## To Run
 
-1. Add more routes in the test.py file(if you like). It only supports only get requests at the moment
+### Without hot reloading
+`python3 app.py`
 
-2. Run `maturin develop`
+### With hot reloading
+`python3 app.py --dev=true`
 
-3. Run `python3 test.py`
-
-4. To measure the performance: `./server_test.sh`
 
 ## Contributors/Supporters
 
