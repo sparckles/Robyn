@@ -12,5 +12,3 @@ services:
       - web
     build: test_python/.
 
-
-    

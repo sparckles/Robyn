@@ -129,7 +129,7 @@ jobs:
       - python/install-packages:
           pkg-manager: pip
           app-dir: ~/project # If you're requirements.txt isn't in the root directory.
-          pip-dependency-file: robyn/test-requirements.txt # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
+          pip-dependency-file: requirements.txt # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
 
       - run:
           name: Install docker compose
@@ -137,7 +137,7 @@ jobs:
             curl -L https://github.com/docker/compose/releases/download/1.25.3/docker-compose-`uname -s`-`uname -m` > ~/docker-compose
             chmod +x ~/docker-compose
             sudo mv ~/docker-compose /usr/local/bin/docker-compose
-            cd project
+            cd ~/project
             docker-compose build
             docker-compose up
 
