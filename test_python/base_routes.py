@@ -1,8 +1,7 @@
-import sys
-import os
 
-robyn_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../robyn")
-sys.path.insert(0, robyn_path)
+
+# robyn_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../robyn")
+# sys.path.insert(0, robyn_path)
 
 from robyn import Robyn, static_file, jsonify
 import asyncio
@@ -21,10 +20,13 @@ async def h(request):
     return message
 
 @app.get("/test")
-async def test():
-    import os
-    path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "index.html"))
-    return static_file(path)
+async def test(request):
+    return static_file("./index.html")
+
+@app.get("/jsonify")
+async def json_get(request):
+    return jsonify({"hello": "world"})
+
 
 @app.post("/jsonify")
 async def json(request):
@@ -63,4 +65,4 @@ def blocker():
 if __name__ == "__main__":
     app.add_header("server", "robyn")
     app.add_directory(route="/test_dir",directory_path="./test_dir/build", index_file="index.html")
-    app.start(port=5000)
+    app.start(port=5000, url='0.0.0.0')

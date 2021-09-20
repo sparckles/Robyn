@@ -1,0 +1,4 @@
+requests==2.26.0
+pytest==6.2.5
+maturin
+robyn==0.6.1

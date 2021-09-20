@@ -56,6 +56,7 @@ workflows:
       - rust/lint-test-build:
           release: true
       - build-and-test
+      - python-tests-e2e
 
 jobs:
   lint-test-build:
@@ -119,6 +120,27 @@ jobs:
                   - ~/.cargo
     working_directory: <<parameters.working_directory>>
 
+  python-tests-e2e:
+    docker:
+      - image: cimg/python:3.8
+
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+          app-dir: ~/project # If you're requirements.txt isn't in the root directory.
+          pip-dependency-file: requirements.txt # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
+
+      - run:
+          name: Install docker compose
+          command: |
+            curl -L https://github.com/docker/compose/releases/download/1.25.3/docker-compose-`uname -s`-`uname -m` > ~/docker-compose
+            chmod +x ~/docker-compose
+            sudo mv ~/docker-compose /usr/local/bin/docker-compose
+            cd ~/project
+            docker-compose build
+            docker-compose up
+
   build-and-test: # This is the name of the job, feel free to change it to better match what you're trying to do!
     # These next lines defines a Docker executors: https://circleci.com/docs/2.0/executor-types/
     # You can specify an image from Dockerhub or use one of the convenience images from CircleCI's Developer Hub
@@ -148,4 +170,3 @@ jobs:
             python3 -m venv venv
             source venv/bin/activate
             maturin develop
-            pytest
