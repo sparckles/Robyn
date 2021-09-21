@@ -12,7 +12,7 @@ app = Robyn(__file__)
 async def h():
     return "Hello, world!"
 
-app.start()
+app.start(port=5000, url="0.0.0.0") # url is optional, defaults to 127.0.0.1
 
 ```
 

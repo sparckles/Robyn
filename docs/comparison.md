@@ -16,6 +16,7 @@ I used [oha](https://github.com/hatoo/oha) to perform the testing of 10000 reque
   Average:	0.0586 secs
   Requests/sec:	850.3200
 ```
+
 2. FastAPI(Uvicorn)
 ```
   Total:	12.4052 secs
@@ -26,7 +27,6 @@ I used [oha](https://github.com/hatoo/oha) to perform the testing of 10000 reque
 ```
 3. Django(Gunicron)
 ```
-  Success rate:	1.0000
   Total:	24.9545 secs
   Slowest:	0.1587 secs
   Fastest:	0.0168 secs

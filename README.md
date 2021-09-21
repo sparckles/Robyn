@@ -45,7 +45,14 @@ If you're feeling curious. You can take a look at a more detailed architecture [
 
 3. Run `python3 test.py`
 
-4. To measure the performance: `./server_test.sh`
+## To Run
+
+### Without hot reloading
+`python3 app.py`
+
+### With hot reloading
+`python3 app.py --dev=true`
+
 
 ## Contributors/Supporters
 
