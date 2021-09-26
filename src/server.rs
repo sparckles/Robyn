@@ -1,5 +1,5 @@
 use crate::processor::{apply_headers, handle_request};
-use crate::router::Router;
+use crate::router::{Router, Routing};
 use crate::types::Headers;
 use actix_files::Files;
 use std::sync::atomic::AtomicBool;
@@ -71,6 +71,7 @@ impl Server {
                     let mut app = App::new();
                     let event_loop_hdl = event_loop_hdl.clone();
                     let directories = directories.read().unwrap();
+                    let routing = Routing::new(&router.clone());
 
                     // this loop matches three types of directory serving
                     // 1. Serves a build folder. e.g. the build folder generated from yarn build
@@ -95,11 +96,11 @@ impl Server {
                         }
                     }
 
-                    app.app_data(web::Data::new(router.clone()))
+                    app.app_data(web::Data::new(routing))
                         .app_data(web::Data::new(headers.clone()))
-                        .default_service(web::route().to(move |router, headers, payload, req| {
+                        .default_service(web::route().to(move |routing, headers, payload, req| {
                             pyo3_asyncio::tokio::scope_local(event_loop_hdl.clone(), async move {
-                                index(router, headers, payload, req).await
+                                index(routing, headers, payload, req).await
                             })
                         }))
                 })
@@ -152,12 +153,12 @@ impl Server {
 /// This is our service handler. It receives a Request, routes on it
 /// path, and returns a Future of a Response.
 async fn index(
-    router: web::Data<Arc<Router>>,
+    router: web::Data<Arc<Routing>>,
     headers: web::Data<Arc<Headers>>,
     mut payload: web::Payload,
     req: HttpRequest,
 ) -> impl Responder {
-    match router.get_route(req.method().clone(), req.uri().path()) {
+    match router.get_route(&req.method().clone(), req.uri().path()) {
         Some(handler_function) => {
             handle_request(handler_function, &headers, &mut payload, &req).await
         }

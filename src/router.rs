@@ -6,7 +6,73 @@ use pyo3::types::PyAny;
 
 use actix_web::http::Method;
 
-/// Contains the thread safe hashmaps of different routes
+use matchit::Node;
+
+pub struct Routing {
+    get_routes: Node<PyFunction>,
+    post_routes: Node<PyFunction>,
+    put_routes: Node<PyFunction>,
+    delete_routes: Node<PyFunction>,
+    patch_routes: Node<PyFunction>,
+    head_routes: Node<PyFunction>,
+    options_routes: Node<PyFunction>,
+    connect_routes: Node<PyFunction>,
+    trace_routes: Node<PyFunction>,
+}
+
+impl Routing {
+    pub fn new(router: &Router) -> Routing {
+        let get_routes = Router::protocol_to_tree(&router.get_routes);
+        let post_routes = Router::protocol_to_tree(&router.post_routes);
+        let put_routes = Router::protocol_to_tree(&router.put_routes);
+        let delete_routes = Router::protocol_to_tree(&router.delete_routes);
+        let patch_routes = Router::protocol_to_tree(&router.patch_routes);
+        let head_routes = Router::protocol_to_tree(&router.head_routes);
+        let options_routes = Router::protocol_to_tree(&router.options_routes);
+        let connect_routes = Router::protocol_to_tree(&router.connect_routes);
+        let trace_routes = Router::protocol_to_tree(&router.trace_routes);
+
+        Self {
+            get_routes,
+            post_routes,
+            put_routes,
+            delete_routes,
+            patch_routes,
+            head_routes,
+            options_routes,
+            connect_routes,
+            trace_routes,
+        }
+    }
+
+    #[inline(always)]
+    fn get_relevant_map(&self, route: &Method) -> Option<&Node<PyFunction>> {
+        match route {
+            &Method::GET => Some(&self.get_routes),
+            &Method::POST => Some(&self.post_routes),
+            &Method::PUT => Some(&self.put_routes),
+            &Method::PATCH => Some(&self.patch_routes),
+            &Method::DELETE => Some(&self.delete_routes),
+            &Method::HEAD => Some(&self.head_routes),
+            &Method::OPTIONS => Some(&self.options_routes),
+            &Method::CONNECT => Some(&self.connect_routes),
+            &Method::TRACE => Some(&self.trace_routes),
+            _ => None,
+        }
+    }
+
+    #[inline(always)]
+    pub fn get_route(&self, route_method: &Method, route: &str) -> Option<PyFunction> {
+        let table = self.get_relevant_map(route_method)?;
+
+        match table.at(route) {
+            Ok(res) => Some(res.value.clone()),
+            Err(_) => None,
+        }
+    }
+}
+
+// Contains the thread safe hashmaps of different routes
 pub struct Router {
     get_routes: DashMap<String, PyFunction>,
     post_routes: DashMap<String, PyFunction>,
@@ -35,17 +101,17 @@ impl Router {
     }
 
     #[inline]
-    fn get_relevant_map(&self, route: Method) -> Option<&DashMap<String, PyFunction>> {
+    fn get_relevant_map(&self, route: &Method) -> Option<&DashMap<String, PyFunction>> {
         match route {
-            Method::GET => Some(&self.get_routes),
-            Method::POST => Some(&self.post_routes),
-            Method::PUT => Some(&self.put_routes),
-            Method::PATCH => Some(&self.patch_routes),
-            Method::DELETE => Some(&self.delete_routes),
-            Method::HEAD => Some(&self.head_routes),
-            Method::OPTIONS => Some(&self.options_routes),
-            Method::CONNECT => Some(&self.connect_routes),
-            Method::TRACE => Some(&self.trace_routes),
+            &Method::GET => Some(&self.get_routes),
+            &Method::POST => Some(&self.post_routes),
+            &Method::PUT => Some(&self.put_routes),
+            &Method::PATCH => Some(&self.patch_routes),
+            &Method::DELETE => Some(&self.delete_routes),
+            &Method::HEAD => Some(&self.head_routes),
+            &Method::OPTIONS => Some(&self.options_routes),
+            &Method::CONNECT => Some(&self.connect_routes),
+            &Method::TRACE => Some(&self.trace_routes),
             _ => None,
         }
     }
@@ -57,7 +123,7 @@ impl Router {
             Err(_) => return None,
         };
 
-        self.get_relevant_map(method)
+        self.get_relevant_map(&method)
     }
 
     // Checks if the functions is an async function
@@ -78,8 +144,19 @@ impl Router {
     }
 
     pub fn get_route(&self, route_method: Method, route: &str) -> Option<PyFunction> {
-        let table = self.get_relevant_map(route_method)?;
+        let table = self.get_relevant_map(&route_method)?;
         Some(table.get(route)?.clone())
+    }
+
+    pub fn protocol_to_tree(incoming: &DashMap<String, PyFunction>) -> Node<PyFunction> {
+        let mut tree = Node::new();
+
+        for item in incoming.iter() {
+            tree.insert(item.key().clone(), item.value().clone())
+                .unwrap();
+        }
+
+        tree
     }
 }
 
