@@ -63,6 +63,7 @@ impl Routing {
 
     #[inline(always)]
     pub fn get_route(&self, route_method: &Method, route: &str) -> Option<PyFunction> {
+        println!("Hello world how are your");
         let table = self.get_relevant_map(route_method)?;
 
         match table.at(route) {

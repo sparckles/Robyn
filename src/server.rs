@@ -71,7 +71,6 @@ impl Server {
                     let mut app = App::new();
                     let event_loop_hdl = event_loop_hdl.clone();
                     let directories = directories.read().unwrap();
-                    let routing = Routing::new(&router.clone());
 
                     // this loop matches three types of directory serving
                     // 1. Serves a build folder. e.g. the build folder generated from yarn build
@@ -96,7 +95,7 @@ impl Server {
                         }
                     }
 
-                    app.app_data(web::Data::new(routing))
+                    app.app_data(web::Data::new(Routing::new(&router.clone())))
                         .app_data(web::Data::new(headers.clone()))
                         .default_service(web::route().to(move |routing, headers, payload, req| {
                             pyo3_asyncio::tokio::scope_local(event_loop_hdl.clone(), async move {
