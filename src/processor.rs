@@ -34,12 +34,12 @@ pub fn apply_headers(response: &mut HttpResponseBuilder, headers: &Arc<Headers>)
 /// There can also be PyError due to any mis processing of the files
 ///
 pub async fn handle_request(
-    function: PyFunction,
+    function: &PyFunction,
     headers: &Arc<Headers>,
     payload: &mut web::Payload,
     req: &HttpRequest,
 ) -> HttpResponse {
-    let contents = match execute_function(function, payload, &headers, req).await {
+    let contents = match execute_function(function.clone(), payload, &headers, req).await {
         Ok(res) => res,
         Err(err) => {
             println!("Error: {:?}", err);

@@ -3,11 +3,13 @@ use dashmap::DashMap;
 use crate::types::PyFunction;
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
+use std::sync::{Arc, RwLock};
 
 use actix_web::http::Method;
 
 use matchit::Node;
 
+#[derive(Clone)]
 pub struct Routing {
     get_routes: Node<PyFunction>,
     post_routes: Node<PyFunction>,
@@ -64,12 +66,14 @@ impl Routing {
     #[inline(always)]
     pub fn get_route(&self, route_method: &Method, route: &str) -> Option<PyFunction> {
         println!("Hello world how are your");
-        let table = self.get_relevant_map(route_method)?;
+        let table = &self.get_relevant_map(route_method)?;
 
-        match table.at(route) {
+        let x = match table.at(route) {
             Ok(res) => Some(res.value.clone()),
             Err(_) => None,
-        }
+        };
+
+        x
     }
 }
 

@@ -157,14 +157,20 @@ async fn index(
     mut payload: web::Payload,
     req: HttpRequest,
 ) -> impl Responder {
-    match router.get_route(&req.method().clone(), req.uri().path()) {
+    let x = match (&router)
+        .clone()
+        .get_route(&req.method().clone(), req.uri().path())
+        .clone()
+    {
         Some(handler_function) => {
-            handle_request(handler_function, &headers, &mut payload, &req).await
+            return handle_request(&handler_function, &headers, &mut payload, &req).await
         }
         None => {
             let mut response = HttpResponse::Ok();
             apply_headers(&mut response, &headers);
-            response.finish()
+            return response.finish();
         }
-    }
+    };
+
+    x
 }
