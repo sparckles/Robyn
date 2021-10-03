@@ -816,6 +816,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7ffc5c5338469d4d3ea17d269fa8ea3512ad247247c30bd2df69e68309ed0a08"
 
 [[package]]
+name = "matchit"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96eb506a2b58cf156e8ea212ec185d0e3a24014d8381c9f73cca8fe3d6e86546"
+
+[[package]]
 name = "memchr"
 version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1181,6 +1187,7 @@ dependencies = [
  "anyhow",
  "dashmap",
  "futures-util",
+ "matchit",
  "pyo3",
  "pyo3-asyncio",
  "tokio",

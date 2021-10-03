@@ -19,7 +19,8 @@ async def h(request):
     message = "Called " + str(callCount) + " times"
     return message
 
-@app.get("/test")
+
+@app.get("/test/:id")
 async def test(request):
     return static_file("./index.html")
 

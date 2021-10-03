@@ -1,41 +1,44 @@
 use dashmap::DashMap;
+use std::sync::{Arc, RwLock};
 // pyo3 modules
 use crate::types::PyFunction;
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
 
 use actix_web::http::Method;
+use matchit::Node;
 
 /// Contains the thread safe hashmaps of different routes
+
 pub struct Router {
-    get_routes: DashMap<String, PyFunction>,
-    post_routes: DashMap<String, PyFunction>,
-    put_routes: DashMap<String, PyFunction>,
-    delete_routes: DashMap<String, PyFunction>,
-    patch_routes: DashMap<String, PyFunction>,
-    head_routes: DashMap<String, PyFunction>,
-    options_routes: DashMap<String, PyFunction>,
-    connect_routes: DashMap<String, PyFunction>,
-    trace_routes: DashMap<String, PyFunction>,
+    get_routes: Arc<RwLock<Node<PyFunction>>>,
+    post_routes: Arc<RwLock<Node<PyFunction>>>,
+    put_routes: Arc<RwLock<Node<PyFunction>>>,
+    delete_routes: Arc<RwLock<Node<PyFunction>>>,
+    patch_routes: Arc<RwLock<Node<PyFunction>>>,
+    head_routes: Arc<RwLock<Node<PyFunction>>>,
+    options_routes: Arc<RwLock<Node<PyFunction>>>,
+    connect_routes: Arc<RwLock<Node<PyFunction>>>,
+    trace_routes: Arc<RwLock<Node<PyFunction>>>,
 }
 
 impl Router {
     pub fn new() -> Self {
         Self {
-            get_routes: DashMap::new(),
-            post_routes: DashMap::new(),
-            put_routes: DashMap::new(),
-            delete_routes: DashMap::new(),
-            patch_routes: DashMap::new(),
-            head_routes: DashMap::new(),
-            options_routes: DashMap::new(),
-            connect_routes: DashMap::new(),
-            trace_routes: DashMap::new(),
+            get_routes: Arc::new(RwLock::new(Node::new())),
+            post_routes: Arc::new(RwLock::new(Node::new())),
+            put_routes: Arc::new(RwLock::new(Node::new())),
+            delete_routes: Arc::new(RwLock::new(Node::new())),
+            patch_routes: Arc::new(RwLock::new(Node::new())),
+            head_routes: Arc::new(RwLock::new(Node::new())),
+            options_routes: Arc::new(RwLock::new(Node::new())),
+            connect_routes: Arc::new(RwLock::new(Node::new())),
+            trace_routes: Arc::new(RwLock::new(Node::new())),
         }
     }
 
     #[inline]
-    fn get_relevant_map(&self, route: Method) -> Option<&DashMap<String, PyFunction>> {
+    fn get_relevant_map(&self, route: Method) -> Option<&Arc<RwLock<Node<PyFunction>>>> {
         match route {
             Method::GET => Some(&self.get_routes),
             Method::POST => Some(&self.post_routes),
@@ -51,7 +54,7 @@ impl Router {
     }
 
     #[inline]
-    fn get_relevant_map_str(&self, route: &str) -> Option<&DashMap<String, PyFunction>> {
+    fn get_relevant_map_str(&self, route: &str) -> Option<&Arc<RwLock<Node<PyFunction>>>> {
         let method = match Method::from_bytes(route.as_bytes()) {
             Ok(res) => res,
             Err(_) => return None,
@@ -74,12 +77,19 @@ impl Router {
             PyFunction::SyncFunction(handler)
         };
 
-        table.insert(route.to_string(), function);
+        table
+            .write()
+            .unwrap()
+            .insert(route.to_string(), function)
+            .unwrap();
     }
 
     pub fn get_route(&self, route_method: Method, route: &str) -> Option<PyFunction> {
         let table = self.get_relevant_map(route_method)?;
-        Some(table.get(route)?.clone())
+        match table.read().unwrap().at(route) {
+            Ok(res) => Some(res.value.clone()),
+            Err(_) => None,
+        }
     }
 }
 
