@@ -1,4 +1,4 @@
-use dashmap::DashMap;
+use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 // pyo3 modules
 use crate::types::PyFunction;
@@ -84,10 +84,22 @@ impl Router {
             .unwrap();
     }
 
-    pub fn get_route(&self, route_method: Method, route: &str) -> Option<PyFunction> {
+    pub fn get_route(
+        &self,
+        route_method: Method,
+        route: &str,
+    ) -> Option<(PyFunction, HashMap<String, String>)> {
         let table = self.get_relevant_map(route_method)?;
         match table.read().unwrap().at(route) {
-            Ok(res) => Some(res.value.clone()),
+            Ok(res) => {
+                let mut route_params = HashMap::new();
+
+                for (key, value) in res.params.iter() {
+                    route_params.insert(key.to_string(), value.to_string());
+                }
+
+                Some((res.value.clone(), route_params))
+            }
             Err(_) => None,
         }
     }

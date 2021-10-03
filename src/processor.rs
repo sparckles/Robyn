@@ -38,8 +38,9 @@ pub async fn handle_request(
     headers: &Arc<Headers>,
     payload: &mut web::Payload,
     req: &HttpRequest,
+    route_params: HashMap<String, String>,
 ) -> HttpResponse {
-    let contents = match execute_function(function, payload, headers, req).await {
+    let contents = match execute_function(function, payload, headers, req, route_params).await {
         Ok(res) => res,
         Err(err) => {
             println!("Error: {:?}", err);
@@ -74,6 +75,7 @@ async fn execute_function(
     payload: &mut web::Payload,
     headers: &Headers,
     req: &HttpRequest,
+    route_params: HashMap<String, String>,
 ) -> Result<String> {
     let mut data: Option<Vec<u8>> = None;
 
@@ -105,11 +107,15 @@ async fn execute_function(
         PyFunction::CoRoutine(handler) => {
             let output = Python::with_gil(|py| {
                 let handler = handler.as_ref(py);
+                request.insert("params", route_params.into_py(py));
+                request.insert("headers", headers_python.into_py(py));
 
-                if let Some(res) = data {
-                    let data = res.into_py(py);
-                    request.insert("body", data);
-                    request.insert("headers", headers_python.into_py(py));
+                match data {
+                    Some(res) => {
+                        let data = res.into_py(py);
+                        request.insert("body", data);
+                    }
+                    None => {}
                 };
 
                 // this makes the request object to be accessible across every route
@@ -158,11 +164,13 @@ async fn execute_function(
             tokio::task::spawn_blocking(move || {
                 Python::with_gil(|py| {
                     let handler = handler.as_ref(py);
+                    request.insert("params", route_params.into_py(py));
+                    request.insert("headers", headers_python.into_py(py));
                     let output: PyResult<&PyAny> = match data {
                         Some(res) => {
                             let data = res.into_py(py);
                             request.insert("body", data);
-                            request.insert("headers", headers_python.into_py(py));
+
                             handler.call1((request,))
                         }
                         None => handler.call1((request,)),

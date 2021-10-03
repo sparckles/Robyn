@@ -164,8 +164,8 @@ async fn index(
     req: HttpRequest,
 ) -> impl Responder {
     match router.get_route(req.method().clone(), req.uri().path()) {
-        Some(handler_function) => {
-            handle_request(handler_function, &headers, &mut payload, &req).await
+        Some((handler_function, route_params)) => {
+            handle_request(handler_function, &headers, &mut payload, &req, route_params).await
         }
         None => {
             let mut response = HttpResponse::Ok();
