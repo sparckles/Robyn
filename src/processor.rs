@@ -39,18 +39,18 @@ pub async fn handle_request(
     payload: &mut web::Payload,
     req: &HttpRequest,
 ) -> HttpResponse {
-    let contents = match execute_function(function, payload, &headers, req).await {
+    let contents = match execute_function(function, payload, headers, req).await {
         Ok(res) => res,
         Err(err) => {
             println!("Error: {:?}", err);
             let mut response = HttpResponse::InternalServerError();
-            apply_headers(&mut response, &headers);
+            apply_headers(&mut response, headers);
             return response.finish();
         }
     };
 
     let mut response = HttpResponse::Ok();
-    apply_headers(&mut response, &headers);
+    apply_headers(&mut response, headers);
     response.body(contents)
 }
 
@@ -106,13 +106,10 @@ async fn execute_function(
             let output = Python::with_gil(|py| {
                 let handler = handler.as_ref(py);
 
-                match data {
-                    Some(res) => {
-                        let data = res.into_py(py);
-                        request.insert("body", data);
-                        request.insert("headers", headers_python.into_py(py));
-                    }
-                    None => {}
+                if let Some(res) = data {
+                    let data = res.into_py(py);
+                    request.insert("body", data);
+                    request.insert("headers", headers_python.into_py(py));
                 };
 
                 // this makes the request object to be accessible across every route
@@ -135,17 +132,13 @@ async fn execute_function(
                                 if response_type == "static_file" {
                                     // static file here and serve string
                                     let file_path = res.get_item("file_path").unwrap().extract()?;
-                                    return Ok(read_file(file_path));
+                                    Ok(read_file(file_path))
                                 } else {
-                                    return Err(PyErr::from_instance(
-                                        "Server Error".into_py(py).as_ref(py),
-                                    ));
+                                    Err(PyErr::from_instance("Server Error".into_py(py).as_ref(py)))
                                 }
                             }
                             false => {
-                                return Err(PyErr::from_instance(
-                                    "Server Error".into_py(py).as_ref(py),
-                                ));
+                                Err(PyErr::from_instance("Server Error".into_py(py).as_ref(py)))
                             }
                         }
                     }
@@ -153,7 +146,7 @@ async fn execute_function(
                         // this means that this is basic string output
                         // and a json serialized string will be parsed here
                         let contents: &str = string_contents.extract(py)?;
-                        return Ok(contents.to_string());
+                        Ok(contents.to_string())
                     }
                 }
             })?;
