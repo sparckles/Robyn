@@ -22,6 +22,7 @@ async def h(request):
 
 @app.get("/test/:id")
 async def test(request):
+    print(request)
     return static_file("./index.html")
 
 @app.get("/jsonify")
@@ -29,7 +30,7 @@ async def json_get(request):
     return jsonify({"hello": "world"})
 
 
-@app.post("/jsonify")
+@app.post("/jsonify/:id")
 async def json(request):
     print(request)
     return jsonify({"hello": "world"})
