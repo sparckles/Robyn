@@ -10,28 +10,28 @@ I used [oha](https://github.com/hatoo/oha) to perform the testing of 10000 reque
 
 1. Flask(Gunicorn)
 ```
-  Total:	11.7603 secs
-  Slowest:	0.0777 secs
-  Fastest:	0.0052 secs
-  Average:	0.0586 secs
-  Requests/sec:	850.3200
+  Total:        5.5254 secs
+  Slowest:      0.0784 secs
+  Fastest:      0.0028 secs
+  Average:      0.0275 secs
+  Requests/sec: 1809.8082
 ```
 
 2. FastAPI(Uvicorn)
 ```
-  Total:	12.4052 secs
-  Slowest:	0.1302 secs
-  Fastest:	0.0227 secs
-  Average:	0.0619 secs
-  Requests/sec:	806.1105
+  Total:        4.1314 secs
+  Slowest:      0.0733 secs
+  Fastest:      0.0027 secs
+  Average:      0.0206 secs
+  Requests/sec: 2420.4851
 ```
 3. Django(Gunicron)
 ```
-  Total:	24.9545 secs
-  Slowest:	0.1587 secs
-  Fastest:	0.0168 secs
-  Average:	0.1245 secs
-  Requests/sec:	400.7296
+  Total:        13.5070 secs
+  Slowest:      0.3635 secs
+  Fastest:      0.0249 secs
+  Average:      0.0674 secs
+  Requests/sec: 740.3558
 ```
 4. Robyn(Doesn't need a *SGI)
 ```
@@ -42,48 +42,48 @@ I used [oha](https://github.com/hatoo/oha) to perform the testing of 10000 reque
   Requests/sec:	5457.2339
 ```
 
-Robyn is able to serve the 10k requests in 1.8 seconds followed by Flask and FastAPI, which take around 12 seconds. Finally, Django takes around 24 seconds.
+Robyn is able to serve the 10k requests in 1.8 seconds followed by Flask and FastAPI, which take around 5 seconds(using 5 workers on a dual core machine). Finally, Django takes around 13.5070 seconds.
 
 ## Verbose Logs
 Flask(Gunicorn)
 ```
 Summary:
-  Success rate:	1.0000
-  Total:	11.7603 secs
-  Slowest:	0.0777 secs
-  Fastest:	0.0052 secs
-  Average:	0.0586 secs
-  Requests/sec:	850.3200
+  Success rate: 1.0000
+  Total:        5.5254 secs
+  Slowest:      0.0784 secs
+  Fastest:      0.0028 secs
+  Average:      0.0275 secs
+  Requests/sec: 1809.8082
 
-  Total data:	126.95 KiB
-  Size/request:	13 B
-  Size/sec:	10.79 KiB
+  Total data:   126.95 KiB
+  Size/request: 13 B
+  Size/sec:     22.98 KiB
 
 Response time histogram:
-  0.007 [4]    |
-  0.013 [6]    |
-  0.020 [5]    |
-  0.026 [3]    |
-  0.033 [4]    |
-  0.040 [5]    |
-  0.046 [6]    |
-  0.053 [3855] |■■■■■■■■■■■■■■■■■■■■
-  0.059 [5928] |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-  0.066 [136]  |
-  0.072 [48]   |
+  0.007 [55]   |
+  0.014 [641]  |■■■■■
+  0.021 [2413] |■■■■■■■■■■■■■■■■■■■■
+  0.027 [3771] |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+  0.034 [1999] |■■■■■■■■■■■■■■■■
+  0.041 [737]  |■■■■■■
+  0.048 [236]  |■■
+  0.055 [75]   |
+  0.062 [46]   |
+  0.069 [24]   |
+  0.076 [3]    |
 
 Latency distribution:
-  10% in 0.0559 secs
-  25% in 0.0572 secs
-  50% in 0.0585 secs
-  75% in 0.0599 secs
-  90% in 0.0616 secs
-  95% in 0.0629 secs
-  99% in 0.0658 secs
+  10% in 0.0178 secs
+  25% in 0.0223 secs
+  50% in 0.0266 secs
+  75% in 0.0317 secs
+  90% in 0.0378 secs
+  95% in 0.0419 secs
+  99% in 0.0551 secs
 
 Details (average, fastest, slowest):
-  DNS+dialup:	0.0002 secs, 0.0001 secs, 0.0077 secs
-  DNS-lookup:	0.0000 secs, 0.0000 secs, 0.0007 secs
+  DNS+dialup:   0.0071 secs, 0.0001 secs, 0.0443 secs
+  DNS-lookup:   0.0000 secs, 0.0000 secs, 0.0010 secs
 
 Status code distribution:
   [200] 10000 responses
@@ -92,42 +92,42 @@ Status code distribution:
 FastAPI(Uvicorn)
 ```
 Summary:
-  Success rate:	1.0000
-  Total:	12.4052 secs
-  Slowest:	0.1302 secs
-  Fastest:	0.0227 secs
-  Average:	0.0619 secs
-  Requests/sec:	806.1105
+  Success rate: 1.0000
+  Total:        4.1314 secs
+  Slowest:      0.0733 secs
+  Fastest:      0.0027 secs
+  Average:      0.0206 secs
+  Requests/sec: 2420.4851
 
-  Total data:	166.02 KiB
-  Size/request:	17 B
-  Size/sec:	13.38 KiB
+  Total data:   166.02 KiB
+  Size/request: 17 B
+  Size/sec:     40.18 KiB
 
 Response time histogram:
-  0.010 [192]  |■
-  0.020 [819]  |■■■■■■■
-  0.029 [308]  |■■
-  0.039 [3698] |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-  0.049 [3678] |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-  0.059 [452]  |■■■
-  0.068 [327]  |■■
-  0.078 [385]  |■■■
-  0.088 [110]  |
-  0.098 [29]   |
-  0.108 [2]    |
+  0.005 [175]  |■
+  0.011 [1541] |■■■■■■■■■■■■■■■■
+  0.016 [2942] |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+  0.021 [2770] |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+  0.027 [1479] |■■■■■■■■■■■■■■■■
+  0.032 [608]  |■■■■■■
+  0.038 [217]  |■■
+  0.043 [103]  |■
+  0.048 [53]   |
+  0.054 [54]   |
+  0.059 [58]   |
 
 Latency distribution:
-  10% in 0.0397 secs
-  25% in 0.0568 secs
-  50% in 0.0618 secs
-  75% in 0.0663 secs
-  90% in 0.0770 secs
-  95% in 0.0919 secs
-  99% in 0.1026 secs
+  10% in 0.0120 secs
+  25% in 0.0151 secs
+  50% in 0.0194 secs
+  75% in 0.0243 secs
+  90% in 0.0300 secs
+  95% in 0.0348 secs
+  99% in 0.0522 secs
 
 Details (average, fastest, slowest):
-  DNS+dialup:	0.0028 secs, 0.0026 secs, 0.0032 secs
-  DNS-lookup:	0.0000 secs, 0.0000 secs, 0.0002 secs
+  DNS+dialup:   0.0088 secs, 0.0073 secs, 0.0103 secs
+  DNS-lookup:   0.0001 secs, 0.0000 secs, 0.0008 secs
 
 Status code distribution:
   [200] 10000 responses
@@ -180,42 +180,42 @@ Status code distribution:
 Django(Gunicorn)
 ```
 Summary:
-  Success rate:	1.0000
-  Total:	24.9545 secs
-  Slowest:	0.1587 secs
-  Fastest:	0.0168 secs
-  Average:	0.1245 secs
-  Requests/sec:	400.7296
+  Success rate: 1.0000
+  Total:        13.5070 secs
+  Slowest:      0.3635 secs
+  Fastest:      0.0249 secs
+  Average:      0.0674 secs
+  Requests/sec: 740.3558
 
-  Total data:	102.01 MiB
-  Size/request:	10.45 KiB
-  Size/sec:	4.09 MiB
+  Total data:   102.01 MiB
+  Size/request: 10.45 KiB
+  Size/sec:     7.55 MiB
 
 Response time histogram:
-  0.013 [5]    |
-  0.026 [5]    |
-  0.039 [4]    |
-  0.052 [3]    |
-  0.064 [5]    |
-  0.077 [5]    |
-  0.090 [5]    |
-  0.103 [213]  |
-  0.116 [9578] |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-  0.129 [172]  |
-  0.142 [5]    |
+  0.016 [283]  |■
+  0.032 [2616] |■■■■■■■■■■■■■■■■■■
+  0.048 [4587] |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+  0.064 [1829] |■■■■■■■■■■■■
+  0.081 [362]  |■■
+  0.097 [98]   |
+  0.113 [105]  |
+  0.129 [20]   |
+  0.145 [7]    |
+  0.161 [28]   |
+  0.177 [65]   |
 
 Latency distribution:
-  10% in 0.1214 secs
-  25% in 0.1226 secs
-  50% in 0.1243 secs
-  75% in 0.1262 secs
-  90% in 0.1282 secs
-  95% in 0.1297 secs
-  99% in 0.1355 secs
+  10% in 0.0493 secs
+  25% in 0.0559 secs
+  50% in 0.0638 secs
+  75% in 0.0733 secs
+  90% in 0.0840 secs
+  95% in 0.0948 secs
+  99% in 0.1543 secs
 
 Details (average, fastest, slowest):
-  DNS+dialup:	0.0002 secs, 0.0001 secs, 0.0092 secs
-  DNS-lookup:	0.0000 secs, 0.0000 secs, 0.0004 secs
+  DNS+dialup:   0.0097 secs, 0.0001 secs, 0.0444 secs
+  DNS-lookup:   0.0000 secs, 0.0000 secs, 0.0007 secs
 
 Status code distribution:
   [200] 10000 responses
