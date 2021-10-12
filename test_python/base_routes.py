@@ -32,7 +32,7 @@ async def json_get(request):
 
 @app.post("/jsonify/:id")
 async def json(request):
-    print(request)
+    print(request["params"]["id"])
     return jsonify({"hello": "world"})
 
 @app.post("/post")
