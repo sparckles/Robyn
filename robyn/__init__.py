@@ -4,14 +4,32 @@ import argparse
 import asyncio
 from inspect import signature
 
-from .robyn import Server
+from .robyn import Server, SocketHeld
 from .responses import static_file, jsonify
 from .dev_event_handler import EventHandler
 from .log_colors import Colors
+from multiprocessing import Process
 
 
 from watchdog.observers import Observer
 
+
+def spawned_process(handlers, socket, name):
+    import asyncio
+    import uvloop
+
+    uvloop.install()
+    loop = uvloop.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    # create a server
+    server = Server()
+
+    for i in handlers:
+        server.add_route(i[0], i[1], i[2], i[3])
+
+    server.start(socket, name)
+    asyncio.get_event_loop().run_forever()
 
 
 class Robyn:
@@ -23,6 +41,8 @@ class Robyn:
         self.directory_path = directory_path
         self.server = Server(directory_path)
         self.dev = self._is_dev()
+        self.routes = []
+        self.headers = []
 
     def _is_dev(self):
         parser = argparse.ArgumentParser()
@@ -61,7 +81,17 @@ class Robyn:
 
         :param port [int]: [reperesents the port number at which the server is listening]
         """
+        socket = SocketHeld(f"0.0.0.0:{port}", port)
         if not self.dev:
+            for i in range(2):
+                copied = socket.try_clone()
+                p = Process(
+                    target=spawned_process,
+                    args=(self.routes, copied, f"Process {i}"),
+                )
+                p.start()
+
+            input("Press Cntrl + C to stop \n")
             self.server.start(url, port)
         else:
             event_handler = EventHandler(self.file_path)

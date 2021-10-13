@@ -1,18 +1,23 @@
 use crate::processor::{apply_headers, handle_request};
 use crate::router::Router;
+use crate::shared_socket::SocketHeld;
 use crate::types::Headers;
 use actix_files::Files;
+use std::convert::TryInto;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::{Relaxed, SeqCst};
 use std::sync::{Arc, RwLock};
 use std::thread;
 // pyO3 module
+use actix_http::KeepAlive;
 use actix_web::*;
 use dashmap::DashMap;
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
 
 // hyper modules
+use socket2::{Domain, Protocol, Socket, Type};
+
 static STARTED: AtomicBool = AtomicBool::new(false);
 
 #[derive(Clone)]
@@ -41,14 +46,27 @@ impl Server {
         }
     }
 
-    pub fn start(&mut self, py: Python, url: String, port: u16) {
+    pub fn start(
+        &mut self,
+        py: Python,
+        url: String,
+        port: u16,
+        socket: &PyCell<SocketHeld>,
+        name: String,
+    ) -> PyResult<()> {
         if STARTED
             .compare_exchange(false, true, SeqCst, Relaxed)
             .is_err()
         {
             println!("Already running...");
-            return;
+            return Ok(());
         }
+
+        let borrow = socket.try_borrow_mut()?;
+        let held_socket: &SocketHeld = &*borrow;
+
+        let raw_socket = held_socket.get_socket();
+        println!("Got our socket {:?}", raw_socket);
 
         let router = self.router.clone();
         let headers = self.headers.clone();
@@ -103,7 +121,10 @@ impl Server {
                             })
                         }))
                 })
-                .bind(addr)
+                .keep_alive(KeepAlive::Os)
+                .workers(1)
+                .client_timeout(0)
+                .listen(raw_socket.try_into().unwrap())
                 .unwrap()
                 .run()
                 .await
@@ -112,6 +133,7 @@ impl Server {
         });
 
         event_loop.call_method0("run_forever").unwrap();
+        Ok(())
     }
 
     pub fn add_directory(
