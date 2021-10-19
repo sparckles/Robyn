@@ -53,7 +53,7 @@ class Robyn:
     def remove_header(self, key):
         self.server.remove_header(key)
     
-    def start(self, url="127.0.0.1", port="5000"):
+    def start(self, url="127.0.0.1", port=5000):
         """
         [Starts the server]
 
