@@ -35,12 +35,22 @@ pub fn apply_headers(response: &mut HttpResponseBuilder, headers: &Arc<Headers>)
 ///
 pub async fn handle_request(
     function: PyFunction,
+    number_of_params: u8,
     headers: &Arc<Headers>,
     payload: &mut web::Payload,
     req: &HttpRequest,
     route_params: HashMap<String, String>,
 ) -> HttpResponse {
-    let contents = match execute_function(function, payload, headers, req, route_params).await {
+    let contents = match execute_function(
+        function,
+        payload,
+        headers,
+        req,
+        route_params,
+        number_of_params,
+    )
+    .await
+    {
         Ok(res) => res,
         Err(err) => {
             println!("Error: {:?}", err);
@@ -76,6 +86,7 @@ async fn execute_function(
     headers: &Headers,
     req: &HttpRequest,
     route_params: HashMap<String, String>,
+    number_of_params: u8,
 ) -> Result<String> {
     let mut data: Option<Vec<u8>> = None;
 
@@ -119,7 +130,12 @@ async fn execute_function(
                 };
 
                 // this makes the request object to be accessible across every route
-                let coro: PyResult<&PyAny> = handler.call1((request,));
+                let coro: PyResult<&PyAny> = match number_of_params {
+                    0 => handler.call0(),
+                    1 => handler.call1((request,)),
+                    // this is done to accomodate any future params
+                    2_u8..=u8::MAX => handler.call1((request,)),
+                };
                 pyo3_asyncio::tokio::into_future(coro?)
             })?;
 
@@ -166,16 +182,20 @@ async fn execute_function(
                     let handler = handler.as_ref(py);
                     request.insert("params", route_params.into_py(py));
                     request.insert("headers", headers_python.into_py(py));
-                    let output: PyResult<&PyAny> = match data {
+                    match data {
                         Some(res) => {
                             let data = res.into_py(py);
                             request.insert("body", data);
-
-                            handler.call1((request,))
                         }
-                        None => handler.call1((request,)),
+                        None => {}
                     };
 
+                    let output: PyResult<&PyAny> = match number_of_params {
+                        0 => handler.call0(),
+                        1 => handler.call1((request,)),
+                        // this is done to accomodate any future params
+                        2_u8..=u8::MAX => handler.call1((request,)),
+                    };
                     let output: &str = output?.extract()?;
                     Ok(output.to_string())
                 })

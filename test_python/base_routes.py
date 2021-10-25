@@ -12,8 +12,8 @@ callCount = 0
 
 
 @app.get("/")
-async def h(request):
-    print(request)
+async def h(requests):
+    print(requests)
     global callCount
     callCount += 1
     message = "Called " + str(callCount) + " times"
@@ -26,7 +26,7 @@ async def test(request):
     return static_file("./index.html")
 
 @app.get("/jsonify")
-async def json_get(request):
+async def json_get():
     return jsonify({"hello": "world"})
 
 

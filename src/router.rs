@@ -11,15 +11,15 @@ use matchit::Node;
 /// Contains the thread safe hashmaps of different routes
 
 pub struct Router {
-    get_routes: Arc<RwLock<Node<PyFunction>>>,
-    post_routes: Arc<RwLock<Node<PyFunction>>>,
-    put_routes: Arc<RwLock<Node<PyFunction>>>,
-    delete_routes: Arc<RwLock<Node<PyFunction>>>,
-    patch_routes: Arc<RwLock<Node<PyFunction>>>,
-    head_routes: Arc<RwLock<Node<PyFunction>>>,
-    options_routes: Arc<RwLock<Node<PyFunction>>>,
-    connect_routes: Arc<RwLock<Node<PyFunction>>>,
-    trace_routes: Arc<RwLock<Node<PyFunction>>>,
+    get_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
+    post_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
+    put_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
+    delete_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
+    patch_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
+    head_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
+    options_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
+    connect_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
+    trace_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
 }
 
 impl Router {
@@ -38,7 +38,7 @@ impl Router {
     }
 
     #[inline]
-    fn get_relevant_map(&self, route: Method) -> Option<&Arc<RwLock<Node<PyFunction>>>> {
+    fn get_relevant_map(&self, route: Method) -> Option<&Arc<RwLock<Node<(PyFunction, u8)>>>> {
         match route {
             Method::GET => Some(&self.get_routes),
             Method::POST => Some(&self.post_routes),
@@ -54,7 +54,7 @@ impl Router {
     }
 
     #[inline]
-    fn get_relevant_map_str(&self, route: &str) -> Option<&Arc<RwLock<Node<PyFunction>>>> {
+    fn get_relevant_map_str(&self, route: &str) -> Option<&Arc<RwLock<Node<(PyFunction, u8)>>>> {
         let method = match Method::from_bytes(route.as_bytes()) {
             Ok(res) => res,
             Err(_) => return None,
@@ -65,7 +65,14 @@ impl Router {
 
     // Checks if the functions is an async function
     // Inserts them in the router according to their nature(CoRoutine/SyncFunction)
-    pub fn add_route(&self, route_type: &str, route: &str, handler: Py<PyAny>, is_async: bool) {
+    pub fn add_route(
+        &self,
+        route_type: &str,
+        route: &str,
+        handler: Py<PyAny>,
+        is_async: bool,
+        number_of_params: u8,
+    ) {
         let table = match self.get_relevant_map_str(route_type) {
             Some(table) => table,
             None => return,
@@ -80,7 +87,7 @@ impl Router {
         table
             .write()
             .unwrap()
-            .insert(route.to_string(), function)
+            .insert(route.to_string(), (function, number_of_params))
             .unwrap();
     }
 
@@ -88,7 +95,7 @@ impl Router {
         &self,
         route_method: Method,
         route: &str,
-    ) -> Option<(PyFunction, HashMap<String, String>)> {
+    ) -> Option<((PyFunction, u8), HashMap<String, String>)> {
         let table = self.get_relevant_map(route_method)?;
         match table.read().unwrap().at(route) {
             Ok(res) => {
