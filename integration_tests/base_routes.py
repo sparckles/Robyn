@@ -5,6 +5,8 @@
 
 from robyn import Robyn, static_file, jsonify
 import asyncio
+import os
+import pathlib
 
 app = Robyn(__file__)
 
@@ -23,7 +25,10 @@ async def h(requests):
 @app.get("/test/:id")
 async def test(request):
     print(request)
-    return static_file("./index.html")
+    current_file_path = pathlib.Path(__file__).parent.resolve()
+    html_file = os.path.join(current_file_path, "index.html")
+
+    return static_file(html_file)
 
 @app.get("/jsonify")
 async def json_get():
