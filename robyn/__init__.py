@@ -2,6 +2,7 @@
 import os
 import argparse
 import asyncio
+from inspect import signature
 
 from .robyn import Server
 from .responses import static_file, jsonify
@@ -40,8 +41,9 @@ class Robyn:
 
         """ We will add the status code here only
         """
+        number_of_params = len(signature(handler).parameters)
         self.server.add_route(
-            route_type, endpoint, handler, asyncio.iscoroutinefunction(handler)
+            route_type, endpoint, handler, asyncio.iscoroutinefunction(handler), number_of_params
         )
 
     def add_directory(self, route, directory_path, index_file=None, show_files_listing=False):

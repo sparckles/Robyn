@@ -143,9 +143,17 @@ impl Server {
 
     /// Add a new route to the routing tables
     /// can be called after the server has been started
-    pub fn add_route(&self, route_type: &str, route: &str, handler: Py<PyAny>, is_async: bool) {
+    pub fn add_route(
+        &self,
+        route_type: &str,
+        route: &str,
+        handler: Py<PyAny>,
+        is_async: bool,
+        number_of_params: u8,
+    ) {
         println!("Route added for {} {} ", route_type, route);
-        self.router.add_route(route_type, route, handler, is_async);
+        self.router
+            .add_route(route_type, route, handler, is_async, number_of_params);
     }
 }
 
@@ -164,8 +172,16 @@ async fn index(
     req: HttpRequest,
 ) -> impl Responder {
     match router.get_route(req.method().clone(), req.uri().path()) {
-        Some((handler_function, route_params)) => {
-            handle_request(handler_function, &headers, &mut payload, &req, route_params).await
+        Some(((handler_function, number_of_params), route_params)) => {
+            handle_request(
+                handler_function,
+                number_of_params,
+                &headers,
+                &mut payload,
+                &req,
+                route_params,
+            )
+            .await
         }
         None => {
             let mut response = HttpResponse::Ok();
