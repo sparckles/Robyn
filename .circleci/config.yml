@@ -145,7 +145,6 @@ jobs:
           command: |
             curl https://sh.rustup.rs -sSf | sh -s -- -y
             source $HOME/.cargo/env
-            python3 -m venv venv
-            source venv/bin/activate
-            maturin develop
+            maturin build  -i python --release --universal2 --out dist --no-sdist
+            pip install --force-reinstall dist/robyn*.whl
             pytest ~/project/integration_tests
