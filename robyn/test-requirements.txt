@@ -1,3 +1,4 @@
-pytest
+pytest==6.2.5
 maturin
 watchdog
+requests==2.26.0
