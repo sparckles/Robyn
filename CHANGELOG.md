@@ -1,5 +1,41 @@
 # Changelog
 
+## [Unreleased](https://github.com/sansyrox/robyn/tree/HEAD)
+
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.7.0...HEAD)
+
+**Closed issues:**
+
+- Remove the solution using dockerisation of tests [\#98](https://github.com/sansyrox/robyn/issues/98)
+- Functions not working without request param [\#96](https://github.com/sansyrox/robyn/issues/96)
+- Add actix router [\#85](https://github.com/sansyrox/robyn/issues/85)
+- Request apart from GET are not working in directory subroutes [\#79](https://github.com/sansyrox/robyn/issues/79)
+- Add the ability to share the server across the network [\#69](https://github.com/sansyrox/robyn/issues/69)
+- Add the ability to view headers in the HTTP Methods [\#54](https://github.com/sansyrox/robyn/issues/54)
+- Add tests! [\#8](https://github.com/sansyrox/robyn/issues/8)
+
+**Merged pull requests:**
+
+- Fix the failing testing suite! [\#100](https://github.com/sansyrox/robyn/pull/100) ([sansyrox](https://github.com/sansyrox))
+- Requests object is now optional [\#99](https://github.com/sansyrox/robyn/pull/99) ([sansyrox](https://github.com/sansyrox))
+
+## [v0.7.0](https://github.com/sansyrox/robyn/tree/v0.7.0) (2021-10-03)
+
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.6.1...v0.7.0)
+
+**Closed issues:**
+
+- Robyn the replacement of Quart [\#86](https://github.com/sansyrox/robyn/issues/86)
+- Add Pytest support for the test endpoints [\#81](https://github.com/sansyrox/robyn/issues/81)
+
+**Merged pull requests:**
+
+- Finally completed router integration [\#90](https://github.com/sansyrox/robyn/pull/90) ([sansyrox](https://github.com/sansyrox))
+- Address clippy lints [\#89](https://github.com/sansyrox/robyn/pull/89) ([SanchithHegde](https://github.com/SanchithHegde))
+- Initial docs update [\#83](https://github.com/sansyrox/robyn/pull/83) ([sansyrox](https://github.com/sansyrox))
+- Add the basics of python testing [\#82](https://github.com/sansyrox/robyn/pull/82) ([sansyrox](https://github.com/sansyrox))
+- Add a new landing page [\#80](https://github.com/sansyrox/robyn/pull/80) ([sansyrox](https://github.com/sansyrox))
+
 ## [v0.6.1](https://github.com/sansyrox/robyn/tree/v0.6.1) (2021-08-30)
 
 [Full Changelog](https://github.com/sansyrox/robyn/compare/v0.6.0...v0.6.1)
