@@ -62,6 +62,8 @@ impl Server {
             return Ok(());
         }
 
+        println!("{}", name);
+
         let borrow = socket.try_borrow_mut()?;
         let held_socket: &SocketHeld = &*borrow;
 

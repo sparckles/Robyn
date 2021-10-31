@@ -14,7 +14,7 @@ impl SocketHeld {
     #[new]
     pub fn new(address: String, port: i32) -> PyResult<SocketHeld> {
         let socket = Socket::new(Domain::IPV4, Type::STREAM, Some(Protocol::TCP))?;
-
+        println!("{}", address);
         let address: SocketAddr = address.parse()?;
         socket.set_reuse_address(true)?;
         //socket.set_reuse_port(true)?;

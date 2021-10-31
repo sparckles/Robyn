@@ -8,13 +8,14 @@ from .robyn import Server, SocketHeld
 from .responses import static_file, jsonify
 from .dev_event_handler import EventHandler
 from .log_colors import Colors
-from multiprocessing import Process
+# from multiprocessing import Process
+from multiprocess import Pool
 
 
 from watchdog.observers import Observer
 
 
-def spawned_process(handlers, socket, name):
+def spawned_process(url, port, handlers, socket, name):
     import asyncio
     import uvloop
 
@@ -22,13 +23,17 @@ def spawned_process(handlers, socket, name):
     loop = uvloop.new_event_loop()
     asyncio.set_event_loop(loop)
 
-    # create a server
+    print(handlers)
     server = Server()
 
-    for i in handlers:
-        server.add_route(i[0], i[1], i[2], i[3])
 
-    server.start(socket, name)
+    for i in handlers:
+        route_type, endpoint, handler, is_async, number_of_params = i
+        print(i)
+        server.add_route(route_type, endpoint, handler, is_async, number_of_params)
+
+    print(socket, name)
+    server.start(url, port, socket, name)
     asyncio.get_event_loop().run_forever()
 
 
@@ -62,8 +67,9 @@ class Robyn:
         """ We will add the status code here only
         """
         number_of_params = len(signature(handler).parameters)
-        self.server.add_route(
-            route_type, endpoint, handler, asyncio.iscoroutinefunction(handler), number_of_params
+        # read why do we need to make a tuple here
+        self.routes.append(
+            ( route_type, endpoint, handler, asyncio.iscoroutinefunction(handler), number_of_params)
         )
 
     def add_directory(self, route, directory_path, index_file=None, show_files_listing=False):
@@ -83,16 +89,17 @@ class Robyn:
         """
         socket = SocketHeld(f"0.0.0.0:{port}", port)
         if not self.dev:
-            for i in range(2):
-                copied = socket.try_clone()
-                p = Process(
-                    target=spawned_process,
-                    args=(self.routes, copied, f"Process {i}"),
-                )
-                p.start()
+            spawned_process(url, port, self.routes, socket.try_clone(), f"Process {1}")
+            # for i in range(2):
+            #     copied = socket.try_clone()
+            #     p = Pool().map(
+            #         spawned_process,
+            #         args=(self.routes, copied, f"Process {i}"),
+            #     )
+            #     p.start()
 
-            input("Press Cntrl + C to stop \n")
-            self.server.start(url, port)
+            # input("Press Cntrl + C to stop \n")
+            # self.server.start(url, port)
         else:
             event_handler = EventHandler(self.file_path)
             event_handler.start_server_first_time()
