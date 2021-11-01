@@ -8,14 +8,18 @@ from .robyn import Server, SocketHeld
 from .responses import static_file, jsonify
 from .dev_event_handler import EventHandler
 from .log_colors import Colors
-# from multiprocessing import Process
-from multiprocess import Pool
+# from multiprocessing import Process, Queue
+from multiprocess import Process, Queue
+import socket
+import multiprocessing as mp
+mp.allow_connection_pickling()
 
 
 from watchdog.observers import Observer
 
 
-def spawned_process(url, port, handlers, socket, name):
+
+def spawned_process(url, port, handlers, socket_queue, name):
     import asyncio
     import uvloop
 
@@ -29,9 +33,10 @@ def spawned_process(url, port, handlers, socket, name):
 
     for i in handlers:
         route_type, endpoint, handler, is_async, number_of_params = i
-        print(i)
         server.add_route(route_type, endpoint, handler, is_async, number_of_params)
 
+    socket = socket_queue
+    print(socket_queue)
     print(socket, name)
     server.start(url, port, socket, name)
     asyncio.get_event_loop().run_forever()
@@ -89,17 +94,21 @@ class Robyn:
         """
         socket = SocketHeld(f"0.0.0.0:{port}", port)
         if not self.dev:
-            spawned_process(url, port, self.routes, socket.try_clone(), f"Process {1}")
-            # for i in range(2):
-            #     copied = socket.try_clone()
-            #     p = Pool().map(
-            #         spawned_process,
-            #         args=(self.routes, copied, f"Process {i}"),
-            #     )
-            #     p.start()
+            # from pathos.pools import ProcessPool
+            # pool = ProcessPool(nodes=2)
+            # spawned_process(url, port, self.routes, socket.try_clone(), f"Process {1}")
+            # from multiprocessing import Manager, Process, Pipe
+                        # p = Process(target=spawned_process, args=(url, port, self.routes, socket.try_clone(), f"Process {1}"))
 
-            # input("Press Cntrl + C to stop \n")
-            # self.server.start(url, port)
+            for i in range(2):
+                copied = socket.try_clone()
+                p = Process(
+                    target=spawned_process,
+                    args=(url, port, self.routes, copied, f"Process {i}"),
+                )
+                p.start()
+
+            input("Press Cntrl + C to stop \n")
         else:
             event_handler = EventHandler(self.file_path)
             event_handler.start_server_first_time()
