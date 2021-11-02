@@ -8,9 +8,7 @@ from .robyn import Server, SocketHeld
 from .responses import static_file, jsonify
 from .dev_event_handler import EventHandler
 from .log_colors import Colors
-# from multiprocessing import Process, Queue
-from multiprocess import Process, Queue
-import socket
+from multiprocess import Process
 import multiprocessing as mp
 mp.allow_connection_pickling()
 
@@ -19,27 +17,33 @@ from watchdog.observers import Observer
 
 
 
-def spawned_process(url, port, handlers, socket_queue, name):
+def spawned_process(url, port, directories, headers, routes, socket, process_name):
     import asyncio
     import uvloop
 
     uvloop.install()
     loop = uvloop.new_event_loop()
     asyncio.set_event_loop(loop)
-
-    print(handlers)
     server = Server()
 
+    print(directories)
 
-    for i in handlers:
-        route_type, endpoint, handler, is_async, number_of_params = i
+    for directory in directories:
+        route, directory_path, index_file, show_files_listing = directory
+        server.add_directory(route, directory_path, index_file, show_files_listing)
+
+    for key, val in headers:
+        server.add_header(key, val)
+
+
+    for route in routes:
+        route_type, endpoint, handler, is_async, number_of_params = route
         server.add_route(route_type, endpoint, handler, is_async, number_of_params)
 
-    socket = socket_queue
-    print(socket_queue)
-    print(socket, name)
-    server.start(url, port, socket, name)
+    server.start(url, port, socket, process_name)
     asyncio.get_event_loop().run_forever()
+
+
 
 
 class Robyn:
@@ -53,6 +57,8 @@ class Robyn:
         self.dev = self._is_dev()
         self.routes = []
         self.headers = []
+        self.routes = []
+        self.directories = []
 
     def _is_dev(self):
         parser = argparse.ArgumentParser()
@@ -78,10 +84,10 @@ class Robyn:
         )
 
     def add_directory(self, route, directory_path, index_file=None, show_files_listing=False):
-        self.server.add_directory(route, directory_path, index_file, show_files_listing)
+        self.directories.append(( route, directory_path, index_file, show_files_listing ))
 
     def add_header(self, key, value):
-        self.server.add_header(key, value)
+        self.headers.append(( key, value ))
 
     def remove_header(self, key):
         self.server.remove_header(key)
@@ -104,7 +110,7 @@ class Robyn:
                 copied = socket.try_clone()
                 p = Process(
                     target=spawned_process,
-                    args=(url, port, self.routes, copied, f"Process {i}"),
+                    args=(url, port, self.directories, self.headers, self.routes, copied, f"Process {i}"),
                 )
                 p.start()
 

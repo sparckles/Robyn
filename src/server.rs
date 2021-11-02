@@ -15,9 +15,6 @@ use dashmap::DashMap;
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
 
-// hyper modules
-use socket2::{Domain, Protocol, Socket, Type};
-
 static STARTED: AtomicBool = AtomicBool::new(false);
 
 #[derive(Clone)]

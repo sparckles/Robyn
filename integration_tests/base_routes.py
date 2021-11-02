@@ -15,11 +15,11 @@ callCount = 0
 
 
 @app.get("/")
-async def hello():
+async def hello(request):
     global callCount
     callCount += 1
     message = "Called " + str(callCount) + " times"
-    return message
+    return jsonify(request)
 
 
 @app.get("/test/:id")
@@ -71,5 +71,7 @@ def blocker():
 
 if __name__ == "__main__":
     app.add_header("server", "robyn")
-    app.add_directory(route="/test_dir",directory_path="./test_dir/build", index_file="index.html")
+    current_file_path = pathlib.Path(__file__).parent.resolve()
+    os.path.join(current_file_path, "build")
+    app.add_directory(route="/test_dir",directory_path=os.path.join(current_file_path, "build/"), index_file="index.html")
     app.start(port=5000, url='0.0.0.0')
