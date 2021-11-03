@@ -3,46 +3,20 @@ import os
 import argparse
 import asyncio
 from inspect import signature
-
-from .robyn import Server, SocketHeld
-from .responses import static_file, jsonify
-from .dev_event_handler import EventHandler
-from .log_colors import Colors
-from multiprocess import Process
 import multiprocessing as mp
 mp.allow_connection_pickling()
 
+# custom imports and exports
+from .robyn import Server, SocketHeld
+from .responses import static_file, jsonify
+from .dev_event_handler import EventHandler
+from .processpool import spawn_process
+from .log_colors import Colors
 
+
+# 3rd party imports and exports
+from multiprocess import Process
 from watchdog.observers import Observer
-
-
-
-def spawned_process(url, port, directories, headers, routes, socket, process_name):
-    import asyncio
-    import uvloop
-
-    uvloop.install()
-    loop = uvloop.new_event_loop()
-    asyncio.set_event_loop(loop)
-    server = Server()
-
-    print(directories)
-
-    for directory in directories:
-        route, directory_path, index_file, show_files_listing = directory
-        server.add_directory(route, directory_path, index_file, show_files_listing)
-
-    for key, val in headers:
-        server.add_header(key, val)
-
-
-    for route in routes:
-        route_type, endpoint, handler, is_async, number_of_params = route
-        server.add_route(route_type, endpoint, handler, is_async, number_of_params)
-
-    server.start(url, port, socket, process_name)
-    asyncio.get_event_loop().run_forever()
-
 
 
 
@@ -55,6 +29,7 @@ class Robyn:
         self.directory_path = directory_path
         self.server = Server(directory_path)
         self.dev = self._is_dev()
+        self.processes = self._processes() if self._processes() else 1
         self.routes = []
         self.headers = []
         self.routes = []
@@ -64,6 +39,11 @@ class Robyn:
         parser = argparse.ArgumentParser()
         parser.add_argument('--dev', default=False, type=lambda x: (str(x).lower() == 'true'))
         return parser.parse_args().dev
+
+    def _processes(self):
+        parser = argparse.ArgumentParser()
+        parser.add_argument('--processes', default=1, type=int)
+        return parser.parse_args().processes
 
 
     def add_route(self, route_type, endpoint, handler):
@@ -78,7 +58,6 @@ class Robyn:
         """ We will add the status code here only
         """
         number_of_params = len(signature(handler).parameters)
-        # read why do we need to make a tuple here
         self.routes.append(
             ( route_type, endpoint, handler, asyncio.iscoroutinefunction(handler), number_of_params)
         )
@@ -100,17 +79,11 @@ class Robyn:
         """
         socket = SocketHeld(f"0.0.0.0:{port}", port)
         if not self.dev:
-            # from pathos.pools import ProcessPool
-            # pool = ProcessPool(nodes=2)
-            # spawned_process(url, port, self.routes, socket.try_clone(), f"Process {1}")
-            # from multiprocessing import Manager, Process, Pipe
-                        # p = Process(target=spawned_process, args=(url, port, self.routes, socket.try_clone(), f"Process {1}"))
-
-            for i in range(2):
+            for process_number in range(self.processes):
                 copied = socket.try_clone()
                 p = Process(
-                    target=spawned_process,
-                    args=(url, port, self.directories, self.headers, self.routes, copied, f"Process {i}"),
+                    target=spawn_process,
+                    args=(url, port, self.directories, self.headers, self.routes, copied, f"Process {process_number}"),
                 )
                 p.start()
 
