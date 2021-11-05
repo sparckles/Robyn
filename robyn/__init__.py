@@ -31,6 +31,7 @@ class Robyn:
         self.parser = ArgumentParser()
         self.dev = self.parser.is_dev()
         self.processes = self.parser.num_processes() 
+        self.workers = self.parser.workers()
         self.routes = []
         self.headers = []
         self.routes = []
@@ -69,12 +70,13 @@ class Robyn:
         :param port [int]: [reperesents the port number at which the server is listening]
         """
         socket = SocketHeld(f"0.0.0.0:{port}", port)
+        workers = self.workers
         if not self.dev:
             for process_number in range(self.processes):
                 copied = socket.try_clone()
                 p = Process(
                     target=spawn_process,
-                    args=(url, port, self.directories, self.headers, self.routes, copied, f"Process {process_number}"),
+                    args=(url, port, self.directories, self.headers, self.routes, copied, f"Process {process_number}", workers),
                 )
                 p.start()
 

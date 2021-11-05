@@ -50,6 +50,7 @@ impl Server {
         port: u16,
         socket: &PyCell<SocketHeld>,
         name: String,
+        workers: usize,
     ) -> PyResult<()> {
         if STARTED
             .compare_exchange(false, true, SeqCst, Relaxed)
@@ -70,6 +71,7 @@ impl Server {
         let router = self.router.clone();
         let headers = self.headers.clone();
         let directories = self.directories.clone();
+        let workers = Arc::new(workers);
 
         let asyncio = py.import("asyncio").unwrap();
 
@@ -83,6 +85,8 @@ impl Server {
             //init_current_thread_once();
             actix_web::rt::System::new().block_on(async move {
                 let addr = format!("{}:{}", url, port);
+
+                println!("The number of workers are {}", workers.clone());
 
                 HttpServer::new(move || {
                     let mut app = App::new();
@@ -121,7 +125,7 @@ impl Server {
                         }))
                 })
                 .keep_alive(KeepAlive::Os)
-                .workers(6)
+                .workers(*workers.clone())
                 .client_timeout(0)
                 .listen(raw_socket.try_into().unwrap())
                 .unwrap()

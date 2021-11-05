@@ -8,7 +8,7 @@ import uvloop
 mp.allow_connection_pickling()
 
 
-def spawn_process(url, port, directories, headers, routes, socket, process_name):
+def spawn_process(url, port, directories, headers, routes, socket, process_name, workers):
     """
     This function is called by the main process handler to create a server runtime.
     This functions allows one runtime per process.
@@ -20,6 +20,7 @@ def spawn_process(url, port, directories, headers, routes, socket, process_name)
     :param routes tuple: The routes touple, containing the description about every route.
     :param socket Socket: This is the main tcp socket, which is being shared across multiple processes.
     :param process_name string: This is the name given to the process to identify the process
+    :param workers number: This is the name given to the process to identify the process
     """
     uvloop.install()
     loop = uvloop.new_event_loop()
@@ -40,5 +41,5 @@ def spawn_process(url, port, directories, headers, routes, socket, process_name)
         route_type, endpoint, handler, is_async, number_of_params = route
         server.add_route(route_type, endpoint, handler, is_async, number_of_params)
 
-    server.start(url, port, socket, process_name)
+    server.start(url, port, socket, process_name, workers)
     asyncio.get_event_loop().run_forever()
