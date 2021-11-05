@@ -1,6 +1,5 @@
 # default imports
 import os
-import argparse
 import asyncio
 from inspect import signature
 import multiprocessing as mp
@@ -8,6 +7,7 @@ mp.allow_connection_pickling()
 
 # custom imports and exports
 from .robyn import Server, SocketHeld
+from .argument_parser import ArgumentParser
 from .responses import static_file, jsonify
 from .dev_event_handler import EventHandler
 from .processpool import spawn_process
@@ -28,22 +28,13 @@ class Robyn:
         self.file_path = file_object
         self.directory_path = directory_path
         self.server = Server(directory_path)
-        self.dev = self._is_dev()
-        self.processes = self._processes() if self._processes() else 1
+        self.parser = ArgumentParser()
+        self.dev = self.parser.is_dev()
+        self.processes = self.parser.num_processes() 
         self.routes = []
         self.headers = []
         self.routes = []
         self.directories = []
-
-    def _is_dev(self):
-        parser = argparse.ArgumentParser()
-        parser.add_argument('--dev', default=False, type=lambda x: (str(x).lower() == 'true'))
-        return parser.parse_args().dev
-
-    def _processes(self):
-        parser = argparse.ArgumentParser()
-        parser.add_argument('--processes', default=1, type=int)
-        return parser.parse_args().processes
 
 
     def add_route(self, route_type, endpoint, handler):

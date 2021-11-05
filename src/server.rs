@@ -121,7 +121,7 @@ impl Server {
                         }))
                 })
                 .keep_alive(KeepAlive::Os)
-                .workers(1)
+                .workers(6)
                 .client_timeout(0)
                 .listen(raw_socket.try_into().unwrap())
                 .unwrap()
