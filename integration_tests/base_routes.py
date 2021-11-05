@@ -41,20 +41,40 @@ async def json(request):
     return jsonify({"hello": "world"})
 
 @app.post("/post")
-async def postreq(request):
+async def post():
+    return "POST Request"
+
+@app.post("/post_with_body")
+async def postreq_with_body(request):
     return bytearray(request["body"]).decode("utf-8")
 
 @app.put("/put")
-async def putreq(request):
+async def put(request):
+    return "PUT Request"
+
+@app.put("/put_with_body")
+async def putreq_with_body(request):
+    print(request)
     return bytearray(request["body"]).decode("utf-8")
+
 
 @app.delete("/delete")
-async def deletereq(request):
+async def delete(request):
+    return "DELETE Request"
+
+@app.delete("/delete_with_body")
+async def deletereq_with_body(request):
     return bytearray(request["body"]).decode("utf-8")
 
+
 @app.patch("/patch")
-async def patchreq(request):
+async def patch(request):
+    return "PATCH Request"
+
+@app.patch("/patch_with_body")
+async def patchreq_with_body(request):
     return bytearray(request["body"]).decode("utf-8")
+
 
 @app.get("/sleep")
 async def sleeper():
