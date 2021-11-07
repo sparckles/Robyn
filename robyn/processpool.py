@@ -1,8 +1,9 @@
 from .robyn import Server
 
+import sys
 import multiprocessing as mp
 import asyncio
-import uvloop
+import platform
 
 
 mp.allow_connection_pickling()
@@ -22,9 +23,18 @@ def spawn_process(url, port, directories, headers, routes, socket, process_name,
     :param process_name string: This is the name given to the process to identify the process
     :param workers number: This is the name given to the process to identify the process
     """
-    uvloop.install()
-    loop = uvloop.new_event_loop()
-    asyncio.set_event_loop(loop)
+    platform_name = platform.machine()   
+    if sys.platform.startswith("win32") or platform_name.startswith("armv7"):
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    else:
+        # uv loop doesn't support windows or arm machines at the moment
+        # but uv loop is much faster than native asyncio
+        import uvloop
+        uvloop.install()
+        loop = uvloop.new_event_loop()
+        asyncio.set_event_loop(loop)
+
     server = Server()
 
     print(directories)
