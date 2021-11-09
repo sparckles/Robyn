@@ -22,4 +22,4 @@ dependencies = [
 ]
 
 [dependencies]
-uvloop = { version = ">= 0.16.0", markers = "sys_platform == 'darwin'" }
+uvloop = { version = ">= 0.16.0", markers = "sys_platform ~= 'win32'" }
