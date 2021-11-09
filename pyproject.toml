@@ -16,14 +16,12 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "robyn"
+dependencies = [
+  'watchdog == 2.1.3',
+  'multiprocess == 0.70.12.2',
+# conditional
+  'uvloop == 0.16.0; sys_platform == "darwin"',
+  'uvloop == 0.16.0; sys_platform == "linux"'
+]
 
-[project.dependencies.watchdog]
-version = 2.1.3
-
-[project.dependencies.multiprocess]
-version = 0.70.12.2
-
-[project.dependencies.uvloop]
-version = 0.16.0
-sys_platform != "win32" 
 
