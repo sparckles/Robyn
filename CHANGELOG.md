@@ -1,8 +1,25 @@
 # Changelog
 
-## [Unreleased](https://github.com/sansyrox/robyn/tree/HEAD)
+## [v0.8.0](https://github.com/sansyrox/robyn/tree/v0.8.0) (2021-11-10)
 
-[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.7.0...HEAD)
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.7.1...v0.8.0)
+
+**Closed issues:**
+
+- Share the TCP web socket across different cores [\#91](https://github.com/sansyrox/robyn/issues/91)
+- Improve the router [\#52](https://github.com/sansyrox/robyn/issues/52)
+- \[Stretch Goal\] Create a a way of writing async request [\#32](https://github.com/sansyrox/robyn/issues/32)
+- Improve the router [\#29](https://github.com/sansyrox/robyn/issues/29)
+
+**Merged pull requests:**
+
+- Fix the failing testing suite! [\#100](https://github.com/sansyrox/robyn/pull/100) ([sansyrox](https://github.com/sansyrox))
+- Requests object is now optional [\#99](https://github.com/sansyrox/robyn/pull/99) ([sansyrox](https://github.com/sansyrox))
+- Add socket sharing [\#94](https://github.com/sansyrox/robyn/pull/94) ([sansyrox](https://github.com/sansyrox))
+
+## [v0.7.1](https://github.com/sansyrox/robyn/tree/v0.7.1) (2021-10-28)
+
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.7.0...v0.7.1)
 
 **Closed issues:**
 
@@ -13,11 +30,6 @@
 - Add the ability to share the server across the network [\#69](https://github.com/sansyrox/robyn/issues/69)
 - Add the ability to view headers in the HTTP Methods [\#54](https://github.com/sansyrox/robyn/issues/54)
 - Add tests! [\#8](https://github.com/sansyrox/robyn/issues/8)
-
-**Merged pull requests:**
-
-- Fix the failing testing suite! [\#100](https://github.com/sansyrox/robyn/pull/100) ([sansyrox](https://github.com/sansyrox))
-- Requests object is now optional [\#99](https://github.com/sansyrox/robyn/pull/99) ([sansyrox](https://github.com/sansyrox))
 
 ## [v0.7.0](https://github.com/sansyrox/robyn/tree/v0.7.0) (2021-10-03)
 
