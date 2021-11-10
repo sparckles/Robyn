@@ -1,15 +1,21 @@
 # default imports
 import os
-import argparse
 import asyncio
 from inspect import signature
+import multiprocessing as mp
+mp.allow_connection_pickling()
 
-from .robyn import Server
+# custom imports and exports
+from .robyn import Server, SocketHeld
+from .argument_parser import ArgumentParser
 from .responses import static_file, jsonify
 from .dev_event_handler import EventHandler
+from .processpool import spawn_process
 from .log_colors import Colors
 
 
+# 3rd party imports and exports
+from multiprocess import Process
 from watchdog.observers import Observer
 
 
@@ -22,12 +28,14 @@ class Robyn:
         self.file_path = file_object
         self.directory_path = directory_path
         self.server = Server(directory_path)
-        self.dev = self._is_dev()
-
-    def _is_dev(self):
-        parser = argparse.ArgumentParser()
-        parser.add_argument('--dev', default=False, type=lambda x: (str(x).lower() == 'true'))
-        return parser.parse_args().dev
+        self.parser = ArgumentParser()
+        self.dev = self.parser.is_dev()
+        self.processes = self.parser.num_processes() 
+        self.workers = self.parser.workers()
+        self.routes = []
+        self.headers = []
+        self.routes = []
+        self.directories = []
 
 
     def add_route(self, route_type, endpoint, handler):
@@ -42,15 +50,15 @@ class Robyn:
         """ We will add the status code here only
         """
         number_of_params = len(signature(handler).parameters)
-        self.server.add_route(
-            route_type, endpoint, handler, asyncio.iscoroutinefunction(handler), number_of_params
+        self.routes.append(
+            ( route_type, endpoint, handler, asyncio.iscoroutinefunction(handler), number_of_params)
         )
 
     def add_directory(self, route, directory_path, index_file=None, show_files_listing=False):
-        self.server.add_directory(route, directory_path, index_file, show_files_listing)
+        self.directories.append(( route, directory_path, index_file, show_files_listing ))
 
     def add_header(self, key, value):
-        self.server.add_header(key, value)
+        self.headers.append(( key, value ))
 
     def remove_header(self, key):
         self.server.remove_header(key)
@@ -61,8 +69,18 @@ class Robyn:
 
         :param port [int]: [reperesents the port number at which the server is listening]
         """
+        socket = SocketHeld(f"0.0.0.0:{port}", port)
+        workers = self.workers
         if not self.dev:
-            self.server.start(url, port)
+            for process_number in range(self.processes):
+                copied = socket.try_clone()
+                p = Process(
+                    target=spawn_process,
+                    args=(url, port, self.directories, self.headers, self.routes, copied, f"Process {process_number}", workers),
+                )
+                p.start()
+
+            input("Press Cntrl + C to stop \n")
         else:
             event_handler = EventHandler(self.file_path)
             event_handler.start_server_first_time()

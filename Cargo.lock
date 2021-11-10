@@ -1183,6 +1183,7 @@ name = "robyn"
 version = "0.7.1"
 dependencies = [
  "actix-files",
+ "actix-http",
  "actix-web",
  "anyhow",
  "dashmap",
@@ -1190,6 +1191,7 @@ dependencies = [
  "matchit",
  "pyo3",
  "pyo3-asyncio",
+ "socket2",
  "tokio",
 ]
 

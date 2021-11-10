@@ -3,23 +3,23 @@
 # robyn_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../robyn")
 # sys.path.insert(0, robyn_path)
 
-from robyn import Robyn, static_file, jsonify
+from robyn import Robyn, static_file, jsonify, SocketHeld
 import asyncio
 import os
 import pathlib
 
 app = Robyn(__file__)
 
+
 callCount = 0
 
 
 @app.get("/")
-async def h(requests):
-    print(requests)
+async def hello(request):
     global callCount
     callCount += 1
     message = "Called " + str(callCount) + " times"
-    return message
+    return jsonify(request)
 
 
 @app.get("/test/:id")
@@ -41,20 +41,40 @@ async def json(request):
     return jsonify({"hello": "world"})
 
 @app.post("/post")
-async def postreq(request):
+async def post():
+    return "POST Request"
+
+@app.post("/post_with_body")
+async def postreq_with_body(request):
     return bytearray(request["body"]).decode("utf-8")
 
 @app.put("/put")
-async def putreq(request):
+async def put(request):
+    return "PUT Request"
+
+@app.put("/put_with_body")
+async def putreq_with_body(request):
+    print(request)
     return bytearray(request["body"]).decode("utf-8")
+
 
 @app.delete("/delete")
-async def deletereq(request):
+async def delete(request):
+    return "DELETE Request"
+
+@app.delete("/delete_with_body")
+async def deletereq_with_body(request):
     return bytearray(request["body"]).decode("utf-8")
 
+
 @app.patch("/patch")
-async def patchreq(request):
+async def patch(request):
+    return "PATCH Request"
+
+@app.patch("/patch_with_body")
+async def patchreq_with_body(request):
     return bytearray(request["body"]).decode("utf-8")
+
 
 @app.get("/sleep")
 async def sleeper():
@@ -71,5 +91,7 @@ def blocker():
 
 if __name__ == "__main__":
     app.add_header("server", "robyn")
-    app.add_directory(route="/test_dir",directory_path="./test_dir/build", index_file="index.html")
+    current_file_path = pathlib.Path(__file__).parent.resolve()
+    os.path.join(current_file_path, "build")
+    app.add_directory(route="/test_dir",directory_path=os.path.join(current_file_path, "build/"), index_file="index.html")
     app.start(port=5000, url='0.0.0.0')
