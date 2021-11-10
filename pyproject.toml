@@ -21,7 +21,8 @@ dependencies = [
   'multiprocess == 0.70.12.2',
 # conditional
   'uvloop == 0.16.0; sys_platform == "darwin"',
-  'uvloop == 0.16.0; platform_machine == "x86_64"'
+  'uvloop == 0.16.0; platform_machine == "x86_64"',
+  'uvloop == 0.16.0; platform_machine == "i686"'
 ]
 
 
