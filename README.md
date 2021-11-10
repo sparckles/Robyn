@@ -50,11 +50,19 @@ If you're feeling curious. You can take a look at a more detailed architecture [
 
 ## To Run
 
-### Without hot reloading
-`python3 app.py`
+```
+python3 app.py -h
 
-### With hot reloading
-`python3 app.py --dev=true`
+usage: base_routes.py [-h] [--processes PROCESSES] [--workers WORKERS] [--dev DEV]
+
+Robyn, a fast async web framework with a rust runtime.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --processes PROCESSES : allows you to choose the number of parallel processes
+  --workers WORKERS : allows you to choose the number of workers
+  --dev DEV : this flag gives the option to enable hot reloading or not
+```
 
 
 ## Contributors/Supporters
