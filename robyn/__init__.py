@@ -195,3 +195,11 @@ class Robyn:
 
         return inner
 
+    def ws(self, endpoint):
+        def inner(handler):
+            # this function will be the resoponse handler for flask
+            ...
+
+        return inner
+
+

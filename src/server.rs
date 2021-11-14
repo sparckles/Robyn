@@ -195,7 +195,17 @@ async fn index(
     headers: web::Data<Arc<Headers>>,
     mut payload: web::Payload,
     req: HttpRequest,
+    Path(group_id): Path<Uuid>,
+    srv: Data<Addr<Lobby>>,
 ) -> impl Responder {
+    // let ws = WsConn::new(
+    // group_id,
+    // srv.get_ref().clone(),
+    // );
+
+    // let resp = ws::start(ws, &req, stream)?;
+    // Ok(resp)
+
     match router.get_route(req.method().clone(), req.uri().path()) {
         Some(((handler_function, number_of_params), route_params)) => {
             handle_request(
