@@ -1,13 +1,12 @@
-use actix::{fut, ActorContext, WrapFuture, ContextFutureSpawner, ActorFuture};
-use crate::messages::{Disconnect, Connect, WsMessage, ClientActorMessage};
-use crate::lobby::Lobby; 
+use crate::lobby::Lobby;
+use crate::messages::{ClientActorMessage, Connect, Disconnect, WsMessage};
+use actix::{fut, ActorContext, ActorFuture, ContextFutureSpawner, WrapFuture};
 use actix::{Actor, Addr, Running, StreamHandler};
 use actix::{AsyncContext, Handler};
 use actix_web_actors::ws;
 use actix_web_actors::ws::Message::Text;
 use std::time::{Duration, Instant};
 use uuid::Uuid;
-
 
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
@@ -55,7 +54,10 @@ impl Actor for WsConn {
     }
 
     fn stopping(&mut self, _: &mut Self::Context) -> Running {
-        self.lobby_addr.do_send(Disconnect { id: self.id, room_id: self.room });
+        self.lobby_addr.do_send(Disconnect {
+            id: self.id,
+            room_id: self.room,
+        });
         Running::Stop
     }
 }
@@ -65,7 +67,10 @@ impl WsConn {
         ctx.run_interval(HEARTBEAT_INTERVAL, |act, ctx| {
             if Instant::now().duration_since(act.hb) > CLIENT_TIMEOUT {
                 println!("Disconnecting failed heartbeat");
-                act.lobby_addr.do_send(Disconnect { id: act.id, room_id: act.room });
+                act.lobby_addr.do_send(Disconnect {
+                    id: act.id,
+                    room_id: act.room,
+                });
                 ctx.stop();
                 return;
             }
@@ -97,9 +102,8 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsConn {
             Ok(Text(s)) => self.lobby_addr.do_send(ClientActorMessage {
                 id: self.id,
                 msg: s,
-                room_id: self.room
+                room_id: self.room,
             }),
-            
             Err(e) => panic!(e),
         }
     }
@@ -112,4 +116,3 @@ impl Handler<WsMessage> for WsConn {
         ctx.text(msg.0);
     }
 }
-

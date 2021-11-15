@@ -38,11 +38,12 @@ class Robyn:
         self.directories = []
 
 
-    def add_route(self, route_type, endpoint, handler):
+    def add_route(self, route_type, connection_type, endpoint, handler):
         """
         [This is base handler for all the decorators]
 
         :param route_type [str]: [route type between GET/POST/PUT/DELETE/PATCH]
+        :param connection_type [str]: [connection_type type between HTTP/WS]
         :param endpoint [str]: [endpoint for the route added]
         :param handler [function]: [represents the sync or async function passed as a handler for the route]
         """
@@ -51,7 +52,7 @@ class Robyn:
         """
         number_of_params = len(signature(handler).parameters)
         self.routes.append(
-            ( route_type, endpoint, handler, asyncio.iscoroutinefunction(handler), number_of_params)
+            ( route_type, connection_type, endpoint, handler, asyncio.iscoroutinefunction(handler), number_of_params)
         )
 
     def add_directory(self, route, directory_path, index_file=None, show_files_listing=False):
@@ -102,7 +103,7 @@ class Robyn:
         :param endpoint [str]: [endpoint to server the route]
         """
         def inner(handler):
-            self.add_route("GET", endpoint, handler)
+            self.add_route("GET", "HTTP", endpoint, handler)
 
         return inner
 
@@ -113,7 +114,7 @@ class Robyn:
         :param endpoint [str]: [endpoint to server the route]
         """
         def inner(handler):
-            self.add_route("POST", endpoint, handler)
+            self.add_route("POST", "HTTP", endpoint, handler)
 
         return inner
 
@@ -124,7 +125,7 @@ class Robyn:
         :param endpoint [str]: [endpoint to server the route]
         """
         def inner(handler):
-            self.add_route("PUT", endpoint, handler)
+            self.add_route("PUT", "HTTP", endpoint, handler)
 
         return inner
 
@@ -135,7 +136,7 @@ class Robyn:
         :param endpoint [str]: [endpoint to server the route]
         """
         def inner(handler):
-            self.add_route("DELETE", endpoint, handler)
+            self.add_route("DELETE", "HTTP", endpoint, handler)
 
         return inner
 
@@ -146,7 +147,7 @@ class Robyn:
         :param endpoint [str]: [endpoint to server the route]
         """
         def inner(handler):
-            self.add_route("PATCH", endpoint, handler)
+            self.add_route("PATCH", "HTTP", endpoint, handler)
            
         return inner
 
@@ -157,7 +158,7 @@ class Robyn:
         :param endpoint [str]: [endpoint to server the route]
         """
         def inner(handler):
-            self.add_route("HEAD", endpoint, handler)
+            self.add_route("HEAD", "HTTP", endpoint, handler)
 
         return inner
 
@@ -168,7 +169,7 @@ class Robyn:
         :param endpoint [str]: [endpoint to server the route]
         """
         def inner(handler):
-            self.add_route("OPTIONS", endpoint, handler)
+            self.add_route("OPTIONS", "HTTP", endpoint, handler)
 
         return inner
 
@@ -180,7 +181,7 @@ class Robyn:
         :param endpoint [str]: [endpoint to server the route]
         """
         def inner(handler):
-            self.add_route("CONNECT", endpoint, handler)
+            self.add_route("CONNECT", "HTTP", endpoint, handler)
 
         return inner
 
@@ -191,14 +192,14 @@ class Robyn:
         :param endpoint [str]: [endpoint to server the route]
         """
         def inner(handler):
-            self.add_route("TRACE", endpoint, handler)
+            self.add_route("TRACE", "HTTP", endpoint, handler)
 
         return inner
 
     def ws(self, endpoint):
         def inner(handler):
             # this function will be the resoponse handler for flask
-            ...
+            self.add_route("", "WS", endpoint, handler)
 
         return inner
 

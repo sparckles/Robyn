@@ -20,6 +20,7 @@ pub struct Router {
     options_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
     connect_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
     trace_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
+    web_socket_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
 }
 
 impl Router {
@@ -34,33 +35,49 @@ impl Router {
             options_routes: Arc::new(RwLock::new(Node::new())),
             connect_routes: Arc::new(RwLock::new(Node::new())),
             trace_routes: Arc::new(RwLock::new(Node::new())),
+            web_socket_routes: Arc::new(RwLock::new(Node::new())),
+        }
+    }
+
+    // &connection_type will be converted to an enum of web socket and http
+    #[inline]
+    fn get_relevant_map(
+        &self,
+        route: Method,
+        connection_type: &str,
+    ) -> Option<&Arc<RwLock<Node<(PyFunction, u8)>>>> {
+        if connection_type == "HTTP" {
+            match route {
+                Method::GET => Some(&self.get_routes),
+                Method::POST => Some(&self.post_routes),
+                Method::PUT => Some(&self.put_routes),
+                Method::PATCH => Some(&self.patch_routes),
+                Method::DELETE => Some(&self.delete_routes),
+                Method::HEAD => Some(&self.head_routes),
+                Method::OPTIONS => Some(&self.options_routes),
+                Method::CONNECT => Some(&self.connect_routes),
+                Method::TRACE => Some(&self.trace_routes),
+                _ => None,
+            }
+        } else if connection_type == "WS" {
+            Some(&self.web_socket_routes)
+        } else {
+            None
         }
     }
 
     #[inline]
-    fn get_relevant_map(&self, route: Method) -> Option<&Arc<RwLock<Node<(PyFunction, u8)>>>> {
-        match route {
-            Method::GET => Some(&self.get_routes),
-            Method::POST => Some(&self.post_routes),
-            Method::PUT => Some(&self.put_routes),
-            Method::PATCH => Some(&self.patch_routes),
-            Method::DELETE => Some(&self.delete_routes),
-            Method::HEAD => Some(&self.head_routes),
-            Method::OPTIONS => Some(&self.options_routes),
-            Method::CONNECT => Some(&self.connect_routes),
-            Method::TRACE => Some(&self.trace_routes),
-            _ => None,
-        }
-    }
-
-    #[inline]
-    fn get_relevant_map_str(&self, route: &str) -> Option<&Arc<RwLock<Node<(PyFunction, u8)>>>> {
+    fn get_relevant_map_str(
+        &self,
+        route: &str,
+        connection_type: &str,
+    ) -> Option<&Arc<RwLock<Node<(PyFunction, u8)>>>> {
         let method = match Method::from_bytes(route.as_bytes()) {
             Ok(res) => res,
             Err(_) => return None,
         };
 
-        self.get_relevant_map(method)
+        self.get_relevant_map(method, connection_type)
     }
 
     // Checks if the functions is an async function
@@ -68,12 +85,13 @@ impl Router {
     pub fn add_route(
         &self,
         route_type: &str,
+        connection_type: &str,
         route: &str,
         handler: Py<PyAny>,
         is_async: bool,
         number_of_params: u8,
     ) {
-        let table = match self.get_relevant_map_str(route_type) {
+        let table = match self.get_relevant_map_str(route_type, connection_type) {
             Some(table) => table,
             None => return,
         };
@@ -95,8 +113,9 @@ impl Router {
         &self,
         route_method: Method,
         route: &str,
+        connection_type: &str,
     ) -> Option<((PyFunction, u8), HashMap<String, String>)> {
-        let table = self.get_relevant_map(route_method)?;
+        let table = self.get_relevant_map(route_method, connection_type)?;
         match table.read().unwrap().at(route) {
             Ok(res) => {
                 let mut route_params = HashMap::new();

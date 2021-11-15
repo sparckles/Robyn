@@ -118,6 +118,7 @@ impl Server {
 
                     app.app_data(web::Data::new(router.clone()))
                         .app_data(web::Data::new(headers.clone()))
+                        .service(start_connection)
                         .default_service(web::route().to(move |router, headers, payload, req| {
                             pyo3_asyncio::tokio::scope_local(event_loop_hdl.clone(), async move {
                                 index(router, headers, payload, req).await
@@ -171,14 +172,21 @@ impl Server {
     pub fn add_route(
         &self,
         route_type: &str,
+        connection_type: &str,
         route: &str,
         handler: Py<PyAny>,
         is_async: bool,
         number_of_params: u8,
     ) {
         println!("Route added for {} {} ", route_type, route);
-        self.router
-            .add_route(route_type, route, handler, is_async, number_of_params);
+        self.router.add_route(
+            route_type,
+            connection_type,
+            route,
+            handler,
+            is_async,
+            number_of_params,
+        );
     }
 }
 
@@ -188,6 +196,14 @@ impl Default for Server {
     }
 }
 
+use crate::lobby::Lobby;
+use crate::start_connection::start_connection;
+use crate::ws::WsConn;
+use actix::Addr;
+use actix_web::{get, web::Data, web::Path, web::Payload, Error, HttpRequest, HttpResponse};
+use actix_web_actors::ws;
+use uuid::Uuid;
+
 /// This is our service handler. It receives a Request, routes on it
 /// path, and returns a Future of a Response.
 async fn index(
@@ -195,8 +211,6 @@ async fn index(
     headers: web::Data<Arc<Headers>>,
     mut payload: web::Payload,
     req: HttpRequest,
-    Path(group_id): Path<Uuid>,
-    srv: Data<Addr<Lobby>>,
 ) -> impl Responder {
     // let ws = WsConn::new(
     // group_id,
@@ -206,7 +220,7 @@ async fn index(
     // let resp = ws::start(ws, &req, stream)?;
     // Ok(resp)
 
-    match router.get_route(req.method().clone(), req.uri().path()) {
+    match router.get_route(req.method().clone(), req.uri().path(), "HTTP") {
         Some(((handler_function, number_of_params), route_params)) => {
             handle_request(
                 handler_function,

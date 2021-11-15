@@ -7,4 +7,6 @@ pub enum PyFunction {
     SyncFunction(Py<PyAny>),
 }
 
+pub type RustAsync = Box<dyn FnOnce() + Send + 'static>;
+
 pub type Headers = DashMap<String, String>;
