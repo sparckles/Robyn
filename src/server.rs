@@ -2,6 +2,8 @@ use crate::processor::{apply_headers, handle_request};
 use crate::router::Router;
 use crate::shared_socket::SocketHeld;
 use crate::types::Headers;
+use crate::web_socket_connection::start_web_socket;
+
 use actix_files::Files;
 use std::convert::TryInto;
 use std::sync::atomic::AtomicBool;
@@ -116,7 +118,8 @@ impl Server {
                         }
                     }
 
-                    app.app_data(web::Data::new(router.clone()))
+                    app.route("/web_socket", web::get().to(start_web_socket))
+                        .app_data(web::Data::new(router.clone()))
                         .app_data(web::Data::new(headers.clone()))
                         .default_service(web::route().to(move |router, headers, payload, req| {
                             pyo3_asyncio::tokio::scope_local(event_loop_hdl.clone(), async move {
