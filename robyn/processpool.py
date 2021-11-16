@@ -51,5 +51,7 @@ def spawn_process(url, port, directories, headers, routes, socket, process_name,
         route_type, endpoint, handler, is_async, number_of_params = route
         server.add_route(route_type, endpoint, handler, is_async, number_of_params)
 
+
+    # need to check if web sockets is initialised and then initilise it here as well
     server.start(url, port, socket, process_name, workers)
     asyncio.get_event_loop().run_forever()

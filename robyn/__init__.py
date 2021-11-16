@@ -36,6 +36,8 @@ class Robyn:
         self.headers = []
         self.routes = []
         self.directories = []
+        self.web_socket_endpoint = ""
+        self.web_socket_methods = []
 
 
     def add_route(self, route_type, endpoint, handler):
@@ -62,6 +64,11 @@ class Robyn:
 
     def remove_header(self, key):
         self.server.remove_header(key)
+
+    def add_web_socket_method(self, type, handler):
+        number_of_params = len(signature(handler).parameters)
+        self.web_socket_methods.append((type, handler, number_of_params))
+        
     
     def start(self, url="127.0.0.1", port=5000):
         """

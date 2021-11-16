@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use dashmap::DashMap;
 use std::sync::{Arc, RwLock};
 // pyo3 modules
 use crate::types::PyFunction;
@@ -20,7 +21,9 @@ pub struct Router {
     options_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
     connect_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
     trace_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
+    trace_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
 }
+
 
 impl Router {
     pub fn new() -> Self {
@@ -110,4 +113,57 @@ impl Router {
             Err(_) => None,
         }
     }
+}
+
+
+
+/// This contains a route member
+/// type of route mapping to the function
+/// Try to check if this method even requires a param or not
+pub struct WebSocketRouter {
+    routes: Arc<RwLock<Node<(PyFunction, u8)>>>;
+}
+
+
+impl WebSocketRouter {
+    pub fn new() -> Self {
+        socket_methods: Arc::new(RwLock::new(Node::new()))
+    }
+
+    fn add_handler(
+        &self,
+        connection_type: &str,
+       handler: Py<PyAny>,
+       is_async: bool,
+       number_of_params: u8,
+    ) {
+        let table = self.socket_methods;
+        let function = if is_async {
+            PyFunction::CoRoutine(handler)
+        } else {
+            PyFunction::SyncFunction(handler)
+        };
+
+        table
+            .write()
+            .unwrap()
+            .insert(connection_type.to_string(), (function, number_of_params))
+            .unwrap();
+
+    }
+
+
+    pub fn get_handler(
+        &self,
+        connection_type: &str,
+    ) -> Option<(PyFunction, u8)> {
+        let table = self.socket_methods;
+        match table.read().unwrap().at(connection_type) {
+            Ok(res) => {
+                Some(res.value.clone())
+            }
+            Err(_) => None,
+        }
+    }
+
 }
