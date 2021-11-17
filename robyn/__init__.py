@@ -69,7 +69,7 @@ class Robyn:
 
         :param port [int]: [reperesents the port number at which the server is listening]
         """
-        socket = SocketHeld(f"0.0.0.0:{port}", port)
+        socket = SocketHeld(url, port)
         workers = self.workers
         if not self.dev:
             for process_number in range(self.processes):

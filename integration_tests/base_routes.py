@@ -59,7 +59,7 @@ async def putreq_with_body(request):
 
 
 @app.delete("/delete")
-async def delete(request):
+async def delete():
     return "DELETE Request"
 
 @app.delete("/delete_with_body")
@@ -68,7 +68,7 @@ async def deletereq_with_body(request):
 
 
 @app.patch("/patch")
-async def patch(request):
+async def patch():
     return "PATCH Request"
 
 @app.patch("/patch_with_body")
@@ -90,8 +90,9 @@ def blocker():
 
 
 if __name__ == "__main__":
+    ROBYN_URL = os.getenv("ROBYN_URL", '0.0.0.0')
     app.add_header("server", "robyn")
     current_file_path = pathlib.Path(__file__).parent.resolve()
     os.path.join(current_file_path, "build")
     app.add_directory(route="/test_dir",directory_path=os.path.join(current_file_path, "build/"), index_file="index.html")
-    app.start(port=5000, url='0.0.0.0')
+    app.start(port=5000, url=ROBYN_URL)
