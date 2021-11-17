@@ -14,6 +14,7 @@ def session():
     time.sleep(1)
     yield
     process.terminate()
+    del os.environ["ROBYN_URL"]
 
 @pytest.fixture
 def global_session():
@@ -24,5 +25,7 @@ def global_session():
     time.sleep(1)
     yield
     process.terminate()
+    del os.environ["ROBYN_URL"]
+
 
 
