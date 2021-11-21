@@ -12,6 +12,7 @@ from .responses import static_file, jsonify
 from .dev_event_handler import EventHandler
 from .processpool import spawn_process
 from .log_colors import Colors
+from .ws import WS
 
 
 # 3rd party imports and exports
@@ -65,7 +66,7 @@ class Robyn:
     def remove_header(self, key):
         self.server.remove_header(key)
 
-    def add_web_socket_method(self, type, handler):
+    def add_web_socket_method(self, endpoint, type, handler):
         number_of_params = len(signature(handler).parameters)
         self.web_socket_methods.append((type, handler, number_of_params))
         
@@ -83,7 +84,7 @@ class Robyn:
                 copied = socket.try_clone()
                 p = Process(
                     target=spawn_process,
-                    args=(url, port, self.directories, self.headers, self.routes, copied, f"Process {process_number}", workers),
+                    args=(url, port, self.directories, self.headers, self.routes, self.web_socket_methods, copied, f"Process {process_number}", workers),
                 )
                 p.start()
 
@@ -101,6 +102,22 @@ class Robyn:
             finally:
                 observer.stop()
                 observer.join()
+
+    def ws__future(self, endpoint):
+        ## I would want it to return a web socket handler
+        ## that would something like 
+        ## ws.on("CONNECT")
+        ## maybe for the future
+        """
+        [The @app.ws decorator to add a web socket route]
+
+        :param endpoint [str]: [endpoint to server the route]
+        """
+        def inner(handler):
+            self.add_route("GET", endpoint, handler)
+
+        return inner
+
 
     def get(self, endpoint):
         """
@@ -201,4 +218,7 @@ class Robyn:
             self.add_route("TRACE", endpoint, handler)
 
         return inner
+
+    def web_socket_handler(self, handler, type):
+        self.add_web_socket_method(self.web_socket_endpoint, type, handler)
 

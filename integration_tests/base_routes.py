@@ -3,12 +3,28 @@
 # robyn_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../robyn")
 # sys.path.insert(0, robyn_path)
 
-from robyn import Robyn, static_file, jsonify, SocketHeld
+from robyn import Robyn, static_file, jsonify, WS
 import asyncio
 import os
 import pathlib
 
 app = Robyn(__file__)
+websocket = WS(app, "/web_socket")
+
+@websocket.on("connect")
+def connect():
+    print("Hello world")
+    return "Hello world, from ws"
+
+@websocket.on("close")
+def close():
+    print("Hello world")
+    return "Hello world, from ws"
+
+@websocket.on("message")
+def message():
+    print("Hello world")
+    return "Hello world, from ws"
 
 
 callCount = 0

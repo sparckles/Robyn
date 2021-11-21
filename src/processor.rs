@@ -79,6 +79,9 @@ fn read_file(file_path: &str) -> String {
     String::from_utf8_lossy(&buf).to_string()
 }
 
+//Execute function should only execute function
+// This function is doing a lot of things
+// Change this!
 #[inline]
 async fn execute_function(
     function: PyFunction,

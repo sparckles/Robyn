@@ -9,7 +9,7 @@ import asyncio
 mp.allow_connection_pickling()
 
 
-def spawn_process(url, port, directories, headers, routes, socket, process_name, workers):
+def spawn_process(url, port, directories, headers, routes, web_socket_methods, socket, process_name, workers):
     """
     This function is called by the main process handler to create a server runtime.
     This functions allows one runtime per process.
@@ -50,6 +50,12 @@ def spawn_process(url, port, directories, headers, routes, socket, process_name,
     for route in routes:
         route_type, endpoint, handler, is_async, number_of_params = route
         server.add_route(route_type, endpoint, handler, is_async, number_of_params)
+
+    # a very major hack used here
+    # need to create a new ws router 
+    # and add the new joining methods
+    for web_socket_method in web_socket_methods[:1]:
+        server.add_route("WS", "/web_socket", web_socket_method, False, 0)
 
 
     # need to check if web sockets is initialised and then initilise it here as well

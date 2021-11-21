@@ -4,7 +4,9 @@ use actix_web_actors::ws;
 use actix_web_actors::ws::WebsocketContext;
 
 /// Define HTTP actor
-struct MyWs;
+struct MyWs {
+    router: web::Data<Arc<Router>>,
+}
 
 // pub fn write_raw(&mut self, msg: Message)
 // [src][−]
@@ -70,6 +72,29 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
             }
 
             Ok(ws::Message::Text(text)) => {
+                let router = &self.router;
+                let (tuple, route_params) = router.get_route(Method::GET, "WS").unwrap();
+                println!("{:?}", tuple);
+                let handler_function = tuple.0;
+                println!("{:?}", handler_function);
+
+                // call execution function
+                match handler_function {
+                    PyFunction::SyncFunction(handler) => Python::with_gil(|py| {
+                        println!("{:?}", handler);
+
+                        let handler = handler.as_ref(py);
+                        println!("Calling handler");
+                        // call execute function
+                        let op = handler.call0();
+
+                        println!("{:?}", op);
+                    }),
+                    PyFunction::CoRoutine(handler) => {
+                        println!("Hello world")
+                    }
+                };
+
                 println!("Hello, how are you!");
                 ctx.text(text)
             }
@@ -82,11 +107,58 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
     }
 }
 
+use crate::router::Router;
+use crate::types::Headers;
+use crate::types::PyFunction;
+use actix_web::http::Method;
+use actix_web::*;
+use pyo3::prelude::*;
+use pyo3::types::PyDict;
+use std::sync::{Arc, RwLock};
+
 pub async fn start_web_socket(
     req: HttpRequest,
     stream: web::Payload,
+    router: web::Data<Arc<Router>>,
 ) -> Result<HttpResponse, Error> {
-    let resp = ws::start(MyWs {}, &req, stream);
+    let resp = ws::start(MyWs { router }, &req, stream);
     println!("{:?}", resp);
     resp
 }
+
+// pub async fn start_web_socket(
+//     router: web::Data<Arc<Router>>,
+//     headers: web::Data<Arc<Headers>>,
+//     stream: web::Payload,
+//     req: HttpRequest,
+// ) -> Result<HttpResponse, Error> {
+//     let resp = ws::start(MyWs {}, &req, stream);
+//     println!("{:?}", resp);
+//     resp
+// }
+
+// async fn index(
+//     router: web::Data<Arc<Router>>,
+//     headers: web::Data<Arc<Headers>>,
+//     stream: web::Payload,
+//     req: HttpRequest,
+// ) -> impl Responder {
+//     match router.get_route(req.method().clone(), req.uri().path()) {
+//         Some(((handler_function, number_of_params), route_params)) => {
+//             handle_request(
+//                 handler_function,
+//                 number_of_params,
+//                 &headers,
+//                 &mut payload,
+//                 &req,
+//                 route_params,
+//             )
+//             .await
+//         }
+//         None => {
+//             let mut response = HttpResponse::Ok();
+//             apply_headers(&mut response, &headers);
+//             response.finish()
+//         }
+//     }
+// }

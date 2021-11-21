@@ -118,9 +118,19 @@ impl Server {
                         }
                     }
 
-                    app.route("/web_socket", web::get().to(start_web_socket))
-                        .app_data(web::Data::new(router.clone()))
+                    app.app_data(web::Data::new(router.clone()))
                         .app_data(web::Data::new(headers.clone()))
+                        .route(
+                            "/web_socket",
+                            web::get().to(
+                                move |router: web::Data<Arc<Router>>,
+                                      headers: web::Data<Arc<Headers>>,
+                                      stream: web::Payload,
+                                      req: HttpRequest| async {
+                                    start_web_socket(req, stream, router).await
+                                },
+                            ),
+                        )
                         .default_service(web::route().to(move |router, headers, payload, req| {
                             pyo3_asyncio::tokio::scope_local(event_loop_hdl.clone(), async move {
                                 index(router, headers, payload, req).await

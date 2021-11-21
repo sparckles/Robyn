@@ -7,9 +7,10 @@ class WS:
 
     def on(self, type):
         def inner(handler):
+            print("Hwllo world", type, handler)
             if type not in ["connect", "close", "message"]:
                 raise Exception("Wrong Socket Route")
             else:
-               self.robyn_object.web_socket_handler(type,handler) 
+               self.robyn_object.web_socket_handler(handler=handler, type=type) 
 
         return inner
