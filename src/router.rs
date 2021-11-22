@@ -20,7 +20,7 @@ pub struct Router {
     options_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
     connect_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
     trace_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
-    web_socket_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
+    web_socket_routes: Arc<RwLock<Node<HashMap<String, (PyFunction, u8)>>>>,
 }
 
 impl Router {
@@ -56,12 +56,12 @@ impl Router {
     }
 
     #[inline]
-    fn get_web_socket_map(&self) -> Option<&Arc<RwLock<Node<(PyFunction, u8)>>>> {
+    fn get_web_socket_map(&self) -> Option<&Arc<RwLock<Node<HashMap<String, (PyFunction, u8)>>>>> {
         Some(&self.web_socket_routes)
     }
 
     #[inline]
-    fn get_relevant_map_str(&self, route: &str) -> Option<&Arc<RwLock<Node<(PyFunction, u8)>>>> {
+    fn get_relevant_map_str(&self, route: &str) -> Option<&Arc<RwLock<Node<HashMap<String, (PyFunction, u8)>>>>> {
         if route == "WS" {
             self.get_web_socket_map()
         } else {
@@ -102,11 +102,48 @@ impl Router {
             .unwrap();
     }
 
+    // Checks if the functions is an async function
+    // Inserts them in the router according to their nature(CoRoutine/SyncFunction)
+    pub fn add_websocket_route(
+        &self,
+        route: &str,
+        connect_route: (Py<PyAny>, bool, u8),
+        close_route: (Py<PyAny>, bool, u8),
+        message_route: (Py<PyAny>, bool, u8),
+    ) {
+        let table = match self.get_relevant_map_str("WS").unwrap();
+        // let connect_route_function , connect_route_is_async , connect_route_params = connect_route;
+        // let close_route_function , close_route_is_async , close_route_params = close_route;
+        // let message_route_function , message_route_is_async , message_route_params = message_route;
+
+        let insert_in_router = |table, function, number_of_params, type: String| {
+            let function = if is_async {
+                PyFunction::CoRoutine(handler)
+            } else {
+                PyFunction::SyncFunction(handler)
+            };
+
+            let route_map = HashMap::new();
+            route_map.insert(type, (function, number_of_params));
+
+            table
+                .write()
+                .unwrap()
+                .insert(route.to_string(), route_map)
+                .unwrap();
+        };
+
+        insert_in_router(connect_route, "connect");
+        insert_in_router(close_route, "close");
+        insert_in_router(message_route, "message");
+    }
+
     pub fn get_route(
         &self,
         route_method: Method,
         route: &str, // check for the route method here
     ) -> Option<((PyFunction, u8), HashMap<String, String>)> {
+        // need to split this function in multiple smaller functions
         let table = if route == "WS" {
             self.get_web_socket_map()?
         } else {

@@ -3,14 +3,16 @@ class WS:
     """
     def __init__(self, robyn_object, endpoint) -> None:
         self.robyn_object = robyn_object
-        robyn_object.web_socket_endpoint = endpoint
+        self.endpoint = endpoint
+        self.methods = {}
 
     def on(self, type):
         def inner(handler):
             print("Hwllo world", type, handler)
             if type not in ["connect", "close", "message"]:
-                raise Exception("Wrong Socket Route")
+                raise Exception(f"Socket method {type} does not exist")
             else:
-               self.robyn_object.web_socket_handler(handler=handler, type=type) 
+                self.methods[type] = handler
+                self.robyn_object.add_web_socket(self.endpoint, self) 
 
         return inner

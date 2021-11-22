@@ -5,7 +5,7 @@ use actix_web_actors::ws::WebsocketContext;
 
 /// Define HTTP actor
 struct MyWs {
-    router: web::Data<Arc<Router>>,
+    router: HashMap<String, (PyFunction, u8)>,
 }
 
 // pub fn write_raw(&mut self, msg: Message)
@@ -73,9 +73,9 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
 
             Ok(ws::Message::Text(text)) => {
                 let router = &self.router;
-                let (tuple, route_params) = router.get_route(Method::GET, "WS").unwrap();
-                println!("{:?}", tuple);
-                let handler_function = tuple.0;
+                // let (tuple, route_params) = router.get_route(Method::GET, "WS").unwrap();
+                // println!("{:?}", tuple);
+                let handler_function = self.router.get("message").unwrap().0;
                 println!("{:?}", handler_function);
 
                 // call execution function
@@ -119,7 +119,7 @@ use std::sync::{Arc, RwLock};
 pub async fn start_web_socket(
     req: HttpRequest,
     stream: web::Payload,
-    router: web::Data<Arc<Router>>,
+    router: HashMap<String, (PyFunction, u8)>,
 ) -> Result<HttpResponse, Error> {
     let resp = ws::start(MyWs { router }, &req, stream);
     println!("{:?}", resp);

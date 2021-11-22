@@ -94,6 +94,7 @@ impl Server {
                     let mut app = App::new();
                     let event_loop_hdl = event_loop_hdl.clone();
                     let directories = directories.read().unwrap();
+                    let router_copy = router.clone();
 
                     // this loop matches three types of directory serving
                     // 1. Serves a build folder. e.g. the build folder generated from yarn build
@@ -118,24 +119,30 @@ impl Server {
                         }
                     }
 
-                    app.app_data(web::Data::new(router.clone()))
-                        .app_data(web::Data::new(headers.clone()))
-                        .route(
-                            "/web_socket",
+                    app = app
+                        .app_data(web::Data::new(router.clone()))
+                        .app_data(web::Data::new(headers.clone()));
+
+                    let web_socket_map = router::get_web_socket_map().unwrap().read();
+                    for (route, params: HashMap<String, (PyFunction, u8)>) in web_socket_map.into_iter() {
+                        app = app.route(
+                            route,
                             web::get().to(
                                 move |router: web::Data<Arc<Router>>,
                                       headers: web::Data<Arc<Headers>>,
                                       stream: web::Payload,
                                       req: HttpRequest| async {
-                                    start_web_socket(req, stream, router).await
+                                    start_web_socket(req, stream, params).await
                                 },
                             ),
                         )
-                        .default_service(web::route().to(move |router, headers, payload, req| {
-                            pyo3_asyncio::tokio::scope_local(event_loop_hdl.clone(), async move {
-                                index(router, headers, payload, req).await
-                            })
-                        }))
+                    }
+
+                    app.default_service(web::route().to(move |router, headers, payload, req| {
+                        pyo3_asyncio::tokio::scope_local(event_loop_hdl.clone(), async move {
+                            index(router, headers, payload, req).await
+                        })
+                    }))
                 })
                 .keep_alive(KeepAlive::Os)
                 .workers(*workers.clone())
@@ -192,6 +199,21 @@ impl Server {
         println!("Route added for {} {} ", route_type, route);
         self.router
             .add_route(route_type, route, handler, is_async, number_of_params);
+    }
+
+    /// Add a new web socket route to the routing tables
+    /// can be called after the server has been started
+    pub fn add_web_socket_route(
+        &self,
+        route: &str,
+        // handler, is_async, number of params
+        connect_route: (Py<PyAny>, bool, u8),
+        close_route: (Py<PyAny>, bool, u8),
+        message_route: (Py<PyAny>, bool, u8),
+    ) {
+        println!("Route added for {} {} ", route_type, route);
+        self.router
+            .add_websocket_route(route, connect_route, close_route, message_route);
     }
 }
 

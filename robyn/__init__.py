@@ -37,8 +37,7 @@ class Robyn:
         self.headers = []
         self.routes = []
         self.directories = []
-        self.web_socket_endpoint = ""
-        self.web_socket_methods = []
+        self.web_sockets = {}
 
 
     def add_route(self, route_type, endpoint, handler):
@@ -66,9 +65,8 @@ class Robyn:
     def remove_header(self, key):
         self.server.remove_header(key)
 
-    def add_web_socket_method(self, endpoint, type, handler):
-        number_of_params = len(signature(handler).parameters)
-        self.web_socket_methods.append((type, handler, number_of_params))
+    def add_web_socket(self, endpoint, ws):
+        self.web_sockets[endpoint] = ws
         
     
     def start(self, url="127.0.0.1", port=5000):
@@ -84,7 +82,7 @@ class Robyn:
                 copied = socket.try_clone()
                 p = Process(
                     target=spawn_process,
-                    args=(url, port, self.directories, self.headers, self.routes, self.web_socket_methods, copied, f"Process {process_number}", workers),
+                    args=(url, port, self.directories, self.headers, self.routes, self.web_sockets, copied, f"Process {process_number}", workers),
                 )
                 p.start()
 
@@ -219,6 +217,4 @@ class Robyn:
 
         return inner
 
-    def web_socket_handler(self, handler, type):
-        self.add_web_socket_method(self.web_socket_endpoint, type, handler)
 
