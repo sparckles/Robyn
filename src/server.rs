@@ -126,7 +126,7 @@ impl Server {
                         .app_data(web::Data::new(router.clone()))
                         .app_data(web::Data::new(headers.clone()));
 
-                    let web_socket_map = router_copy.get_web_socket_map().unwrap();
+                    let web_socket_map = router_copy.get_web_socket_map();
                     for elem in (web_socket_map).iter() {
                         let route1 = Arc::new(elem.key().clone());
                         let route = elem.key().clone();

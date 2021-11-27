@@ -57,10 +57,8 @@ impl Router {
     }
 
     #[inline]
-    pub fn get_web_socket_map(
-        &self,
-    ) -> Option<&DashMap<String, HashMap<String, (PyFunction, u8)>>> {
-        Some(&self.web_socket_routes)
+    pub fn get_web_socket_map(&self) -> &DashMap<String, HashMap<String, (PyFunction, u8)>> {
+        &self.web_socket_routes
     }
 
     #[inline]
@@ -119,23 +117,26 @@ impl Router {
         let (close_route_function, close_route_is_async, close_route_params) = close_route;
         let (message_route_function, message_route_is_async, message_route_params) = message_route;
 
-        let insert_in_router =
-            |table: Option<&DashMap<String, HashMap<String, (PyFunction, u8)>>>,
-             handler: Py<PyAny>,
-             is_async: bool,
-             number_of_params: u8,
-             socket_type: &str| {
-                let function = if is_async {
-                    PyFunction::CoRoutine(handler)
-                } else {
-                    PyFunction::SyncFunction(handler)
-                };
-
-                let mut route_map = HashMap::new();
-                route_map.insert(socket_type.to_string(), (function, number_of_params));
-
-                table.unwrap().insert(route.to_string(), route_map).unwrap();
+        println!("Hello world my name is ");
+        let insert_in_router = |table: &DashMap<String, HashMap<String, (PyFunction, u8)>>,
+                                handler: Py<PyAny>,
+                                is_async: bool,
+                                number_of_params: u8,
+                                socket_type: &str| {
+            let function = if is_async {
+                PyFunction::CoRoutine(handler)
+            } else {
+                PyFunction::SyncFunction(handler)
             };
+
+            let mut route_map = HashMap::new();
+            route_map.insert(socket_type.to_string(), (function, number_of_params));
+
+            println!("{:?}", table);
+            table.insert(route.to_string(), route_map);
+        };
+
+        println!("Hello world my name is 0");
 
         insert_in_router(
             table,
@@ -144,6 +145,8 @@ impl Router {
             connect_route_params,
             "connect",
         );
+        println!("Hello world my name is 1");
+
         insert_in_router(
             table,
             close_route_function,
@@ -151,6 +154,8 @@ impl Router {
             close_route_params,
             "close",
         );
+        println!("Hello world my name is 2");
+
         insert_in_router(
             table,
             message_route_function,
@@ -158,6 +163,7 @@ impl Router {
             message_route_params,
             "message",
         );
+        println!("Hello world my name is 3");
     }
 
     pub fn get_route(

@@ -54,8 +54,10 @@ def spawn_process(url, port, directories, headers, routes, web_sockets, socket, 
     # a very major hack used here
     # need to create a new ws router 
     # and add the new joining methods
-    for web_socket in web_sockets[:1]:
-        server.add_web_socket_route(web_socket.endpoint, web_socket.connect_route, web_socket.close_route, web_socket.message_route)
+    for endpoint in web_sockets:
+        web_socket = web_sockets[endpoint]
+        print(web_socket.methods)
+        server.add_web_socket_route(endpoint, web_socket.methods["connect"], web_socket.methods["close"], web_socket.methods["message"])
 
 
     # need to check if web sockets is initialised and then initilise it here as well
