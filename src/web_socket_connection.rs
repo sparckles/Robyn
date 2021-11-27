@@ -75,7 +75,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
                 let router = &self.router;
                 // let (tuple, route_params) = router.get_route(Method::GET, "WS").unwrap();
                 // println!("{:?}", tuple);
-                let handler_function = self.router.get("message").unwrap().0;
+                let handler_function = &self.router.get("message").unwrap().0;
                 println!("{:?}", handler_function);
 
                 // call execution function
@@ -107,14 +107,12 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
     }
 }
 
-use crate::router::Router;
-use crate::types::Headers;
 use crate::types::PyFunction;
-use actix_web::http::Method;
 use actix_web::*;
+use dashmap::DashMap;
 use pyo3::prelude::*;
-use pyo3::types::PyDict;
-use std::sync::{Arc, RwLock};
+use std::collections::HashMap;
+use std::sync::Arc;
 
 pub async fn start_web_socket(
     req: HttpRequest,

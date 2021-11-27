@@ -6,6 +6,7 @@ use pyo3::prelude::*;
 use pyo3::types::PyAny;
 
 use actix_web::http::Method;
+use dashmap::DashMap;
 use matchit::Node;
 
 /// Contains the thread safe hashmaps of different routes
@@ -20,7 +21,7 @@ pub struct Router {
     options_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
     connect_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
     trace_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
-    web_socket_routes: Arc<RwLock<Node<HashMap<String, (PyFunction, u8)>>>>,
+    web_socket_routes: DashMap<String, HashMap<String, (PyFunction, u8)>>,
 }
 
 impl Router {
@@ -35,7 +36,7 @@ impl Router {
             options_routes: Arc::new(RwLock::new(Node::new())),
             connect_routes: Arc::new(RwLock::new(Node::new())),
             trace_routes: Arc::new(RwLock::new(Node::new())),
-            web_socket_routes: Arc::new(RwLock::new(Node::new())),
+            web_socket_routes: DashMap::new(),
         }
     }
 
@@ -56,21 +57,23 @@ impl Router {
     }
 
     #[inline]
-    fn get_web_socket_map(&self) -> Option<&Arc<RwLock<Node<HashMap<String, (PyFunction, u8)>>>>> {
+    pub fn get_web_socket_map(
+        &self,
+    ) -> Option<&DashMap<String, HashMap<String, (PyFunction, u8)>>> {
         Some(&self.web_socket_routes)
     }
 
     #[inline]
-    fn get_relevant_map_str(&self, route: &str) -> Option<&Arc<RwLock<Node<HashMap<String, (PyFunction, u8)>>>>> {
-        if route == "WS" {
-            self.get_web_socket_map()
-        } else {
+    fn get_relevant_map_str(&self, route: &str) -> Option<&Arc<RwLock<Node<(PyFunction, u8)>>>> {
+        if route != "WS" {
             let method = match Method::from_bytes(route.as_bytes()) {
                 Ok(res) => res,
                 Err(_) => return None,
             };
 
-            self.get_relevant_map(method)
+            return self.get_relevant_map(method);
+        } else {
+            return None;
         }
     }
 
@@ -111,31 +114,50 @@ impl Router {
         close_route: (Py<PyAny>, bool, u8),
         message_route: (Py<PyAny>, bool, u8),
     ) {
-        let table = match self.get_relevant_map_str("WS").unwrap();
-        // let connect_route_function , connect_route_is_async , connect_route_params = connect_route;
-        // let close_route_function , close_route_is_async , close_route_params = close_route;
-        // let message_route_function , message_route_is_async , message_route_params = message_route;
+        let table = self.get_web_socket_map();
+        let (connect_route_function, connect_route_is_async, connect_route_params) = connect_route;
+        let (close_route_function, close_route_is_async, close_route_params) = close_route;
+        let (message_route_function, message_route_is_async, message_route_params) = message_route;
 
-        let insert_in_router = |table, function, number_of_params, type: String| {
-            let function = if is_async {
-                PyFunction::CoRoutine(handler)
-            } else {
-                PyFunction::SyncFunction(handler)
+        let insert_in_router =
+            |table: Option<&DashMap<String, HashMap<String, (PyFunction, u8)>>>,
+             handler: Py<PyAny>,
+             is_async: bool,
+             number_of_params: u8,
+             socket_type: &str| {
+                let function = if is_async {
+                    PyFunction::CoRoutine(handler)
+                } else {
+                    PyFunction::SyncFunction(handler)
+                };
+
+                let mut route_map = HashMap::new();
+                route_map.insert(socket_type.to_string(), (function, number_of_params));
+
+                table.unwrap().insert(route.to_string(), route_map).unwrap();
             };
 
-            let route_map = HashMap::new();
-            route_map.insert(type, (function, number_of_params));
-
-            table
-                .write()
-                .unwrap()
-                .insert(route.to_string(), route_map)
-                .unwrap();
-        };
-
-        insert_in_router(connect_route, "connect");
-        insert_in_router(close_route, "close");
-        insert_in_router(message_route, "message");
+        insert_in_router(
+            table,
+            connect_route_function,
+            connect_route_is_async,
+            connect_route_params,
+            "connect",
+        );
+        insert_in_router(
+            table,
+            close_route_function,
+            close_route_is_async,
+            close_route_params,
+            "close",
+        );
+        insert_in_router(
+            table,
+            message_route_function,
+            message_route_is_async,
+            message_route_params,
+            "message",
+        );
     }
 
     pub fn get_route(
@@ -144,39 +166,35 @@ impl Router {
         route: &str, // check for the route method here
     ) -> Option<((PyFunction, u8), HashMap<String, String>)> {
         // need to split this function in multiple smaller functions
-        let table = if route == "WS" {
-            self.get_web_socket_map()?
-        } else {
-            self.get_relevant_map(route_method)?
-        };
+        let table = self.get_relevant_map(route_method)?;
 
-        if route == "WS" {
-            match table.read().unwrap().at("/web_socket") {
-                Ok(res) => {
-                    let mut route_params = HashMap::new();
+        // if route == "WS" {
+        //     match table.read().unwrap().at("/web_socket") {
+        //         Ok(res) => {
+        //             let mut route_params = HashMap::new();
 
-                    for (key, value) in res.params.iter() {
-                        route_params.insert(key.to_string(), value.to_string());
-                    }
+        //             for (key, value) in res.params.iter() {
+        //                 route_params.insert(key.to_string(), value.to_string());
+        //             }
 
-                    Some((res.value.clone(), route_params))
+        //             Some((res.value.clone(), route_params))
+        //         }
+        //         Err(_) => None,
+        //     }
+        // } else {
+        match table.read().unwrap().at(route) {
+            Ok(res) => {
+                let mut route_params = HashMap::new();
+
+                for (key, value) in res.params.iter() {
+                    route_params.insert(key.to_string(), value.to_string());
                 }
-                Err(_) => None,
-            }
-        } else {
-            match table.read().unwrap().at(route) {
-                Ok(res) => {
-                    let mut route_params = HashMap::new();
 
-                    for (key, value) in res.params.iter() {
-                        route_params.insert(key.to_string(), value.to_string());
-                    }
-
-                    Some((res.value.clone(), route_params))
-                }
-                Err(_) => None,
+                Some((res.value.clone(), route_params))
             }
+            Err(_) => None,
         }
+        // }
     }
 }
 

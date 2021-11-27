@@ -4,18 +4,21 @@ use crate::shared_socket::SocketHeld;
 use crate::types::Headers;
 use crate::web_socket_connection::start_web_socket;
 
-use actix_files::Files;
+use std::collections::HashMap;
 use std::convert::TryInto;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::{Relaxed, SeqCst};
 use std::sync::{Arc, RwLock};
 use std::thread;
-// pyO3 module
+
+use actix_files::Files;
 use actix_http::KeepAlive;
 use actix_web::*;
 use dashmap::DashMap;
+
+// pyO3 module
+use crate::types::PyFunction;
 use pyo3::prelude::*;
-use pyo3::types::PyAny;
 
 static STARTED: AtomicBool = AtomicBool::new(false);
 
@@ -121,18 +124,29 @@ impl Server {
 
                     app = app
                         .app_data(web::Data::new(router.clone()))
-                        .app_data(web::Data::new(headers.clone()));
+                        .app_data(web::Data::new(headers.clone()))
+                        .app_data(web::Data::new(router_copy.get_web_socket_map().unwrap()));
 
-                    let web_socket_map = router::get_web_socket_map().unwrap().read();
-                    for (route, params: HashMap<String, (PyFunction, u8)>) in web_socket_map.into_iter() {
+                    let web_socket_map = router_copy.get_web_socket_map().unwrap();
+                    for elem in (web_socket_map).iter() {
+                        let route1 = Arc::new(elem.key().clone());
+                        // let params = Arc::new(elem.value().clone());
                         app = app.route(
-                            route,
+                            &elem.key().clone(),
                             web::get().to(
-                                move |router: web::Data<Arc<Router>>,
-                                      headers: web::Data<Arc<Headers>>,
-                                      stream: web::Payload,
-                                      req: HttpRequest| async {
-                                    start_web_socket(req, stream, params).await
+                                |router: web::Data<Arc<Router>>,
+                                 headers: web::Data<Arc<Headers>>,
+                                 stream: web::Payload,
+                                 req: HttpRequest,
+                                 ws_map: web::Data<
+                                    DashMap<String, HashMap<String, (PyFunction, u8)>>,
+                                >| async move {
+                                    start_web_socket(
+                                        req,
+                                        stream,
+                                        *ws_map.get(&elem.key().clone()).unwrap(),
+                                    )
+                                    .await
                                 },
                             ),
                         )
@@ -211,7 +225,7 @@ impl Server {
         close_route: (Py<PyAny>, bool, u8),
         message_route: (Py<PyAny>, bool, u8),
     ) {
-        println!("Route added for {} {} ", route_type, route);
+        println!("WS Route added for {} ", route);
         self.router
             .add_websocket_route(route, connect_route, close_route, message_route);
     }
