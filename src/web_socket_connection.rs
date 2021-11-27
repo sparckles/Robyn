@@ -92,7 +92,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
                         println!("{:?}", op);
                     }),
                     PyFunction::CoRoutine(handler) => {
-                        println!("Hello world")
+                        println!("Async Functions are not supported right now!")
                     }
                 };
 
