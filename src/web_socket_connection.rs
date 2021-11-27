@@ -3,9 +3,10 @@ use actix_web::{web, Error, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
 use actix_web_actors::ws::WebsocketContext;
 
+use std::sync::Arc;
 /// Define HTTP actor
 struct MyWs {
-    router: HashMap<String, (PyFunction, u8)>,
+    router: Arc<HashMap<String, (PyFunction, u8)>>,
 }
 
 // pub fn write_raw(&mut self, msg: Message)
@@ -112,12 +113,11 @@ use actix_web::*;
 use dashmap::DashMap;
 use pyo3::prelude::*;
 use std::collections::HashMap;
-use std::sync::Arc;
 
 pub async fn start_web_socket(
     req: HttpRequest,
     stream: web::Payload,
-    router: HashMap<String, (PyFunction, u8)>,
+    router: Arc<HashMap<String, (PyFunction, u8)>>,
 ) -> Result<HttpResponse, Error> {
     let resp = ws::start(MyWs { router }, &req, stream);
     println!("{:?}", resp);

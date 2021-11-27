@@ -124,32 +124,24 @@ impl Server {
 
                     app = app
                         .app_data(web::Data::new(router.clone()))
-                        .app_data(web::Data::new(headers.clone()))
-                        .app_data(web::Data::new(router_copy.get_web_socket_map().unwrap()));
+                        .app_data(web::Data::new(headers.clone()));
 
                     let web_socket_map = router_copy.get_web_socket_map().unwrap();
                     for elem in (web_socket_map).iter() {
                         let route1 = Arc::new(elem.key().clone());
-                        // let params = Arc::new(elem.value().clone());
+                        let route = elem.key().clone();
+                        let params = elem.value().clone();
                         app = app.route(
-                            &elem.key().clone(),
+                            &route,
                             web::get().to(
-                                |router: web::Data<Arc<Router>>,
-                                 headers: web::Data<Arc<Headers>>,
-                                 stream: web::Payload,
-                                 req: HttpRequest,
-                                 ws_map: web::Data<
-                                    DashMap<String, HashMap<String, (PyFunction, u8)>>,
-                                >| async move {
-                                    start_web_socket(
-                                        req,
-                                        stream,
-                                        *ws_map.get(&elem.key().clone()).unwrap(),
-                                    )
-                                    .await
+                                move |router: web::Data<Arc<Router>>,
+                                      headers: web::Data<Arc<Headers>>,
+                                      stream: web::Payload,
+                                      req: HttpRequest| {
+                                    start_web_socket(req, stream, Arc::new(params.clone()))
                                 },
                             ),
-                        )
+                        );
                     }
 
                     app.default_service(web::route().to(move |router, headers, payload, req| {
