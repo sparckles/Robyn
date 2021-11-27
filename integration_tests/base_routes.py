@@ -10,18 +10,28 @@ import pathlib
 
 app = Robyn(__file__)
 websocket = WS(app, "/web_socket")
+i = 0
 
-@websocket.on("connect")
+@websocket.on("message")
 def connect():
-    print("Hello world")
-    return "Hello world, from ws"
+    global i
+    s = ""
+    if i==0:
+        s = "Whaaat??"
+    elif i==1:
+        s = "Whooo??"
+    elif i==2:
+        s = "*chika* *chika* Slim Shady."
+    i+=1
+    print(i)
+    return s
 
 @websocket.on("close")
 def close():
     print("Hello world")
     return "Hello world, from ws"
 
-@websocket.on("message")
+@websocket.on("connect")
 def message():
     print("Hello world")
     return "Hello world, from ws"

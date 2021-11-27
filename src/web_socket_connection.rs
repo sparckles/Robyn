@@ -4,46 +4,11 @@ use actix_web_actors::ws;
 use actix_web_actors::ws::WebsocketContext;
 
 use std::sync::Arc;
+
 /// Define HTTP actor
 struct MyWs {
     router: Arc<HashMap<String, (PyFunction, u8)>>,
 }
-
-// pub fn write_raw(&mut self, msg: Message)
-// [src][−]
-// Write payload
-
-// This is a low-level function that accepts framed messages that should be created using Frame::message(). If you want to send text or binary data you should prefer the text() or binary() convenience functions that handle the framing for you.
-
-// pub fn text<T: Into<String>>(&mut self, text: T)
-// [src][−]
-// Send text frame
-
-// pub fn binary<B: Into<Bytes>>(&mut self, data: B)
-// [src][−]
-// Send binary frame
-
-// pub fn ping(&mut self, message: &[u8])
-// [src][−]
-// Send ping frame
-
-// pub fn pong(&mut self, message: &[u8])
-// [src][−]
-// Send pong frame
-
-// pub fn close(&mut self, reason: Option<CloseReason>)
-// [src][−]
-// Send close frame
-
-// pub fn handle(&self) -> SpawnHandle
-// [src][−]
-// Handle of the running future
-
-// SpawnHandle is the handle returned by AsyncContext::spawn() method.
-
-// pub fn set_mailbox_capacity(&mut self, cap: usize)
-// [src][−]
-// Set mailbox capacity
 
 // By default mailbox capacity is 16 messages.
 impl Actor for MyWs {
@@ -77,28 +42,33 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
                 // let (tuple, route_params) = router.get_route(Method::GET, "WS").unwrap();
                 // println!("{:?}", tuple);
                 let handler_function = &self.router.get("message").unwrap().0;
+                let number_of_params = &self.router.get("message").unwrap().1;
                 println!("{:?}", handler_function);
-
-                // call execution function
                 match handler_function {
                     PyFunction::SyncFunction(handler) => Python::with_gil(|py| {
-                        println!("{:?}", handler);
-
                         let handler = handler.as_ref(py);
-                        println!("Calling handler");
                         // call execute function
-                        let op = handler.call0();
+                        let op = handler.call0().unwrap();
+                        let op: &str = op.extract().unwrap();
 
-                        println!("{:?}", op);
+                        return ctx.text(op);
                     }),
                     PyFunction::CoRoutine(handler) => {
-                        println!("Async Functions are not supported right now!")
+                        println!("Async functions are not supported in WS right now.");
+                        return ctx.text("Async Functions are not supported in WS right now.");
                     }
-                };
+                }
+                // let async_exection_function = execute_function(handler_function, number_of_params);
 
-                println!("Hello, how are you!");
-                ctx.text(text)
+                // // do some compute-heavy work or call synchronous code
+                // let res = Runtime::new()
+                //     .unwrap()
+                //     .block_on(async_exection_function)
+                //     .unwrap();
+
+                // return ctx.text(res);
             }
+
             Ok(ws::Message::Binary(bin)) => ctx.binary(bin),
             Ok(ws::Message::Close(close_reason)) => {
                 println!("Socket was closed");

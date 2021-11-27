@@ -117,7 +117,6 @@ impl Router {
         let (close_route_function, close_route_is_async, close_route_params) = close_route;
         let (message_route_function, message_route_is_async, message_route_params) = message_route;
 
-        println!("Hello world my name is ");
         let insert_in_router = |table: &DashMap<String, HashMap<String, (PyFunction, u8)>>,
                                 handler: Py<PyAny>,
                                 is_async: bool,
@@ -136,8 +135,6 @@ impl Router {
             table.insert(route.to_string(), route_map);
         };
 
-        println!("Hello world my name is 0");
-
         insert_in_router(
             table,
             connect_route_function,
@@ -145,7 +142,6 @@ impl Router {
             connect_route_params,
             "connect",
         );
-        println!("Hello world my name is 1");
 
         insert_in_router(
             table,
@@ -154,7 +150,6 @@ impl Router {
             close_route_params,
             "close",
         );
-        println!("Hello world my name is 2");
 
         insert_in_router(
             table,
@@ -163,7 +158,6 @@ impl Router {
             message_route_params,
             "message",
         );
-        println!("Hello world my name is 3");
     }
 
     pub fn get_route(
