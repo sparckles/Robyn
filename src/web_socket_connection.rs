@@ -16,10 +16,49 @@ impl Actor for MyWs {
 
     fn started(&mut self, ctx: &mut WebsocketContext<Self>) {
         println!("Actor is alive");
+        let router = &self.router;
+        // let (tuple, route_params) = router.get_route(Method::GET, "WS").unwrap();
+        // println!("{:?}", tuple);
+        let handler_function = &self.router.get("message").unwrap().0;
+        let number_of_params = &self.router.get("message").unwrap().1;
+        println!("{:?}", handler_function);
+        match handler_function {
+            PyFunction::SyncFunction(handler) => Python::with_gil(|py| {
+                let handler = handler.as_ref(py);
+                // call execute function
+                let op = handler.call0().unwrap();
+                let op: &str = op.extract().unwrap();
+
+                println!(op);
+            }),
+            PyFunction::CoRoutine(handler) => {
+                println!("Async functions are not supported in WS right now.");
+            }
+        }
     }
 
     fn stopped(&mut self, ctx: &mut WebsocketContext<Self>) {
-        println!("Actor is stopped");
+                println!("Actor is alive");
+        let router = &self.router;
+        // let (tuple, route_params) = router.get_route(Method::GET, "WS").unwrap();
+        // println!("{:?}", tuple);
+        let handler_function = &self.router.get("message").unwrap().0;
+        let number_of_params = &self.router.get("message").unwrap().1;
+        println!("{:?}", handler_function);
+        match handler_function {
+            PyFunction::SyncFunction(handler) => Python::with_gil(|py| {
+                let handler = handler.as_ref(py);
+                // call execute function
+                let op = handler.call0().unwrap();
+                let op: &str = op.extract().unwrap();
+
+                println!(op);
+            }),
+            PyFunction::CoRoutine(handler) => {
+                println!("Async functions are not supported in WS right now.");
+            }
+        }
+
     }
 }
 
