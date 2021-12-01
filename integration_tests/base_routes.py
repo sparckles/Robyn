@@ -16,10 +16,8 @@ def connect():
     elif i==1:
         return "Whooo??"
     elif i==2:
+        i = -1
         return "*chika* *chika* Slim Shady."
-    elif i==3:
-        i= -1
-        return ""
 
 @websocket.on("close")
 def close():
