@@ -2,18 +2,21 @@ use crate::processor::{apply_headers, handle_request};
 use crate::router::Router;
 use crate::shared_socket::SocketHeld;
 use crate::types::Headers;
-use actix_files::Files;
+use crate::web_socket_connection::start_web_socket;
+
 use std::convert::TryInto;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::{Relaxed, SeqCst};
 use std::sync::{Arc, RwLock};
 use std::thread;
-// pyO3 module
+
+use actix_files::Files;
 use actix_http::KeepAlive;
 use actix_web::*;
 use dashmap::DashMap;
+
+// pyO3 module
 use pyo3::prelude::*;
-use pyo3::types::PyAny;
 
 static STARTED: AtomicBool = AtomicBool::new(false);
 
@@ -84,14 +87,13 @@ impl Server {
         thread::spawn(move || {
             //init_current_thread_once();
             actix_web::rt::System::new().block_on(async move {
-                let addr = format!("{}:{}", url, port);
-
                 println!("The number of workers are {}", workers.clone());
 
                 HttpServer::new(move || {
                     let mut app = App::new();
                     let event_loop_hdl = event_loop_hdl.clone();
                     let directories = directories.read().unwrap();
+                    let router_copy = router.clone();
 
                     // this loop matches three types of directory serving
                     // 1. Serves a build folder. e.g. the build folder generated from yarn build
@@ -116,13 +118,32 @@ impl Server {
                         }
                     }
 
-                    app.app_data(web::Data::new(router.clone()))
-                        .app_data(web::Data::new(headers.clone()))
-                        .default_service(web::route().to(move |router, headers, payload, req| {
-                            pyo3_asyncio::tokio::scope_local(event_loop_hdl.clone(), async move {
-                                index(router, headers, payload, req).await
-                            })
-                        }))
+                    app = app
+                        .app_data(web::Data::new(router.clone()))
+                        .app_data(web::Data::new(headers.clone()));
+
+                    let web_socket_map = router_copy.get_web_socket_map();
+                    for elem in (web_socket_map).iter() {
+                        let route = elem.key().clone();
+                        let params = elem.value().clone();
+                        app = app.route(
+                            &route,
+                            web::get().to(
+                                move |_router: web::Data<Arc<Router>>,
+                                      _headers: web::Data<Arc<Headers>>,
+                                      stream: web::Payload,
+                                      req: HttpRequest| {
+                                    start_web_socket(req, stream, Arc::new(params.clone()))
+                                },
+                            ),
+                        );
+                    }
+
+                    app.default_service(web::route().to(move |router, headers, payload, req| {
+                        pyo3_asyncio::tokio::scope_local(event_loop_hdl.clone(), async move {
+                            index(router, headers, payload, req).await
+                        })
+                    }))
                 })
                 .keep_alive(KeepAlive::Os)
                 .workers(*workers.clone())
@@ -179,6 +200,21 @@ impl Server {
         println!("Route added for {} {} ", route_type, route);
         self.router
             .add_route(route_type, route, handler, is_async, number_of_params);
+    }
+
+    /// Add a new web socket route to the routing tables
+    /// can be called after the server has been started
+    pub fn add_web_socket_route(
+        &self,
+        route: &str,
+        // handler, is_async, number of params
+        connect_route: (Py<PyAny>, bool, u8),
+        close_route: (Py<PyAny>, bool, u8),
+        message_route: (Py<PyAny>, bool, u8),
+    ) {
+        println!("WS Route added for {} ", route);
+        self.router
+            .add_websocket_route(route, connect_route, close_route, message_route);
     }
 }
 

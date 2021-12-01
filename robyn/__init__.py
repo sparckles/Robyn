@@ -12,6 +12,7 @@ from .responses import static_file, jsonify
 from .dev_event_handler import EventHandler
 from .processpool import spawn_process
 from .log_colors import Colors
+from .ws import WS
 
 
 # 3rd party imports and exports
@@ -36,6 +37,7 @@ class Robyn:
         self.headers = []
         self.routes = []
         self.directories = []
+        self.web_sockets = {}
 
 
     def add_route(self, route_type, endpoint, handler):
@@ -62,6 +64,10 @@ class Robyn:
 
     def remove_header(self, key):
         self.server.remove_header(key)
+
+    def add_web_socket(self, endpoint, ws):
+        self.web_sockets[endpoint] = ws
+        
     
     def start(self, url="127.0.0.1", port=5000):
         """
@@ -76,7 +82,7 @@ class Robyn:
                 copied = socket.try_clone()
                 p = Process(
                     target=spawn_process,
-                    args=(url, port, self.directories, self.headers, self.routes, copied, f"Process {process_number}", workers),
+                    args=(url, port, self.directories, self.headers, self.routes, self.web_sockets, copied, f"Process {process_number}", workers),
                 )
                 p.start()
 
@@ -94,6 +100,7 @@ class Robyn:
             finally:
                 observer.stop()
                 observer.join()
+
 
     def get(self, endpoint):
         """
@@ -194,4 +201,5 @@ class Robyn:
             self.add_route("TRACE", endpoint, handler)
 
         return inner
+
 

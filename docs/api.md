@@ -90,8 +90,17 @@ Robyn supports every HTTP request method. The examples of some of them are below
     ```
 
 
+### Having Dynamic Routes
+You can now add params in the routes and access them from the request object.
 
-## Returning a JSON Response
+```python3
+@app.post("/jsonify/:id")
+async def json(request):
+    print(request["params"]["id"])
+    return jsonify({"hello": "world"})
+```
+
+### Returning a JSON Response
 You can also serve JSON responses when serving HTTP request using the following way.
 
 ```python3
@@ -139,4 +148,53 @@ app.add_header("server", "robyn")
 
 ```
 
-To see a complete service in action, you can go to the folder [../test_python/test.py](../test_python/test.py)
+## WebSockets
+
+You can now serve websockets using Robyn.
+
+Firstly, you need to create a WebSocket Class and wrap it around your Robyn app.
+
+```python3
+from robyn import Robyn, static_file, jsonify, WS
+
+
+app = Robyn(__file__)
+websocket = WS(app, "/web_socket")
+```
+
+Now, you can define 3 methods for every web_socket for their lifecycle, they are as follows:
+
+```python3
+@websocket.on("message")
+def connect():
+    global i
+    i+=1
+    if i==0:
+        return "Whaaat??"
+    elif i==1:
+        return "Whooo??"
+    elif i==2:
+        return "*chika* *chika* Slim Shady."
+    elif i==3:
+        i= -1
+        return ""
+
+@websocket.on("close")
+def close():
+    return "Goodbye world, from ws"
+
+@websocket.on("connect")
+def message():
+    return "Hello world, from ws"
+
+```
+
+
+## MutliCore Scaling
+
+The three methods:
+ - "message" is called when the socket receives a message
+ - "close" is called when the socket is disconnected
+ - "connect" is called when the socket connects
+
+To see a complete service in action, you can go to the folder [../integration_tests/base_routes.py](../integration_tests/base_routes.py)

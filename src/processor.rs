@@ -41,7 +41,7 @@ pub async fn handle_request(
     req: &HttpRequest,
     route_params: HashMap<String, String>,
 ) -> HttpResponse {
-    let contents = match execute_function(
+    let contents = match execute_http_function(
         function,
         payload,
         headers,
@@ -79,8 +79,9 @@ fn read_file(file_path: &str) -> String {
     String::from_utf8_lossy(&buf).to_string()
 }
 
+// Change this!
 #[inline]
-async fn execute_function(
+async fn execute_http_function(
     function: PyFunction,
     payload: &mut web::Payload,
     headers: &Headers,

@@ -28,6 +28,8 @@ futures-util = "0.3.15"
 matchit = "0.4.3"
 actix-http = "3.0.0-beta.8"
 socket2 = { version = "0.4.1", features = ["all"] }
+actix = "0.12.0"
+actix-web-actors = "4.0.0-beta.1"
 
 [package.metadata.maturin]
 name = "robyn"

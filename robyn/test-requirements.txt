@@ -4,3 +4,5 @@ watchdog
 requests==2.26.0
 uvloop==0.16.0
 multiprocess==0.70.12.2
+websockets==10.1
+freeport==0.1.15
