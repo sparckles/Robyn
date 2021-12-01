@@ -168,20 +168,6 @@ impl Router {
         // need to split this function in multiple smaller functions
         let table = self.get_relevant_map(route_method)?;
 
-        // if route == "WS" {
-        //     match table.read().unwrap().at("/web_socket") {
-        //         Ok(res) => {
-        //             let mut route_params = HashMap::new();
-
-        //             for (key, value) in res.params.iter() {
-        //                 route_params.insert(key.to_string(), value.to_string());
-        //             }
-
-        //             Some((res.value.clone(), route_params))
-        //         }
-        //         Err(_) => None,
-        //     }
-        // } else {
         match table.read().unwrap().at(route) {
             Ok(res) => {
                 let mut route_params = HashMap::new();
@@ -194,55 +180,5 @@ impl Router {
             }
             Err(_) => None,
         }
-        // }
     }
 }
-
-// This contains a route member
-// type of route mapping to the function
-// Try to check if this method even requires a param or not
-// pub struct WebSocketRouter {
-//     socket_methods: Arc<RwLock<Node<(PyFunction, u8)>>>;
-// }
-
-// impl WebSocketRouter {
-//     pub fn new() -> Self {
-//         socket_methods: Arc::new(RwLock::new(Node::new()))
-//     }
-
-//     fn add_handler(
-//         &self,
-//         connection_type: &str,
-//        handler: Py<PyAny>,
-//        is_async: bool,
-//        number_of_params: u8,
-//     ) {
-//         // let table = self.socket_methods;
-//         // let function = if is_async {
-//         //     PyFunction::CoRoutine(handler)
-//         // } else {
-//         //     PyFunction::SyncFunction(handler)
-//         // };
-
-//         // table
-//         //     .write()
-//         //     .unwrap()
-//         //     .insert(connection_type.to_string(), (function, number_of_params))
-//         //     .unwrap();
-
-//     }
-
-//     // pub fn get_handler(
-//     //     &self,
-//     //     connection_type: &str,
-//     // ) -> Option<(PyFunction, u8)> {
-//     //     let table = self.socket_methods;
-//     //     match table.read().unwrap().at(connection_type) {
-//     //         Ok(res) => {
-//     //             Some(res.value.clone())
-//     //         }
-//     //         Err(_) => None,
-//     //     }
-//     // }
-
-// }
