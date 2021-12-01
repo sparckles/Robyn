@@ -1,8 +1,12 @@
+use crate::types::PyFunction;
+
 use actix::{Actor, StreamHandler};
 use actix_web::{web, Error, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
 use actix_web_actors::ws::WebsocketContext;
+use pyo3::prelude::*;
 
+use std::collections::HashMap;
 use std::sync::Arc;
 
 /// Define HTTP actor
@@ -16,9 +20,8 @@ impl Actor for MyWs {
 
     fn started(&mut self, ctx: &mut WebsocketContext<Self>) {
         println!("Actor is alive");
-        let router = &self.router;
         let handler_function = &self.router.get("connect").unwrap().0;
-        let number_of_params = &self.router.get("connect").unwrap().1;
+        let _number_of_params = &self.router.get("connect").unwrap().1;
         println!("{:?}", handler_function);
         match handler_function {
             PyFunction::SyncFunction(handler) => Python::with_gil(|py| {
@@ -27,7 +30,7 @@ impl Actor for MyWs {
                 let op = handler.call0().unwrap();
                 let op: &str = op.extract().unwrap();
 
-                println!(op);
+                println!("{}", op);
             }),
             PyFunction::CoRoutine(handler) => {
                 println!("Async functions are not supported in WS right now.");
@@ -35,7 +38,7 @@ impl Actor for MyWs {
         }
     }
 
-    fn stopped(&mut self, ctx: &mut WebsocketContext<Self>) {
+    fn stopped(&mut self, _ctx: &mut WebsocketContext<Self>) {
         println!("Actor is alive");
         let router = &self.router;
         let handler_function = &self.router.get("close").unwrap().0;
@@ -48,7 +51,7 @@ impl Actor for MyWs {
                 let op = handler.call0().unwrap();
                 let op: &str = op.extract().unwrap();
 
-                println!(op);
+                println!("{:?}", op);
             }),
             PyFunction::CoRoutine(handler) => {
                 println!("Async functions are not supported in WS right now.");
@@ -72,11 +75,9 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
             }
 
             Ok(ws::Message::Text(text)) => {
-                let router = &self.router;
-                // let (tuple, route_params) = router.get_route(Method::GET, "WS").unwrap();
-                // println!("{:?}", tuple);
+                // need to also passs this text as a param
                 let handler_function = &self.router.get("message").unwrap().0;
-                let number_of_params = &self.router.get("message").unwrap().1;
+                let _number_of_params = &self.router.get("message").unwrap().1;
                 println!("{:?}", handler_function);
                 match handler_function {
                     PyFunction::SyncFunction(handler) => Python::with_gil(|py| {
@@ -87,7 +88,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
 
                         return ctx.text(op);
                     }),
-                    PyFunction::CoRoutine(handler) => {
+                    PyFunction::CoRoutine(_handler) => {
                         println!("Async functions are not supported in WS right now.");
                         return ctx.text("Async Functions are not supported in WS right now.");
                     }
@@ -95,19 +96,13 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
             }
 
             Ok(ws::Message::Binary(bin)) => ctx.binary(bin),
-            Ok(ws::Message::Close(close_reason)) => {
+            Ok(ws::Message::Close(_close_reason)) => {
                 println!("Socket was closed");
             }
             _ => (),
         }
     }
 }
-
-use crate::types::PyFunction;
-use actix_web::*;
-use dashmap::DashMap;
-use pyo3::prelude::*;
-use std::collections::HashMap;
 
 pub async fn start_web_socket(
     req: HttpRequest,

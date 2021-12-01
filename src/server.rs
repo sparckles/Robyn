@@ -4,7 +4,6 @@ use crate::shared_socket::SocketHeld;
 use crate::types::Headers;
 use crate::web_socket_connection::start_web_socket;
 
-use std::collections::HashMap;
 use std::convert::TryInto;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::{Relaxed, SeqCst};
@@ -17,7 +16,6 @@ use actix_web::*;
 use dashmap::DashMap;
 
 // pyO3 module
-use crate::types::PyFunction;
 use pyo3::prelude::*;
 
 static STARTED: AtomicBool = AtomicBool::new(false);
@@ -89,8 +87,6 @@ impl Server {
         thread::spawn(move || {
             //init_current_thread_once();
             actix_web::rt::System::new().block_on(async move {
-                let addr = format!("{}:{}", url, port);
-
                 println!("The number of workers are {}", workers.clone());
 
                 HttpServer::new(move || {
@@ -128,14 +124,13 @@ impl Server {
 
                     let web_socket_map = router_copy.get_web_socket_map();
                     for elem in (web_socket_map).iter() {
-                        let route1 = Arc::new(elem.key().clone());
                         let route = elem.key().clone();
                         let params = elem.value().clone();
                         app = app.route(
                             &route,
                             web::get().to(
-                                move |router: web::Data<Arc<Router>>,
-                                      headers: web::Data<Arc<Headers>>,
+                                move |_router: web::Data<Arc<Router>>,
+                                      _headers: web::Data<Arc<Headers>>,
                                       stream: web::Payload,
                                       req: HttpRequest| {
                                     start_web_socket(req, stream, Arc::new(params.clone()))
