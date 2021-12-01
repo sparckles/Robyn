@@ -11,7 +11,6 @@ class WS:
 
     def on(self, type):
         def inner(handler):
-            print("Hwllo world", type, handler)
             if type not in ["connect", "close", "message"]:
                 raise Exception(f"Socket method {type} does not exist")
             else:

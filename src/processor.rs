@@ -79,51 +79,6 @@ fn read_file(file_path: &str) -> String {
     String::from_utf8_lossy(&buf).to_string()
 }
 
-// #[inline]
-// pub async fn execute_function(function: PyFunction, number_of_params: u8) -> Result<String> {
-//     match function {
-//         PyFunction::CoRoutine(handler) => {
-//             let output = Python::with_gil(|py| {
-//                 let handler = handler.as_ref(py);
-
-//                 // this makes the request object to be accessible across every route
-//                 let coro: PyResult<&PyAny> = match number_of_params {
-//                     0 => handler.call0(),
-//                     // 1 => handler.call1((request,)),
-//                     // this is done to accomodate any future params
-//                     1_u8..=u8::MAX => handler.call0(),
-//                 };
-//                 pyo3_asyncio::tokio::into_future(coro?)
-//             })?;
-
-//             let output = output.await?;
-//             let res = Python::with_gil(|py| -> PyResult<String> {
-//                 let contents: &str = output.extract(py)?;
-//                 Ok(contents.to_string())
-//             })?;
-//             Ok(res)
-//         }
-
-//         PyFunction::SyncFunction(handler) => {
-//             tokio::task::spawn_blocking(move || {
-//                 Python::with_gil(|py| {
-//                     let handler = handler.as_ref(py);
-
-//                     let output: PyResult<&PyAny> = match number_of_params {
-//                         0 => handler.call0(),
-//                         // 1 => handler.call1((request,)),
-//                         // this is done to accomodate any future params
-//                         1_u8..=u8::MAX => handler.call0(),
-//                     };
-//                     let output: &str = output?.extract()?;
-//                     Ok(output.to_string())
-//                 })
-//             })
-//             .await?
-//         }
-//     }
-// }
-
 // Change this!
 #[inline]
 async fn execute_http_function(

@@ -101,21 +101,6 @@ class Robyn:
                 observer.stop()
                 observer.join()
 
-    def ws__future(self, endpoint):
-        ## I would want it to return a web socket handler
-        ## that would something like 
-        ## ws.on("CONNECT")
-        ## maybe for the future
-        """
-        [The @app.ws decorator to add a web socket route]
-
-        :param endpoint [str]: [endpoint to server the route]
-        """
-        def inner(handler):
-            self.add_route("GET", endpoint, handler)
-
-        return inner
-
 
     def get(self, endpoint):
         """

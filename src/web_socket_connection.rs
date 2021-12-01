@@ -17,10 +17,8 @@ impl Actor for MyWs {
     fn started(&mut self, ctx: &mut WebsocketContext<Self>) {
         println!("Actor is alive");
         let router = &self.router;
-        // let (tuple, route_params) = router.get_route(Method::GET, "WS").unwrap();
-        // println!("{:?}", tuple);
-        let handler_function = &self.router.get("message").unwrap().0;
-        let number_of_params = &self.router.get("message").unwrap().1;
+        let handler_function = &self.router.get("connect").unwrap().0;
+        let number_of_params = &self.router.get("connect").unwrap().1;
         println!("{:?}", handler_function);
         match handler_function {
             PyFunction::SyncFunction(handler) => Python::with_gil(|py| {
@@ -38,12 +36,10 @@ impl Actor for MyWs {
     }
 
     fn stopped(&mut self, ctx: &mut WebsocketContext<Self>) {
-                println!("Actor is alive");
+        println!("Actor is alive");
         let router = &self.router;
-        // let (tuple, route_params) = router.get_route(Method::GET, "WS").unwrap();
-        // println!("{:?}", tuple);
-        let handler_function = &self.router.get("message").unwrap().0;
-        let number_of_params = &self.router.get("message").unwrap().1;
+        let handler_function = &self.router.get("close").unwrap().0;
+        let number_of_params = &self.router.get("close").unwrap().1;
         println!("{:?}", handler_function);
         match handler_function {
             PyFunction::SyncFunction(handler) => Python::with_gil(|py| {
@@ -58,7 +54,6 @@ impl Actor for MyWs {
                 println!("Async functions are not supported in WS right now.");
             }
         }
-
     }
 }
 
@@ -97,15 +92,6 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
                         return ctx.text("Async Functions are not supported in WS right now.");
                     }
                 }
-                // let async_exection_function = execute_function(handler_function, number_of_params);
-
-                // // do some compute-heavy work or call synchronous code
-                // let res = Runtime::new()
-                //     .unwrap()
-                //     .block_on(async_exection_function)
-                //     .unwrap();
-
-                // return ctx.text(res);
             }
 
             Ok(ws::Message::Binary(bin)) => ctx.binary(bin),
@@ -128,44 +114,8 @@ pub async fn start_web_socket(
     stream: web::Payload,
     router: Arc<HashMap<String, (PyFunction, u8)>>,
 ) -> Result<HttpResponse, Error> {
+    // execute the async function here
     let resp = ws::start(MyWs { router }, &req, stream);
     println!("{:?}", resp);
     resp
 }
-
-// pub async fn start_web_socket(
-//     router: web::Data<Arc<Router>>,
-//     headers: web::Data<Arc<Headers>>,
-//     stream: web::Payload,
-//     req: HttpRequest,
-// ) -> Result<HttpResponse, Error> {
-//     let resp = ws::start(MyWs {}, &req, stream);
-//     println!("{:?}", resp);
-//     resp
-// }
-
-// async fn index(
-//     router: web::Data<Arc<Router>>,
-//     headers: web::Data<Arc<Headers>>,
-//     stream: web::Payload,
-//     req: HttpRequest,
-// ) -> impl Responder {
-//     match router.get_route(req.method().clone(), req.uri().path()) {
-//         Some(((handler_function, number_of_params), route_params)) => {
-//             handle_request(
-//                 handler_function,
-//                 number_of_params,
-//                 &headers,
-//                 &mut payload,
-//                 &req,
-//                 route_params,
-//             )
-//             .await
-//         }
-//         None => {
-//             let mut response = HttpResponse::Ok();
-//             apply_headers(&mut response, &headers);
-//             response.finish()
-//         }
-//     }
-// }

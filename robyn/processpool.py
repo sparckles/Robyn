@@ -51,15 +51,11 @@ def spawn_process(url, port, directories, headers, routes, web_sockets, socket, 
         route_type, endpoint, handler, is_async, number_of_params = route
         server.add_route(route_type, endpoint, handler, is_async, number_of_params)
 
-    # a very major hack used here
-    # need to create a new ws router 
-    # and add the new joining methods
     for endpoint in web_sockets:
         web_socket = web_sockets[endpoint]
         print(web_socket.methods)
         server.add_web_socket_route(endpoint, web_socket.methods["connect"], web_socket.methods["close"], web_socket.methods["message"])
 
 
-    # need to check if web sockets is initialised and then initilise it here as well
     server.start(url, port, socket, process_name, workers)
     asyncio.get_event_loop().run_forever()

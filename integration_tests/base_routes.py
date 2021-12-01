@@ -1,8 +1,3 @@
-
-
-# robyn_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../robyn")
-# sys.path.insert(0, robyn_path)
-
 from robyn import Robyn, static_file, jsonify, WS
 import asyncio
 import os
