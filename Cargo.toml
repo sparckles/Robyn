@@ -1,5 +1,3 @@
-cargo-features = ["resolver"]
-
 [package]
 name = "robyn"
 version = "0.9.0"
