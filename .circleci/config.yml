@@ -78,7 +78,7 @@ jobs:
         description: Whether to build the binary for release or debug.
         type: boolean
       version:
-        default: 1.49.0
+        default: 1.57.0
         description: Version of Rust executor to utilize.
         type: string
       with_cache:
@@ -92,12 +92,19 @@ jobs:
     steps:
       - checkout:
           path: /home/circleci/robyn
+      - run:
+          name: Update clippy
+          command: |
+            rustup update
+            rustup component add clippy-preview
+
       - when:
           condition: <<parameters.with_cache>>
           steps:
             - restore_cache:
                 keys:
                   - cargo-<<parameters.cache_version>>-{{ checksum "Cargo.lock" }}
+
       - clippy:
           flags: <<parameters.clippy_arguments>>
           with_cache: false
