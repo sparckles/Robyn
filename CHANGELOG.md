@@ -1,5 +1,26 @@
 # Changelog
 
+## [v0.9.0](https://github.com/sansyrox/robyn/tree/v0.9.0) (2021-12-01)
+
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.8.1...v0.9.0)
+
+**Closed issues:**
+
+- Add more HTTP methods [\#74](https://github.com/sansyrox/robyn/issues/74)
+
+**Merged pull requests:**
+
+- Fix default url bug [\#111](https://github.com/sansyrox/robyn/pull/111) ([sansyrox](https://github.com/sansyrox))
+- Web socket integration attempt 2 [\#109](https://github.com/sansyrox/robyn/pull/109) ([sansyrox](https://github.com/sansyrox))
+
+## [v0.8.1](https://github.com/sansyrox/robyn/tree/v0.8.1) (2021-11-17)
+
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.8.0...v0.8.1)
+
+**Fixed bugs:**
+
+- The default start is running the server at '0.0.0.0' instead of '127.0.0.1' [\#110](https://github.com/sansyrox/robyn/issues/110)
+
 ## [v0.8.0](https://github.com/sansyrox/robyn/tree/v0.8.0) (2021-11-10)
 
 [Full Changelog](https://github.com/sansyrox/robyn/compare/v0.7.1...v0.8.0)
