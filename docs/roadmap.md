@@ -1,6 +1,7 @@
 ## Future Roadmap
 
-- Integrate WebSockets
 - Add session/cookie plugins
-- Add the plugin documentation
+- Create a WEB3 plugin
+- Add graphql integration
+- And more...
 

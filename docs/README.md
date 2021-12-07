@@ -36,18 +36,19 @@ To read about the detailed architecture, you can read [here](https://sansyrox.gi
 
 ## Testing on Python
 
-1. `cargo build --release`
-2. `cp target/release/librobyn.dylib ./robyn.so`
-3. `python3`
-4. `import robyn`
-5. `dir(robyn)`
+1. Activate a virtual environment
+2. Install maturin: `pip3 install maturin`
+3. Create a Debug build: `maturin develop`
+4. Test it out: `python3`
+5. `import robyn`
+6. `dir(robyn)`
 
 ## To Run
 
 ### Without hot reloading
 `python3 app.py`
 
-### With hot reloading
+### With hot reloading(still beta)
 `python3 app.py --dev=true`
 
 

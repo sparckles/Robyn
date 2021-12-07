@@ -6,6 +6,9 @@
 [![Gitter](https://badges.gitter.im/robyn_/community.svg)](https://gitter.im/robyn_/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 [![Downloads](https://static.pepy.tech/personalized-badge/robyn?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Downloads)](https://pepy.tech/project/robyn)
 
+
+[Docs](https://sansyrox.github.io/robyn/#/)
+
 Robyn is an async Python backend server with a runtime written in Rust, btw.
 
 Python server running on top of of Rust Async RunTime.
@@ -33,6 +36,20 @@ async def h():
 app.start(port=5000)
 
 ```
+
+## Features
+- Under active development!
+- Written in Russt, btw xD
+- A multithreaded Runtime
+- Extensible
+- A simple API
+- Sync and Async Function Support
+- Dynamic URL Routing
+- Multi Core Scaling
+- WebSockets!
+- Hot Reloading (Still experimental)
+- Community First and truly FOSS!
+
 
 ## Contributor Guidelines
 

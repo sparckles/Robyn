@@ -42,6 +42,15 @@ I used [oha](https://github.com/hatoo/oha) to perform the testing of 10000 reque
   Requests/sec:	5457.2339
 ```
 
+4. Robyn (5 workers)
+```
+  Total:	1.5592 secs
+  Slowest:	0.0211 secs
+  Fastest:	0.0017 secs
+  Average:	0.0078 secs
+  Requests/sec:	6413.6480
+```
+
 Robyn is able to serve the 10k requests in 1.8 seconds followed by Flask and FastAPI, which take around 5 seconds(using 5 workers on a dual core machine). Finally, Django takes around 13.5070 seconds.
 
 ## Verbose Logs
@@ -222,3 +231,46 @@ Status code distribution:
 ```
 
 
+Robyn(with 5 workers)
+```
+Summary:
+  Success rate:	1.0000
+  Total:	1.5592 secs
+  Slowest:	0.0211 secs
+  Fastest:	0.0017 secs
+  Average:	0.0078 secs
+  Requests/sec:	6413.6480
+
+  Total data:	126.95 KiB
+  Size/request:	13 B
+  Size/sec:	81.42 KiB
+
+Response time histogram:
+  0.002 [30]   |
+  0.004 [599]  |■■■■■
+  0.005 [3336] |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+  0.007 [3309] |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+  0.009 [1614] |■■■■■■■■■■■■■■■
+  0.011 [749]  |■■■■■■■
+  0.012 [253]  |■■
+  0.014 [94]   |
+  0.016 [14]   |
+  0.018 [1]    |
+  0.019 [1]    |
+
+Latency distribution:
+  10% in 0.0055 secs
+  25% in 0.0063 secs
+  50% in 0.0074 secs
+  75% in 0.0089 secs
+  90% in 0.0107 secs
+  95% in 0.0117 secs
+  99% in 0.0142 secs
+
+Details (average, fastest, slowest):
+  DNS+dialup:	0.0022 secs, 0.0013 secs, 0.0028 secs
+  DNS-lookup:	0.0000 secs, 0.0000 secs, 0.0001 secs
+
+Status code distribution:
+  [200] 10000 responses
+```

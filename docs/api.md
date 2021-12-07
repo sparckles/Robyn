@@ -189,12 +189,15 @@ def message():
 
 ```
 
-
-## MutliCore Scaling
-
 The three methods:
  - "message" is called when the socket receives a message
  - "close" is called when the socket is disconnected
  - "connect" is called when the socket connects
 
 To see a complete service in action, you can go to the folder [../integration_tests/base_routes.py](../integration_tests/base_routes.py)
+
+## MutliCore Scaling
+
+To run Robyn across multiple cores, you can use the following command:
+
+`python3 app.py --workers=N --processes=N`
