@@ -42,11 +42,11 @@ If you're feeling curious. You can take a look at a more detailed architecture [
 
 ## To Run Locally
 
-1. Add more routes in the test.py file(if you like). It only supports only get requests at the moment
+1. Add more routes in the `integration_tests/base_routes.py` file(if you like). It only supports only get requests at the moment
 
 2. Run `maturin develop`
 
-3. Run `python3 test.py`
+3. Run `python3 integration_tests/base_routes.py`
 
 ## To Run
 
