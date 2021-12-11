@@ -51,43 +51,45 @@ The request object contains the `body` in PUT/POST/PATCH. The `header`s are avai
 Robyn supports every HTTP request method. The examples of some of them are below:
 ### GET Request
 
-    ```python3
-    @app.get("/")
-    async def h(request):
-        return "Hello World"
-    ```
+```python3
+@app.get("/")
+async def h(request):
+    return "Hello World"
+```
 
 ### POST Request
 
-    ```python3
-    @app.post("/post")
-    async def postreq(request):
-        return bytearray(request["body"]).decode("utf-8")
-    ```
+```python3
+@app.post("/post")
+async def postreq(request):
+    return bytearray(request["body"]).decode("utf-8")
+```
 
 ### PUT Request
 
-    ```python3
-    @app.put("/put")
-    async def postreq(request):
-        return bytearray(request["body"]).decode("utf-8")
-    ```
+```python3
+@app.put("/put")
+async def postreq(request):
+    return bytearray(request["body"]).decode("utf-8")
+```
 
 
 ### PATCH Request
-    ```python3
-    @app.patch("/patch")
-    async def postreq(request):
-        return bytearray(request["body"]).decode("utf-8")
-    ```
+
+```python3
+@app.patch("/patch")
+async def postreq(request):
+    return bytearray(request["body"]).decode("utf-8")
+```
 
 
 ### DELETE Request
-    ```python3
-    @app.delete("/delete")
-    async def postreq(request):
-        return bytearray(request["body"]).decode("utf-8")
-    ```
+
+```python3
+@app.delete("/delete")
+async def postreq(request):
+    return bytearray(request["body"]).decode("utf-8")
+```
 
 
 ### Having Dynamic Routes
