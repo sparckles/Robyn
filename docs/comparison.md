@@ -25,7 +25,7 @@ I used [oha](https://github.com/hatoo/oha) to perform the testing of 10000 reque
   Average:      0.0206 secs
   Requests/sec: 2420.4851
 ```
-3. Django(Gunicron)
+3. Django(Gunicorn)
 ```
   Total:        13.5070 secs
   Slowest:      0.3635 secs
