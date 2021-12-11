@@ -2,7 +2,7 @@
 
 ## Read this before you scroll down
 
-The comparison is not meant to defame any of the of the developers or the frameworks listed below. The names of the frameworks have been listed for a clear comparison. All of these frameworks are the reason for me having a high inclination towards the python web ecosystem and I hope to have not caused any offence( to anyone) by listing these frameworks.
+The comparison is not meant to defame any of the of the developers or the frameworks listed below. The names of the frameworks have been listed for a clear comparison. All of these frameworks are the reason for me having a high inclination towards the python web ecosystem and I hope to have not caused any offence (to anyone) by listing these frameworks.
 
 **Also, these tests were done on my development machine and the numbers portrayed below are not absolute by any means. These numbers only indicate the relative performance of these frameworks.**
 
