@@ -1,6 +1,7 @@
 use crate::types::PyFunction;
 
-use actix::{Actor, StreamHandler};
+use actix::prelude::*;
+use actix::{Actor, AsyncContext, StreamHandler};
 use actix_web::{web, Error, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
 use actix_web_actors::ws::WebsocketContext;
@@ -26,6 +27,10 @@ impl Actor for MyWs {
         println!("Actor is alive");
     }
 }
+
+#[derive(Message)]
+#[rtype(result = "Result<(), ()>")]
+struct CommandRunner(String);
 
 /// Handler for ws::Message message
 impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
@@ -70,9 +75,28 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
                         let op: &str = op.extract().unwrap();
 
                         return ctx.text(op);
+                        // return ctx.text(op);
                     }),
-                    PyFunction::CoRoutine(_handler) => {
-                        println!("Async functions are not supported in WS right now.");
+                    PyFunction::CoRoutine(handler) => {
+                        println!("{:?}", handler);
+                        let fut = Python::with_gil(|py| {
+                            let handler = handler.as_ref(py);
+                            pyo3_asyncio::tokio::into_future(handler.call0().unwrap()).unwrap()
+                        });
+                        tokio::spawn(async {
+                            let output = fut.await.unwrap();
+
+                            Python::with_gil(|py| {
+                                println!("Bruhhh moment");
+                                let contents: &str = output.extract(py).unwrap();
+                                println!("{:?}", contents);
+                            });
+                        });
+                        let f = async move {};
+                        let fut = actix::fut::wrap_future::<_, Self>(f);
+                        // fut.spawn(self);
+                        ctx.spawn(fut);
+                        // ctx.add_stream("Hello, world");
                         return ctx.text("Async Functions are not supported in WS right now.");
                     }
                 }

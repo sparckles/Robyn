@@ -8,10 +8,11 @@ websocket = WS(app, "/web_socket")
 i = -1
 
 @websocket.on("message")
-def connect():
+async def connect():
     global i
     i+=1
     if i==0:
+        print("hello, world")
         return "Whaaat??"
     elif i==1:
         return "Whooo??"
