@@ -81,21 +81,27 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
                         println!("{:?}", handler);
                         let fut = Python::with_gil(|py| {
                             let handler = handler.as_ref(py);
-                            pyo3_asyncio::tokio::into_future(handler.call0().unwrap()).unwrap()
+                            let coro = handler.call0().unwrap();
+                            pyo3_asyncio::tokio::into_future(coro)
                         });
-                        tokio::spawn(async {
-                            let output = fut.await.unwrap();
+                        // let fut = async move {
+                        //     println!("Hello world");
+                        // }
+                        // tokio::spawn(async {
+                        //     let output = fut.await.unwrap();
 
-                            Python::with_gil(|py| {
-                                println!("Bruhhh moment");
-                                let contents: &str = output.extract(py).unwrap();
-                                println!("{:?}", contents);
-                            });
-                        });
-                        let f = async move {};
-                        let fut = actix::fut::wrap_future::<_, Self>(f);
-                        // fut.spawn(self);
-                        ctx.spawn(fut);
+                        //     Python::with_gil(|py| {
+                        //         println!("Bruhhh moment");
+                        //         let contents: &str = output.extract(py).unwrap();
+                        //         println!("{:?}", contents);
+                        //     });
+                        // });
+                        // let f = async move {};
+                        let f = async move {
+                            fut.unwrap().await.unwrap();
+                        };
+                        let x = actix::fut::wrap_future::<_, Self>(f);
+                        ctx.spawn(x);
                         // ctx.add_stream("Hello, world");
                         return ctx.text("Async Functions are not supported in WS right now.");
                     }
