@@ -67,7 +67,6 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
                 // need to also passs this text as a param
                 let handler_function = &self.router.get("message").unwrap().0;
                 let _number_of_params = &self.router.get("message").unwrap().1;
-                println!("{:?}", handler_function);
                 match handler_function {
                     PyFunction::SyncFunction(handler) => Python::with_gil(|py| {
                         let handler = handler.as_ref(py);
@@ -76,22 +75,25 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
                         let op: &str = op.extract().unwrap();
 
                         return ctx.text(op);
-                        // return ctx.text(op);
                     }),
                     PyFunction::CoRoutine(handler) => {
                         let fut = Python::with_gil(|py| {
                             let handler = handler.as_ref(py);
                             let coro = handler.call0().unwrap();
-                            println!("{:?}", coro);
                             pyo3_asyncio::into_future_with_loop(self.event_loop.as_ref(py), coro)
                                 .unwrap()
                         });
                         let f = async move {
-                            fut.await.unwrap();
+                            let op = fut.await.unwrap();
+                            Python::with_gil(|py| {
+                                let op: &str = op.extract(py).unwrap();
+                                op.to_string()
+                            })
                         };
-                        let x = actix::fut::wrap_future::<_, Self>(f);
-                        ctx.spawn(x);
-                        return ctx.text("Async Functions are not spported in WS right now.");
+                        let f = f.into_actor(self).map(|res, _, ctx| {
+                            ctx.text(res);
+                        });
+                        ctx.spawn(f);
                     }
                 }
             }
@@ -99,9 +101,8 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
             Ok(ws::Message::Binary(bin)) => ctx.binary(bin),
             Ok(ws::Message::Close(_close_reason)) => {
                 println!("Socket was closed");
-                let router = &self.router;
                 let handler_function = &self.router.get("close").unwrap().0;
-                let number_of_params = &self.router.get("close").unwrap().1;
+                let _number_of_params = &self.router.get("close").unwrap().1;
                 println!("{:?}", handler_function);
                 match handler_function {
                     PyFunction::SyncFunction(handler) => Python::with_gil(|py| {
@@ -112,7 +113,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
 
                         println!("{:?}", op);
                     }),
-                    PyFunction::CoRoutine(handler) => {
+                    PyFunction::CoRoutine(_handler) => {
                         println!("Async functions are not supported in WS right now.");
                     }
                 }
