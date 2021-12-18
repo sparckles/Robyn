@@ -126,6 +126,7 @@ impl Server {
                     for elem in (web_socket_map).iter() {
                         let route = elem.key().clone();
                         let params = elem.value().clone();
+                        let event_loop_hdl = event_loop_hdl.clone();
                         app = app.route(
                             &route,
                             web::get().to(
@@ -133,7 +134,12 @@ impl Server {
                                       _headers: web::Data<Arc<Headers>>,
                                       stream: web::Payload,
                                       req: HttpRequest| {
-                                    start_web_socket(req, stream, Arc::new(params.clone()))
+                                    start_web_socket(
+                                        req,
+                                        stream,
+                                        Arc::new(params.clone()),
+                                        event_loop_hdl.clone(),
+                                    )
                                 },
                             ),
                         );

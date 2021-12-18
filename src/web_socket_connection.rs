@@ -13,6 +13,7 @@ use std::sync::Arc;
 /// Define HTTP actor
 struct MyWs {
     router: Arc<HashMap<String, (PyFunction, u8)>>,
+    event_loop: PyObject,
 }
 
 // By default mailbox capacity is 16 messages.
@@ -78,32 +79,19 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
                         // return ctx.text(op);
                     }),
                     PyFunction::CoRoutine(handler) => {
-                        println!("{:?}", handler);
                         let fut = Python::with_gil(|py| {
                             let handler = handler.as_ref(py);
                             let coro = handler.call0().unwrap();
-                            pyo3_asyncio::tokio::into_future(coro)
+                            println!("{:?}", coro);
+                            pyo3_asyncio::into_future_with_loop(self.event_loop.as_ref(py), coro)
+                                .unwrap()
                         });
-                        // let fut = async move {
-                        //     println!("Hello world");
-                        // }
-                        // tokio::spawn(async {
-                        //     let output = fut.await.unwrap();
-
-                        //     Python::with_gil(|py| {
-                        //         println!("Bruhhh moment");
-                        //         let contents: &str = output.extract(py).unwrap();
-                        //         println!("{:?}", contents);
-                        //     });
-                        // });
-                        // let f = async move {};
                         let f = async move {
-                            fut.unwrap().await.unwrap();
+                            fut.await.unwrap();
                         };
                         let x = actix::fut::wrap_future::<_, Self>(f);
                         ctx.spawn(x);
-                        // ctx.add_stream("Hello, world");
-                        return ctx.text("Async Functions are not supported in WS right now.");
+                        return ctx.text("Async Functions are not spported in WS right now.");
                     }
                 }
             }
@@ -138,9 +126,17 @@ pub async fn start_web_socket(
     req: HttpRequest,
     stream: web::Payload,
     router: Arc<HashMap<String, (PyFunction, u8)>>,
+    event_loop: PyObject,
 ) -> Result<HttpResponse, Error> {
     // execute the async function here
-    let resp = ws::start(MyWs { router }, &req, stream);
+    let resp = ws::start(
+        MyWs {
+            router,
+            event_loop: event_loop.clone(),
+        },
+        &req,
+        stream,
+    );
     println!("{:?}", resp);
     resp
 }
