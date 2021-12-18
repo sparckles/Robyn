@@ -6,7 +6,6 @@ use pyo3::prelude::*;
 use pyo3::types::PyAny;
 
 use actix_web::http::Method;
-use dashmap::DashMap;
 use matchit::Node;
 
 /// Contains the thread safe hashmaps of different routes
@@ -21,7 +20,7 @@ pub struct Router {
     options_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
     connect_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
     trace_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
-    web_socket_routes: DashMap<String, HashMap<String, (PyFunction, u8)>>,
+    web_socket_routes: Arc<RwLock<HashMap<String, HashMap<String, (PyFunction, u8)>>>>,
 }
 
 impl Router {
@@ -36,7 +35,7 @@ impl Router {
             options_routes: Arc::new(RwLock::new(Node::new())),
             connect_routes: Arc::new(RwLock::new(Node::new())),
             trace_routes: Arc::new(RwLock::new(Node::new())),
-            web_socket_routes: DashMap::new(),
+            web_socket_routes: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 
@@ -57,7 +56,9 @@ impl Router {
     }
 
     #[inline]
-    pub fn get_web_socket_map(&self) -> &DashMap<String, HashMap<String, (PyFunction, u8)>> {
+    pub fn get_web_socket_map(
+        &self,
+    ) -> &Arc<RwLock<HashMap<String, HashMap<String, (PyFunction, u8)>>>> {
         &self.web_socket_routes
     }
 
@@ -117,26 +118,25 @@ impl Router {
         let (close_route_function, close_route_is_async, close_route_params) = close_route;
         let (message_route_function, message_route_is_async, message_route_params) = message_route;
 
-        let insert_in_router = |table: &DashMap<String, HashMap<String, (PyFunction, u8)>>,
-                                handler: Py<PyAny>,
-                                is_async: bool,
-                                number_of_params: u8,
-                                socket_type: &str| {
-            let function = if is_async {
-                PyFunction::CoRoutine(handler)
-            } else {
-                PyFunction::SyncFunction(handler)
+        let insert_in_router =
+            |handler: Py<PyAny>, is_async: bool, number_of_params: u8, socket_type: &str| {
+                let function = if is_async {
+                    PyFunction::CoRoutine(handler)
+                } else {
+                    PyFunction::SyncFunction(handler)
+                };
+
+                println!("socket type is {:?} {:?}", table, route);
+
+                table
+                    .write()
+                    .unwrap()
+                    .entry(route.to_string())
+                    .or_default()
+                    .insert(socket_type.to_string(), (function, number_of_params))
             };
 
-            let mut route_map = HashMap::new();
-            route_map.insert(socket_type.to_string(), (function, number_of_params));
-
-            println!("{:?}", table);
-            table.insert(route.to_string(), route_map);
-        };
-
         insert_in_router(
-            table,
             connect_route_function,
             connect_route_is_async,
             connect_route_params,
@@ -144,7 +144,6 @@ impl Router {
         );
 
         insert_in_router(
-            table,
             close_route_function,
             close_route_is_async,
             close_route_params,
@@ -152,7 +151,6 @@ impl Router {
         );
 
         insert_in_router(
-            table,
             message_route_function,
             message_route_is_async,
             message_route_params,

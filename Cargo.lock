@@ -1245,7 +1245,6 @@ dependencies = [
  "actix-web-actors",
  "anyhow",
  "dashmap",
- "futures",
  "futures-util",
  "matchit",
  "pyo3",
