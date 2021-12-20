@@ -1,5 +1,33 @@
 # Changelog
 
+## [Unreleased](https://github.com/sansyrox/robyn/tree/HEAD)
+
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.9.0...HEAD)
+
+**Closed issues:**
+
+- Add PyPI classifiers [\#127](https://github.com/sansyrox/robyn/issues/127)
+- Robyn version 0.9.0 doesn't work on Mac M1 Models  [\#120](https://github.com/sansyrox/robyn/issues/120)
+- Inconsistency in steps mentioned in Readme to run locally  [\#119](https://github.com/sansyrox/robyn/issues/119)
+- Async web socket support [\#116](https://github.com/sansyrox/robyn/issues/116)
+- Reveal Logo to be removed from Future Roadmap [\#107](https://github.com/sansyrox/robyn/issues/107)
+- Dead Link for Test Drive Button on Robyn Landing Page  [\#106](https://github.com/sansyrox/robyn/issues/106)
+- Add issue template, pr template and community guidelines [\#105](https://github.com/sansyrox/robyn/issues/105)
+- For v0.7.0 [\#72](https://github.com/sansyrox/robyn/issues/72)
+- Add better support for requests and response! [\#13](https://github.com/sansyrox/robyn/issues/13)
+
+**Merged pull requests:**
+
+- Add async support in WS [\#134](https://github.com/sansyrox/robyn/pull/134) ([sansyrox](https://github.com/sansyrox))
+- Add help messages and simplify 'dev' option [\#128](https://github.com/sansyrox/robyn/pull/128) ([Kludex](https://github.com/Kludex))
+- Apply Python highlight on api.md [\#126](https://github.com/sansyrox/robyn/pull/126) ([Kludex](https://github.com/Kludex))
+- Update comparison.md [\#124](https://github.com/sansyrox/robyn/pull/124) ([Kludex](https://github.com/Kludex))
+- Update comparison.md [\#123](https://github.com/sansyrox/robyn/pull/123) ([Kludex](https://github.com/Kludex))
+- Fix readme documentation [\#122](https://github.com/sansyrox/robyn/pull/122) ([sansyrox](https://github.com/sansyrox))
+- Release v0.9.0 Changelog [\#121](https://github.com/sansyrox/robyn/pull/121) ([sansyrox](https://github.com/sansyrox))
+- \[FEAT\] Open Source Contribution Templates [\#118](https://github.com/sansyrox/robyn/pull/118) ([shivaylamba](https://github.com/shivaylamba))
+- FIX : Wrong link for Test Drive [\#117](https://github.com/sansyrox/robyn/pull/117) ([shivaylamba](https://github.com/shivaylamba))
+
 ## [v0.9.0](https://github.com/sansyrox/robyn/tree/v0.9.0) (2021-12-01)
 
 [Full Changelog](https://github.com/sansyrox/robyn/compare/v0.8.1...v0.9.0)

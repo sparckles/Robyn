@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "robyn"
-version = "0.9.0"
+version = "0.10.0"
 description = "A web server that is fast!"
 authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 
@@ -23,6 +23,20 @@ dependencies = [
   'uvloop == 0.16.0; sys_platform == "darwin"',
   'uvloop == 0.16.0; platform_machine == "x86_64"',
   'uvloop == 0.16.0; platform_machine == "i686"'
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Web Environment",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: BSD License",
+  "Operating System :: OS Independent",
+  "Topic :: Internet :: WWW/HTTP",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: Implementation :: CPython",
 ]
 
 
