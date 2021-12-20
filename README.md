@@ -39,7 +39,7 @@ app.start(port=5000)
 
 ## Features
 - Under active development!
-- Written in Russt, btw xD
+- Written in Rust, btw xD
 - A multithreaded Runtime
 - Extensible
 - A simple API

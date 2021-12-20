@@ -162,7 +162,7 @@ app = Robyn(__file__)
 websocket = WS(app, "/web_socket")
 ```
 
-Now, you can define 3 methods for every web_socket for their lifecycle, they are as follows:
+Now, you can define 3 methods for every web_socket for their life cycle, they are as follows:
 
 ```python3
 @websocket.on("message")
@@ -195,6 +195,42 @@ The three methods:
  - "connect" is called when the socket connects
 
 To see a complete service in action, you can go to the folder [../integration_tests/base_routes.py](../integration_tests/base_routes.py)
+
+### Update(20/12/21)
+
+Async functions are supported in Web Sockets now!
+
+Async functions are executed out of order for web sockets. i.e. the order of response is not guaranteed. This is done to achieve a non blocking concurrent effect. 
+
+A blocking async web socket is in plans for the future.
+
+### Usage
+
+```python3
+@websocket.on("message")
+async def connect():
+    global i
+    i+=1
+    if i==0:
+        return "Whaaat??"
+    elif i==1:
+        return "Whooo??"
+    elif i==2:
+        return "*chika* *chika* Slim Shady."
+    elif i==3:
+        i= -1
+        return ""
+
+@websocket.on("close")
+async def close():
+    return "Goodbye world, from ws"
+
+@websocket.on("connect")
+async def message():
+    return "Hello world, from ws"
+
+```
+
 
 ## MutliCore Scaling
 
