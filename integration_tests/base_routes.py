@@ -8,7 +8,7 @@ websocket = WS(app, "/web_socket")
 i = -1
 
 @websocket.on("message")
-def connect():
+async def connect():
     global i
     i+=1
     if i==0:
@@ -21,12 +21,10 @@ def connect():
 
 @websocket.on("close")
 def close():
-    print("Hello world")
-    return "Hello world, from ws"
+    return "GoodBye world, from ws"
 
 @websocket.on("connect")
 def message():
-    print("Hello world")
     return "Hello world, from ws"
 
 

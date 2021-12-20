@@ -63,13 +63,10 @@ impl Server {
             return Ok(());
         }
 
-        println!("{}", name);
-
         let borrow = socket.try_borrow_mut()?;
         let held_socket: &SocketHeld = &*borrow;
 
         let raw_socket = held_socket.get_socket();
-        println!("Got our socket {:?}", raw_socket);
 
         let router = self.router.clone();
         let headers = self.headers.clone();
@@ -123,17 +120,23 @@ impl Server {
                         .app_data(web::Data::new(headers.clone()));
 
                     let web_socket_map = router_copy.get_web_socket_map();
-                    for elem in (web_socket_map).iter() {
-                        let route = elem.key().clone();
-                        let params = elem.value().clone();
+                    for (elem, value) in (web_socket_map.read().unwrap()).iter() {
+                        let route = elem.clone();
+                        let params = value.clone();
+                        let event_loop_hdl = event_loop_hdl.clone();
                         app = app.route(
-                            &route,
+                            &route.clone(),
                             web::get().to(
                                 move |_router: web::Data<Arc<Router>>,
                                       _headers: web::Data<Arc<Headers>>,
                                       stream: web::Payload,
                                       req: HttpRequest| {
-                                    start_web_socket(req, stream, Arc::new(params.clone()))
+                                    start_web_socket(
+                                        req,
+                                        stream,
+                                        Arc::new(params.clone()),
+                                        event_loop_hdl.clone(),
+                                    )
                                 },
                             ),
                         );
@@ -205,14 +208,13 @@ impl Server {
     /// Add a new web socket route to the routing tables
     /// can be called after the server has been started
     pub fn add_web_socket_route(
-        &self,
+        &mut self,
         route: &str,
         // handler, is_async, number of params
         connect_route: (Py<PyAny>, bool, u8),
         close_route: (Py<PyAny>, bool, u8),
         message_route: (Py<PyAny>, bool, u8),
     ) {
-        println!("WS Route added for {} ", route);
         self.router
             .add_websocket_route(route, connect_route, close_route, message_route);
     }
