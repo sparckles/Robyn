@@ -1,0 +1,8 @@
+[flake8]
+
+max-line-length = 160
+exclude = src/* , .git , docs
+max-complexity = 10
+ignore = 
+      # empty file at eof
+      W391

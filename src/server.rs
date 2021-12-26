@@ -49,10 +49,10 @@ impl Server {
     pub fn start(
         &mut self,
         py: Python,
-        url: String,
-        port: u16,
+        _url: String,
+        _port: u16,
         socket: &PyCell<SocketHeld>,
-        name: String,
+        _name: String,
         workers: usize,
     ) -> PyResult<()> {
         if STARTED

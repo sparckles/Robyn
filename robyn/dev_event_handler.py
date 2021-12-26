@@ -8,7 +8,6 @@ from .log_colors import Colors
 from watchdog.events import FileSystemEventHandler
 
 
-
 class EventHandler(FileSystemEventHandler):
     def __init__(self, file_name):
         self.file_name = file_name
@@ -27,7 +26,7 @@ class EventHandler(FileSystemEventHandler):
 
         :param event [FSEvent]: [a data structure with info about the events]
         """
-        if len(self.processes)>0:
+        if len(self.processes) > 0:
             for process in self.processes:
                 process.terminate()
         print(f"{Colors.OKGREEN}Starting the server in dev mode{Colors.ENDC}")
