@@ -95,7 +95,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
                 ctx.pong(&msg)
             }
 
-            Ok(ws::Message::Text(text)) => {
+            Ok(ws::Message::Text(_text)) => {
                 // need to also passs this text as a param
                 let handler_function = &self.router.get("message").unwrap().0;
                 let _number_of_params = &self.router.get("message").unwrap().1;

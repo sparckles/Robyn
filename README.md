@@ -5,9 +5,10 @@
 
 [![Gitter](https://badges.gitter.im/robyn_/community.svg)](https://gitter.im/robyn_/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 [![Downloads](https://static.pepy.tech/personalized-badge/robyn?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Downloads)](https://pepy.tech/project/robyn)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 
-[Docs](https://sansyrox.github.io/robyn/#/)
+API Docs: [Docs](https://sansyrox.github.io/robyn/#/)
 
 Robyn is an async Python backend server with a runtime written in Rust, btw.
 
