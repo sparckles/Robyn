@@ -27,6 +27,13 @@ class ArgumentParser(argparse.ArgumentParser):
             default=False,
             help="Development mode. It restarts the server based on file changes.",
         )
+        self.parser.add_argument(
+            "--reuse_port",
+            dest="reuse_port",
+            action="store_true",
+            default=False,
+            help="Set the ability to reuse port",
+        )
 
         self.args = self.parser.parse_args()
 
@@ -41,3 +48,6 @@ class ArgumentParser(argparse.ArgumentParser):
         if _is_dev and (self.num_processes() != 1 or self.workers() != 1):
             raise Exception("--processes and --workers shouldn't be used with --dev")
         return _is_dev
+
+    def reuse_port(self):
+        return self.args.reuse_port

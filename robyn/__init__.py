@@ -32,6 +32,7 @@ class Robyn:
         self.dev = self.parser.is_dev()
         self.processes = self.parser.num_processes()
         self.workers = self.parser.workers()
+        self.reuse_port = self.parser.reuse_port()
         self.routes = []
         self.headers = []
         self.routes = []
@@ -75,8 +76,8 @@ class Robyn:
 
         :param port [int]: [reperesents the port number at which the server is listening]
         """
-        socket = SocketHeld(url, port)
         workers = self.workers
+        socket = SocketHeld(url, port, self.reuse_port)
         if not self.dev:
             for process_number in range(self.processes):
                 copied = socket.try_clone()
@@ -88,19 +89,21 @@ class Robyn:
                 )
                 p.start()
 
-            input("Press Cntrl + C to stop \n")
+            print("Press Cntrl + C to stop \n")
         else:
             event_handler = EventHandler(self.file_path)
-            event_handler.start_server_first_time()
             print(f"{Colors.OKBLUE}Dev server initialised with the directory_path : {self.directory_path}{Colors.ENDC}")
             observer = Observer()
             observer.schedule(event_handler,
                               path=self.directory_path,
                               recursive=True)
             observer.start()
+            event_handler.start_server_first_time()
             try:
                 while True:
-                    pass
+                    with open("test.txt", "w") as f:
+                        f.write("h\n")
+                        pass
             finally:
                 observer.stop()
                 observer.join()

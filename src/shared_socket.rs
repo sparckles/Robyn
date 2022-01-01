@@ -12,10 +12,14 @@ pub struct SocketHeld {
 #[pymethods]
 impl SocketHeld {
     #[new]
-    pub fn new(address: String, port: i32) -> PyResult<SocketHeld> {
+    pub fn new(address: String, port: i32, reuse_port: bool) -> PyResult<SocketHeld> {
         let socket = Socket::new(Domain::IPV4, Type::STREAM, Some(Protocol::TCP))?;
         let address: SocketAddr = format!("{}:{}", address, port).parse()?;
-        println!("{}", address);
+        println!("{} {}", address, reuse_port);
+        // this is being set to true when the --dev flag is passed
+        // constant restarting of the socket server causes issue(s) otherwise
+
+        socket.set_reuse_port(reuse_port)?;
         socket.set_reuse_address(true)?;
         socket.bind(&address.into())?;
         socket.listen(1024)?;
