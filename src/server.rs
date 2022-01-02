@@ -9,6 +9,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::{Relaxed, SeqCst};
 use std::sync::{Arc, RwLock};
 use std::thread;
+use std::collections::HashMap;
 
 use actix_files::Files;
 use actix_http::KeepAlive;
@@ -234,6 +235,13 @@ async fn index(
     mut payload: web::Payload,
     req: HttpRequest,
 ) -> impl Responder {
+    let split = req.query_string().split("&");
+    let mut queries = HashMap::new();
+    for s in split {
+        let params = s.split_once("=").unwrap_or(("", ""));
+        queries.insert(params.0, params.1);
+    }
+
     match router.get_route(req.method().clone(), req.uri().path()) {
         Some(((handler_function, number_of_params), route_params)) => {
             handle_request(
@@ -243,6 +251,7 @@ async fn index(
                 &mut payload,
                 &req,
                 route_params,
+                queries,
             )
             .await
         }
