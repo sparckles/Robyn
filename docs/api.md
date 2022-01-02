@@ -102,6 +102,17 @@ async def json(request):
     return jsonify({"hello": "world"})
 ```
 
+### Getting URL form data
+You can access URL form data with the request object similar to how you access params.
+
+```python3
+@app.get("/get")
+async def query(request):
+    form_data = request.get("queries", {})
+    print(form_data)
+    return jsonify({"queries": form_data})
+```
+
 ### Returning a JSON Response
 You can also serve JSON responses when serving HTTP request using the following way.
 
