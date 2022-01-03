@@ -235,11 +235,14 @@ async fn index(
     mut payload: web::Payload,
     req: HttpRequest,
 ) -> impl Responder {
-    let split = req.query_string().split("&");
     let mut queries = HashMap::new();
-    for s in split {
-        let params = s.split_once("=").unwrap_or(("", ""));
-        queries.insert(params.0, params.1);
+    
+    if req.query_string().len() > 0 {
+        let split = req.query_string().split("&");
+        for s in split {
+            let params = s.split_once("=").unwrap_or((s, ""));
+            queries.insert(params.0, params.1);
+        }
     }
 
     match router.get_route(req.method().clone(), req.uri().path()) {
