@@ -16,6 +16,7 @@ impl SocketHeld {
         let socket = Socket::new(Domain::IPV4, Type::STREAM, Some(Protocol::TCP))?;
         let address: SocketAddr = format!("{}:{}", address, port).parse()?;
         println!("{}", address);
+        socket.set_reuse_port(true)?;
         socket.set_reuse_address(true)?;
         socket.bind(&address.into())?;
         socket.listen(1024)?;

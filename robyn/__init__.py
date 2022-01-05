@@ -75,9 +75,9 @@ class Robyn:
 
         :param port [int]: [reperesents the port number at which the server is listening]
         """
-        socket = SocketHeld(url, port)
-        workers = self.workers
         if not self.dev:
+            workers = self.workers
+            socket = SocketHeld(url, port)
             for process_number in range(self.processes):
                 copied = socket.try_clone()
                 p = Process(
