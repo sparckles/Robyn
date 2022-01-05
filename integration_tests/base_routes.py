@@ -51,6 +51,11 @@ async def test(request):
 async def json_get():
     return jsonify({"hello": "world"})
 
+@app.get("/query")
+async def query_get(request):
+    query_data = request["queries"]
+    return jsonify(query_data)
+
 
 @app.post("/jsonify/:id")
 async def json(request):

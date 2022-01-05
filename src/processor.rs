@@ -40,6 +40,7 @@ pub async fn handle_request(
     payload: &mut web::Payload,
     req: &HttpRequest,
     route_params: HashMap<String, String>,
+    queries: HashMap<&str, &str>,
 ) -> HttpResponse {
     let contents = match execute_http_function(
         function,
@@ -47,6 +48,7 @@ pub async fn handle_request(
         headers,
         req,
         route_params,
+        queries,
         number_of_params,
     )
     .await
@@ -87,6 +89,7 @@ async fn execute_http_function(
     headers: &Headers,
     req: &HttpRequest,
     route_params: HashMap<String, String>,
+    queries: HashMap<&str, &str>,
     number_of_params: u8,
 ) -> Result<String> {
     let mut data: Option<Vec<u8>> = None;
@@ -115,11 +118,13 @@ async fn execute_http_function(
     for elem in headers.into_iter() {
         headers_python.insert(elem.key().clone(), elem.value().clone());
     }
+
     match function {
         PyFunction::CoRoutine(handler) => {
             let output = Python::with_gil(|py| {
                 let handler = handler.as_ref(py);
                 request.insert("params", route_params.into_py(py));
+                request.insert("queries", queries.into_py(py));
                 request.insert("headers", headers_python.into_py(py));
 
                 match data {

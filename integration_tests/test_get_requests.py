@@ -15,3 +15,9 @@ def test_html(session):
     r = requests.get(f"{BASE_URL}/test/123")
     assert "Hello world. How are you?" in r.text
 
+def test_queries(session):
+    r = requests.get(f"{BASE_URL}/query?hello=robyn")
+    assert r.json()=={"hello":"robyn"}
+
+    r = requests.get(f"{BASE_URL}/query")
+    assert r.json()=={}
