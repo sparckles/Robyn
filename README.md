@@ -31,7 +31,7 @@ from robyn import Robyn
 app = Robyn(__file__)
 
 @app.get("/")
-async def h():
+async def h(requests):
     return "Hello, world!"
 
 app.start(port=5000)
@@ -71,7 +71,7 @@ If you're feeling curious. You can take a look at a more detailed architecture [
 ```
 python3 app.py -h
 
-usage: base_routes.py [-h] [--processes PROCESSES] [--workers WORKERS] [--dev DEV]
+usage: app.py [-h] [--processes PROCESSES] [--workers WORKERS] [--dev DEV]
 
 Robyn, a fast async web framework with a rust runtime.
 
