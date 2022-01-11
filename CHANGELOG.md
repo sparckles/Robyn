@@ -2,7 +2,18 @@
 
 ## [Unreleased](https://github.com/sansyrox/robyn/tree/HEAD)
 
-[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.10.0...HEAD)
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.11.0...HEAD)
+
+**Merged pull requests:**
+
+- Use print instead of input after starting server [\#149](https://github.com/sansyrox/robyn/pull/149) ([klaa97](https://github.com/klaa97))
+- Fix dev server [\#148](https://github.com/sansyrox/robyn/pull/148) ([sansyrox](https://github.com/sansyrox))
+- URL queries [\#146](https://github.com/sansyrox/robyn/pull/146) ([patchgamestudio](https://github.com/patchgamestudio))
+- Add project wide flake8 settings [\#143](https://github.com/sansyrox/robyn/pull/143) ([sansyrox](https://github.com/sansyrox))
+
+## [v0.11.0](https://github.com/sansyrox/robyn/tree/v0.11.0) (2022-01-07)
+
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.10.0...v0.11.0)
 
 **Fixed bugs:**
 
@@ -13,12 +24,6 @@
 - Benchmarks to Björn, uvicorn etc.  [\#142](https://github.com/sansyrox/robyn/issues/142)
 - Add Python linter setup [\#129](https://github.com/sansyrox/robyn/issues/129)
 - Add fixtures in testing [\#84](https://github.com/sansyrox/robyn/issues/84)
-
-**Merged pull requests:**
-
-- Fix dev server [\#148](https://github.com/sansyrox/robyn/pull/148) ([sansyrox](https://github.com/sansyrox))
-- URL queries [\#146](https://github.com/sansyrox/robyn/pull/146) ([patchgamestudio](https://github.com/patchgamestudio))
-- Add project wide flake8 settings [\#143](https://github.com/sansyrox/robyn/pull/143) ([sansyrox](https://github.com/sansyrox))
 
 ## [v0.10.0](https://github.com/sansyrox/robyn/tree/v0.10.0) (2021-12-20)
 
