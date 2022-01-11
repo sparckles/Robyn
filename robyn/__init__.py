@@ -88,7 +88,7 @@ class Robyn:
                 )
                 p.start()
 
-            input("Press Cntrl + C to stop \n")
+            print("Press Ctrl + C to stop \n")
         else:
             event_handler = EventHandler(self.file_path)
             event_handler.start_server_first_time()
