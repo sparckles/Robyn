@@ -1,18 +1,11 @@
-[tool.poetry]
 name = "robyn"
 version = "0.11.1"
 description = "A web server that is fast!"
 authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 
-[tool.poetry.dependencies]
-python = "^3.8"
-watchdog = "^2.1.3"
-
-[tool.poetry.dev-dependencies]
-
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["maturin>=0.12,<0.13"]
+build-backend = "maturin"
 
 [project]
 name = "robyn"
@@ -40,3 +33,8 @@ classifiers = [
 ]
 
 
+[project.urls]
+"Source Code" = "https://github.com/sansyrox/robyn"
+Issues = "https://github.com/sansyrox/robyn/issues"
+Documentation = "https://robyn.sanskar.wtf/"
+Changelog = "https://github.com/sansyrox/robyn/blob/main/CHANGELOG.md"
