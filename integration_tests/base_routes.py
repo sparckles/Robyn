@@ -7,21 +7,24 @@ app = Robyn(__file__)
 websocket = WS(app, "/web_socket")
 i = -1
 
+
 @websocket.on("message")
 async def connect():
     global i
-    i+=1
-    if i==0:
+    i += 1
+    if i == 0:
         return "Whaaat??"
-    elif i==1:
+    elif i == 1:
         return "Whooo??"
-    elif i==2:
+    elif i == 2:
         i = -1
         return "*chika* *chika* Slim Shady."
+
 
 @websocket.on("close")
 def close():
     return "GoodBye world, from ws"
+
 
 @websocket.on("connect")
 def message():
@@ -47,9 +50,11 @@ async def test(request):
 
     return static_file(html_file)
 
+
 @app.get("/jsonify")
 async def json_get():
     return jsonify({"hello": "world"})
+
 
 @app.get("/query")
 async def query_get(request):
@@ -62,17 +67,21 @@ async def json(request):
     print(request["params"]["id"])
     return jsonify({"hello": "world"})
 
+
 @app.post("/post")
 async def post():
     return "POST Request"
+
 
 @app.post("/post_with_body")
 async def postreq_with_body(request):
     return bytearray(request["body"]).decode("utf-8")
 
+
 @app.put("/put")
 async def put(request):
     return "PUT Request"
+
 
 @app.put("/put_with_body")
 async def putreq_with_body(request):
@@ -84,6 +93,7 @@ async def putreq_with_body(request):
 async def delete():
     return "DELETE Request"
 
+
 @app.delete("/delete_with_body")
 async def deletereq_with_body(request):
     return bytearray(request["body"]).decode("utf-8")
@@ -92,6 +102,7 @@ async def deletereq_with_body(request):
 @app.patch("/patch")
 async def patch():
     return "PATCH Request"
+
 
 @app.patch("/patch_with_body")
 async def patchreq_with_body(request):
@@ -107,6 +118,7 @@ async def sleeper():
 @app.get("/blocker")
 def blocker():
     import time
+
     time.sleep(10)
     return "blocker function"
 
@@ -121,10 +133,14 @@ def shutdown_handler():
 
 
 if __name__ == "__main__":
-    ROBYN_URL = os.getenv("ROBYN_URL", '0.0.0.0')
+    ROBYN_URL = os.getenv("ROBYN_URL", "0.0.0.0")
     app.add_header("server", "robyn")
     current_file_path = pathlib.Path(__file__).parent.resolve()
     os.path.join(current_file_path, "build")
-    app.add_directory(route="/test_dir",directory_path=os.path.join(current_file_path, "build/"), index_file="index.html")
+    app.add_directory(
+        route="/test_dir",
+        directory_path=os.path.join(current_file_path, "build/"),
+        index_file="index.html",
+    )
     app.startup_handler(startup_handler)
     app.start(port=5000, url=ROBYN_URL)
