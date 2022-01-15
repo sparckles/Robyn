@@ -210,3 +210,26 @@ async fn execute_http_function(
         }
     }
 }
+
+pub async fn execute_event_handler(event_handler: Option<PyFunction>, event_loop: Py<PyAny>) {
+    match event_handler {
+        Some(handler) => match handler {
+            PyFunction::SyncFunction(function) => {
+                println!("Startup event handler");
+                Python::with_gil(|py| {
+                    function.call0(py).unwrap();
+                });
+            }
+            PyFunction::CoRoutine(function) => {
+                let future = Python::with_gil(|py| {
+                    println!("Startup event handler async");
+
+                    let coroutine = function.as_ref(py).call0().unwrap();
+                    pyo3_asyncio::into_future_with_loop(event_loop.as_ref(py), coroutine).unwrap()
+                });
+                future.await.unwrap();
+            }
+        },
+        None => {}
+    }
+}

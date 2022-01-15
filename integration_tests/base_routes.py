@@ -35,7 +35,7 @@ callCount = 0
 async def hello(request):
     global callCount
     callCount += 1
-    message = "Called " + str(callCount) + " times"
+    _message = "Called " + str(callCount) + " times"
     return jsonify(request)
 
 
@@ -111,10 +111,20 @@ def blocker():
     return "blocker function"
 
 
+async def startup_handler():
+    print("Starting up")
+
+
+@app.shutdown_handler
+def shutdown_handler():
+    print("Shutting down")
+
+
 if __name__ == "__main__":
     ROBYN_URL = os.getenv("ROBYN_URL", '0.0.0.0')
     app.add_header("server", "robyn")
     current_file_path = pathlib.Path(__file__).parent.resolve()
     os.path.join(current_file_path, "build")
     app.add_directory(route="/test_dir",directory_path=os.path.join(current_file_path, "build/"), index_file="index.html")
+    app.startup_handler(startup_handler)
     app.start(port=5000, url=ROBYN_URL)

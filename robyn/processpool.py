@@ -3,13 +3,16 @@ from .robyn import Server
 import sys
 import multiprocessing as mp
 import asyncio
+
 # import platform
 
 
 mp.allow_connection_pickling()
 
 
-def spawn_process(url, port, directories, headers, routes, web_sockets, socket, process_name, workers):
+def spawn_process(
+    directories, headers, routes, web_sockets, event_handlers, socket, workers
+):
     """
     This function is called by the main process handler to create a server runtime.
     This functions allows one runtime per process.
@@ -31,13 +34,12 @@ def spawn_process(url, port, directories, headers, routes, web_sockets, socket, 
         # uv loop doesn't support windows or arm machines at the moment
         # but uv loop is much faster than native asyncio
         import uvloop
+
         uvloop.install()
         loop = uvloop.new_event_loop()
         asyncio.set_event_loop(loop)
 
     server = Server()
-
-    print(directories)
 
     for directory in directories:
         route, directory_path, index_file, show_files_listing = directory
@@ -50,10 +52,21 @@ def spawn_process(url, port, directories, headers, routes, web_sockets, socket, 
         route_type, endpoint, handler, is_async, number_of_params = route
         server.add_route(route_type, endpoint, handler, is_async, number_of_params)
 
+    if "startup_handler" in event_handlers:
+        server.add_startup_handler(event_handlers["startup_handler"][0], event_handlers["startup_handler"][1])
+
+    if "shutdown_handler" in event_handlers:
+        server.add_shutdown_handler(event_handlers["shutdown_handler"][0], event_handlers["shutdown_handler"][1])
+
     for endpoint in web_sockets:
         web_socket = web_sockets[endpoint]
         print(web_socket.methods)
-        server.add_web_socket_route(endpoint, web_socket.methods["connect"], web_socket.methods["close"], web_socket.methods["message"])
+        server.add_web_socket_route(
+            endpoint,
+            web_socket.methods["connect"],
+            web_socket.methods["close"],
+            web_socket.methods["message"],
+        )
 
-    server.start(url, port, socket, process_name, workers)
+    server.start(socket, workers)
     asyncio.get_event_loop().run_forever()
