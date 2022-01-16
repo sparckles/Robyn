@@ -1,4 +1,5 @@
 from .robyn import Server
+from .events import Events
 
 import sys
 import multiprocessing as mp
@@ -17,11 +18,11 @@ def spawn_process(
     This function is called by the main process handler to create a server runtime.
     This functions allows one runtime per process.
 
-    :param url string: the base url at which the server will listen
-    :param port string: the port at which the url will listen to
     :param directories tuple: the list of all the directories and related data in a tuple
     :param headers tuple: All the global headers in a tuple
     :param routes tuple: The routes touple, containing the description about every route.
+    :param web_sockets list: This is a list of all the web socket routes
+    :param event_handlers Dict: This is an event dict that contains the event handlers
     :param socket Socket: This is the main tcp socket, which is being shared across multiple processes.
     :param process_name string: This is the name given to the process to identify the process
     :param workers number: This is the name given to the process to identify the process
@@ -52,11 +53,11 @@ def spawn_process(
         route_type, endpoint, handler, is_async, number_of_params = route
         server.add_route(route_type, endpoint, handler, is_async, number_of_params)
 
-    if "startup_handler" in event_handlers:
-        server.add_startup_handler(event_handlers["startup_handler"][0], event_handlers["startup_handler"][1])
+    if "startup" in event_handlers:
+        server.add_startup_handler(event_handlers[Events.STARTUP][0], event_handlers[Events.STARTUP][1])
 
-    if "shutdown_handler" in event_handlers:
-        server.add_shutdown_handler(event_handlers["shutdown_handler"][0], event_handlers["shutdown_handler"][1])
+    if "shutdown" in event_handlers:
+        server.add_shutdown_handler(event_handlers[Events.SHUTDOWN][0], event_handlers[Events.SHUTDOWN][1])
 
     for endpoint in web_sockets:
         web_socket = web_sockets[endpoint]

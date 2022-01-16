@@ -3,6 +3,7 @@ import os
 import asyncio
 from inspect import signature
 import multiprocessing as mp
+from robyn.events import Events
 
 # custom imports and exports
 from .robyn import Server, SocketHeld
@@ -73,20 +74,17 @@ class Robyn:
 
     def _add_event_handler(self, event_type: str, handler):
         print(f"Add event {event_type} handler")
-        if event_type.lower() not in {"startup", "shutdown"}:
+        if event_type not in {Events.STARTUP, Events.SHUTDOWN}:
             return
 
         is_async = asyncio.iscoroutinefunction(handler)
-        if event_type.lower() == "startup":
-            self.event_handlers["startup_handler"] = (handler, is_async)
-        else:
-            self.event_handlers["shutdown_handler"] = (handler, is_async)
+        self.event_handlers[event_type] = (handler, is_async)
 
     def startup_handler(self, handler):
-        self._add_event_handler("startup", handler)
+        self._add_event_handler(Events.STARTUP, handler)
 
     def shutdown_handler(self, handler):
-        self._add_event_handler("shutdown", handler)
+        self._add_event_handler(Events.SHUTDOWN, handler)
 
     def start(self, url="128.0.0.1", port=5000):
         """
