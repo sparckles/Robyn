@@ -82,6 +82,7 @@ impl Server {
             .call_method1("set_event_loop", (event_loop,))
             .unwrap();
         let event_loop_hdl = PyObject::from(event_loop);
+        let event_loop_cleanup = PyObject::from(event_loop);
         let startup_handler = self.startup_handler.clone();
         let shutdown_handler = self.shutdown_handler.clone();
 
@@ -162,12 +163,21 @@ impl Server {
                 .run()
                 .await
                 .unwrap();
-
-                execute_event_handler(shutdown_handler, event_loop_hdl.clone()).await;
             });
         });
 
-        event_loop.call_method0("run_forever").unwrap();
+        let event_loop = event_loop.call_method0("run_forever");
+        if event_loop.is_err() {
+            println!("Ctrl c handler");
+            Python::with_gil(|py| {
+                let event_loop_hdl = event_loop_cleanup.clone();
+                pyo3_asyncio::tokio::run(py, async move {
+                    execute_event_handler(shutdown_handler, event_loop_hdl.clone()).await;
+                    Ok(())
+                })
+                .unwrap();
+            })
+        }
         Ok(())
     }
 
