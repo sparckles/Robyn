@@ -2,6 +2,10 @@ from robyn import Robyn, static_file, jsonify, WS
 import asyncio
 import os
 import pathlib
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Robyn(__file__)
 websocket = WS(app, "/web_socket")
@@ -124,12 +128,12 @@ def blocker():
 
 
 async def startup_handler():
-    print("Starting up")
+    logger.log(logging.INFO, "Starting up")
 
 
 @app.shutdown_handler
 def shutdown_handler():
-    print("Shutting down")
+    logger.log(logging.INFO, "Shutting down")
 
 
 if __name__ == "__main__":
