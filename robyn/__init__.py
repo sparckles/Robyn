@@ -3,6 +3,7 @@ import os
 import asyncio
 from inspect import signature
 import multiprocessing as mp
+from robyn.events import Events
 
 # custom imports and exports
 from .robyn import Server, SocketHeld
@@ -21,13 +22,12 @@ mp.allow_connection_pickling()
 
 
 class Robyn:
-    """This is the python wrapper for the Robyn binaries.
-    """
+    """This is the python wrapper for the Robyn binaries."""
+
     def __init__(self, file_object):
         directory_path = os.path.dirname(os.path.abspath(file_object))
         self.file_path = file_object
         self.directory_path = directory_path
-        self.server = Server(directory_path)
         self.parser = ArgumentParser()
         self.dev = self.parser.is_dev()
         self.processes = self.parser.num_processes()
@@ -37,6 +37,7 @@ class Robyn:
         self.routes = []
         self.directories = []
         self.web_sockets = {}
+        self.event_handlers = {}
 
     def add_route(self, route_type, endpoint, handler):
         """
@@ -51,25 +52,41 @@ class Robyn:
         """
         number_of_params = len(signature(handler).parameters)
         self.routes.append(
-            (route_type,
-             endpoint,
-             handler,
-             asyncio.iscoroutinefunction(handler), number_of_params)
+            (
+                route_type,
+                endpoint,
+                handler,
+                asyncio.iscoroutinefunction(handler),
+                number_of_params,
+            )
         )
 
-    def add_directory(self, route, directory_path, index_file=None, show_files_listing=False):
+    def add_directory(
+        self, route, directory_path, index_file=None, show_files_listing=False
+    ):
         self.directories.append((route, directory_path, index_file, show_files_listing))
 
     def add_header(self, key, value):
         self.headers.append((key, value))
 
-    def remove_header(self, key):
-        self.server.remove_header(key)
-
     def add_web_socket(self, endpoint, ws):
         self.web_sockets[endpoint] = ws
 
-    def start(self, url="127.0.0.1", port=5000):
+    def _add_event_handler(self, event_type: str, handler):
+        print(f"Add event {event_type} handler")
+        if event_type not in {Events.STARTUP, Events.SHUTDOWN}:
+            return
+
+        is_async = asyncio.iscoroutinefunction(handler)
+        self.event_handlers[event_type] = (handler, is_async)
+
+    def startup_handler(self, handler):
+        self._add_event_handler(Events.STARTUP, handler)
+
+    def shutdown_handler(self, handler):
+        self._add_event_handler(Events.SHUTDOWN, handler)
+
+    def start(self, url="128.0.0.1", port=5000):
         """
         [Starts the server]
 
@@ -78,13 +95,19 @@ class Robyn:
         if not self.dev:
             workers = self.workers
             socket = SocketHeld(url, port)
-            for process_number in range(self.processes):
-                copied = socket.try_clone()
+            for _ in range(self.processes):
+                copied_socket = socket.try_clone()
                 p = Process(
                     target=spawn_process,
-                    args=(url, port, self.directories, self.headers,
-                          self.routes, self.web_sockets, copied,
-                          f"Process {process_number}", workers),
+                    args=(
+                        self.directories,
+                        self.headers,
+                        self.routes,
+                        self.web_sockets,
+                        self.event_handlers,
+                        copied_socket,
+                        workers,
+                    ),
                 )
                 p.start()
 
@@ -92,11 +115,11 @@ class Robyn:
         else:
             event_handler = EventHandler(self.file_path)
             event_handler.start_server_first_time()
-            print(f"{Colors.OKBLUE}Dev server initialised with the directory_path : {self.directory_path}{Colors.ENDC}")
+            print(
+                f"{Colors.OKBLUE}Dev server initialised with the directory_path : {self.directory_path}{Colors.ENDC}"
+            )
             observer = Observer()
-            observer.schedule(event_handler,
-                              path=self.directory_path,
-                              recursive=True)
+            observer.schedule(event_handler, path=self.directory_path, recursive=True)
             observer.start()
             try:
                 while True:
@@ -111,6 +134,7 @@ class Robyn:
 
         :param endpoint [str]: [endpoint to server the route]
         """
+
         def inner(handler):
             self.add_route("GET", endpoint, handler)
 
@@ -122,6 +146,7 @@ class Robyn:
 
         :param endpoint [str]: [endpoint to server the route]
         """
+
         def inner(handler):
             self.add_route("POST", endpoint, handler)
 
@@ -133,6 +158,7 @@ class Robyn:
 
         :param endpoint [str]: [endpoint to server the route]
         """
+
         def inner(handler):
             self.add_route("PUT", endpoint, handler)
 
@@ -144,6 +170,7 @@ class Robyn:
 
         :param endpoint [str]: [endpoint to server the route]
         """
+
         def inner(handler):
             self.add_route("DELETE", endpoint, handler)
 
@@ -155,6 +182,7 @@ class Robyn:
 
         :param endpoint [str]: [endpoint to server the route]
         """
+
         def inner(handler):
             self.add_route("PATCH", endpoint, handler)
 
@@ -166,6 +194,7 @@ class Robyn:
 
         :param endpoint [str]: [endpoint to server the route]
         """
+
         def inner(handler):
             self.add_route("HEAD", endpoint, handler)
 
@@ -177,6 +206,7 @@ class Robyn:
 
         :param endpoint [str]: [endpoint to server the route]
         """
+
         def inner(handler):
             self.add_route("OPTIONS", endpoint, handler)
 
@@ -188,6 +218,7 @@ class Robyn:
 
         :param endpoint [str]: [endpoint to server the route]
         """
+
         def inner(handler):
             self.add_route("CONNECT", endpoint, handler)
 
@@ -199,8 +230,8 @@ class Robyn:
 
         :param endpoint [str]: [endpoint to server the route]
         """
+
         def inner(handler):
             self.add_route("TRACE", endpoint, handler)
 
         return inner
-

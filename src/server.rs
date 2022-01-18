@@ -1,15 +1,15 @@
-use crate::processor::{apply_headers, handle_request};
+use crate::processor::{apply_headers, execute_event_handler, handle_request};
 use crate::router::Router;
 use crate::shared_socket::SocketHeld;
-use crate::types::Headers;
+use crate::types::{Headers, PyFunction};
 use crate::web_socket_connection::start_web_socket;
 
+use std::collections::HashMap;
 use std::convert::TryInto;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::{Relaxed, SeqCst};
 use std::sync::{Arc, RwLock};
 use std::thread;
-use std::collections::HashMap;
 
 use actix_files::Files;
 use actix_http::KeepAlive;
@@ -34,6 +34,8 @@ pub struct Server {
     router: Arc<Router>,
     headers: Arc<DashMap<String, String>>,
     directories: Arc<RwLock<Vec<Directory>>>,
+    startup_handler: Option<PyFunction>,
+    shutdown_handler: Option<PyFunction>,
 }
 
 #[pymethods]
@@ -44,16 +46,15 @@ impl Server {
             router: Arc::new(Router::new()),
             headers: Arc::new(DashMap::new()),
             directories: Arc::new(RwLock::new(Vec::new())),
+            startup_handler: None,
+            shutdown_handler: None,
         }
     }
 
     pub fn start(
         &mut self,
         py: Python,
-        _url: String,
-        _port: u16,
         socket: &PyCell<SocketHeld>,
-        _name: String,
         workers: usize,
     ) -> PyResult<()> {
         if STARTED
@@ -81,15 +82,20 @@ impl Server {
             .call_method1("set_event_loop", (event_loop,))
             .unwrap();
         let event_loop_hdl = PyObject::from(event_loop);
+        let event_loop_cleanup = PyObject::from(event_loop);
+        let startup_handler = self.startup_handler.clone();
+        let shutdown_handler = self.shutdown_handler.clone();
 
         thread::spawn(move || {
             //init_current_thread_once();
+            let copied_event_loop = event_loop_hdl.clone();
             actix_web::rt::System::new().block_on(async move {
                 println!("The number of workers are {}", workers.clone());
+                execute_event_handler(startup_handler, copied_event_loop.clone()).await;
 
                 HttpServer::new(move || {
                     let mut app = App::new();
-                    let event_loop_hdl = event_loop_hdl.clone();
+                    let event_loop_hdl = copied_event_loop.clone();
                     let directories = directories.read().unwrap();
                     let router_copy = router.clone();
 
@@ -160,7 +166,18 @@ impl Server {
             });
         });
 
-        event_loop.call_method0("run_forever").unwrap();
+        let event_loop = event_loop.call_method0("run_forever");
+        if event_loop.is_err() {
+            println!("Ctrl c handler");
+            Python::with_gil(|py| {
+                let event_loop_hdl = event_loop_cleanup.clone();
+                pyo3_asyncio::tokio::run(py, async move {
+                    execute_event_handler(shutdown_handler, event_loop_hdl.clone()).await;
+                    Ok(())
+                })
+                .unwrap();
+            })
+        }
         Ok(())
     }
 
@@ -219,6 +236,27 @@ impl Server {
         self.router
             .add_websocket_route(route, connect_route, close_route, message_route);
     }
+
+    /// Add a new startup handler
+    pub fn add_startup_handler(&mut self, handler: Py<PyAny>, is_async: bool) {
+        println!("Adding startup handler");
+        match is_async {
+            true => self.startup_handler = Some(PyFunction::CoRoutine(handler)),
+            false => self.startup_handler = Some(PyFunction::SyncFunction(handler)),
+        };
+        println!("{:?}", self.startup_handler);
+    }
+
+    /// Add a new shutdown handler
+    pub fn add_shutdown_handler(&mut self, handler: Py<PyAny>, is_async: bool) {
+        println!("Adding shutdown handler");
+        match is_async {
+            true => self.shutdown_handler = Some(PyFunction::CoRoutine(handler)),
+            false => self.shutdown_handler = Some(PyFunction::SyncFunction(handler)),
+        };
+        println!("{:?}", self.startup_handler);
+        println!("{:?}", self.shutdown_handler);
+    }
 }
 
 impl Default for Server {
@@ -236,7 +274,7 @@ async fn index(
     req: HttpRequest,
 ) -> impl Responder {
     let mut queries = HashMap::new();
-    
+
     if req.query_string().len() > 0 {
         let split = req.query_string().split("&");
         for s in split {
