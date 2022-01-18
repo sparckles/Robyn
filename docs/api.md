@@ -93,13 +93,28 @@ async def postreq(request):
 
 
 ### Having Dynamic Routes
-You can now add params in the routes and access them from the request object.
+You can add params in the routes and access them from the request object.
 
 ```python3
 @app.post("/jsonify/:id")
 async def json(request):
     print(request["params"]["id"])
     return jsonify({"hello": "world"})
+```
+
+### Query Params
+
+You can access query params from every HTTP method.
+
+For the url: `http://localhost:5000/query?a=b`
+
+You can use the following code snippet.
+
+```python3
+@app.get("/query")
+async def query_get(request):
+    query_data = request["queries"]
+    return jsonify(query_data)
 ```
 
 ### Getting URL form data
@@ -209,13 +224,6 @@ The three methods:
 
 To see a complete service in action, you can go to the folder [../integration_tests/base_routes.py](../integration_tests/base_routes.py)
 
-### Update(20/12/21)
-
-Async functions are supported in Web Sockets now!
-
-Async functions are executed out of order for web sockets. i.e. the order of response is not guaranteed. This is done to achieve a non blocking concurrent effect. 
-
-A blocking async web socket is in plans for the future.
 
 ### Usage
 

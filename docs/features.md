@@ -9,5 +9,6 @@
 - Multi Core Scaling
 - WebSocket!
 - Hot Reloading (Still experimental)
+- Query Params
 - Community First and truly FOSS!
 

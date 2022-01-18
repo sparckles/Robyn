@@ -3,6 +3,7 @@
 
 # Robyn
 
+[![sansyrox](https://circleci.com/gh/sansyrox/robyn.svg?style=svg)](https://app.circleci.com/pipelines/github/sansyrox/robyn)
 [![Gitter](https://badges.gitter.im/robyn_/community.svg)](https://gitter.im/robyn_/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 [![Downloads](https://static.pepy.tech/personalized-badge/robyn?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Downloads)](https://pepy.tech/project/robyn)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
@@ -14,7 +15,7 @@ Robyn is an async Python backend server with a runtime written in Rust, btw.
 
 Python server running on top of of Rust Async RunTime.
 
-## Installation
+## 📦 Installation
 
 You can simply use Pip for installation.
 
@@ -22,7 +23,7 @@ You can simply use Pip for installation.
 pip install robyn
 ```
 
-## Usage
+## 🤔 Usage
 
 ```python
 
@@ -38,7 +39,7 @@ app.start(port=5000)
 
 ```
 
-## Features
+## 💡 Features
 - Under active development!
 - Written in Rust, btw xD
 - A multithreaded Runtime
@@ -52,13 +53,13 @@ app.start(port=5000)
 - Community First and truly FOSS!
 
 
-## Contributor Guidelines
+## 🗒️ Contributor Guidelines
 
 Feel free to open an issue for any clarification or for any suggestions.
 
 If you're feeling curious. You can take a look at a more detailed architecture [here](https://github.com/sansyrox/robyn/blob/main/docs/architecture.md).
 
-## To Run Locally
+## ⚙️ To Develop Locally
 
 1. Add more routes in the `integration_tests/base_routes.py` file(if you like). It only supports only get requests at the moment
 
@@ -66,7 +67,7 @@ If you're feeling curious. You can take a look at a more detailed architecture [
 
 3. Run `python3 integration_tests/base_routes.py`
 
-## To Run
+## 🏃 To Run
 
 ```
 python3 app.py -h
@@ -83,7 +84,7 @@ optional arguments:
 ```
 
 
-## Contributors/Supporters
+## ✨ Contributors/Supporters
 
 To contribute to Robyn, make sure to first go through the [CONTRIBUTING.md](./CONTRIBUTING.md).
 
