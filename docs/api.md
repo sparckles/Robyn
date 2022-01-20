@@ -176,6 +176,22 @@ app.add_header("server", "robyn")
 
 ```
 
+## Events
+
+You can add startup and shutdown events in robyn. These events will execute before the requests have started serving and after the serving has been completed.
+
+```python3
+
+async def startup_handler():
+    logger.log(logging.INFO, "Starting up")
+
+app.startup_handler(startup_handler)
+
+@app.shutdown_handler
+def shutdown_handler():
+    logger.log(logging.INFO, "Shutting down")
+```
+
 ## WebSockets
 
 You can now serve websockets using Robyn.

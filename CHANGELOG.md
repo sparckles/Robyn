@@ -2,14 +2,25 @@
 
 ## [Unreleased](https://github.com/sansyrox/robyn/tree/HEAD)
 
-[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.11.0...HEAD)
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.11.1...HEAD)
+
+**Closed issues:**
+
+- Consider adding startup events [\#153](https://github.com/sansyrox/robyn/issues/153)
+- Remove poetry dependency [\#150](https://github.com/sansyrox/robyn/issues/150)
 
 **Merged pull requests:**
 
+- Add Event handlers [\#154](https://github.com/sansyrox/robyn/pull/154) ([sansyrox](https://github.com/sansyrox))
+- Remove poetry [\#152](https://github.com/sansyrox/robyn/pull/152) ([sansyrox](https://github.com/sansyrox))
 - Use print instead of input after starting server [\#149](https://github.com/sansyrox/robyn/pull/149) ([klaa97](https://github.com/klaa97))
 - Fix dev server [\#148](https://github.com/sansyrox/robyn/pull/148) ([sansyrox](https://github.com/sansyrox))
 - URL queries [\#146](https://github.com/sansyrox/robyn/pull/146) ([patchgamestudio](https://github.com/patchgamestudio))
 - Add project wide flake8 settings [\#143](https://github.com/sansyrox/robyn/pull/143) ([sansyrox](https://github.com/sansyrox))
+
+## [v0.11.1](https://github.com/sansyrox/robyn/tree/v0.11.1) (2022-01-11)
+
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.11.0...v0.11.1)
 
 ## [v0.11.0](https://github.com/sansyrox/robyn/tree/v0.11.0) (2022-01-07)
 

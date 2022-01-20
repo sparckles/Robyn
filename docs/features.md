@@ -10,5 +10,6 @@
 - WebSocket!
 - Hot Reloading (Still experimental)
 - Query Params
+- Events (Startup and Shutdown)
 - Community First and truly FOSS!
 
