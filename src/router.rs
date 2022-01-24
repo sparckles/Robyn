@@ -11,36 +11,36 @@ use matchit::Node;
 /// Contains the thread safe hashmaps of different routes
 
 pub struct Router {
-    get_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
-    post_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
-    put_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
-    delete_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
-    patch_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
-    head_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
-    options_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
-    connect_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
-    trace_routes: Arc<RwLock<Node<(PyFunction, u8)>>>,
-    web_socket_routes: Arc<RwLock<HashMap<String, HashMap<String, (PyFunction, u8)>>>>,
+    get_routes: RwLock<Node<(PyFunction, u8)>>,
+    post_routes: RwLock<Node<(PyFunction, u8)>>,
+    put_routes: RwLock<Node<(PyFunction, u8)>>,
+    delete_routes: RwLock<Node<(PyFunction, u8)>>,
+    patch_routes: RwLock<Node<(PyFunction, u8)>>,
+    head_routes: RwLock<Node<(PyFunction, u8)>>,
+    options_routes: RwLock<Node<(PyFunction, u8)>>,
+    connect_routes: RwLock<Node<(PyFunction, u8)>>,
+    trace_routes: RwLock<Node<(PyFunction, u8)>>,
+    web_socket_routes: RwLock<HashMap<String, HashMap<String, (PyFunction, u8)>>>,
 }
 
 impl Router {
     pub fn new() -> Self {
         Self {
-            get_routes: Arc::new(RwLock::new(Node::new())),
-            post_routes: Arc::new(RwLock::new(Node::new())),
-            put_routes: Arc::new(RwLock::new(Node::new())),
-            delete_routes: Arc::new(RwLock::new(Node::new())),
-            patch_routes: Arc::new(RwLock::new(Node::new())),
-            head_routes: Arc::new(RwLock::new(Node::new())),
-            options_routes: Arc::new(RwLock::new(Node::new())),
-            connect_routes: Arc::new(RwLock::new(Node::new())),
-            trace_routes: Arc::new(RwLock::new(Node::new())),
-            web_socket_routes: Arc::new(RwLock::new(HashMap::new())),
+            get_routes: RwLock::new(Node::new()),
+            post_routes: RwLock::new(Node::new()),
+            put_routes: RwLock::new(Node::new()),
+            delete_routes: RwLock::new(Node::new()),
+            patch_routes: RwLock::new(Node::new()),
+            head_routes: RwLock::new(Node::new()),
+            options_routes: RwLock::new(Node::new()),
+            connect_routes: RwLock::new(Node::new()),
+            trace_routes: RwLock::new(Node::new()),
+            web_socket_routes: RwLock::new(HashMap::new()),
         }
     }
 
     #[inline]
-    fn get_relevant_map(&self, route: Method) -> Option<&Arc<RwLock<Node<(PyFunction, u8)>>>> {
+    fn get_relevant_map(&self, route: Method) -> Option<&RwLock<Node<(PyFunction, u8)>>> {
         match route {
             Method::GET => Some(&self.get_routes),
             Method::POST => Some(&self.post_routes),
@@ -58,12 +58,12 @@ impl Router {
     #[inline]
     pub fn get_web_socket_map(
         &self,
-    ) -> &Arc<RwLock<HashMap<String, HashMap<String, (PyFunction, u8)>>>> {
+    ) -> &RwLock<HashMap<String, HashMap<String, (PyFunction, u8)>>> {
         &self.web_socket_routes
     }
 
     #[inline]
-    fn get_relevant_map_str(&self, route: &str) -> Option<&Arc<RwLock<Node<(PyFunction, u8)>>>> {
+    fn get_relevant_map_str(&self, route: &str) -> Option<&RwLock<Node<(PyFunction, u8)>>> {
         if route != "WS" {
             let method = match Method::from_bytes(route.as_bytes()) {
                 Ok(res) => res,

@@ -8,12 +8,11 @@ use actix_web_actors::ws::WebsocketContext;
 use pyo3::prelude::*;
 
 use std::collections::HashMap;
-use std::sync::Arc;
 
 /// Define HTTP actor
 #[derive(Clone)]
 struct MyWs {
-    router: Arc<HashMap<String, (PyFunction, u8)>>,
+    router: HashMap<String, (PyFunction, u8)>,
     event_loop: PyObject,
 }
 
@@ -117,7 +116,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
 pub async fn start_web_socket(
     req: HttpRequest,
     stream: web::Payload,
-    router: Arc<HashMap<String, (PyFunction, u8)>>,
+    router: HashMap<String, (PyFunction, u8)>,
     event_loop: PyObject,
 ) -> Result<HttpResponse, Error> {
     // execute the async function here

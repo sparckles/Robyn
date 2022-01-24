@@ -141,7 +141,7 @@ impl Server {
                                     start_web_socket(
                                         req,
                                         stream,
-                                        Arc::new(params.clone()),
+                                        params.clone(),
                                         event_loop_hdl.clone(),
                                     )
                                 },
