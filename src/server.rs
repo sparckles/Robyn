@@ -1,3 +1,4 @@
+use crate::middleware_router::MiddlewareRouter;
 use crate::processor::{apply_headers, execute_event_handler, handle_request};
 use crate::router::Router;
 use crate::shared_socket::SocketHeld;
@@ -32,6 +33,7 @@ struct Directory {
 #[pyclass]
 pub struct Server {
     router: Arc<Router>,
+    middleware_router: Arc<MiddlewareRouter>,
     headers: Arc<DashMap<String, String>>,
     directories: Arc<RwLock<Vec<Directory>>>,
     startup_handler: Option<PyFunction>,
@@ -44,6 +46,7 @@ impl Server {
     pub fn new() -> Self {
         Self {
             router: Arc::new(Router::new()),
+            middleware_router: Arc::new(MiddlewareRouter::new()),
             headers: Arc::new(DashMap::new()),
             directories: Arc::new(RwLock::new(Vec::new())),
             startup_handler: None,
@@ -71,6 +74,7 @@ impl Server {
         let raw_socket = held_socket.get_socket();
 
         let router = self.router.clone();
+        let middleware_router = self.middleware_router.clone();
         let headers = self.headers.clone();
         let directories = self.directories.clone();
         let workers = Arc::new(workers);
@@ -124,6 +128,7 @@ impl Server {
 
                     app = app
                         .app_data(web::Data::new(router.clone()))
+                        .app_data(web::Data::new(middleware_router.clone()))
                         .app_data(web::Data::new(headers.clone()));
 
                     let web_socket_map = router_copy.get_web_socket_map();
@@ -221,6 +226,20 @@ impl Server {
         println!("Route added for {} {} ", route_type, route);
         self.router
             .add_route(route_type, route, handler, is_async, number_of_params);
+    }
+
+    /// Add a new route to the routing tables
+    /// can be called after the server has been started
+    pub fn add_middleware_route(
+        &self,
+        route_type: &str,
+        route: &str,
+        handler: Py<PyAny>,
+        is_async: bool,
+        number_of_params: u8,
+    ) {
+        println!("Route added for {} {} ", route_type, route);
+        self.middleware_router .add_route(route_type, route, handler, is_async, number_of_params);
     }
 
     /// Add a new web socket route to the routing tables

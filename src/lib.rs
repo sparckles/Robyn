@@ -1,3 +1,4 @@
+mod middleware_router;
 mod processor;
 mod router;
 mod server;
