@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::sync::{Arc, RwLock};
+use std::sync::RwLock;
 // pyo3 modules
 use crate::types::PyFunction;
 use pyo3::prelude::*;

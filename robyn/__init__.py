@@ -35,8 +35,9 @@ class Robyn:
         self.routes = []
         self.headers = []
         self.routes = []
-        self.directories = []
+        self.middlewares = []
         self.web_sockets = {}
+        self.directories = []
         self.event_handlers = {}
 
     def add_route(self, route_type, endpoint, handler):
@@ -60,6 +61,40 @@ class Robyn:
                 number_of_params,
             )
         )
+
+    def add_middleware_route(self, route_type, endpoint, handler):
+        """
+        [This is base handler for the middleware decorator]
+
+        :param route_type [str]: [??]
+        :param endpoint [str]: [endpoint for the route added]
+        :param handler [function]: [represents the sync or async function passed as a handler for the route]
+        """
+
+        """ We will add the status code here only
+        """
+        number_of_params = len(signature(handler).parameters)
+        self.routes.append(
+            (
+                route_type,
+                endpoint,
+                handler,
+                asyncio.iscoroutinefunction(handler),
+                number_of_params,
+            )
+        )
+
+    def before_request(self, endpoint):
+        """
+        [The @app.before_request decorator to add a get route]
+
+        :param endpoint [str]: [endpoint to server the route]
+        """
+
+        def inner(handler):
+            self.add_middleware_route("BEFORE_REQUEST", endpoint, handler)
+
+        return inner
 
     def add_directory(
         self, route, directory_path, index_file=None, show_files_listing=False

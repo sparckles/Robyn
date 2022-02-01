@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::sync::{Arc, RwLock};
+use std::sync::RwLock;
 // pyo3 modules
 use crate::types::PyFunction;
 use pyo3::prelude::*;
@@ -55,16 +55,12 @@ impl MiddlewareRouter {
 
     #[inline]
     fn get_relevant_map_str(&self, route: &str) -> Option<&RwLock<Node<(PyFunction, u8)>>> {
-        if route != "WS" {
-            let method = match Method::from_bytes(route.as_bytes()) {
-                Ok(res) => res,
-                Err(_) => return None,
-            };
+        let method = match Method::from_bytes(route.as_bytes()) {
+            Ok(res) => res,
+            Err(_) => return None,
+        };
 
-            return self.get_relevant_map(method);
-        } else {
-            return None;
-        }
+        return self.get_relevant_map(method);
     }
 
     // Checks if the functions is an async function

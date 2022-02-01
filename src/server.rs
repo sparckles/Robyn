@@ -1,6 +1,6 @@
-use crate::middleware_router::MiddlewareRouter;
 use crate::processor::{apply_headers, execute_event_handler, handle_request};
-use crate::router::Router;
+use crate::routers::middleware_router::MiddlewareRouter;
+use crate::routers::router::Router;
 use crate::shared_socket::SocketHeld;
 use crate::types::{Headers, PyFunction};
 use crate::web_socket_connection::start_web_socket;
@@ -239,7 +239,8 @@ impl Server {
         number_of_params: u8,
     ) {
         println!("Route added for {} {} ", route_type, route);
-        self.middleware_router .add_route(route_type, route, handler, is_async, number_of_params);
+        self.middleware_router
+            .add_route(route_type, route, handler, is_async, number_of_params);
     }
 
     /// Add a new web socket route to the routing tables
