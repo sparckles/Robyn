@@ -92,6 +92,9 @@ async fn execute_http_function(
     queries: HashMap<&str, &str>,
     number_of_params: u8,
 ) -> Result<String> {
+    // TODO:
+    // try executing the first version of middleware(s) here
+    // with just headers as params
     let mut data: Option<Vec<u8>> = None;
 
     if req.method() == Method::POST

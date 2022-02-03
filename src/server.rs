@@ -1,6 +1,6 @@
 use crate::processor::{apply_headers, execute_event_handler, handle_request};
-use crate::routers::middleware_router::MiddlewareRouter;
 use crate::routers::router::Router;
+use crate::routers::{middleware_router::MiddlewareRouter, web_socket_router::WebSocketRouter};
 use crate::shared_socket::SocketHeld;
 use crate::types::{Headers, PyFunction};
 use crate::web_socket_connection::start_web_socket;
@@ -33,11 +33,16 @@ struct Directory {
 #[pyclass]
 pub struct Server {
     router: Arc<Router>,
+    websocket_router: Arc<WebSocketRouter>,
     middleware_router: Arc<MiddlewareRouter>,
     headers: Arc<DashMap<String, String>>,
     directories: Arc<RwLock<Vec<Directory>>>,
     startup_handler: Option<PyFunction>,
     shutdown_handler: Option<PyFunction>,
+}
+
+fn test_function(req: HttpRequest) -> HttpRequest {
+    return req;
 }
 
 #[pymethods]
@@ -46,6 +51,7 @@ impl Server {
     pub fn new() -> Self {
         Self {
             router: Arc::new(Router::new()),
+            websocket_router: Arc::new(WebSocketRouter::new()),
             middleware_router: Arc::new(MiddlewareRouter::new()),
             headers: Arc::new(DashMap::new()),
             directories: Arc::new(RwLock::new(Vec::new())),
@@ -75,6 +81,7 @@ impl Server {
 
         let router = self.router.clone();
         let middleware_router = self.middleware_router.clone();
+        let web_socket_router = self.websocket_router.clone();
         let headers = self.headers.clone();
         let directories = self.directories.clone();
         let workers = Arc::new(workers);
@@ -101,7 +108,6 @@ impl Server {
                     let mut app = App::new();
                     let event_loop_hdl = copied_event_loop.clone();
                     let directories = directories.read().unwrap();
-                    let router_copy = router.clone();
 
                     // this loop matches three types of directory serving
                     // 1. Serves a build folder. e.g. the build folder generated from yarn build
@@ -131,7 +137,7 @@ impl Server {
                         .app_data(web::Data::new(middleware_router.clone()))
                         .app_data(web::Data::new(headers.clone()));
 
-                    let web_socket_map = router_copy.get_web_socket_map();
+                    let web_socket_map = web_socket_router.get_web_socket_map();
                     for (elem, value) in (web_socket_map.read().unwrap()).iter() {
                         let route = elem.clone();
                         let params = value.clone();
@@ -154,11 +160,13 @@ impl Server {
                         );
                     }
 
-                    app.default_service(web::route().to(move |router, headers, payload, req| {
-                        pyo3_asyncio::tokio::scope_local(event_loop_hdl.clone(), async move {
-                            index(router, headers, payload, req).await
-                        })
-                    }))
+                    app.default_service(web::route().to(
+                        move |router, headers, payload, mut req| {
+                            pyo3_asyncio::tokio::scope_local(event_loop_hdl.clone(), async move {
+                                index(router, headers, payload, req).await
+                            })
+                        },
+                    ))
                 })
                 .keep_alive(KeepAlive::Os)
                 .workers(*workers.clone())
@@ -253,7 +261,7 @@ impl Server {
         close_route: (Py<PyAny>, bool, u8),
         message_route: (Py<PyAny>, bool, u8),
     ) {
-        self.router
+        self.websocket_router
             .add_websocket_route(route, connect_route, close_route, message_route);
     }
 

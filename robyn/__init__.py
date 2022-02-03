@@ -138,6 +138,7 @@ class Robyn:
                         self.directories,
                         self.headers,
                         self.routes,
+                        [],
                         self.web_sockets,
                         self.event_handlers,
                         copied_socket,
