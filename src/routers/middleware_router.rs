@@ -11,56 +11,25 @@ use matchit::Node;
 /// Contains the thread safe hashmaps of different routes
 
 pub struct MiddlewareRouter {
-    get_routes: RwLock<Node<(PyFunction, u8)>>,
-    post_routes: RwLock<Node<(PyFunction, u8)>>,
-    put_routes: RwLock<Node<(PyFunction, u8)>>,
-    delete_routes: RwLock<Node<(PyFunction, u8)>>,
-    patch_routes: RwLock<Node<(PyFunction, u8)>>,
-    head_routes: RwLock<Node<(PyFunction, u8)>>,
-    options_routes: RwLock<Node<(PyFunction, u8)>>,
-    connect_routes: RwLock<Node<(PyFunction, u8)>>,
-    trace_routes: RwLock<Node<(PyFunction, u8)>>,
+    before_request: RwLock<Node<(PyFunction, u8)>>,
+    after_request: RwLock<Node<(PyFunction, u8)>>,
 }
 
 impl MiddlewareRouter {
     pub fn new() -> Self {
         Self {
-            get_routes: RwLock::new(Node::new()),
-            post_routes: RwLock::new(Node::new()),
-            put_routes: RwLock::new(Node::new()),
-            delete_routes: RwLock::new(Node::new()),
-            patch_routes: RwLock::new(Node::new()),
-            head_routes: RwLock::new(Node::new()),
-            options_routes: RwLock::new(Node::new()),
-            connect_routes: RwLock::new(Node::new()),
-            trace_routes: RwLock::new(Node::new()),
+            before_request: RwLock::new(Node::new()),
+            after_request: RwLock::new(Node::new()),
         }
     }
 
     #[inline]
-    fn get_relevant_map(&self, route: Method) -> Option<&RwLock<Node<(PyFunction, u8)>>> {
+    fn get_relevant_map(&self, route: &str) -> Option<&RwLock<Node<(PyFunction, u8)>>> {
         match route {
-            Method::GET => Some(&self.get_routes),
-            Method::POST => Some(&self.post_routes),
-            Method::PUT => Some(&self.put_routes),
-            Method::PATCH => Some(&self.patch_routes),
-            Method::DELETE => Some(&self.delete_routes),
-            Method::HEAD => Some(&self.head_routes),
-            Method::OPTIONS => Some(&self.options_routes),
-            Method::CONNECT => Some(&self.connect_routes),
-            Method::TRACE => Some(&self.trace_routes),
+            "BEFORE_REQUEST" => Some(&self.before_request),
+            "AFTER_REQUEST" => Some(&self.after_request),
             _ => None,
         }
-    }
-
-    #[inline]
-    fn get_relevant_map_str(&self, route: &str) -> Option<&RwLock<Node<(PyFunction, u8)>>> {
-        let method = match Method::from_bytes(route.as_bytes()) {
-            Ok(res) => res,
-            Err(_) => return None,
-        };
-
-        return self.get_relevant_map(method);
     }
 
     // Checks if the functions is an async function
@@ -73,7 +42,7 @@ impl MiddlewareRouter {
         is_async: bool,
         number_of_params: u8,
     ) {
-        let table = match self.get_relevant_map_str(route_type) {
+        let table = match self.get_relevant_map(route_type) {
             Some(table) => table,
             None => return,
         };
@@ -93,7 +62,7 @@ impl MiddlewareRouter {
 
     pub fn get_route(
         &self,
-        route_method: Method,
+        route_method: &str,
         route: &str, // check for the route method here
     ) -> Option<((PyFunction, u8), HashMap<String, String>)> {
         // need to split this function in multiple smaller functions

@@ -41,10 +41,6 @@ pub struct Server {
     shutdown_handler: Option<PyFunction>,
 }
 
-fn test_function(req: HttpRequest) -> HttpRequest {
-    return req;
-}
-
 #[pymethods]
 impl Server {
     #[new]
@@ -161,9 +157,13 @@ impl Server {
                     }
 
                     app.default_service(web::route().to(
-                        move |router, headers, payload, mut req| {
+                        move |router,
+                              middleware_router: web::Data<Arc<MiddlewareRouter>>,
+                              headers,
+                              payload,
+                              mut req| {
                             pyo3_asyncio::tokio::scope_local(event_loop_hdl.clone(), async move {
-                                index(router, headers, payload, req).await
+                                index(router, middleware_router, headers, payload, req).await
                             })
                         },
                     ))
@@ -246,7 +246,7 @@ impl Server {
         is_async: bool,
         number_of_params: u8,
     ) {
-        println!("Route added for {} {} ", route_type, route);
+        println!("MiddleWare Route added for {} {} ", route_type, route);
         self.middleware_router
             .add_route(route_type, route, handler, is_async, number_of_params);
     }
@@ -297,6 +297,7 @@ impl Default for Server {
 /// path, and returns a Future of a Response.
 async fn index(
     router: web::Data<Arc<Router>>,
+    middleware_router: web::Data<Arc<MiddlewareRouter>>,
     headers: web::Data<Arc<Headers>>,
     mut payload: web::Payload,
     req: HttpRequest,
@@ -310,6 +311,26 @@ async fn index(
             queries.insert(params.0, params.1);
         }
     }
+
+    let _ = match middleware_router.get_route("BEFORE_REQUEST", req.uri().path()) {
+        Some(((handler_function, number_of_params), route_params)) => {
+            handle_request(
+                handler_function,
+                number_of_params,
+                &headers,
+                &mut payload,
+                &req,
+                route_params,
+                queries.clone(),
+            )
+            .await;
+        }
+        None => {
+            let mut response = HttpResponse::Ok();
+            apply_headers(&mut response, &headers);
+            response.finish();
+        }
+    };
 
     match router.get_route(req.method().clone(), req.uri().path()) {
         Some(((handler_function, number_of_params), route_params)) => {

@@ -74,7 +74,7 @@ class Robyn:
         """ We will add the status code here only
         """
         number_of_params = len(signature(handler).parameters)
-        self.routes.append(
+        self.middlewares.append(
             (
                 route_type,
                 endpoint,
@@ -130,6 +130,7 @@ class Robyn:
         if not self.dev:
             workers = self.workers
             socket = SocketHeld(url, port)
+            print(self.middlewares)
             for _ in range(self.processes):
                 copied_socket = socket.try_clone()
                 p = Process(
@@ -138,7 +139,7 @@ class Robyn:
                         self.directories,
                         self.headers,
                         self.routes,
-                        [],
+                        self.middlewares,
                         self.web_sockets,
                         self.event_handlers,
                         copied_socket,
