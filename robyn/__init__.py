@@ -92,7 +92,19 @@ class Robyn:
         """
 
         def inner(handler):
-            self.add_middleware_route("BEFORE_REQUEST", endpoint, handler)
+            # add handling for async functions
+            async def async_inner_handler(*args):
+                await handler(args)
+                return args
+
+            def inner_handler(*args):
+                handler(*args)
+                return args
+
+            if asyncio.iscoroutinefunction(handler):
+                self.add_middleware_route("BEFORE_REQUEST", endpoint, async_inner_handler)
+            else:
+                self.add_middleware_route("BEFORE_REQUEST", endpoint, inner_handler)
 
         return inner
 

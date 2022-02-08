@@ -1,4 +1,6 @@
-use crate::processor::{apply_headers, execute_event_handler, handle_request};
+use crate::processor::{
+    apply_headers, execute_event_handler, handle_middleware_request, handle_request,
+};
 use crate::routers::router::Router;
 use crate::routers::{middleware_router::MiddlewareRouter, web_socket_router::WebSocketRouter};
 use crate::shared_socket::SocketHeld;
@@ -123,8 +125,10 @@ impl Server {
                                     .show_files_listing(),
                             );
                         } else {
-                            app = app
-                                .service(Files::new(&directory.route, &directory.directory_path));
+                            app = app.service(Files::new(
+                                &directory.route,
+                                &directory.directory_path,
+                            ));
                         }
                     }
 
@@ -162,9 +166,13 @@ impl Server {
                               headers,
                               payload,
                               mut req| {
-                            pyo3_asyncio::tokio::scope_local(event_loop_hdl.clone(), async move {
-                                index(router, middleware_router, headers, payload, req).await
-                            })
+                            pyo3_asyncio::tokio::scope_local(
+                                event_loop_hdl.clone(),
+                                async move {
+                                    index(router, middleware_router, headers, payload, req)
+                                        .await
+                                },
+                            )
                         },
                     ))
                 })
@@ -247,8 +255,13 @@ impl Server {
         number_of_params: u8,
     ) {
         println!("MiddleWare Route added for {} {} ", route_type, route);
-        self.middleware_router
-            .add_route(route_type, route, handler, is_async, number_of_params);
+        self.middleware_router.add_route(
+            route_type,
+            route,
+            handler,
+            is_async,
+            number_of_params,
+        );
     }
 
     /// Add a new web socket route to the routing tables
@@ -261,8 +274,12 @@ impl Server {
         close_route: (Py<PyAny>, bool, u8),
         message_route: (Py<PyAny>, bool, u8),
     ) {
-        self.websocket_router
-            .add_websocket_route(route, connect_route, close_route, message_route);
+        self.websocket_router.add_websocket_route(
+            route,
+            connect_route,
+            close_route,
+            message_route,
+        );
     }
 
     /// Add a new startup handler
@@ -314,7 +331,7 @@ async fn index(
 
     let _ = match middleware_router.get_route("BEFORE_REQUEST", req.uri().path()) {
         Some(((handler_function, number_of_params), route_params)) => {
-            handle_request(
+            let x = handle_middleware_request(
                 handler_function,
                 number_of_params,
                 &headers,
@@ -324,12 +341,9 @@ async fn index(
                 queries.clone(),
             )
             .await;
+            println!("{:?}", x.to_string());
         }
-        None => {
-            let mut response = HttpResponse::Ok();
-            apply_headers(&mut response, &headers);
-            response.finish();
-        }
+        None => {}
     };
 
     match router.get_route(req.method().clone(), req.uri().path()) {
