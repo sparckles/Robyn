@@ -319,6 +319,8 @@ async fn index(
     mut payload: web::Payload,
     req: HttpRequest,
 ) -> impl Responder {
+    // cloning hashmaps a lot here
+    // try reading about arc or rc
     let mut queries = HashMap::new();
 
     if req.query_string().len() > 0 {
@@ -346,7 +348,7 @@ async fn index(
         None => {}
     };
 
-    match router.get_route(req.method().clone(), req.uri().path()) {
+    let response = match router.get_route(req.method().clone(), req.uri().path()) {
         Some(((handler_function, number_of_params), route_params)) => {
             handle_request(
                 handler_function,
@@ -355,7 +357,7 @@ async fn index(
                 &mut payload,
                 &req,
                 route_params,
-                queries,
+                queries.clone(),
             )
             .await
         }
@@ -364,5 +366,24 @@ async fn index(
             apply_headers(&mut response, &headers);
             response.finish()
         }
-    }
+    };
+
+    let _ = match middleware_router.get_route("AFTER_REQUEST", req.uri().path()) {
+        Some(((handler_function, number_of_params), route_params)) => {
+            let x = handle_middleware_request(
+                handler_function,
+                number_of_params,
+                &headers,
+                &mut payload,
+                &req,
+                route_params,
+                queries.clone(),
+            )
+            .await;
+            println!("{:?}", x.to_string());
+        }
+        None => {}
+    };
+
+    response
 }

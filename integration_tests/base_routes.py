@@ -55,6 +55,14 @@ async def hello_before_request(request):
     return ""
 
 
+@app.after_request("/")
+async def hello_after_request(request):
+    global callCount
+    callCount += 1
+    print(request)
+    return ""
+
+
 @app.get("/test/:id")
 async def test(request):
     print(request)

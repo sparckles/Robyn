@@ -108,6 +108,30 @@ class Robyn:
 
         return inner
 
+    def after_request(self, endpoint):
+        """
+        [The @app.after_request decorator to add a get route]
+
+        :param endpoint [str]: [endpoint to server the route]
+        """
+
+        def inner(handler):
+            # add handling for async functions
+            async def async_inner_handler(*args):
+                await handler(args)
+                return args
+
+            def inner_handler(*args):
+                handler(*args)
+                return args
+
+            if asyncio.iscoroutinefunction(handler):
+                self.add_middleware_route("AFTER_REQUEST", endpoint, async_inner_handler)
+            else:
+                self.add_middleware_route("AFTER_REQUEST", endpoint, inner_handler)
+
+        return inner
+
     def add_directory(
         self, route, directory_path, index_file=None, show_files_listing=False
     ):
