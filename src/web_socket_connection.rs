@@ -8,17 +8,18 @@ use actix_web_actors::ws::WebsocketContext;
 use pyo3::prelude::*;
 
 use std::collections::HashMap;
+use std::sync::Arc;
 
 /// Define HTTP actor
 #[derive(Clone)]
 struct MyWs {
     router: HashMap<String, (PyFunction, u8)>,
-    event_loop: PyObject,
+    event_loop: Arc<PyObject>,
 }
 
 fn execute_ws_functionn(
     handler_function: &PyFunction,
-    event_loop: PyObject,
+    event_loop: Arc<PyObject>,
     ctx: &mut ws::WebsocketContext<MyWs>,
     ws: &MyWs,
 ) {
@@ -34,7 +35,8 @@ fn execute_ws_functionn(
             let fut = Python::with_gil(|py| {
                 let handler = handler.as_ref(py);
                 let coro = handler.call0().unwrap();
-                pyo3_asyncio::into_future_with_loop(event_loop.as_ref(py), coro).unwrap()
+                pyo3_asyncio::into_future_with_loop((*(event_loop.clone())).as_ref(py), coro)
+                    .unwrap()
             });
             let f = async move {
                 let output = fut.await.unwrap();
@@ -117,7 +119,7 @@ pub async fn start_web_socket(
     req: HttpRequest,
     stream: web::Payload,
     router: HashMap<String, (PyFunction, u8)>,
-    event_loop: PyObject,
+    event_loop: Arc<PyObject>,
 ) -> Result<HttpResponse, Error> {
     // execute the async function here
     let resp = ws::start(

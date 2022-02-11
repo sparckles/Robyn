@@ -264,13 +264,10 @@ async fn execute_http_function(
                                     res.get_item("response_type").unwrap().extract()?;
                                 if response_type == "static_file" {
                                     // static file here and serve string
-                                    let file_path =
-                                        res.get_item("file_path").unwrap().extract()?;
+                                    let file_path = res.get_item("file_path").unwrap().extract()?;
                                     Ok(read_file(file_path))
                                 } else {
-                                    Err(PyErr::from_instance(
-                                        "Server Error".into_py(py).as_ref(py),
-                                    ))
+                                    Err(PyErr::from_instance("Server Error".into_py(py).as_ref(py)))
                                 }
                             }
                             false => {
@@ -319,9 +316,12 @@ async fn execute_http_function(
     }
 }
 
-pub async fn execute_event_handler(event_handler: Option<PyFunction>, event_loop: Py<PyAny>) {
+pub async fn execute_event_handler(
+    event_handler: Option<Arc<PyFunction>>,
+    event_loop: Arc<Py<PyAny>>,
+) {
     match event_handler {
-        Some(handler) => match handler {
+        Some(handler) => match &(*handler) {
             PyFunction::SyncFunction(function) => {
                 println!("Startup event handler");
                 Python::with_gil(|py| {
@@ -333,7 +333,7 @@ pub async fn execute_event_handler(event_handler: Option<PyFunction>, event_loop
                     println!("Startup event handler async");
 
                     let coroutine = function.as_ref(py).call0().unwrap();
-                    pyo3_asyncio::into_future_with_loop(event_loop.as_ref(py), coroutine)
+                    pyo3_asyncio::into_future_with_loop((*event_loop).as_ref(py), coroutine)
                         .unwrap()
                 });
                 future.await.unwrap();

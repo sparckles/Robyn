@@ -39,8 +39,8 @@ pub struct Server {
     middleware_router: Arc<MiddlewareRouter>,
     headers: Arc<DashMap<String, String>>,
     directories: Arc<RwLock<Vec<Directory>>>,
-    startup_handler: Option<PyFunction>,
-    shutdown_handler: Option<PyFunction>,
+    startup_handler: Option<Arc<PyFunction>>,
+    shutdown_handler: Option<Arc<PyFunction>>,
 }
 
 #[pymethods]
@@ -90,8 +90,8 @@ impl Server {
         asyncio
             .call_method1("set_event_loop", (event_loop,))
             .unwrap();
-        let event_loop_hdl = PyObject::from(event_loop);
-        let event_loop_cleanup = PyObject::from(event_loop);
+        let event_loop_hdl = Arc::new(PyObject::from(event_loop));
+        let event_loop_cleanup = event_loop_hdl.clone();
         let startup_handler = self.startup_handler.clone();
         let shutdown_handler = self.shutdown_handler.clone();
 
@@ -125,10 +125,8 @@ impl Server {
                                     .show_files_listing(),
                             );
                         } else {
-                            app = app.service(Files::new(
-                                &directory.route,
-                                &directory.directory_path,
-                            ));
+                            app = app
+                                .service(Files::new(&directory.route, &directory.directory_path));
                         }
                     }
 
@@ -165,12 +163,11 @@ impl Server {
                               middleware_router: web::Data<Arc<MiddlewareRouter>>,
                               headers,
                               payload,
-                              mut req| {
+                              req| {
                             pyo3_asyncio::tokio::scope_local(
-                                event_loop_hdl.clone(),
+                                (*event_loop_hdl).clone(),
                                 async move {
-                                    index(router, middleware_router, headers, payload, req)
-                                        .await
+                                    index(router, middleware_router, headers, payload, req).await
                                 },
                             )
                         },
@@ -187,7 +184,7 @@ impl Server {
             });
         });
 
-        let event_loop = event_loop.call_method0("run_forever");
+        let event_loop = (*event_loop).call_method0("run_forever");
         if event_loop.is_err() {
             println!("Ctrl c handler");
             Python::with_gil(|py| {
@@ -255,13 +252,8 @@ impl Server {
         number_of_params: u8,
     ) {
         println!("MiddleWare Route added for {} {} ", route_type, route);
-        self.middleware_router.add_route(
-            route_type,
-            route,
-            handler,
-            is_async,
-            number_of_params,
-        );
+        self.middleware_router
+            .add_route(route_type, route, handler, is_async, number_of_params);
     }
 
     /// Add a new web socket route to the routing tables
@@ -274,20 +266,16 @@ impl Server {
         close_route: (Py<PyAny>, bool, u8),
         message_route: (Py<PyAny>, bool, u8),
     ) {
-        self.websocket_router.add_websocket_route(
-            route,
-            connect_route,
-            close_route,
-            message_route,
-        );
+        self.websocket_router
+            .add_websocket_route(route, connect_route, close_route, message_route);
     }
 
     /// Add a new startup handler
     pub fn add_startup_handler(&mut self, handler: Py<PyAny>, is_async: bool) {
         println!("Adding startup handler");
         match is_async {
-            true => self.startup_handler = Some(PyFunction::CoRoutine(handler)),
-            false => self.startup_handler = Some(PyFunction::SyncFunction(handler)),
+            true => self.startup_handler = Some(Arc::new(PyFunction::CoRoutine(handler))),
+            false => self.startup_handler = Some(Arc::new(PyFunction::SyncFunction(handler))),
         };
         println!("{:?}", self.startup_handler);
     }
@@ -296,8 +284,8 @@ impl Server {
     pub fn add_shutdown_handler(&mut self, handler: Py<PyAny>, is_async: bool) {
         println!("Adding shutdown handler");
         match is_async {
-            true => self.shutdown_handler = Some(PyFunction::CoRoutine(handler)),
-            false => self.shutdown_handler = Some(PyFunction::SyncFunction(handler)),
+            true => self.shutdown_handler = Some(Arc::new(PyFunction::CoRoutine(handler))),
+            false => self.shutdown_handler = Some(Arc::new(PyFunction::SyncFunction(handler))),
         };
         println!("{:?}", self.startup_handler);
         println!("{:?}", self.shutdown_handler);
