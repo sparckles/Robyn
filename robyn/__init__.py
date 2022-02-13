@@ -86,7 +86,7 @@ class Robyn:
     def shutdown_handler(self, handler):
         self._add_event_handler(Events.SHUTDOWN, handler)
 
-    def start(self, url="128.0.0.1", port=5000):
+    def start(self, url="127.0.0.1", port=5000):
         """
         [Starts the server]
 
