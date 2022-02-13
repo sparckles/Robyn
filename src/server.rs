@@ -315,7 +315,7 @@ async fn index(
         let split = req.query_string().split("&");
         for s in split {
             let params = s.split_once("=").unwrap_or((s, ""));
-            queries.insert(params.0, params.1);
+            queries.insert(params.0.to_string(), params.1.to_string());
         }
     }
 

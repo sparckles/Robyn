@@ -40,7 +40,7 @@ pub async fn handle_request(
     payload: &mut web::Payload,
     req: &HttpRequest,
     route_params: HashMap<String, String>,
-    queries: HashMap<&str, &str>,
+    queries: HashMap<String, String>,
 ) -> HttpResponse {
     let contents = match execute_http_function(
         function,
@@ -74,7 +74,7 @@ pub async fn handle_middleware_request(
     payload: &mut web::Payload,
     req: &HttpRequest,
     route_params: HashMap<String, String>,
-    queries: HashMap<&str, &str>,
+    queries: HashMap<String, String>,
 ) -> Py<PyTuple> {
     let contents = match execute_middleware_function(
         function,
@@ -89,8 +89,8 @@ pub async fn handle_middleware_request(
     {
         Ok(res) => res,
         Err(err) => Python::with_gil(|py| {
-            let a: Py<PyTuple> = PyTuple::empty(py).into_py(py);
-            a
+            println!("{:?}", err);
+            PyTuple::empty(py).into_py(py)
         }),
     };
 
@@ -111,18 +111,38 @@ fn read_file(file_path: &str) -> String {
     String::from_utf8_lossy(&buf).to_string()
 }
 
-async fn execute_middleware_function(
+async fn execute_middleware_function<'a>(
     function: PyFunction,
     payload: &mut web::Payload,
     headers: &Headers,
     req: &HttpRequest,
     route_params: HashMap<String, String>,
-    queries: HashMap<&str, &str>,
+    queries: HashMap<String, String>,
     number_of_params: u8,
 ) -> Result<Py<PyTuple>> {
     // TODO:
     // try executing the first version of middleware(s) here
     // with just headers as params
+
+    let mut data: Option<Vec<u8>> = None;
+
+    if req.method() == Method::POST
+        || req.method() == Method::PUT
+        || req.method() == Method::PATCH
+        || req.method() == Method::DELETE
+    {
+        let mut body = web::BytesMut::new();
+        while let Some(chunk) = payload.next().await {
+            let chunk = chunk?;
+            // limit max size of in-memory payload
+            if (body.len() + chunk.len()) > MAX_SIZE {
+                bail!("Body content Overflow");
+            }
+            body.extend_from_slice(&chunk);
+        }
+
+        data = Some(body.to_vec())
+    }
 
     // request object accessible while creating routes
     let mut request = HashMap::new();
@@ -138,6 +158,7 @@ async fn execute_middleware_function(
                 request.insert("params", route_params.into_py(py));
                 request.insert("queries", queries.into_py(py));
                 request.insert("headers", headers_python.into_py(py));
+                request.insert("body", data.into_py(py));
 
                 // this makes the request object to be accessible across every route
                 let coro: PyResult<&PyAny> = match number_of_params {
@@ -164,7 +185,9 @@ async fn execute_middleware_function(
                 Python::with_gil(|py| {
                     let handler = handler.as_ref(py);
                     request.insert("params", route_params.into_py(py));
+                    request.insert("queries", queries.into_py(py));
                     request.insert("headers", headers_python.into_py(py));
+                    request.insert("body", data.into_py(py));
 
                     let output: PyResult<&PyAny> = match number_of_params {
                         0 => handler.call0(),
@@ -191,12 +214,9 @@ async fn execute_http_function(
     headers: &Headers,
     req: &HttpRequest,
     route_params: HashMap<String, String>,
-    queries: HashMap<&str, &str>,
+    queries: HashMap<String, String>,
     number_of_params: u8,
 ) -> Result<String> {
-    // TODO:
-    // try executing the first version of middleware(s) here
-    // with just headers as params
     let mut data: Option<Vec<u8>> = None;
 
     if req.method() == Method::POST
