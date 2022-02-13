@@ -7,9 +7,11 @@
 [![Gitter](https://badges.gitter.im/robyn_/community.svg)](https://gitter.im/robyn_/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 [![Downloads](https://static.pepy.tech/personalized-badge/robyn?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Downloads)](https://pepy.tech/project/robyn)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![GitHub tag](https://img.shields.io/github/tag/sansyrox/robyn?include_prereleases=&sort=semver&color=black)](https://github.com/sansyrox/robyn/releases/)
+[![License](https://img.shields.io/badge/License-BSD_2.0-black)](#license)
 
 
-API Docs: [Docs](https://sansyrox.github.io/robyn/#/)
+[![view - Documentation](https://img.shields.io/badge/view-Documentation-blue?style=for-the-badge)](https://sansyrox.github.io/robyn/#/)
 
 Robyn is an async Python backend server with a runtime written in Rust, btw.
 
@@ -61,7 +63,7 @@ If you're feeling curious. You can take a look at a more detailed architecture [
 
 ## ⚙️ To Develop Locally
 
-1. Add more routes in the `integration_tests/base_routes.py` file(if you like). It only supports only get requests at the moment
+1. Add more routes in the `integration_tests/base_routes.py` file(if you like).
 
 2. Run `maturin develop`
 
