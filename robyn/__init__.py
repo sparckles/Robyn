@@ -91,8 +91,12 @@ class Robyn:
         :param endpoint [str]: [endpoint to server the route]
         """
 
+        # This inner function is basically a wrapper arround the closure(decorator) 
+        # being returned.
+        # It takes in a handler and converts it in into a closure
+        # and returns the arguments. 
+        # Arguments are returned as they could be modified by the middlewares.
         def inner(handler):
-            # add handling for async functions
             async def async_inner_handler(*args):
                 await handler(args)
                 return args
@@ -115,8 +119,12 @@ class Robyn:
         :param endpoint [str]: [endpoint to server the route]
         """
 
+        # This inner function is basically a wrapper arround the closure(decorator) 
+        # being returned.
+        # It takes in a handler and converts it in into a closure
+        # and returns the arguments. 
+        # Arguments are returned as they could be modified by the middlewares.
         def inner(handler):
-            # add handling for async functions
             async def async_inner_handler(*args):
                 await handler(args)
                 return args
