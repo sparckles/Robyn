@@ -42,8 +42,25 @@ callCount = 0
 async def hello(request):
     global callCount
     callCount += 1
-    _message = "Called " + str(callCount) + " times"
+    message = "Called " + str(callCount) + " times"
+    print(message)
     return jsonify(request)
+
+
+@app.before_request("/")
+async def hello_before_request(request):
+    global callCount
+    callCount += 1
+    print(request)
+    return ""
+
+
+@app.after_request("/")
+async def hello_after_request(request):
+    global callCount
+    callCount += 1
+    print(request)
+    return ""
 
 
 @app.get("/test/:id")

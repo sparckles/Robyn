@@ -1,5 +1,8 @@
-use crate::processor::{apply_headers, execute_event_handler, handle_request};
-use crate::router::Router;
+use crate::processor::{
+    apply_headers, execute_event_handler, handle_middleware_request, handle_request,
+};
+use crate::routers::router::Router;
+use crate::routers::{middleware_router::MiddlewareRouter, web_socket_router::WebSocketRouter};
 use crate::shared_socket::SocketHeld;
 use crate::types::{Headers, PyFunction};
 use crate::web_socket_connection::start_web_socket;
@@ -32,10 +35,12 @@ struct Directory {
 #[pyclass]
 pub struct Server {
     router: Arc<Router>,
+    websocket_router: Arc<WebSocketRouter>,
+    middleware_router: Arc<MiddlewareRouter>,
     headers: Arc<DashMap<String, String>>,
     directories: Arc<RwLock<Vec<Directory>>>,
-    startup_handler: Option<PyFunction>,
-    shutdown_handler: Option<PyFunction>,
+    startup_handler: Option<Arc<PyFunction>>,
+    shutdown_handler: Option<Arc<PyFunction>>,
 }
 
 #[pymethods]
@@ -44,6 +49,8 @@ impl Server {
     pub fn new() -> Self {
         Self {
             router: Arc::new(Router::new()),
+            websocket_router: Arc::new(WebSocketRouter::new()),
+            middleware_router: Arc::new(MiddlewareRouter::new()),
             headers: Arc::new(DashMap::new()),
             directories: Arc::new(RwLock::new(Vec::new())),
             startup_handler: None,
@@ -71,6 +78,8 @@ impl Server {
         let raw_socket = held_socket.get_socket();
 
         let router = self.router.clone();
+        let middleware_router = self.middleware_router.clone();
+        let web_socket_router = self.websocket_router.clone();
         let headers = self.headers.clone();
         let directories = self.directories.clone();
         let workers = Arc::new(workers);
@@ -81,8 +90,8 @@ impl Server {
         asyncio
             .call_method1("set_event_loop", (event_loop,))
             .unwrap();
-        let event_loop_hdl = PyObject::from(event_loop);
-        let event_loop_cleanup = PyObject::from(event_loop);
+        let event_loop_hdl = Arc::new(PyObject::from(event_loop));
+        let event_loop_cleanup = event_loop_hdl.clone();
         let startup_handler = self.startup_handler.clone();
         let shutdown_handler = self.shutdown_handler.clone();
 
@@ -97,7 +106,6 @@ impl Server {
                     let mut app = App::new();
                     let event_loop_hdl = copied_event_loop.clone();
                     let directories = directories.read().unwrap();
-                    let router_copy = router.clone();
 
                     // this loop matches three types of directory serving
                     // 1. Serves a build folder. e.g. the build folder generated from yarn build
@@ -124,9 +132,10 @@ impl Server {
 
                     app = app
                         .app_data(web::Data::new(router.clone()))
+                        .app_data(web::Data::new(middleware_router.clone()))
                         .app_data(web::Data::new(headers.clone()));
 
-                    let web_socket_map = router_copy.get_web_socket_map();
+                    let web_socket_map = web_socket_router.get_web_socket_map();
                     for (elem, value) in (web_socket_map.read().unwrap()).iter() {
                         let route = elem.clone();
                         let params = value.clone();
@@ -149,11 +158,20 @@ impl Server {
                         );
                     }
 
-                    app.default_service(web::route().to(move |router, headers, payload, req| {
-                        pyo3_asyncio::tokio::scope_local(event_loop_hdl.clone(), async move {
-                            index(router, headers, payload, req).await
-                        })
-                    }))
+                    app.default_service(web::route().to(
+                        move |router,
+                              middleware_router: web::Data<Arc<MiddlewareRouter>>,
+                              headers,
+                              payload,
+                              req| {
+                            pyo3_asyncio::tokio::scope_local(
+                                (*event_loop_hdl).clone(),
+                                async move {
+                                    index(router, middleware_router, headers, payload, req).await
+                                },
+                            )
+                        },
+                    ))
                 })
                 .keep_alive(KeepAlive::Os)
                 .workers(*workers.clone())
@@ -166,7 +184,7 @@ impl Server {
             });
         });
 
-        let event_loop = event_loop.call_method0("run_forever");
+        let event_loop = (*event_loop).call_method0("run_forever");
         if event_loop.is_err() {
             println!("Ctrl c handler");
             Python::with_gil(|py| {
@@ -223,6 +241,21 @@ impl Server {
             .add_route(route_type, route, handler, is_async, number_of_params);
     }
 
+    /// Add a new route to the routing tables
+    /// can be called after the server has been started
+    pub fn add_middleware_route(
+        &self,
+        route_type: &str,
+        route: &str,
+        handler: Py<PyAny>,
+        is_async: bool,
+        number_of_params: u8,
+    ) {
+        println!("MiddleWare Route added for {} {} ", route_type, route);
+        self.middleware_router
+            .add_route(route_type, route, handler, is_async, number_of_params);
+    }
+
     /// Add a new web socket route to the routing tables
     /// can be called after the server has been started
     pub fn add_web_socket_route(
@@ -233,7 +266,7 @@ impl Server {
         close_route: (Py<PyAny>, bool, u8),
         message_route: (Py<PyAny>, bool, u8),
     ) {
-        self.router
+        self.websocket_router
             .add_websocket_route(route, connect_route, close_route, message_route);
     }
 
@@ -241,8 +274,8 @@ impl Server {
     pub fn add_startup_handler(&mut self, handler: Py<PyAny>, is_async: bool) {
         println!("Adding startup handler");
         match is_async {
-            true => self.startup_handler = Some(PyFunction::CoRoutine(handler)),
-            false => self.startup_handler = Some(PyFunction::SyncFunction(handler)),
+            true => self.startup_handler = Some(Arc::new(PyFunction::CoRoutine(handler))),
+            false => self.startup_handler = Some(Arc::new(PyFunction::SyncFunction(handler))),
         };
         println!("{:?}", self.startup_handler);
     }
@@ -251,8 +284,8 @@ impl Server {
     pub fn add_shutdown_handler(&mut self, handler: Py<PyAny>, is_async: bool) {
         println!("Adding shutdown handler");
         match is_async {
-            true => self.shutdown_handler = Some(PyFunction::CoRoutine(handler)),
-            false => self.shutdown_handler = Some(PyFunction::SyncFunction(handler)),
+            true => self.shutdown_handler = Some(Arc::new(PyFunction::CoRoutine(handler))),
+            false => self.shutdown_handler = Some(Arc::new(PyFunction::SyncFunction(handler))),
         };
         println!("{:?}", self.startup_handler);
         println!("{:?}", self.shutdown_handler);
@@ -269,21 +302,41 @@ impl Default for Server {
 /// path, and returns a Future of a Response.
 async fn index(
     router: web::Data<Arc<Router>>,
+    middleware_router: web::Data<Arc<MiddlewareRouter>>,
     headers: web::Data<Arc<Headers>>,
     mut payload: web::Payload,
     req: HttpRequest,
 ) -> impl Responder {
+    // cloning hashmaps a lot here
+    // try reading about arc or rc
     let mut queries = HashMap::new();
 
     if req.query_string().len() > 0 {
         let split = req.query_string().split("&");
         for s in split {
             let params = s.split_once("=").unwrap_or((s, ""));
-            queries.insert(params.0, params.1);
+            queries.insert(params.0.to_string(), params.1.to_string());
         }
     }
 
-    match router.get_route(req.method().clone(), req.uri().path()) {
+    let _ = match middleware_router.get_route("BEFORE_REQUEST", req.uri().path()) {
+        Some(((handler_function, number_of_params), route_params)) => {
+            let x = handle_middleware_request(
+                handler_function,
+                number_of_params,
+                &headers,
+                &mut payload,
+                &req,
+                route_params,
+                queries.clone(),
+            )
+            .await;
+            println!("{:?}", x.to_string());
+        }
+        None => {}
+    };
+
+    let response = match router.get_route(req.method().clone(), req.uri().path()) {
         Some(((handler_function, number_of_params), route_params)) => {
             handle_request(
                 handler_function,
@@ -292,7 +345,7 @@ async fn index(
                 &mut payload,
                 &req,
                 route_params,
-                queries,
+                queries.clone(),
             )
             .await
         }
@@ -301,5 +354,24 @@ async fn index(
             apply_headers(&mut response, &headers);
             response.finish()
         }
-    }
+    };
+
+    let _ = match middleware_router.get_route("AFTER_REQUEST", req.uri().path()) {
+        Some(((handler_function, number_of_params), route_params)) => {
+            let x = handle_middleware_request(
+                handler_function,
+                number_of_params,
+                &headers,
+                &mut payload,
+                &req,
+                route_params,
+                queries.clone(),
+            )
+            .await;
+            println!("{:?}", x.to_string());
+        }
+        None => {}
+    };
+
+    response
 }

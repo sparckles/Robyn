@@ -35,8 +35,9 @@ class Robyn:
         self.routes = []
         self.headers = []
         self.routes = []
-        self.directories = []
+        self.middlewares = []
         self.web_sockets = {}
+        self.directories = []
         self.event_handlers = {}
 
     def add_route(self, route_type, endpoint, handler):
@@ -60,6 +61,84 @@ class Robyn:
                 number_of_params,
             )
         )
+
+    def add_middleware_route(self, route_type, endpoint, handler):
+        """
+        [This is base handler for the middleware decorator]
+
+        :param route_type [str]: [??]
+        :param endpoint [str]: [endpoint for the route added]
+        :param handler [function]: [represents the sync or async function passed as a handler for the route]
+        """
+
+        """ We will add the status code here only
+        """
+        number_of_params = len(signature(handler).parameters)
+        self.middlewares.append(
+            (
+                route_type,
+                endpoint,
+                handler,
+                asyncio.iscoroutinefunction(handler),
+                number_of_params,
+            )
+        )
+
+    def before_request(self, endpoint):
+        """
+        [The @app.before_request decorator to add a get route]
+
+        :param endpoint [str]: [endpoint to server the route]
+        """
+
+        # This inner function is basically a wrapper arround the closure(decorator) 
+        # being returned.
+        # It takes in a handler and converts it in into a closure
+        # and returns the arguments. 
+        # Arguments are returned as they could be modified by the middlewares.
+        def inner(handler):
+            async def async_inner_handler(*args):
+                await handler(args)
+                return args
+
+            def inner_handler(*args):
+                handler(*args)
+                return args
+
+            if asyncio.iscoroutinefunction(handler):
+                self.add_middleware_route("BEFORE_REQUEST", endpoint, async_inner_handler)
+            else:
+                self.add_middleware_route("BEFORE_REQUEST", endpoint, inner_handler)
+
+        return inner
+
+    def after_request(self, endpoint):
+        """
+        [The @app.after_request decorator to add a get route]
+
+        :param endpoint [str]: [endpoint to server the route]
+        """
+
+        # This inner function is basically a wrapper arround the closure(decorator) 
+        # being returned.
+        # It takes in a handler and converts it in into a closure
+        # and returns the arguments. 
+        # Arguments are returned as they could be modified by the middlewares.
+        def inner(handler):
+            async def async_inner_handler(*args):
+                await handler(args)
+                return args
+
+            def inner_handler(*args):
+                handler(*args)
+                return args
+
+            if asyncio.iscoroutinefunction(handler):
+                self.add_middleware_route("AFTER_REQUEST", endpoint, async_inner_handler)
+            else:
+                self.add_middleware_route("AFTER_REQUEST", endpoint, inner_handler)
+
+        return inner
 
     def add_directory(
         self, route, directory_path, index_file=None, show_files_listing=False
@@ -95,6 +174,7 @@ class Robyn:
         if not self.dev:
             workers = self.workers
             socket = SocketHeld(url, port)
+            print(self.middlewares)
             for _ in range(self.processes):
                 copied_socket = socket.try_clone()
                 p = Process(
@@ -103,6 +183,7 @@ class Robyn:
                         self.directories,
                         self.headers,
                         self.routes,
+                        self.middlewares,
                         self.web_sockets,
                         self.event_handlers,
                         copied_socket,
