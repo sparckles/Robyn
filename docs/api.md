@@ -268,6 +268,20 @@ async def message():
 
 ```
 
+## Middlewares
+
+You can use both sync and async functions for middlewares!
+
+```python3
+@app.before_request("/")
+async def hello_before_request(request):
+    print(request)
+
+
+@app.after_request("/")
+def hello_after_request(request):
+    print(request)
+```
 
 ## MutliCore Scaling
 

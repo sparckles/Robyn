@@ -52,7 +52,8 @@ app.start(port=5000)
 - Dynamic URL Routing
 - Multi Core Scaling
 - WebSockets!
-- Hot Reloading (Still experimental)
+- Middlewares
+- Hot Reloading
 - Community First and truly FOSS!
 
 

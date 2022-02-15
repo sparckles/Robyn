@@ -2,17 +2,22 @@
 
 ## [Unreleased](https://github.com/sansyrox/robyn/tree/HEAD)
 
-[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.12.0...HEAD)
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.12.1...HEAD)
+
+**Merged pull requests:**
+
+- Fix: default url param in app.start [\#160](https://github.com/sansyrox/robyn/pull/160) ([sansyrox](https://github.com/sansyrox))
+- Add middlewares [\#157](https://github.com/sansyrox/robyn/pull/157) ([sansyrox](https://github.com/sansyrox))
+- Remove arc\(ing\) [\#156](https://github.com/sansyrox/robyn/pull/156) ([sansyrox](https://github.com/sansyrox))
+
+## [v0.12.1](https://github.com/sansyrox/robyn/tree/v0.12.1) (2022-02-13)
+
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.12.0...v0.12.1)
 
 **Closed issues:**
 
 - \[BUG\] Default URL cannot be assigned [\#159](https://github.com/sansyrox/robyn/issues/159)
 - Upcoming release\(s\) [\#141](https://github.com/sansyrox/robyn/issues/141)
-
-**Merged pull requests:**
-
-- Fix: default url param in app.start [\#160](https://github.com/sansyrox/robyn/pull/160) ([sansyrox](https://github.com/sansyrox))
-- Remove arc\(ing\) [\#156](https://github.com/sansyrox/robyn/pull/156) ([sansyrox](https://github.com/sansyrox))
 
 ## [v0.12.0](https://github.com/sansyrox/robyn/tree/v0.12.0) (2022-01-21)
 
