@@ -175,7 +175,7 @@ impl Server {
                 })
                 .keep_alive(KeepAlive::Os)
                 .workers(*workers.clone())
-                .client_timeout(0)
+                .client_request_timeout(std::time::Duration::from_secs(0))
                 .listen(raw_socket.try_into().unwrap())
                 .unwrap()
                 .run()

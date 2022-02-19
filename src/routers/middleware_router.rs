@@ -5,7 +5,6 @@ use crate::types::PyFunction;
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
 
-use actix_web::http::Method;
 use matchit::Node;
 
 /// Contains the thread safe hashmaps of different routes
