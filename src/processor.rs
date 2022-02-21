@@ -216,6 +216,8 @@ async fn execute_http_function(
     route_params: HashMap<String, String>,
     queries: HashMap<String, String>,
     number_of_params: u8,
+    // need to change this to return a response struct
+    // create a custom struct for this
 ) -> Result<String> {
     let mut data: Option<Vec<u8>> = None;
 
@@ -272,35 +274,25 @@ async fn execute_http_function(
 
             let output = output.await?;
             let res = Python::with_gil(|py| -> PyResult<String> {
-                let string_contents = output.clone();
-                let contents = output.into_ref(py).downcast::<PyDict>();
-                match contents {
-                    Ok(res) => {
-                        // static file or json here
-                        let contains_response_type = res.contains("response_type")?;
-                        match contains_response_type {
-                            true => {
-                                let response_type: &str =
-                                    res.get_item("response_type").unwrap().extract()?;
-                                if response_type == "static_file" {
-                                    // static file here and serve string
-                                    let file_path = res.get_item("file_path").unwrap().extract()?;
-                                    Ok(read_file(file_path))
-                                } else {
-                                    Err(PyErr::from_instance("Server Error".into_py(py).as_ref(py)))
-                                }
-                            }
-                            false => {
-                                Err(PyErr::from_instance("Server Error".into_py(py).as_ref(py)))
-                            }
+                let res = output.into_ref(py).downcast::<PyDict>().unwrap();
+                // static file or json here
+                let contains_response_type = res.contains("response_type")?;
+                match contains_response_type {
+                    true => {
+                        let response_type: &str =
+                            res.get_item("response_type").unwrap().extract()?;
+                        if response_type == "static_file" {
+                            // static file here and serve string
+                            let file_path = res.get_item("file_path").unwrap().extract()?;
+                            Ok(read_file(file_path))
+                        } else if response_type == "text" {
+                            let output_response = res.get_item("text").unwrap().extract()?;
+                            Ok(output_response)
+                        } else {
+                            Err(PyErr::from_instance("Server Error".into_py(py).as_ref(py)))
                         }
                     }
-                    Err(_) => {
-                        // this means that this is basic string output
-                        // and a json serialized string will be parsed here
-                        let contents: &str = string_contents.extract(py)?;
-                        Ok(contents.to_string())
-                    }
+                    false => Err(PyErr::from_instance("Server Error".into_py(py).as_ref(py))),
                 }
             })?;
 
@@ -328,6 +320,8 @@ async fn execute_http_function(
                         2_u8..=u8::MAX => handler.call1((request,)),
                     };
                     let output: &str = output?.extract()?;
+                    // also convert to object here
+                    // also check why don't sync functions have file handling enabled
                     Ok(output.to_string())
                 })
             })

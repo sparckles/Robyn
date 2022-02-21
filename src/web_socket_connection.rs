@@ -14,6 +14,8 @@ use std::sync::Arc;
 #[derive(Clone)]
 struct MyWs {
     router: HashMap<String, (PyFunction, u8)>,
+    // can probably try removing arc from here
+    // and use clone_ref()
     event_loop: Arc<PyObject>,
 }
 
