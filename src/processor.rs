@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::str::FromStr;
 use std::sync::Arc;
 
 use actix_web::{http::Method, web, HttpRequest, HttpResponse, HttpResponseBuilder};
@@ -63,8 +64,11 @@ pub async fn handle_request(
     };
 
     let mut response = HttpResponse::Ok();
+    let status_code =
+        actix_http::StatusCode::from_str(contents.get("status_code").unwrap()).unwrap();
     apply_headers(&mut response, headers);
-    response.body(contents)
+    response.status(status_code);
+    response.body(contents.get("body").unwrap().to_owned())
 }
 
 pub async fn handle_middleware_request(
@@ -218,7 +222,7 @@ async fn execute_http_function(
     number_of_params: u8,
     // need to change this to return a response struct
     // create a custom struct for this
-) -> Result<String> {
+) -> Result<HashMap<String, String>> {
     let mut data: Option<Vec<u8>> = None;
 
     if req.method() == Method::POST
@@ -273,27 +277,10 @@ async fn execute_http_function(
             })?;
 
             let output = output.await?;
-            let res = Python::with_gil(|py| -> PyResult<String> {
-                let res = output.into_ref(py).downcast::<PyDict>().unwrap();
-                // static file or json here
-                let contains_response_type = res.contains("response_type")?;
-                match contains_response_type {
-                    true => {
-                        let response_type: &str =
-                            res.get_item("response_type").unwrap().extract()?;
-                        if response_type == "static_file" {
-                            // static file here and serve string
-                            let file_path = res.get_item("file_path").unwrap().extract()?;
-                            Ok(read_file(file_path))
-                        } else if response_type == "text" {
-                            let output_response = res.get_item("text").unwrap().extract()?;
-                            Ok(output_response)
-                        } else {
-                            Err(PyErr::from_instance("Server Error".into_py(py).as_ref(py)))
-                        }
-                    }
-                    false => Err(PyErr::from_instance("Server Error".into_py(py).as_ref(py))),
-                }
+            let res = Python::with_gil(|py| -> PyResult<HashMap<String, String>> {
+                let res: HashMap<String, String> =
+                    output.into_ref(py).downcast::<PyDict>()?.extract()?;
+                Ok(res)
             })?;
 
             Ok(res)
@@ -319,10 +306,10 @@ async fn execute_http_function(
                         // this is done to accomodate any future params
                         2_u8..=u8::MAX => handler.call1((request,)),
                     };
-                    let output: &str = output?.extract()?;
+                    let output: HashMap<String, String> = output?.extract()?;
                     // also convert to object here
                     // also check why don't sync functions have file handling enabled
-                    Ok(output.to_string())
+                    Ok(output)
                 })
             })
             .await?

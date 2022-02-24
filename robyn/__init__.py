@@ -51,16 +51,55 @@ class Robyn:
 
         """ We will add the status code here only
         """
+        async def async_inner_handler(*args):
+            res = await handler(args)
+            if type(res) == "dict":
+                if "status_code" not in res:
+                    res["status_code"] = 200
+            else:
+                response = {
+                    "status_code": 200,
+                    "body": res,
+                    "type": "text"
+                }
+                res = response
+            return res
+
+        def inner_handler(*args):
+            res = handler(args)
+            if type(res) == "dict":
+                if "status_code" not in res:
+                    res["status_code"] = 200
+            else:
+                response = {
+                    "status_code": 200,
+                    "body": res,
+                    "type": "text"
+                }
+                res = response
+            return res
+
         number_of_params = len(signature(handler).parameters)
-        self.routes.append(
-            (
-                route_type,
-                endpoint,
-                handler,
-                asyncio.iscoroutinefunction(handler),
-                number_of_params,
+        if asyncio.iscoroutinefunction(handler):
+            self.routes.append(
+                (
+                    route_type,
+                    endpoint,
+                    async_inner_handler,
+                    True,
+                    number_of_params,
+                )
             )
-        )
+        else:
+            self.routes.append(
+                (
+                    route_type,
+                    endpoint,
+                    inner_handler,
+                    False,
+                    number_of_params,
+                )
+            )
 
     def add_middleware_route(self, route_type, endpoint, handler):
         """
