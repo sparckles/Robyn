@@ -55,10 +55,10 @@ class Robyn:
             res = await handler(args)
             if type(res) == "dict":
                 if "status_code" not in res:
-                    res["status_code"] = 200
+                    res["status_code"] = "200"
             else:
                 response = {
-                    "status_code": 200,
+                    "status_code": "200",
                     "body": res,
                     "type": "text"
                 }
