@@ -278,6 +278,8 @@ async fn execute_http_function(
 
             let output = output.await?;
             let res = Python::with_gil(|py| -> PyResult<HashMap<String, String>> {
+                println!("This is the result of the code {:?}", output);
+
                 let res: HashMap<String, String> =
                     output.into_ref(py).downcast::<PyDict>()?.extract()?;
                 Ok(res)
