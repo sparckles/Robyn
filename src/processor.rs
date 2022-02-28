@@ -280,8 +280,16 @@ async fn execute_http_function(
             let res = Python::with_gil(|py| -> PyResult<HashMap<String, String>> {
                 println!("This is the result of the code {:?}", output);
 
-                let res: HashMap<String, String> =
+                let mut res: HashMap<String, String> =
                     output.into_ref(py).downcast::<PyDict>()?.extract()?;
+
+                let response_type = res.get("type").unwrap();
+
+                if response_type == "static_file" {
+                    let file_path = res.get("file_path").unwrap();
+                    let contents = read_file(file_path);
+                    res.insert("body".to_owned(), contents.to_owned());
+                }
                 Ok(res)
             })?;
 

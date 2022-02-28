@@ -26,7 +26,7 @@ class Router(BaseRouter):
                 response = {
                     "status_code": "200",
                     "body": res["body"],
-                    "type": "text",
+                    **res
                 }
             print("Setting the response", response)
         else:
