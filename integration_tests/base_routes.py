@@ -45,7 +45,16 @@ async def hello(request):
     message = "Called " + str(callCount) + " times"
     print(message, request)
     return {"status_code": "200", "body": "hello", "type": "text"}
-    # return 
+
+
+@app.get('/404')
+def return_404():
+    return {"status_code": "404", "body": "hello", "type": "text"}
+
+
+@app.post('/404')
+def return_404_post():
+    return {"status_code": "404", "body": "hello", "type": "text"}
 
 
 @app.before_request("/")
