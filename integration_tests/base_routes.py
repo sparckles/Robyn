@@ -43,8 +43,18 @@ async def hello(request):
     global callCount
     callCount += 1
     message = "Called " + str(callCount) + " times"
-    print(message)
-    return jsonify(request)
+    print(message, request)
+    return {"status_code": "200", "body": "hello", "type": "text"}
+
+
+@app.get('/404')
+def return_404():
+    return {"status_code": "404", "body": "hello", "type": "text"}
+
+
+@app.post('/404')
+def return_404_post():
+    return {"status_code": "404", "body": "hello", "type": "text"}
 
 
 @app.before_request("/")

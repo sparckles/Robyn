@@ -13,6 +13,7 @@ from .dev_event_handler import EventHandler
 from .processpool import spawn_process
 from .log_colors import Colors
 from .ws import WS
+from .router import Router, MiddlewareRouter, WebSocketRouter
 
 # 3rd party imports and exports
 from multiprocess import Process
@@ -32,15 +33,14 @@ class Robyn:
         self.dev = self.parser.is_dev()
         self.processes = self.parser.num_processes()
         self.workers = self.parser.workers()
-        self.routes = []
+        self.router = Router()
+        self.middleware_router = MiddlewareRouter()
+        self.web_socket_router = WebSocketRouter()
         self.headers = []
-        self.routes = []
-        self.middlewares = []
-        self.web_sockets = {}
         self.directories = []
         self.event_handlers = {}
 
-    def add_route(self, route_type, endpoint, handler):
+    def _add_route(self, route_type, endpoint, handler):
         """
         [This is base handler for all the decorators]
 
@@ -51,38 +51,7 @@ class Robyn:
 
         """ We will add the status code here only
         """
-        number_of_params = len(signature(handler).parameters)
-        self.routes.append(
-            (
-                route_type,
-                endpoint,
-                handler,
-                asyncio.iscoroutinefunction(handler),
-                number_of_params,
-            )
-        )
-
-    def add_middleware_route(self, route_type, endpoint, handler):
-        """
-        [This is base handler for the middleware decorator]
-
-        :param route_type [str]: [??]
-        :param endpoint [str]: [endpoint for the route added]
-        :param handler [function]: [represents the sync or async function passed as a handler for the route]
-        """
-
-        """ We will add the status code here only
-        """
-        number_of_params = len(signature(handler).parameters)
-        self.middlewares.append(
-            (
-                route_type,
-                endpoint,
-                handler,
-                asyncio.iscoroutinefunction(handler),
-                number_of_params,
-            )
-        )
+        self.router.add_route(route_type, endpoint, handler)
 
     def before_request(self, endpoint):
         """
@@ -90,27 +59,7 @@ class Robyn:
 
         :param endpoint [str]: [endpoint to server the route]
         """
-
-        # This inner function is basically a wrapper arround the closure(decorator) 
-        # being returned.
-        # It takes in a handler and converts it in into a closure
-        # and returns the arguments. 
-        # Arguments are returned as they could be modified by the middlewares.
-        def inner(handler):
-            async def async_inner_handler(*args):
-                await handler(args)
-                return args
-
-            def inner_handler(*args):
-                handler(*args)
-                return args
-
-            if asyncio.iscoroutinefunction(handler):
-                self.add_middleware_route("BEFORE_REQUEST", endpoint, async_inner_handler)
-            else:
-                self.add_middleware_route("BEFORE_REQUEST", endpoint, inner_handler)
-
-        return inner
+        return self.middleware_router.add_before_request(endpoint)
 
     def after_request(self, endpoint):
         """
@@ -118,27 +67,7 @@ class Robyn:
 
         :param endpoint [str]: [endpoint to server the route]
         """
-
-        # This inner function is basically a wrapper arround the closure(decorator) 
-        # being returned.
-        # It takes in a handler and converts it in into a closure
-        # and returns the arguments. 
-        # Arguments are returned as they could be modified by the middlewares.
-        def inner(handler):
-            async def async_inner_handler(*args):
-                await handler(args)
-                return args
-
-            def inner_handler(*args):
-                handler(*args)
-                return args
-
-            if asyncio.iscoroutinefunction(handler):
-                self.add_middleware_route("AFTER_REQUEST", endpoint, async_inner_handler)
-            else:
-                self.add_middleware_route("AFTER_REQUEST", endpoint, inner_handler)
-
-        return inner
+        return self.middleware_router.add_after_request(endpoint)
 
     def add_directory(
         self, route, directory_path, index_file=None, show_files_listing=False
@@ -149,7 +78,7 @@ class Robyn:
         self.headers.append((key, value))
 
     def add_web_socket(self, endpoint, ws):
-        self.web_sockets[endpoint] = ws
+        self.web_socket_router.add_route(endpoint, ws)
 
     def _add_event_handler(self, event_type: str, handler):
         print(f"Add event {event_type} handler")
@@ -174,7 +103,6 @@ class Robyn:
         if not self.dev:
             workers = self.workers
             socket = SocketHeld(url, port)
-            print(self.middlewares)
             for _ in range(self.processes):
                 copied_socket = socket.try_clone()
                 p = Process(
@@ -182,9 +110,9 @@ class Robyn:
                     args=(
                         self.directories,
                         self.headers,
-                        self.routes,
-                        self.middlewares,
-                        self.web_sockets,
+                        self.router.get_routes(),
+                        self.middleware_router.get_routes(),
+                        self.web_socket_router.get_routes(),
                         self.event_handlers,
                         copied_socket,
                         workers,
@@ -217,7 +145,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.add_route("GET", endpoint, handler)
+            self._add_route("GET", endpoint, handler)
 
         return inner
 
@@ -229,7 +157,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.add_route("POST", endpoint, handler)
+            self._add_route("POST", endpoint, handler)
 
         return inner
 
@@ -241,7 +169,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.add_route("PUT", endpoint, handler)
+            self._add_route("PUT", endpoint, handler)
 
         return inner
 
@@ -253,7 +181,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.add_route("DELETE", endpoint, handler)
+            self._add_route("DELETE", endpoint, handler)
 
         return inner
 
@@ -265,7 +193,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.add_route("PATCH", endpoint, handler)
+            self._add_route("PATCH", endpoint, handler)
 
         return inner
 
@@ -277,7 +205,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.add_route("HEAD", endpoint, handler)
+            self._add_route("HEAD", endpoint, handler)
 
         return inner
 
@@ -289,7 +217,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.add_route("OPTIONS", endpoint, handler)
+            self._add_route("OPTIONS", endpoint, handler)
 
         return inner
 
@@ -301,7 +229,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.add_route("CONNECT", endpoint, handler)
+            self._add_route("CONNECT", endpoint, handler)
 
         return inner
 
@@ -313,6 +241,6 @@ class Robyn:
         """
 
         def inner(handler):
-            self.add_route("TRACE", endpoint, handler)
+            self._add_route("TRACE", endpoint, handler)
 
         return inner

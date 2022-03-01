@@ -9,8 +9,11 @@ def static_file(file_path):
     """
 
     return {
-        "response_type": "static_file",
-        "file_path": file_path
+        "type": "static_file",
+        "file_path": file_path,
+        # this is a hack for now
+        "body": "",
+        "status_code": "200",
     }
 
 
