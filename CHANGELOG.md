@@ -2,14 +2,23 @@
 
 ## [Unreleased](https://github.com/sansyrox/robyn/tree/HEAD)
 
-[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.13.0...HEAD)
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.13.1...HEAD)
+
+**Fixed bugs:**
+
+- Build error [\#161](https://github.com/sansyrox/robyn/issues/161)
 
 **Merged pull requests:**
 
+- Implement Custom Response objects. [\#165](https://github.com/sansyrox/robyn/pull/165) ([sansyrox](https://github.com/sansyrox))
 - Remove deprecated endpoints [\#162](https://github.com/sansyrox/robyn/pull/162) ([sansyrox](https://github.com/sansyrox))
 - Fix: default url param in app.start [\#160](https://github.com/sansyrox/robyn/pull/160) ([sansyrox](https://github.com/sansyrox))
 - Add middlewares [\#157](https://github.com/sansyrox/robyn/pull/157) ([sansyrox](https://github.com/sansyrox))
 - Remove arc\(ing\) [\#156](https://github.com/sansyrox/robyn/pull/156) ([sansyrox](https://github.com/sansyrox))
+
+## [v0.13.1](https://github.com/sansyrox/robyn/tree/v0.13.1) (2022-02-19)
+
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.13.0...v0.13.1)
 
 ## [v0.13.0](https://github.com/sansyrox/robyn/tree/v0.13.0) (2022-02-15)
 
