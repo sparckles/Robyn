@@ -28,7 +28,6 @@ class Router(BaseRouter):
                     "body": res["body"],
                     **res
                 }
-            print("Setting the response", response)
         else:
             response = {"status_code": "200", "body": res, "type": "text"}
 
@@ -37,7 +36,6 @@ class Router(BaseRouter):
     def add_route(self, route_type, endpoint, handler):
         async def async_inner_handler(*args):
             response = self._format_response(await handler(*args))
-            print(f"This is the response in python: {response}")
             return response
 
         def inner_handler(*args):
@@ -95,7 +93,7 @@ class MiddlewareRouter(BaseRouter):
     def add_after_request(self, endpoint):
         def inner(handler):
             async def async_inner_handler(*args):
-                await handler(args)
+                await handler(*args)
                 return args
 
             def inner_handler(*args):
@@ -112,7 +110,7 @@ class MiddlewareRouter(BaseRouter):
     def add_before_request(self, endpoint):
         def inner(handler):
             async def async_inner_handler(*args):
-                await handler(args)
+                await handler(*args)
                 return args
 
             def inner_handler(*args):

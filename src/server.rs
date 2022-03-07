@@ -12,6 +12,7 @@ use std::convert::TryInto;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::{Relaxed, SeqCst};
 use std::sync::{Arc, RwLock};
+
 use std::thread;
 
 use actix_files::Files;
@@ -319,28 +320,38 @@ async fn index(
         }
     }
 
-    let _ = if let Some(((handler_function, number_of_params), route_params)) =
-        middleware_router.get_route("BEFORE_REQUEST", req.uri().path())
-    {
-        let x = handle_middleware_request(
-            handler_function,
-            number_of_params,
-            &headers,
-            &mut payload,
-            &req,
-            route_params,
-            queries.clone(),
-        )
-        .await;
-        println!("{:?}", x.to_string());
+    let tuple_params = match middleware_router.get_route("BEFORE_REQUEST", req.uri().path()) {
+        Some(((handler_function, number_of_params), route_params)) => {
+            let x = handle_middleware_request(
+                handler_function,
+                number_of_params,
+                &headers,
+                &mut payload,
+                &req,
+                route_params,
+                queries.clone(),
+            )
+            .await;
+            println!("Middleware contents {:?}", x);
+            x
+        }
+        None => HashMap::new(),
     };
+
+    println!("These are the tuple params {:?}", tuple_params);
+
+    let mut headers_dup = HashMap::new();
+
+    if tuple_params.len() != 0 {
+        headers_dup = tuple_params.get("headers").unwrap().clone();
+    }
 
     let response = match router.get_route(req.method().clone(), req.uri().path()) {
         Some(((handler_function, number_of_params), route_params)) => {
             handle_request(
                 handler_function,
                 number_of_params,
-                &headers,
+                headers_dup.clone(),
                 &mut payload,
                 &req,
                 route_params,
@@ -350,25 +361,26 @@ async fn index(
         }
         None => {
             let mut response = HttpResponse::Ok();
-            apply_headers(&mut response, &headers);
+            apply_headers(&mut response, headers_dup.clone());
             response.finish()
         }
     };
 
-    let _ = if let Some(((handler_function, number_of_params), route_params)) =
-        middleware_router.get_route("AFTER_REQUEST", req.uri().path())
-    {
-        let x = handle_middleware_request(
-            handler_function,
-            number_of_params,
-            &headers,
-            &mut payload,
-            &req,
-            route_params,
-            queries.clone(),
-        )
-        .await;
-        println!("{:?}", x.to_string());
+    let _ = match middleware_router.get_route("AFTER_REQUEST", req.uri().path()) {
+        Some(((handler_function, number_of_params), route_params)) => {
+            let x = handle_middleware_request(
+                handler_function,
+                number_of_params,
+                &headers,
+                &mut payload,
+                &req,
+                route_params,
+                queries.clone(),
+            )
+            .await;
+            println!("{:?}", x);
+        }
+        None => {}
     };
 
     response

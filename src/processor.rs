@@ -8,7 +8,7 @@ use anyhow::{bail, Result};
 use crate::types::{Headers, PyFunction};
 use futures_util::stream::StreamExt;
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyTuple};
+use pyo3::types::PyDict;
 
 use std::fs::File;
 use std::io::Read;
@@ -17,9 +17,9 @@ use std::io::Read;
 const MAX_SIZE: usize = 10_000;
 
 #[inline]
-pub fn apply_headers(response: &mut HttpResponseBuilder, headers: &Arc<Headers>) {
-    for a in headers.iter() {
-        response.insert_header((a.key().clone(), a.value().clone()));
+pub fn apply_headers(response: &mut HttpResponseBuilder, headers: HashMap<String, String>) {
+    for (key, val) in (headers).iter() {
+        response.insert_header((key.clone(), val.clone()));
     }
 }
 
@@ -37,7 +37,7 @@ pub fn apply_headers(response: &mut HttpResponseBuilder, headers: &Arc<Headers>)
 pub async fn handle_request(
     function: PyFunction,
     number_of_params: u8,
-    headers: &Arc<Headers>,
+    headers: HashMap<String, String>,
     payload: &mut web::Payload,
     req: &HttpRequest,
     route_params: HashMap<String, String>,
@@ -46,7 +46,7 @@ pub async fn handle_request(
     let contents = match execute_http_function(
         function,
         payload,
-        headers,
+        headers.clone(),
         req,
         route_params,
         queries,
@@ -58,17 +58,30 @@ pub async fn handle_request(
         Err(err) => {
             println!("Error: {:?}", err);
             let mut response = HttpResponse::InternalServerError();
-            apply_headers(&mut response, headers);
+            apply_headers(&mut response, headers.clone());
             return response.finish();
         }
     };
 
-    let mut response = HttpResponse::Ok();
+    let body = contents.get("body").unwrap().to_owned();
     let status_code =
         actix_http::StatusCode::from_str(contents.get("status_code").unwrap()).unwrap();
-    apply_headers(&mut response, headers);
-    response.status(status_code);
-    response.body(contents.get("body").unwrap().to_owned())
+
+    let mut response = HttpResponse::build(status_code);
+    apply_headers(&mut response, headers.clone());
+    let final_response = if body != "" {
+        response.body(body)
+    } else {
+        response.finish()
+    };
+
+    println!(
+        "The status code is {} and the headers are {:?}",
+        final_response.status(),
+        final_response.headers()
+    );
+    // response.body(contents.get("body").unwrap().to_owned())
+    final_response
 }
 
 pub async fn handle_middleware_request(
@@ -79,7 +92,7 @@ pub async fn handle_middleware_request(
     req: &HttpRequest,
     route_params: HashMap<String, String>,
     queries: HashMap<String, String>,
-) -> Py<PyTuple> {
+) -> HashMap<String, HashMap<String, String>> {
     let contents = match execute_middleware_function(
         function,
         payload,
@@ -92,12 +105,10 @@ pub async fn handle_middleware_request(
     .await
     {
         Ok(res) => res,
-        Err(err) => Python::with_gil(|py| {
-            println!("{:?}", err);
-            PyTuple::empty(py).into_py(py)
-        }),
+        Err(_err) => HashMap::new(),
     };
 
+    println!("These are the middleware response {:?}", contents);
     contents
 }
 
@@ -123,12 +134,12 @@ async fn execute_middleware_function<'a>(
     route_params: HashMap<String, String>,
     queries: HashMap<String, String>,
     number_of_params: u8,
-) -> Result<Py<PyTuple>> {
+) -> Result<HashMap<String, HashMap<String, String>>> {
     // TODO:
     // try executing the first version of middleware(s) here
     // with just headers as params
 
-    let mut data: Option<Vec<u8>> = None;
+    let mut data: Vec<u8> = Vec::new();
 
     if req.method() == Method::POST
         || req.method() == Method::PUT
@@ -145,13 +156,13 @@ async fn execute_middleware_function<'a>(
             body.extend_from_slice(&chunk);
         }
 
-        data = Some(body.to_vec())
+        data = body.to_vec()
     }
 
     // request object accessible while creating routes
     let mut request = HashMap::new();
     let mut headers_python = HashMap::new();
-    for elem in headers.into_iter() {
+    for elem in (*headers).iter() {
         headers_python.insert(elem.key().clone(), elem.value().clone());
     }
 
@@ -162,7 +173,7 @@ async fn execute_middleware_function<'a>(
                 request.insert("params", route_params.into_py(py));
                 request.insert("queries", queries.into_py(py));
                 request.insert("headers", headers_python.into_py(py));
-                request.insert("body", data.into_py(py));
+                // request.insert("body", data.into_py(py));
 
                 // this makes the request object to be accessible across every route
                 let coro: PyResult<&PyAny> = match number_of_params {
@@ -176,10 +187,13 @@ async fn execute_middleware_function<'a>(
 
             let output = output.await?;
 
-            let res = Python::with_gil(|py| -> PyResult<Py<PyTuple>> {
-                let output: Py<PyTuple> = output.extract(py).unwrap();
-                Ok(output)
-            })?;
+            let res =
+                Python::with_gil(|py| -> PyResult<HashMap<String, HashMap<String, String>>> {
+                    let output: Vec<HashMap<String, HashMap<String, String>>> =
+                        output.extract(py).unwrap();
+                    let responses = output[0].clone();
+                    Ok(responses)
+                })?;
 
             Ok(res)
         }
@@ -200,9 +214,10 @@ async fn execute_middleware_function<'a>(
                         2_u8..=u8::MAX => handler.call1((request,)),
                     };
 
-                    let output: Py<PyTuple> = output?.extract().unwrap();
+                    let output: Vec<HashMap<String, HashMap<String, String>>> =
+                        output?.extract().unwrap();
 
-                    Ok(output)
+                    Ok(output[0].clone())
                 })
             })
             .await?
@@ -215,7 +230,7 @@ async fn execute_middleware_function<'a>(
 async fn execute_http_function(
     function: PyFunction,
     payload: &mut web::Payload,
-    headers: &Headers,
+    headers: HashMap<String, String>,
     req: &HttpRequest,
     route_params: HashMap<String, String>,
     queries: HashMap<String, String>,
@@ -223,7 +238,7 @@ async fn execute_http_function(
     // need to change this to return a response struct
     // create a custom struct for this
 ) -> Result<HashMap<String, String>> {
-    let mut data: Option<Vec<u8>> = None;
+    let mut data: Vec<u8> = Vec::new();
 
     if req.method() == Method::POST
         || req.method() == Method::PUT
@@ -240,15 +255,11 @@ async fn execute_http_function(
             body.extend_from_slice(&chunk);
         }
 
-        data = Some(body.to_vec())
+        data = body.to_vec()
     }
 
     // request object accessible while creating routes
     let mut request = HashMap::new();
-    let mut headers_python = HashMap::new();
-    for elem in headers.into_iter() {
-        headers_python.insert(elem.key().clone(), elem.value().clone());
-    }
 
     match function {
         PyFunction::CoRoutine(handler) => {
@@ -256,12 +267,9 @@ async fn execute_http_function(
                 let handler = handler.as_ref(py);
                 request.insert("params", route_params.into_py(py));
                 request.insert("queries", queries.into_py(py));
-                request.insert("headers", headers_python.into_py(py));
-
-                if let Some(res) = data {
-                    let data = res.into_py(py);
-                    request.insert("body", data);
-                };
+                request.insert("headers", headers.into_py(py));
+                let data = data.into_py(py);
+                request.insert("body", data);
 
                 // this makes the request object to be accessible across every route
                 let coro: PyResult<&PyAny> = match number_of_params {
@@ -298,11 +306,9 @@ async fn execute_http_function(
                 Python::with_gil(|py| {
                     let handler = handler.as_ref(py);
                     request.insert("params", route_params.into_py(py));
-                    request.insert("headers", headers_python.into_py(py));
-                    if let Some(res) = data {
-                        let data = res.into_py(py);
-                        request.insert("body", data);
-                    };
+                    request.insert("headers", headers.into_py(py));
+                    let data = data.into_py(py);
+                    request.insert("body", data);
 
                     let output: PyResult<&PyAny> = match number_of_params {
                         0 => handler.call0(),
@@ -325,22 +331,24 @@ pub async fn execute_event_handler(
     event_handler: Option<Arc<PyFunction>>,
     event_loop: Arc<Py<PyAny>>,
 ) {
-    if let Some(handler) = event_handler { match &(*handler) {
-        PyFunction::SyncFunction(function) => {
-            println!("Startup event handler");
-            Python::with_gil(|py| {
-                function.call0(py).unwrap();
-            });
-        }
-        PyFunction::CoRoutine(function) => {
-            let future = Python::with_gil(|py| {
-                println!("Startup event handler async");
+    if let Some(handler) = event_handler {
+        match &(*handler) {
+            PyFunction::SyncFunction(function) => {
+                println!("Startup event handler");
+                Python::with_gil(|py| {
+                    function.call0(py).unwrap();
+                });
+            }
+            PyFunction::CoRoutine(function) => {
+                let future = Python::with_gil(|py| {
+                    println!("Startup event handler async");
 
-                let coroutine = function.as_ref(py).call0().unwrap();
-                pyo3_asyncio::into_future_with_loop((*event_loop).as_ref(py), coroutine)
-                    .unwrap()
-            });
-            future.await.unwrap();
+                    let coroutine = function.as_ref(py).call0().unwrap();
+                    pyo3_asyncio::into_future_with_loop((*event_loop).as_ref(py), coroutine)
+                        .unwrap()
+                });
+                future.await.unwrap();
+            }
         }
-    } }
+    }
 }
