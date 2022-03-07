@@ -4,6 +4,8 @@ Robyn is an async Python backend server with a runtime written in Rust, btw.
 
 Python server running on top of of Rust Async RunTime.
 
+Check out the talk at **PyCon Sweden 2021** about [Robyn: An async python web framework with a Rust runtime](https://www.youtube.com/watch?v=DK9teAs72Do)
+
 ## Installation
 
 You can simply use Pip for installation.
