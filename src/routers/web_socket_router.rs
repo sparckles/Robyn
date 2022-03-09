@@ -7,8 +7,10 @@ use pyo3::types::PyAny;
 
 /// Contains the thread safe hashmaps of different routes
 
+type WebSocketRoutes = RwLock<HashMap<String, HashMap<String, (PyFunction, u8)>>>;
+
 pub struct WebSocketRouter {
-    web_socket_routes: RwLock<HashMap<String, HashMap<String, (PyFunction, u8)>>>,
+    web_socket_routes: WebSocketRoutes,
 }
 
 impl WebSocketRouter {
@@ -21,7 +23,7 @@ impl WebSocketRouter {
     #[inline]
     pub fn get_web_socket_map(
         &self,
-    ) -> &RwLock<HashMap<String, HashMap<String, (PyFunction, u8)>>> {
+    ) -> &WebSocketRoutes {
         &self.web_socket_routes
     }
 

@@ -89,7 +89,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
                 let handler_function = &self.router.get("connect").unwrap().0;
                 let _number_of_params = &self.router.get("connect").unwrap().1;
                 println!("{:?}", handler_function);
-                execute_ws_functionn(handler_function, self.event_loop.clone(), ctx, &self);
+                execute_ws_functionn(handler_function, self.event_loop.clone(), ctx, self);
                 ctx.pong(&msg)
             }
 
@@ -102,7 +102,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
                 // need to also passs this text as a param
                 let handler_function = &self.router.get("message").unwrap().0;
                 let _number_of_params = &self.router.get("message").unwrap().1;
-                execute_ws_functionn(handler_function, self.event_loop.clone(), ctx, &self);
+                execute_ws_functionn(handler_function, self.event_loop.clone(), ctx, self);
             }
 
             Ok(ws::Message::Binary(bin)) => ctx.binary(bin),
@@ -110,7 +110,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
                 println!("Socket was closed");
                 let handler_function = &self.router.get("close").expect("No close function").0;
                 let _number_of_params = &self.router.get("close").unwrap().1;
-                execute_ws_functionn(handler_function, self.event_loop.clone(), ctx, &self);
+                execute_ws_functionn(handler_function, self.event_loop.clone(), ctx, self);
             }
             _ => (),
         }
@@ -127,7 +127,7 @@ pub async fn start_web_socket(
     let resp = ws::start(
         MyWs {
             router,
-            event_loop: event_loop.clone(),
+            event_loop,
         },
         &req,
         stream,

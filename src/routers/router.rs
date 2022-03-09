@@ -61,9 +61,9 @@ impl Router {
                 Err(_) => return None,
             };
 
-            return self.get_relevant_map(method);
+            self.get_relevant_map(method)
         } else {
-            return None;
+            None
         }
     }
 
