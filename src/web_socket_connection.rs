@@ -62,7 +62,7 @@ impl Actor for MyWs {
     fn started(&mut self, ctx: &mut WebsocketContext<Self>) {
         let handler_function = &self.router.get("connect").unwrap().0;
         let _number_of_params = &self.router.get("connect").unwrap().1;
-        execute_ws_functionn(handler_function, self.event_loop.clone(), ctx, &self);
+        execute_ws_functionn(handler_function, self.event_loop.clone(), ctx, self);
 
         println!("Actor is alive");
     }
@@ -70,7 +70,7 @@ impl Actor for MyWs {
     fn stopped(&mut self, ctx: &mut WebsocketContext<Self>) {
         let handler_function = &self.router.get("close").expect("No close function").0;
         let _number_of_params = &self.router.get("close").unwrap().1;
-        execute_ws_functionn(handler_function, self.event_loop.clone(), ctx, &self);
+        execute_ws_functionn(handler_function, self.event_loop.clone(), ctx, self);
 
         println!("Actor is dead");
     }
