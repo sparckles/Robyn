@@ -311,29 +311,28 @@ async fn index(
     // try reading about arc or rc
     let mut queries = HashMap::new();
 
-    if req.query_string().len() > 0 {
-        let split = req.query_string().split("&");
+    if !req.query_string().is_empty() {
+        let split = req.query_string().split('&');
         for s in split {
             let params = s.split_once("=").unwrap_or((s, ""));
             queries.insert(params.0.to_string(), params.1.to_string());
         }
     }
 
-    let _ = match middleware_router.get_route("BEFORE_REQUEST", req.uri().path()) {
-        Some(((handler_function, number_of_params), route_params)) => {
-            let x = handle_middleware_request(
-                handler_function,
-                number_of_params,
-                &headers,
-                &mut payload,
-                &req,
-                route_params,
-                queries.clone(),
-            )
-            .await;
-            println!("{:?}", x.to_string());
-        }
-        None => {}
+    let _ = if let Some(((handler_function, number_of_params), route_params)) =
+        middleware_router.get_route("BEFORE_REQUEST", req.uri().path())
+    {
+        let x = handle_middleware_request(
+            handler_function,
+            number_of_params,
+            &headers,
+            &mut payload,
+            &req,
+            route_params,
+            queries.clone(),
+        )
+        .await;
+        println!("{:?}", x.to_string());
     };
 
     let response = match router.get_route(req.method().clone(), req.uri().path()) {
@@ -356,21 +355,20 @@ async fn index(
         }
     };
 
-    let _ = match middleware_router.get_route("AFTER_REQUEST", req.uri().path()) {
-        Some(((handler_function, number_of_params), route_params)) => {
-            let x = handle_middleware_request(
-                handler_function,
-                number_of_params,
-                &headers,
-                &mut payload,
-                &req,
-                route_params,
-                queries.clone(),
-            )
-            .await;
-            println!("{:?}", x.to_string());
-        }
-        None => {}
+    let _ = if let Some(((handler_function, number_of_params), route_params)) =
+        middleware_router.get_route("AFTER_REQUEST", req.uri().path())
+    {
+        let x = handle_middleware_request(
+            handler_function,
+            number_of_params,
+            &headers,
+            &mut payload,
+            &req,
+            route_params,
+            queries.clone(),
+        )
+        .await;
+        println!("{:?}", x.to_string());
     };
 
     response

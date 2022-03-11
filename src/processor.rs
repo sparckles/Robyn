@@ -258,12 +258,9 @@ async fn execute_http_function(
                 request.insert("queries", queries.into_py(py));
                 request.insert("headers", headers_python.into_py(py));
 
-                match data {
-                    Some(res) => {
-                        let data = res.into_py(py);
-                        request.insert("body", data);
-                    }
-                    None => {}
+                if let Some(res) = data {
+                    let data = res.into_py(py);
+                    request.insert("body", data);
                 };
 
                 // this makes the request object to be accessible across every route
@@ -288,7 +285,7 @@ async fn execute_http_function(
                 if response_type == "static_file" {
                     let file_path = res.get("file_path").unwrap();
                     let contents = read_file(file_path);
-                    res.insert("body".to_owned(), contents.to_owned());
+                    res.insert("body".to_owned(), contents);
                 }
                 Ok(res)
             })?;
@@ -302,12 +299,9 @@ async fn execute_http_function(
                     let handler = handler.as_ref(py);
                     request.insert("params", route_params.into_py(py));
                     request.insert("headers", headers_python.into_py(py));
-                    match data {
-                        Some(res) => {
-                            let data = res.into_py(py);
-                            request.insert("body", data);
-                        }
-                        None => {}
+                    if let Some(res) = data {
+                        let data = res.into_py(py);
+                        request.insert("body", data);
                     };
 
                     let output: PyResult<&PyAny> = match number_of_params {
@@ -331,25 +325,22 @@ pub async fn execute_event_handler(
     event_handler: Option<Arc<PyFunction>>,
     event_loop: Arc<Py<PyAny>>,
 ) {
-    match event_handler {
-        Some(handler) => match &(*handler) {
-            PyFunction::SyncFunction(function) => {
-                println!("Startup event handler");
-                Python::with_gil(|py| {
-                    function.call0(py).unwrap();
-                });
-            }
-            PyFunction::CoRoutine(function) => {
-                let future = Python::with_gil(|py| {
-                    println!("Startup event handler async");
+    if let Some(handler) = event_handler { match &(*handler) {
+        PyFunction::SyncFunction(function) => {
+            println!("Startup event handler");
+            Python::with_gil(|py| {
+                function.call0(py).unwrap();
+            });
+        }
+        PyFunction::CoRoutine(function) => {
+            let future = Python::with_gil(|py| {
+                println!("Startup event handler async");
 
-                    let coroutine = function.as_ref(py).call0().unwrap();
-                    pyo3_asyncio::into_future_with_loop((*event_loop).as_ref(py), coroutine)
-                        .unwrap()
-                });
-                future.await.unwrap();
-            }
-        },
-        None => {}
-    }
+                let coroutine = function.as_ref(py).call0().unwrap();
+                pyo3_asyncio::into_future_with_loop((*event_loop).as_ref(py), coroutine)
+                    .unwrap()
+            });
+            future.await.unwrap();
+        }
+    } }
 }
