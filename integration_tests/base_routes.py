@@ -163,6 +163,28 @@ def shutdown_handler():
     logger.log(logging.INFO, "Shutting down")
 
 
+@app.get("/redirect")
+async def redirect(request):
+    return {"status_code": "307", "body": "", "type": "text"}
+
+
+@app.get("/redirect_route")
+async def redirect_route(request):
+    return "This is the redirected route"
+
+
+@app.before_request("/redirect")
+async def redirect_before_request(request):
+    request["headers"]["Location"] = "redirect_route"
+    return ""
+
+
+@app.after_request("/redirect")
+async def redirect_after_request(request):
+    request["headers"]["Location"] = "redirect_route"
+    return ""
+
+
 if __name__ == "__main__":
     ROBYN_URL = os.getenv("ROBYN_URL", "0.0.0.0")
     app.add_header("server", "robyn")
