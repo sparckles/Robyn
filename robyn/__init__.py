@@ -14,6 +14,7 @@ from .processpool import spawn_process
 from .log_colors import Colors
 from .ws import WS
 from .router import Router, MiddlewareRouter, WebSocketRouter
+from .sessions import redirect
 
 # 3rd party imports and exports
 from multiprocess import Process
