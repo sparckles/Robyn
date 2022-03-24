@@ -13,7 +13,8 @@ i = -1
 
 
 @websocket.on("message")
-async def connect():
+async def connect(websocket_id):
+    print(websocket_id)
     global i
     i += 1
     if i == 0:
