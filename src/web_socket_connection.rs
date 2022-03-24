@@ -19,7 +19,6 @@ struct MyWs {
     // can probably try removing arc from here
     // and use clone_ref()
     event_loop: Arc<PyObject>,
-
 }
 
 fn execute_ws_functionn(
@@ -35,13 +34,13 @@ fn execute_ws_functionn(
             let handler = handler.as_ref(py);
             // call execute function
             let op: PyResult<&PyAny> = match number_of_params {
-                        0 => handler.call0(),
-                        1 => handler.call1((ws.id.to_string(),)),
-                        // this is done to accomodate any future params
-                        2_u8..=u8::MAX => handler.call1((ws.id.to_string(),)),
-                    };
+                0 => handler.call0(),
+                1 => handler.call1((ws.id.to_string(),)),
+                // this is done to accomodate any future params
+                2_u8..=u8::MAX => handler.call1((ws.id.to_string(),)),
+            };
 
-            let op: &str = op.extract().unwrap();
+            let op: &str = op.unwrap().extract().unwrap();
             ctx.text(op);
         }),
         PyFunction::CoRoutine(handler) => {
@@ -51,7 +50,7 @@ fn execute_ws_functionn(
                     0 => handler.call0().unwrap(),
                     1 => handler.call1((ws.id.to_string(),)).unwrap(),
                     // this is done to accomodate any future params
-                    2_u8..=u8::MAX => handler.call1((ws.id.to_string(),)),
+                    2_u8..=u8::MAX => handler.call1((ws.id.to_string(),)).unwrap(),
                 };
                 pyo3_asyncio::into_future_with_loop((*(event_loop.clone())).as_ref(py), coro)
                     .unwrap()
@@ -78,7 +77,13 @@ impl Actor for MyWs {
     fn started(&mut self, ctx: &mut WebsocketContext<Self>) {
         let handler_function = &self.router.get("connect").unwrap().0;
         let number_of_params = &self.router.get("connect").unwrap().1;
-        execute_ws_functionn(handler_function, number_of_params, self.event_loop.clone(), ctx, self);
+        execute_ws_functionn(
+            handler_function,
+            *number_of_params,
+            self.event_loop.clone(),
+            ctx,
+            self,
+        );
 
         println!("Actor is alive");
     }
@@ -86,7 +91,13 @@ impl Actor for MyWs {
     fn stopped(&mut self, ctx: &mut WebsocketContext<Self>) {
         let handler_function = &self.router.get("close").expect("No close function").0;
         let number_of_params = &self.router.get("close").unwrap().1;
-        execute_ws_functionn(handler_function, number_of_params, self.event_loop.clone(), ctx, self);
+        execute_ws_functionn(
+            handler_function,
+            *number_of_params,
+            self.event_loop.clone(),
+            ctx,
+            self,
+        );
 
         println!("Actor is dead");
     }
@@ -103,9 +114,15 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
             Ok(ws::Message::Ping(msg)) => {
                 println!("Ping message {:?}", msg);
                 let handler_function = &self.router.get("connect").unwrap().0;
-                let _number_of_params = &self.router.get("connect").unwrap().1;
+                let number_of_params = &self.router.get("connect").unwrap().1;
                 println!("{:?}", handler_function);
-                execute_ws_functionn(handler_function, self.event_loop.clone(), ctx, self);
+                execute_ws_functionn(
+                    handler_function,
+                    *number_of_params,
+                    self.event_loop.clone(),
+                    ctx,
+                    self,
+                );
                 ctx.pong(&msg)
             }
 
@@ -118,7 +135,13 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
                 // need to also passs this text as a param
                 let handler_function = &self.router.get("message").unwrap().0;
                 let number_of_params = &self.router.get("message").unwrap().1;
-                execute_ws_functionn(handler_function,number_of_params, self.event_loop.clone(), ctx, self);
+                execute_ws_functionn(
+                    handler_function,
+                    *number_of_params,
+                    self.event_loop.clone(),
+                    ctx,
+                    self,
+                );
             }
 
             Ok(ws::Message::Binary(bin)) => ctx.binary(bin),
@@ -126,7 +149,13 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
                 println!("Socket was closed");
                 let handler_function = &self.router.get("close").expect("No close function").0;
                 let number_of_params = &self.router.get("close").unwrap().1;
-                execute_ws_functionn(handler_function,number_of_params, self.event_loop.clone(), ctx, self);
+                execute_ws_functionn(
+                    handler_function,
+                    *number_of_params,
+                    self.event_loop.clone(),
+                    ctx,
+                    self,
+                );
             }
             _ => (),
         }
@@ -144,7 +173,7 @@ pub async fn start_web_socket(
         MyWs {
             router,
             event_loop,
-            id: Uuid::new_v4()
+            id: Uuid::new_v4(),
         },
         &req,
         stream,
