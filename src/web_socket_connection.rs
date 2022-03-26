@@ -169,7 +169,8 @@ pub async fn start_web_socket(
     event_loop: Arc<PyObject>,
 ) -> Result<HttpResponse, Error> {
     // execute the async function here
-    let resp = ws::start(
+    
+    ws::start(
         MyWs {
             router,
             event_loop,
@@ -177,6 +178,5 @@ pub async fn start_web_socket(
         },
         &req,
         stream,
-    );
-    resp
+    )
 }
