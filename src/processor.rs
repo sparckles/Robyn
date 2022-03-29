@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use actix_web::{http::Method, web, HttpRequest, HttpResponse, HttpResponseBuilder};
 use anyhow::{bail, Result};
+use serde_json::Value;
 // pyO3 module
 use crate::types::{Headers, PyFunction};
 use futures_util::stream::StreamExt;
@@ -66,6 +67,16 @@ pub async fn handle_request(
     let body = contents.get("body").unwrap().to_owned();
     let status_code =
         actix_http::StatusCode::from_str(contents.get("status_code").unwrap()).unwrap();
+
+    let headers: HashMap<String, String> = match contents.get("headers") {
+        Some(headers) => {
+            let h: HashMap<String, String> = serde_json::from_str(headers).unwrap();
+            h
+        }
+        None => HashMap::new(),
+    };
+
+    println!("These are the headers from serde {:?}", headers);
 
     let mut response = HttpResponse::build(status_code);
     apply_headers(&mut response, headers.clone());
