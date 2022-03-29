@@ -315,7 +315,7 @@ async fn index(
     if !req.query_string().is_empty() {
         let split = req.query_string().split('&');
         for s in split {
-            let params = s.split_once("=").unwrap_or((s, ""));
+            let params = s.split_once('=').unwrap_or((s, ""));
             queries.insert(params.0.to_string(), params.1.to_string());
         }
     }
@@ -342,7 +342,7 @@ async fn index(
 
     let mut headers_dup = HashMap::new();
 
-    if tuple_params.len() != 0 {
+    if !tuple_params.is_empty() {
         headers_dup = tuple_params.get("headers").unwrap().clone();
     }
 

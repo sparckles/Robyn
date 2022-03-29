@@ -69,7 +69,7 @@ pub async fn handle_request(
 
     let mut response = HttpResponse::build(status_code);
     apply_headers(&mut response, headers.clone());
-    let final_response = if body != "" {
+    let final_response = if !body.is_empty() {
         response.body(body)
     } else {
         response.finish()
