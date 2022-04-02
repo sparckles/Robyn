@@ -1248,6 +1248,8 @@ dependencies = [
  "matchit",
  "pyo3",
  "pyo3-asyncio",
+ "serde",
+ "serde_json",
  "socket2",
  "tokio",
  "uuid",

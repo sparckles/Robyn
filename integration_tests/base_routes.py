@@ -166,24 +166,12 @@ def shutdown_handler():
 
 @app.get("/redirect")
 async def redirect(request):
-    return {"status_code": "307", "body": "", "type": "text"}
+    return {"status_code": "307", "body": "", "type": "text", "headers": jsonify({"Location": "redirect_route"})}
 
 
 @app.get("/redirect_route")
 async def redirect_route(request):
     return "This is the redirected route"
-
-
-@app.before_request("/redirect")
-async def redirect_before_request(request):
-    request["headers"]["Location"] = "redirect_route"
-    return ""
-
-
-@app.after_request("/redirect")
-async def redirect_after_request(request):
-    request["headers"]["Location"] = "redirect_route"
-    return ""
 
 
 if __name__ == "__main__":
