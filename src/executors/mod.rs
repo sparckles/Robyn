@@ -1,10 +1,11 @@
 /// This is the module that has all the executor functions
 /// i.e. the functions that have the responsibility of parsing and executing functions.
+use crate::io_helpers::read_file;
+
 use std::collections::HashMap;
-use std::str::FromStr;
 use std::sync::Arc;
 
-use actix_web::{http::Method, web, HttpRequest, HttpResponse, HttpResponseBuilder};
+use actix_web::{http::Method, web, HttpRequest};
 use anyhow::{bail, Result};
 // pyO3 module
 use crate::types::{Headers, PyFunction};
@@ -12,21 +13,10 @@ use futures_util::stream::StreamExt;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
-use std::fs::File;
-use std::io::Read;
-
 /// @TODO make configurable
 const MAX_SIZE: usize = 10_000;
 
-#[inline]
-pub fn apply_headers(response: &mut HttpResponseBuilder, headers: HashMap<String, String>) {
-    for (key, val) in (headers).iter() {
-        response.insert_header((key.clone(), val.clone()));
-    }
-}
-
-
-async fn execute_middleware_function<'a>(
+pub async fn execute_middleware_function<'a>(
     function: PyFunction,
     payload: &mut web::Payload,
     headers: &Headers,
@@ -127,7 +117,7 @@ async fn execute_middleware_function<'a>(
 
 // Change this!
 #[inline]
-async fn execute_http_function(
+pub async fn execute_http_function(
     function: PyFunction,
     payload: &mut web::Payload,
     headers: HashMap<String, String>,

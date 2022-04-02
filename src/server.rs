@@ -1,6 +1,6 @@
-use crate::processor::{
-    apply_headers, execute_event_handler, handle_middleware_request, handle_request,
-};
+use crate::executors::execute_event_handler;
+use crate::io_helpers::apply_headers;
+use crate::request_handler::{handle_http_middleware_request, handle_http_request};
 use crate::routers::router::Router;
 use crate::routers::{middleware_router::MiddlewareRouter, web_socket_router::WebSocketRouter};
 use crate::shared_socket::SocketHeld;
@@ -322,7 +322,7 @@ async fn index(
 
     let tuple_params = match middleware_router.get_route("BEFORE_REQUEST", req.uri().path()) {
         Some(((handler_function, number_of_params), route_params)) => {
-            let x = handle_middleware_request(
+            let x = handle_http_middleware_request(
                 handler_function,
                 number_of_params,
                 &headers,
@@ -348,7 +348,7 @@ async fn index(
 
     let response = match router.get_route(req.method().clone(), req.uri().path()) {
         Some(((handler_function, number_of_params), route_params)) => {
-            handle_request(
+            handle_http_request(
                 handler_function,
                 number_of_params,
                 headers_dup.clone(),
@@ -368,7 +368,7 @@ async fn index(
 
     let _ = match middleware_router.get_route("AFTER_REQUEST", req.uri().path()) {
         Some(((handler_function, number_of_params), route_params)) => {
-            let x = handle_middleware_request(
+            let x = handle_http_middleware_request(
                 handler_function,
                 number_of_params,
                 &headers,

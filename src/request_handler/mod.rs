@@ -1,20 +1,12 @@
+use crate::executors::{execute_http_function, execute_middleware_function};
+
 use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::Arc;
 
-use actix_web::{http::Method, web, HttpRequest, HttpResponse, HttpResponseBuilder};
-use anyhow::{bail, Result};
+use actix_web::{web, HttpRequest, HttpResponse, HttpResponseBuilder};
 // pyO3 module
 use crate::types::{Headers, PyFunction};
-use futures_util::stream::StreamExt;
-use pyo3::prelude::*;
-use pyo3::types::PyDict;
-
-use std::fs::File;
-use std::io::Read;
-
-/// @TODO make configurable
-const MAX_SIZE: usize = 10_000;
 
 #[inline]
 pub fn apply_headers(response: &mut HttpResponseBuilder, headers: HashMap<String, String>) {
@@ -22,7 +14,6 @@ pub fn apply_headers(response: &mut HttpResponseBuilder, headers: HashMap<String
         response.insert_header((key.clone(), val.clone()));
     }
 }
-
 
 /// This functions handles the incoming request matches it to the function and serves the response
 ///
@@ -112,4 +103,3 @@ pub async fn handle_http_middleware_request(
     println!("These are the middleware response {:?}", contents);
     contents
 }
-
