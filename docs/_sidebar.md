@@ -7,3 +7,5 @@
 - [Comparison](comparison.md)
 - [Plugins](plugins.md)
 - [Future Roadmap](roadmap.md)
+- [Sponsors](sponsors.md)
+
