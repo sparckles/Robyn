@@ -68,7 +68,7 @@ If you're feeling curious. You can take a look at a more detailed architecture [
 
 1. Add more routes in the `integration_tests/base_routes.py` file(if you like).
 
-2. Run `maturin develop`
+2. Run `maturin develop` or `maturin develop --cargo-extra-args="--features=io-uring"` (if you want to run the experimental version).
 
 3. Run `python3 integration_tests/base_routes.py`
 
