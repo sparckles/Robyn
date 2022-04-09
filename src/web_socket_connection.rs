@@ -21,7 +21,7 @@ struct MyWs {
     event_loop: Arc<PyObject>,
 }
 
-fn execute_ws_functionn(
+fn execute_ws_function(
     handler_function: &PyFunction,
     number_of_params: u8,
     event_loop: Arc<PyObject>,
@@ -77,7 +77,7 @@ impl Actor for MyWs {
     fn started(&mut self, ctx: &mut WebsocketContext<Self>) {
         let handler_function = &self.router.get("connect").unwrap().0;
         let number_of_params = &self.router.get("connect").unwrap().1;
-        execute_ws_functionn(
+        execute_ws_function(
             handler_function,
             *number_of_params,
             self.event_loop.clone(),
@@ -91,7 +91,7 @@ impl Actor for MyWs {
     fn stopped(&mut self, ctx: &mut WebsocketContext<Self>) {
         let handler_function = &self.router.get("close").expect("No close function").0;
         let number_of_params = &self.router.get("close").unwrap().1;
-        execute_ws_functionn(
+        execute_ws_function(
             handler_function,
             *number_of_params,
             self.event_loop.clone(),
@@ -116,7 +116,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
                 let handler_function = &self.router.get("connect").unwrap().0;
                 let number_of_params = &self.router.get("connect").unwrap().1;
                 println!("{:?}", handler_function);
-                execute_ws_functionn(
+                execute_ws_function(
                     handler_function,
                     *number_of_params,
                     self.event_loop.clone(),
@@ -135,7 +135,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
                 // need to also passs this text as a param
                 let handler_function = &self.router.get("message").unwrap().0;
                 let number_of_params = &self.router.get("message").unwrap().1;
-                execute_ws_functionn(
+                execute_ws_function(
                     handler_function,
                     *number_of_params,
                     self.event_loop.clone(),
@@ -149,7 +149,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
                 println!("Socket was closed");
                 let handler_function = &self.router.get("close").expect("No close function").0;
                 let number_of_params = &self.router.get("close").unwrap().1;
-                execute_ws_functionn(
+                execute_ws_function(
                     handler_function,
                     *number_of_params,
                     self.event_loop.clone(),
@@ -169,7 +169,7 @@ pub async fn start_web_socket(
     event_loop: Arc<PyObject>,
 ) -> Result<HttpResponse, Error> {
     // execute the async function here
-    
+
     ws::start(
         MyWs {
             router,
