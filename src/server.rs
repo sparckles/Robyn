@@ -8,8 +8,10 @@ use crate::shared_socket::SocketHeld;
 use crate::types::{Headers, PyFunction};
 use crate::web_socket_connection::start_web_socket;
 
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::convert::TryInto;
+use std::rc::Rc;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::{Relaxed, SeqCst};
 use std::sync::{Arc, RwLock};
@@ -311,13 +313,16 @@ async fn index(
 ) -> impl Responder {
     // cloning hashmaps a lot here
     // try reading about arc or rc
-    let mut queries = HashMap::new();
+
+    let mut queries = Rc::new(RefCell::new(HashMap::new()));
 
     if !req.query_string().is_empty() {
         let split = req.query_string().split('&');
         for s in split {
             let params = s.split_once('=').unwrap_or((s, ""));
-            queries.insert(params.0.to_string(), params.1.to_string());
+            queries
+                .borrow_mut()
+                .insert(params.0.to_string(), params.1.to_string());
         }
     }
 
