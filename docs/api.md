@@ -283,7 +283,7 @@ def hello_after_request(request):
     print(request)
 ```
 
-## MutliCore Scaling
+## MultiCore Scaling
 
 To run Robyn across multiple cores, you can use the following command:
 
