@@ -1,8 +1,9 @@
 use crate::executors::{execute_http_function, execute_middleware_function};
 
-use std::collections::HashMap;
+use std::rc::Rc;
 use std::str::FromStr;
 use std::sync::Arc;
+use std::{cell::RefCell, collections::HashMap};
 
 use actix_web::{web, HttpRequest, HttpResponse, HttpResponseBuilder};
 // pyO3 module
@@ -33,7 +34,7 @@ pub async fn handle_http_request(
     payload: &mut web::Payload,
     req: &HttpRequest,
     route_params: HashMap<String, String>,
-    queries: HashMap<String, String>,
+    queries: Rc<RefCell<HashMap<String, String>>>,
 ) -> HttpResponse {
     let contents = match execute_http_function(
         function,
@@ -93,7 +94,7 @@ pub async fn handle_http_middleware_request(
     payload: &mut web::Payload,
     req: &HttpRequest,
     route_params: HashMap<String, String>,
-    queries: HashMap<String, String>,
+    queries: Rc<RefCell<HashMap<String, String>>>,
 ) -> HashMap<String, HashMap<String, String>> {
     let contents = match execute_middleware_function(
         function,

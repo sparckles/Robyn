@@ -2,11 +2,15 @@
 /// i.e. the functions that have the responsibility of parsing and executing functions.
 use crate::io_helpers::read_file;
 
+use std::borrow::Borrow;
+use std::cell::RefCell;
 use std::collections::HashMap;
+use std::rc::Rc;
 use std::sync::Arc;
 
 use actix_web::{http::Method, web, HttpRequest};
 use anyhow::{bail, Result};
+use futures::lock::Mutex;
 // pyO3 module
 use crate::types::{Headers, PyFunction};
 use futures_util::stream::StreamExt;
@@ -22,7 +26,7 @@ pub async fn execute_middleware_function<'a>(
     headers: &Headers,
     req: &HttpRequest,
     route_params: HashMap<String, String>,
-    queries: HashMap<String, String>,
+    queries: Rc<RefCell<HashMap<String, String>>>,
     number_of_params: u8,
 ) -> Result<HashMap<String, HashMap<String, String>>> {
     // TODO:
@@ -55,13 +59,18 @@ pub async fn execute_middleware_function<'a>(
     for elem in (*headers).iter() {
         headers_python.insert(elem.key().clone(), elem.value().clone());
     }
+    let mut queries_clone: HashMap<String, String> = HashMap::new();
+
+    for (key, value) in (*queries).borrow().clone() {
+        queries_clone.insert(key, value);
+    }
 
     match function {
         PyFunction::CoRoutine(handler) => {
             let output = Python::with_gil(|py| {
                 let handler = handler.as_ref(py);
                 request.insert("params", route_params.into_py(py));
-                request.insert("queries", queries.into_py(py));
+                request.insert("queries", queries_clone.into_py(py));
                 request.insert("headers", headers_python.into_py(py));
                 // request.insert("body", data.into_py(py));
 
@@ -89,28 +98,30 @@ pub async fn execute_middleware_function<'a>(
         }
 
         PyFunction::SyncFunction(handler) => {
-            tokio::task::spawn_blocking(move || {
-                Python::with_gil(|py| {
-                    let handler = handler.as_ref(py);
-                    request.insert("params", route_params.into_py(py));
-                    request.insert("queries", queries.into_py(py));
-                    request.insert("headers", headers_python.into_py(py));
-                    request.insert("body", data.into_py(py));
+            // do we even need this?
+            // How else can we return a future from this?
+            // let's wrap the output in a future?
+            let output: Result<HashMap<String, HashMap<String, String>>> = Python::with_gil(|py| {
+                let handler = handler.as_ref(py);
+                request.insert("params", route_params.into_py(py));
+                request.insert("queries", queries_clone.into_py(py));
+                request.insert("headers", headers_python.into_py(py));
+                request.insert("body", data.into_py(py));
 
-                    let output: PyResult<&PyAny> = match number_of_params {
-                        0 => handler.call0(),
-                        1 => handler.call1((request,)),
-                        // this is done to accomodate any future params
-                        2_u8..=u8::MAX => handler.call1((request,)),
-                    };
+                let output: PyResult<&PyAny> = match number_of_params {
+                    0 => handler.call0(),
+                    1 => handler.call1((request,)),
+                    // this is done to accomodate any future params
+                    2_u8..=u8::MAX => handler.call1((request,)),
+                };
 
-                    let output: Vec<HashMap<String, HashMap<String, String>>> =
-                        output?.extract().unwrap();
+                let output: Vec<HashMap<String, HashMap<String, String>>> =
+                    output?.extract().unwrap();
 
-                    Ok(output[0].clone())
-                })
-            })
-            .await?
+                Ok(output[0].clone())
+            });
+
+            Ok(output.unwrap())
         }
     }
 }
@@ -123,7 +134,7 @@ pub async fn execute_http_function(
     headers: HashMap<String, String>,
     req: &HttpRequest,
     route_params: HashMap<String, String>,
-    queries: HashMap<String, String>,
+    queries: Rc<RefCell<HashMap<String, String>>>,
     number_of_params: u8,
     // need to change this to return a response struct
     // create a custom struct for this
@@ -151,12 +162,18 @@ pub async fn execute_http_function(
     // request object accessible while creating routes
     let mut request = HashMap::new();
 
+    let mut queries_clone: HashMap<String, String> = HashMap::new();
+
+    for (key, value) in (*queries).borrow().clone() {
+        queries_clone.insert(key, value);
+    }
+
     match function {
         PyFunction::CoRoutine(handler) => {
             let output = Python::with_gil(|py| {
                 let handler = handler.as_ref(py);
                 request.insert("params", route_params.into_py(py));
-                request.insert("queries", queries.into_py(py));
+                request.insert("queries", queries_clone.into_py(py));
                 request.insert("headers", headers.into_py(py));
                 let data = data.into_py(py);
                 request.insert("body", data);
