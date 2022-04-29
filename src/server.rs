@@ -311,10 +311,7 @@ async fn index(
     mut payload: web::Payload,
     req: HttpRequest,
 ) -> impl Responder {
-    // cloning hashmaps a lot here
-    // try reading about arc or rc
-
-    let mut queries = Rc::new(RefCell::new(HashMap::new()));
+    let queries = Rc::new(RefCell::new(HashMap::new()));
 
     if !req.query_string().is_empty() {
         let split = req.query_string().split('&');
