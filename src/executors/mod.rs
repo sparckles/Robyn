@@ -2,7 +2,6 @@
 /// i.e. the functions that have the responsibility of parsing and executing functions.
 use crate::io_helpers::read_file;
 
-use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -10,7 +9,6 @@ use std::sync::Arc;
 
 use actix_web::{http::Method, web, HttpRequest};
 use anyhow::{bail, Result};
-use futures::lock::Mutex;
 // pyO3 module
 use crate::types::{Headers, PyFunction};
 use futures_util::stream::StreamExt;

@@ -1,8 +1,52 @@
 # Changelog
 
-## [Unreleased](https://github.com/sansyrox/robyn/tree/HEAD)
+## [v0.16.0](https://github.com/sansyrox/robyn/tree/v0.16.0) (2022-04-29)
 
-[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.13.1...HEAD)
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.15.1...v0.16.0)
+
+**Closed issues:**
+
+- \[Feature Request\] Add list of sponsors on the project website  [\#182](https://github.com/sansyrox/robyn/issues/182)
+- Optional build feature for io\_uring [\#177](https://github.com/sansyrox/robyn/issues/177)
+- Create Custom headers for the response. [\#174](https://github.com/sansyrox/robyn/issues/174)
+
+**Merged pull requests:**
+
+- Fix build pipeline [\#190](https://github.com/sansyrox/robyn/pull/190) ([sansyrox](https://github.com/sansyrox))
+- fix typo :pencil2: in api docs. [\#189](https://github.com/sansyrox/robyn/pull/189) ([sombralibre](https://github.com/sombralibre))
+- Remove hashmap clones [\#187](https://github.com/sansyrox/robyn/pull/187) ([sansyrox](https://github.com/sansyrox))
+- Code clean up | Modularise rust code [\#185](https://github.com/sansyrox/robyn/pull/185) ([sansyrox](https://github.com/sansyrox))
+- Add experimental io-uring [\#184](https://github.com/sansyrox/robyn/pull/184) ([sansyrox](https://github.com/sansyrox))
+- Implement Response headers [\#179](https://github.com/sansyrox/robyn/pull/179) ([sansyrox](https://github.com/sansyrox))
+- Code cleanup [\#178](https://github.com/sansyrox/robyn/pull/178) ([sansyrox](https://github.com/sansyrox))
+
+## [v0.15.1](https://github.com/sansyrox/robyn/tree/v0.15.1) (2022-03-24)
+
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.15.0...v0.15.1)
+
+**Closed issues:**
+
+- Add middleware support [\#95](https://github.com/sansyrox/robyn/issues/95)
+
+**Merged pull requests:**
+
+- Make websocket id accessible [\#173](https://github.com/sansyrox/robyn/pull/173) ([sansyrox](https://github.com/sansyrox))
+- Use Clippy tool optimized code [\#171](https://github.com/sansyrox/robyn/pull/171) ([mrxiaozhuox](https://github.com/mrxiaozhuox))
+- Modify headers [\#170](https://github.com/sansyrox/robyn/pull/170) ([sansyrox](https://github.com/sansyrox))
+- Update README.md [\#168](https://github.com/sansyrox/robyn/pull/168) ([Polokghosh53](https://github.com/Polokghosh53))
+
+## [v0.15.0](https://github.com/sansyrox/robyn/tree/v0.15.0) (2022-03-17)
+
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.14.0...v0.15.0)
+
+**Closed issues:**
+
+- \[BUG\] Unable to modify headers in middlewares [\#167](https://github.com/sansyrox/robyn/issues/167)
+- Add Pycon talk link to docs [\#102](https://github.com/sansyrox/robyn/issues/102)
+
+## [v0.14.0](https://github.com/sansyrox/robyn/tree/v0.14.0) (2022-03-03)
+
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.13.1...v0.14.0)
 
 **Fixed bugs:**
 
