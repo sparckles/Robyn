@@ -6,7 +6,7 @@ import multiprocessing as mp
 from robyn.events import Events
 
 # custom imports and exports
-from .robyn import Server, SocketHeld
+from .robyn import SocketHeld
 from .argument_parser import ArgumentParser
 from .responses import static_file, jsonify
 from .dev_event_handler import EventHandler
