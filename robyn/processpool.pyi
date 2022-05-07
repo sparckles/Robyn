@@ -6,13 +6,15 @@ from robyn.robyn import SocketHeld
 from typing import  Dict, Tuple, Callable
 
 Route = Tuple[str, str, Callable, bool, int]
+Directory = Tuple[str, str, str, str]
+Header = Tuple[str, str]
 
 
 def spawn_process(
-    directories: Tuple[str, str, str, str],
-    headers: Tuple[str, str],
-    routes: Tuple[Route],
-    middlewares: Tuple[Route],
+    directories: Tuple[Directory, ...],
+    headers: Tuple[Header, ...],
+    routes: Tuple[Route, ...],
+    middlewares: Tuple[Route, ...],
     web_sockets: Dict[str, WS],
     event_handlers: Dict[Events, list],
     socket: SocketHeld,

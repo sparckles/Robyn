@@ -1,8 +1,6 @@
 from abc import ABC, abstractmethod
 from robyn.ws import WS
-from typing import Callable, List, Tuple
-
-Routes = List[Tuple[str, str, Callable, bool, int]]
+from typing import Callable
 
 
 class BaseRouter(ABC):
