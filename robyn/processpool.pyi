@@ -1,14 +1,20 @@
 from numbers import Number
+from robyn.ws import WS
+from robyn.events import Events
 from robyn.robyn import SocketHeld
+
+from typing import  Dict, Tuple, Callable
+
+Route = Tuple[str, str, Callable, bool, int]
 
 
 def spawn_process(
-    directories: tuple,
-    headers: tuple,
-    routes: tuple,
-    middlewares: tuple,
-    web_sockets: list,
-    event_handlers: dict,
+    directories: Tuple[str, str, str, str],
+    headers: Tuple[str, str],
+    routes: Tuple[Route],
+    middlewares: Tuple[Route],
+    web_sockets: Dict[str, WS],
+    event_handlers: Dict[Events, list],
     socket: SocketHeld,
     workers: Number,
 ) -> None:
@@ -18,8 +24,8 @@ def spawn_process(
 
     :param directories tuple: the list of all the directories and related data in a tuple
     :param headers tuple: All the global headers in a tuple
-    :param routes tuple: The routes touple, containing the description about every route.
-    :param middlewares tuple: The middleware router touple, containing the description about every route.
+    :param routes Tuple[Route]: The routes touple, containing the description about every route.
+    :param middlewares Tuple[Route]: The middleware router touple, containing the description about every route.
     :param web_sockets list: This is a list of all the web socket routes
     :param event_handlers Dict: This is an event dict that contains the event handlers
     :param socket SocketHeld: This is the main tcp socket, which is being shared across multiple processes.
