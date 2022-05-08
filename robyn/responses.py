@@ -3,9 +3,9 @@ import json
 
 def static_file(file_path):
     """
-    [This function will help in serving a static_file]
+    This function will help in serving a static_file
 
-    :param file_path [str]: [file path to serve as a response]
+    :param file_path str: file path to serve as a response
     """
 
     return {
@@ -19,9 +19,10 @@ def static_file(file_path):
 
 def jsonify(input_dict):
     """
-    [This function serializes input dict to a json string]
+    This function serializes input dict to a json string
 
-    :param input_dict [dict]: [response of the function]
+    :param input_dict dict: response of the function
     """
+
     return json.dumps(input_dict)
 

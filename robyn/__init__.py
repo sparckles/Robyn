@@ -6,7 +6,7 @@ import multiprocessing as mp
 from robyn.events import Events
 
 # custom imports and exports
-from .robyn import Server, SocketHeld
+from .robyn import SocketHeld
 from .argument_parser import ArgumentParser
 from .responses import static_file, jsonify
 from .dev_event_handler import EventHandler
@@ -55,18 +55,20 @@ class Robyn:
 
     def before_request(self, endpoint):
         """
-        [The @app.before_request decorator to add a get route]
+        The @app.before_request decorator to add a get route
 
-        :param endpoint [str]: [endpoint to server the route]
+        :param endpoint str: endpoint to server the route
         """
+
         return self.middleware_router.add_before_request(endpoint)
 
     def after_request(self, endpoint):
         """
-        [The @app.after_request decorator to add a get route]
+        The @app.after_request decorator to add a get route
 
-        :param endpoint [str]: [endpoint to server the route]
+        :param endpoint str: endpoint to server the route
         """
+
         return self.middleware_router.add_after_request(endpoint)
 
     def add_directory(
@@ -96,10 +98,11 @@ class Robyn:
 
     def start(self, url="127.0.0.1", port=5000):
         """
-        [Starts the server]
+        Starts the server
 
-        :param port [int]: [reperesents the port number at which the server is listening]
+        :param port int: reperesents the port number at which the server is listening
         """
+
         if not self.dev:
             workers = self.workers
             socket = SocketHeld(url, port)
@@ -139,9 +142,9 @@ class Robyn:
 
     def get(self, endpoint):
         """
-        [The @app.get decorator to add a get route]
+        The @app.get decorator to add a get route
 
-        :param endpoint [str]: [endpoint to server the route]
+        :param endpoint str: endpoint to server the route
         """
 
         def inner(handler):
@@ -151,9 +154,9 @@ class Robyn:
 
     def post(self, endpoint):
         """
-        [The @app.post decorator to add a get route]
+        The @app.post decorator to add a get route
 
-        :param endpoint [str]: [endpoint to server the route]
+        :param endpoint str: endpoint to server the route
         """
 
         def inner(handler):
@@ -163,11 +166,10 @@ class Robyn:
 
     def put(self, endpoint):
         """
-        [The @app.put decorator to add a get route]
+        The @app.put decorator to add a get route
 
-        :param endpoint [str]: [endpoint to server the route]
+        :param endpoint str: endpoint to server the route
         """
-
         def inner(handler):
             self._add_route("PUT", endpoint, handler)
 
@@ -175,9 +177,9 @@ class Robyn:
 
     def delete(self, endpoint):
         """
-        [The @app.delete decorator to add a get route]
+        The @app.delete decorator to add a get route
 
-        :param endpoint [str]: [endpoint to server the route]
+        :param endpoint str: endpoint to server the route
         """
 
         def inner(handler):
@@ -199,9 +201,9 @@ class Robyn:
 
     def head(self, endpoint):
         """
-        [The @app.head decorator to add a get route]
+        The @app.head decorator to add a get route
 
-        :param endpoint [str]: [endpoint to server the route]
+        :param endpoint str: endpoint to server the route
         """
 
         def inner(handler):
@@ -211,9 +213,9 @@ class Robyn:
 
     def options(self, endpoint):
         """
-        [The @app.options decorator to add a get route]
+        The @app.options decorator to add a get route
 
-        :param endpoint [str]: [endpoint to server the route]
+        :param endpoint str: endpoint to server the route
         """
 
         def inner(handler):
@@ -223,9 +225,9 @@ class Robyn:
 
     def connect(self, endpoint):
         """
-        [The @app.connect decorator to add a get route]
+        The @app.connect decorator to add a get route
 
-        :param endpoint [str]: [endpoint to server the route]
+        :param endpoint str: endpoint to server the route
         """
 
         def inner(handler):
@@ -235,9 +237,9 @@ class Robyn:
 
     def trace(self, endpoint):
         """
-        [The @app.trace decorator to add a get route]
+        The @app.trace decorator to add a get route
 
-        :param endpoint [str]: [endpoint to server the route]
+        :param endpoint str: endpoint to server the route
         """
 
         def inner(handler):
