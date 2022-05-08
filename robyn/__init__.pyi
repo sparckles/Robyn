@@ -18,6 +18,7 @@ from .robyn import Server, SocketHeld
 from .router import MiddlewareRouter, Router, WebSocketRouter
 from .ws import WS
 
+
 class Robyn:
     """This is the python wrapper for the Robyn binaries."""
 
@@ -28,16 +29,16 @@ class Robyn:
 
         :param endpoint str: endpoint to server the route
         """
-
         ...
-    def after_request(self, endpoint: str):  # -> (handler: Unknown) -> None:
-        """
-        [The @app.after_request decorator to add a get route]
 
-        :param endpoint [str]: [endpoint to server the route]
+    def after_request(self, endpoint: str) -> Callable[..., None]:
         """
+        The @app.after_request decorator to add a get route
 
+        :param endpoint str: endpoint to server the route
+        """
         ...
+
     def add_directory(
         self,
         route: str,
@@ -95,6 +96,7 @@ class Robyn:
         """
 
         ...
+
     def head(self, endpoint: str) -> Callable[..., None]:
         """
         The @app.head decorator to add a get route

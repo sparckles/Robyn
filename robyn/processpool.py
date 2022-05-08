@@ -20,14 +20,15 @@ def spawn_process(
 
     :param directories tuple: the list of all the directories and related data in a tuple
     :param headers tuple: All the global headers in a tuple
-    :param routes tuple: The routes touple, containing the description about every route.
-    :param middlewares tuple: The middleware router touple, containing the description about every route.
+    :param routes Tuple[Route]: The routes touple, containing the description about every route.
+    :param middlewares Tuple[Route]: The middleware router touple, containing the description about every route.
     :param web_sockets list: This is a list of all the web socket routes
     :param event_handlers Dict: This is an event dict that contains the event handlers
     :param socket SocketHeld: This is the main tcp socket, which is being shared across multiple processes.
     :param process_name string: This is the name given to the process to identify the process
     :param workers number: This is the name given to the process to identify the process
     """
+
     # platform_name = platform.machine()
     if sys.platform.startswith("win32") or sys.platform.startswith("linux-cross"):
         loop = asyncio.new_event_loop()

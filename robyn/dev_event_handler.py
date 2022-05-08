@@ -22,10 +22,11 @@ class EventHandler(FileSystemEventHandler):
 
     def on_any_event(self, event):
         """
-        [This function is a callback that will start a new server on every even change]
+        This function is a callback that will start a new server on every even change
 
-        :param event [FSEvent]: [a data structure with info about the events]
+        :param event FSEvent: a data structure with info about the events
         """
+
         if len(self.processes) > 0:
             for process in self.processes:
                 process.terminate()
