@@ -1,19 +1,16 @@
 from __future__ import annotations
-from typing import Callable, Optional, Tuple
 
+from typing import Callable, Optional, Tuple
 
 class SocketHeld:
     def __init__(self, url: str, port: int):
         pass
-
     def try_clone(self) -> SocketHeld:
         pass
-
 
 class Server:
     def __init__(self):
         pass
-
     def add_directory(
         self,
         route: str,
@@ -22,10 +19,8 @@ class Server:
         show_files_listing: bool,
     ):
         pass
-
     def add_header(self, key: str, value: str):
         pass
-
     def add_route(
         self,
         route_type: str,
@@ -35,7 +30,6 @@ class Server:
         number_of_params: int,
     ):
         pass
-
     def add_middleware_route(
         self,
         route_type: str,
@@ -45,13 +39,10 @@ class Server:
         number_of_params: int,
     ):
         pass
-
     def add_startup_handler(self, handler: Callable, is_async: bool):
         pass
-
     def add_shutdown_handler(self, handler: Callable, is_async: bool):
         pass
-
     def add_web_socket_route(
         self,
         route: str,
@@ -60,6 +51,5 @@ class Server:
         message_route: Tuple[Callable, bool, int],
     ):
         pass
-
     def start(self, socket: SocketHeld, workers: int):
         pass

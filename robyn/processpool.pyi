@@ -1,14 +1,13 @@
 from numbers import Number
-from robyn.ws import WS
+from typing import Dict, Tuple
+
 from robyn.events import Events
 from robyn.robyn import SocketHeld
+from robyn.router import Route
+from robyn.ws import WS
 
-from typing import  Dict, Tuple, Callable
-
-Route = Tuple[str, str, Callable, bool, int]
 Directory = Tuple[str, str, str, str]
 Header = Tuple[str, str]
-
 
 def spawn_process(
     directories: Tuple[Directory, ...],
@@ -34,5 +33,3 @@ def spawn_process(
     :param process_name string: This is the name given to the process to identify the process
     :param workers number: This is the name given to the process to identify the process
     """
-
-    pass

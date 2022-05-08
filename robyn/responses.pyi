@@ -1,6 +1,5 @@
 from typing import Any
 
-
 def static_file(file_path: str) -> dict[str, Any]:
     """
     [This function will help in serving a static_file]
@@ -9,7 +8,6 @@ def static_file(file_path: str) -> dict[str, Any]:
     """
 
     pass
-
 
 def jsonify(input_dict: dict) -> str:
     """
