@@ -104,6 +104,7 @@ class Robyn:
         """
 
         if not self.dev:
+            processes = []
             workers = self.workers
             socket = SocketHeld(url, port)
             for _ in range(self.processes):
@@ -122,8 +123,16 @@ class Robyn:
                     ),
                 )
                 p.start()
+                processes.append(p)
 
             print("Press Ctrl + C to stop \n")
+            try:
+                for process in processes:
+                    process.join()
+            except KeyboardInterrupt:
+                print(f"\n{Colors.BOLD}{Colors.OKGREEN} Terminating server!! {Colors.ENDC}")
+                for process in processes:
+                    process.kill()
         else:
             event_handler = EventHandler(self.file_path)
             event_handler.start_server_first_time()

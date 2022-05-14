@@ -75,5 +75,9 @@ def spawn_process(
             web_socket.methods["message"],
         )
 
-    server.start(socket, workers)
-    asyncio.get_event_loop().run_forever()
+    try:
+        server.start(socket, workers)
+        loop = asyncio.get_event_loop()
+        loop.run_forever()
+    except KeyboardInterrupt:
+        loop.close()
