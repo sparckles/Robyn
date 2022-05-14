@@ -7,6 +7,8 @@ use pyo3::types::PyAny;
 
 use matchit::Node;
 
+use anyhow::{bail, Error, Result};
+
 /// Contains the thread safe hashmaps of different routes
 
 pub struct MiddlewareRouter {
@@ -40,10 +42,10 @@ impl MiddlewareRouter {
         handler: Py<PyAny>,
         is_async: bool,
         number_of_params: u8,
-    ) {
+    ) -> Result<(), Error> {
         let table = match self.get_relevant_map(route_type) {
             Some(table) => table,
-            None => return,
+            None => bail!("No relevant map"),
         };
 
         let function = if is_async {
@@ -55,8 +57,9 @@ impl MiddlewareRouter {
         table
             .write()
             .unwrap()
-            .insert(route.to_string(), (function, number_of_params))
-            .unwrap();
+            .insert(route.to_string(), (function, number_of_params))?;
+
+        Ok(())
     }
 
     pub fn get_route(

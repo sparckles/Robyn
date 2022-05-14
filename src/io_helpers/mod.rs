@@ -21,9 +21,9 @@ pub fn apply_headers(response: &mut HttpResponseBuilder, headers: HashMap<String
 /// * `file_path` - The file path that we want the function to read
 ///
 // ideally this should be async
-pub fn read_file(file_path: &str) -> String {
-    let mut file = File::open(file_path).unwrap();
+pub fn read_file(file_path: &str) -> Result<String, Box<dyn std::error::Error>> {
+    let mut file = File::open(file_path)?;
     let mut buf = vec![];
-    file.read_to_end(&mut buf).unwrap();
-    String::from_utf8_lossy(&buf).to_string()
+    file.read_to_end(&mut buf)?;
+    Ok(String::from_utf8_lossy(&buf).to_string())
 }

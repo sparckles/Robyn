@@ -87,7 +87,7 @@ pub async fn execute_middleware_function<'a>(
             let res =
                 Python::with_gil(|py| -> PyResult<HashMap<String, HashMap<String, String>>> {
                     let output: Vec<HashMap<String, HashMap<String, String>>> =
-                        output.extract(py).unwrap();
+                        output.extract(py)?;
                     let responses = output[0].clone();
                     Ok(responses)
                 })?;
@@ -113,13 +113,12 @@ pub async fn execute_middleware_function<'a>(
                     2_u8..=u8::MAX => handler.call1((request,)),
                 };
 
-                let output: Vec<HashMap<String, HashMap<String, String>>> =
-                    output?.extract().unwrap();
+                let output: Vec<HashMap<String, HashMap<String, String>>> = output?.extract()?;
 
                 Ok(output[0].clone())
             });
 
-            Ok(output.unwrap())
+            Ok(output?)
         }
     }
 }
@@ -197,7 +196,7 @@ pub async fn execute_http_function(
 
                 if response_type == "static_file" {
                     let file_path = res.get("file_path").unwrap();
-                    let contents = read_file(file_path);
+                    let contents = read_file(file_path).unwrap();
                     res.insert("body".to_owned(), contents);
                 }
                 Ok(res)
@@ -235,14 +234,15 @@ pub async fn execute_http_function(
 pub async fn execute_event_handler(
     event_handler: Option<Arc<PyFunction>>,
     event_loop: Arc<Py<PyAny>>,
-) {
+) -> Result<(), Box<dyn std::error::Error>> {
     if let Some(handler) = event_handler {
         match &(*handler) {
             PyFunction::SyncFunction(function) => {
                 println!("Startup event handler");
-                Python::with_gil(|py| {
-                    function.call0(py).unwrap();
-                });
+                Python::with_gil(|py| -> Result<(), Box<dyn std::error::Error>> {
+                    function.call0(py)?;
+                    Ok(())
+                })?;
             }
             PyFunction::CoRoutine(function) => {
                 let future = Python::with_gil(|py| {
@@ -252,8 +252,9 @@ pub async fn execute_event_handler(
                     pyo3_asyncio::into_future_with_loop((*event_loop).as_ref(py), coroutine)
                         .unwrap()
                 });
-                future.await.unwrap();
+                future.await?;
             }
         }
     }
+    Ok(())
 }
