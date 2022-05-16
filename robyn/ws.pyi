@@ -5,5 +5,5 @@ class WS:
 
     def __init__(self, robyn_object: Robyn, endpoint: str) -> None:
         pass
-    def on(self, type: str):
+    def on(self, type: str) -> None:
         pass

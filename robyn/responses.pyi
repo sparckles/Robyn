@@ -9,11 +9,11 @@ def static_file(file_path: str) -> dict[str, Any]:
 
     pass
 
-def jsonify(input_dict: dict) -> str:
+def jsonify(input_dict: object) -> str:
     """
     This function serializes input dict to a json string
 
-    :param input_dict dict: response of the function
+    :param input_dict object: response of the function
     """
 
     pass

@@ -9,7 +9,7 @@ class SocketHeld:
         pass
 
 class Server:
-    def __init__(self):
+    def __init__(self) -> None:
         pass
     def add_directory(
         self,
@@ -17,9 +17,9 @@ class Server:
         directory_path: str,
         index_file: Optional[str],
         show_files_listing: bool,
-    ):
+    ) -> None:
         pass
-    def add_header(self, key: str, value: str):
+    def add_header(self, key: str, value: str) -> None:
         pass
     def add_route(
         self,
@@ -28,7 +28,7 @@ class Server:
         handler: Callable,
         is_async: bool,
         number_of_params: int,
-    ):
+    ) -> None:
         pass
     def add_middleware_route(
         self,
@@ -37,11 +37,11 @@ class Server:
         handler: Callable,
         is_async: bool,
         number_of_params: int,
-    ):
+    ) -> None:
         pass
-    def add_startup_handler(self, handler: Callable, is_async: bool):
+    def add_startup_handler(self, handler: Callable, is_async: bool) -> None:
         pass
-    def add_shutdown_handler(self, handler: Callable, is_async: bool):
+    def add_shutdown_handler(self, handler: Callable, is_async: bool) -> None:
         pass
     def add_web_socket_route(
         self,
@@ -49,7 +49,7 @@ class Server:
         connect_route: Tuple[Callable, bool, int],
         close_route: Tuple[Callable, bool, int],
         message_route: Tuple[Callable, bool, int],
-    ):
+    ) -> None:
         pass
-    def start(self, socket: SocketHeld, workers: int):
+    def start(self, socket: SocketHeld, workers: int) -> None:
         pass
