@@ -1,5 +1,41 @@
 # Changelog
 
+## [v0.16.3](https://github.com/sansyrox/robyn/tree/v0.16.3) (2022-05-18)
+
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.16.2...v0.16.3)
+
+**Closed issues:**
+
+- \[BUG\] Port not being free on app kill [\#183](https://github.com/sansyrox/robyn/issues/183)
+- Build failure [\#166](https://github.com/sansyrox/robyn/issues/166)
+
+**Merged pull requests:**
+
+- Resolves port open issue when app is killed \#183 [\#196](https://github.com/sansyrox/robyn/pull/196) ([anandtripathi5](https://github.com/anandtripathi5))
+
+## [v0.16.2](https://github.com/sansyrox/robyn/tree/v0.16.2) (2022-05-09)
+
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.16.1...v0.16.2)
+
+## [v0.16.1](https://github.com/sansyrox/robyn/tree/v0.16.1) (2022-05-09)
+
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.16.0...v0.16.1)
+
+**Closed issues:**
+
+- Add Python stubs [\#130](https://github.com/sansyrox/robyn/issues/130)
+
+**Merged pull requests:**
+
+- Setup types for Robyn [\#192](https://github.com/sansyrox/robyn/pull/192) ([sansyrox](https://github.com/sansyrox))
+- Fix build pipeline [\#190](https://github.com/sansyrox/robyn/pull/190) ([sansyrox](https://github.com/sansyrox))
+- fix typo :pencil2: in api docs. [\#189](https://github.com/sansyrox/robyn/pull/189) ([sombralibre](https://github.com/sombralibre))
+- Remove hashmap clones [\#187](https://github.com/sansyrox/robyn/pull/187) ([sansyrox](https://github.com/sansyrox))
+- Code clean up | Modularise rust code [\#185](https://github.com/sansyrox/robyn/pull/185) ([sansyrox](https://github.com/sansyrox))
+- Add experimental io-uring [\#184](https://github.com/sansyrox/robyn/pull/184) ([sansyrox](https://github.com/sansyrox))
+- Implement Response headers [\#179](https://github.com/sansyrox/robyn/pull/179) ([sansyrox](https://github.com/sansyrox))
+- Code cleanup [\#178](https://github.com/sansyrox/robyn/pull/178) ([sansyrox](https://github.com/sansyrox))
+
 ## [v0.16.0](https://github.com/sansyrox/robyn/tree/v0.16.0) (2022-04-29)
 
 [Full Changelog](https://github.com/sansyrox/robyn/compare/v0.15.1...v0.16.0)
@@ -9,16 +45,6 @@
 - \[Feature Request\] Add list of sponsors on the project website  [\#182](https://github.com/sansyrox/robyn/issues/182)
 - Optional build feature for io\_uring [\#177](https://github.com/sansyrox/robyn/issues/177)
 - Create Custom headers for the response. [\#174](https://github.com/sansyrox/robyn/issues/174)
-
-**Merged pull requests:**
-
-- Fix build pipeline [\#190](https://github.com/sansyrox/robyn/pull/190) ([sansyrox](https://github.com/sansyrox))
-- fix typo :pencil2: in api docs. [\#189](https://github.com/sansyrox/robyn/pull/189) ([sombralibre](https://github.com/sombralibre))
-- Remove hashmap clones [\#187](https://github.com/sansyrox/robyn/pull/187) ([sansyrox](https://github.com/sansyrox))
-- Code clean up | Modularise rust code [\#185](https://github.com/sansyrox/robyn/pull/185) ([sansyrox](https://github.com/sansyrox))
-- Add experimental io-uring [\#184](https://github.com/sansyrox/robyn/pull/184) ([sansyrox](https://github.com/sansyrox))
-- Implement Response headers [\#179](https://github.com/sansyrox/robyn/pull/179) ([sansyrox](https://github.com/sansyrox))
-- Code cleanup [\#178](https://github.com/sansyrox/robyn/pull/178) ([sansyrox](https://github.com/sansyrox))
 
 ## [v0.15.1](https://github.com/sansyrox/robyn/tree/v0.15.1) (2022-03-24)
 
