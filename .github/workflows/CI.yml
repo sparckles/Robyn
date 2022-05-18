@@ -67,12 +67,12 @@ jobs:
         uses: messense/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: -i python --release --out dist --no-sdist
+          args: -i python3 --release --out dist --no-sdist
       - name: Install built wheel
         shell: bash
         run: |
-          pip install --force-reinstall dist/robyn*.whl
-          cd ~ && python -c 'import robyn'
+          python3 -m pip install --force-reinstall dist/robyn*.whl
+          cd ~ && python3 -c 'import robyn'
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
