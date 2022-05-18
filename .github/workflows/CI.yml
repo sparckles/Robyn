@@ -64,15 +64,16 @@ jobs:
           profile: minimal
           default: true
       - name: Build wheels
-        uses: messense/maturin-action@v1
+        uses: https://github.com/messense/maturin-action/tree/v1v1
         with:
+          maturin-version: v0.12.17-beta.1
           target: ${{ matrix.target }}
-          args: -i python3 --release --out dist --no-sdist
+          args: -i python --release --out dist --no-sdist
       - name: Install built wheel
         shell: bash
         run: |
-          python3 -m pip install --force-reinstall dist/robyn*.whl
-          cd ~ && python3 -c 'import robyn'
+          python -m pip install --force-reinstall dist/robyn*.whl
+          cd ~ && python -c 'import robyn'
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
