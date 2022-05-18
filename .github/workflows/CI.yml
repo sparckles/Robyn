@@ -64,7 +64,7 @@ jobs:
           profile: minimal
           default: true
       - name: Build wheels
-        uses: messense/maturin-action@v1v1
+        uses: https://github.com/messense/maturin-action/tree/v1v1
         with:
           maturin-version: v0.12.17-beta.1
           target: ${{ matrix.target }}
