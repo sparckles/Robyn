@@ -66,11 +66,15 @@ If you're feeling curious. You can take a look at a more detailed architecture [
 
 ## ⚙️ To Develop Locally
 
+1. Install the development dependencies: `pip install -r dev-requirements.txt`
+
+1. Install the pre-commit git hooks: `pre-commit install`
+
 1. Add more routes in the `integration_tests/base_routes.py` file(if you like).
 
-2. Run `maturin develop` or `maturin develop --cargo-extra-args="--features=io-uring"` (if you want to run the experimental version).
+1. Run `maturin develop` or `maturin develop --cargo-extra-args="--features=io-uring"` (if you want to run the experimental version).
 
-3. Run `python3 integration_tests/base_routes.py`
+1. Run `python3 integration_tests/base_routes.py`
 
 ## 🏃 To Run
 
