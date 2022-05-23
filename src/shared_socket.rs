@@ -1,5 +1,6 @@
 use pyo3::prelude::*;
 
+use log::debug;
 use socket2::{Domain, Protocol, Socket, Type};
 use std::net::SocketAddr;
 
@@ -16,7 +17,7 @@ impl SocketHeld {
     pub fn new(address: String, port: i32) -> PyResult<SocketHeld> {
         let socket = Socket::new(Domain::IPV4, Type::STREAM, Some(Protocol::TCP))?;
         let address: SocketAddr = format!("{}:{}", address, port).parse()?;
-        println!("{}", address);
+        debug!("{}", address);
         socket.set_reuse_port(true)?;
         socket.set_reuse_address(true)?;
         socket.bind(&address.into())?;
@@ -30,7 +31,7 @@ impl SocketHeld {
     pub fn new(address: String, port: i32) -> PyResult<SocketHeld> {
         let socket = Socket::new(Domain::IPV4, Type::STREAM, Some(Protocol::TCP))?;
         let address: SocketAddr = format!("{}:{}", address, port).parse()?;
-        println!("{}", address);
+        debug!("{}", address);
         // reuse port is not available on windows
         socket.set_reuse_address(true)?;
         socket.bind(&address.into())?;

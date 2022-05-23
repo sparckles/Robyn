@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::RwLock;
 // pyo3 modules
 use crate::types::PyFunction;
+use log::debug;
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
 
@@ -47,7 +48,7 @@ impl WebSocketRouter {
                     PyFunction::SyncFunction(handler)
                 };
 
-                println!("socket type is {:?} {:?}", table, route);
+                debug!("socket type is {:?} {:?}", table, route);
 
                 table
                     .write()

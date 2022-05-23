@@ -9,6 +9,7 @@ use std::sync::Arc;
 
 use actix_web::{http::Method, web, HttpRequest};
 use anyhow::{bail, Result};
+use log::debug;
 // pyO3 module
 use crate::types::{Headers, PyFunction};
 use futures_util::stream::StreamExt;
@@ -187,7 +188,7 @@ pub async fn execute_http_function(
 
             let output = output.await?;
             let res = Python::with_gil(|py| -> PyResult<HashMap<String, String>> {
-                println!("This is the result of the code {:?}", output);
+                debug!("This is the result of the code {:?}", output);
 
                 let mut res: HashMap<String, String> =
                     output.into_ref(py).downcast::<PyDict>()?.extract()?;
@@ -238,7 +239,7 @@ pub async fn execute_event_handler(
     if let Some(handler) = event_handler {
         match &(*handler) {
             PyFunction::SyncFunction(function) => {
-                println!("Startup event handler");
+                debug!("Startup event handler");
                 Python::with_gil(|py| -> Result<(), Box<dyn std::error::Error>> {
                     function.call0(py)?;
                     Ok(())
@@ -246,7 +247,7 @@ pub async fn execute_event_handler(
             }
             PyFunction::CoRoutine(function) => {
                 let future = Python::with_gil(|py| {
-                    println!("Startup event handler async");
+                    debug!("Startup event handler async");
 
                     let coroutine = function.as_ref(py).call0().unwrap();
                     pyo3_asyncio::into_future_with_loop((*event_loop).as_ref(py), coroutine)

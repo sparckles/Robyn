@@ -306,6 +306,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "08f9b8508dccb7687a1d6c4ce66b2b0ecef467c94667de27d8d7fe1f8d2a9cdc"
 
 [[package]]
+name = "arc-swap"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c5d78ce20460b82d3fa150275ed9d55e21064fc7951177baacf86a145c4a4b1f"
+
+[[package]]
 name = "askama_escape"
 version = "0.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1123,6 +1129,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "pyo3-log"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6087e5025c5d7d6ed6294c68f83d9f7965c2b3fd3a726ecc1c22dbe4af7390f4"
+dependencies = [
+ "arc-swap",
+ "log",
+ "pyo3",
+]
+
+[[package]]
 name = "pyo3-macros"
 version = "0.14.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1223,9 +1240,11 @@ dependencies = [
  "dashmap",
  "futures",
  "futures-util",
+ "log",
  "matchit",
  "pyo3",
  "pyo3-asyncio",
+ "pyo3-log",
  "serde",
  "serde_json",
  "socket2",

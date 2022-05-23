@@ -5,6 +5,7 @@ use actix::{Actor, AsyncContext, StreamHandler};
 use actix_web::{web, Error, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
 use actix_web_actors::ws::WebsocketContext;
+use log::debug;
 use pyo3::prelude::*;
 use uuid::Uuid;
 
@@ -85,7 +86,7 @@ impl Actor for MyWs {
             self,
         );
 
-        println!("Actor is alive");
+        debug!("Actor is alive");
     }
 
     fn stopped(&mut self, ctx: &mut WebsocketContext<Self>) {
@@ -99,7 +100,7 @@ impl Actor for MyWs {
             self,
         );
 
-        println!("Actor is dead");
+        debug!("Actor is dead");
     }
 }
 
@@ -112,10 +113,10 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
     fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
         match msg {
             Ok(ws::Message::Ping(msg)) => {
-                println!("Ping message {:?}", msg);
+                debug!("Ping message {:?}", msg);
                 let handler_function = &self.router.get("connect").unwrap().0;
                 let number_of_params = &self.router.get("connect").unwrap().1;
-                println!("{:?}", handler_function);
+                debug!("{:?}", handler_function);
                 execute_ws_function(
                     handler_function,
                     *number_of_params,
@@ -127,7 +128,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
             }
 
             Ok(ws::Message::Pong(msg)) => {
-                println!("Pong message {:?}", msg);
+                debug!("Pong message {:?}", msg);
                 ctx.pong(&msg)
             }
 
@@ -146,7 +147,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
 
             Ok(ws::Message::Binary(bin)) => ctx.binary(bin),
             Ok(ws::Message::Close(_close_reason)) => {
-                println!("Socket was closed");
+                debug!("Socket was closed");
                 let handler_function = &self.router.get("close").expect("No close function").0;
                 let number_of_params = &self.router.get("close").unwrap().1;
                 execute_ws_function(

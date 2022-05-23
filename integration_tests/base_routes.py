@@ -2,10 +2,6 @@ from robyn import Robyn, static_file, jsonify, WS
 import asyncio
 import os
 import pathlib
-import logging
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 app = Robyn(__file__)
 websocket = WS(app, "/web_socket")
@@ -156,12 +152,12 @@ def blocker():
 
 
 async def startup_handler():
-    logger.log(logging.INFO, "Starting up")
+    print("Starting up")
 
 
 @app.shutdown_handler
 def shutdown_handler():
-    logger.log(logging.INFO, "Shutting down")
+    print("Shutting down")
 
 
 @app.get("/redirect")
@@ -178,10 +174,9 @@ if __name__ == "__main__":
     ROBYN_URL = os.getenv("ROBYN_URL", "0.0.0.0")
     app.add_header("server", "robyn")
     current_file_path = pathlib.Path(__file__).parent.resolve()
-    os.path.join(current_file_path, "build")
     app.add_directory(
         route="/test_dir",
-        directory_path=os.path.join(current_file_path, "build/"),
+        directory_path=os.path.join(current_file_path, "build"),
         index_file="index.html",
     )
     app.startup_handler(startup_handler)

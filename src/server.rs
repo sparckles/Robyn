@@ -24,6 +24,7 @@ use actix_web::*;
 use dashmap::DashMap;
 
 // pyO3 module
+use log::debug;
 use pyo3::prelude::*;
 
 static STARTED: AtomicBool = AtomicBool::new(false);
@@ -68,11 +69,13 @@ impl Server {
         socket: &PyCell<SocketHeld>,
         workers: usize,
     ) -> PyResult<()> {
+        pyo3_log::init();
+
         if STARTED
             .compare_exchange(false, true, SeqCst, Relaxed)
             .is_err()
         {
-            println!("Already running...");
+            debug!("Robyn is already running...");
             return Ok(());
         }
 
@@ -103,7 +106,7 @@ impl Server {
             //init_current_thread_once();
             let copied_event_loop = event_loop_hdl.clone();
             actix_web::rt::System::new().block_on(async move {
-                println!("The number of workers are {}", workers.clone());
+                debug!("The number of workers are {}", workers.clone());
                 execute_event_handler(startup_handler, copied_event_loop.clone())
                     .await
                     .unwrap();
@@ -192,7 +195,7 @@ impl Server {
 
         let event_loop = (*event_loop).call_method0("run_forever");
         if event_loop.is_err() {
-            println!("Ctrl c handler");
+            debug!("Ctrl c handler");
             Python::with_gil(|py| {
                 let event_loop_hdl = event_loop_cleanup.clone();
                 pyo3_asyncio::tokio::run(py, async move {
@@ -244,7 +247,7 @@ impl Server {
         is_async: bool,
         number_of_params: u8,
     ) {
-        println!("Route added for {} {} ", route_type, route);
+        debug!("Route added for {} {} ", route_type, route);
         self.router
             .add_route(route_type, route, handler, is_async, number_of_params)
             .unwrap();
@@ -260,7 +263,7 @@ impl Server {
         is_async: bool,
         number_of_params: u8,
     ) {
-        println!("MiddleWare Route added for {} {} ", route_type, route);
+        debug!("MiddleWare Route added for {} {} ", route_type, route);
         self.middleware_router
             .add_route(route_type, route, handler, is_async, number_of_params)
             .unwrap();
@@ -282,23 +285,23 @@ impl Server {
 
     /// Add a new startup handler
     pub fn add_startup_handler(&mut self, handler: Py<PyAny>, is_async: bool) {
-        println!("Adding startup handler");
+        debug!("Adding startup handler");
         match is_async {
             true => self.startup_handler = Some(Arc::new(PyFunction::CoRoutine(handler))),
             false => self.startup_handler = Some(Arc::new(PyFunction::SyncFunction(handler))),
         };
-        println!("{:?}", self.startup_handler);
+        debug!("{:?}", self.startup_handler);
     }
 
     /// Add a new shutdown handler
     pub fn add_shutdown_handler(&mut self, handler: Py<PyAny>, is_async: bool) {
-        println!("Adding shutdown handler");
+        debug!("Adding shutdown handler");
         match is_async {
             true => self.shutdown_handler = Some(Arc::new(PyFunction::CoRoutine(handler))),
             false => self.shutdown_handler = Some(Arc::new(PyFunction::SyncFunction(handler))),
         };
-        println!("{:?}", self.startup_handler);
-        println!("{:?}", self.shutdown_handler);
+        debug!("{:?}", self.startup_handler);
+        debug!("{:?}", self.shutdown_handler);
     }
 }
 
@@ -341,13 +344,13 @@ async fn index(
                 queries.clone(),
             )
             .await;
-            println!("Middleware contents {:?}", x);
+            debug!("Middleware contents {:?}", x);
             x
         }
         None => HashMap::new(),
     };
 
-    println!("These are the tuple params {:?}", tuple_params);
+    debug!("These are the tuple params {:?}", tuple_params);
 
     let mut headers_dup = HashMap::new();
 
@@ -387,7 +390,7 @@ async fn index(
                 queries.clone(),
             )
             .await;
-            println!("{:?}", x);
+            debug!("{:?}", x);
         }
         None => {}
     };

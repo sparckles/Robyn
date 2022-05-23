@@ -4,8 +4,9 @@ from .events import Events
 import sys
 import multiprocessing as mp
 import asyncio
+import logging
 
-# import platform
+logger = logging.getLogger(__name__)
 
 
 mp.allow_connection_pickling()
@@ -67,7 +68,6 @@ def spawn_process(
 
     for endpoint in web_sockets:
         web_socket = web_sockets[endpoint]
-        print(web_socket.methods)
         server.add_web_socket_route(
             endpoint,
             web_socket.methods["connect"],
