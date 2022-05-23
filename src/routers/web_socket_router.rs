@@ -21,9 +21,7 @@ impl WebSocketRouter {
     }
 
     #[inline]
-    pub fn get_web_socket_map(
-        &self,
-    ) -> &WebSocketRoutes {
+    pub fn get_web_socket_map(&self) -> &WebSocketRoutes {
         &self.web_socket_routes
     }
 

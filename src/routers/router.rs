@@ -8,6 +8,8 @@ use pyo3::types::PyAny;
 use actix_web::http::Method;
 use matchit::Node;
 
+use anyhow::{bail, Error, Result};
+
 /// Contains the thread safe hashmaps of different routes
 
 pub struct Router {
@@ -76,10 +78,10 @@ impl Router {
         handler: Py<PyAny>,
         is_async: bool,
         number_of_params: u8,
-    ) {
+    ) -> Result<(), Error> {
         let table = match self.get_relevant_map_str(route_type) {
             Some(table) => table,
-            None => return,
+            None => bail!("No relevant map"),
         };
 
         let function = if is_async {
@@ -88,11 +90,13 @@ impl Router {
             PyFunction::SyncFunction(handler)
         };
 
+        // try removing unwrap here
         table
             .write()
             .unwrap()
-            .insert(route.to_string(), (function, number_of_params))
-            .unwrap();
+            .insert(route.to_string(), (function, number_of_params))?;
+
+        Ok(())
     }
 
     // Checks if the functions is an async function
