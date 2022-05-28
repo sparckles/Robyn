@@ -1,11 +1,6 @@
-# default imports
 import subprocess
 
-# third party imports
 from watchdog.events import FileSystemEventHandler
-import logging
-
-logger = logging.getLogger(__name__)
 
 
 class EventHandler(FileSystemEventHandler):

@@ -1,12 +1,10 @@
-from .robyn import Server
-from .events import Events
-
-import sys
-import multiprocessing as mp
 import asyncio
 import logging
+import multiprocessing as mp
+import sys
 
-logger = logging.getLogger(__name__)
+from .events import Events
+from .robyn import Server
 
 
 mp.allow_connection_pickling()
