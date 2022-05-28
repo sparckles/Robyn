@@ -28,14 +28,28 @@ class ArgumentParser(argparse.ArgumentParser):
             help="Development mode. It restarts the server based on file changes.",
         )
 
+        self.parser.add_argument(
+            "--log-level",
+            dest="log_level",
+            default="INFO",
+            help="Set the log level name",
+        )
+
         self.args = self.parser.parse_args()
 
+    @property
     def num_processes(self):
         return self.args.processes
 
+    @property
     def workers(self):
         return self.args.workers
 
+    @property
+    def log_level(self):
+        return self.args.log_level
+
+    @property
     def is_dev(self):
         _is_dev = self.args.dev
         if _is_dev and (self.num_processes() != 1 or self.workers() != 1):

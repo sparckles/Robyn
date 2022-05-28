@@ -89,7 +89,8 @@ optional arguments:
   -h, --help            show this help message and exit
   --processes PROCESSES : allows you to choose the number of parallel processes
   --workers WORKERS : allows you to choose the number of workers
-  --dev DEV : this flag gives the option to enable hot reloading or not
+  --dev DEV : this flag gives the option to enable hot reloading or not and also sets the default log level to debug
+  --log-level LEVEL : this flag allows you to set the log level
 ```
 
 

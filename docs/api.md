@@ -183,13 +183,13 @@ You can add startup and shutdown events in robyn. These events will execute befo
 ```python3
 
 async def startup_handler():
-    logger.log(logging.INFO, "Starting up")
+    print("Starting up")
 
 app.startup_handler(startup_handler)
 
 @app.shutdown_handler
 def shutdown_handler():
-    logger.log(logging.INFO, "Shutting down")
+    print("Shutting down")
 ```
 
 ## WebSockets

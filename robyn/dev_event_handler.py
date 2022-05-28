@@ -1,11 +1,11 @@
 # default imports
 import subprocess
 
-# custom imports
-from .log_colors import Colors
-
 # third party imports
 from watchdog.events import FileSystemEventHandler
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class EventHandler(FileSystemEventHandler):
@@ -16,8 +16,6 @@ class EventHandler(FileSystemEventHandler):
     def start_server_first_time(self):
         if self.processes:
             raise Exception("Something wrong with the server")
-
-        print(f"{Colors.OKGREEN}Starting the server in dev mode{Colors.ENDC}")
         self.processes.append(subprocess.Popen(["python3", self.file_name], start_new_session=False))
 
     def on_any_event(self, event):
@@ -30,5 +28,4 @@ class EventHandler(FileSystemEventHandler):
         if len(self.processes) > 0:
             for process in self.processes:
                 process.terminate()
-        print(f"{Colors.OKGREEN}Starting the server in dev mode{Colors.ENDC}")
         self.processes.append(subprocess.Popen(["python3", self.file_name], start_new_session=False))

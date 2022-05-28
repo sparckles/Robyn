@@ -1,5 +1,6 @@
 use crate::executors::{execute_http_function, execute_middleware_function};
 
+use log::debug;
 use std::rc::Rc;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -49,7 +50,7 @@ pub async fn handle_http_request(
     {
         Ok(res) => res,
         Err(err) => {
-            println!("Error: {:?}", err);
+            debug!("Error: {:?}", err);
             let mut response = HttpResponse::InternalServerError();
             apply_headers(&mut response, headers.clone());
             return response.finish();
@@ -68,7 +69,7 @@ pub async fn handle_http_request(
         None => HashMap::new(),
     };
 
-    println!("These are the headers from serde {:?}", headers);
+    debug!("These are the headers from serde {:?}", headers);
 
     let mut response = HttpResponse::build(status_code);
     apply_headers(&mut response, headers.clone());
@@ -78,7 +79,7 @@ pub async fn handle_http_request(
         response.finish()
     };
 
-    println!(
+    debug!(
         "The status code is {} and the headers are {:?}",
         final_response.status(),
         final_response.headers()
@@ -111,6 +112,6 @@ pub async fn handle_http_middleware_request(
         Err(_err) => HashMap::new(),
     };
 
-    println!("These are the middleware response {:?}", contents);
+    debug!("These are the middleware response {:?}", contents);
     contents
 }

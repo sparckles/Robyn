@@ -4,6 +4,7 @@ import asyncio
 from inspect import signature
 import multiprocessing as mp
 from robyn.events import Events
+import logging
 
 # custom imports and exports
 from .robyn import SocketHeld
@@ -19,7 +20,10 @@ from .router import Router, MiddlewareRouter, WebSocketRouter
 from multiprocess import Process
 from watchdog.observers import Observer
 
+
 mp.allow_connection_pickling()
+
+logger = logging.getLogger(__name__)
 
 
 class Robyn:
@@ -30,15 +34,18 @@ class Robyn:
         self.file_path = file_object
         self.directory_path = directory_path
         self.parser = ArgumentParser()
-        self.dev = self.parser.is_dev()
-        self.processes = self.parser.num_processes()
-        self.workers = self.parser.workers()
+        self.dev = self.parser.is_dev
+        self.processes = self.parser.num_processes
+        self.workers = self.parser.workers
+        self.log_level = self.parser.log_level
         self.router = Router()
         self.middleware_router = MiddlewareRouter()
         self.web_socket_router = WebSocketRouter()
         self.headers = []
         self.directories = []
         self.event_handlers = {}
+
+        self._config_logger()
 
     def _add_route(self, route_type, endpoint, handler):
         """
@@ -83,7 +90,7 @@ class Robyn:
         self.web_socket_router.add_route(endpoint, ws)
 
     def _add_event_handler(self, event_type: str, handler):
-        print(f"Add event {event_type} handler")
+        logger.debug(f"Add event {event_type} handler")
         if event_type not in {Events.STARTUP, Events.SHUTDOWN}:
             return
 
@@ -125,18 +132,19 @@ class Robyn:
                 p.start()
                 processes.append(p)
 
-            print("Press Ctrl + C to stop \n")
+            logger.info(f"{Colors.HEADER}Starting up \n{Colors.ENDC}")
+            logger.info(f"{Colors.OKGREEN}Press Ctrl + C to stop \n{Colors.ENDC}")
             try:
                 for process in processes:
                     process.join()
             except KeyboardInterrupt:
-                print(f"\n{Colors.BOLD}{Colors.OKGREEN} Terminating server!! {Colors.ENDC}")
+                logger.info(f"{Colors.BOLD}{Colors.OKGREEN} Terminating server!! {Colors.ENDC}")
                 for process in processes:
                     process.kill()
         else:
             event_handler = EventHandler(self.file_path)
             event_handler.start_server_first_time()
-            print(
+            logger.info(
                 f"{Colors.OKBLUE}Dev server initialised with the directory_path : {self.directory_path}{Colors.ENDC}"
             )
             observer = Observer()
@@ -255,3 +263,17 @@ class Robyn:
             self._add_route("TRACE", endpoint, handler)
 
         return inner
+
+    def _config_logger(self):
+        """
+        This is the method to configure the logger either on the dev mode or the env variable
+        """
+
+        log_level = "WARN"
+
+        if self.dev:
+            log_level = "DEBUG"
+
+        log_level = self.log_level if self.log_level else log_level
+        logging.basicConfig(level=log_level)
+

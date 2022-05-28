@@ -19,7 +19,6 @@ class Router(BaseRouter):
         response = {}
         if type(res) == dict:
             if "status_code" not in res:
-                print("Getting here")
                 res["status_code"] = "200"
                 response = res
             else:
