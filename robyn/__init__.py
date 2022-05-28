@@ -1,25 +1,20 @@
-# default imports
-import os
 import asyncio
-from inspect import signature
-import multiprocessing as mp
-from robyn.events import Events
 import logging
+import multiprocessing as mp
+import os
 
-# custom imports and exports
-from .robyn import SocketHeld
-from .argument_parser import ArgumentParser
-from .responses import static_file, jsonify
-from .dev_event_handler import EventHandler
-from .processpool import spawn_process
-from .log_colors import Colors
-from .ws import WS
-from .router import Router, MiddlewareRouter, WebSocketRouter
-
-# 3rd party imports and exports
 from multiprocess import Process
 from watchdog.observers import Observer
+from robyn.events import Events
+from .argument_parser import ArgumentParser
+from .dev_event_handler import EventHandler
+from .log_colors import Colors
+from .processpool import spawn_process
+from .responses import jsonify, static_file
 
+from .robyn import SocketHeld
+from .router import MiddlewareRouter, Router, WebSocketRouter
+from .ws import WS
 
 mp.allow_connection_pickling()
 

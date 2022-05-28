@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from inspect import signature
 from asyncio import iscoroutinefunction
+from inspect import signature
 
 
 class BaseRouter(ABC):
