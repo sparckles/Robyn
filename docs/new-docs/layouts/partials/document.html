@@ -1,0 +1,8 @@
+<div class="grid-auto">
+  {{- partial "sidebar" . }}
+  <main class="content">
+    <h1>{{ .Title }}</h1>
+    {{- .Content }}
+    {{ partial "pager" . }}
+  </main>
+</div>

@@ -1,0 +1,43 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+{{- hugo.Generator }}
+{{- $iconsPath := "favicons/" }}
+<link rel="apple-touch-icon" sizes="180x180" href='{{ absURL (printf "%sapple-touch-icon.png" $iconsPath) }}'>
+<link rel="icon" type="image/png" sizes="32x32" href='{{ absURL (printf "%sfavicon-32x32.png" $iconsPath) }}'>
+<link rel="icon" type="image/png" sizes="16x16" href='{{ absURL (printf "%sfavicon-16x16.png" $iconsPath) }}'>
+<link rel="manifest" href='{{ absURL (printf "%ssite.webmanifest" $iconsPath) }}'>
+<link rel="mask-icon" href='{{ absURL (printf "%ssafari-pinned-tab.svg" $iconsPath) }}'  color="#004750">
+<link rel="shortcut icon" href='{{ absURL (printf "%sfavicon.ico" $iconsPath) }}'>
+<meta name="msapplication-config" content='{{ absURL (printf "%sbrowserconfig.xml" $iconsPath) }}'>
+{{- $t := .Title }}
+{{- $s := site.Title }}
+{{- if in (lower $s) (lower $t) }}
+  {{- $t = false }}
+{{- end }}
+<title>{{ if and $t (ne (trim (lower $s) "") (trim (lower $t) "")) }}{{ $t }} | {{ end }}{{ $s }}</title>
+
+{{- partial "opengraph" . }}
+
+{{- $options := (dict "targetPath" "css/styles.css" "outputStyle" "compressed" "enableSourceMap" "true") -}}
+{{- $styles := resources.Get "sass/main.sass" | resources.ExecuteAsTemplate "main.sass" . | resources.ToCSS $options | resources.Fingerprint "sha512" }}
+<link rel="stylesheet" href="{{ $styles.Permalink }}" integrity="{{ $styles.Data.Integrity }}">
+
+{{- $sp := site.Params }}
+{{- with $sp.customCSS }}
+  {{- range . -}}
+  <link rel="stylesheet" href="{{ . }}">
+  {{- end }}
+{{- end }}
+
+{{ with $sp.metaThemeColor }}
+  <meta name="theme-color" content="{{.}}">
+{{ end }}
+
+{{ if .Description }}
+  <meta name="description" content="{{ .Description }}">
+{{ else if .IsPage }}
+  <meta name="description" content="{{ .Summary | plainify }}">
+{{ else if $sp.Description }}
+  <meta name="descripion" content="{{ $sp.Description }}">
+{{ end }}
+{{- partialCached "hooks/head" . }}

@@ -1,0 +1,7 @@
+{{- define "main" }}
+<div class="content">
+	<h1>{{ .Title }}</h1>
+	{{ with .Params.description }}<div>{{ . | markdownify }}</div>{{ end }}
+  {{- .Content }}
+</div>
+{{- end }}

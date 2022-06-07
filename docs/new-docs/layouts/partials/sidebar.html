@@ -1,0 +1,29 @@
+<aside class="aside menu">
+  <div>
+    <label class="aside_toggle toggle" title='{{ T "docs_menu" }}' role="button">{{ T "docs_menu" }} {{ partial "sprite" (dict "icon" "harmburger") }}</label>
+  </div>
+  {{- template "tree" (dict "page" . "section" .FirstSection)  }}
+  {{- define "tree" }}
+  {{- $section := .section }}
+  {{- $page := .page }}
+  {{- $permalink := $page.RelPermalink }}
+  <section class="section aside_inner">
+    <h2 class="section_title{{ if eq $section.RelPermalink $permalink }} active{{ end }}"><a  href="{{ $section.Permalink }}" class="group">{{ $section.Title }}</a></h2>
+      {{- $pages := $section.Pages }}
+      {{- with $pages }}
+      <section class="" id="docs-{{ anchorize $section.Title }}">
+        {{- range . }}
+        {{- if .IsPage }}
+        <h3 class="section_link{{ if eq .RelPermalink $permalink }} active{{ end }}"><a id="docs-{{ anchorize .Title }}" href="{{ .Permalink }}">{{ .Title }}</a></h3>
+        {{- if ne (print .TableOfContents) ""}}
+          {{- .TableOfContents }}
+        {{- end }}
+        {{- else }}
+        {{- template "tree" (dict "page" $page "section" .) }}
+        {{- end }}
+        {{- end }}
+      </section>
+      {{- end }}
+  </section>
+  {{- end }}
+</aside>

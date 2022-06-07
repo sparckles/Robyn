@@ -1,0 +1,339 @@
+.section
+  &_title
+    font-size: 1.25rem
+  &_link
+    font-size: 1rem
+    font-weight: 400
+
+.sidebar
+  &-link
+    display: grid
+    padding: 0.2rem 0
+
+.toc
+  border-left: 2px solid var(--theme)
+  padding: 0 1rem
+  height: 0
+  overflow: hidden
+  filter: opacity(0.87)
+  &_item
+    font-size: 0.9rem
+  &_active
+    height: initial
+.search
+  flex: 1
+  display: flex
+  justify-content: flex-end
+  position: relative
+  &_field
+    padding: 0.5rem 1.5rem 0.5rem 2.5rem
+    border-radius: 1.5rem
+    width: 13.5rem
+    outline: none
+    border: 1px solid var(--search-border-color)
+    background: transparent
+    color: var(--text)
+    box-shadow: 0 1rem 4rem rgba(0,0,0,0.17)
+    font-size: 1rem
+    &:hover, &:focus
+      background: var(--search-bg)
+  &_label
+    width: 1rem
+    height: 1rem
+    position: absolute
+    left: 0.33rem
+    top: 0.25rem
+    opacity: 0.33
+    svg
+      width: 100%
+      height: 100%
+      fill: var(--text)
+  &_result
+    padding: 0.5rem 1rem
+    &:not(.passive):hover
+      background-color: var(--theme)
+      color: var(--light)
+    &.passive
+      display: grid
+    &s
+      width: 13.5rem
+      background-color: var(--overlay)
+      border-radius: 0 0 0.25rem 0.25rem
+      box-shadow: 0 1rem 4rem rgba(0,0,0,0.17)
+      position: absolute
+      top: 125%
+      display: grid
+      overflow: hidden
+      z-index: 5
+      &:empty
+        display: none
+  &_title
+    padding: 0.5rem 1rem 0.5rem 1rem
+    background: var(--theme)
+    color: var(--light)
+    font-size: 0.9rem
+    opacity: 0.87
+    text-transform: uppercase
+
+.button
+  background-color: var(--theme)
+  color: var(--light)
+  border-radius: 0.25rem
+  display: inline-block
+  padding: 0.75rem 1.25rem
+  text-align: center
+  &:hover
+    opacity: 0.84
+  & + &
+    background-color: var(--haze)
+    color: var(--dark)
+  &_grid
+    display: grid
+    max-width: 15rem
+    grid-gap: 1rem
+    grid-template-columns: repeat( auto-fit, minmax(12rem, 1fr) )
+    @media  screen and (min-width: 557px)
+      max-width: 25rem
+
+.video
+  overflow: hidden
+  padding-bottom: 56.25%
+  position: relative
+  height: 0
+  margin: 1.5rem 0
+  border-radius: 0.6rem
+  background-color: var(--bg)
+  box-shadow: 0 1rem 2rem rgba(0,0,0,0.17)
+  iframe
+    left: 0
+    top: 0
+    height: 100%
+    width: 100%
+    border: none
+    position: absolute
+    transform: scale(1.02)
+.icon
+  width: 1.1rem
+  height: 1.1rem
+  display: inline-flex
+  justify-content: center
+  align-items: center
+  margin: 0 0.5rem
+
+.link
+  opacity: 0
+  position: relative
+  &_owner:hover &
+    opacity: 1
+  &_yank
+    opacity: 1
+    &ed
+      position: absolute
+      right: -2.2rem
+      top: -2rem
+      background-color: var(--theme)
+      color: var(--light)
+      width: 7rem
+      padding: 0.25rem 0.5rem
+      font-size: 0.9rem
+      border-radius: 1rem
+      text-align: center
+      &::after
+        position: absolute
+        top: 1rem
+        content: ""
+        border-color: var(--theme) transparent
+        border-style: solid
+        border-width: 1rem 1rem 0 1rem
+        height: 0
+        width: 0
+        transform-origin: 50% 50%
+        transform: rotate(145deg)
+        right: 0.45rem
+
+.gallery
+  width: 100%
+  column-count: 3
+  column-gap: 1rem
+  @media screen and (max-width: 667px)
+    column-count: 2
+  &_item
+    background-color: transparent
+    margin: 0 0 1rem
+  &_image
+    margin: 0 auto
+
+.pager
+  display: flex
+  justify-content: space-between
+  align-items: center
+  padding-top: 2rem
+  margin: 2rem 0
+  max-width: 100vw
+  overflow: hidden
+  svg
+    filter: opacity(0.75)
+    width: 1.25rem
+    height: 1rem
+    transform-origin: 50% 50%
+
+  &_lean
+    justify-content: flex-end
+
+  &_label
+    max-width: 100%
+    overflow: hidden
+    white-space: nowrap
+    text-overflow: ellipsis
+
+  &_link
+    padding: 0.5rem 1rem
+    border-radius: 0.25rem
+    width: 12.5rem
+    max-width: 40vw
+    position: relative
+    display: flex
+    align-items: center
+    text-align: center
+    justify-content: center
+    &::before, &::after
+      background-image: var(--nextIcon)
+      height: 0.8rem
+      width: 0.8rem
+      background-size: 100%
+      background-repeat: no-repeat
+      transform-origin: 50% 50%
+
+  &_item
+    display: flex
+    flex-direction: column
+    flex: 1
+    max-width: 48%
+    // filter: opacity(0.87)
+    &.prev
+      align-items: flex-start
+      // margin-right: 0.5rem
+
+    &.next
+      align-items: flex-end
+      // margin-left: 0.5rem
+      &::after
+        content: ""
+
+  &_item.prev &_link
+    &::before
+      content: ""
+      transform: rotate(180deg)
+      margin-right: 0.67rem
+
+  &_item.next &_link
+    &::after
+      content: ""
+      margin-left: 0.67rem
+
+  &_item.next &_link
+    grid-template-columns: 1fr 1.5rem
+
+  &_meta
+    margin: 0.5rem 0
+
+.color
+  &_mode
+    height: 1rem
+    margin-left: 1.5rem
+
+  &_choice
+    outline: none
+    border: none
+    -webkit-appearance: none
+    height: 1rem
+    position: relative
+    width: 1rem
+    border-radius: 1rem
+    cursor: pointer
+    z-index: 2
+    right: 0
+    filter: contrast(0.8)
+
+    &::after
+      content: ""
+      top: 0.1rem
+      bottom: 0
+      left: 0
+      position: absolute
+      height: 0.8rem
+      background: var(--accent)
+      width: 0.8rem
+      border-radius: 0.25rem
+      z-index: 3
+      transform: scale(1.67)
+      transform-origin: 50% 50%
+      transition: transform 0.5s cubic-bezier(.19,1,.22,1)
+      will-change: transform
+      background-image: var(--sunIcon)
+      background-size: 60%
+      background-repeat: no-repeat
+      background-position: center
+
+  &_icon
+    height: 1rem
+    width: 1rem
+    margin: 0
+    z-index: 4
+    position: absolute
+    transform: translateY(-50%)
+    transition: transform 0.5s cubic-bezier(.19,1,.22,1)
+    right: 3.5rem
+
+.tip
+  padding: 1.5rem 1rem 1.5rem 1.5rem
+  margin: 1.5rem 0
+  border-left: 0.2rem solid var(--theme)
+  position: relative
+  background: var(--accent)
+  blockquote
+    padding: 0
+    margin: 0
+    border: none
+    &::before
+      display: none
+  p
+    &:first-child, ~ p
+      padding-top: 0
+    &:last-child
+      padding-bottom: 0
+  &_warning
+    --theme: var(--inline-color)
+  &_warning::before
+    transform: rotate(180deg)
+  &::before
+    content: ""
+    position: absolute
+    left: -0.85rem
+    top: 1.5rem
+    z-index: 3
+    padding: 0.75rem
+    transform-origin: 50% 50%
+    border-radius: 50%
+    background-color: var(--theme)
+    background-image: var(--infoIcon)
+    background-size: 12%
+    background-position: 50% 50%
+    background-repeat: no-repeat
+
+.mermaid
+  --theme: darkgoldenrod
+  background-color: transparent !important
+  margin-bottom: 2.5rem
+  svg
+    margin: 0 auto
+    display: block
+  .actor, .labelBox, .classGroup rect
+    fill: var(--theme) !important
+    stroke: var(--theme) !important
+  .messageText, tspan, text
+    fill: var(--text) !important
+    stroke: var(--text) !important
+  .messageLine0, .loopLine
+    stroke: var(--theme) !important
+    fill: var(--theme) !important

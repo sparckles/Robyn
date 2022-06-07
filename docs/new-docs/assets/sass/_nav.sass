@@ -1,0 +1,70 @@
+.nav
+  display: grid
+  grid-gap: 1rem
+  padding: 0 1.5rem !important
+  align-items: center
+  background-color: var(--bg)
+  @media screen and (min-width: 992px)
+    grid-template-columns: 10rem 1fr
+  &_brand
+    position: relative
+    picture, img
+      max-width: 3rem
+  &_header
+    position: absolute
+    top: 0
+    left: 0
+    width: 100%
+    background-color: var(--bg)
+    z-index: 999999
+  &_toggle
+    position: absolute
+    top: 0
+    bottom: 0
+    width: 3rem
+    display: flex
+    align-items: center
+    justify-content: flex-end
+    text-align: center
+    right: 0
+    color: var(--text)
+    @media screen and (min-width: 992px)
+      display: none
+  &_body
+    display: flex
+    flex-direction: column
+    background: var(--accent)
+    position: fixed
+    left: 0
+    top: 0
+    bottom: 0
+    height: 100vh
+    transition: transform 0.25s var(--ease)
+    transform: translateX(-101vw)
+    @media screen and (min-width: 992px)
+      transform: translateX(0)
+      position: relative
+      height: initial
+      justify-content: flex-end
+      background: transparent
+      flex-direction: row
+  &.show &_body
+    transform: translateX(0)
+    box-shadow: 0 1rem 4rem rgba(0,0,0,0.1)
+    background: var(--bg)
+    li:first-child
+      margin: 1.5rem 1rem 0.5rem 1rem
+    // input
+    //   background: var(--accent)
+  &-link
+    display: inline-flex
+    padding: 0.5rem 1rem
+  &-item
+    display: grid
+    align-items: center
+    .search
+      @media screen and (min-width: 992px)
+        margin-right: 1.5rem
+  &_repo
+    picture, img
+      max-width: 1.25rem

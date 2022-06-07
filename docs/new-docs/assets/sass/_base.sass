@@ -1,0 +1,251 @@
+*
+  box-sizing: border-box
+  -webkit-appearance: none
+  margin: 0
+  padding: 0
+
+body, html
+  scroll-behavior: smooth
+  scroll-padding-top: 1rem
+  font-kerning: normal
+  -webkit-text-size-adjust: 100%
+  font-size: 18px
+
+body
+  font-family: var(--font)
+  background-color: var(--bg)
+  color: var(--text)
+  line-height: 1.5
+  margin: 0 auto
+  position: relative
+  font-kerning: normal
+  display: flex
+  flex-direction: column
+  justify-content: space-between
+  min-height: 100vh
+  -webkit-font-smoothing: antialiased
+  -moz-osx-font-smoothing: grayscale
+  -webkit-overflow-scrolling: touch
+  max-width: 1440px
+  @media screen and (min-width: 1640px)
+    max-width: 1600px
+
+a
+  text-decoration: none
+  color: inherit
+p
+  padding: 0.75rem 0
+  // opacity: 0.9
+  &:empty
+    display: none
+li
+  &, p
+    padding: 0.25rem 0
+blockquote
+  opacity: 0.8
+  padding: 1rem
+  position: relative
+  quotes: '\201C''\201D''\2018''\2019'
+  margin: 0.75rem 0
+  display: flex
+  flex-flow: row wrap
+  background-repeat: no-repeat
+  background-size: 5rem
+  background-position: 50% 50%
+  position: relative
+  background-color: var(--accent)
+  border-radius: 0.25rem
+  overflow: hidden
+  &::before
+    content: ""
+    padding: 2px
+    position: absolute
+    top: 0
+    bottom: 0
+    left: 0
+    background: var(--theme)
+
+  p
+    padding-left: 0.5rem !important
+    font-size: 1.1rem !important
+    width: 100%
+    font-style: italic
+
+h1,h2,h3,h4,h5
+  font-family: inherit
+  font-weight: 500
+  padding: 0.33rem 0
+  color: inherit
+  line-height: 1.35
+
+h1
+  font-size: 200%
+h2
+  font-size: 175%
+h3
+  font-size: 150%
+h4
+  font-size: 125%
+h5
+  font-size: 120%
+h6
+  font-size: 100%
+
+img, svg, figure
+  max-width: 100%
+  vertical-align: middle
+img
+  height: auto
+  margin: 1rem auto
+  padding: 0
+
+main
+  flex: 1
+  @media screen and (min-width: 42rem)
+    padding-bottom: 45px
+
+ol, ul
+  list-style: none
+
+b, strong
+  font-weight: 500
+
+hr
+  border: none
+  padding: 0.5px
+  background: var(--text)
+  opacity: 0.5
+  margin: 1rem 0
+
+.aside
+  overflow-y: auto
+  background: var(--bg)
+  border-radius: 0.25rem
+  align-self: start
+  max-height: 80vh
+  position: sticky
+  z-index: 9999
+  top: 0
+  padding: 1rem 0
+  @media screen and (min-width: 42rem)
+    padding: 1rem 1.5rem
+    top: 2.5rem
+    margin-top: 1rem
+    padding-top: 0
+  &_inner
+    height: 0
+    overflow: hidden
+    @media screen and (min-width: 42rem)
+      height: initial
+  &.show &_inner
+    height: initial
+    overflow: visible
+  &_toggle
+    padding: 1.5rem 0
+    margin: -1.5rem 0
+    display: flex
+    justify-content: space-between
+    @media screen and (min-width: 42rem)
+      display: none
+  h3
+    position: relative
+  ul
+    padding: 0
+    list-style: none
+
+th, td
+  padding: 0.5rem
+  font-weight: 400 !important
+  &:not(:first-child)
+    padding-left: 1.5rem
+
+thead
+  background: var(--theme)
+  color: var(--light)
+  font-weight: 400
+  text-align: left
+
+tbody
+  tr
+    &:nth-child(even)
+      background-color: var(--accent) !important
+      box-shadow: 0 1rem 0.75rem -0.75rem rgba(0,0,0,0.07)
+
+table
+  margin: 1.5rem 0
+  width:  100%
+
+.main
+  flex: 1
+
+.page
+  &-home
+    h1
+      font-weight: 300
+
+.content
+  ul, ol
+    padding-left: 1.1rem
+  ul
+    list-style: initial
+  ol
+    list-style: decimal
+  a:not(.button)
+    color: var(--theme)
+
+::placeholder
+  font-size: 1rem
+
+svg
+  &.icon_sort
+    fill: var(--light)
+    height: 0.7rem
+    width: 0.7rem
+    display: inline-block
+    margin-left: auto
+    vertical-align: middle
+
+canvas
+  margin: 2.5rem auto 0 auto
+  max-width: 450px !important
+  max-height: 450px !important
+
+footer
+  min-height: 150px
+
+del
+  opacity: 0.5
+
+#toTop
+  background: transparent
+  outline: 0.5rem solid transparent
+  height: 2rem
+  width: 2rem
+  cursor: pointer
+  padding: 0.5rem
+  display: flex
+  align-items: center
+  justify-content: center
+  position: fixed
+  right: 0
+  bottom: 2.25rem
+  transform: rotate(45deg) translate(5rem) 
+  opacity: 0
+  transition: opacity 0.5s var(--ease), transform 0.25s var(--ease)
+  z-index: 5
+  &.active
+    right: 1.5rem
+    opacity: 1
+    transform: rotate(45deg) translate(0)
+  &::after, &::before
+    position: absolute
+    display: block
+    width: 1rem
+    height: 1rem
+    content: ""
+    border-left: 1px solid var(--text)
+    border-top: 1px solid var(--text)
+  &::after
+    width: 0.67rem
+    height: 0.67rem
+    transform: translate(0.1rem, 0.1rem)

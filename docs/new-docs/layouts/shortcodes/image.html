@@ -1,0 +1,4 @@
+{{- $src := .Get 0 }}
+{{- $alt := .Get 1 }}
+{{- $modifier := .Get 2 -}}
+<img src="{{ $src }}"{{ with $alt }} alt="{{ . }}"{{ end }}{{ with $modifier }} class="{{ . }}"{{ end }}>

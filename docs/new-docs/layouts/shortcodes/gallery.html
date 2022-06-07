@@ -1,0 +1,9 @@
+{{- $images := split (replace (.Get 0) ", " ",") "," }}
+{{- $descriptions := split (replace (.Get 1) ":: " "::") "::" }}
+<div class="gallery">
+  {{ range $index, $image := $images }}
+  <figure class="gallery_item">
+    <img src="{{ absURL $image }} " class="gallery_image"{{ with $descriptions }}{{ with (index . $index) }} alt="{{ . }}"{{ end }}{{ end }}/>
+  </figure>
+  {{ end }}
+</div>

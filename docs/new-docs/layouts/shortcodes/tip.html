@@ -1,0 +1,4 @@
+{{- $type := .Get 0 }}
+<div class="tip{{ with $type }} tip_{{ . }}{{ end }}">
+  {{ markdownify .Inner }}
+</div>

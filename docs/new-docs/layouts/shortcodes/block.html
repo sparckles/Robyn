@@ -1,0 +1,5 @@
+{{- $modifier := .Get 0 -}}
+{{- $bg := .Get 1 -}}
+<section class="{{ $modifier }}"  {{ with $bg }}style="background-image: url(/images/{{ . }})"{{ end }}>
+  {{- .Inner -}}
+</section>

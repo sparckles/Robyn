@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="{{ site.Language.Lang }}"{{ with site.Params.enableDarkMode }} class="dark"{{ end }}>
+<head>
+  {{- partial "head" . }}
+</head>
+<body class="page-{{ .Kind }}" id="pagetop">
+  <header class="nav_header">
+    {{- partial "nav" . }}
+  </header>
+  <div class="main wrap pt-4">
+    {{ $docSections := site.Params.docSections }}
+    {{- with $docSections }}{{- else }}
+      {{- $docSections = "docs" }}
+    {{- end }}
+    {{ $uniqueHomepage := .IsHome }}
+    {{ if site.Params.uniqueHomepage }}
+      {{ if .IsHome }}
+        {{ $uniqueHomepage = true }}
+      {{ end }}
+    {{ else }}
+      {{ $uniqueHomepage = false }}
+    {{ end }}
+    {{- if and (in $docSections .Section) (ne $uniqueHomepage true) }}
+      {{- partial "document" . }}
+    {{- else }}
+      <div class="content">
+        {{- block "main" . }}{{ end }}
+      </div>
+    {{- end -}}
+  </div>
+  {{- partialCached "footer" . -}}
+  {{- partialCached "sprites" . -}}
+  {{- partialCached "scripts/bundle" . -}}
+  {{- partial "scripts/other" . -}}
+</body>
+</html>

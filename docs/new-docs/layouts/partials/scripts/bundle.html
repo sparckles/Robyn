@@ -1,0 +1,35 @@
+{{- $variablesPath := "js/variables.js" }}
+{{- $variables := resources.Get $variablesPath | resources.ExecuteAsTemplate $variablesPath . }}
+
+{{- $funcPath := "js/functions.js" }}
+{{- $functions := resources.Get $funcPath | resources.ExecuteAsTemplate $funcPath . }}
+
+{{- $codePath := "js/code.js" }}
+{{- $code := resources.Get $codePath | resources.ExecuteAsTemplate $codePath . }}
+
+{{- $fusePath := "js/fuse.js" }}
+{{- $fuse := resources.Get $fusePath | resources.ExecuteAsTemplate $fusePath . }}
+
+{{- $searchPath := "js/search.js" }}
+{{- $search := resources.Get $searchPath | resources.ExecuteAsTemplate $searchPath . }}
+
+{{- $mainScriptPath := "js/index.js" }}
+{{- $main := resources.Get $mainScriptPath | resources.ExecuteAsTemplate $mainScriptPath . }}
+
+{{- $customScriptPath := "js/custom.js" }}
+{{ if (fileExists "../../assets/js/custom.js") }}
+  {{ $customScriptPath := "../../assets/js/custom.js" }}
+{{ end }}
+{{- $custom := resources.Get $customScriptPath | resources.ExecuteAsTemplate $customScriptPath . }}
+
+{{- $bundle := slice $variables $functions $code $main $fuse $search $custom | resources.Concat "js/bundle.js" | resources.Minify | resources.Fingerprint "sha512" }}
+<script src="{{ $bundle.Permalink }}"></script>
+
+{{- partialCached "hooks/scripts" . -}}
+
+{{- $sp := .Site.Params }}
+{{- with $sp.customJS }}
+  {{- range . -}}
+    <script src="{{ . }}"></script>
+  {{- end }}
+{{- end -}}

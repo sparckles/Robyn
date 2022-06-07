@@ -1,0 +1,12 @@
+name = "Robyn"
+license = "MIT"
+licenselink = "https://github.com/sansyrox/robyn/blob/main/LICENSE"
+description = "Robyn is a fast and extensible async python web server with a rust runtime"
+homepage = "https://sansyrox.github.io/robyn"
+tags = ["technical", "docs", "dark", "customizable", "search", "documentation"]
+features = ["technical", "docs", "dark", "customizable", "search", "documentation"]
+min_version = "0.76.0"
+
+[author]
+  name = "Sanskar Jethi"
+  homepage = "https://github.com/sansyrox"

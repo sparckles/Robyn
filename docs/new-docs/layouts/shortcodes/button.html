@@ -1,0 +1,4 @@
+{{- $link := .Get 0 -}}
+{{- $label := .Get 1 -}}
+{{- $modifier := .Get 2 -}}
+<a href="{{ $link }}" class="button{{ with $modifier }} {{ . }}{{ end }}">{{- $label -}}</a>

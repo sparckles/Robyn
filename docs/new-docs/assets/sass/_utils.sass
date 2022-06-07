@@ -1,0 +1,80 @@
+.wrap
+  max-width: 1240px
+  @media screen and (min-width: 1640px)
+    max-width: 1600px
+  &, &
+    width: 100%
+    padding: 0 25px
+    margin: 0 auto
+
+@for $i from 1 through 4
+  $size: $i * 1.5rem
+  $x-size: $size * 0.5
+  .pt-#{$i}
+    padding-top: $size
+
+  .pb-#{$i}
+    padding-bottom: $size
+
+  .mt-#{$i}
+    margin-top: $size
+
+  .mb-#{$i}
+    margin-bottom: $size
+
+%grid
+  display: grid
+  grid-template-columns: 1fr
+
+[class*='grid-']
+  grid-gap: 2rem
+
+.grid-2, .grid-3, .grid-4, .grid-auto, .grid-reverse
+  @extend %grid
+
+@media screen and (min-width: 42rem)
+  .grid-auto
+    grid-template-columns: 2fr 5fr
+
+  .grid-reverse
+    grid-template-columns: 3fr 1fr
+
+  .grid-2
+    grid-template-columns: repeat(2, 1fr)
+
+  .grid-3
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr))
+
+  .grid-4
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr))
+
+.active
+  color: var(--theme)
+
+.is
+  background: var(--theme)
+  color: var(--light)
+
+.toggle
+  svg
+    fill: var(--text)
+    display: inline-block
+    transform-origin: 50% 50%
+    transform: scale(1.2)
+    cursor: pointer
+    margin: 0
+
+.scrollable
+  width: 100%
+  overflow-x: hidden
+  max-width: calc(100vw - 48px)
+  @media screen and (min-width: 768px)
+    max-width: 100%
+  &:hover
+    overflow-x: auto
+
+.chart
+  display: grid
+  grid-gap: 1.5rem
+  max-width: 98vw !important
+  max-height: 98vw !important

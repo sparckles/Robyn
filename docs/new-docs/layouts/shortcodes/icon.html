@@ -1,0 +1,6 @@
+{{- $src := .Get 0 }}
+{{- $alt := .Get 1 }}
+{{- $modifier := .Get 2 -}}
+<figure {{ with $modifier }}class="icon_{{ . }}"{{ end }}>
+  <img src="/images/{{ $src }}" alt="{{ $alt }}" class="icon">
+</figure>

@@ -1,0 +1,55 @@
+{{- $s := .Site }}
+{{- $sp := $s.Params }}
+<nav class="wrap nav menu">
+	<a href="{{ $s.BaseURL }}" class="nav_brand">
+		{{- $logos := $sp.logo }}
+		{{- $litPath := absURL ($logos.lightMode) }}
+		{{- $darkPath := absURL ($logos.darkMode) }}
+		<picture data-lit="{{ $litPath }}" data-dark="{{ $darkPath }}">
+			{{ with $sp.enableDarkMode }}
+			<source srcset = '{{ $darkPath }}' media="(prefers-color-scheme: dark)">
+			{{ end }}
+			<img srcset = '{{ $litPath }}' alt = '{{ $s.Title }} Logo'>
+		</picture>
+		<label class="nav_toggle toggle" title='{{ T "site_menu" }}' role="button">
+			{{ partial "sprite" (dict "icon" "harmburger") }}
+		</label>
+	</a>
+	<ul class="nav_body">
+		<li class="nav-item">
+			{{- partial "search" . }}
+		</li>
+		{{- $p := . }}
+		{{- range $s.Menus.main }}
+		<li class="nav-item">
+			{{- $active := or ($p.IsMenuCurrent "main" .) ($p.HasMenuCurrent "main" .) }}
+			{{- with .Page }}
+			{{- $active = or $active ( $.IsDescendant .)  }}
+			{{- end }}
+			{{- $url := absURL .URL }}
+			{{- if or (hasPrefix .URL "http") (hasPrefix .URL "www.") }}
+				{{- $url = .URL }}
+			{{- end }}
+			<a class="nav-link{{if $active }} active{{end}}" href="{{ $url }}"><span{{if $active }} class="active"{{end}}>{{ .Name }}</span></a>
+		</li>
+		{{- end }}
+		{{ $repo := $sp.source }}
+		<li class="nav-item nav_repo">
+			<a class="nav-link" href="{{ $repo.url }}" target="_blank">
+				{{ if $repo.iconLight }}
+					{{- $litPath := absURL ($repo.iconLight) }}
+					{{- $darkPath := absURL ($repo.iconDark) }}
+					<picture data-lit="{{ $litPath }}" data-dark="{{ $darkPath }}">
+						{{ with $sp.enableDarkMode }}
+							<source srcset = '{{ $darkPath }}' media="(prefers-color-scheme: dark)">
+						{{ end }}
+						<img srcset = '{{ $litPath }}' alt = '{{ $repo.name }} Repo'>
+					</picture>
+				{{ else }}
+					{{ $repo.name }}
+				{{ end }}
+			</a>
+		</li>
+		<li class="nav-item">{{ partial "mode" . }}</li>
+	</ul>
+</nav>

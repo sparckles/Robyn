@@ -1,0 +1,9 @@
+{{- $normal := .Get 0 }}
+{{- $dark := .Get 1 }}
+{{- $alt := .Get 2 }}
+{{- $litPath := absURL (printf "images/%s" $normal) }}
+{{- $darkPath := absURL (printf "images/%s" $dark) }}
+<picture class="nav_logo" data-lit="{{ $litPath }}" data-dark="{{ $darkPath }}">
+  <source srcset="{{ $darkPath }}" media="(prefers-color-scheme: dark)">
+  <img srcset="{{ $litPath }}" alt="{{ $alt }}">
+</picture>

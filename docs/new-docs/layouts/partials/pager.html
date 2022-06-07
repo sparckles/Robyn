@@ -1,0 +1,22 @@
+<div class="pager{{ if .Next }}{{ else }} pager_lean{{ end }}">
+  {{- $searchURL := "/search/" }}
+  {{ with .NextInSection }}
+    {{ if and (ne .RelPermalink $searchURL) (.InSection .) }}
+    <div class="pager_item prev">
+      <a href="{{ .Permalink }}" class="pager_link button" title="{{ .Title }}" rel="prev">
+        <span class="pager_label">{{ .Title }}</span>
+      </a>
+    </div>
+    {{ end }}
+  {{ end }}
+
+  {{ with .PrevInSection  }}
+    {{ if and (ne .RelPermalink $searchURL) (.InSection .) }}
+    <div class="pager_item next">
+      <a href="{{ .Permalink }}" class="pager_link button" title="{{ .Title }}" rel="next">
+        <span class="pager_label">{{ .Title }}</span>
+      </a>
+    </div>
+    {{ end }}
+  {{ end }}
+</div>

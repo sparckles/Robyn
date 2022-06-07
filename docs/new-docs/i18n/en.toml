@@ -1,0 +1,18 @@
+[docs_menu]
+  other = "Docs Menu"
+[no_matches]
+  other = "No matches found"
+[quick_links]
+  other = "Quick links"
+[search_field_placeholder]
+  other = "Search the docs"
+[search_results_label]
+  other = "Search Results"
+[short_search_query]
+  other = "Query is too short"
+[site_menu]
+  other = "Site Menu"
+[to_top]
+  other = "Back to top"
+[type_to_search]
+  other = "Type to search"

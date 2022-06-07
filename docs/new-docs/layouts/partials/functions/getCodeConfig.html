@@ -1,0 +1,16 @@
+<!-- will return an array holding 1) Whether to show line numbers or not 2) maximum number of lines per code block -->
+{{- $s := .Site.Params }}
+{{- $p := .Params }}
+{{- $maxCodeLines := default 100 $s.codeMaxLines }}
+{{- with $p.codeMaxLines }}
+  {{- $maxCodeLines = . }}
+{{- end }}
+{{- $showLineNumbers := default false $s.showLineNumbers }}
+{{ with $p.showLineNumbers }}
+  {{- $showLineNumbers = . }}
+{{ else }}
+  {{ if eq $p.showLineNumbers false }}
+    {{- $showLineNumbers = false }}
+  {{ end }}
+{{- end }}
+{{- return (jsonify (dict "show" $showLineNumbers "maximum" $maxCodeLines)) }}

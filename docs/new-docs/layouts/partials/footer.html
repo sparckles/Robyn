@@ -1,0 +1,10 @@
+{{ if .Site.Params.enableCopyright | default true }}
+<footer class="pt-2 pb-2">
+  <div class="wrap">
+    {{- $author := site.Params.author }}
+    <p>&copy; <span class="year">{{ now.Year }}</span>{{ with $author }} <a href ="{{ .url }}" target="_blank" rel="noopener">{{ .name }}</a>{{ end }}</p>
+    <a href="#pagetop" id="toTop" title={{ T "to_top" }}></a>
+  </div>
+</footer>
+{{ end }}
+

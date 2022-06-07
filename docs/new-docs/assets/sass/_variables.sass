@@ -1,0 +1,49 @@
+html
+  --color-mode: "light"
+  --light: #fff
+  --dark:  rgb(28,28,30)
+  --haze: #f2f5f7
+  --bubble: rgb(36,36,38)
+  --accent: var(--haze)
+  --bg: var(--light)
+  --code-bg: var(--accent)
+  --overlay: var(--light)
+  --text: #111
+  --font: 'Metropolis', sans-serif
+  --border-color: #eee
+  --inline-color: darkgoldenrod
+  --theme: rgb(52,199,89)
+  --ease: ease
+  --search-border-color: transparent
+
+  @mixin darkmode
+    --color-mode: "dark"
+    --theme: rgb(48,209,88)
+    --bg: var(--dark)
+    --text: #eee
+    --accent: var(--bubble)
+    --overlay: var(--bubble)
+    --border-color: transparent
+    --search-bg: var(--accent)
+    --search-border-color: var(--accent)
+    *
+      box-shadow: none !important
+
+  &[data-mode="dark"]
+    @include darkmode
+    .color
+      &_choice
+        &::after
+          background-image: var(--moonIcon)
+
+  &.dark:not([data-mode="light"])
+    @media (prefers-color-scheme: dark)
+      @include darkmode
+
+%narrow
+  max-width: 750px
+  margin: 0 auto
+
+blockquote
+  + .highlight_wrap
+    margin-top: 2.25rem
