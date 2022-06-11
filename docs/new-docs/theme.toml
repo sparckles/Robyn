@@ -1,8 +1,8 @@
-name = "Robyn"
+name = "robyn"
 license = "MIT"
 licenselink = "https://github.com/sansyrox/robyn/blob/main/LICENSE"
-description = "Robyn is a fast and extensible async python web server with a rust runtime"
-homepage = "https://sansyrox.github.io/robyn"
+description = "A hugo theme for documentation sites. It's inspired by forestry.io's docs page"
+homepage = "https://github.com/sansyrox/robyn"
 tags = ["technical", "docs", "dark", "customizable", "search", "documentation"]
 features = ["technical", "docs", "dark", "customizable", "search", "documentation"]
 min_version = "0.76.0"
