@@ -246,10 +246,11 @@ impl Server {
         handler: Py<PyAny>,
         is_async: bool,
         number_of_params: u8,
+        const_route: bool
     ) {
         debug!("Route added for {} {} ", route_type, route);
         self.router
-            .add_route(route_type, route, handler, is_async, number_of_params)
+            .add_route(route_type, route, handler, is_async, number_of_params, const_route)
             .unwrap();
     }
 
