@@ -77,6 +77,11 @@ impl ConstRouter {
         route: &str,
         response: &str,
     ) -> Result<(), Error> {
+        // TODO:
+        // allow handlers
+        // allow routes
+        // and all others
+        // spawn a blockking thread for insertion
         let table = match self.get_relevant_map_str(route_type) {
             Some(table) => table,
             None => bail!("No relevant map"),

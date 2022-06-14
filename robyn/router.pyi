@@ -13,7 +13,7 @@ class BaseRouter(ABC):
 class Router(BaseRouter):
     def __init__(self) -> None:
         pass
-    def add_route(self, route_type: str, endpoint: str, handler: Callable) -> None:
+    def add_route(self, route_type: str, endpoint: str, handler: Callable, const: bool) -> None:
         pass
     def get_routes(self) -> list[Route]:
         pass

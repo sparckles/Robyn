@@ -78,7 +78,6 @@ impl Router {
         handler: Py<PyAny>,
         is_async: bool,
         number_of_params: u8,
-        const_route: bool,
     ) -> Result<(), Error> {
         let table = match self.get_relevant_map_str(route_type) {
             Some(table) => table,

@@ -35,6 +35,11 @@ def message():
 callCount = 0
 
 
+@app.get("/bruhh", const=True)
+async def bruhh(request):
+    return "Hello world"
+
+
 @app.get("/")
 async def hello(request):
     global callCount

@@ -42,7 +42,7 @@ class Robyn:
 
         self._config_logger()
 
-    def _add_route(self, route_type, endpoint, handler, const):
+    def _add_route(self, route_type, endpoint, handler, const=False):
         """
         [This is base handler for all the decorators]
 

@@ -263,16 +263,16 @@ impl Server {
         const_route: bool,
     ) {
         debug!("Route added for {} {} ", route_type, route);
-        self.router
-            .add_route(
-                route_type,
-                route,
-                handler,
-                is_async,
-                number_of_params,
-                const_route,
-            )
-            .unwrap();
+
+        if const_route {
+            self.const_router
+                .add_route(route_type, route, "hello world")
+                .unwrap();
+        } else {
+            self.router
+                .add_route(route_type, route, handler, is_async, number_of_params)
+                .unwrap();
+        }
     }
 
     /// Add a new route to the routing tables
@@ -386,13 +386,12 @@ async fn index(
         .is_some()
     {
         let mut response = HttpResponse::Ok();
+        apply_headers(&mut response, headers_dup.clone());
         response.body(
             const_router
                 .get_route(req.method().clone(), req.uri().path())
                 .unwrap(),
-        );
-        apply_headers(&mut response, headers_dup.clone());
-        response.finish()
+        )
     } else {
         match router.get_route(req.method().clone(), req.uri().path()) {
             Some(((handler_function, number_of_params), route_params)) => {
