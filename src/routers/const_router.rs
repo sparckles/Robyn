@@ -101,7 +101,8 @@ impl ConstRouter {
                 .clone()
                 .write()
                 .unwrap()
-                .insert(route, "hello world".to_string());
+                .insert(route, output.get("body").unwrap().to_string())
+                .unwrap();
 
             Ok(())
         })
