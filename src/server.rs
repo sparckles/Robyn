@@ -255,6 +255,7 @@ impl Server {
     /// can be called after the server has been started
     pub fn add_route(
         &self,
+        py: Python,
         route_type: &str,
         route: &str,
         handler: Py<PyAny>,
@@ -263,10 +264,20 @@ impl Server {
         const_route: bool,
     ) {
         debug!("Route added for {} {} ", route_type, route);
+        // let event_loop = pyo3_asyncio::tokio::get_current_loop(py).unwrap();
+        let asyncio = py.import("asyncio").unwrap();
+        let event_loop = asyncio.call_method0("get_event_loop").unwrap();
 
         if const_route {
             self.const_router
-                .add_route(route_type, route, "hello world")
+                .add_route(
+                    route_type,
+                    route,
+                    handler,
+                    is_async,
+                    number_of_params,
+                    event_loop,
+                )
                 .unwrap();
         } else {
             self.router

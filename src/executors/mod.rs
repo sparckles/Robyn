@@ -124,6 +124,81 @@ pub async fn execute_middleware_function<'a>(
     }
 }
 
+pub async fn execute_function(
+    function: Py<PyAny>,
+    // queries: Rc<RefCell<HashMap<String, String>>>,
+    number_of_params: u8,
+    is_async: bool,
+) -> Result<HashMap<String, String>> {
+    let mut request: HashMap<String, String> = HashMap::new();
+
+    // let mut queries_clone: HashMap<String, String> = HashMap::new();
+
+    // for (key, value) in (*queries).borrow().clone() {
+    //     queries_clone.insert(key, value);
+    // }
+
+    if is_async {
+        let output = Python::with_gil(|py| {
+            let handler = function.as_ref(py);
+            // request.insert("params", route_params.into_py(py));
+            // request.insert("queries", queries_clone.into_py(py));
+            // request.insert("headers", headers.into_py(py));
+            // request.insert("body", data);
+
+            // this makes the request object to be accessible across every route
+            let coro: PyResult<&PyAny> = match number_of_params {
+                0 => handler.call0(),
+                1 => handler.call1((request,)),
+                // this is done to accomodate any future params
+                2_u8..=u8::MAX => handler.call1((request,)),
+            };
+            pyo3_asyncio::tokio::into_future(coro?)
+        })?;
+
+        let output = output.await?;
+        let res = Python::with_gil(|py| -> PyResult<HashMap<String, String>> {
+            debug!("This is the result of the code {:?}", output);
+
+            let mut res: HashMap<String, String> =
+                output.into_ref(py).downcast::<PyDict>()?.extract()?;
+
+            let response_type = res.get("type").unwrap();
+
+            if response_type == "static_file" {
+                let file_path = res.get("file_path").unwrap();
+                let contents = read_file(file_path).unwrap();
+                res.insert("body".to_owned(), contents);
+            }
+            Ok(res)
+        })?;
+
+        Ok(res)
+    } else {
+        tokio::task::spawn_blocking(move || {
+            Python::with_gil(|py| {
+                let handler = function.as_ref(py);
+                // request.insert("params", route_params.into_py(py));
+                // request.insert("headers", headers.into_py(py));
+                // let data = data.into_py(py);
+                // request.insert("body", data);
+
+                let output: PyResult<&PyAny> = match number_of_params {
+                    0 => handler.call0(),
+                    1 => handler.call1((request,)),
+                    // this is done to accomodate any future params
+                    2_u8..=u8::MAX => handler.call1((request,)),
+                };
+                let output: HashMap<String, String> = output?.extract()?;
+                // also convert to object here
+                // also check why don't sync functions have file handling enabled
+                Ok(output)
+            })
+        })
+        .await?
+    }
+}
+
 // Change this!
 #[inline]
 pub async fn execute_http_function(

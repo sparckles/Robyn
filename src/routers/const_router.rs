@@ -1,7 +1,8 @@
-use std::collections::HashMap;
 use std::sync::RwLock;
+use std::{collections::HashMap, sync::Arc};
 // pyo3 modules
-use crate::types::PyFunction;
+use crate::{executors::execute_function, types::PyFunction};
+use log::debug;
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
 
@@ -13,50 +14,50 @@ use anyhow::{bail, Error, Result};
 /// Contains the thread safe hashmaps of different routes
 
 pub struct ConstRouter {
-    get_routes: RwLock<Node<String>>,
-    post_routes: RwLock<Node<String>>,
-    put_routes: RwLock<Node<String>>,
-    delete_routes: RwLock<Node<String>>,
-    patch_routes: RwLock<Node<String>>,
-    head_routes: RwLock<Node<String>>,
-    options_routes: RwLock<Node<String>>,
-    connect_routes: RwLock<Node<String>>,
-    trace_routes: RwLock<Node<String>>,
+    get_routes: Arc<RwLock<Node<String>>>,
+    post_routes: Arc<RwLock<Node<String>>>,
+    put_routes: Arc<RwLock<Node<String>>>,
+    delete_routes: Arc<RwLock<Node<String>>>,
+    patch_routes: Arc<RwLock<Node<String>>>,
+    head_routes: Arc<RwLock<Node<String>>>,
+    options_routes: Arc<RwLock<Node<String>>>,
+    connect_routes: Arc<RwLock<Node<String>>>,
+    trace_routes: Arc<RwLock<Node<String>>>,
 }
 
 impl ConstRouter {
     pub fn new() -> Self {
         Self {
-            get_routes: RwLock::new(Node::new()),
-            post_routes: RwLock::new(Node::new()),
-            put_routes: RwLock::new(Node::new()),
-            delete_routes: RwLock::new(Node::new()),
-            patch_routes: RwLock::new(Node::new()),
-            head_routes: RwLock::new(Node::new()),
-            options_routes: RwLock::new(Node::new()),
-            connect_routes: RwLock::new(Node::new()),
-            trace_routes: RwLock::new(Node::new()),
+            get_routes: Arc::new(RwLock::new(Node::new())),
+            post_routes: Arc::new(RwLock::new(Node::new())),
+            put_routes: Arc::new(RwLock::new(Node::new())),
+            delete_routes: Arc::new(RwLock::new(Node::new())),
+            patch_routes: Arc::new(RwLock::new(Node::new())),
+            head_routes: Arc::new(RwLock::new(Node::new())),
+            options_routes: Arc::new(RwLock::new(Node::new())),
+            connect_routes: Arc::new(RwLock::new(Node::new())),
+            trace_routes: Arc::new(RwLock::new(Node::new())),
         }
     }
 
     #[inline]
-    fn get_relevant_map(&self, route: Method) -> Option<&RwLock<Node<String>>> {
+    fn get_relevant_map(&self, route: Method) -> Option<Arc<RwLock<Node<String>>>> {
         match route {
-            Method::GET => Some(&self.get_routes),
-            Method::POST => Some(&self.post_routes),
-            Method::PUT => Some(&self.put_routes),
-            Method::PATCH => Some(&self.patch_routes),
-            Method::DELETE => Some(&self.delete_routes),
-            Method::HEAD => Some(&self.head_routes),
-            Method::OPTIONS => Some(&self.options_routes),
-            Method::CONNECT => Some(&self.connect_routes),
-            Method::TRACE => Some(&self.trace_routes),
+            Method::GET => Some(self.get_routes.clone()),
+            Method::POST => Some(self.post_routes.clone()),
+            Method::PUT => Some(self.put_routes.clone()),
+            Method::PATCH => Some(self.patch_routes.clone()),
+            Method::DELETE => Some(self.delete_routes.clone()),
+            Method::HEAD => Some(self.head_routes.clone()),
+            Method::OPTIONS => Some(self.options_routes.clone()),
+            Method::CONNECT => Some(self.connect_routes.clone()),
+            Method::TRACE => Some(self.trace_routes.clone()),
             _ => None,
         }
     }
 
     #[inline]
-    fn get_relevant_map_str(&self, route: &str) -> Option<&RwLock<Node<String>>> {
+    fn get_relevant_map_str(&self, route: &str) -> Option<Arc<RwLock<Node<String>>>> {
         if route != "WS" {
             let method = match Method::from_bytes(route.as_bytes()) {
                 Ok(res) => res,
@@ -75,7 +76,11 @@ impl ConstRouter {
         &self,
         route_type: &str, // we can just have route type as WS
         route: &str,
-        response: &str,
+        function: Py<PyAny>,
+        is_async: bool,
+        // queries: Rc<RefCell<HashMap<String, String>>>,
+        number_of_params: u8,
+        event_loop: &PyAny,
     ) -> Result<(), Error> {
         // TODO:
         // allow handlers
@@ -86,12 +91,21 @@ impl ConstRouter {
             Some(table) => table,
             None => bail!("No relevant map"),
         };
+        let route = route.to_string();
+        pyo3_asyncio::tokio::run_until_complete(event_loop, async move {
+            let output = execute_function(function, number_of_params, is_async)
+                .await
+                .unwrap();
+            debug!("This is the result of the output {:?}", output);
+            table
+                .clone()
+                .write()
+                .unwrap()
+                .insert(route, "hello world".to_string());
 
-        // try removing unwrap here
-        table
-            .write()
-            .unwrap()
-            .insert(route.to_string(), response.to_string())?;
+            Ok(())
+        })
+        .unwrap();
 
         Ok(())
     }
@@ -106,7 +120,7 @@ impl ConstRouter {
         // need to split this function in multiple smaller functions
         let table = self.get_relevant_map(route_method)?;
 
-        match table.read().unwrap().at(route) {
+        match table.clone().read().unwrap().at(route) {
             Ok(res) => Some(res.value.clone()),
             Err(_) => None,
         }
