@@ -27,6 +27,14 @@ You can simply use Pip for installation.
 pip install robyn
 ```
 
+Or, with [conda-forge](https://conda-forge.org/)
+
+```
+conda config --add channels conda-forge
+conda config --set channel_priority strict
+conda install robyn
+```
+
 ## 🤔 Usage
 
 ```python
