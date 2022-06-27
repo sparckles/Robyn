@@ -1,6 +1,5 @@
-from __future__ import annotations
-
 from typing import Callable, Optional, Tuple
+
 
 class SocketHeld:
     def __init__(self, url: str, port: int):

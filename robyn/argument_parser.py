@@ -2,7 +2,7 @@ import argparse
 
 
 class ArgumentParser(argparse.ArgumentParser):
-    def __init__(self):
+    def __init__(self) -> None:
         self.parser = argparse.ArgumentParser(
             description="Robyn, a fast async web framework with a rust runtime."
         )
@@ -38,20 +38,20 @@ class ArgumentParser(argparse.ArgumentParser):
         self.args = self.parser.parse_args()
 
     @property
-    def num_processes(self):
+    def num_processes(self) -> int:
         return self.args.processes
 
     @property
-    def workers(self):
+    def workers(self) -> int:
         return self.args.workers
 
     @property
-    def log_level(self):
+    def log_level(self) -> str:
         return self.args.log_level
 
     @property
-    def is_dev(self):
+    def is_dev(self) -> bool:
         _is_dev = self.args.dev
-        if _is_dev and (self.num_processes() != 1 or self.workers() != 1):
+        if _is_dev and (self.num_processes != 1 or self.workers != 1):
             raise Exception("--processes and --workers shouldn't be used with --dev")
         return _is_dev

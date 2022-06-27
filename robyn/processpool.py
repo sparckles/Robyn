@@ -1,18 +1,33 @@
 import asyncio
-import logging
 import multiprocessing as mp
 import sys
+from numbers import Number
+from typing import Dict, Tuple
+
+from robyn.events import Events
+from robyn.robyn import SocketHeld
+from robyn.router import Route
+from robyn.ws import WS
 
 from .events import Events
 from .robyn import Server
 
-
 mp.allow_connection_pickling()
 
 
+Directory = Tuple[str, str, str, str]
+Header = Tuple[str, str]
+
 def spawn_process(
-    directories, headers, routes, middlewares, web_sockets, event_handlers, socket, workers
-):
+    directories: Tuple[Directory, ...],
+    headers: Tuple[Header, ...],
+    routes: Tuple[Route, ...],
+    middlewares: Tuple[Route, ...],
+    web_sockets: Dict[str, WS],
+    event_handlers: Dict[Events, list],
+    socket: SocketHeld,
+    workers: Number,
+) -> None:
     """
     This function is called by the main process handler to create a server runtime.
     This functions allows one runtime per process.
@@ -33,7 +48,7 @@ def spawn_process(
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
     else:
-        # uv loop doesn't support windows or arm machines at the moment
+        # uvloop doesn't support windows or arm machines at the moment
         # but uv loop is much faster than native asyncio
         import uvloop
 

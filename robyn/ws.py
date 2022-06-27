@@ -1,16 +1,19 @@
 import asyncio
 from inspect import signature
+from typing import Callable
+
+from robyn import Robyn
 
 
 class WS:
     """This is the python wrapper for the web socket that will be used here.
     """
-    def __init__(self, robyn_object, endpoint) -> None:
+    def __init__(self, robyn_object: Robyn, endpoint: str) -> None:
         self.robyn_object = robyn_object
         self.endpoint = endpoint
         self.methods = {}
 
-    def on(self, type):
+    def on(self, type: str) -> Callable[[str], None]:
         def inner(handler):
             if type not in ["connect", "close", "message"]:
                 raise Exception(f"Socket method {type} does not exist")
@@ -20,9 +23,9 @@ class WS:
 
         return inner
 
-    def _num_params(self, handler):
+    def _num_params(self, handler: Callable[..., None]) -> int:
         return len(signature(handler).parameters)
 
-    def _is_async(self, handler):
+    def _is_async(self, handler) -> bool:
         return asyncio.iscoroutinefunction(handler)
 
