@@ -1,5 +1,43 @@
 # Changelog
 
+## [Unreleased](https://github.com/sansyrox/robyn/tree/HEAD)
+
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.16.5...HEAD)
+
+**Merged pull requests:**
+
+- fix: Fixes the crashing dev mode [\#218](https://github.com/sansyrox/robyn/pull/218) ([sansyrox](https://github.com/sansyrox))
+- feat: add commitizen as a dev dependency [\#216](https://github.com/sansyrox/robyn/pull/216) ([sansyrox](https://github.com/sansyrox))
+- Isort imports [\#205](https://github.com/sansyrox/robyn/pull/205) ([sansyrox](https://github.com/sansyrox))
+- Add bridged logger. Improves performance substantially. [\#201](https://github.com/sansyrox/robyn/pull/201) ([sansyrox](https://github.com/sansyrox))
+- Adds pre-commit hooks for black, flake8, isort [\#198](https://github.com/sansyrox/robyn/pull/198) ([chrismoradi](https://github.com/chrismoradi))
+- Resolves port open issue when app is killed \#183 [\#196](https://github.com/sansyrox/robyn/pull/196) ([anandtripathi5](https://github.com/anandtripathi5))
+- Removing unwraps [\#195](https://github.com/sansyrox/robyn/pull/195) ([sansyrox](https://github.com/sansyrox))
+
+## [v0.16.5](https://github.com/sansyrox/robyn/tree/v0.16.5) (2022-06-29)
+
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.16.4...v0.16.5)
+
+**Closed issues:**
+
+- \[Feature Request\] Add sponsors in the repo and website [\#212](https://github.com/sansyrox/robyn/issues/212)
+- \[Feature Request\] Add commitizen as a dev dependency [\#211](https://github.com/sansyrox/robyn/issues/211)
+- Add better logging [\#158](https://github.com/sansyrox/robyn/issues/158)
+- Remove freeport dependency [\#151](https://github.com/sansyrox/robyn/issues/151)
+- Add websocket support [\#104](https://github.com/sansyrox/robyn/issues/104)
+- Maintenance issue [\#56](https://github.com/sansyrox/robyn/issues/56)
+- Improve Readme [\#4](https://github.com/sansyrox/robyn/issues/4)
+
+## [v0.16.4](https://github.com/sansyrox/robyn/tree/v0.16.4) (2022-05-30)
+
+[Full Changelog](https://github.com/sansyrox/robyn/compare/v0.16.3...v0.16.4)
+
+**Closed issues:**
+
+- \[Feature Request\] Remove extra logs [\#200](https://github.com/sansyrox/robyn/issues/200)
+- \[Feature Request\] Add precommit hook for black, flake8 and isort [\#194](https://github.com/sansyrox/robyn/issues/194)
+- \[BUG\] Get rid of Hashmap Clones and Unwraps! [\#186](https://github.com/sansyrox/robyn/issues/186)
+
 ## [v0.16.3](https://github.com/sansyrox/robyn/tree/v0.16.3) (2022-05-18)
 
 [Full Changelog](https://github.com/sansyrox/robyn/compare/v0.16.2...v0.16.3)
@@ -8,10 +46,6 @@
 
 - \[BUG\] Port not being free on app kill [\#183](https://github.com/sansyrox/robyn/issues/183)
 - Build failure [\#166](https://github.com/sansyrox/robyn/issues/166)
-
-**Merged pull requests:**
-
-- Resolves port open issue when app is killed \#183 [\#196](https://github.com/sansyrox/robyn/pull/196) ([anandtripathi5](https://github.com/anandtripathi5))
 
 ## [v0.16.2](https://github.com/sansyrox/robyn/tree/v0.16.2) (2022-05-09)
 
