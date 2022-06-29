@@ -52,6 +52,6 @@ class ArgumentParser(argparse.ArgumentParser):
     @property
     def is_dev(self):
         _is_dev = self.args.dev
-        if _is_dev and (self.num_processes() != 1 or self.workers() != 1):
+        if _is_dev and (self.num_processes != 1 or self.workers != 1):
             raise Exception("--processes and --workers shouldn't be used with --dev")
         return _is_dev
