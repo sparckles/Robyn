@@ -1,5 +1,5 @@
 name = "robyn"
-version = "0.16.4"
+version = "0.16.5"
 description = "A web server that is fast!"
 authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 
@@ -36,5 +36,5 @@ classifiers = [
 [project.urls]
 "Source Code" = "https://github.com/sansyrox/robyn"
 Issues = "https://github.com/sansyrox/robyn/issues"
-Documentation = "https://robyn.sanskar.wtf/"
+Documentation = "https://robyn.tech/"
 Changelog = "https://github.com/sansyrox/robyn/blob/main/CHANGELOG.md"
