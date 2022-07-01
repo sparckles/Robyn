@@ -126,27 +126,14 @@ pub async fn execute_middleware_function<'a>(
 
 pub async fn execute_function(
     function: Py<PyAny>,
-    // queries: Rc<RefCell<HashMap<String, String>>>,
     number_of_params: u8,
     is_async: bool,
 ) -> Result<HashMap<String, String>> {
     let mut request: HashMap<String, String> = HashMap::new();
 
-    // let mut queries_clone: HashMap<String, String> = HashMap::new();
-
-    // for (key, value) in (*queries).borrow().clone() {
-    //     queries_clone.insert(key, value);
-    // }
-
     if is_async {
         let output = Python::with_gil(|py| {
             let handler = function.as_ref(py);
-            // request.insert("params", route_params.into_py(py));
-            // request.insert("queries", queries_clone.into_py(py));
-            // request.insert("headers", headers.into_py(py));
-            // request.insert("body", data);
-
-            // this makes the request object to be accessible across every route
             let coro: PyResult<&PyAny> = match number_of_params {
                 0 => handler.call0(),
                 1 => handler.call1((request,)),
@@ -178,11 +165,6 @@ pub async fn execute_function(
         tokio::task::spawn_blocking(move || {
             Python::with_gil(|py| {
                 let handler = function.as_ref(py);
-                // request.insert("params", route_params.into_py(py));
-                // request.insert("headers", headers.into_py(py));
-                // let data = data.into_py(py);
-                // request.insert("body", data);
-
                 let output: PyResult<&PyAny> = match number_of_params {
                     0 => handler.call0(),
                     1 => handler.call1((request,)),

@@ -35,11 +35,6 @@ def message():
 callCount = 0
 
 
-@app.get("/bruhh", const=True)
-async def bruhh(request):
-    return "Hello world"
-
-
 @app.get("/")
 async def hello(request):
     global callCount
@@ -47,6 +42,16 @@ async def hello(request):
     message = "Called " + str(callCount) + " times"
     print(message, request)
     return {"status_code": "200", "body": "hello", "type": "text"}
+
+
+@app.get("/const_request", const=True)
+async def const_request():
+    return "Hello world"
+
+
+@app.get("/const_request_json", const=True)
+async def const_request_json():
+    return jsonify({"hello": "world"})
 
 
 @app.get('/404')

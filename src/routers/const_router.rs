@@ -70,23 +70,18 @@ impl ConstRouter {
         }
     }
 
-    // Checks if the functions is an async function
-    // Inserts them in the router according to their nature(CoRoutine/SyncFunction)
+    /// Checks if the functions is an async function
+    /// Inserts them in the router according to their nature(CoRoutine/SyncFunction)
+    /// Doesn't allow query params/body/etc as variables cannot be "memoized"/"const"ified
     pub fn add_route(
         &self,
         route_type: &str, // we can just have route type as WS
         route: &str,
         function: Py<PyAny>,
         is_async: bool,
-        // queries: Rc<RefCell<HashMap<String, String>>>,
         number_of_params: u8,
         event_loop: &PyAny,
     ) -> Result<(), Error> {
-        // TODO:
-        // allow handlers
-        // allow routes
-        // and all others
-        // spawn a blockking thread for insertion
         let table = match self.get_relevant_map_str(route_type) {
             Some(table) => table,
             None => bail!("No relevant map"),
