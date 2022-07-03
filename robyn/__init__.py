@@ -42,7 +42,7 @@ class Robyn:
 
         self._config_logger()
 
-    def _add_route(self, route_type, endpoint, handler):
+    def _add_route(self, route_type, endpoint, handler, const=False):
         """
         [This is base handler for all the decorators]
 
@@ -53,7 +53,7 @@ class Robyn:
 
         """ We will add the status code here only
         """
-        self.router.add_route(route_type, endpoint, handler)
+        self.router.add_route(route_type, endpoint, handler, const)
 
     def before_request(self, endpoint):
         """
@@ -152,7 +152,7 @@ class Robyn:
                 observer.stop()
                 observer.join()
 
-    def get(self, endpoint):
+    def get(self, endpoint, const=False):
         """
         The @app.get decorator to add a get route
 
@@ -160,7 +160,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self._add_route("GET", endpoint, handler)
+            self._add_route("GET", endpoint, handler, const)
 
         return inner
 

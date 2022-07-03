@@ -2,6 +2,7 @@ use crate::executors::execute_event_handler;
 use crate::io_helpers::apply_headers;
 use crate::request_handler::{handle_http_middleware_request, handle_http_request};
 
+use crate::routers::const_router::ConstRouter;
 use crate::routers::router::Router;
 use crate::routers::{middleware_router::MiddlewareRouter, web_socket_router::WebSocketRouter};
 use crate::shared_socket::SocketHeld;
@@ -40,6 +41,7 @@ struct Directory {
 #[pyclass]
 pub struct Server {
     router: Arc<Router>,
+    const_router: Arc<ConstRouter>,
     websocket_router: Arc<WebSocketRouter>,
     middleware_router: Arc<MiddlewareRouter>,
     headers: Arc<DashMap<String, String>>,
@@ -54,6 +56,7 @@ impl Server {
     pub fn new() -> Self {
         Self {
             router: Arc::new(Router::new()),
+            const_router: Arc::new(ConstRouter::new()),
             websocket_router: Arc::new(WebSocketRouter::new()),
             middleware_router: Arc::new(MiddlewareRouter::new()),
             headers: Arc::new(DashMap::new()),
@@ -85,6 +88,7 @@ impl Server {
         let raw_socket = held_socket.get_socket();
 
         let router = self.router.clone();
+        let const_router = self.const_router.clone();
         let middleware_router = self.middleware_router.clone();
         let web_socket_router = self.websocket_router.clone();
         let headers = self.headers.clone();
@@ -141,6 +145,7 @@ impl Server {
 
                     app = app
                         .app_data(web::Data::new(router.clone()))
+                        .app_data(web::Data::new(const_router.clone()))
                         .app_data(web::Data::new(middleware_router.clone()))
                         .app_data(web::Data::new(headers.clone()));
 
@@ -169,6 +174,7 @@ impl Server {
 
                     app.default_service(web::route().to(
                         move |router,
+                              const_router: web::Data<Arc<ConstRouter>>,
                               middleware_router: web::Data<Arc<MiddlewareRouter>>,
                               headers,
                               payload,
@@ -176,7 +182,15 @@ impl Server {
                             pyo3_asyncio::tokio::scope_local(
                                 (*event_loop_hdl).clone(),
                                 async move {
-                                    index(router, middleware_router, headers, payload, req).await
+                                    index(
+                                        router,
+                                        const_router,
+                                        middleware_router,
+                                        headers,
+                                        payload,
+                                        req,
+                                    )
+                                    .await
                                 },
                             )
                         },
@@ -241,16 +255,35 @@ impl Server {
     /// can be called after the server has been started
     pub fn add_route(
         &self,
+        py: Python,
         route_type: &str,
         route: &str,
         handler: Py<PyAny>,
         is_async: bool,
         number_of_params: u8,
+        const_route: bool,
     ) {
         debug!("Route added for {} {} ", route_type, route);
-        self.router
-            .add_route(route_type, route, handler, is_async, number_of_params)
-            .unwrap();
+        // let event_loop = pyo3_asyncio::tokio::get_current_loop(py).unwrap();
+        let asyncio = py.import("asyncio").unwrap();
+        let event_loop = asyncio.call_method0("get_event_loop").unwrap();
+
+        if const_route {
+            self.const_router
+                .add_route(
+                    route_type,
+                    route,
+                    handler,
+                    is_async,
+                    number_of_params,
+                    event_loop,
+                )
+                .unwrap();
+        } else {
+            self.router
+                .add_route(route_type, route, handler, is_async, number_of_params)
+                .unwrap();
+        }
     }
 
     /// Add a new route to the routing tables
@@ -315,6 +348,7 @@ impl Default for Server {
 /// path, and returns a Future of a Response.
 async fn index(
     router: web::Data<Arc<Router>>,
+    const_router: web::Data<Arc<ConstRouter>>,
     middleware_router: web::Data<Arc<MiddlewareRouter>>,
     headers: web::Data<Arc<Headers>>,
     mut payload: web::Payload,
@@ -358,23 +392,36 @@ async fn index(
         headers_dup = tuple_params.get("headers").unwrap().clone();
     }
 
-    let response = match router.get_route(req.method().clone(), req.uri().path()) {
-        Some(((handler_function, number_of_params), route_params)) => {
-            handle_http_request(
-                handler_function,
-                number_of_params,
-                headers_dup.clone(),
-                &mut payload,
-                &req,
-                route_params,
-                queries.clone(),
-            )
-            .await
-        }
-        None => {
-            let mut response = HttpResponse::Ok();
-            apply_headers(&mut response, headers_dup.clone());
-            response.finish()
+    let response = if const_router
+        .get_route(req.method().clone(), req.uri().path())
+        .is_some()
+    {
+        let mut response = HttpResponse::Ok();
+        apply_headers(&mut response, headers_dup.clone());
+        response.body(
+            const_router
+                .get_route(req.method().clone(), req.uri().path())
+                .unwrap(),
+        )
+    } else {
+        match router.get_route(req.method().clone(), req.uri().path()) {
+            Some(((handler_function, number_of_params), route_params)) => {
+                handle_http_request(
+                    handler_function,
+                    number_of_params,
+                    headers_dup.clone(),
+                    &mut payload,
+                    &req,
+                    route_params,
+                    queries.clone(),
+                )
+                .await
+            }
+            None => {
+                let mut response = HttpResponse::Ok();
+                apply_headers(&mut response, headers_dup.clone());
+                response.finish()
+            }
         }
     };
 

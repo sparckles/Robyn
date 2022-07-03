@@ -58,7 +58,7 @@ class Robyn:
         """
 
         ...
-    def get(self, endpoint: str) -> Callable[..., None]:
+    def get(self, endpoint: str, const: bool = False) -> Callable[..., None]:
         """
         The @app.get decorator to add a get route
 

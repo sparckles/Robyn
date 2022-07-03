@@ -32,7 +32,7 @@ class Router(BaseRouter):
 
         return response
 
-    def add_route(self, route_type, endpoint, handler):
+    def add_route(self, route_type, endpoint, handler, const):
         async def async_inner_handler(*args):
             response = self._format_response(await handler(*args))
             return response
@@ -50,6 +50,7 @@ class Router(BaseRouter):
                     async_inner_handler,
                     True,
                     number_of_params,
+                    const
                 )
             )
         else:
@@ -60,6 +61,7 @@ class Router(BaseRouter):
                     inner_handler,
                     False,
                     number_of_params,
+                    const
                 )
             )
 

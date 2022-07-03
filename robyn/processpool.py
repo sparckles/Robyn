@@ -43,6 +43,8 @@ def spawn_process(
 
     server = Server()
 
+    # TODO: if we remove the dot access
+    # the startup time will improve in the server
     for directory in directories:
         route, directory_path, index_file, show_files_listing = directory
         server.add_directory(route, directory_path, index_file, show_files_listing)
@@ -51,8 +53,8 @@ def spawn_process(
         server.add_header(key, val)
 
     for route in routes:
-        route_type, endpoint, handler, is_async, number_of_params = route
-        server.add_route(route_type, endpoint, handler, is_async, number_of_params)
+        route_type, endpoint, handler, is_async, number_of_params, const = route
+        server.add_route(route_type, endpoint, handler, is_async, number_of_params, const)
 
     for route in middlewares:
         route_type, endpoint, handler, is_async, number_of_params = route

@@ -44,6 +44,16 @@ async def hello(request):
     return {"status_code": "200", "body": "hello", "type": "text"}
 
 
+@app.get("/const_request", const=True)
+async def const_request():
+    return "Hello world"
+
+
+@app.get("/const_request_json", const=True)
+async def const_request_json():
+    return jsonify({"hello": "world"})
+
+
 @app.get('/404')
 def return_404():
     return {"status_code": "404", "body": "hello", "type": "text"}
