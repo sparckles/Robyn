@@ -302,7 +302,7 @@
 
 - Add body support for PUT, POST and PATCH [\#53](https://github.com/sansyrox/robyn/issues/53)
 - Away with limited internet access till 1st August [\#51](https://github.com/sansyrox/robyn/issues/51)
-- Add doc stings [\#42](https://github.com/sansyrox/robyn/issues/42)
+- Add doc strings [\#42](https://github.com/sansyrox/robyn/issues/42)
 - OSX builds are failing [\#41](https://github.com/sansyrox/robyn/issues/41)
 - Add a dev server implementation [\#37](https://github.com/sansyrox/robyn/issues/37)
 - Mini Roadmap | A list of issues that would require fixing [\#19](https://github.com/sansyrox/robyn/issues/19)
