@@ -102,7 +102,6 @@ async def query_get(request):
 
 @app.post("/jsonify/:id")
 async def json(request):
-    print(request["params"]["id"])
     return jsonify({"hello": "world"})
 
 
@@ -125,6 +124,11 @@ async def put(request):
 async def putreq_with_body(request):
     print(request)
     return bytearray(request["body"]).decode("utf-8")
+
+
+@app.post("/headers")
+async def postreq_with_headers(request):
+    return jsonify(request)
 
 
 @app.delete("/delete")

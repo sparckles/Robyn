@@ -18,5 +18,11 @@ def test_post_with_param(session):
 def test_jsonify_request(session):
     res = requests.post(f"{BASE_URL}/jsonify/123")
     assert(res.status_code == 200)
-    assert res.json()=={"hello":"world"}
+    assert res.json() == {"hello": "world"}
+
+
+def test_post_request_headers(session):
+    res = requests.post(f"{BASE_URL}/header", headers={"hello": "world"})
+    assert(res.status_code == 200)
+    assert res.json()["hello"] == "world"
 

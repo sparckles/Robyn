@@ -391,7 +391,13 @@ async fn index(
 
     if !tuple_params.is_empty() {
         headers_dup = tuple_params.get("headers").unwrap().clone();
+    } else {
+        for elem in (*headers).iter() {
+            headers_dup.insert(elem.key().clone(), elem.value().clone());
+        }
     }
+
+    debug!("These are the headers {:?}", headers);
 
     let response = if const_router
         .get_route(req.method().clone(), req.uri().path())
