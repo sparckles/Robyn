@@ -154,6 +154,7 @@ jobs:
             apt-get install -y $PYTHON $PYTHON-distutils $PYTHON-venv
           run: |
             ls -lrth /artifacts
+            PYTHON=python${{ matrix.python.version }}
             $PYTHON --version
             $PYTHON -m venv venv
             source venv/bin/activate
