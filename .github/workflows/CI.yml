@@ -147,9 +147,10 @@ jobs:
             --volume "${PWD}/dist:/artifacts"
           install: |
             PYTHON=python${{ matrix.python.version }}
-            add-apt-repository ppa:deadsnakes/ppa
             apt-get update -y
             apt-get install -y --no-install-recommends software-properties-common
+            add-apt-repository ppa:deadsnakes/ppa
+            apt-get update -y
             apt-get install -y $PYTHON $PYTHON-distutils $PYTHON-pip
           run: |
             ls -lrth /artifacts
