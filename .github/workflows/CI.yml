@@ -9,7 +9,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        python-version: [3.11.0-beta.4]  # ["3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -49,7 +49,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: [3.11.0-beta.4]  # ["3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
         target: [x64, x86]
     steps:
       - uses: actions/checkout@v3
@@ -146,15 +146,14 @@ jobs:
           dockerRunArgs: |
             --volume "${PWD}/dist:/artifacts"
           install: |
-            PYTHON=python${{ matrix.python.version }}
             apt-get update -y
             apt-get install -y --no-install-recommends software-properties-common
             add-apt-repository ppa:deadsnakes/ppa
             apt-get update -y
+            PYTHON=python${{ matrix.python.version }}
             apt-get install -y $PYTHON $PYTHON-distutils $PYTHON-venv
           run: |
             ls -lrth /artifacts
-            PYTHON=python${{ matrix.python.version }}
             $PYTHON --version
             $PYTHON -m venv venv
             source venv/bin/activate
