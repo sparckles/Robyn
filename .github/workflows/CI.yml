@@ -156,9 +156,11 @@ jobs:
             ls -lrth /artifacts
             PYTHON=python${{ matrix.python.version }}
             $PYTHON --version
-            $PYTHON -m pip install --upgrade pip html5lib
-            $PYTHON -m pip install --force-reinstall dist/robyn*.whl
-            cd ~ && $PYTHON -c 'import robyn'
+            $PYTHON -m venv venv
+            source venv/bin/activate
+            pip install --upgrade pip html5lib
+            install --force-reinstall dist/robyn*.whl
+            cd ~ && python -c 'import robyn'
       - name: Upload wheels
         uses: actions/upload-artifact@v3
         with:
