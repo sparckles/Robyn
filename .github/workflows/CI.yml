@@ -122,7 +122,7 @@ jobs:
             { version: "3.7", abi: "cp37-cp37m" },
             { version: "3.8", abi: "cp38-cp38" },
             { version: "3.9", abi: "cp39-cp39" },
-            # { version: "3.10", abi: "cp310-cp310" },
+            { version: "3.10", abi: "cp310-cp310" },
           ]
         target: [aarch64, armv7, s390x, ppc64le]
     steps:
@@ -149,8 +149,7 @@ jobs:
             apt-get install -y --no-install-recommends python3 python3-pip software-properties-common
             add-apt-repository ppa:deadsnakes/ppa
             apt-get update -y
-            apt-get install -y python3.7-distutils python3.9-distutils
-            apt-get install -y python3.7 python3.9
+            apt-get install -y python${{ matrix.python.version }} python${{ matrix.python.version }}-distutils
           run: |
             ls -lrth /artifacts
             PYTHON=python${{ matrix.python.version }}
