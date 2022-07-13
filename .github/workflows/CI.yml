@@ -27,7 +27,7 @@ jobs:
         with:
           target: x86_64
           args: -i python --release --out dist
-      - name: Install built wheel - x86_64
+      - name: Install build wheel - x86_64
         run: |
           pip install --force-reinstall dist/robyn*.whl
           cd ~ && python -c 'import robyn'
@@ -35,7 +35,7 @@ jobs:
         uses: messense/maturin-action@v1
         with:
           args: -i python --release --universal2 --out dist --no-sdist
-      - name: Install built wheel - universal2
+      - name: Install build wheel - universal2
         run: |
           pip install --force-reinstall dist/robyn*_universal2.whl
           cd ~ && python -c 'import robyn'
@@ -68,7 +68,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           args: -i python --release --out dist --no-sdist
-      - name: Install built wheel
+      - name: Install build wheel
         shell: bash
         run: |
           pip install --force-reinstall dist/robyn*.whl
@@ -102,7 +102,7 @@ jobs:
           target: ${{ matrix.target }}
           manylinux: auto
           args: -i python${{ matrix.python-version }} --release --out dist --no-sdist
-      - name: Install built wheel
+      - name: Install build wheel
         if: matrix.target == 'x86_64'
         run: |
           pip install --force-reinstall dist/robyn*.whl
@@ -137,7 +137,7 @@ jobs:
           manylinux: auto
           args: -i python3.9 --release --out dist --no-sdist
       - uses: uraimo/run-on-arch-action@v2.2.0
-        name: Install built wheel
+        name: Install build wheel
         with:
           arch: ${{ matrix.target }}
           distro: ubuntu20.04
@@ -151,7 +151,7 @@ jobs:
             apt-get install -y --no-install-recommends software-properties-common
             add-apt-repository ppa:deadsnakes/ppa
             apt-get update -y
-            apt-get install -y $PYTHON $PYTHON-distutils
+            apt-get install -y $PYTHON $PYTHON-distutils $PYTHON-venv
           run: |
             ls -lrth /artifacts
             PYTHON=python${{ matrix.python.version }}
