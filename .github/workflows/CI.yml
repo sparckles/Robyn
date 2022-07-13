@@ -9,7 +9,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: [3.11.0-beta.4]  # ["3.7", "3.8", "3.9", "3.10"]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -49,7 +49,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: [3.11.0-beta.4]  # ["3.7", "3.8", "3.9", "3.10"]
         target: [x64, x86]
     steps:
       - uses: actions/checkout@v3
@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: [3.11.0-beta.4]  # ["3.7", "3.8", "3.9", "3.10"]
         target: [x86_64, i686]
     steps:
       - uses: actions/checkout@v3
@@ -140,7 +140,7 @@ jobs:
         name: Install build wheel
         with:
           arch: ${{ matrix.target }}
-          distro: ubuntu20.04
+          distro: ubuntu22.04
           githubToken: ${{ github.token }}
           # Mount the dist directory as /artifacts in the container
           dockerRunArgs: |
@@ -159,7 +159,7 @@ jobs:
             $PYTHON -m venv venv
             source venv/bin/activate
             pip install --upgrade pip html5lib
-            install --force-reinstall dist/robyn*.whl
+            pip install --force-reinstall dist/robyn*.whl
             cd ~ && python -c 'import robyn'
       - name: Upload wheels
         uses: actions/upload-artifact@v3
@@ -178,7 +178,7 @@ jobs:
           name: wheels
       - uses: actions/setup-python@v4
         with:
-          python-version: 3.10
+          python-version: 3.x
       - name: Publish to PyPi
         env:
           TWINE_USERNAME: __token__
