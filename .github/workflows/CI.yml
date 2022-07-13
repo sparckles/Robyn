@@ -151,7 +151,7 @@ jobs:
             apt-get install -y --no-install-recommends software-properties-common
             add-apt-repository ppa:deadsnakes/ppa
             apt-get update -y
-            apt-get install -y $PYTHON $PYTHON-distutils $PYTHON-pip
+            apt-get install -y $PYTHON $PYTHON-distutils
           run: |
             ls -lrth /artifacts
             PYTHON=python${{ matrix.python.version }}
