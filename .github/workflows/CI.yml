@@ -158,7 +158,7 @@ jobs:
             $PYTHON --version
             $PYTHON -m venv venv
             source venv/bin/activate
-            pip install --upgrade pip html5lib
+            pip install --upgrade pip
             pip install --force-reinstall dist/robyn*.whl
             cd ~ && python -c 'import robyn'
       - name: Upload wheels
