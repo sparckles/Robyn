@@ -108,7 +108,7 @@ To contribute to Robyn, make sure to first go through the [CONTRIBUTING.md](./CO
 
 Thanks to all the contributors of the project. Robyn will not be what it is without all your support :heart:.
 
-Special thanks to the [ PyO3 ](https://pyo3.rs/v0.13.2/) community and [ Andrew from PyO3-asyncio ](awestlake87/pyo3-asyncio) for their amazing libraries and their support for my queries. 💖
+Special thanks to the [ PyO3 ](https://pyo3.rs/v0.13.2/) community and [ Andrew from PyO3-asyncio ](https://github.com/awestlake87/pyo3-asyncio) for their amazing libraries and their support for my queries. 💖
 
 ## ✨ Sponsors
 
