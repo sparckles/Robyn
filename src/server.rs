@@ -253,6 +253,7 @@ impl Server {
 
     /// Add a new route to the routing tables
     /// can be called after the server has been started
+    #[allow(clippy::too_many_arguments)]
     pub fn add_route(
         &self,
         py: Python,
@@ -425,7 +426,7 @@ async fn index(
         }
     };
 
-    let _ = match middleware_router.get_route("AFTER_REQUEST", req.uri().path()) {
+    match middleware_router.get_route("AFTER_REQUEST", req.uri().path()) {
         Some(((handler_function, number_of_params), route_params)) => {
             let x = handle_http_middleware_request(
                 handler_function,

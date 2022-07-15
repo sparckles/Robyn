@@ -1,7 +1,7 @@
+use std::sync::Arc;
 use std::sync::RwLock;
-use std::{collections::HashMap, sync::Arc};
 // pyo3 modules
-use crate::{executors::execute_function, types::PyFunction};
+use crate::executors::execute_function;
 use log::debug;
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
@@ -115,8 +115,9 @@ impl ConstRouter {
     ) -> Option<String> {
         // need to split this function in multiple smaller functions
         let table = self.get_relevant_map(route_method)?;
+        let route_map = table.read().ok()?;
 
-        match table.clone().read().unwrap().at(route) {
+        match route_map.at(route) {
             Ok(res) => Some(res.value.clone()),
             Err(_) => None,
         }
