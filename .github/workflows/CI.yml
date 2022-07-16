@@ -9,10 +9,10 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install Rust toolchain
@@ -27,7 +27,7 @@ jobs:
         with:
           target: x86_64
           args: -i python --release --out dist
-      - name: Install built wheel - x86_64
+      - name: Install build wheel - x86_64
         run: |
           pip install --force-reinstall dist/robyn*.whl
           cd ~ && python -c 'import robyn'
@@ -35,12 +35,12 @@ jobs:
         uses: messense/maturin-action@v1
         with:
           args: -i python --release --universal2 --out dist --no-sdist
-      - name: Install built wheel - universal2
+      - name: Install build wheel - universal2
         run: |
           pip install --force-reinstall dist/robyn*_universal2.whl
           cd ~ && python -c 'import robyn'
       - name: Upload wheels
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: wheels
           path: dist
@@ -49,11 +49,11 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
         target: [x64, x86]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.target }}
@@ -68,13 +68,13 @@ jobs:
         with:
           target: ${{ matrix.target }}
           args: -i python --release --out dist --no-sdist
-      - name: Install built wheel
+      - name: Install build wheel
         shell: bash
         run: |
           pip install --force-reinstall dist/robyn*.whl
           cd ~ && python -c 'import robyn'
       - name: Upload wheels
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: wheels
           path: dist
@@ -83,17 +83,17 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
         target: [x86_64, i686]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           profile: minimal
           default: true
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Build Wheels
@@ -102,13 +102,13 @@ jobs:
           target: ${{ matrix.target }}
           manylinux: auto
           args: -i python${{ matrix.python-version }} --release --out dist --no-sdist
-      - name: Install built wheel
+      - name: Install build wheel
         if: matrix.target == 'x86_64'
         run: |
           pip install --force-reinstall dist/robyn*.whl
           cd ~ && python -c 'import robyn'
       - name: Upload wheels
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: wheels
           path: dist
@@ -116,16 +116,18 @@ jobs:
   linux-cross:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python:
           [
             { version: "3.7", abi: "cp37-cp37m" },
             { version: "3.8", abi: "cp38-cp38" },
             { version: "3.9", abi: "cp39-cp39" },
+            { version: "3.10", abi: "cp310-cp310" },
           ]
         target: [aarch64, armv7, s390x, ppc64le]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Build Wheels
         uses: messense/maturin-action@v1
         env:
@@ -134,8 +136,8 @@ jobs:
           target: ${{ matrix.target }}
           manylinux: auto
           args: -i python3.9 --release --out dist --no-sdist
-      - uses: uraimo/run-on-arch-action@v2.0.5
-        name: Install built wheel
+      - uses: uraimo/run-on-arch-action@v2.2.0
+        name: Install build wheel
         with:
           arch: ${{ matrix.target }}
           distro: ubuntu20.04
@@ -144,20 +146,23 @@ jobs:
           dockerRunArgs: |
             --volume "${PWD}/dist:/artifacts"
           install: |
-            apt-get update
-            apt-get install -y --no-install-recommends python3 python3-pip software-properties-common
+            apt-get update -y
+            apt-get install -y --no-install-recommends software-properties-common
             add-apt-repository ppa:deadsnakes/ppa
             apt-get update -y
-            apt-get install -y python3.7-distutils python3.9-distutils
-            apt-get install -y python3.7 python3.9
+            PYTHON=python${{ matrix.python.version }}
+            apt-get install -y $PYTHON $PYTHON-distutils $PYTHON-venv
           run: |
             ls -lrth /artifacts
             PYTHON=python${{ matrix.python.version }}
-            $PYTHON -m pip install -U pip
-            $PYTHON -m pip install --force-reinstall dist/robyn*.whl
-            cd ~ && $PYTHON -c 'import robyn'
+            $PYTHON --version
+            $PYTHON -m venv venv
+            source venv/bin/activate
+            pip install --upgrade pip
+            pip install --force-reinstall dist/robyn*.whl
+            cd ~ && python -c 'import robyn'
       - name: Upload wheels
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: wheels
           path: dist
@@ -168,12 +173,12 @@ jobs:
     if: "startsWith(github.ref, 'refs/tags/')"
     needs: [macos, windows, linux, linux-cross]
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: wheels
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
-          python-version: 3.9
+          python-version: 3.x
       - name: Publish to PyPi
         env:
           TWINE_USERNAME: __token__
