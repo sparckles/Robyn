@@ -367,6 +367,8 @@ async fn index(
         }
     }
 
+    debug!("These are the main headers {:?}", req.headers().iter());
+
     let tuple_params = match middleware_router.get_route("BEFORE_REQUEST", req.uri().path()) {
         Some(((handler_function, number_of_params), route_params)) => {
             let x = handle_http_middleware_request(
@@ -397,7 +399,7 @@ async fn index(
         }
     }
 
-    debug!("These are the headers {:?}", headers);
+    debug!("These are the headers {:?}", headers_dup);
 
     let response = if const_router
         .get_route(req.method().clone(), req.uri().path())

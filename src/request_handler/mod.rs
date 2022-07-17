@@ -37,6 +37,8 @@ pub async fn handle_http_request(
     route_params: HashMap<String, String>,
     queries: Rc<RefCell<HashMap<String, String>>>,
 ) -> HttpResponse {
+    debug!("Top tier requests {:?}", headers);
+
     let contents = match execute_http_function(
         function,
         payload,
