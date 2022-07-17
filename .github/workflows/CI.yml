@@ -9,7 +9,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11-dev"]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -49,7 +49,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11-dev"]
         target: [x64, x86]
     steps:
       - uses: actions/checkout@v3
@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11-dev"]
         target: [x86_64, i686]
     steps:
       - uses: actions/checkout@v3
@@ -124,6 +124,7 @@ jobs:
             { version: "3.8", abi: "cp38-cp38" },
             { version: "3.9", abi: "cp39-cp39" },
             { version: "3.10", abi: "cp310-cp310" },
+            { version: "3.11", abi: "cp310-cp311" },
           ]
         target: [aarch64, armv7, s390x, ppc64le]
     steps:
