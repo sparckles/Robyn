@@ -129,7 +129,7 @@ pub async fn execute_function(
     number_of_params: u8,
     is_async: bool,
 ) -> Result<HashMap<String, String>> {
-    let mut request: HashMap<String, String> = HashMap::new();
+    let request: HashMap<String, String> = HashMap::new();
 
     if is_async {
         let output = Python::with_gil(|py| {

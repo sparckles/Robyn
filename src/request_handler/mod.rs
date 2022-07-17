@@ -72,7 +72,7 @@ pub async fn handle_http_request(
     debug!("These are the headers from serde {:?}", headers);
 
     let mut response = HttpResponse::build(status_code);
-    apply_headers(&mut response, headers.clone());
+    apply_headers(&mut response, headers);
     let final_response = if !body.is_empty() {
         response.body(body)
     } else {
