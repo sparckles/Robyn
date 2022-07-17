@@ -152,6 +152,6 @@ jobs:
           command: |
             curl https://sh.rustup.rs -sSf | sh -s -- -y
             source $HOME/.cargo/env
-            maturin build  -i python --release --universal2 --out dist --no-sdist
+            maturin build  -i python --release --universal2 --out dist
             pip install --force-reinstall dist/robyn*.whl
             pytest ~/project/integration_tests
