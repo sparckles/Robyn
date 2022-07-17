@@ -20,6 +20,7 @@ use std::sync::{Arc, RwLock};
 use std::thread;
 
 use actix_files::Files;
+use actix_http::header::HeaderMap;
 use actix_http::KeepAlive;
 use actix_web::*;
 use dashmap::DashMap;
@@ -44,7 +45,7 @@ pub struct Server {
     const_router: Arc<ConstRouter>,
     websocket_router: Arc<WebSocketRouter>,
     middleware_router: Arc<MiddlewareRouter>,
-    headers: Arc<DashMap<String, String>>,
+    global_headers: Arc<DashMap<String, String>>,
     directories: Arc<RwLock<Vec<Directory>>>,
     startup_handler: Option<Arc<PyFunction>>,
     shutdown_handler: Option<Arc<PyFunction>>,
@@ -59,7 +60,7 @@ impl Server {
             const_router: Arc::new(ConstRouter::new()),
             websocket_router: Arc::new(WebSocketRouter::new()),
             middleware_router: Arc::new(MiddlewareRouter::new()),
-            headers: Arc::new(DashMap::new()),
+            global_headers: Arc::new(DashMap::new()),
             directories: Arc::new(RwLock::new(Vec::new())),
             startup_handler: None,
             shutdown_handler: None,
@@ -91,7 +92,7 @@ impl Server {
         let const_router = self.const_router.clone();
         let middleware_router = self.middleware_router.clone();
         let web_socket_router = self.websocket_router.clone();
-        let headers = self.headers.clone();
+        let global_headers = self.global_headers.clone();
         let directories = self.directories.clone();
         let workers = Arc::new(workers);
 
@@ -147,7 +148,7 @@ impl Server {
                         .app_data(web::Data::new(router.clone()))
                         .app_data(web::Data::new(const_router.clone()))
                         .app_data(web::Data::new(middleware_router.clone()))
-                        .app_data(web::Data::new(headers.clone()));
+                        .app_data(web::Data::new(global_headers.clone()));
 
                     let web_socket_map = web_socket_router.get_web_socket_map();
                     for (elem, value) in (web_socket_map.read().unwrap()).iter() {
@@ -158,7 +159,7 @@ impl Server {
                             &route.clone(),
                             web::get().to(
                                 move |_router: web::Data<Arc<Router>>,
-                                      _headers: web::Data<Arc<Headers>>,
+                                      _global_headers: web::Data<Arc<Headers>>,
                                       stream: web::Payload,
                                       req: HttpRequest| {
                                     start_web_socket(
@@ -176,7 +177,7 @@ impl Server {
                         move |router,
                               const_router: web::Data<Arc<ConstRouter>>,
                               middleware_router: web::Data<Arc<MiddlewareRouter>>,
-                              headers,
+                              global_headers,
                               payload,
                               req| {
                             pyo3_asyncio::tokio::scope_local(
@@ -186,7 +187,7 @@ impl Server {
                                         router,
                                         const_router,
                                         middleware_router,
-                                        headers,
+                                        global_headers,
                                         payload,
                                         req,
                                     )
@@ -242,13 +243,14 @@ impl Server {
     /// Adds a new header to our concurrent hashmap
     /// this can be called after the server has started.
     pub fn add_header(&self, key: &str, value: &str) {
-        self.headers.insert(key.to_string(), value.to_string());
+        self.global_headers
+            .insert(key.to_string(), value.to_string());
     }
 
     /// Removes a new header to our concurrent hashmap
     /// this can be called after the server has started.
     pub fn remove_header(&self, key: &str) {
-        self.headers.remove(key);
+        self.global_headers.remove(key);
     }
 
     /// Add a new route to the routing tables
@@ -345,13 +347,34 @@ impl Default for Server {
     }
 }
 
+async fn merge_headers(
+    global_headers: &Arc<Headers>,
+    request_headers: &HeaderMap,
+) -> HashMap<String, String> {
+    let mut headers = HashMap::new();
+
+    for elem in (global_headers).iter() {
+        headers.insert(elem.key().clone(), elem.value().clone());
+    }
+
+    for (key, value) in (request_headers).iter() {
+        headers.insert(
+            key.to_string().clone(),
+            // test if this crashes or not
+            value.to_str().unwrap().to_string().clone(),
+        );
+    }
+
+    headers
+}
+
 /// This is our service handler. It receives a Request, routes on it
 /// path, and returns a Future of a Response.
 async fn index(
     router: web::Data<Arc<Router>>,
     const_router: web::Data<Arc<ConstRouter>>,
     middleware_router: web::Data<Arc<MiddlewareRouter>>,
-    headers: web::Data<Arc<Headers>>,
+    global_headers: web::Data<Arc<Headers>>,
     mut payload: web::Payload,
     req: HttpRequest,
 ) -> impl Responder {
@@ -367,8 +390,9 @@ async fn index(
         }
     }
 
-    debug!("These are the main headers {:?}", req.headers().iter());
+    let headers = merge_headers(&global_headers, req.headers()).await;
 
+    // need a better name for this
     let tuple_params = match middleware_router.get_route("BEFORE_REQUEST", req.uri().path()) {
         Some(((handler_function, number_of_params), route_params)) => {
             let x = handle_http_middleware_request(
@@ -394,12 +418,10 @@ async fn index(
     if !tuple_params.is_empty() {
         headers_dup = tuple_params.get("headers").unwrap().clone();
     } else {
-        for elem in (*headers).iter() {
-            headers_dup.insert(elem.key().clone(), elem.value().clone());
-        }
+        headers_dup = headers;
     }
 
-    debug!("These are the headers {:?}", headers_dup);
+    debug!("These are the request headers {:?}", headers_dup);
 
     let response = if const_router
         .get_route(req.method().clone(), req.uri().path())
@@ -439,7 +461,7 @@ async fn index(
             let x = handle_http_middleware_request(
                 handler_function,
                 number_of_params,
-                &headers,
+                &headers_dup,
                 &mut payload,
                 &req,
                 route_params,

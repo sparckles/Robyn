@@ -22,7 +22,7 @@ def test_jsonify_request(session):
 
 
 def test_post_request_headers(session):
-    res = requests.post(f"{BASE_URL}/header", headers={"hello": "world"})
+    res = requests.post(f"{BASE_URL}/headers", headers={"hello": "world"})
     assert(res.status_code == 200)
     assert res.json()["hello"] == "world"
 
