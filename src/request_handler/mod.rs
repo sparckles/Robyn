@@ -3,12 +3,11 @@ use crate::executors::{execute_http_function, execute_middleware_function};
 use log::debug;
 use std::rc::Rc;
 use std::str::FromStr;
-use std::sync::Arc;
 use std::{cell::RefCell, collections::HashMap};
 
 use actix_web::{web, HttpRequest, HttpResponse, HttpResponseBuilder};
 // pyO3 module
-use crate::types::{Headers, PyFunction};
+use crate::types::PyFunction;
 
 #[inline]
 pub fn apply_headers(response: &mut HttpResponseBuilder, headers: HashMap<String, String>) {
@@ -75,7 +74,7 @@ pub async fn handle_http_request(
     );
 
     let mut response = HttpResponse::build(status_code);
-    apply_headers(&mut response, response_headers.clone());
+    apply_headers(&mut response, response_headers);
     let final_response = if !body.is_empty() {
         response.body(body)
     } else {

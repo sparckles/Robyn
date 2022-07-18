@@ -11,7 +11,7 @@ use actix_web::{http::Method, web, HttpRequest};
 use anyhow::{bail, Result};
 use log::debug;
 // pyO3 module
-use crate::types::{Headers, PyFunction};
+use crate::types::PyFunction;
 use futures_util::stream::StreamExt;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;

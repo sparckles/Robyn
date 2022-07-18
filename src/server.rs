@@ -413,13 +413,11 @@ async fn index(
 
     debug!("These are the tuple params {:?}", tuple_params);
 
-    let mut headers_dup = HashMap::new();
-
-    if !tuple_params.is_empty() {
-        headers_dup = tuple_params.get("headers").unwrap().clone();
+    let headers_dup = if !tuple_params.is_empty() {
+        tuple_params.get("headers").unwrap().clone()
     } else {
-        headers_dup = headers;
-    }
+        headers
+    };
 
     debug!("These are the request headers {:?}", headers_dup);
 
