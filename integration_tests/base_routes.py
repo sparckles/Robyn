@@ -1,11 +1,16 @@
 from robyn import Robyn, static_file, jsonify, WS
+
+from robyn.log_colors import Colors
 import asyncio
 import os
 import pathlib
+import logging
 
 app = Robyn(__file__)
 websocket = WS(app, "/web_socket")
 i = -1
+
+logger = logging.getLogger(__name__)
 
 
 @websocket.on("message")
@@ -102,7 +107,6 @@ async def query_get(request):
 
 @app.post("/jsonify/:id")
 async def json(request):
-    print(request["params"]["id"])
     return jsonify({"hello": "world"})
 
 
@@ -125,6 +129,12 @@ async def put(request):
 async def putreq_with_body(request):
     print(request)
     return bytearray(request["body"]).decode("utf-8")
+
+
+@app.post("/headers")
+async def postreq_with_headers(request):
+    logger.info(f"{Colors.OKGREEN} {request['headers']} \n{Colors.ENDC}")
+    return jsonify(request["headers"])
 
 
 @app.delete("/delete")

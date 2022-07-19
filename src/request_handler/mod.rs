@@ -3,12 +3,11 @@ use crate::executors::{execute_http_function, execute_middleware_function};
 use log::debug;
 use std::rc::Rc;
 use std::str::FromStr;
-use std::sync::Arc;
 use std::{cell::RefCell, collections::HashMap};
 
 use actix_web::{web, HttpRequest, HttpResponse, HttpResponseBuilder};
 // pyO3 module
-use crate::types::{Headers, PyFunction};
+use crate::types::PyFunction;
 
 #[inline]
 pub fn apply_headers(response: &mut HttpResponseBuilder, headers: HashMap<String, String>) {
@@ -61,7 +60,7 @@ pub async fn handle_http_request(
     let status_code =
         actix_http::StatusCode::from_str(contents.get("status_code").unwrap()).unwrap();
 
-    let headers: HashMap<String, String> = match contents.get("headers") {
+    let response_headers: HashMap<String, String> = match contents.get("headers") {
         Some(headers) => {
             let h: HashMap<String, String> = serde_json::from_str(headers).unwrap();
             h
@@ -69,10 +68,13 @@ pub async fn handle_http_request(
         None => HashMap::new(),
     };
 
-    debug!("These are the headers from serde {:?}", headers);
+    debug!(
+        "These are the request headers from serde {:?}",
+        response_headers
+    );
 
     let mut response = HttpResponse::build(status_code);
-    apply_headers(&mut response, headers);
+    apply_headers(&mut response, response_headers);
     let final_response = if !body.is_empty() {
         response.body(body)
     } else {
@@ -80,18 +82,17 @@ pub async fn handle_http_request(
     };
 
     debug!(
-        "The status code is {} and the headers are {:?}",
+        "The response status code is {} and the headers are {:?}",
         final_response.status(),
         final_response.headers()
     );
-    // response.body(contents.get("body").unwrap().to_owned())
     final_response
 }
 
 pub async fn handle_http_middleware_request(
     function: PyFunction,
     number_of_params: u8,
-    headers: &Arc<Headers>,
+    headers: &HashMap<String, String>,
     payload: &mut web::Payload,
     req: &HttpRequest,
     route_params: HashMap<String, String>,

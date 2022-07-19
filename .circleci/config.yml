@@ -5,8 +5,8 @@ orbs:
   # Orb commands and jobs help you with common scripting around a language/tool
   # so you dont have to copy and paste it everywhere.
   # See the orb documentation here: https://circleci.com/developer/orbs/orb/circleci/python
-  python: circleci/python@2.0.3
-  rust: circleci/rust@1.6.0
+  python: circleci/python@1.2
+  rust: circleci/rust@1.5.0
 
 commands:
   test:
@@ -152,6 +152,6 @@ jobs:
           command: |
             curl https://sh.rustup.rs -sSf | sh -s -- -y
             source $HOME/.cargo/env
-            maturin build  -i python --release --universal2 --out dist --no-sdist
+            maturin build  -i python --release --universal2 --out dist
             pip install --force-reinstall dist/robyn*.whl
             pytest ~/project/integration_tests

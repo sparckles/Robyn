@@ -11,7 +11,7 @@ use actix_web::{http::Method, web, HttpRequest};
 use anyhow::{bail, Result};
 use log::debug;
 // pyO3 module
-use crate::types::{Headers, PyFunction};
+use crate::types::PyFunction;
 use futures_util::stream::StreamExt;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
@@ -22,15 +22,14 @@ const MAX_SIZE: usize = 10_000;
 pub async fn execute_middleware_function<'a>(
     function: PyFunction,
     payload: &mut web::Payload,
-    headers: &Headers,
+    headers: &HashMap<String, String>,
     req: &HttpRequest,
     route_params: HashMap<String, String>,
     queries: Rc<RefCell<HashMap<String, String>>>,
     number_of_params: u8,
 ) -> Result<HashMap<String, HashMap<String, String>>> {
     // TODO:
-    // try executing the first version of middleware(s) here
-    // with just headers as params
+    // add body in middlewares too
 
     let mut data: Vec<u8> = Vec::new();
 
@@ -54,10 +53,7 @@ pub async fn execute_middleware_function<'a>(
 
     // request object accessible while creating routes
     let mut request = HashMap::new();
-    let mut headers_python = HashMap::new();
-    for elem in (*headers).iter() {
-        headers_python.insert(elem.key().clone(), elem.value().clone());
-    }
+
     let mut queries_clone: HashMap<String, String> = HashMap::new();
 
     for (key, value) in (*queries).borrow().clone() {
@@ -70,7 +66,8 @@ pub async fn execute_middleware_function<'a>(
                 let handler = handler.as_ref(py);
                 request.insert("params", route_params.into_py(py));
                 request.insert("queries", queries_clone.into_py(py));
-                request.insert("headers", headers_python.into_py(py));
+                // is this a bottleneck again?
+                request.insert("headers", headers.clone().into_py(py));
                 // request.insert("body", data.into_py(py));
 
                 // this makes the request object to be accessible across every route
@@ -104,7 +101,8 @@ pub async fn execute_middleware_function<'a>(
                 let handler = handler.as_ref(py);
                 request.insert("params", route_params.into_py(py));
                 request.insert("queries", queries_clone.into_py(py));
-                request.insert("headers", headers_python.into_py(py));
+                // is this a bottleneck again?
+                request.insert("headers", headers.clone().into_py(py));
                 request.insert("body", data.into_py(py));
 
                 let output: PyResult<&PyAny> = match number_of_params {
