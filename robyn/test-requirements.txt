@@ -1,5 +1,5 @@
 pytest==6.2.5
-maturin
+maturin==0.12.11
 watchdog
 requests==2.26.0
 uvloop==0.16.0
