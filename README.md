@@ -3,7 +3,6 @@
 
 # Robyn
 
-[![sansyrox](https://circleci.com/gh/sansyrox/robyn.svg?style=svg)](https://app.circleci.com/pipelines/github/sansyrox/robyn)
 [![Twitter](https://badgen.net/badge/icon/twitter?icon=twitter&label)](https://twitter.com/robyn_oss)
 [![Gitter](https://badges.gitter.im/robyn_/community.svg)](https://gitter.im/robyn_/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 [![Downloads](https://static.pepy.tech/personalized-badge/robyn?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Downloads)](https://pepy.tech/project/robyn)
