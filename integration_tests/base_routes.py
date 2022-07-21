@@ -117,6 +117,7 @@ async def post():
 
 @app.post("/post_with_body")
 async def postreq_with_body(request):
+    print(request)
     return bytearray(request["body"]).decode("utf-8")
 
 

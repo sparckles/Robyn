@@ -30,6 +30,9 @@ class Router(BaseRouter):
         else:
             response = {"status_code": "200", "body": res, "type": "text"}
 
+        if "body" in response:
+            response["body"] = bytearray(response["body"]).decode("utf-8")
+
         return response
 
     def add_route(self, route_type, endpoint, handler, const):
