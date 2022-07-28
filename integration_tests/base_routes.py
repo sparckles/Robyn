@@ -115,6 +115,12 @@ async def post():
     return "POST Request"
 
 
+@app.before_request("/post_with_body")
+async def before_post_request(request):
+    print(request)
+    return ""
+
+
 @app.post("/post_with_body")
 async def postreq_with_body(request):
     return bytearray(request["body"]).decode("utf-8")
