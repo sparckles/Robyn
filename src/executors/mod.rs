@@ -68,7 +68,7 @@ pub async fn execute_middleware_function<'a>(
                 request.insert("queries", queries_clone.into_py(py));
                 // is this a bottleneck again?
                 request.insert("headers", headers.clone().into_py(py));
-                // request.insert("body", data.into_py(py));
+                request.insert("body", data.into_py(py));
 
                 // this makes the request object to be accessible across every route
                 let coro: PyResult<&PyAny> = match number_of_params {
