@@ -1,13 +1,30 @@
 import asyncio
 import logging
 import multiprocessing as mp
+from multiprocessing.process import AuthenticationString
 import sys
 
-from .events import Events
-from .robyn import Server
+from robyn.events import Events
+from robyn.robyn import Server
+
+from copy import deepcopy
 
 
-mp.allow_connection_pickling()
+def initialize_event_loop():
+    # platform_name = platform.machine()
+    if sys.platform.startswith("win32") or sys.platform.startswith("linux-cross"):
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        return loop
+    else:
+        # uv loop doesn't support windows or arm machines at the moment
+        # but uv loop is much faster than native asyncio
+        import uvloop
+
+        uvloop.install()
+        loop = uvloop.new_event_loop()
+        asyncio.set_event_loop(loop)
+        return loop
 
 
 def spawn_process(
@@ -28,18 +45,7 @@ def spawn_process(
     :param workers number: This is the name given to the process to identify the process
     """
 
-    # platform_name = platform.machine()
-    if sys.platform.startswith("win32") or sys.platform.startswith("linux-cross"):
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-    else:
-        # uv loop doesn't support windows or arm machines at the moment
-        # but uv loop is much faster than native asyncio
-        import uvloop
-
-        uvloop.install()
-        loop = uvloop.new_event_loop()
-        asyncio.set_event_loop(loop)
+    loop = initialize_event_loop()
 
     server = Server()
 
@@ -81,3 +87,4 @@ def spawn_process(
         loop.run_forever()
     except KeyboardInterrupt:
         loop.close()
+

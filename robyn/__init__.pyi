@@ -9,14 +9,14 @@ from watchdog.observers import Observer
 
 from robyn.events import Events
 
-from .argument_parser import ArgumentParser
-from .dev_event_handler import EventHandler
-from .log_colors import Colors
-from .processpool import spawn_process
-from .responses import jsonify, static_file
-from .robyn import Server, SocketHeld
-from .router import MiddlewareRouter, Router, WebSocketRouter
-from .ws import WS
+from robyn.argument_parser import ArgumentParser
+from robyn.dev_event_handler import EventHandler
+from robyn.log_colors import Colors
+from robyn.processpool import spawn_process
+from robyn.responses import jsonify, static_file
+from robyn.robyn import Server, SocketHeld
+from robyn.router import MiddlewareRouter, Router, WebSocketRouter
+from robyn.ws import WS
 
 
 class Robyn:

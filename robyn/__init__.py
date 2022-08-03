@@ -6,17 +6,15 @@ import os
 from multiprocess import Process
 from watchdog.observers import Observer
 from robyn.events import Events
-from .argument_parser import ArgumentParser
-from .dev_event_handler import EventHandler
-from .log_colors import Colors
-from .processpool import spawn_process
-from .responses import jsonify, static_file
+from robyn.argument_parser import ArgumentParser
+from robyn.dev_event_handler import EventHandler
+from robyn.log_colors import Colors
+from robyn.processpool import spawn_process
+from robyn.responses import jsonify, static_file
 
-from .robyn import SocketHeld
-from .router import MiddlewareRouter, Router, WebSocketRouter
-from .ws import WS
-
-mp.allow_connection_pickling()
+from robyn.robyn import SocketHeld
+from robyn.router import MiddlewareRouter, Router, WebSocketRouter
+from robyn.ws import WS
 
 logger = logging.getLogger(__name__)
 
@@ -104,11 +102,13 @@ class Robyn:
 
         :param port int: reperesents the port number at which the server is listening
         """
+        mp.allow_connection_pickling()
 
         if not self.dev:
             processes = []
             workers = self.workers
             socket = SocketHeld(url, port)
+
             for _ in range(self.processes):
                 copied_socket = socket.try_clone()
                 p = Process(
@@ -136,6 +136,7 @@ class Robyn:
                 logger.info(f"{Colors.BOLD}{Colors.OKGREEN} Terminating server!! {Colors.ENDC}")
                 for process in processes:
                     process.kill()
+
         else:
             event_handler = EventHandler(self.file_path)
             event_handler.start_server_first_time()
