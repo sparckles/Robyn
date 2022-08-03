@@ -2,7 +2,7 @@
 
 on: [push, pull_request, workflow_dispatch]
 
-name: Python Continuous integration
+name: Python Continuous Integration
 
 jobs:
   test:
