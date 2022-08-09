@@ -147,12 +147,12 @@ jobs:
           dockerRunArgs: |
             --volume "${PWD}/dist:/artifacts"
           install: |
-            apt-get update -y
-            apt-get install -y --no-install-recommends software-properties-common
+            apt update -y
+            apt install -y --no-install-recommends software-properties-common
             add-apt-repository ppa:deadsnakes/ppa
-            apt-get update -y
+            apt update -y
             PYTHON=python${{ matrix.python.version }}
-            apt-get install -y $PYTHON $PYTHON-distutils $PYTHON-venv
+            apt install -y $PYTHON $PYTHON-distutils $PYTHON-venv
           run: |
             ls -lrth /artifacts
             PYTHON=python${{ matrix.python.version }}
