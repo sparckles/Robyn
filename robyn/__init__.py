@@ -103,12 +103,11 @@ class Robyn:
 
         :param port int: reperesents the port number at which the server is listening
         """
-        def init_procespool(socket):
+        def init_processpool(socket):
 
             process_pool = []
             if sys.platform.startswith("win32"):
-                process_pool = [
-                    Process(
+                process = Process(
                         target=spawn_process,
                         args=(
                             self.directories,
@@ -121,7 +120,9 @@ class Robyn:
                             workers,
                         )
                     )
-                ]
+                process.start()
+                process_pool.append(process)
+                
                 return process_pool
             for _ in range(self.processes):
                 copied_socket = socket.try_clone()
@@ -149,7 +150,7 @@ class Robyn:
             workers = self.workers
             socket = SocketHeld(url, port)
 
-            process_pool = init_procespool(socket)
+            process_pool = init_processpool(socket)
 
             logger.info(f"{Colors.HEADER}Starting up \n{Colors.ENDC}")
             logger.info(f"{Colors.OKGREEN}Press Ctrl + C to stop \n{Colors.ENDC}")
