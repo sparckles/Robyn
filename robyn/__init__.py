@@ -2,6 +2,7 @@ import asyncio
 import logging
 import multiprocessing as mp
 import os
+import sys
 
 from multiprocess import Process
 from watchdog.observers import Observer
@@ -102,16 +103,29 @@ class Robyn:
 
         :param port int: reperesents the port number at which the server is listening
         """
-        mp.allow_connection_pickling()
+        def init_procespool(socket):
 
-        if not self.dev:
-            processes = []
-            workers = self.workers
-            socket = SocketHeld(url, port)
-
+            process_pool = []
+            if sys.platform.startswith("win32"):
+                process_pool = [
+                    Process(
+                        target=spawn_process,
+                        args=(
+                            self.directories,
+                            self.headers,
+                            self.router.get_routes(),
+                            self.middleware_router.get_routes(),
+                            self.web_socket_router.get_routes(),
+                            self.event_handlers,
+                            socket,
+                            workers,
+                        )
+                    )
+                ]
+                return process_pool
             for _ in range(self.processes):
                 copied_socket = socket.try_clone()
-                p = Process(
+                process = Process(
                     target=spawn_process,
                     args=(
                         self.directories,
@@ -124,17 +138,27 @@ class Robyn:
                         workers,
                     ),
                 )
-                p.start()
-                processes.append(p)
+                process.start()
+                process_pool.append(process)
+
+            return process_pool
+
+        mp.allow_connection_pickling()
+
+        if not self.dev:
+            workers = self.workers
+            socket = SocketHeld(url, port)
+
+            process_pool = init_procespool(socket)
 
             logger.info(f"{Colors.HEADER}Starting up \n{Colors.ENDC}")
             logger.info(f"{Colors.OKGREEN}Press Ctrl + C to stop \n{Colors.ENDC}")
             try:
-                for process in processes:
+                for process in process_pool:
                     process.join()
             except KeyboardInterrupt:
                 logger.info(f"{Colors.BOLD}{Colors.OKGREEN} Terminating server!! {Colors.ENDC}")
-                for process in processes:
+                for process in process_pool:
                     process.kill()
 
         else:
