@@ -2,21 +2,20 @@ import asyncio
 import logging
 import multiprocessing as mp
 import os
+import sys
 
 from multiprocess import Process
 from watchdog.observers import Observer
 from robyn.events import Events
-from .argument_parser import ArgumentParser
-from .dev_event_handler import EventHandler
-from .log_colors import Colors
-from .processpool import spawn_process
-from .responses import jsonify, static_file
+from robyn.argument_parser import ArgumentParser
+from robyn.dev_event_handler import EventHandler
+from robyn.log_colors import Colors
+from robyn.processpool import spawn_process
+from robyn.responses import jsonify, static_file
 
-from .robyn import SocketHeld
-from .router import MiddlewareRouter, Router, WebSocketRouter
-from .ws import WS
-
-mp.allow_connection_pickling()
+from robyn.robyn import SocketHeld
+from robyn.router import MiddlewareRouter, Router, WebSocketRouter
+from robyn.ws import WS
 
 logger = logging.getLogger(__name__)
 
@@ -104,14 +103,26 @@ class Robyn:
 
         :param port int: reperesents the port number at which the server is listening
         """
+        def init_processpool(socket):
 
-        if not self.dev:
-            processes = []
-            workers = self.workers
-            socket = SocketHeld(url, port)
+            process_pool = []
+            if sys.platform.startswith("win32"):
+                spawn_process(
+                    self.directories,
+                    self.headers,
+                    self.router.get_routes(),
+                    self.middleware_router.get_routes(),
+                    self.web_socket_router.get_routes(),
+                    self.event_handlers,
+                    socket,
+                    workers,
+                )
+                
+                return process_pool
+
             for _ in range(self.processes):
                 copied_socket = socket.try_clone()
-                p = Process(
+                process = Process(
                     target=spawn_process,
                     args=(
                         self.directories,
@@ -124,18 +135,29 @@ class Robyn:
                         workers,
                     ),
                 )
-                p.start()
-                processes.append(p)
+                process.start()
+                process_pool.append(process)
+
+            return process_pool
+
+        mp.allow_connection_pickling()
+
+        if not self.dev:
+            workers = self.workers
+            socket = SocketHeld(url, port)
+
+            process_pool = init_processpool(socket)
 
             logger.info(f"{Colors.HEADER}Starting up \n{Colors.ENDC}")
             logger.info(f"{Colors.OKGREEN}Press Ctrl + C to stop \n{Colors.ENDC}")
             try:
-                for process in processes:
+                for process in process_pool:
                     process.join()
             except KeyboardInterrupt:
                 logger.info(f"{Colors.BOLD}{Colors.OKGREEN} Terminating server!! {Colors.ENDC}")
-                for process in processes:
+                for process in process_pool:
                     process.kill()
+
         else:
             event_handler = EventHandler(self.file_path)
             event_handler.start_server_first_time()
