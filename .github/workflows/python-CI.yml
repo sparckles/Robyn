@@ -80,9 +80,9 @@ jobs:
       - name: Setup Rust part of the project
         run: |
           source $HOME/.cargo/env
+          rustup target add aarch64-apple-darwin
           maturin build -i python --release --universal2 --out dist --no-sdist
           pip install --force-reinstall dist/robyn*.whl
       - name: Test with pytest
         run: |
           pytest ./integration_tests
-
