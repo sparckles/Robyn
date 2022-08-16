@@ -22,6 +22,9 @@ class Router(BaseRouter):
                 res["status_code"] = "200"
                 response = res
             else:
+                if type(res["status_code"]) == int:
+                    res["status_code"] = str(res["status_code"])
+
                 response = {
                     "status_code": "200",
                     "body": res["body"],
