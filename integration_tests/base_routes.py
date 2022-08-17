@@ -69,6 +69,11 @@ def return_404_post():
     return {"status_code": "404", "body": "hello", "type": "text"}
 
 
+@app.get('/int_status_code')
+def return_int_status_code():
+    return {"status_code": 202, "body": "hello", "type": "text"}
+
+
 @app.before_request("/")
 async def hello_before_request(request):
     global callCount
