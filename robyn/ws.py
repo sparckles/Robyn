@@ -1,16 +1,24 @@
+from __future__ import annotations
+
+from typing import Callable
 import asyncio
 from inspect import signature
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from robyn import Robyn
 
 
 class WS:
     """This is the python wrapper for the web socket that will be used here.
     """
-    def __init__(self, robyn_object, endpoint) -> None:
+    def __init__(self, robyn_object: "Robyn", endpoint: str) -> None:
         self.robyn_object = robyn_object
         self.endpoint = endpoint
         self.methods = {}
 
-    def on(self, type):
+    def on(self, type: str) -> Callable[..., None]:
         def inner(handler):
             if type not in ["connect", "close", "message"]:
                 raise Exception(f"Socket method {type} does not exist")

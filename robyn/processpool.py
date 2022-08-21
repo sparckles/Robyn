@@ -1,13 +1,15 @@
 import asyncio
-import logging
-import multiprocessing as mp
-from multiprocessing.process import AuthenticationString
 import sys
+from typing import Dict, Tuple
 
 from robyn.events import Events
-from robyn.robyn import Server
+from robyn.router import Route, MiddlewareRoute
+from robyn.robyn import Server, SocketHeld
+from robyn.ws import WS
 
-from copy import deepcopy
+
+Directory = Tuple[str, str, str, bool]
+Header = Tuple[str, str]
 
 
 def initialize_event_loop():
@@ -28,7 +30,14 @@ def initialize_event_loop():
 
 
 def spawn_process(
-    directories, headers, routes, middlewares, web_sockets, event_handlers, socket, workers
+    directories: Tuple[Directory, ...],
+    headers: Tuple[Header, ...],
+    routes: Tuple[Route, ...],
+    middlewares: Tuple[MiddlewareRoute, ...],
+    web_sockets: Dict[str, WS],
+    event_handlers: Dict[Events, list],
+    socket: SocketHeld,
+    workers: int,
 ):
     """
     This function is called by the main process handler to create a server runtime.
@@ -42,7 +51,7 @@ def spawn_process(
     :param event_handlers Dict: This is an event dict that contains the event handlers
     :param socket SocketHeld: This is the main tcp socket, which is being shared across multiple processes.
     :param process_name string: This is the name given to the process to identify the process
-    :param workers number: This is the name given to the process to identify the process
+    :param workers int: This is the name given to the process to identify the process
     """
 
     loop = initialize_event_loop()
