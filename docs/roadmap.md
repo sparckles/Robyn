@@ -1,7 +1,11 @@
 ## Future Roadmap
-
-- Add session/cookie plugins
-- Create a WEB3 plugin
+- #### More Performance Optimizations
 - Add graphql integration
 - And more...
+
+
+### Planned Integrations
+- #### OpenAPI Integration
+- #### Pydantic Integration
+- #### GraphQL(Strawberry) Integration
 
