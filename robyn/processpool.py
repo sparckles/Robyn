@@ -3,10 +3,9 @@ import sys
 from typing import Dict, Tuple
 
 from robyn.events import Events
-from robyn.router import Route, MiddlewareRoute
 from robyn.robyn import Server, SocketHeld
+from robyn.router import MiddlewareRoute, Route
 from robyn.ws import WS
-
 
 Directory = Tuple[str, str, str, bool]
 Header = Tuple[str, str]

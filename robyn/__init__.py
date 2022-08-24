@@ -3,17 +3,17 @@ import logging
 import multiprocessing as mp
 import os
 import sys
+from typing import Callable, Optional
 
 from multiprocess import Process
 from watchdog.observers import Observer
-from robyn.events import Events
+
 from robyn.argument_parser import ArgumentParser
 from robyn.dev_event_handler import EventHandler
+from robyn.events import Events
 from robyn.log_colors import Colors
 from robyn.processpool import spawn_process
 from robyn.responses import jsonify, static_file
-from typing import Callable, Optional
-
 from robyn.robyn import SocketHeld
 from robyn.router import MiddlewareRouter, Router, WebSocketRouter
 from robyn.ws import WS

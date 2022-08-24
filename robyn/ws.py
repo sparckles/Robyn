@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-from typing import Callable
 import asyncio
 from inspect import signature
-
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 if TYPE_CHECKING:
     from robyn import Robyn
