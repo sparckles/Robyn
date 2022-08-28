@@ -1,11 +1,15 @@
 <!-- docs/_sidebar.md -->
 
 - [Home](/)
-- [Features](features.md)
-- [API](api.md)
+- [Installation](installation.md)
+- [Getting Started](getting-started.md)
+- [Community Resources](community-resources.md)
+- [Examples](examples.md)
+- [Feature Showcase](features.md)
 - [Architecture](architecture.md)
 - [Comparison](comparison.md)
-- [Plugins](plugins.md)
+- [API](api.md)
 - [Future Roadmap](roadmap.md)
+- [Plugins](plugins.md)
 - [Sponsors](sponsors.md)
 
