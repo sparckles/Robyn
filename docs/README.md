@@ -3,21 +3,19 @@
 
 # Robyn
 
-[![sansyrox](https://circleci.com/gh/sansyrox/robyn.svg?style=svg)](https://app.circleci.com/pipelines/github/sansyrox/robyn)
 [![Twitter](https://badgen.net/badge/icon/twitter?icon=twitter&label)](https://twitter.com/robyn_oss)
 [![Gitter](https://badges.gitter.im/robyn_/community.svg)](https://gitter.im/robyn_/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 [![Downloads](https://static.pepy.tech/personalized-badge/robyn?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Downloads)](https://pepy.tech/project/robyn)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![GitHub tag](https://img.shields.io/github/tag/sansyrox/robyn?include_prereleases=&sort=semver&color=black)](https://github.com/sansyrox/robyn/releases/)
 [![License](https://img.shields.io/badge/License-BSD_2.0-black)](#license)
+[![Discord](https://img.shields.io/discord/999782964143603713?label=discord&logo=discord&logoColor=white&style=for-the-badge&color=blue)](https://discord.gg/qKF5sSnC)
 
 
 [![view - Documentation](https://img.shields.io/badge/view-Documentation-blue?style=for-the-badge)](https://sansyrox.github.io/robyn/#/)
 
 Robyn is an async Python backend server with a runtime written in Rust, btw.
 
-
-Check out the talk at **PyCon Sweden 2021** about [Robyn: An async python web framework with a Rust runtime](https://www.youtube.com/watch?v=DK9teAs72Do)
 
 ## 📦 Installation
 
@@ -30,9 +28,7 @@ pip install robyn
 Or, with [conda-forge](https://conda-forge.org/)
 
 ```
-conda config --add channels conda-forge
-conda config --set channel_priority strict
-conda install robyn
+conda install -c conda-forge robyn
 ```
 
 ## 🤔 Usage
@@ -44,7 +40,7 @@ from robyn import Robyn
 app = Robyn(__file__)
 
 @app.get("/")
-async def h(requests):
+async def h(request):
     return "Hello, world!"
 
 app.start(port=5000)
@@ -108,7 +104,12 @@ To contribute to Robyn, make sure to first go through the [CONTRIBUTING.md](./CO
 
 Thanks to all the contributors of the project. Robyn will not be what it is without all your support :heart:.
 
-Special thanks to the [ PyO3 ](https://pyo3.rs/v0.13.2/) community and [ Andrew from PyO3-asyncio ](awestlake87/pyo3-asyncio) for their amazing libraries and their support for my queries. 💖
+<a href="https://github.com/sansyrox/robyn/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=sansyrox/robyn" />
+</a>
+
+
+Special thanks to the [ PyO3 ](https://pyo3.rs/v0.13.2/) community and [ Andrew from PyO3-asyncio ](https://github.com/awestlake87/pyo3-asyncio) for their amazing libraries and their support for my queries. 💖
 
 ## ✨ Sponsors
 
@@ -116,8 +117,7 @@ These sponsors help us make the magic happen!
 
 [![DigitalOcean Referral Badge](https://web-platforms.sfo2.cdn.digitaloceanspaces.com/WWW/Badge%201.svg)](https://www.digitalocean.com/?refcode=3f2b9fd4968d&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge)
 
-[![Shivay Lamba](https://avatars.githubusercontent.com/u/19529592?v=4 =100x100)](https://github.com/shivaylamba)
-
+- [ Shivay Lamba ](https://github.com/shivaylamba)
 
 
 
