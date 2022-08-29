@@ -44,11 +44,11 @@ app.start(port=5000, url="0.0.0.0") # url is optional, defaults to 127.0.0.1
 
 Let us try to decipher the usage line by line.
 
-> from robyn import Robyn
+> `from robyn import Robyn`
 
 This statement just imports the Robyn structure from the robyn package.
 
-> app = Robyn(__file__)
+> `app = Robyn(__file__)`
 
 Here, we are creating the app object. We require the `__file__` object to mount the directory for hot reloading.
 

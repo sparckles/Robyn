@@ -11,5 +11,6 @@
 - [Community Resources](community-resources.md)
 - [Future Roadmap](roadmap.md)
 - [Plugins](plugins.md)
+- [Hosting](hosting.md)
 - [Sponsors](sponsors.md)
 
