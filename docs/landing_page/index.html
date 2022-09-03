@@ -76,7 +76,7 @@
 app = Robyn(__file__)
 
 @app.get("/")
-async def h():
+async def h(request):
     return "Hello, world!"
 
 app.start(port=5000)</code></pre>

@@ -7,7 +7,7 @@ Robyn supports both sync methods and async methods for fetching requests. Every 
 ```python3
 
 @app.get("/")
-def h():
+def h(request):
     return "Hello, world"
 ```
 
@@ -15,7 +15,7 @@ def h():
 
 ```python3
 @app.get("/")
-async def h():
+async def h(request):
     return "Hello, world"
 ```
 

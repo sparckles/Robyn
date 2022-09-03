@@ -35,7 +35,7 @@ from robyn import Robyn
 app = Robyn(__file__)
 
 @app.get("/")
-async def h():
+async def h(request): # request is an optional parameter
     return "Hello, world!"
 
 app.start(port=5000, url="0.0.0.0") # url is optional, defaults to 127.0.0.1
