@@ -9,6 +9,7 @@
 - [Comparison](comparison.md)
 - [API](api.md)
 - [Community Resources](community-resources.md)
+- [GraphQL Support](graphql-integration.md)
 - [Future Roadmap](roadmap.md)
 - [Plugins](plugins.md)
 - [Hosting](hosting.md)
