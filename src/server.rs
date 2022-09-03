@@ -52,6 +52,7 @@ pub struct Server {
 }
 
 #[pymethods]
+#[allow(clippy::deref_addrof)]
 impl Server {
     #[new]
     pub fn new() -> Self {
