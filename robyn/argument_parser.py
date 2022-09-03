@@ -1,5 +1,8 @@
 import argparse
 
+from returns.result import Failure, Success, Result
+from typing import Any
+
 
 class ArgumentParser(argparse.ArgumentParser):
     def __init__(self) -> None:
@@ -50,8 +53,9 @@ class ArgumentParser(argparse.ArgumentParser):
         return self.args.log_level
 
     @property
-    def is_dev(self) -> bool:
+    def is_dev(self) -> Result[bool, Exception]:
         _is_dev = self.args.dev
         if _is_dev and (self.num_processes != 1 or self.workers != 1):
-            raise Exception("--processes and --workers shouldn't be used with --dev")
-        return _is_dev
+            return Failure(Exception("--processes and --workers shouldn't be used with --dev"))
+
+        return Success(_is_dev)

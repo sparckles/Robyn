@@ -4,6 +4,8 @@ import asyncio
 from inspect import signature
 from typing import TYPE_CHECKING, Callable
 
+from returns.result import Failure, Result, Success
+
 if TYPE_CHECKING:
     from robyn import Robyn
 
@@ -16,15 +18,16 @@ class WS:
         self.endpoint = endpoint
         self.methods = {}
 
-    def on(self, type: str) -> Callable[..., None]:
+    # (handler: Unknown) -> Failure[Exception] | None
+    def on(self, type: str) -> Result[Callable[..., None], Exception]:
         def inner(handler):
             if type not in ["connect", "close", "message"]:
-                raise Exception(f"Socket method {type} does not exist")
+                return Failure(Exception(f"Socket method {type} does not exist"))
             else:
                 self.methods[type] = (handler, self._is_async(handler), self._num_params(handler))
                 self.robyn_object.add_web_socket(self.endpoint, self)
 
-        return inner
+        return Success(inner)
 
     def _num_params(self, handler):
         return len(signature(handler).parameters)

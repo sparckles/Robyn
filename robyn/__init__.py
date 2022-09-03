@@ -288,7 +288,7 @@ class Robyn:
 
         log_level = "WARN"
 
-        if self.dev:
+        if self.dev.unwrap():
             log_level = "DEBUG"
 
         log_level = self.log_level if self.log_level else log_level
