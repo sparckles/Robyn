@@ -3,7 +3,7 @@
 Below are a few examples of real life use cases of Robyn.
 
 ### Creating a Simple HTTP Service
-```python3
+```python
 
 from robyn import Robyn
 
@@ -18,7 +18,7 @@ app.start(port=5000)
 ```
 
 ### Serving simple HTML Files
-```python3
+```python
 
 from robyn import Robyn, static_file
 
@@ -37,7 +37,7 @@ app.start(port=5000)
 
 It should be fairly easy to make a crud app example. Here's a minimal example using Prisma(`pip install prisma-client-py`) with Robyn.
 
-```py
+```python
 from robyn import Robyn
 from prisma import Prisma
 from prisma.models import User
@@ -85,7 +85,7 @@ model User {
 ```
 
 ### Using Middleware
-```python3
+```python
 
 from robyn import Robyn, static_file
 
@@ -98,6 +98,7 @@ async def h(request):
 app.start(port=5000)
 
 ```
+
 ### A basic web socket chat app.
 Coming Soon....
 

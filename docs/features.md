@@ -4,7 +4,7 @@
 ## Synchronous Requests
 Robyn supports both sync methods and async methods for fetching requests. Every method gets a request object from the routing decorator.
 
-```python3
+```python
 
 @app.get("/")
 def h(request):
@@ -13,7 +13,7 @@ def h(request):
 
 ## Async Requests
 
-```python3
+```python
 @app.get("/")
 async def h(request):
     return "Hello, world"
@@ -28,7 +28,7 @@ Robyn supports every HTTP request method. The examples of some of them are below
 
 #### GET Request
 
-```python3
+```python
 @app.get("/")
 async def h(request):
     return "Hello World"
@@ -36,7 +36,7 @@ async def h(request):
 
 #### POST Request
 
-```python3
+```python
 @app.post("/post")
 async def postreq(request):
     return bytearray(request["body"]).decode("utf-8")
@@ -44,7 +44,7 @@ async def postreq(request):
 
 #### PUT Request
 
-```python3
+```python
 @app.put("/put")
 async def postreq(request):
     return bytearray(request["body"]).decode("utf-8")
@@ -53,7 +53,7 @@ async def postreq(request):
 
 #### PATCH Request
 
-```python3
+```python
 @app.patch("/patch")
 async def postreq(request):
     return bytearray(request["body"]).decode("utf-8")
@@ -62,7 +62,7 @@ async def postreq(request):
 
 #### DELETE Request
 
-```python3
+```python
 @app.delete("/delete")
 async def postreq(request):
     return bytearray(request["body"]).decode("utf-8")
@@ -71,7 +71,7 @@ async def postreq(request):
 
 #### Directory Serving
 
-```python3
+```python
 app.add_directory(
     route="/test_dir"
     directory_path="/build"
@@ -82,7 +82,7 @@ app.add_directory(
 ## Dynamic Routes
 You can add params in the routes and access them from the request object.
 
-```python3
+```python
 @app.post("/jsonify/:id")
 async def json(request):
     print(request["params"]["id"])
@@ -92,7 +92,7 @@ async def json(request):
 ## Returning a JSON Response
 You can also serve JSON responses when serving HTTP request using the following way.
 
-```python3
+```python
 from robyn import jsonify
 
 @app.post("/jsonify")
@@ -104,7 +104,7 @@ async def json(request):
 ## Global Headers
 You can also add global headers for every request.
 
-```python3
+```python
 app.add_header("server", "robyn")
 
 ```
@@ -118,7 +118,7 @@ For the url: `http://localhost:5000/query?a=b`
 
 You can use the following code snippet.
 
-```python3
+```python
 @app.get("/query")
 async def query_get(request):
     query_data = request["queries"]
@@ -130,7 +130,7 @@ async def query_get(request):
 
 You can add startup and shutdown events in robyn. These events will execute before the requests have started serving and after the serving has been completed.
 
-```python3
+```python
 
 async def startup_handler():
     print("Starting up")
@@ -148,7 +148,7 @@ You can now serve websockets using Robyn.
 
 Firstly, you need to create a WebSocket Class and wrap it around your Robyn app.
 
-```python3
+```python
 from robyn import Robyn, static_file, jsonify, WS
 
 
@@ -158,7 +158,7 @@ websocket = WS(app, "/web_socket")
 
 Now, you can define 3 methods for every web_socket for their life cycle, they are as follows:
 
-```python3
+```python
 @websocket.on("message")
 def connect():
     global i
@@ -193,7 +193,7 @@ To see a complete service in action, you can go to the folder [../integration_te
 
 #### Web Socket Usage
 
-```python3
+```python
 @websocket.on("message")
 async def connect():
     global i
@@ -222,7 +222,7 @@ async def message():
 
 You can use both sync and async functions for middlewares!
 
-```python3
+```python
 @app.before_request("/")
 async def hello_before_request(request):
     print(request)
@@ -237,7 +237,7 @@ def hello_after_request(request):
 
 To run Robyn across multiple cores, you can use the following command:
 
-`python3 app.py --workers=N --processes=N`
+`python app.py --workers=N --processes=N`
 
 
 
@@ -245,7 +245,7 @@ To run Robyn across multiple cores, you can use the following command:
 
 You can pre-compute the response for each route. This will compute the response even before execution. This will improve the response time bypassing the need to access the router.
 
-```python3
+```python
 @app.get("/", const=True)
 async def h():
     return "Hello, world"

@@ -1,4 +1,4 @@
-## GraphQl Support (with <a target="_blank" href="https://strawberry.rocks/">Strawberry 🍓</a>)
+## GraphQl Support (<a target="_blank" href="https://strawberry.rocks/">with Strawberry 🍓</a>)
 
 <i>This is in a very early stage right now. We will have a much more stable version when we have a stable API for Views and View Controllers.</i>
 
@@ -164,5 +164,6 @@ async def post(request):
 ```
 Finally, we are getting params(body, query, variables, context_value, root_value, operation_name) from the `request` object.
 
+The above is the example for just one route. You can do the same for as many as you like. :)
 
 That's all folks. :D
