@@ -262,27 +262,24 @@ pub async fn execute_http_function(
         }
 
         PyFunction::SyncFunction(handler) => {
-            tokio::task::spawn_blocking(move || {
-                Python::with_gil(|py| {
-                    let handler = handler.as_ref(py);
-                    request.insert("params", route_params.into_py(py));
-                    request.insert("headers", headers.into_py(py));
-                    let data = data.into_py(py);
-                    request.insert("body", data);
+            Python::with_gil(|py| {
+                let handler = handler.as_ref(py);
+                request.insert("params", route_params.into_py(py));
+                request.insert("headers", headers.into_py(py));
+                let data = data.into_py(py);
+                request.insert("body", data);
 
-                    let output: PyResult<&PyAny> = match number_of_params {
-                        0 => handler.call0(),
-                        1 => handler.call1((request,)),
-                        // this is done to accomodate any future params
-                        2_u8..=u8::MAX => handler.call1((request,)),
-                    };
-                    let output: HashMap<String, String> = output?.extract()?;
-                    // also convert to object here
-                    // also check why don't sync functions have file handling enabled
-                    Ok(output)
-                })
+                let output: PyResult<&PyAny> = match number_of_params {
+                    0 => handler.call0(),
+                    1 => handler.call1((request,)),
+                    // this is done to accomodate any future params
+                    2_u8..=u8::MAX => handler.call1((request,)),
+                };
+                let output: HashMap<String, String> = output?.extract()?;
+                // also convert to object here
+                // also check why don't sync functions have file handling enabled
+                Ok(output)
             })
-            .await?
         }
     }
 }
