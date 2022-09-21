@@ -1,4 +1,4 @@
-flake8==5.0.3
+flake8==5.0.4
 black==21.12b0
 websockets==10.1
 maturin==0.12.11
