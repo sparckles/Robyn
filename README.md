@@ -9,8 +9,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![GitHub tag](https://img.shields.io/github/tag/sansyrox/robyn?include_prereleases=&sort=semver&color=black)](https://github.com/sansyrox/robyn/releases/)
 [![License](https://img.shields.io/badge/License-BSD_2.0-black)](#license)
-[![Discord](https://img.shields.io/discord/999782964143603713?label=discord&logo=discord&logoColor=white&style=for-the-badge&color=blue)](https://discord.gg/qKF5sSnC)
-
+[![Discord](https://img.shields.io/discord/999782964143603713?label=discord&logo=discord&logoColor=white&style=for-the-badge&color=blue)](https://discord.gg/rkERZ5eNU8)
 
 [![view - Documentation](https://img.shields.io/badge/view-Documentation-blue?style=for-the-badge)](https://sansyrox.github.io/robyn/#/)
 
@@ -30,9 +29,7 @@ pip install robyn
 Or, with [conda-forge](https://conda-forge.org/)
 
 ```
-conda config --add channels conda-forge
-conda config --set channel_priority strict
-conda install robyn
+conda install -c conda-forge robyn
 ```
 
 ## 🤔 Usage

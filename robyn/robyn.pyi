@@ -28,6 +28,7 @@ class Server:
         handler: Callable,
         is_async: bool,
         number_of_params: int,
+        const: bool,
     ) -> None:
         pass
     def add_middleware_route(

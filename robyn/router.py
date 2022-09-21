@@ -1,11 +1,17 @@
 from abc import ABC, abstractmethod
 from asyncio import iscoroutinefunction
 from inspect import signature
+from typing import Callable, Dict, List, Tuple
+
+from robyn.ws import WS
+
+Route = Tuple[str, str, Callable, bool, int, bool]
+MiddlewareRoute = Tuple[str, str, Callable, bool, int]
 
 
 class BaseRouter(ABC):
     @abstractmethod
-    def add_route(*args):
+    def add_route(*args) -> None:
         ...
 
 
@@ -22,6 +28,9 @@ class Router(BaseRouter):
                 res["status_code"] = "200"
                 response = res
             else:
+                if type(res["status_code"]) == int:
+                    res["status_code"] = str(res["status_code"])
+
                 response = {
                     "status_code": "200",
                     "body": res["body"],
@@ -32,7 +41,7 @@ class Router(BaseRouter):
 
         return response
 
-    def add_route(self, route_type, endpoint, handler, const):
+    def add_route(self, route_type: str, endpoint: str, handler: Callable, const: bool) -> None:
         async def async_inner_handler(*args):
             response = self._format_response(await handler(*args))
             return response
@@ -65,7 +74,7 @@ class Router(BaseRouter):
                 )
             )
 
-    def get_routes(self):
+    def get_routes(self) -> List[Route]:
         return self.routes
 
 
@@ -74,7 +83,7 @@ class MiddlewareRouter(BaseRouter):
         super().__init__()
         self.routes = []
 
-    def add_route(self, route_type, endpoint, handler):
+    def add_route(self, route_type: str, endpoint: str, handler: Callable) -> None:
         number_of_params = len(signature(handler).parameters)
         self.routes.append(
             (
@@ -91,7 +100,7 @@ class MiddlewareRouter(BaseRouter):
     # It takes in a handler and converts it in into a closure
     # and returns the arguments.
     # Arguments are returned as they could be modified by the middlewares.
-    def add_after_request(self, endpoint):
+    def add_after_request(self, endpoint: str) -> Callable[..., None]:
         def inner(handler):
             async def async_inner_handler(*args):
                 await handler(*args)
@@ -108,7 +117,7 @@ class MiddlewareRouter(BaseRouter):
 
         return inner
 
-    def add_before_request(self, endpoint):
+    def add_before_request(self, endpoint: str) -> Callable[..., None]:
         def inner(handler):
             async def async_inner_handler(*args):
                 await handler(*args)
@@ -125,7 +134,7 @@ class MiddlewareRouter(BaseRouter):
 
         return inner
 
-    def get_routes(self):
+    def get_routes(self) -> List[MiddlewareRoute]:
         return self.routes
 
 
@@ -134,8 +143,8 @@ class WebSocketRouter(BaseRouter):
         super().__init__()
         self.routes = {}
 
-    def add_route(self, endpoint, web_socket):
+    def add_route(self, endpoint: str, web_socket: WS) -> None:
         self.routes[endpoint] = web_socket
 
-    def get_routes(self):
+    def get_routes(self) -> Dict[str, WS]:
         return self.routes

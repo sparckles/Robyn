@@ -1,7 +1,8 @@
 import json
+from typing import Any, Dict
 
 
-def static_file(file_path):
+def static_file(file_path: str) -> Dict[str, Any]:
     """
     This function will help in serving a static_file
 
@@ -17,7 +18,7 @@ def static_file(file_path):
     }
 
 
-def jsonify(input_dict):
+def jsonify(input_dict: dict) -> str:
     """
     This function serializes input dict to a json string
 

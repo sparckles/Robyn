@@ -1,17 +1,42 @@
 import asyncio
-import logging
-import multiprocessing as mp
 import sys
+from typing import Dict, Tuple
 
-from .events import Events
-from .robyn import Server
+from robyn.events import Events
+from robyn.robyn import Server, SocketHeld
+from robyn.router import MiddlewareRoute, Route
+from robyn.ws import WS
+
+Directory = Tuple[str, str, str, bool]
+Header = Tuple[str, str]
 
 
-mp.allow_connection_pickling()
+def initialize_event_loop():
+    # platform_name = platform.machine()
+    if sys.platform.startswith("win32") or sys.platform.startswith("linux-cross"):
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        return loop
+    else:
+        # uv loop doesn't support windows or arm machines at the moment
+        # but uv loop is much faster than native asyncio
+        import uvloop
+
+        uvloop.install()
+        loop = uvloop.new_event_loop()
+        asyncio.set_event_loop(loop)
+        return loop
 
 
 def spawn_process(
-    directories, headers, routes, middlewares, web_sockets, event_handlers, socket, workers
+    directories: Tuple[Directory, ...],
+    headers: Tuple[Header, ...],
+    routes: Tuple[Route, ...],
+    middlewares: Tuple[MiddlewareRoute, ...],
+    web_sockets: Dict[str, WS],
+    event_handlers: Dict[Events, list],
+    socket: SocketHeld,
+    workers: int,
 ):
     """
     This function is called by the main process handler to create a server runtime.
@@ -25,21 +50,10 @@ def spawn_process(
     :param event_handlers Dict: This is an event dict that contains the event handlers
     :param socket SocketHeld: This is the main tcp socket, which is being shared across multiple processes.
     :param process_name string: This is the name given to the process to identify the process
-    :param workers number: This is the name given to the process to identify the process
+    :param workers int: This is the name given to the process to identify the process
     """
 
-    # platform_name = platform.machine()
-    if sys.platform.startswith("win32") or sys.platform.startswith("linux-cross"):
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-    else:
-        # uv loop doesn't support windows or arm machines at the moment
-        # but uv loop is much faster than native asyncio
-        import uvloop
-
-        uvloop.install()
-        loop = uvloop.new_event_loop()
-        asyncio.set_event_loop(loop)
+    loop = initialize_event_loop()
 
     server = Server()
 
@@ -81,3 +95,4 @@ def spawn_process(
         loop.run_forever()
     except KeyboardInterrupt:
         loop.close()
+

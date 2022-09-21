@@ -2,21 +2,21 @@ import asyncio
 import logging
 import multiprocessing as mp
 import os
+import sys
+from typing import Callable, Optional
 
 from multiprocess import Process
 from watchdog.observers import Observer
+
+from robyn.argument_parser import ArgumentParser
+from robyn.dev_event_handler import EventHandler
 from robyn.events import Events
-from .argument_parser import ArgumentParser
-from .dev_event_handler import EventHandler
-from .log_colors import Colors
-from .processpool import spawn_process
-from .responses import jsonify, static_file
-
-from .robyn import SocketHeld
-from .router import MiddlewareRouter, Router, WebSocketRouter
-from .ws import WS
-
-mp.allow_connection_pickling()
+from robyn.log_colors import Colors
+from robyn.processpool import spawn_process
+from robyn.responses import jsonify, static_file
+from robyn.robyn import SocketHeld
+from robyn.router import MiddlewareRouter, Router, WebSocketRouter
+from robyn.ws import WS
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 class Robyn:
     """This is the python wrapper for the Robyn binaries."""
 
-    def __init__(self, file_object):
+    def __init__(self, file_object: str) -> None:
         directory_path = os.path.dirname(os.path.abspath(file_object))
         self.file_path = file_object
         self.directory_path = directory_path
@@ -55,7 +55,7 @@ class Robyn:
         """
         self.router.add_route(route_type, endpoint, handler, const)
 
-    def before_request(self, endpoint):
+    def before_request(self, endpoint: str) -> Callable[..., None]:
         """
         The @app.before_request decorator to add a get route
 
@@ -64,7 +64,7 @@ class Robyn:
 
         return self.middleware_router.add_before_request(endpoint)
 
-    def after_request(self, endpoint):
+    def after_request(self, endpoint: str) -> Callable[..., None]:
         """
         The @app.after_request decorator to add a get route
 
@@ -74,17 +74,17 @@ class Robyn:
         return self.middleware_router.add_after_request(endpoint)
 
     def add_directory(
-        self, route, directory_path, index_file=None, show_files_listing=False
+        self, route: str, directory_path: str, index_file: Optional[str] = None, show_files_listing: bool = False
     ):
         self.directories.append((route, directory_path, index_file, show_files_listing))
 
-    def add_header(self, key, value):
+    def add_header(self, key: str, value: str) -> None:
         self.headers.append((key, value))
 
-    def add_web_socket(self, endpoint, ws):
+    def add_web_socket(self, endpoint: str, ws: WS) -> None:
         self.web_socket_router.add_route(endpoint, ws)
 
-    def _add_event_handler(self, event_type: str, handler):
+    def _add_event_handler(self, event_type: str, handler) -> None:
         logger.debug(f"Add event {event_type} handler")
         if event_type not in {Events.STARTUP, Events.SHUTDOWN}:
             return
@@ -92,26 +92,38 @@ class Robyn:
         is_async = asyncio.iscoroutinefunction(handler)
         self.event_handlers[event_type] = (handler, is_async)
 
-    def startup_handler(self, handler):
+    def startup_handler(self, handler: Callable) -> None:
         self._add_event_handler(Events.STARTUP, handler)
 
-    def shutdown_handler(self, handler):
+    def shutdown_handler(self, handler: Callable) -> None:
         self._add_event_handler(Events.SHUTDOWN, handler)
 
-    def start(self, url="127.0.0.1", port=5000):
+    def start(self, url: str = "127.0.0.1", port: int = 5000):
         """
         Starts the server
 
         :param port int: reperesents the port number at which the server is listening
         """
+        def init_processpool(socket):
 
-        if not self.dev:
-            processes = []
-            workers = self.workers
-            socket = SocketHeld(url, port)
+            process_pool = []
+            if sys.platform.startswith("win32"):
+                spawn_process(
+                    self.directories,
+                    self.headers,
+                    self.router.get_routes(),
+                    self.middleware_router.get_routes(),
+                    self.web_socket_router.get_routes(),
+                    self.event_handlers,
+                    socket,
+                    workers,
+                )
+                
+                return process_pool
+
             for _ in range(self.processes):
                 copied_socket = socket.try_clone()
-                p = Process(
+                process = Process(
                     target=spawn_process,
                     args=(
                         self.directories,
@@ -124,17 +136,27 @@ class Robyn:
                         workers,
                     ),
                 )
-                p.start()
-                processes.append(p)
+                process.start()
+                process_pool.append(process)
+
+            return process_pool
+
+        mp.allow_connection_pickling()
+
+        if not self.dev:
+            workers = self.workers
+            socket = SocketHeld(url, port)
+
+            process_pool = init_processpool(socket)
 
             logger.info(f"{Colors.HEADER}Starting up \n{Colors.ENDC}")
             logger.info(f"{Colors.OKGREEN}Press Ctrl + C to stop \n{Colors.ENDC}")
             try:
-                for process in processes:
+                for process in process_pool:
                     process.join()
             except KeyboardInterrupt:
                 logger.info(f"{Colors.BOLD}{Colors.OKGREEN} Terminating server!! {Colors.ENDC}")
-                for process in processes:
+                for process in process_pool:
                     process.kill()
         else:
             event_handler = EventHandler(self.file_path)
@@ -152,7 +174,7 @@ class Robyn:
                 observer.stop()
                 observer.join()
 
-    def get(self, endpoint, const=False):
+    def get(self, endpoint: str, const: bool = False) -> Callable[..., None]:
         """
         The @app.get decorator to add a get route
 
@@ -164,7 +186,7 @@ class Robyn:
 
         return inner
 
-    def post(self, endpoint):
+    def post(self, endpoint: str) -> Callable[..., None]:
         """
         The @app.post decorator to add a get route
 
@@ -176,7 +198,7 @@ class Robyn:
 
         return inner
 
-    def put(self, endpoint):
+    def put(self, endpoint: str) -> Callable[..., None]:
         """
         The @app.put decorator to add a get route
 
@@ -187,7 +209,7 @@ class Robyn:
 
         return inner
 
-    def delete(self, endpoint):
+    def delete(self, endpoint: str) -> Callable[..., None]:
         """
         The @app.delete decorator to add a get route
 
@@ -199,7 +221,7 @@ class Robyn:
 
         return inner
 
-    def patch(self, endpoint):
+    def patch(self, endpoint: str) -> Callable[..., None]:
         """
         [The @app.patch decorator to add a get route]
 
@@ -211,7 +233,7 @@ class Robyn:
 
         return inner
 
-    def head(self, endpoint):
+    def head(self, endpoint: str) -> Callable[..., None]:
         """
         The @app.head decorator to add a get route
 
@@ -223,7 +245,7 @@ class Robyn:
 
         return inner
 
-    def options(self, endpoint):
+    def options(self, endpoint: str) -> Callable[..., None]:
         """
         The @app.options decorator to add a get route
 
@@ -235,7 +257,7 @@ class Robyn:
 
         return inner
 
-    def connect(self, endpoint):
+    def connect(self, endpoint: str) -> Callable[..., None]:
         """
         The @app.connect decorator to add a get route
 
@@ -247,7 +269,7 @@ class Robyn:
 
         return inner
 
-    def trace(self, endpoint):
+    def trace(self, endpoint: str) -> Callable[..., None]:
         """
         The @app.trace decorator to add a get route
 
