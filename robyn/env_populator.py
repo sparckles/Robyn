@@ -1,5 +1,18 @@
 import os 
-from definitions import CONFIG_PATH
+import logging
+from pathlib import Path
+
+
+
+# Path to the root of the project
+ROOT_DIR = Path(__file__).parent.parent
+
+# Path to the environment variables
+CONFIG_PATH = ROOT_DIR / 'robyn.env'
+
+#set the logger that will log the environment variables imported from robyn.env and the ones already set
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 # parse the configuration file returning a list of tuples (key, value) containing the environment variables
 def parser(config_path=CONFIG_PATH):
@@ -22,11 +35,12 @@ def load_vars(variables = None):
 
     for var in variables:
         if var[0] in os.environ:
-            print("Variable {} already set".format(var[0]))
+            logger.info(f" Variable {var[0]} already set")
             continue
         else:
             os.environ[var[0]]=var[1]   
-            print(var[0], var[1])
+            logger.info(f" Variable {var[0]} set to {var[1]}")
+            
 
     
 
