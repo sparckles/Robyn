@@ -17,11 +17,12 @@ logging.basicConfig(level=logging.INFO)
 # parse the configuration file returning a list of tuples (key, value) containing the environment variables
 def parser(config_path=CONFIG_PATH):
     """Parse the configuration file"""
-    with open(config_path, 'r') as f:
-        for line in f:
-            if line.startswith('#'):
-                continue
-            yield line.strip().split('=')  
+    if config_path.exists():
+        with open(config_path, 'r') as f:
+            for line in f:
+                if line.startswith('#'):
+                    continue
+                yield line.strip().split('=')  
 
 
 # check for the environment variables set in cli and if not set them

@@ -17,6 +17,7 @@ from robyn.responses import jsonify, static_file
 from robyn.robyn import SocketHeld
 from robyn.router import MiddlewareRouter, Router, WebSocketRouter
 from robyn.ws import WS
+from robyn.env_populator import load_vars
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ class Robyn:
         self.headers = []
         self.directories = []
         self.event_handlers = {}
-
+        self.load_var = load_vars(self.directory_path)
         self._config_logger()
 
     def _add_route(self, route_type, endpoint, handler, const=False):
