@@ -40,7 +40,7 @@ class Robyn:
         self.headers = []
         self.directories = []
         self.event_handlers = {}
-        self.load_var = load_vars()
+        load_vars()
         self._config_logger()
 
     def _add_route(self, route_type, endpoint, handler, const=False):
