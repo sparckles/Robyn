@@ -29,10 +29,8 @@ def parser(config_path=CONFIG_PATH):
 def load_vars(variables = None):
     """Main function"""
     
-    variables = parser() 
-
     if variables is None:
-        return
+        variables = parser()
 
     for var in variables:
         if var[0] in os.environ:
@@ -43,6 +41,6 @@ def load_vars(variables = None):
             logger.info(f" Variable {var[0]} set to {var[1]}")
             
 
-    
+
 
 
