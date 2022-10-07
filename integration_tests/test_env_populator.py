@@ -12,7 +12,7 @@ path = pathlib.Path(__file__).parent
 #create robyn.env before test and delete it after test
 @pytest.fixture
 def env_file():
-    CONTENT = "PORT=8080"
+    CONTENT = "ROBYN_PORT=8080" + "\n" + "ROBYN_URL=127.0.1.1"
     dir = path / "test_dir"
     env_file = dir / "robyn.env"
     env_file.write_text(CONTENT)
@@ -25,7 +25,8 @@ def test_env_population(test_session, env_file):
     dir = path / "test_dir"
     env_file = dir / "robyn.env"
     load_vars(variables = parser(config_path = env_file))
-    port = os.environ['PORT'] 
-    BASE_URL = f"http://127.0.0.1:{port}"
+    PORT = os.environ['ROBYN_PORT'] 
+    HOST = os.environ['ROBYN_URL']
+    BASE_URL = f"http://{HOST}:{PORT}"
     res = requests.get(f"{BASE_URL}")
     assert res.status_code == 200
