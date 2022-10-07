@@ -75,3 +75,15 @@ def dev_session():
     time.sleep(5)
     yield
     kill_process(process)
+
+@pytest.fixture(scope="session")
+def test_session():
+    os.environ["ROBYN_URL"] = "127.0.0.1"
+    os.environ["ROBYN_PORT"] = os.environ["PORT"]
+    current_file_path = pathlib.Path(__file__).parent.resolve()
+    base_routes = os.path.join(current_file_path, "./base_routes.py")
+    command = ["python3", base_routes, "--dev"]
+    process = spawn_process(command)
+    time.sleep(5)
+    yield
+    kill_process(process)    
