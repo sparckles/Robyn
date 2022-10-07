@@ -1,4 +1,4 @@
-from integration_tests.conftest import test_session
+# from integration_tests.conftest import test_session
 from robyn.env_populator import load_vars, parser
 import pathlib
 import os
@@ -21,7 +21,7 @@ def env_file():
     os.unsetenv("PORT")
 
 # this tests if a connection can be made to the server with the correct port imported from the env file
-def test_env_population(test_session, env_file):
+def test_env_population(dev_session, env_file):
     dir = path / "test_dir"
     env_file = dir / "robyn.env"
     load_vars(variables = parser(config_path = env_file))
