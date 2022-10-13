@@ -13,19 +13,20 @@ path = pathlib.Path(__file__).parent
 @pytest.fixture
 def env_file():
     CONTENT = """ROBYN_PORT=8080 
-    ROBYN_URL=127.0.1.1"""
+    ROBYN_URL=127.0.0.1"""
     dir = path / "test_dir"
     env_file = dir / "robyn.env"
     env_file.write_text(CONTENT)
     yield
     env_file.unlink()
-    os.unsetenv("PORT")
+    os.unsetenv("ROBYN_PORT")
+    os.unsetenv("ROBYN_URL")
 
 # this tests if a connection can be made to the server with the correct port imported from the env file
-def test_env_population(dev_session, env_file):
+def test_env_population(test_session, env_file):
     dir = path / "test_dir"
-    env_file = dir / "robyn.env"
-    load_vars(variables = parser(config_path = env_file))
+    env_path = dir / "build"
+    load_vars(search_from=dir)
     PORT = os.environ['ROBYN_PORT'] 
     HOST = os.environ['ROBYN_URL']
     BASE_URL = f"http://{HOST}:{PORT}"
