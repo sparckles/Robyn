@@ -11,11 +11,10 @@ logging.basicConfig(level=logging.INFO)
 
 # parse the configuration file returning a list of tuples (key, value) containing the environment variables
 def parser(config_path=None, project_root = None):
-    """Find robyn.env file in root of the project"""
+    """Find robyn.env file in root of the project and parse it """
     if config_path is None:
         config_path = Path(project_root) / "robyn.env"
 
-    """Parse the configuration file"""
     if config_path.exists():
         with open(config_path, 'r') as f:
             for line in f:
