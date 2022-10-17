@@ -454,9 +454,8 @@ async fn index(
         }
     };
 
-    match middleware_router.get_route("AFTER_REQUEST", req.uri().path()) {
-        Some(((handler_function, number_of_params), route_params)) => {
-            let x = handle_http_middleware_request(
+    if let Some(((handler_function, number_of_params), route_params)) = middleware_router.get_route("AFTER_REQUEST", req.uri().path()) {
+        let x = handle_http_middleware_request(
                 handler_function,
                 number_of_params,
                 &headers_dup,
@@ -467,8 +466,6 @@ async fn index(
             )
             .await;
             debug!("{:?}", x);
-        }
-        None => {}
     };
 
     response
