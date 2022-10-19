@@ -24,11 +24,11 @@ def parser(config_path=None, project_root = None):
 
 
 # check for the environment variables set in cli and if not set them
-def load_vars(variables = None, root = None):
+def load_vars(variables = None, project_root = None):
     """Main function"""
     
     if variables is None:
-        variables = parser(project_root=root)
+        variables = parser(project_root=project_root)
 
     for var in variables:
         if var[0] in os.environ:
