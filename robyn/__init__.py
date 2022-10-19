@@ -40,7 +40,7 @@ class Robyn:
         self.headers = []
         self.directories = []
         self.event_handlers = {}
-        load_vars()
+        load_vars(project_root=directory_path)
         self._config_logger()
 
     def _add_route(self, route_type, endpoint, handler, const=False):
@@ -105,6 +105,10 @@ class Robyn:
 
         :param port int: reperesents the port number at which the server is listening
         """
+
+        url = os.getenv("ROBYN_URL", "127.0.0.1")
+        port= int(os.getenv("ROBYN_PORT", "5000"))
+        
         def init_processpool(socket):
 
             process_pool = []

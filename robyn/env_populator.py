@@ -1,22 +1,20 @@
+from distutils.command.config import config
 import os 
 import logging
 from pathlib import Path
 
 
-
-# Path to the root of the project
-ROOT_DIR = Path(__file__).parent.parent
-
-# Path to the environment variables
-CONFIG_PATH = ROOT_DIR / 'robyn.env'
-
 #set the logger that will log the environment variables imported from robyn.env and the ones already set
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
+
 # parse the configuration file returning a list of tuples (key, value) containing the environment variables
-def parser(config_path=CONFIG_PATH):
-    """Parse the configuration file"""
+def parser(config_path=None, project_root = None):
+    """Find robyn.env file in root of the project and parse it """
+    if config_path is None:
+        config_path = Path(project_root) / "robyn.env"
+
     if config_path.exists():
         with open(config_path, 'r') as f:
             for line in f:
@@ -26,11 +24,11 @@ def parser(config_path=CONFIG_PATH):
 
 
 # check for the environment variables set in cli and if not set them
-def load_vars(variables = None):
+def load_vars(variables = None, project_root = None):
     """Main function"""
     
     if variables is None:
-        variables = parser()
+        variables = parser(project_root=project_root)
 
     for var in variables:
         if var[0] in os.environ:
