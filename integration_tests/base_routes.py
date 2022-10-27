@@ -73,11 +73,13 @@ def return_404_post():
 def return_int_status_code():
     return {"status_code": 202, "body": "hello", "type": "text"}
 
+
 @app.before_request("/post_with_body")
 async def hello_before_request(request):
     global callCount
     callCount += 1
-    response["body"] = "hello resposne"
+    print(request)
+    # response["body"] = "hello resposne"
     request["body"] = "hello request"
     print()
     return ""
@@ -99,12 +101,6 @@ async def hello_after_request(request):
 #     return ""
 
 
-@app.after_request("/")
-async def hello_after_request(request,response):
-    global callCount
-    callCount += 1
-    print("hello after request")
-    return ""
 
 
 @app.get("/test/:id")
@@ -139,6 +135,8 @@ async def post():
 
 @app.post("/post_with_body")
 async def postreq_with_body(request, response):
+    print("This is the main function")
+    print(request)
     return bytearray(response["body"]).decode("utf-8")
 
 
@@ -214,7 +212,7 @@ async def redirect_route(request):
 
 if __name__ == "__main__":
     ROBYN_URL = os.getenv("ROBYN_URL", "0.0.0.0")
-    ROBYN_PORT = int(os.getenv("ROBYN_PORT", "5000"))
+    ROBYN_PORT = int(os.getenv("ROBYN_PORT", "5001"))
     app.add_header("server", "robyn")
     current_file_path = pathlib.Path(__file__).parent.resolve()
     app.add_directory(

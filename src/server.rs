@@ -392,17 +392,43 @@ async fn index(
 
     let headers = merge_headers(&global_headers, req.headers()).await;
 
+        let mut data: Vec<u8> = Vec::new();
+
+    if req.method() == Method::POST
+        || req.method() == Method::PUT
+        || req.method() == Method::PATCH
+        || req.method() == Method::DELETE
+    {
+        let mut body = web::BytesMut::new();
+        while let Some(chunk) = payload.next().await {
+            let chunk = chunk?;
+            // limit max size of in-memory payload
+            if (body.len() + chunk.len()) > MAX_SIZE {
+                bail!("Body content Overflow");
+            }
+            body.extend_from_slice(&chunk);
+        }
+
+        data = body.to_vec()
+    }
+
+
+    // payload = [1,2,3,4,5,'\0']
+    //           i=0  
+    //          .next() -> 1
+    //          i=1
     // need a better name for this
     let tuple_params = match middleware_router.get_route("BEFORE_REQUEST", req.uri().path()) {
         Some(((handler_function, number_of_params), route_params)) => {
-            let x = handle_http_middleware_request(
+            let x = handle_http_middleware_request( // potentially return the data method
                 handler_function,
                 number_of_params,
                 &headers,
-                &mut payload,
+                &mut data,
                 &req,
                 route_params,
                 queries.clone(),
+                None
             )
             .await;
             debug!("Middleware contents {:?}", x);
@@ -411,6 +437,7 @@ async fn index(
         None => HashMap::new(),
     };
 
+    // payload = ['\0']
     debug!("These are the tuple params {:?}", tuple_params);
 
     let headers_dup = if !tuple_params.is_empty() {
@@ -439,7 +466,7 @@ async fn index(
                     handler_function,
                     number_of_params,
                     headers_dup.clone(),
-                    &mut payload,
+                    &mut data,
                     &req,
                     route_params,
                     queries.clone(),
@@ -459,7 +486,7 @@ async fn index(
                 handler_function,
                 number_of_params,
                 &headers_dup,
-                &mut payload,
+                &mut data,
                 &req,
                 route_params,
                 queries.clone(),
