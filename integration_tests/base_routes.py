@@ -45,7 +45,7 @@ async def hello(request):
     global callCount
     callCount += 1
     message = "Called " + str(callCount) + " times"
-    print(message, request)
+    # print(message, request)
     return {"status_code": "200", "body": "hello", "type": "text"}
 
 
@@ -73,20 +73,37 @@ def return_404_post():
 def return_int_status_code():
     return {"status_code": 202, "body": "hello", "type": "text"}
 
-
-@app.before_request("/")
+@app.before_request("/post_with_body")
 async def hello_before_request(request):
     global callCount
     callCount += 1
-    print(request)
+    response["body"] = "hello resposne"
+    request["body"] = "hello request"
+    print()
     return ""
 
 
-@app.after_request("/")
+@app.after_request("/post_with_body")
 async def hello_after_request(request):
     global callCount
     callCount += 1
     print(request)
+    return ""
+    
+# @app.before_request("/")
+# async def hello_before_request(request, response):
+#     global callCount
+#     callCount += 1
+#     print()
+#     response["body"] = "hello before request"
+#     return ""
+
+
+@app.after_request("/")
+async def hello_after_request(request,response):
+    global callCount
+    callCount += 1
+    print("hello after request")
     return ""
 
 
@@ -121,8 +138,8 @@ async def post():
 
 
 @app.post("/post_with_body")
-async def postreq_with_body(request):
-    return bytearray(request["body"]).decode("utf-8")
+async def postreq_with_body(request, response):
+    return bytearray(response["body"]).decode("utf-8")
 
 
 @app.put("/put")

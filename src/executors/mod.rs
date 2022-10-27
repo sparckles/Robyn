@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::Arc;
 
+use actix_web::HttpResponse;
 use actix_web::{http::Method, web, HttpRequest};
 use anyhow::{bail, Result};
 use log::debug;
@@ -31,6 +32,7 @@ pub async fn execute_middleware_function<'a>(
     // TODO:
     // add body in middlewares too
 
+
     let mut data: Vec<u8> = Vec::new();
 
     if req.method() == Method::POST
@@ -51,6 +53,10 @@ pub async fn execute_middleware_function<'a>(
         data = body.to_vec()
     }
 
+    // make response object accessible while creating routes
+    let mut response: HashMap<String, HashMap<String,String>> = HashMap::new();
+
+
     // request object accessible while creating routes
     let mut request = HashMap::new();
 
@@ -68,17 +74,26 @@ pub async fn execute_middleware_function<'a>(
                 request.insert("queries", queries_clone.into_py(py));
                 // is this a bottleneck again?
                 request.insert("headers", headers.clone().into_py(py));
-                // request.insert("body", data.into_py(py));
+                request.insert("body", data.into_py(py));
+                
+                // let response = handler.call1((request.clone(),));
+                // pyo3_asyncio::tokio::into_future(response?);
+                // response = response.await?;
+
 
                 // this makes the request object to be accessible across every route
                 let coro: PyResult<&PyAny> = match number_of_params {
                     0 => handler.call0(),
                     1 => handler.call1((request,)),
+                    2 => handler.call((request, response), None),
                     // this is done to accomodate any future params
-                    2_u8..=u8::MAX => handler.call1((request,)),
+                    3_u8..=u8::MAX => handler.call1((request,response)),
                 };
                 pyo3_asyncio::tokio::into_future(coro?)
+
+
             })?;
+
 
             let output = output.await?;
 
@@ -89,6 +104,8 @@ pub async fn execute_middleware_function<'a>(
                     let responses = output[0].clone();
                     Ok(responses)
                 })?;
+            
+            
 
             Ok(res)
         }
@@ -104,12 +121,15 @@ pub async fn execute_middleware_function<'a>(
                 // is this a bottleneck again?
                 request.insert("headers", headers.clone().into_py(py));
                 request.insert("body", data.into_py(py));
+                
+                let response = handler.call1((request.clone(),)).unwrap();
 
                 let output: PyResult<&PyAny> = match number_of_params {
                     0 => handler.call0(),
                     1 => handler.call1((request,)),
+                    2 => handler.call1((request, response)),
                     // this is done to accomodate any future params
-                    2_u8..=u8::MAX => handler.call1((request,)),
+                    3_u8..=u8::MAX => handler.call1((request,response)),
                 };
 
                 let output: Vec<HashMap<String, HashMap<String, String>>> = output?.extract()?;
