@@ -105,7 +105,7 @@ impl Server {
         let startup_handler = self.startup_handler.clone();
         let shutdown_handler = self.shutdown_handler.clone();
 
-        let task_locals = Arc::new(pyo3_asyncio::TaskLocals::new(&event_loop).copy_context(py)?);
+        let task_locals = Arc::new(pyo3_asyncio::TaskLocals::new(event_loop).copy_context(py)?);
         let task_locals_cleanup = task_locals.clone();
 
         thread::spawn(move || {

@@ -54,7 +54,7 @@ fn execute_ws_function(
                     // this is done to accomodate any future params
                     2_u8..=u8::MAX => handler.call1((ws.id.to_string(),)).unwrap(),
                 };
-                pyo3_asyncio::into_future_with_locals(&task_locals, coro).unwrap()
+                pyo3_asyncio::into_future_with_locals(task_locals, coro).unwrap()
             });
             let f = async move {
                 let output = fut.await.unwrap();
