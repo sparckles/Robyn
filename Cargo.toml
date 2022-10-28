@@ -1,6 +1,6 @@
 [package]
 name = "robyn"
-version = "0.18.1"
+version = "0.18.1000001"
 authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 edition = "2018"
 description = "A web server that is fast!"
@@ -14,27 +14,27 @@ name = "robyn"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies.pyo3]
-version = "0.14.1"
+version = "0.17.2"
 features = ["extension-module"]
 
 [dependencies]
 tokio = { version = "1.7.0", features = ["full"] }
 dashmap = {git = "https://github.com/quake/dashmap", branch = "parking_lot", features = ["parking_lot"]}
-pyo3-asyncio = { version="0.14.0" , features = ["attributes", "tokio-runtime"] }
+pyo3-asyncio = { version="0.17.0" , features = ["attributes", "tokio-runtime"] }
 anyhow = "1.0.38"
 actix-web = "4.0.1"
 actix-files = "0.6.0"
 futures-util = "0.3.15"
-matchit = "0.4.3"
+matchit = "0.6.0"
 actix-http = "3.0.4"
 socket2 = { version = "0.4.1", features = ["all"] }
 actix = "0.13.0"
 actix-web-actors = "4.1.0"
-uuid = { version = "0.8", features = ["serde", "v4"] }
+uuid = { version = "1.2.1", features = ["serde", "v4"] }
 serde = "1.0.136"
 serde_json = "1.0.79"
 futures = "0.3.21"
-pyo3-log = "0.4.1"
+pyo3-log = "0.7.0"
 log = "0.4.17"
 
 [features]

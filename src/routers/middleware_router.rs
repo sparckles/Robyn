@@ -5,27 +5,27 @@ use crate::types::PyFunction;
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
 
-use matchit::Node;
+use matchit::Router;
 
 use anyhow::{bail, Error, Result};
 
 /// Contains the thread safe hashmaps of different routes
 
 pub struct MiddlewareRouter {
-    before_request: RwLock<Node<(PyFunction, u8)>>,
-    after_request: RwLock<Node<(PyFunction, u8)>>,
+    before_request: RwLock<Router<(PyFunction, u8)>>,
+    after_request: RwLock<Router<(PyFunction, u8)>>,
 }
 
 impl MiddlewareRouter {
     pub fn new() -> Self {
         Self {
-            before_request: RwLock::new(Node::new()),
-            after_request: RwLock::new(Node::new()),
+            before_request: RwLock::new(Router::new()),
+            after_request: RwLock::new(Router::new()),
         }
     }
 
     #[inline]
-    fn get_relevant_map(&self, route: &str) -> Option<&RwLock<Node<(PyFunction, u8)>>> {
+    fn get_relevant_map(&self, route: &str) -> Option<&RwLock<Router<(PyFunction, u8)>>> {
         match route {
             "BEFORE_REQUEST" => Some(&self.before_request),
             "AFTER_REQUEST" => Some(&self.after_request),
