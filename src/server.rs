@@ -3,7 +3,8 @@ use crate::io_helpers::apply_headers;
 use crate::request_handler::{handle_http_middleware_request, handle_http_request};
 
 use crate::routers::const_router::ConstRouter;
-use crate::routers::router::Router;
+
+use crate::routers::router::{RouteType, Router};
 use crate::routers::{middleware_router::MiddlewareRouter, web_socket_router::WebSocketRouter};
 use crate::shared_socket::SocketHeld;
 use crate::types::{Headers, PyFunction};
@@ -296,6 +297,9 @@ impl Server {
         number_of_params: u8,
     ) {
         debug!("MiddleWare Route added for {} {} ", route_type, route);
+
+        let route_type = RouteType::from_str(route_type);
+
         self.middleware_router
             .add_route(route_type, route, handler, is_async, number_of_params)
             .unwrap();
@@ -389,7 +393,8 @@ async fn index(
     let headers = merge_headers(&global_headers, req.headers()).await;
 
     // need a better name for this
-    let tuple_params = match middleware_router.get_route("BEFORE_REQUEST", req.uri().path()) {
+    let tuple_params = match middleware_router.get_route(RouteType::BeforeRequest, req.uri().path())
+    {
         Some(((handler_function, number_of_params), route_params)) => {
             let x = handle_http_middleware_request(
                 handler_function,
@@ -451,7 +456,7 @@ async fn index(
     };
 
     if let Some(((handler_function, number_of_params), route_params)) =
-        middleware_router.get_route("AFTER_REQUEST", req.uri().path())
+        middleware_router.get_route(RouteType::AfterRequest, req.uri().path())
     {
         let x = handle_http_middleware_request(
             handler_function,

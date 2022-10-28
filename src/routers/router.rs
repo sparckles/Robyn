@@ -10,6 +10,22 @@ use matchit::Router as MatchItRouter;
 
 use anyhow::{bail, Error, Result};
 
+#[derive(Debug)]
+pub enum RouteType {
+    BeforeRequest,
+    AfterRequest,
+}
+
+impl RouteType {
+    pub fn from_str(input: &str) -> RouteType {
+        match input {
+            "BEFORE_REQUEST" => RouteType::BeforeRequest,
+            "AFTER_REQUEST" => RouteType::AfterRequest,
+            _ => panic!("Invalid route type enum."),
+        }
+    }
+}
+
 /// Contains the thread safe hashmaps of different routes
 
 pub struct Router {
