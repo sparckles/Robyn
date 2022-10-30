@@ -1,14 +1,14 @@
 #[derive(Debug)]
-pub enum MiddlewareRouteType {
+pub enum MiddlewareRoute {
     BeforeRequest,
     AfterRequest,
 }
 
-impl MiddlewareRouteType {
-    pub fn from_str(input: &str) -> MiddlewareRouteType {
+impl MiddlewareRoute {
+    pub fn from_str(input: &str) -> MiddlewareRoute {
         match input {
-            "BEFORE_REQUEST" => MiddlewareRouteType::BeforeRequest,
-            "AFTER_REQUEST" => MiddlewareRouteType::AfterRequest,
+            "BEFORE_REQUEST" => MiddlewareRoute::BeforeRequest,
+            "AFTER_REQUEST" => MiddlewareRoute::AfterRequest,
             _ => panic!("Invalid route type enum."),
         }
     }
