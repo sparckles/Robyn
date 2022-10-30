@@ -26,4 +26,3 @@ def jsonify(input_dict: dict) -> str:
     """
 
     return json.dumps(input_dict)
-

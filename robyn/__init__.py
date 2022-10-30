@@ -5,7 +5,7 @@ import os
 import sys
 from typing import Callable, Optional
 
-from multiprocess import Process
+from multiprocess import Process  # type: ignore
 from watchdog.observers import Observer
 
 from robyn.argument_parser import ArgumentParser
@@ -54,7 +54,7 @@ class Robyn:
 
         """ We will add the status code here only
         """
-        self.router.add_route(route_type, endpoint, handler, const)
+        return self.router.add_route(route_type, endpoint, handler, const)
 
     def before_request(self, endpoint: str) -> Callable[..., None]:
         """
@@ -75,7 +75,11 @@ class Robyn:
         return self.middleware_router.add_after_request(endpoint)
 
     def add_directory(
-        self, route: str, directory_path: str, index_file: Optional[str] = None, show_files_listing: bool = False
+        self,
+        route: str,
+        directory_path: str,
+        index_file: Optional[str] = None,
+        show_files_listing: bool = False,
     ):
         self.directories.append((route, directory_path, index_file, show_files_listing))
 
@@ -85,7 +89,7 @@ class Robyn:
     def add_web_socket(self, endpoint: str, ws: WS) -> None:
         self.web_socket_router.add_route(endpoint, ws)
 
-    def _add_event_handler(self, event_type: str, handler) -> None:
+    def _add_event_handler(self, event_type: Events, handler) -> None:
         logger.debug(f"Add event {event_type} handler")
         if event_type not in {Events.STARTUP, Events.SHUTDOWN}:
             return
@@ -105,7 +109,10 @@ class Robyn:
 
         :param port int: reperesents the port number at which the server is listening
         """
-        
+
+        url = os.getenv("ROBYN_URL", "127.0.0.1")
+        port = int(os.getenv("ROBYN_PORT", "5000"))
+
         def init_processpool(socket):
 
             process_pool = []
@@ -120,7 +127,7 @@ class Robyn:
                     socket,
                     workers,
                 )
-                
+
                 return process_pool
 
             for _ in range(self.processes):
@@ -157,7 +164,9 @@ class Robyn:
                 for process in process_pool:
                     process.join()
             except KeyboardInterrupt:
-                logger.info(f"{Colors.BOLD}{Colors.OKGREEN} Terminating server!! {Colors.ENDC}")
+                logger.info(
+                    f"{Colors.BOLD}{Colors.OKGREEN} Terminating server!! {Colors.ENDC}"
+                )
                 for process in process_pool:
                     process.kill()
         else:
@@ -176,7 +185,7 @@ class Robyn:
                 observer.stop()
                 observer.join()
 
-    def get(self, endpoint: str, const: bool = False) -> Callable[..., None]:
+    def get(self, endpoint: str, const: bool = False):
         """
         The @app.get decorator to add a get route
 
@@ -184,11 +193,11 @@ class Robyn:
         """
 
         def inner(handler):
-            self._add_route("GET", endpoint, handler, const)
+            return self._add_route("GET", endpoint, handler, const)
 
         return inner
 
-    def post(self, endpoint: str) -> Callable[..., None]:
+    def post(self, endpoint: str):
         """
         The @app.post decorator to add a get route
 
@@ -196,22 +205,23 @@ class Robyn:
         """
 
         def inner(handler):
-            self._add_route("POST", endpoint, handler)
+            return self._add_route("POST", endpoint, handler)
 
         return inner
 
-    def put(self, endpoint: str) -> Callable[..., None]:
+    def put(self, endpoint: str):
         """
         The @app.put decorator to add a get route
 
         :param endpoint str: endpoint to server the route
         """
+
         def inner(handler):
-            self._add_route("PUT", endpoint, handler)
+            return self._add_route("PUT", endpoint, handler)
 
         return inner
 
-    def delete(self, endpoint: str) -> Callable[..., None]:
+    def delete(self, endpoint: str):
         """
         The @app.delete decorator to add a get route
 
@@ -219,11 +229,11 @@ class Robyn:
         """
 
         def inner(handler):
-            self._add_route("DELETE", endpoint, handler)
+            return self._add_route("DELETE", endpoint, handler)
 
         return inner
 
-    def patch(self, endpoint: str) -> Callable[..., None]:
+    def patch(self, endpoint: str):
         """
         [The @app.patch decorator to add a get route]
 
@@ -231,11 +241,11 @@ class Robyn:
         """
 
         def inner(handler):
-            self._add_route("PATCH", endpoint, handler)
+            return self._add_route("PATCH", endpoint, handler)
 
         return inner
 
-    def head(self, endpoint: str) -> Callable[..., None]:
+    def head(self, endpoint: str):
         """
         The @app.head decorator to add a get route
 
@@ -243,11 +253,11 @@ class Robyn:
         """
 
         def inner(handler):
-            self._add_route("HEAD", endpoint, handler)
+            return self._add_route("HEAD", endpoint, handler)
 
         return inner
 
-    def options(self, endpoint: str) -> Callable[..., None]:
+    def options(self, endpoint: str):
         """
         The @app.options decorator to add a get route
 
@@ -255,11 +265,11 @@ class Robyn:
         """
 
         def inner(handler):
-            self._add_route("OPTIONS", endpoint, handler)
+            return self._add_route("OPTIONS", endpoint, handler)
 
         return inner
 
-    def connect(self, endpoint: str) -> Callable[..., None]:
+    def connect(self, endpoint: str):
         """
         The @app.connect decorator to add a get route
 
@@ -267,11 +277,11 @@ class Robyn:
         """
 
         def inner(handler):
-            self._add_route("CONNECT", endpoint, handler)
+            return self._add_route("CONNECT", endpoint, handler)
 
         return inner
 
-    def trace(self, endpoint: str) -> Callable[..., None]:
+    def trace(self, endpoint: str):
         """
         The @app.trace decorator to add a get route
 
@@ -279,7 +289,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self._add_route("TRACE", endpoint, handler)
+            return self._add_route("TRACE", endpoint, handler)
 
         return inner
 
@@ -295,4 +305,3 @@ class Robyn:
 
         log_level = self.log_level if self.log_level else log_level
         logging.basicConfig(level=log_level)
-

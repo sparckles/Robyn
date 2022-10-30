@@ -68,17 +68,25 @@ def spawn_process(
 
     for route in routes:
         route_type, endpoint, handler, is_async, number_of_params, const = route
-        server.add_route(route_type, endpoint, handler, is_async, number_of_params, const)
+        server.add_route(
+            route_type, endpoint, handler, is_async, number_of_params, const
+        )
 
     for route in middlewares:
         route_type, endpoint, handler, is_async, number_of_params = route
-        server.add_middleware_route(route_type, endpoint, handler, is_async, number_of_params)
+        server.add_middleware_route(
+            route_type, endpoint, handler, is_async, number_of_params
+        )
 
     if "startup" in event_handlers:
-        server.add_startup_handler(event_handlers[Events.STARTUP][0], event_handlers[Events.STARTUP][1])
+        server.add_startup_handler(
+            event_handlers[Events.STARTUP][0], event_handlers[Events.STARTUP][1]
+        )
 
     if "shutdown" in event_handlers:
-        server.add_shutdown_handler(event_handlers[Events.SHUTDOWN][0], event_handlers[Events.SHUTDOWN][1])
+        server.add_shutdown_handler(
+            event_handlers[Events.SHUTDOWN][0], event_handlers[Events.SHUTDOWN][1]
+        )
 
     for endpoint in web_sockets:
         web_socket = web_sockets[endpoint]
@@ -95,4 +103,3 @@ def spawn_process(
         loop.run_forever()
     except KeyboardInterrupt:
         loop.close()
-
