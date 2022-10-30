@@ -7,6 +7,7 @@ use actix_web_actors::ws;
 use actix_web_actors::ws::WebsocketContext;
 use log::debug;
 use pyo3::prelude::*;
+use pyo3_asyncio::TaskLocals;
 use uuid::Uuid;
 
 use std::collections::HashMap;
@@ -19,13 +20,13 @@ struct MyWs {
     router: HashMap<String, (PyFunction, u8)>,
     // can probably try removing arc from here
     // and use clone_ref()
-    event_loop: Arc<PyObject>,
+    task_locals: Arc<TaskLocals>,
 }
 
 fn execute_ws_function(
     handler_function: &PyFunction,
     number_of_params: u8,
-    event_loop: Arc<PyObject>,
+    task_locals: &TaskLocals,
     ctx: &mut ws::WebsocketContext<MyWs>,
     ws: &MyWs,
     // add number of params here
@@ -53,8 +54,7 @@ fn execute_ws_function(
                     // this is done to accomodate any future params
                     2_u8..=u8::MAX => handler.call1((ws.id.to_string(),)).unwrap(),
                 };
-                pyo3_asyncio::into_future_with_loop((*(event_loop.clone())).as_ref(py), coro)
-                    .unwrap()
+                pyo3_asyncio::into_future_with_locals(task_locals, coro).unwrap()
             });
             let f = async move {
                 let output = fut.await.unwrap();
@@ -81,7 +81,7 @@ impl Actor for MyWs {
         execute_ws_function(
             handler_function,
             *number_of_params,
-            self.event_loop.clone(),
+            &self.task_locals,
             ctx,
             self,
         );
@@ -95,7 +95,7 @@ impl Actor for MyWs {
         execute_ws_function(
             handler_function,
             *number_of_params,
-            self.event_loop.clone(),
+            &self.task_locals,
             ctx,
             self,
         );
@@ -120,7 +120,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
                 execute_ws_function(
                     handler_function,
                     *number_of_params,
-                    self.event_loop.clone(),
+                    &self.task_locals,
                     ctx,
                     self,
                 );
@@ -139,7 +139,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
                 execute_ws_function(
                     handler_function,
                     *number_of_params,
-                    self.event_loop.clone(),
+                    &self.task_locals,
                     ctx,
                     self,
                 );
@@ -153,7 +153,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
                 execute_ws_function(
                     handler_function,
                     *number_of_params,
-                    self.event_loop.clone(),
+                    &self.task_locals,
                     ctx,
                     self,
                 );
@@ -167,14 +167,14 @@ pub async fn start_web_socket(
     req: HttpRequest,
     stream: web::Payload,
     router: HashMap<String, (PyFunction, u8)>,
-    event_loop: Arc<PyObject>,
+    task_locals: Arc<TaskLocals>,
 ) -> Result<HttpResponse, Error> {
     // execute the async function here
 
     ws::start(
         MyWs {
             router,
-            event_loop,
+            task_locals,
             id: Uuid::new_v4(),
         },
         &req,

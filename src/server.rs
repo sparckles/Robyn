@@ -102,23 +102,23 @@ impl Server {
         asyncio
             .call_method1("set_event_loop", (event_loop,))
             .unwrap();
-        let event_loop_hdl = Arc::new(PyObject::from(event_loop));
-        let event_loop_cleanup = event_loop_hdl.clone();
         let startup_handler = self.startup_handler.clone();
         let shutdown_handler = self.shutdown_handler.clone();
 
+        let task_locals = Arc::new(pyo3_asyncio::TaskLocals::new(event_loop).copy_context(py)?);
+        let task_locals_cleanup = task_locals.clone();
+
         thread::spawn(move || {
-            //init_current_thread_once();
-            let copied_event_loop = event_loop_hdl.clone();
             actix_web::rt::System::new().block_on(async move {
                 debug!("The number of workers are {}", workers.clone());
-                execute_event_handler(startup_handler, copied_event_loop.clone())
+                execute_event_handler(startup_handler, &task_locals)
                     .await
                     .unwrap();
 
                 HttpServer::new(move || {
                     let mut app = App::new();
-                    let event_loop_hdl = copied_event_loop.clone();
+
+                    let task_locals = task_locals.clone();
                     let directories = directories.read().unwrap();
 
                     // this loop matches three types of directory serving
@@ -154,7 +154,7 @@ impl Server {
                     for (elem, value) in (web_socket_map.read().unwrap()).iter() {
                         let route = elem.clone();
                         let params = value.clone();
-                        let event_loop_hdl = event_loop_hdl.clone();
+                        let task_locals = task_locals.clone();
                         app = app.route(
                             &route.clone(),
                             web::get().to(
@@ -166,7 +166,7 @@ impl Server {
                                         req,
                                         stream,
                                         params.clone(),
-                                        event_loop_hdl.clone(),
+                                        task_locals.clone(),
                                     )
                                 },
                             ),
@@ -180,20 +180,17 @@ impl Server {
                               global_headers,
                               payload,
                               req| {
-                            pyo3_asyncio::tokio::scope_local(
-                                (*event_loop_hdl).clone(),
-                                async move {
-                                    index(
-                                        router,
-                                        const_router,
-                                        middleware_router,
-                                        global_headers,
-                                        payload,
-                                        req,
-                                    )
-                                    .await
-                                },
-                            )
+                            pyo3_asyncio::tokio::scope_local((*task_locals).clone(), async move {
+                                index(
+                                    router,
+                                    const_router,
+                                    middleware_router,
+                                    global_headers,
+                                    payload,
+                                    req,
+                                )
+                                .await
+                            })
                         },
                     ))
                 })
@@ -212,9 +209,8 @@ impl Server {
         if event_loop.is_err() {
             debug!("Ctrl c handler");
             Python::with_gil(|py| {
-                let event_loop_hdl = event_loop_cleanup.clone();
                 pyo3_asyncio::tokio::run(py, async move {
-                    execute_event_handler(shutdown_handler, event_loop_hdl.clone())
+                    execute_event_handler(shutdown_handler, &task_locals_cleanup)
                         .await
                         .unwrap();
                     Ok(())
@@ -454,18 +450,20 @@ async fn index(
         }
     };
 
-    if let Some(((handler_function, number_of_params), route_params)) = middleware_router.get_route("AFTER_REQUEST", req.uri().path()) {
+    if let Some(((handler_function, number_of_params), route_params)) =
+        middleware_router.get_route("AFTER_REQUEST", req.uri().path())
+    {
         let x = handle_http_middleware_request(
-                handler_function,
-                number_of_params,
-                &headers_dup,
-                &mut payload,
-                &req,
-                route_params,
-                queries.clone(),
-            )
-            .await;
-            debug!("{:?}", x);
+            handler_function,
+            number_of_params,
+            &headers_dup,
+            &mut payload,
+            &req,
+            route_params,
+            queries.clone(),
+        )
+        .await;
+        debug!("{:?}", x);
     };
 
     response
