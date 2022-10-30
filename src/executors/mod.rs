@@ -8,12 +8,11 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::Arc;
 
-
 use actix_web::HttpResponse;
-
-use actix_web::{ HttpRequest};
-use anyhow::{ Result};
+use actix_web::{http::Method, web, HttpRequest};
+use anyhow::{bail, Result};
 use log::{debug, info};
+use pyo3_asyncio::TaskLocals;
 // pyO3 module
 use crate::types::PyFunction;
 
@@ -306,7 +305,7 @@ pub async fn execute_http_function(
 
 pub async fn execute_event_handler(
     event_handler: Option<Arc<PyFunction>>,
-    event_loop: Arc<Py<PyAny>>,
+    task_locals: &TaskLocals,
 ) -> Result<(), Box<dyn std::error::Error>> {
     if let Some(handler) = event_handler {
         match &(*handler) {
@@ -322,8 +321,8 @@ pub async fn execute_event_handler(
                     debug!("Startup event handler async");
 
                     let coroutine = function.as_ref(py).call0().unwrap();
-                    pyo3_asyncio::into_future_with_loop((*event_loop).as_ref(py), coroutine)
-                        .unwrap()
+
+                    pyo3_asyncio::into_future_with_locals(task_locals, coroutine).unwrap()
                 });
                 future.await?;
             }

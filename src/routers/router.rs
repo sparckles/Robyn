@@ -6,41 +6,41 @@ use pyo3::prelude::*;
 use pyo3::types::PyAny;
 
 use actix_web::http::Method;
-use matchit::Node;
+use matchit::Router as MatchItRouter;
 
 use anyhow::{bail, Error, Result};
 
 /// Contains the thread safe hashmaps of different routes
 
 pub struct Router {
-    get_routes: RwLock<Node<(PyFunction, u8)>>,
-    post_routes: RwLock<Node<(PyFunction, u8)>>,
-    put_routes: RwLock<Node<(PyFunction, u8)>>,
-    delete_routes: RwLock<Node<(PyFunction, u8)>>,
-    patch_routes: RwLock<Node<(PyFunction, u8)>>,
-    head_routes: RwLock<Node<(PyFunction, u8)>>,
-    options_routes: RwLock<Node<(PyFunction, u8)>>,
-    connect_routes: RwLock<Node<(PyFunction, u8)>>,
-    trace_routes: RwLock<Node<(PyFunction, u8)>>,
+    get_routes: RwLock<MatchItRouter<(PyFunction, u8)>>,
+    post_routes: RwLock<MatchItRouter<(PyFunction, u8)>>,
+    put_routes: RwLock<MatchItRouter<(PyFunction, u8)>>,
+    delete_routes: RwLock<MatchItRouter<(PyFunction, u8)>>,
+    patch_routes: RwLock<MatchItRouter<(PyFunction, u8)>>,
+    head_routes: RwLock<MatchItRouter<(PyFunction, u8)>>,
+    options_routes: RwLock<MatchItRouter<(PyFunction, u8)>>,
+    connect_routes: RwLock<MatchItRouter<(PyFunction, u8)>>,
+    trace_routes: RwLock<MatchItRouter<(PyFunction, u8)>>,
 }
 
 impl Router {
     pub fn new() -> Self {
         Self {
-            get_routes: RwLock::new(Node::new()),
-            post_routes: RwLock::new(Node::new()),
-            put_routes: RwLock::new(Node::new()),
-            delete_routes: RwLock::new(Node::new()),
-            patch_routes: RwLock::new(Node::new()),
-            head_routes: RwLock::new(Node::new()),
-            options_routes: RwLock::new(Node::new()),
-            connect_routes: RwLock::new(Node::new()),
-            trace_routes: RwLock::new(Node::new()),
+            get_routes: RwLock::new(MatchItRouter::new()),
+            post_routes: RwLock::new(MatchItRouter::new()),
+            put_routes: RwLock::new(MatchItRouter::new()),
+            delete_routes: RwLock::new(MatchItRouter::new()),
+            patch_routes: RwLock::new(MatchItRouter::new()),
+            head_routes: RwLock::new(MatchItRouter::new()),
+            options_routes: RwLock::new(MatchItRouter::new()),
+            connect_routes: RwLock::new(MatchItRouter::new()),
+            trace_routes: RwLock::new(MatchItRouter::new()),
         }
     }
 
     #[inline]
-    fn get_relevant_map(&self, route: Method) -> Option<&RwLock<Node<(PyFunction, u8)>>> {
+    fn get_relevant_map(&self, route: Method) -> Option<&RwLock<MatchItRouter<(PyFunction, u8)>>> {
         match route {
             Method::GET => Some(&self.get_routes),
             Method::POST => Some(&self.post_routes),
@@ -56,7 +56,10 @@ impl Router {
     }
 
     #[inline]
-    fn get_relevant_map_str(&self, route: &str) -> Option<&RwLock<Node<(PyFunction, u8)>>> {
+    fn get_relevant_map_str(
+        &self,
+        route: &str,
+    ) -> Option<&RwLock<MatchItRouter<(PyFunction, u8)>>> {
         if route != "WS" {
             let method = match Method::from_bytes(route.as_bytes()) {
                 Ok(res) => res,

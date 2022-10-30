@@ -7,41 +7,41 @@ use pyo3::prelude::*;
 use pyo3::types::PyAny;
 
 use actix_web::http::Method;
-use matchit::Node;
+use matchit::Router;
 
 use anyhow::{bail, Error, Result};
 
 /// Contains the thread safe hashmaps of different routes
 
 pub struct ConstRouter {
-    get_routes: Arc<RwLock<Node<String>>>,
-    post_routes: Arc<RwLock<Node<String>>>,
-    put_routes: Arc<RwLock<Node<String>>>,
-    delete_routes: Arc<RwLock<Node<String>>>,
-    patch_routes: Arc<RwLock<Node<String>>>,
-    head_routes: Arc<RwLock<Node<String>>>,
-    options_routes: Arc<RwLock<Node<String>>>,
-    connect_routes: Arc<RwLock<Node<String>>>,
-    trace_routes: Arc<RwLock<Node<String>>>,
+    get_routes: Arc<RwLock<Router<String>>>,
+    post_routes: Arc<RwLock<Router<String>>>,
+    put_routes: Arc<RwLock<Router<String>>>,
+    delete_routes: Arc<RwLock<Router<String>>>,
+    patch_routes: Arc<RwLock<Router<String>>>,
+    head_routes: Arc<RwLock<Router<String>>>,
+    options_routes: Arc<RwLock<Router<String>>>,
+    connect_routes: Arc<RwLock<Router<String>>>,
+    trace_routes: Arc<RwLock<Router<String>>>,
 }
 
 impl ConstRouter {
     pub fn new() -> Self {
         Self {
-            get_routes: Arc::new(RwLock::new(Node::new())),
-            post_routes: Arc::new(RwLock::new(Node::new())),
-            put_routes: Arc::new(RwLock::new(Node::new())),
-            delete_routes: Arc::new(RwLock::new(Node::new())),
-            patch_routes: Arc::new(RwLock::new(Node::new())),
-            head_routes: Arc::new(RwLock::new(Node::new())),
-            options_routes: Arc::new(RwLock::new(Node::new())),
-            connect_routes: Arc::new(RwLock::new(Node::new())),
-            trace_routes: Arc::new(RwLock::new(Node::new())),
+            get_routes: Arc::new(RwLock::new(Router::new())),
+            post_routes: Arc::new(RwLock::new(Router::new())),
+            put_routes: Arc::new(RwLock::new(Router::new())),
+            delete_routes: Arc::new(RwLock::new(Router::new())),
+            patch_routes: Arc::new(RwLock::new(Router::new())),
+            head_routes: Arc::new(RwLock::new(Router::new())),
+            options_routes: Arc::new(RwLock::new(Router::new())),
+            connect_routes: Arc::new(RwLock::new(Router::new())),
+            trace_routes: Arc::new(RwLock::new(Router::new())),
         }
     }
 
     #[inline]
-    fn get_relevant_map(&self, route: Method) -> Option<Arc<RwLock<Node<String>>>> {
+    fn get_relevant_map(&self, route: Method) -> Option<Arc<RwLock<Router<String>>>> {
         match route {
             Method::GET => Some(self.get_routes.clone()),
             Method::POST => Some(self.post_routes.clone()),
@@ -57,7 +57,7 @@ impl ConstRouter {
     }
 
     #[inline]
-    fn get_relevant_map_str(&self, route: &str) -> Option<Arc<RwLock<Node<String>>>> {
+    fn get_relevant_map_str(&self, route: &str) -> Option<Arc<RwLock<Router<String>>>> {
         if route != "WS" {
             let method = match Method::from_bytes(route.as_bytes()) {
                 Ok(res) => res,
