@@ -83,8 +83,8 @@ class MiddlewareRouter(BaseRouter):
         super().__init__()
         self.routes = []
 
-    def add_route(self, route_type: str, endpoint: str, handler: Callable) -> None:
-        number_of_params = len(signature(handler).parameters)
+    def add_route(self, route_type: str, endpoint: str, handler: Callable, number_of_params=0) -> None:
+        print(route_type, handler, signature(handler).parameters, number_of_params)
         self.routes.append(
             (
                 route_type,
@@ -101,7 +101,8 @@ class MiddlewareRouter(BaseRouter):
     # and returns the arguments.
     # Arguments are returned as they could be modified by the middlewares.
     def add_after_request(self, endpoint: str) -> Callable[..., None]:
-        def inner(handler):
+        def inner(handler): # number_of_params 
+
             async def async_inner_handler(*args):
                 await handler(*args)
                 return args
@@ -110,10 +111,13 @@ class MiddlewareRouter(BaseRouter):
                 handler(*args)
                 return args
 
+            number_of_params = len(signature(handler).parameters)
+
+
             if iscoroutinefunction(handler):
-                self.add_route("AFTER_REQUEST", endpoint, async_inner_handler)
+                self.add_route("AFTER_REQUEST", endpoint, async_inner_handler, number_of_params)
             else:
-                self.add_route("AFTER_REQUEST", endpoint, inner_handler)
+                self.add_route("AFTER_REQUEST", endpoint, inner_handler, number_of_params)
 
         return inner
 

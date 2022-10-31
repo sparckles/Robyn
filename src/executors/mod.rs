@@ -75,25 +75,24 @@ pub async fn execute_middleware_function<'a>(
                 response_dict.insert("headers", response_headers.into_py(py));
                 response_dict.insert("status", response_status_code.into_py(py));
                 response_dict.insert("body", response_body.into_py(py));
-                
+                info!("{:?}", request);
+                info!("{:?}", response_dict);
+                info!("{:?}", number_of_params);
+
                 // let response = handler.call1((request.clone(),));
                 // pyo3_asyncio::tokio::into_future(response?);
                 // response = response.await?;
 
-
                 // this makes the request object to be accessible across every route
                 let coro: PyResult<&PyAny> = match number_of_params {
                     0 => handler.call0(),
-                    1 => handler.call1((request,)),
-                    2 => handler.call((request, response_dict), None),
+                    1 => handler.call1((response_dict,)),
+                    2 => handler.call1((request, response_dict)),
                     // this is done to accomodate any future params
                     3_u8..=u8::MAX => handler.call1((request, response_dict)),
                 };
                 pyo3_asyncio::tokio::into_future(coro?)
-
-
             })?;
-
 
             let output = output.await?;
 
@@ -104,8 +103,6 @@ pub async fn execute_middleware_function<'a>(
                     let responses = output[0].clone();
                     Ok(responses)
                 })?;
-            
-            
 
             Ok(res)
         }
