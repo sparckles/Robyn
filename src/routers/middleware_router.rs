@@ -27,7 +27,10 @@ impl MiddlewareRouter {
     }
 
     #[inline]
-    fn get_relevant_map(&self, route: MiddlewareRoute) -> Option<&RwLock<Router<(PyFunction, u8)>>> {
+    fn get_relevant_map(
+        &self,
+        route: MiddlewareRoute,
+    ) -> Option<&RwLock<Router<(PyFunction, u8)>>> {
         match route {
             MiddlewareRoute::BeforeRequest => Some(&self.before_request),
             MiddlewareRoute::AfterRequest => Some(&self.after_request),
