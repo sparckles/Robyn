@@ -1,13 +1,16 @@
 /// This is the module that has all the executor functions
 /// i.e. the functions that have the responsibility of parsing and executing functions.
 use crate::io_helpers::read_file;
+use crate::request_handler::apply_headers;
 
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::Arc;
 
+
 use actix_web::HttpResponse;
+use actix_web::web::BytesMut;
 use actix_web::{http::Method, web, HttpRequest};
 use anyhow::{bail, Result};
 use log::debug;
@@ -22,40 +25,34 @@ const MAX_SIZE: usize = 10_000;
 
 pub async fn execute_middleware_function<'a>(
     function: PyFunction,
-    payload: &mut web::Payload,
+    payload: &mut Vec<u8>,
     headers: &HashMap<String, String>,
     req: &HttpRequest,
     route_params: HashMap<String, String>,
     queries: Rc<RefCell<HashMap<String, String>>>,
     number_of_params: u8,
+    res: Option<&HttpResponse>,
 ) -> Result<HashMap<String, HashMap<String, String>>> {
     // TODO:
     // add body in middlewares too
 
-
-    let mut data: Vec<u8> = Vec::new();
-
-    if req.method() == Method::POST
-        || req.method() == Method::PUT
-        || req.method() == Method::PATCH
-        || req.method() == Method::DELETE
-    {
-        let mut body = web::BytesMut::new();
-        while let Some(chunk) = payload.next().await {
-            let chunk = chunk?;
-            // limit max size of in-memory payload
-            if (body.len() + chunk.len()) > MAX_SIZE {
-                bail!("Body content Overflow");
-            }
-            body.extend_from_slice(&chunk);
-        }
-
-        data = body.to_vec()
-    }
-
+    let mut data = payload.clone();
+    let tmp = &HttpResponse::Ok().finish();
+    
     // make response object accessible while creating routes
-    let mut response: HashMap<String, HashMap<String,String>> = HashMap::new();
-
+    let mut response = match res {
+        Some(res) => res.clone(),
+        // do nothing if none
+        None => tmp,
+    };
+    let mut response_headers = HashMap::new();
+    for (key, val) in response.headers() {
+        response_headers.insert(key.to_string(), val.to_str().unwrap().to_string());
+    }
+    let mut response_dict: HashMap<&str, Py<PyAny>> = HashMap::new();
+    let mut response_status_code = response.status().as_u16();
+    let mut response_body = data.clone();
+    
 
     // request object accessible while creating routes
     let mut request = HashMap::new();
@@ -75,6 +72,9 @@ pub async fn execute_middleware_function<'a>(
                 // is this a bottleneck again?
                 request.insert("headers", headers.clone().into_py(py));
                 request.insert("body", data.into_py(py));
+                response_dict.insert("headers", response_headers.into_py(py));
+                response_dict.insert("status", response_status_code.into_py(py));
+                response_dict.insert("body", response_body.into_py(py));
                 
                 // let response = handler.call1((request.clone(),));
                 // pyo3_asyncio::tokio::into_future(response?);
@@ -85,9 +85,9 @@ pub async fn execute_middleware_function<'a>(
                 let coro: PyResult<&PyAny> = match number_of_params {
                     0 => handler.call0(),
                     1 => handler.call1((request,)),
-                    2 => handler.call((request, response), None),
+                    2 => handler.call((request, response_dict), None),
                     // this is done to accomodate any future params
-                    3_u8..=u8::MAX => handler.call1((request,response)),
+                    3_u8..=u8::MAX => handler.call1((request, response_dict)),
                 };
                 pyo3_asyncio::tokio::into_future(coro?)
 
@@ -121,15 +121,18 @@ pub async fn execute_middleware_function<'a>(
                 // is this a bottleneck again?
                 request.insert("headers", headers.clone().into_py(py));
                 request.insert("body", data.into_py(py));
+                response_dict.insert("headers", response_headers.into_py(py));
+                response_dict.insert("status", response_status_code.into_py(py));
+                response_dict.insert("body", response_body.into_py(py));
                 
                 let response = handler.call1((request.clone(),)).unwrap();
 
                 let output: PyResult<&PyAny> = match number_of_params {
                     0 => handler.call0(),
                     1 => handler.call1((request,)),
-                    2 => handler.call1((request, response)),
+                    2 => handler.call1((request, response_dict)),
                     // this is done to accomodate any future params
-                    3_u8..=u8::MAX => handler.call1((request,response)),
+                    3_u8..=u8::MAX => handler.call1((request,response_dict)),
                 };
 
                 let output: Vec<HashMap<String, HashMap<String, String>>> = output?.extract()?;
@@ -203,7 +206,7 @@ pub async fn execute_function(
 #[inline]
 pub async fn execute_http_function(
     function: PyFunction,
-    payload: &mut web::Payload,
+    payload: &mut Vec<u8>,
     headers: HashMap<String, String>,
     req: &HttpRequest,
     route_params: HashMap<String, String>,
@@ -212,25 +215,25 @@ pub async fn execute_http_function(
     // need to change this to return a response struct
     // create a custom struct for this
 ) -> Result<HashMap<String, String>> {
-    let mut data: Vec<u8> = Vec::new();
+    let mut data: Vec<u8> = payload.clone();
 
-    if req.method() == Method::POST
-        || req.method() == Method::PUT
-        || req.method() == Method::PATCH
-        || req.method() == Method::DELETE
-    {
-        let mut body = web::BytesMut::new();
-        while let Some(chunk) = payload.next().await {
-            let chunk = chunk?;
-            // limit max size of in-memory payload
-            if (body.len() + chunk.len()) > MAX_SIZE {
-                bail!("Body content Overflow");
-            }
-            body.extend_from_slice(&chunk);
-        }
+    // if req.method() == Method::POST
+    //     || req.method() == Method::PUT
+    //     || req.method() == Method::PATCH
+    //     || req.method() == Method::DELETE
+    // {
+    //     let mut body = web::BytesMut::new();
+    //     while let Some(chunk) = payload.next().await {
+    //         let chunk = chunk?;
+    //         // limit max size of in-memory payload
+    //         if (body.len() + chunk.len()) > MAX_SIZE {
+    //             bail!("Body content Overflow");
+    //         }
+    //         body.extend_from_slice(&chunk);
+    //     }
 
-        data = body.to_vec()
-    }
+    //     data = body.to_vec()
+    // }
 
     // request object accessible while creating routes
     let mut request = HashMap::new();

@@ -78,9 +78,10 @@ def return_int_status_code():
 async def hello_before_request(request):
     global callCount
     callCount += 1
-    print(request)
+    
     # response["body"] = "hello resposne"
     request["body"] = "hello request"
+    print(request)
     print()
     return ""
 
@@ -89,6 +90,7 @@ async def hello_before_request(request):
 async def hello_after_request(request):
     global callCount
     callCount += 1
+    
     print(request)
     return ""
     

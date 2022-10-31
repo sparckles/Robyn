@@ -21,9 +21,10 @@ use std::thread;
 
 use actix_files::Files;
 use actix_http::header::HeaderMap;
-use actix_http::KeepAlive;
+use actix_http::{KeepAlive, Method};
 use actix_web::*;
 use dashmap::DashMap;
+use futures_util::stream::StreamExt;
 
 // pyO3 module
 use log::debug;
@@ -391,7 +392,7 @@ async fn index(
     }
 
     let headers = merge_headers(&global_headers, req.headers()).await;
-
+    const MAX_SIZE: usize = 10_000;
         let mut data: Vec<u8> = Vec::new();
 
     if req.method() == Method::POST
@@ -401,10 +402,10 @@ async fn index(
     {
         let mut body = web::BytesMut::new();
         while let Some(chunk) = payload.next().await {
-            let chunk = chunk?;
+            let chunk = chunk.unwrap();
             // limit max size of in-memory payload
             if (body.len() + chunk.len()) > MAX_SIZE {
-                bail!("Body content Overflow");
+                return HttpResponse::PayloadTooLarge().finish();
             }
             body.extend_from_slice(&chunk);
         }
@@ -445,10 +446,24 @@ async fn index(
     } else {
         headers
     };
+    if let Some(((handler_function, number_of_params), route_params)) = middleware_router.get_route("BEFORE_REQUEST", req.uri().path()) {
+        let x = handle_http_middleware_request(
+                handler_function,
+                number_of_params,
+                &headers_dup,
+                &mut data,
+                &req,
+                route_params,
+                queries.clone(),
+                None
+            )
+            .await;
+            debug!("{:?}", x);
+    };
 
     debug!("These are the request headers {:?}", headers_dup);
 
-    let response = if const_router
+    let mut response = if const_router
         .get_route(req.method().clone(), req.uri().path())
         .is_some()
     {
@@ -470,6 +485,7 @@ async fn index(
                     &req,
                     route_params,
                     queries.clone(),
+                    
                 )
                 .await
             }
@@ -490,6 +506,7 @@ async fn index(
                 &req,
                 route_params,
                 queries.clone(),
+                Some(&response)
             )
             .await;
             debug!("{:?}", x);

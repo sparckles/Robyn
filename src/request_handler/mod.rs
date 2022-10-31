@@ -31,10 +31,11 @@ pub async fn handle_http_request(
     function: PyFunction,
     number_of_params: u8,
     headers: HashMap<String, String>,
-    payload: &mut web::Payload,
+    payload: &mut Vec<u8>,
     req: &HttpRequest,
     route_params: HashMap<String, String>,
     queries: Rc<RefCell<HashMap<String, String>>>,
+    
 ) -> HttpResponse {
     let contents = match execute_http_function(
         function,
@@ -93,10 +94,11 @@ pub async fn handle_http_middleware_request(
     function: PyFunction,
     number_of_params: u8,
     headers: &HashMap<String, String>,
-    payload: &mut web::Payload,
+    payload: &mut Vec<u8>,
     req: &HttpRequest,
     route_params: HashMap<String, String>,
     queries: Rc<RefCell<HashMap<String, String>>>,
+    res: Option<&HttpResponse>,
 ) -> HashMap<String, HashMap<String, String>> {
     let contents = match execute_middleware_function(
         function,
@@ -106,6 +108,7 @@ pub async fn handle_http_middleware_request(
         route_params,
         queries,
         number_of_params,
+        res
     )
     .await
     {
