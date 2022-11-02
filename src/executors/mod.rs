@@ -1,7 +1,7 @@
 /// This is the module that has all the executor functions
 /// i.e. the functions that have the responsibility of parsing and executing functions.
 use crate::io_helpers::read_file;
-use crate::request_handler::apply_headers;
+
 
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -10,18 +10,18 @@ use std::sync::Arc;
 
 
 use actix_web::HttpResponse;
-use actix_web::web::BytesMut;
-use actix_web::{http::Method, web, HttpRequest};
-use anyhow::{bail, Result};
-use log::debug;
+
+use actix_web::{ HttpRequest};
+use anyhow::{ Result};
+use log::{debug, info};
 // pyO3 module
 use crate::types::PyFunction;
-use futures_util::stream::StreamExt;
+
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
 /// @TODO make configurable
-const MAX_SIZE: usize = 10_000;
+
 
 pub async fn execute_middleware_function<'a>(
     function: PyFunction,
@@ -36,11 +36,11 @@ pub async fn execute_middleware_function<'a>(
     // TODO:
     // add body in middlewares too
 
-    let mut data = payload.clone();
+    let  data = payload.clone();
     let tmp = &HttpResponse::Ok().finish();
     
     // make response object accessible while creating routes
-    let mut response = match res {
+    let  response = match res {
         Some(res) => res.clone(),
         // do nothing if none
         None => tmp,
@@ -50,8 +50,8 @@ pub async fn execute_middleware_function<'a>(
         response_headers.insert(key.to_string(), val.to_str().unwrap().to_string());
     }
     let mut response_dict: HashMap<&str, Py<PyAny>> = HashMap::new();
-    let mut response_status_code = response.status().as_u16();
-    let mut response_body = data.clone();
+    let  response_status_code = response.status().as_u16();
+    let  response_body = data.clone();
     
 
     // request object accessible while creating routes
@@ -122,7 +122,7 @@ pub async fn execute_middleware_function<'a>(
                 response_dict.insert("status", response_status_code.into_py(py));
                 response_dict.insert("body", response_body.into_py(py));
                 
-                let response = handler.call1((request.clone(),)).unwrap();
+                
 
                 let output: PyResult<&PyAny> = match number_of_params {
                     0 => handler.call0(),
@@ -212,7 +212,7 @@ pub async fn execute_http_function(
     // need to change this to return a response struct
     // create a custom struct for this
 ) -> Result<HashMap<String, String>> {
-    let mut data: Vec<u8> = payload.clone();
+    let data: Vec<u8> = payload.clone();
 
     // if req.method() == Method::POST
     //     || req.method() == Method::PUT

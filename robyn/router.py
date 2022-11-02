@@ -131,10 +131,12 @@ class MiddlewareRouter(BaseRouter):
                 handler(*args)
                 return args
 
+            number_of_params = len(signature(handler).parameters)
+
             if iscoroutinefunction(handler):
-                self.add_route("BEFORE_REQUEST", endpoint, async_inner_handler)
+                self.add_route("BEFORE_REQUEST", endpoint, async_inner_handler, number_of_params)
             else:
-                self.add_route("BEFORE_REQUEST", endpoint, inner_handler)
+                self.add_route("BEFORE_REQUEST", endpoint, inner_handler, number_of_params)
 
         return inner
 

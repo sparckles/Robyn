@@ -463,7 +463,7 @@ async fn index(
 
     debug!("These are the request headers {:?}", headers_dup);
 
-    let mut response = if const_router
+    let  response = if const_router
         .get_route(req.method().clone(), req.uri().path())
         .is_some()
     {

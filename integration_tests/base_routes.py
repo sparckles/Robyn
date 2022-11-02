@@ -75,23 +75,22 @@ def return_int_status_code():
 
 
 @app.before_request("/post_with_body")
-async def hello_before_request(request):
+async def hello_before_request(request,response):
     global callCount
     callCount += 1
-    
-    # response["body"] = "hello resposne"
-    request["body"] = "hello request"
+    print("this is before request")
     print(request)
-    print()
+    print(response)
     return ""
 
 
 @app.after_request("/post_with_body")
-async def hello_after_request(request):
+async def hello_after_request(request, response):
     global callCount
     callCount += 1
-    
+    print("this is after request")
     print(request)
+    print(response)
     return ""
     
 # @app.before_request("/")
@@ -136,10 +135,11 @@ async def post():
 
 
 @app.post("/post_with_body")
-async def postreq_with_body(request, response):
+async def postreq_with_body(request):
     print("This is the main function")
     print(request)
-    return bytearray(response["body"]).decode("utf-8")
+    
+    return bytearray(request["body"]).decode("utf-8")
 
 
 @app.put("/put")

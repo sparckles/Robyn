@@ -5,7 +5,7 @@ use std::rc::Rc;
 use std::str::FromStr;
 use std::{cell::RefCell, collections::HashMap};
 
-use actix_web::{web, HttpRequest, HttpResponse, HttpResponseBuilder};
+use actix_web::{ HttpRequest, HttpResponse, HttpResponseBuilder};
 // pyO3 module
 use crate::types::PyFunction;
 
