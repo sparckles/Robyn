@@ -2,7 +2,6 @@
 /// i.e. the functions that have the responsibility of parsing and executing functions.
 use crate::io_helpers::read_file;
 
-
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -22,7 +21,6 @@ use pyo3::types::PyDict;
 
 /// @TODO make configurable
 
-
 pub async fn execute_middleware_function<'a>(
     function: PyFunction,
     payload: &mut Vec<u8>,
@@ -36,11 +34,11 @@ pub async fn execute_middleware_function<'a>(
     // TODO:
     // add body in middlewares too
 
-    let  data = payload.clone();
+    let data = payload.clone();
     let tmp = &HttpResponse::Ok().finish();
-    
+
     // make response object accessible while creating routes
-    let  response = match res {
+    let response = match res {
         Some(res) => res.clone(),
         // do nothing if none
         None => tmp,
@@ -50,9 +48,8 @@ pub async fn execute_middleware_function<'a>(
         response_headers.insert(key.to_string(), val.to_str().unwrap().to_string());
     }
     let mut response_dict: HashMap<&str, Py<PyAny>> = HashMap::new();
-    let  response_status_code = response.status().as_u16();
-    let  response_body = data.clone();
-    
+    let response_status_code = response.status().as_u16();
+    let response_body = data.clone();
 
     // request object accessible while creating routes
     let mut request = HashMap::new();
@@ -121,15 +118,13 @@ pub async fn execute_middleware_function<'a>(
                 response_dict.insert("headers", response_headers.into_py(py));
                 response_dict.insert("status", response_status_code.into_py(py));
                 response_dict.insert("body", response_body.into_py(py));
-                
-                
 
                 let output: PyResult<&PyAny> = match number_of_params {
                     0 => handler.call0(),
                     1 => handler.call1((request,)),
                     2 => handler.call1((request, response_dict)),
                     // this is done to accomodate any future params
-                    3_u8..=u8::MAX => handler.call1((request,response_dict)),
+                    3_u8..=u8::MAX => handler.call1((request, response_dict)),
                 };
 
                 let output: Vec<HashMap<String, HashMap<String, String>>> = output?.extract()?;

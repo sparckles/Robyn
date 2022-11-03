@@ -389,7 +389,7 @@ async fn index(
 
     let headers = merge_headers(&global_headers, req.headers()).await;
     const MAX_SIZE: usize = 10_000;
-        let mut data: Vec<u8> = Vec::new();
+    let mut data: Vec<u8> = Vec::new();
 
     if req.method() == Method::POST
         || req.method() == Method::PUT
@@ -409,15 +409,15 @@ async fn index(
         data = body.to_vec()
     }
 
-
     // payload = [1,2,3,4,5,'\0']
-    //           i=0  
+    //           i=0
     //          .next() -> 1
     //          i=1
     // need a better name for this
     let tuple_params = match middleware_router.get_route("BEFORE_REQUEST", req.uri().path()) {
         Some(((handler_function, number_of_params), route_params)) => {
-            let x = handle_http_middleware_request( // potentially return the data method
+            let x = handle_http_middleware_request(
+                // potentially return the data method
                 handler_function,
                 number_of_params,
                 &headers,
@@ -425,7 +425,7 @@ async fn index(
                 &req,
                 route_params,
                 queries.clone(),
-                None
+                None,
             )
             .await;
             debug!("Middleware contents {:?}", x);
@@ -442,24 +442,26 @@ async fn index(
     } else {
         headers
     };
-    if let Some(((handler_function, number_of_params), route_params)) = middleware_router.get_route("BEFORE_REQUEST", req.uri().path()) {
+    if let Some(((handler_function, number_of_params), route_params)) =
+        middleware_router.get_route("BEFORE_REQUEST", req.uri().path())
+    {
         let x = handle_http_middleware_request(
-                handler_function,
-                number_of_params,
-                &headers_dup,
-                &mut data,
-                &req,
-                route_params,
-                queries.clone(),
-                None
-            )
-            .await;
-            debug!("{:?}", x);
+            handler_function,
+            number_of_params,
+            &headers_dup,
+            &mut data,
+            &req,
+            route_params,
+            queries.clone(),
+            None,
+        )
+        .await;
+        debug!("{:?}", x);
     };
 
     debug!("These are the request headers {:?}", headers_dup);
 
-    let  response = if const_router
+    let response = if const_router
         .get_route(req.method().clone(), req.uri().path())
         .is_some()
     {
@@ -481,7 +483,6 @@ async fn index(
                     &req,
                     route_params,
                     queries.clone(),
-                    
                 )
                 .await
             }
@@ -497,17 +498,17 @@ async fn index(
         middleware_router.get_route("AFTER_REQUEST", req.uri().path())
     {
         let x = handle_http_middleware_request(
-                handler_function,
-                number_of_params,
-                &headers_dup,
-                &mut data,
-                &req,
-                route_params,
-                queries.clone(),
-                Some(&response)
-            )
-            .await;
-            debug!("{:?}", x);
+            handler_function,
+            number_of_params,
+            &headers_dup,
+            &mut data,
+            &req,
+            route_params,
+            queries.clone(),
+            Some(&response),
+        )
+        .await;
+        debug!("{:?}", x);
     };
 
     response
