@@ -8,8 +8,7 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use actix_web::HttpResponse;
-use actix_web::{http::Method, web, HttpRequest};
-use anyhow::{bail, Result};
+use anyhow::Result;
 use log::{debug, info};
 
 use pyo3_asyncio::TaskLocals;
@@ -23,9 +22,8 @@ use pyo3::types::PyDict;
 
 pub async fn execute_middleware_function<'a>(
     function: PyFunction,
-    payload: &mut Vec<u8>,
+    payload: &mut [u8],
     headers: &HashMap<String, String>,
-    req: &HttpRequest,
     route_params: HashMap<String, String>,
     queries: Rc<RefCell<HashMap<String, String>>>,
     number_of_params: u8,
@@ -34,12 +32,12 @@ pub async fn execute_middleware_function<'a>(
     // TODO:
     // add body in middlewares too
 
-    let data = payload.clone();
+    let data = payload.to_owned();
     let tmp = &HttpResponse::Ok().finish();
 
     // make response object accessible while creating routes
     let response = match res {
-        Some(res) => res.clone(),
+        Some(res) => res,
         // do nothing if none
         None => tmp,
     };
@@ -198,16 +196,15 @@ pub async fn execute_function(
 #[inline]
 pub async fn execute_http_function(
     function: PyFunction,
-    payload: &mut Vec<u8>,
+    payload: &mut [u8],
     headers: HashMap<String, String>,
-    req: &HttpRequest,
     route_params: HashMap<String, String>,
     queries: Rc<RefCell<HashMap<String, String>>>,
     number_of_params: u8,
     // need to change this to return a response struct
     // create a custom struct for this
 ) -> Result<HashMap<String, String>> {
-    let data: Vec<u8> = payload.clone();
+    let data: Vec<u8> = payload.to_owned();
 
     // if req.method() == Method::POST
     //     || req.method() == Method::PUT

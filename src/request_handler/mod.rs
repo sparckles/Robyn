@@ -5,7 +5,7 @@ use std::rc::Rc;
 use std::str::FromStr;
 use std::{cell::RefCell, collections::HashMap};
 
-use actix_web::{HttpRequest, HttpResponse, HttpResponseBuilder};
+use actix_web::{HttpResponse, HttpResponseBuilder};
 // pyO3 module
 use crate::types::PyFunction;
 
@@ -31,8 +31,7 @@ pub async fn handle_http_request(
     function: PyFunction,
     number_of_params: u8,
     headers: HashMap<String, String>,
-    payload: &mut Vec<u8>,
-    req: &HttpRequest,
+    payload: &mut [u8],
     route_params: HashMap<String, String>,
     queries: Rc<RefCell<HashMap<String, String>>>,
 ) -> HttpResponse {
@@ -40,7 +39,6 @@ pub async fn handle_http_request(
         function,
         payload,
         headers.clone(),
-        req,
         route_params,
         queries,
         number_of_params,
@@ -93,8 +91,7 @@ pub async fn handle_http_middleware_request(
     function: PyFunction,
     number_of_params: u8,
     headers: &HashMap<String, String>,
-    payload: &mut Vec<u8>,
-    req: &HttpRequest,
+    payload: &mut [u8],
     route_params: HashMap<String, String>,
     queries: Rc<RefCell<HashMap<String, String>>>,
     res: Option<&HttpResponse>,
@@ -103,7 +100,6 @@ pub async fn handle_http_middleware_request(
         function,
         payload,
         headers,
-        req,
         route_params,
         queries,
         number_of_params,

@@ -45,7 +45,7 @@ async def hello(request):
     global callCount
     callCount += 1
     message = "Called " + str(callCount) + " times"
-    # print(message, request)
+    print(message, request)
     return {"status_code": "200", "body": "hello", "type": "text"}
 
 
@@ -93,15 +93,6 @@ async def hello_after_request(request, response):
     print(response)
     return ""
     
-# @app.before_request("/")
-# async def hello_before_request(request, response):
-#     global callCount
-#     callCount += 1
-#     print()
-#     response["body"] = "hello before request"
-#     return ""
-
-
 
 
 @app.get("/test/:id")
