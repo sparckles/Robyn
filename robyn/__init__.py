@@ -103,17 +103,15 @@ class Robyn:
     def shutdown_handler(self, handler: Callable) -> None:
         self._add_event_handler(Events.SHUTDOWN, handler)
 
-    def start(self, url: str | None = None, port: int | None = None):
+    def start(self, url: str = "127.0.0.1", port: int = 5000):
         """
         Starts the server
 
         :param port int: reperesents the port number at which the server is listening
         """
 
-        if url is None:
-            url = os.getenv("ROBYN_URL", "127.0.0.1")
-        if port is None:
-            port = int(os.getenv("ROBYN_PORT", "5000"))
+        url = os.getenv("ROBYN_URL", url)
+        port = int(os.getenv("ROBYN_PORT", port))
 
         def init_processpool(socket):
 
