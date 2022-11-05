@@ -110,8 +110,8 @@ class Robyn:
         :param port int: reperesents the port number at which the server is listening
         """
 
-        url = os.getenv("ROBYN_URL", "127.0.0.1")
-        port = int(os.getenv("ROBYN_PORT", "5000"))
+        url = os.getenv("ROBYN_URL", url)
+        port = int(os.getenv("ROBYN_PORT", port))
 
         def init_processpool(socket):
 
