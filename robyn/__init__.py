@@ -113,6 +113,10 @@ class Robyn:
         url = os.getenv("ROBYN_URL", url)
         port = int(os.getenv("ROBYN_PORT", port))
 
+        logger.info(
+            "%sStarting server at %s:%s %s", Colors.OKGREEN, url, port, Colors.ENDC
+        )
+
         def init_processpool(socket):
 
             process_pool = []
@@ -158,7 +162,6 @@ class Robyn:
 
             process_pool = init_processpool(socket)
 
-            logger.info(f"{Colors.HEADER}Starting up \n{Colors.ENDC}")
             logger.info(f"{Colors.OKGREEN}Press Ctrl + C to stop \n{Colors.ENDC}")
             try:
                 for process in process_pool:
