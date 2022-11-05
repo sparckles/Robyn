@@ -196,8 +196,6 @@ async def redirect_route(request):
 
 
 if __name__ == "__main__":
-    ROBYN_URL = os.getenv("ROBYN_URL", "0.0.0.0")
-    ROBYN_PORT = int(os.getenv("ROBYN_PORT", "5000"))
     app.add_header("server", "robyn")
     current_file_path = pathlib.Path(__file__).parent.resolve()
     app.add_directory(
@@ -206,4 +204,4 @@ if __name__ == "__main__":
         index_file="index.html",
     )
     app.startup_handler(startup_handler)
-    app.start(port=ROBYN_PORT, url=ROBYN_URL)
+    app.start(port=5000)
