@@ -1,12 +1,8 @@
-from distutils.command.config import config
-import os
 import logging
+import os
 from pathlib import Path
 
-
-# set the logger that will log the environment variables imported from robyn.env and the ones already set
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
 
 
 # parse the configuration file returning a list of tuples (key, value) containing the environment variables
