@@ -9,6 +9,8 @@ use matchit::Router;
 
 use anyhow::{bail, Error, Result};
 
+use crate::routers::types::MiddlewareRoute;
+
 /// Contains the thread safe hashmaps of different routes
 
 pub struct MiddlewareRouter {
@@ -25,11 +27,13 @@ impl MiddlewareRouter {
     }
 
     #[inline]
-    fn get_relevant_map(&self, route: &str) -> Option<&RwLock<Router<(PyFunction, u8)>>> {
+    fn get_relevant_map(
+        &self,
+        route: MiddlewareRoute,
+    ) -> Option<&RwLock<Router<(PyFunction, u8)>>> {
         match route {
-            "BEFORE_REQUEST" => Some(&self.before_request),
-            "AFTER_REQUEST" => Some(&self.after_request),
-            _ => None,
+            MiddlewareRoute::BeforeRequest => Some(&self.before_request),
+            MiddlewareRoute::AfterRequest => Some(&self.after_request),
         }
     }
 
@@ -37,7 +41,7 @@ impl MiddlewareRouter {
     // Inserts them in the router according to their nature(CoRoutine/SyncFunction)
     pub fn add_route(
         &self,
-        route_type: &str, // we can just have route type as WS
+        route_type: MiddlewareRoute,
         route: &str,
         handler: Py<PyAny>,
         is_async: bool,
@@ -64,7 +68,7 @@ impl MiddlewareRouter {
 
     pub fn get_route(
         &self,
-        route_method: &str,
+        route_method: MiddlewareRoute,
         route: &str, // check for the route method here
     ) -> Option<((PyFunction, u8), HashMap<String, String>)> {
         // need to split this function in multiple smaller functions
