@@ -3,7 +3,6 @@ use crate::io_helpers::apply_headers;
 use crate::request_handler::{handle_http_middleware_request, handle_http_request};
 
 use crate::routers::const_router::ConstRouter;
-
 use crate::routers::router::Router;
 use crate::routers::types::MiddlewareRoute;
 use crate::routers::{middleware_router::MiddlewareRouter, web_socket_router::WebSocketRouter};
@@ -299,11 +298,8 @@ impl Server {
         number_of_params: u8,
     ) {
         debug!("MiddleWare Route added for {} {} ", route_type, route);
-
-        let route_type = MiddlewareRoute::from_str(route_type);
-
         self.middleware_router
-            .add_route(route_type, route, handler, is_async, number_of_params)
+            .add_route(MiddlewareRoute::from_str(route_type), route, handler, is_async, number_of_params)
             .unwrap();
     }
 
@@ -419,7 +415,7 @@ async fn index(
     //          .next() -> 1
     //          i=1
     // need a better name for this
-    let tuple_params = match middleware_router.get_route("BEFORE_REQUEST", req.uri().path()) {
+    let tuple_params = match middleware_router.get_route(MiddlewareRoute::BeforeRequest, req.uri().path()) {
         Some(((handler_function, number_of_params), route_params)) => {
             let x = handle_http_middleware_request(
                 // potentially return the data method
@@ -437,7 +433,6 @@ async fn index(
         }
         None => HashMap::new(),
     };
-
 
     // payload = ['\0']
     debug!("These are the tuple params {:?}", tuple_params);
