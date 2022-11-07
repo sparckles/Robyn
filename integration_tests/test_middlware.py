@@ -10,7 +10,7 @@ def test_post_with_middleware(session):
     
     res = requests.post(f"{BASE_URL}/post_with_body", data = {
         "hello": "world"
-    }, )
+    })
 
 
     

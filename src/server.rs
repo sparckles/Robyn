@@ -447,6 +447,7 @@ async fn index(
     } else {
         headers
     };
+
     debug!("These are the request headers {:?}", headers_dup);
 
     let response = if const_router
