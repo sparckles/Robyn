@@ -33,13 +33,13 @@ pub async fn execute_middleware_function<'a>(
     // add body in middlewares too
 
     let data = payload.to_owned();
-    let tmp = &HttpResponse::Ok().finish();
+    let temp_response = &HttpResponse::Ok().finish();
 
     // make response object accessible while creating routes
     let response = match res {
         Some(res) => res,
         // do nothing if none
-        None => tmp,
+        None => temp_response,
     };
     let mut response_headers = HashMap::new();
     for (key, val) in response.headers() {
