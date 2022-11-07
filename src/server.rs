@@ -299,7 +299,13 @@ impl Server {
     ) {
         debug!("MiddleWare Route added for {} {} ", route_type, route);
         self.middleware_router
-            .add_route(MiddlewareRoute::from_str(route_type), route, handler, is_async, number_of_params)
+            .add_route(
+                MiddlewareRoute::from_str(route_type),
+                route,
+                handler,
+                is_async,
+                number_of_params,
+            )
             .unwrap();
     }
 
@@ -410,31 +416,24 @@ async fn index(
         data = body.to_vec()
     }
 
-    // payload = [1,2,3,4,5,'\0']
-    //           i=0
-    //          .next() -> 1
-    //          i=1
-    // need a better name for this
-    let tuple_params = match middleware_router.get_route(MiddlewareRoute::BeforeRequest, req.uri().path()) {
-        Some(((handler_function, number_of_params), route_params)) => {
-            let x = handle_http_middleware_request(
-                // potentially return the data method
-                handler_function,
-                number_of_params,
-                &headers,
-                &mut data,
-                route_params,
-                queries.clone(),
-                None,
-            )
-            .await;
-            debug!("Middleware contents {:?}", x);
-            x
-        }
-        None => HashMap::new(),
-    };
-
-    // payload = ['\0']
+    let tuple_params =
+        match middleware_router.get_route(MiddlewareRoute::BeforeRequest, req.uri().path()) {
+            Some(((handler_function, number_of_params), route_params)) => {
+                let x = handle_http_middleware_request(
+                    handler_function,
+                    number_of_params,
+                    &headers,
+                    &mut data,
+                    route_params,
+                    queries.clone(),
+                    None,
+                )
+                .await;
+                debug!("Middleware contents {:?}", x);
+                x
+            }
+            None => HashMap::new(),
+        };
     debug!("These are the tuple params {:?}", tuple_params);
 
     let headers_dup = if !tuple_params.is_empty() {
