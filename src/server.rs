@@ -441,22 +441,6 @@ async fn index(
     } else {
         headers
     };
-    if let Some(((handler_function, number_of_params), route_params)) =
-        middleware_router.get_route("BEFORE_REQUEST", req.uri().path())
-    {
-        let x = handle_http_middleware_request(
-            handler_function,
-            number_of_params,
-            &headers_dup,
-            &mut data,
-            route_params,
-            queries.clone(),
-            None,
-        )
-        .await;
-        debug!("{:?}", x);
-    };
-
     debug!("These are the request headers {:?}", headers_dup);
 
     let response = if const_router

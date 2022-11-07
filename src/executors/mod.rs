@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 use actix_web::HttpResponse;
 use anyhow::Result;
-use log::{debug, info};
+use log::debug;
 
 use pyo3_asyncio::TaskLocals;
 // pyO3 module
@@ -70,13 +70,6 @@ pub async fn execute_middleware_function<'a>(
                 response_dict.insert("headers", response_headers.into_py(py));
                 response_dict.insert("status", response_status_code.into_py(py));
                 response_dict.insert("body", response_body.into_py(py));
-                info!("{:?}", request);
-                info!("{:?}", response_dict);
-                info!("{:?}", number_of_params);
-
-                // let response = handler.call1((request.clone(),));
-                // pyo3_asyncio::tokio::into_future(response?);
-                // response = response.await?;
 
                 // this makes the request object to be accessible across every route
                 let coro: PyResult<&PyAny> = match number_of_params {
@@ -205,24 +198,6 @@ pub async fn execute_http_function(
     // create a custom struct for this
 ) -> Result<HashMap<String, String>> {
     let data: Vec<u8> = payload.to_owned();
-
-    // if req.method() == Method::POST
-    //     || req.method() == Method::PUT
-    //     || req.method() == Method::PATCH
-    //     || req.method() == Method::DELETE
-    // {
-    //     let mut body = web::BytesMut::new();
-    //     while let Some(chunk) = payload.next().await {
-    //         let chunk = chunk?;
-    //         // limit max size of in-memory payload
-    //         if (body.len() + chunk.len()) > MAX_SIZE {
-    //             bail!("Body content Overflow");
-    //         }
-    //         body.extend_from_slice(&chunk);
-    //     }
-
-    //     data = body.to_vec()
-    // }
 
     // request object accessible while creating routes
     let mut request = HashMap::new();
