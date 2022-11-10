@@ -3,8 +3,9 @@ use crate::io_helpers::apply_headers;
 use crate::request_handler::{handle_http_middleware_request, handle_http_request};
 
 use crate::routers::const_router::ConstRouter;
+use crate::routers::{RouteType, Router};
 
-use crate::routers::router::Router;
+use crate::routers::router::DynRouter;
 use crate::routers::types::MiddlewareRoute;
 use crate::routers::{middleware_router::MiddlewareRouter, web_socket_router::WebSocketRouter};
 use crate::shared_socket::SocketHeld;
@@ -43,7 +44,7 @@ struct Directory {
 
 #[pyclass]
 pub struct Server {
-    router: Arc<Router>,
+    router: Arc<DynRouter>,
     const_router: Arc<ConstRouter>,
     websocket_router: Arc<WebSocketRouter>,
     middleware_router: Arc<MiddlewareRouter>,
@@ -58,7 +59,7 @@ impl Server {
     #[new]
     pub fn new() -> Self {
         Self {
-            router: Arc::new(Router::new()),
+            router: Arc::new(DynRouter::new()),
             const_router: Arc::new(ConstRouter::new()),
             websocket_router: Arc::new(WebSocketRouter::new()),
             middleware_router: Arc::new(MiddlewareRouter::new()),
@@ -160,7 +161,7 @@ impl Server {
                         app = app.route(
                             &route.clone(),
                             web::get().to(
-                                move |_router: web::Data<Arc<Router>>,
+                                move |_router: web::Data<Arc<DynRouter>>,
                                       _global_headers: web::Data<Arc<Headers>>,
                                       stream: web::Payload,
                                       req: HttpRequest| {
@@ -176,7 +177,7 @@ impl Server {
                     }
 
                     app.default_service(web::route().to(
-                        move |router,
+                        move |router: web::Data<Arc<DynRouter>>,
                               const_router: web::Data<Arc<ConstRouter>>,
                               middleware_router: web::Data<Arc<MiddlewareRouter>>,
                               global_headers,
@@ -277,12 +278,12 @@ impl Server {
                     handler,
                     is_async,
                     number_of_params,
-                    event_loop,
+                    Some(event_loop),
                 )
                 .unwrap();
         } else {
             self.router
-                .add_route(route_type, route, handler, is_async, number_of_params)
+                .add_route(route_type, route, handler, is_async, number_of_params, None)
                 .unwrap();
         }
     }
@@ -298,11 +299,8 @@ impl Server {
         number_of_params: u8,
     ) {
         debug!("MiddleWare Route added for {} {} ", route_type, route);
-
-        let route_type = MiddlewareRoute::from_str(route_type);
-
         self.middleware_router
-            .add_route(route_type, route, handler, is_async, number_of_params)
+            .add_route(route_type, route, handler, is_async, number_of_params, None)
             .unwrap();
     }
 
@@ -372,7 +370,7 @@ async fn merge_headers(
 /// This is our service handler. It receives a Request, routes on it
 /// path, and returns a Future of a Response.
 async fn index(
-    router: web::Data<Arc<Router>>,
+    router: web::Data<Arc<DynRouter>>,
     const_router: web::Data<Arc<ConstRouter>>,
     middleware_router: web::Data<Arc<MiddlewareRouter>>,
     global_headers: web::Data<Arc<Headers>>,
@@ -394,24 +392,25 @@ async fn index(
     let headers = merge_headers(&global_headers, req.headers()).await;
 
     // need a better name for this
-    let tuple_params =
-        match middleware_router.get_route(MiddlewareRoute::BeforeRequest, req.uri().path()) {
-            Some(((handler_function, number_of_params), route_params)) => {
-                let x = handle_http_middleware_request(
-                    handler_function,
-                    number_of_params,
-                    &headers,
-                    &mut payload,
-                    &req,
-                    route_params,
-                    queries.clone(),
-                )
-                .await;
-                debug!("Middleware contents {:?}", x);
-                x
-            }
-            None => HashMap::new(),
-        };
+    let tuple_params = match middleware_router
+        .get_route(RouteType(MiddlewareRoute::BeforeRequest), req.uri().path())
+    {
+        Some(((handler_function, number_of_params), route_params)) => {
+            let x = handle_http_middleware_request(
+                handler_function,
+                number_of_params,
+                &headers,
+                &mut payload,
+                &req,
+                route_params,
+                queries.clone(),
+            )
+            .await;
+            debug!("Middleware contents {:?}", x);
+            x
+        }
+        None => HashMap::new(),
+    };
 
     debug!("These are the tuple params {:?}", tuple_params);
 
@@ -424,18 +423,18 @@ async fn index(
     debug!("These are the request headers {:?}", headers_dup);
 
     let response = if const_router
-        .get_route(req.method().clone(), req.uri().path())
+        .get_route(RouteType(req.method().clone()), req.uri().path())
         .is_some()
     {
         let mut response = HttpResponse::Ok();
         apply_headers(&mut response, headers_dup.clone());
         response.body(
             const_router
-                .get_route(req.method().clone(), req.uri().path())
+                .get_route(RouteType(req.method().clone()), req.uri().path())
                 .unwrap(),
         )
     } else {
-        match router.get_route(req.method().clone(), req.uri().path()) {
+        match router.get_route(RouteType(req.method().clone()), req.uri().path()) {
             Some(((handler_function, number_of_params), route_params)) => {
                 handle_http_request(
                     handler_function,
@@ -457,7 +456,7 @@ async fn index(
     };
 
     if let Some(((handler_function, number_of_params), route_params)) =
-        middleware_router.get_route(MiddlewareRoute::AfterRequest, req.uri().path())
+        middleware_router.get_route(RouteType(MiddlewareRoute::AfterRequest), req.uri().path())
     {
         let x = handle_http_middleware_request(
             handler_function,

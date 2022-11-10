@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub enum MiddlewareRoute {
     BeforeRequest,
     AfterRequest,

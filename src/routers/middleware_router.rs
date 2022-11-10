@@ -5,57 +5,54 @@ use crate::types::PyFunction;
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
 
-use matchit::Router;
-
-use anyhow::{bail, Error, Result};
+use anyhow::{Context, Error, Result};
 
 use crate::routers::types::MiddlewareRoute;
 
-/// Contains the thread safe hashmaps of different routes
+use super::{RouteType, Router};
 
+type RouteMap = RwLock<matchit::Router<(PyFunction, u8)>>;
+
+/// Contains the thread safe hashmaps of different routes
 pub struct MiddlewareRouter {
-    before_request: RwLock<Router<(PyFunction, u8)>>,
-    after_request: RwLock<Router<(PyFunction, u8)>>,
+    routes: HashMap<MiddlewareRoute, RouteMap>,
 }
 
 impl MiddlewareRouter {
     pub fn new() -> Self {
-        Self {
-            before_request: RwLock::new(Router::new()),
-            after_request: RwLock::new(Router::new()),
-        }
+        let mut routes = HashMap::new();
+        routes.insert(
+            MiddlewareRoute::BeforeRequest,
+            RwLock::new(matchit::Router::new()),
+        );
+        routes.insert(
+            MiddlewareRoute::AfterRequest,
+            RwLock::new(matchit::Router::new()),
+        );
+        Self { routes }
     }
+}
 
-    #[inline]
-    fn get_relevant_map(
-        &self,
-        route: MiddlewareRoute,
-    ) -> Option<&RwLock<Router<(PyFunction, u8)>>> {
-        match route {
-            MiddlewareRoute::BeforeRequest => Some(&self.before_request),
-            MiddlewareRoute::AfterRequest => Some(&self.after_request),
-        }
-    }
-
+impl Router<((PyFunction, u8), HashMap<String, String>), MiddlewareRoute> for MiddlewareRouter {
     // Checks if the functions is an async function
     // Inserts them in the router according to their nature(CoRoutine/SyncFunction)
-    pub fn add_route(
+    fn add_route(
         &self,
-        route_type: MiddlewareRoute,
+        route_type: &str,
         route: &str,
         handler: Py<PyAny>,
         is_async: bool,
         number_of_params: u8,
+        _event_loop: Option<&PyAny>,
     ) -> Result<(), Error> {
-        let table = match self.get_relevant_map(route_type) {
-            Some(table) => table,
-            None => bail!("No relevant map"),
-        };
+        let table = self
+            .routes
+            .get(&MiddlewareRoute::from_str(route_type))
+            .context("No relevant map")?;
 
-        let function = if is_async {
-            PyFunction::CoRoutine(handler)
-        } else {
-            PyFunction::SyncFunction(handler)
+        let function = match is_async {
+            true => PyFunction::CoRoutine(handler),
+            false => PyFunction::SyncFunction(handler),
         };
 
         table
@@ -66,25 +63,20 @@ impl MiddlewareRouter {
         Ok(())
     }
 
-    pub fn get_route(
+    fn get_route(
         &self,
-        route_method: MiddlewareRoute,
-        route: &str, // check for the route method here
+        route_method: RouteType<MiddlewareRoute>,
+        route: &str,
     ) -> Option<((PyFunction, u8), HashMap<String, String>)> {
-        // need to split this function in multiple smaller functions
-        let table = self.get_relevant_map(route_method)?;
+        let table = self.routes.get(&route_method.0)?;
 
-        match table.read().unwrap().at(route) {
-            Ok(res) => {
-                let mut route_params = HashMap::new();
-
-                for (key, value) in res.params.iter() {
-                    route_params.insert(key.to_string(), value.to_string());
-                }
-
-                Some((res.value.clone(), route_params))
-            }
-            Err(_) => None,
+        let table_lock = table.read().ok()?;
+        let res = table_lock.at(route).ok()?;
+        let mut route_params = HashMap::new();
+        for (key, value) in res.params.iter() {
+            route_params.insert(key.to_string(), value.to_string());
         }
+
+        Some((res.value.to_owned(), route_params))
     }
 }

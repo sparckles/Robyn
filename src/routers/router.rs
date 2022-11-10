@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use std::sync::RwLock;
+use std::{collections::HashMap, str::FromStr};
 // pyo3 modules
 use crate::types::PyFunction;
 use pyo3::prelude::*;
@@ -8,89 +8,34 @@ use pyo3::types::PyAny;
 use actix_web::http::Method;
 use matchit::Router as MatchItRouter;
 
-use anyhow::{bail, Error, Result};
+use anyhow::{Context, Result};
+
+use super::{RouteType, Router};
+
+type RouteMap = RwLock<MatchItRouter<(PyFunction, u8)>>;
 
 /// Contains the thread safe hashmaps of different routes
-
-pub struct Router {
-    get_routes: RwLock<MatchItRouter<(PyFunction, u8)>>,
-    post_routes: RwLock<MatchItRouter<(PyFunction, u8)>>,
-    put_routes: RwLock<MatchItRouter<(PyFunction, u8)>>,
-    delete_routes: RwLock<MatchItRouter<(PyFunction, u8)>>,
-    patch_routes: RwLock<MatchItRouter<(PyFunction, u8)>>,
-    head_routes: RwLock<MatchItRouter<(PyFunction, u8)>>,
-    options_routes: RwLock<MatchItRouter<(PyFunction, u8)>>,
-    connect_routes: RwLock<MatchItRouter<(PyFunction, u8)>>,
-    trace_routes: RwLock<MatchItRouter<(PyFunction, u8)>>,
+pub struct DynRouter {
+    routes: HashMap<Method, RouteMap>,
 }
 
-impl Router {
-    pub fn new() -> Self {
-        Self {
-            get_routes: RwLock::new(MatchItRouter::new()),
-            post_routes: RwLock::new(MatchItRouter::new()),
-            put_routes: RwLock::new(MatchItRouter::new()),
-            delete_routes: RwLock::new(MatchItRouter::new()),
-            patch_routes: RwLock::new(MatchItRouter::new()),
-            head_routes: RwLock::new(MatchItRouter::new()),
-            options_routes: RwLock::new(MatchItRouter::new()),
-            connect_routes: RwLock::new(MatchItRouter::new()),
-            trace_routes: RwLock::new(MatchItRouter::new()),
-        }
-    }
-
-    #[inline]
-    fn get_relevant_map(&self, route: Method) -> Option<&RwLock<MatchItRouter<(PyFunction, u8)>>> {
-        match route {
-            Method::GET => Some(&self.get_routes),
-            Method::POST => Some(&self.post_routes),
-            Method::PUT => Some(&self.put_routes),
-            Method::PATCH => Some(&self.patch_routes),
-            Method::DELETE => Some(&self.delete_routes),
-            Method::HEAD => Some(&self.head_routes),
-            Method::OPTIONS => Some(&self.options_routes),
-            Method::CONNECT => Some(&self.connect_routes),
-            Method::TRACE => Some(&self.trace_routes),
-            _ => None,
-        }
-    }
-
-    #[inline]
-    fn get_relevant_map_str(
+impl Router<((PyFunction, u8), HashMap<String, String>), Method> for DynRouter {
+    fn add_route(
         &self,
-        route: &str,
-    ) -> Option<&RwLock<MatchItRouter<(PyFunction, u8)>>> {
-        if route != "WS" {
-            let method = match Method::from_bytes(route.as_bytes()) {
-                Ok(res) => res,
-                Err(_) => return None,
-            };
-
-            self.get_relevant_map(method)
-        } else {
-            None
-        }
-    }
-
-    // Checks if the functions is an async function
-    // Inserts them in the router according to their nature(CoRoutine/SyncFunction)
-    pub fn add_route(
-        &self,
-        route_type: &str, // we can just have route type as WS
+        route_type: &str, // We can just have route type as WS
         route: &str,
         handler: Py<PyAny>,
         is_async: bool,
         number_of_params: u8,
-    ) -> Result<(), Error> {
-        let table = match self.get_relevant_map_str(route_type) {
-            Some(table) => table,
-            None => bail!("No relevant map"),
-        };
+        _event_loop: Option<&PyAny>,
+    ) -> Result<()> {
+        let table = self
+            .get_relevant_map_str(route_type)
+            .context("No relevant map")?;
 
-        let function = if is_async {
-            PyFunction::CoRoutine(handler)
-        } else {
-            PyFunction::SyncFunction(handler)
+        let function = match is_async {
+            true => PyFunction::CoRoutine(handler),
+            false => PyFunction::SyncFunction(handler),
         };
 
         // try removing unwrap here
@@ -102,27 +47,48 @@ impl Router {
         Ok(())
     }
 
-    // Checks if the functions is an async function
-    // Inserts them in the router according to their nature(CoRoutine/SyncFunction)
-    pub fn get_route(
+    fn get_route(
         &self,
-        route_method: Method,
-        route: &str, // check for the route method here
+        route_method: RouteType<Method>,
+        route: &str,
     ) -> Option<((PyFunction, u8), HashMap<String, String>)> {
         // need to split this function in multiple smaller functions
-        let table = self.get_relevant_map(route_method)?;
+        let table = self.routes.get(&route_method.0)?;
 
-        match table.read().unwrap().at(route) {
-            Ok(res) => {
-                let mut route_params = HashMap::new();
+        let table_lock = table.read().ok()?;
+        let res = table_lock.at(route).ok()?;
+        let mut route_params = HashMap::new();
+        for (key, value) in res.params.iter() {
+            route_params.insert(key.to_string(), value.to_string());
+        }
 
-                for (key, value) in res.params.iter() {
-                    route_params.insert(key.to_string(), value.to_string());
-                }
+        Some((res.value.to_owned(), route_params))
+    }
+}
 
-                Some((res.value.clone(), route_params))
-            }
-            Err(_) => None,
+impl DynRouter {
+    pub fn new() -> Self {
+        let mut routes = HashMap::new();
+        routes.insert(Method::GET, RwLock::new(MatchItRouter::new()));
+        routes.insert(Method::POST, RwLock::new(MatchItRouter::new()));
+        routes.insert(Method::PUT, RwLock::new(MatchItRouter::new()));
+        routes.insert(Method::DELETE, RwLock::new(MatchItRouter::new()));
+        routes.insert(Method::PATCH, RwLock::new(MatchItRouter::new()));
+        routes.insert(Method::HEAD, RwLock::new(MatchItRouter::new()));
+        routes.insert(Method::OPTIONS, RwLock::new(MatchItRouter::new()));
+        routes.insert(Method::CONNECT, RwLock::new(MatchItRouter::new()));
+        routes.insert(Method::TRACE, RwLock::new(MatchItRouter::new()));
+        Self { routes }
+    }
+
+    #[inline]
+    fn get_relevant_map_str(
+        &self,
+        route: &str,
+    ) -> Option<&RwLock<MatchItRouter<(PyFunction, u8)>>> {
+        match route {
+            "WS" => None,
+            _ => self.routes.get(&Method::from_str(route).ok()?),
         }
     }
 }
