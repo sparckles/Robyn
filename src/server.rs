@@ -86,10 +86,7 @@ impl Server {
             return Ok(());
         }
 
-        let borrow = socket.try_borrow_mut()?;
-        let held_socket: &SocketHeld = &*borrow;
-
-        let raw_socket = held_socket.get_socket();
+        let raw_socket = socket.try_borrow_mut()?.get_socket();
 
         let router = self.router.clone();
         let const_router = self.const_router.clone();
