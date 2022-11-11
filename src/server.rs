@@ -260,7 +260,7 @@ impl Server {
         route_type: &str,
         route: &str,
         handler: Py<PyAny>,
-        is_async: bool,
+        function_type: String,
         number_of_params: u8,
         const_route: bool,
     ) {
@@ -275,14 +275,14 @@ impl Server {
                     route_type,
                     route,
                     handler,
-                    is_async,
+                    function_type,
                     number_of_params,
                     event_loop,
                 )
                 .unwrap();
         } else {
             self.router
-                .add_route(route_type, route, handler, is_async, number_of_params)
+                .add_route(route_type, route, handler, function_type, number_of_params)
                 .unwrap();
         }
     }

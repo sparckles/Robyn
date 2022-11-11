@@ -67,9 +67,10 @@ def spawn_process(
         server.add_header(key, val)
 
     for route in routes:
-        route_type, endpoint, handler, is_async, number_of_params, const = route
+        route_type, endpoint, handler, function_type, number_of_params, const = route
+
         server.add_route(
-            route_type, endpoint, handler, is_async, number_of_params, const
+            route_type, endpoint, handler, function_type, number_of_params, const
         )
 
     for route in middlewares:

@@ -1,6 +1,7 @@
 /// This is the module that has all the executor functions
 /// i.e. the functions that have the responsibility of parsing and executing functions.
 use crate::io_helpers::read_file;
+mod function_executors;
 
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -9,13 +10,15 @@ use std::sync::Arc;
 
 use actix_web::{http::Method, web, HttpRequest};
 use anyhow::{bail, Result};
-use log::debug;
+use log::{debug, error};
 use pyo3_asyncio::TaskLocals;
 // pyO3 module
 use crate::types::PyFunction;
 use futures_util::stream::StreamExt;
 use pyo3::prelude::*;
-use pyo3::types::PyDict;
+use pyo3::types::{PyDict, PyIterator};
+
+use self::function_executors::execute_sync_generator;
 
 /// @TODO make configurable
 const MAX_SIZE: usize = 10_000;
@@ -120,63 +123,87 @@ pub async fn execute_middleware_function<'a>(
 
             Ok(output?)
         }
+        PyFunction::SyncGenerator(handler) => {
+            // let output: Result<HashMap<String, HashMap<String, String>>> = Python::with_gil(|py| {
+            //     request.insert("params", route_params.into_py(py));
+            //     request.insert("queries", queries_clone.into_py(py));
+            //     // is this a bottleneck again?
+            //     request.insert("headers", headers.clone().into_py(py));
+            //     request.insert("body", data.into_py(py));
+
+            //     let output: PyResult<&PyAny> = match number_of_params {
+            //         0 => execute_sync_generator(py, handler, None),
+            //         1 => execute_sync_generator(py, handler, Some(request)),
+            //         // this is done to accomodate any future params
+            //         2_u8..=u8::MAX => execute_sync_generator(py, handler, Some(request)),
+            //     };
+
+            //     let output: Vec<HashMap<String, HashMap<String, String>>> = output?.extract()?;
+
+            //     Ok(output[0].clone())
+            // });
+
+            // Ok(output?)
+            unimplemented!()
+        }
     }
 }
 
 pub async fn execute_function(
     function: Py<PyAny>,
     number_of_params: u8,
-    is_async: bool,
+    function_type: String,
 ) -> Result<HashMap<String, String>> {
     let request: HashMap<String, String> = HashMap::new();
+    let function = PyFunction::from_str(function_type.as_str(), function);
 
-    if is_async {
-        let output = Python::with_gil(|py| {
-            let handler = function.as_ref(py);
-            let coro: PyResult<&PyAny> = match number_of_params {
-                0 => handler.call0(),
-                1 => handler.call1((request,)),
-                // this is done to accomodate any future params
-                2_u8..=u8::MAX => handler.call1((request,)),
-            };
-            pyo3_asyncio::tokio::into_future(coro?)
-        })?;
+    match function {
+        PyFunction::CoRoutine(handler) => {
+            let output = Python::with_gil(|py| {
+                let handler = handler.as_ref(py);
+                let coro: PyResult<&PyAny> = match number_of_params {
+                    0 => handler.call0(),
+                    1 => handler.call1((request,)),
+                    // this is done to accomodate any future params
+                    2_u8..=u8::MAX => handler.call1((request,)),
+                };
+                pyo3_asyncio::tokio::into_future(coro?)
+            })?;
 
-        let output = output.await?;
-        let res = Python::with_gil(|py| -> PyResult<HashMap<String, String>> {
-            debug!("This is the result of the code {:?}", output);
+            let output = output.await?;
 
-            let mut res: HashMap<String, String> =
-                output.into_ref(py).downcast::<PyDict>()?.extract()?;
+            let res = Python::with_gil(|py| -> PyResult<HashMap<String, String>> {
+                let output: Vec<HashMap<String, String>> = output.extract(py)?;
+                let responses = output[0].clone();
+                Ok(responses)
+            })?;
 
-            let response_type = res.get("type").unwrap();
-
-            if response_type == "static_file" {
-                let file_path = res.get("file_path").unwrap();
-                let contents = read_file(file_path).unwrap();
-                res.insert("body".to_owned(), contents);
-            }
             Ok(res)
-        })?;
+        }
 
-        Ok(res)
-    } else {
-        tokio::task::spawn_blocking(move || {
-            Python::with_gil(|py| {
-                let handler = function.as_ref(py);
+        PyFunction::SyncFunction(handler) => {
+            // do we even need this?
+            // How else can we return a future from this?
+            // let's wrap the output in a future?
+            let output: Result<HashMap<String, String>> = Python::with_gil(|py| {
+                let handler = handler.as_ref(py);
                 let output: PyResult<&PyAny> = match number_of_params {
                     0 => handler.call0(),
                     1 => handler.call1((request,)),
                     // this is done to accomodate any future params
                     2_u8..=u8::MAX => handler.call1((request,)),
                 };
-                let output: HashMap<String, String> = output?.extract()?;
-                // also convert to object here
-                // also check why don't sync functions have file handling enabled
-                Ok(output)
-            })
-        })
-        .await?
+
+                let output: Vec<HashMap<String, String>> = output?.extract()?;
+
+                Ok(output[0].clone())
+            });
+
+            Ok(output?)
+        }
+        PyFunction::SyncGenerator(handler) => {
+            unimplemented!()
+        }
     }
 }
 
@@ -222,6 +249,7 @@ pub async fn execute_http_function(
         queries_clone.insert(key, value);
     }
 
+    error!("Call the execute function");
     match function {
         PyFunction::CoRoutine(handler) => {
             let output = Python::with_gil(|py| {
@@ -282,6 +310,23 @@ pub async fn execute_http_function(
                 Ok(output)
             })
         }
+
+        PyFunction::SyncGenerator(handler) => {
+            let output: Result<HashMap<String, String>> = Python::with_gil(|py| {
+                let output: PyResult<&PyAny> = match number_of_params {
+                    0 => execute_sync_generator(py, handler, None),
+                    1 => execute_sync_generator(py, handler, Some(request)),
+                    // this is done to accomodate any future params
+                    2_u8..=u8::MAX => execute_sync_generator(py, handler, Some(request)),
+                };
+
+                let output: HashMap<String, String> = output?.extract()?;
+
+                Ok(output)
+            });
+
+            Ok(output?)
+        }
     }
 }
 
@@ -308,6 +353,7 @@ pub async fn execute_event_handler(
                 });
                 future.await?;
             }
+            PyFunction::SyncGenerator(_) => unimplemented!(),
         }
     }
     Ok(())

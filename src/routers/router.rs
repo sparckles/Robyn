@@ -79,7 +79,7 @@ impl Router {
         route_type: &str, // we can just have route type as WS
         route: &str,
         handler: Py<PyAny>,
-        is_async: bool,
+        function_type: String,
         number_of_params: u8,
     ) -> Result<(), Error> {
         let table = match self.get_relevant_map_str(route_type) {
@@ -87,12 +87,7 @@ impl Router {
             None => bail!("No relevant map"),
         };
 
-        let function = if is_async {
-            PyFunction::CoRoutine(handler)
-        } else {
-            PyFunction::SyncFunction(handler)
-        };
-
+        let function = PyFunction::from_str(function_type.as_str(), handler);
         // try removing unwrap here
         table
             .write()

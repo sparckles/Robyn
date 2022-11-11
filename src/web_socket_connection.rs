@@ -68,6 +68,9 @@ fn execute_ws_function(
             });
             ctx.spawn(f);
         }
+        PyFunction::SyncGenerator(_) => {
+            unimplemented!()
+        }
     }
 }
 
