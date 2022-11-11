@@ -7,8 +7,6 @@ pub mod router;
 pub mod types;
 pub mod web_socket_router;
 
-pub struct RouteType<T>(pub T);
-
 pub trait Router<T, U> {
     /// Checks if the functions is an async function
     /// Inserts them in the router according to their nature(CoRoutine/SyncFunction)
@@ -22,7 +20,6 @@ pub trait Router<T, U> {
         event_loop: Option<&PyAny>,
     ) -> Result<()>;
 
-    /// Checks if the functions is an async function
-    /// Inserts them in the router according to their nature(CoRoutine/SyncFunction)
-    fn get_route(&self, route_method: RouteType<U>, route: &str) -> Option<T>;
+    /// Retrieve the correct function from the previously inserted routes
+    fn get_route(&self, route_method: U, route: &str) -> Option<T>;
 }

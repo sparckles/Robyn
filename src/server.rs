@@ -3,7 +3,7 @@ use crate::io_helpers::apply_headers;
 use crate::request_handler::{handle_http_middleware_request, handle_http_request};
 
 use crate::routers::const_router::ConstRouter;
-use crate::routers::{RouteType, Router};
+use crate::routers::Router;
 
 use crate::routers::router::DynRouter;
 use crate::routers::types::MiddlewareRoute;
@@ -388,31 +388,29 @@ async fn index(
 
     let headers = merge_headers(&global_headers, req.headers()).await;
 
-    // need a better name for this
-    let tuple_params = match middleware_router
-        .get_route(RouteType(MiddlewareRoute::BeforeRequest), req.uri().path())
-    {
-        Some(((handler_function, number_of_params), route_params)) => {
-            let x = handle_http_middleware_request(
-                handler_function,
-                number_of_params,
-                &headers,
-                &mut payload,
-                &req,
-                route_params,
-                queries.clone(),
-            )
-            .await;
-            debug!("Middleware contents {:?}", x);
-            x
-        }
-        None => HashMap::new(),
-    };
+    let modified_request =
+        match middleware_router.get_route(MiddlewareRoute::BeforeRequest, req.uri().path()) {
+            Some(((handler_function, number_of_params), route_params)) => {
+                let x = handle_http_middleware_request(
+                    handler_function,
+                    number_of_params,
+                    &headers,
+                    &mut payload,
+                    &req,
+                    route_params,
+                    queries.clone(),
+                )
+                .await;
+                debug!("Middleware contents {:?}", x);
+                x
+            }
+            None => HashMap::new(),
+        };
 
-    debug!("These are the tuple params {:?}", tuple_params);
+    debug!("These are the tuple params {:?}", modified_request);
 
-    let headers_dup = if !tuple_params.is_empty() {
-        tuple_params.get("headers").unwrap().clone()
+    let headers_dup = if !modified_request.is_empty() {
+        modified_request.get("headers").unwrap().clone()
     } else {
         headers
     };
@@ -420,18 +418,18 @@ async fn index(
     debug!("These are the request headers {:?}", headers_dup);
 
     let response = if const_router
-        .get_route(RouteType(req.method().clone()), req.uri().path())
+        .get_route(req.method().clone(), req.uri().path())
         .is_some()
     {
         let mut response = HttpResponse::Ok();
         apply_headers(&mut response, headers_dup.clone());
         response.body(
             const_router
-                .get_route(RouteType(req.method().clone()), req.uri().path())
+                .get_route(req.method().clone(), req.uri().path())
                 .unwrap(),
         )
     } else {
-        match router.get_route(RouteType(req.method().clone()), req.uri().path()) {
+        match router.get_route(req.method().clone(), req.uri().path()) {
             Some(((handler_function, number_of_params), route_params)) => {
                 handle_http_request(
                     handler_function,
@@ -453,7 +451,7 @@ async fn index(
     };
 
     if let Some(((handler_function, number_of_params), route_params)) =
-        middleware_router.get_route(RouteType(MiddlewareRoute::AfterRequest), req.uri().path())
+        middleware_router.get_route(MiddlewareRoute::AfterRequest, req.uri().path())
     {
         let x = handle_http_middleware_request(
             handler_function,

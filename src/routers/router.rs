@@ -10,7 +10,7 @@ use matchit::Router as MatchItRouter;
 
 use anyhow::{Context, Result};
 
-use super::{RouteType, Router};
+use super::Router;
 
 type RouteMap = RwLock<MatchItRouter<(PyFunction, u8)>>;
 
@@ -49,11 +49,10 @@ impl Router<((PyFunction, u8), HashMap<String, String>), Method> for DynRouter {
 
     fn get_route(
         &self,
-        route_method: RouteType<Method>,
+        route_method: Method,
         route: &str,
     ) -> Option<((PyFunction, u8), HashMap<String, String>)> {
-        // need to split this function in multiple smaller functions
-        let table = self.routes.get(&route_method.0)?;
+        let table = self.routes.get(&route_method)?;
 
         let table_lock = table.read().ok()?;
         let res = table_lock.at(route).ok()?;

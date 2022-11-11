@@ -13,7 +13,6 @@ use actix_web::http::Method;
 
 use anyhow::{Error, Result};
 
-use super::RouteType;
 use super::Router;
 
 type RouteMap = RwLock<matchit::Router<String>>;
@@ -59,13 +58,8 @@ impl Router<String, Method> for ConstRouter {
         Ok(())
     }
 
-    fn get_route(
-        &self,
-        route_method: RouteType<Method>,
-        route: &str, // check for the route method here
-    ) -> Option<String> {
-        // need to split this function in multiple smaller functions
-        let table = self.routes.get(&route_method.0)?;
+    fn get_route(&self, route_method: Method, route: &str) -> Option<String> {
+        let table = self.routes.get(&route_method)?;
         let route_map = table.read().ok()?;
 
         match route_map.at(route) {

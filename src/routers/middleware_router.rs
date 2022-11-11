@@ -9,7 +9,7 @@ use anyhow::{Context, Error, Result};
 
 use crate::routers::types::MiddlewareRoute;
 
-use super::{RouteType, Router};
+use super::Router;
 
 type RouteMap = RwLock<matchit::Router<(PyFunction, u8)>>;
 
@@ -34,8 +34,6 @@ impl MiddlewareRouter {
 }
 
 impl Router<((PyFunction, u8), HashMap<String, String>), MiddlewareRoute> for MiddlewareRouter {
-    // Checks if the functions is an async function
-    // Inserts them in the router according to their nature(CoRoutine/SyncFunction)
     fn add_route(
         &self,
         route_type: &str,
@@ -65,10 +63,10 @@ impl Router<((PyFunction, u8), HashMap<String, String>), MiddlewareRoute> for Mi
 
     fn get_route(
         &self,
-        route_method: RouteType<MiddlewareRoute>,
+        route_method: MiddlewareRoute,
         route: &str,
     ) -> Option<((PyFunction, u8), HashMap<String, String>)> {
-        let table = self.routes.get(&route_method.0)?;
+        let table = self.routes.get(&route_method)?;
 
         let table_lock = table.read().ok()?;
         let res = table_lock.at(route).ok()?;
