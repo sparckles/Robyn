@@ -5,7 +5,7 @@ use crate::request_handler::{handle_http_middleware_request, handle_http_request
 use crate::routers::const_router::ConstRouter;
 use crate::routers::Router;
 
-use crate::routers::router::DynRouter;
+use crate::routers::http_router::HttpRouter;
 use crate::routers::types::MiddlewareRoute;
 use crate::routers::{middleware_router::MiddlewareRouter, web_socket_router::WebSocketRouter};
 use crate::shared_socket::SocketHeld;
@@ -44,7 +44,7 @@ struct Directory {
 
 #[pyclass]
 pub struct Server {
-    router: Arc<DynRouter>,
+    router: Arc<HttpRouter>,
     const_router: Arc<ConstRouter>,
     websocket_router: Arc<WebSocketRouter>,
     middleware_router: Arc<MiddlewareRouter>,
@@ -59,7 +59,7 @@ impl Server {
     #[new]
     pub fn new() -> Self {
         Self {
-            router: Arc::new(DynRouter::new()),
+            router: Arc::new(HttpRouter::new()),
             const_router: Arc::new(ConstRouter::new()),
             websocket_router: Arc::new(WebSocketRouter::new()),
             middleware_router: Arc::new(MiddlewareRouter::new()),
@@ -158,7 +158,7 @@ impl Server {
                         app = app.route(
                             &route.clone(),
                             web::get().to(
-                                move |_router: web::Data<Arc<DynRouter>>,
+                                move |_router: web::Data<Arc<HttpRouter>>,
                                       _global_headers: web::Data<Arc<Headers>>,
                                       stream: web::Payload,
                                       req: HttpRequest| {
@@ -174,7 +174,7 @@ impl Server {
                     }
 
                     app.default_service(web::route().to(
-                        move |router: web::Data<Arc<DynRouter>>,
+                        move |router: web::Data<Arc<HttpRouter>>,
                               const_router: web::Data<Arc<ConstRouter>>,
                               middleware_router: web::Data<Arc<MiddlewareRouter>>,
                               global_headers,
@@ -367,7 +367,7 @@ async fn merge_headers(
 /// This is our service handler. It receives a Request, routes on it
 /// path, and returns a Future of a Response.
 async fn index(
-    router: web::Data<Arc<DynRouter>>,
+    router: web::Data<Arc<HttpRouter>>,
     const_router: web::Data<Arc<ConstRouter>>,
     middleware_router: web::Data<Arc<MiddlewareRouter>>,
     global_headers: web::Data<Arc<Headers>>,

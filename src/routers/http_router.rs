@@ -15,11 +15,11 @@ use super::Router;
 type RouteMap = RwLock<MatchItRouter<(PyFunction, u8)>>;
 
 /// Contains the thread safe hashmaps of different routes
-pub struct DynRouter {
+pub struct HttpRouter {
     routes: HashMap<Method, RouteMap>,
 }
 
-impl Router<((PyFunction, u8), HashMap<String, String>), Method> for DynRouter {
+impl Router<((PyFunction, u8), HashMap<String, String>), Method> for HttpRouter {
     fn add_route(
         &self,
         route_type: &str, // We can just have route type as WS
@@ -65,7 +65,7 @@ impl Router<((PyFunction, u8), HashMap<String, String>), Method> for DynRouter {
     }
 }
 
-impl DynRouter {
+impl HttpRouter {
     pub fn new() -> Self {
         let mut routes = HashMap::new();
         routes.insert(Method::GET, RwLock::new(MatchItRouter::new()));
