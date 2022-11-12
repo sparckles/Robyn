@@ -9,4 +9,8 @@
 
 ### Blogs
 
-- [Hello, Robyn!](https://www.sanskar.me/hello_robyn.html)
+- [Hello, Robyn!](https://www.sanskar.me/posts/hello-robyn)
+
+
+### Upcoming Talks
+- Coming Soon...
