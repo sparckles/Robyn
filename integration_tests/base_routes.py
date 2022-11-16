@@ -81,6 +81,7 @@ async def hello_before_request(request,response):
     print("this is before request")
     print(request)
     print(response)
+    response["headers"]["test_value"] = "World"
     return ""
 
 
@@ -91,6 +92,7 @@ async def hello_after_request(request, response):
     print("this is after request")
     print(request)
     print(response)
+    response["body"] = "body modified"
     return ""
     
 

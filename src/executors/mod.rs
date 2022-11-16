@@ -41,6 +41,8 @@ pub async fn execute_middleware_function<'a>(
         // do nothing if none
         None => temp_response,
     };
+    debug!("response: {:?}", response);
+    debug!("temp_response: {:?}", temp_response);
     let mut response_headers = HashMap::new();
     for (key, val) in response.headers() {
         response_headers.insert(key.to_string(), val.to_str().unwrap().to_string());
@@ -70,7 +72,8 @@ pub async fn execute_middleware_function<'a>(
                 response_dict.insert("headers", response_headers.into_py(py));
                 response_dict.insert("status", response_status_code.into_py(py));
                 response_dict.insert("body", response_body.into_py(py));
-
+                debug!("response_dict: {:?}", response_dict);
+                debug!("res: {:?}", res);
                 // this makes the request object to be accessible across every route
                 let coro: PyResult<&PyAny> = match number_of_params {
                     0 => handler.call0(),
@@ -91,7 +94,7 @@ pub async fn execute_middleware_function<'a>(
                     let responses = output[0].clone();
                     Ok(responses)
                 })?;
-
+            debug!("res at 97 : {:?}", res);
             Ok(res)
         }
 
@@ -125,7 +128,9 @@ pub async fn execute_middleware_function<'a>(
 
             Ok(output?)
         }
+        
     }
+    
 }
 
 pub async fn execute_function(

@@ -489,7 +489,8 @@ async fn index(
             Some(&response),
         )
         .await;
-        debug!("{:?}", x);
+        debug!("this is the response from the after request {:?}", x);
+        
     };
 
     response
