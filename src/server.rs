@@ -372,6 +372,40 @@ async fn merge_headers(
     headers
 }
 
+async fn create_response(contents: HashMap<String, String>) -> HTTPResponse {
+    let body = contents.get("body").unwrap().to_owned();
+    let status_code =
+        actix_http::StatusCode::from_str(contents.get("status_code").unwrap()).unwrap();
+
+    let response_headers: HashMap<String, String> = match contents.get("headers") {
+        Some(headers) => {
+            let h: HashMap<String, String> = serde_json::from_str(headers).unwrap();
+            h
+        }
+        None => HashMap::new(),
+    };
+
+    debug!(
+        "These are the request headers from serde {:?}",
+        response_headers
+    );
+
+    let mut response = HttpResponse::build(status_code);
+    apply_headers(&mut response, response_headers);
+    let final_response = if !body.is_empty() {
+        response.body(body)
+    } else {
+        response.finish()
+    };
+
+    debug!(
+        "The response status code is {} and the headers are {:?}",
+        final_response.status(),
+        final_response.headers()
+    );
+    final_response
+}
+
 /// This is our service handler. It receives a Request, routes on it
 /// path, and returns a Future of a Response.
 async fn index(
@@ -416,7 +450,7 @@ async fn index(
         data = body.to_vec()
     }
 
-    let tuple_params =
+    let inital_contents =
         match middleware_router.get_route(MiddlewareRoute::BeforeRequest, req.uri().path()) {
             Some(((handler_function, number_of_params), route_params)) => {
                 let x = handle_http_middleware_request(
@@ -434,17 +468,17 @@ async fn index(
             }
             None => HashMap::new(),
         };
-    debug!("These are the tuple params {:?}", tuple_params);
+    debug!("These are the tuple params {:?}", inital_contents);
 
-    let headers_dup = if !tuple_params.is_empty() {
-        tuple_params.get("headers").unwrap().clone()
+    let headers_dup = if !inital_contents.is_empty() {
+        inital_contents.get("headers").unwrap().clone()
     } else {
         headers
     };
 
     debug!("These are the request headers {:?}", headers_dup);
 
-    let response = if const_router
+    let contents = if const_router
         .get_route(req.method().clone(), req.uri().path())
         .is_some()
     {
@@ -476,7 +510,7 @@ async fn index(
         }
     };
 
-    if let Some(((handler_function, number_of_params), route_params)) =
+    let final_contents = if let Some(((handler_function, number_of_params), route_params)) =
         middleware_router.get_route(MiddlewareRoute::AfterRequest, req.uri().path())
     {
         let x = handle_http_middleware_request(
@@ -486,12 +520,18 @@ async fn index(
             &mut data,
             route_params,
             queries.clone(),
-            Some(&response),
+            Some(&contents),
         )
         .await;
         debug!("this is the response from the after request {:?}", x);
-        
+        x
+    } else {
+        HashMap::new()
     };
 
-    response
+    if !final_contents.is_empty() {
+        create_response(final_contents)
+    } else {
+        create_response(contents)
+    }
 }

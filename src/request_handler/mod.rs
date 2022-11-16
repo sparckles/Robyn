@@ -54,37 +54,9 @@ pub async fn handle_http_request(
         }
     };
 
-    let body = contents.get("body").unwrap().to_owned();
-    let status_code =
-        actix_http::StatusCode::from_str(contents.get("status_code").unwrap()).unwrap();
+    // removed the response creation
 
-    let response_headers: HashMap<String, String> = match contents.get("headers") {
-        Some(headers) => {
-            let h: HashMap<String, String> = serde_json::from_str(headers).unwrap();
-            h
-        }
-        None => HashMap::new(),
-    };
-
-    debug!(
-        "These are the request headers from serde {:?}",
-        response_headers
-    );
-
-    let mut response = HttpResponse::build(status_code);
-    apply_headers(&mut response, response_headers);
-    let final_response = if !body.is_empty() {
-        response.body(body)
-    } else {
-        response.finish()
-    };
-
-    debug!(
-        "The response status code is {} and the headers are {:?}",
-        final_response.status(),
-        final_response.headers()
-    );
-    final_response
+    contents
 }
 
 pub async fn handle_http_middleware_request(

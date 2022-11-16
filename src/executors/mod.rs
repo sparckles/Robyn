@@ -36,11 +36,8 @@ pub async fn execute_middleware_function<'a>(
     let temp_response = &HttpResponse::Ok().finish();
 
     // make response object accessible while creating routes
-    let response = match res {
-        Some(res) => res,
-        // do nothing if none
-        None => temp_response,
-    };
+    let response = res.unwrap_or(temp_response);
+
     debug!("response: {:?}", response);
     debug!("temp_response: {:?}", temp_response);
     let mut response_headers = HashMap::new();
@@ -60,10 +57,11 @@ pub async fn execute_middleware_function<'a>(
         queries_clone.insert(key, value);
     }
 
-    match function {
+    let http_response = match function {
         PyFunction::CoRoutine(handler) => {
             let output = Python::with_gil(|py| {
                 let handler = handler.as_ref(py);
+
                 request.insert("params", route_params.into_py(py));
                 request.insert("queries", queries_clone.into_py(py));
                 // is this a bottleneck again?
@@ -128,9 +126,12 @@ pub async fn execute_middleware_function<'a>(
 
             Ok(output?)
         }
-        
-    }
-    
+    };
+
+    //
+    let &mut original_headers = response.headers_mut();
+
+    http_response
 }
 
 pub async fn execute_function(

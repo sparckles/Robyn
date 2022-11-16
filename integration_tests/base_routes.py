@@ -93,7 +93,7 @@ async def hello_after_request(request, response):
     print(request)
     print(response)
     response["body"] = "body modified"
-    return ""
+    return "hello word"
     
 
 
@@ -214,4 +214,4 @@ if __name__ == "__main__":
         index_file="index.html",
     )
     app.startup_handler(startup_handler)
-    app.start(port=5000)
+    app.start(port=5001)
