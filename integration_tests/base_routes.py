@@ -1,5 +1,7 @@
 from robyn import Robyn, static_file, jsonify, WS
 
+from robyn.templating import JinjaTemplate
+
 from robyn.log_colors import Colors
 import asyncio
 import os
@@ -97,6 +99,20 @@ async def test(request):
     html_file = os.path.join(current_file_path, "index.html")
 
     return static_file(html_file)
+
+
+@app.get("/template_render")
+async def template_render():
+    current_file_path = pathlib.Path(__file__).parent.resolve()
+    template = JinjaTemplate(os.path.join(current_file_path, "templates"))
+
+    context = {
+        "framework": "Robyn",
+        "templating_engine": "Jinja2"
+    }
+
+    string = template.render_template(template_name="test.html", **context)
+    return string
 
 
 @app.get("/jsonify")
