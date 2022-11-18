@@ -87,15 +87,14 @@ model User {
 ### Using Middleware
 ```python
 
-from robyn import Robyn, static_file
+@app.before_request("/")
+async def hello_before_request(request):
+    print(request)
 
-app = Robyn(__file__)
 
-@app.get("/")
-async def h(request):
-    return static_file("./index.html")
-
-app.start(port=5000)
+@app.after_request("/")
+def hello_after_request(request):
+    print(request)
 
 ```
 
