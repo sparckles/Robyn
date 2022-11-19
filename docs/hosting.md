@@ -71,8 +71,10 @@ Then, we press the "New Project" button and select "Deploy from GitHub repo".
 
 ![image](https://user-images.githubusercontent.com/70811425/202870632-4d3f46dc-1aa9-4603-9b0f-344ed87ec9d0.png)
 
+And we select the repo we want to deploy. And click "Deploy Now".
+![image](https://user-images.githubusercontent.com/70811425/202870837-16884fef-8900-4ab3-9794-0fb53c3ffd2e.png)
 
-And we select the repo to deploy.
+![image](https://user-images.githubusercontent.com/70811425/202871003-f79a1cef-9a5f-4166-be4f-527c60ec6c79.png)
 
 Now, we click on our project's card.
 
@@ -87,4 +89,4 @@ We would see the domain generate bellow "Domains".
 ![image](https://user-images.githubusercontent.com/70811425/202870735-6b955752-c5a6-48d5-acbc-1a4ea6fd7574.png)
 
 
-We can go to <domain>/hello and confirm that the message "Hello World" is displayed.
+We can go to <domain>/hello and confirm that the message "Hello World" is displayed.  
