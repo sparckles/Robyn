@@ -69,7 +69,7 @@ Press the "Login" button and select to login with a Github account.
 
 Then, we press the "New Project" button and select "Deploy from GitHub repo".
 
-![image](https://user-images.githubusercontent.com/70811425/202867653-7477cb10-2b2c-47ae-986a-b584f463cd13.png)
+![image](https://user-images.githubusercontent.com/70811425/202870632-4d3f46dc-1aa9-4603-9b0f-344ed87ec9d0.png)
 
 
 And we select the repo to deploy.
@@ -78,13 +78,13 @@ Now, we click on our project's card.
 
 Select "Variables" and press the "New Variable" button to set the environments variables.
 
-![image](https://user-images.githubusercontent.com/70811425/202869462-8cb9c052-4083-4696-9bb3-9fe7a7637c35.png)
+![image](https://user-images.githubusercontent.com/70811425/202870681-5c069475-a5d1-4069-8582-c5b549d27aad.png)
 
 Then, we go to Setting and click on "Generate Domain".
 
 We would see the domain generate bellow "Domains".
 
-![image](https://user-images.githubusercontent.com/70811425/202869664-31687da8-0194-45f0-a460-470c41ea2ef6.png)
+![image](https://user-images.githubusercontent.com/70811425/202870735-6b955752-c5a6-48d5-acbc-1a4ea6fd7574.png)
 
 
 We can go to <domain>/hello and confirm that the message "Hello World" is displayed.
