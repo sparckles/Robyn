@@ -78,7 +78,7 @@ impl ConstRouter {
         route_type: &str, // we can just have route type as WS
         route: &str,
         function: Py<PyAny>,
-        is_async: bool,
+        function_type: String,
         number_of_params: u8,
         event_loop: &PyAny,
     ) -> Result<(), Error> {
@@ -88,10 +88,10 @@ impl ConstRouter {
         };
         let route = route.to_string();
         pyo3_asyncio::tokio::run_until_complete(event_loop, async move {
-            let output = execute_function(function, number_of_params, is_async)
+            let output = execute_function(function, number_of_params, function_type)
                 .await
                 .unwrap();
-            debug!("This is the result of the output {:?}", output);
+
             table
                 .clone()
                 .write()

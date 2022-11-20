@@ -1,6 +1,6 @@
 use crate::executors::{execute_http_function, execute_middleware_function};
 
-use log::debug;
+use log::{debug, error};
 use std::rc::Rc;
 use std::str::FromStr;
 use std::{cell::RefCell, collections::HashMap};
@@ -49,7 +49,7 @@ pub async fn handle_http_request(
     {
         Ok(res) => res,
         Err(err) => {
-            debug!("Error: {:?}", err);
+            error!("Error: {:?}", err);
             let mut response = HttpResponse::InternalServerError();
             apply_headers(&mut response, headers.clone());
             return response.finish();

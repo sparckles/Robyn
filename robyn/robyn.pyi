@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Callable, Optional, Tuple
 
+from robyn.types import FunctionType
+
 class SocketHeld:
     def __init__(self, url: str, port: int):
         pass
@@ -26,7 +28,7 @@ class Server:
         route_type: str,
         route: str,
         handler: Callable,
-        is_async: bool,
+        function_type: str,
         number_of_params: int,
         const: bool,
     ) -> None:

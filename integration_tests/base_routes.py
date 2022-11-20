@@ -41,12 +41,13 @@ callCount = 0
 
 
 @app.get("/")
-async def hello(request):
+def hello(request):
     global callCount
     callCount += 1
     message = "Called " + str(callCount) + " times"
     print(message, request)
-    return {"status_code": "200", "body": "hello", "type": "text"}
+    yield {"status_code": "200", "body": "hello", "type": "text"}
+    print(message, request)
 
 
 @app.get("/const_request", const=True)
@@ -78,7 +79,7 @@ def return_int_status_code():
 async def hello_before_request(request):
     global callCount
     callCount += 1
-    print(request)
+    print(f"Before request: { request }")
     return ""
 
 
@@ -86,7 +87,7 @@ async def hello_before_request(request):
 async def hello_after_request(request):
     global callCount
     callCount += 1
-    print(request)
+    print(f"After request: { request }")
     return ""
 
 

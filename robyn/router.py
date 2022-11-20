@@ -1,13 +1,15 @@
 from abc import ABC, abstractmethod
 from functools import wraps
 from asyncio import iscoroutinefunction
-from inspect import signature
+from inspect import signature, isgeneratorfunction
 from typing import Callable, Dict, List, Tuple, Union
 from types import CoroutineType
+from robyn.types import FunctionType
 
 from robyn.ws import WS
 
-Route = Tuple[str, str, Callable, bool, int, bool]
+
+Route = Tuple[str, str, Callable, str, int, bool]
 MiddlewareRoute = Tuple[str, str, Callable, bool, int]
 
 
@@ -59,16 +61,21 @@ class Router(BaseRouter):
                     route_type,
                     endpoint,
                     async_inner_handler,
-                    True,
+                    FunctionType.AsyncFunction.value,
                     number_of_params,
                     const,
                 )
             )
 
             return async_inner_handler
+        elif isgeneratorfunction(handler):
+            self.routes.append(
+                (route_type, endpoint, inner_handler, FunctionType.SyncGenerator.value, number_of_params, const)
+            )
+            return inner_handler
         else:
             self.routes.append(
-                (route_type, endpoint, inner_handler, False, number_of_params, const)
+                (route_type, endpoint, inner_handler, FunctionType.SyncFunction.value, number_of_params, const)
             )
             return inner_handler
 
