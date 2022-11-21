@@ -23,6 +23,8 @@ app folder/
 
 This is a template of the Robyn app we will be deploy.
 
+We have to write the code in `main.py` instead `app.py`. If there is no `main.py` file the building process will fail. But that is a thing with Railway, you have to have a main.py to start any app.
+
 main.py
 
 ```python
