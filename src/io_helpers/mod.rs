@@ -1,14 +1,14 @@
 use std::collections::HashMap;
-
 use std::fs::File;
 use std::io::Read;
 
 use actix_web::HttpResponseBuilder;
+use anyhow::Result;
 
 // this should be something else
 // probably inside the submodule of the http router
 #[inline]
-pub fn apply_headers(response: &mut HttpResponseBuilder, headers: HashMap<String, String>) {
+pub fn apply_headers(response: &mut HttpResponseBuilder, headers: &HashMap<String, String>) {
     for (key, val) in (headers).iter() {
         response.insert_header((key.clone(), val.clone()));
     }
@@ -21,7 +21,7 @@ pub fn apply_headers(response: &mut HttpResponseBuilder, headers: HashMap<String
 /// * `file_path` - The file path that we want the function to read
 ///
 // ideally this should be async
-pub fn read_file(file_path: &str) -> Result<String, Box<dyn std::error::Error>> {
+pub fn read_file(file_path: &str) -> Result<String> {
     let mut file = File::open(file_path)?;
     let mut buf = vec![];
     file.read_to_end(&mut buf)?;

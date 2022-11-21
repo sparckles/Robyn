@@ -2,35 +2,20 @@ use std::collections::HashMap;
 use std::sync::RwLock;
 // pyo3 modules
 use crate::types::PyFunction;
+use anyhow::{Context, Error, Result};
+use matchit::Router as MatchItRouter;
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
-
-use anyhow::{Context, Error, Result};
 
 use crate::routers::types::MiddlewareRoute;
 
 use super::Router;
 
-type RouteMap = RwLock<matchit::Router<(PyFunction, u8)>>;
+type RouteMap = RwLock<MatchItRouter<(PyFunction, u8)>>;
 
 /// Contains the thread safe hashmaps of different routes
 pub struct MiddlewareRouter {
     routes: HashMap<MiddlewareRoute, RouteMap>,
-}
-
-impl MiddlewareRouter {
-    pub fn new() -> Self {
-        let mut routes = HashMap::new();
-        routes.insert(
-            MiddlewareRoute::BeforeRequest,
-            RwLock::new(matchit::Router::new()),
-        );
-        routes.insert(
-            MiddlewareRoute::AfterRequest,
-            RwLock::new(matchit::Router::new()),
-        );
-        Self { routes }
-    }
 }
 
 impl Router<((PyFunction, u8), HashMap<String, String>), MiddlewareRoute> for MiddlewareRouter {
@@ -63,10 +48,10 @@ impl Router<((PyFunction, u8), HashMap<String, String>), MiddlewareRoute> for Mi
 
     fn get_route(
         &self,
-        route_method: MiddlewareRoute,
+        route_method: &MiddlewareRoute,
         route: &str,
     ) -> Option<((PyFunction, u8), HashMap<String, String>)> {
-        let table = self.routes.get(&route_method)?;
+        let table = self.routes.get(route_method)?;
 
         let table_lock = table.read().ok()?;
         let res = table_lock.at(route).ok()?;
@@ -76,5 +61,20 @@ impl Router<((PyFunction, u8), HashMap<String, String>), MiddlewareRoute> for Mi
         }
 
         Some((res.value.to_owned(), route_params))
+    }
+}
+
+impl MiddlewareRouter {
+    pub fn new() -> Self {
+        let mut routes = HashMap::new();
+        routes.insert(
+            MiddlewareRoute::BeforeRequest,
+            RwLock::new(MatchItRouter::new()),
+        );
+        routes.insert(
+            MiddlewareRoute::AfterRequest,
+            RwLock::new(MatchItRouter::new()),
+        );
+        Self { routes }
     }
 }

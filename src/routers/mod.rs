@@ -21,5 +21,5 @@ pub trait Router<T, U> {
     ) -> Result<()>;
 
     /// Retrieve the correct function from the previously inserted routes
-    fn get_route(&self, route_method: U, route: &str) -> Option<T>;
+    fn get_route(&self, route_method: &U, route: &str) -> Option<T>;
 }

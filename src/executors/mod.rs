@@ -2,9 +2,7 @@
 /// i.e. the functions that have the responsibility of parsing and executing functions.
 use crate::io_helpers::read_file;
 
-use std::cell::RefCell;
 use std::collections::HashMap;
-use std::rc::Rc;
 use std::sync::Arc;
 
 use actix_web::{http::Method, web, HttpRequest};
@@ -25,8 +23,8 @@ pub async fn execute_middleware_function<'a>(
     payload: &mut web::Payload,
     headers: &HashMap<String, String>,
     req: &HttpRequest,
-    route_params: HashMap<String, String>,
-    queries: Rc<RefCell<HashMap<String, String>>>,
+    route_params: &HashMap<String, String>,
+    queries: &HashMap<String, String>,
     number_of_params: u8,
 ) -> Result<HashMap<String, HashMap<String, String>>> {
     // TODO:
@@ -55,20 +53,14 @@ pub async fn execute_middleware_function<'a>(
     // request object accessible while creating routes
     let mut request = HashMap::new();
 
-    let mut queries_clone: HashMap<String, String> = HashMap::new();
-
-    for (key, value) in (*queries).borrow().clone() {
-        queries_clone.insert(key, value);
-    }
-
     match function {
         PyFunction::CoRoutine(handler) => {
             let output = Python::with_gil(|py| {
                 let handler = handler.as_ref(py);
-                request.insert("params", route_params.into_py(py));
-                request.insert("queries", queries_clone.into_py(py));
+                request.insert("params", route_params.to_object(py));
+                request.insert("queries", queries.to_object(py));
                 // is this a bottleneck again?
-                request.insert("headers", headers.clone().into_py(py));
+                request.insert("headers", headers.to_object(py));
                 // request.insert("body", data.into_py(py));
 
                 // this makes the request object to be accessible across every route
@@ -100,10 +92,10 @@ pub async fn execute_middleware_function<'a>(
             // let's wrap the output in a future?
             let output: Result<HashMap<String, HashMap<String, String>>> = Python::with_gil(|py| {
                 let handler = handler.as_ref(py);
-                request.insert("params", route_params.into_py(py));
-                request.insert("queries", queries_clone.into_py(py));
+                request.insert("params", route_params.to_object(py));
+                request.insert("queries", queries.to_object(py));
                 // is this a bottleneck again?
-                request.insert("headers", headers.clone().into_py(py));
+                request.insert("headers", headers.to_object(py));
                 request.insert("body", data.into_py(py));
 
                 let output: PyResult<&PyAny> = match number_of_params {
@@ -185,10 +177,10 @@ pub async fn execute_function(
 pub async fn execute_http_function(
     function: PyFunction,
     payload: &mut web::Payload,
-    headers: HashMap<String, String>,
+    headers: &HashMap<String, String>,
     req: &HttpRequest,
-    route_params: HashMap<String, String>,
-    queries: Rc<RefCell<HashMap<String, String>>>,
+    route_params: &HashMap<String, String>,
+    queries: &HashMap<String, String>,
     number_of_params: u8,
     // need to change this to return a response struct
     // create a custom struct for this
@@ -216,19 +208,13 @@ pub async fn execute_http_function(
     // request object accessible while creating routes
     let mut request = HashMap::new();
 
-    let mut queries_clone: HashMap<String, String> = HashMap::new();
-
-    for (key, value) in (*queries).borrow().clone() {
-        queries_clone.insert(key, value);
-    }
-
     match function {
         PyFunction::CoRoutine(handler) => {
             let output = Python::with_gil(|py| {
                 let handler = handler.as_ref(py);
-                request.insert("params", route_params.into_py(py));
-                request.insert("queries", queries_clone.into_py(py));
-                request.insert("headers", headers.into_py(py));
+                request.insert("params", route_params.to_object(py));
+                request.insert("queries", queries.to_object(py));
+                request.insert("headers", headers.to_object(py));
                 let data = data.into_py(py);
                 request.insert("body", data);
 
@@ -265,8 +251,8 @@ pub async fn execute_http_function(
         PyFunction::SyncFunction(handler) => {
             Python::with_gil(|py| {
                 let handler = handler.as_ref(py);
-                request.insert("params", route_params.into_py(py));
-                request.insert("headers", headers.into_py(py));
+                request.insert("params", route_params.to_object(py));
+                request.insert("headers", headers.to_object(py));
                 let data = data.into_py(py);
                 request.insert("body", data);
 
@@ -288,12 +274,12 @@ pub async fn execute_http_function(
 pub async fn execute_event_handler(
     event_handler: Option<Arc<PyFunction>>,
     task_locals: &TaskLocals,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<()> {
     if let Some(handler) = event_handler {
         match &(*handler) {
             PyFunction::SyncFunction(function) => {
                 debug!("Startup event handler");
-                Python::with_gil(|py| -> Result<(), Box<dyn std::error::Error>> {
+                Python::with_gil(|py| -> Result<()> {
                     function.call0(py)?;
                     Ok(())
                 })?;
