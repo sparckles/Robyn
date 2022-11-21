@@ -65,7 +65,7 @@ So, is necessary to pass `url` as `0.0.0.0` to `app.start()` as argument.
 
 To deploy this app on Railway, we need to create a Railway account. We can do so by going on the [Railway HomePage](https://railway.app/).
 
-Press the "Login" button and select to login with a Github account.
+Press the "Login" button and select "login with a GitHub account."
 
 ![image](https://user-images.githubusercontent.com/70811425/202867604-10a09f87-ecb9-4a42-ae90-1359223049bc.png)
 
