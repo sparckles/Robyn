@@ -5,9 +5,11 @@ The process of hosting a Robyn app on various cloud providers.
 
 ### Railway
 
-To deploy an app on Railway is necessary to have a Github account, because the apps are deploying from a Github repository. 
+We will be deploying the app on [Railway](https://railway.app/).
 
-The repository we will be deploy is a simple app that display a "Hello World" message and serve a HTML file.
+A GitHub account is needed as a mandatory pre-requisite.
+
+We will be deploying a sample "Hello World", which will be demonstrating a simple `GET` route and serving an HTML file.
 
 Directory structure:
 
@@ -19,14 +21,11 @@ app folder/
 
 ```
 
-Prerequisites:
-
-- Github Account
-
 This is a template of the Robyn app we will be deploy.
 
 main.py
-```
+
+```python
 from robyn import Robyn, static_file
 
 
@@ -47,21 +46,22 @@ app.start(url="0.0.0.0", port=PORT)
 
 ```
 
+
 index.html
 
-```
+```html
 <h1> Hello World, this is Robyn framework! <h1>
 
 ```
 
-
+### Exposing Ports
 The Railway documentation says the following about exposion an app:
 
 > The easiest way to get up and running is to have your application listen on 0.0.0.0:$PORT, where PORT is a Railway-provided environment variable. 
 
 So, is necessary to pass `url` as `0.0.0.0` to `app.start()` as argument. 
 
-Too deploy this app on Railway, we need to go to the [Railway page](https://railway.app/) and create an account.
+To deploy this app on Railway, we need to create a Railway account. We can do so by going on the [Railway HomePage](https://railway.app/).
 
 Press the "Login" button and select to login with a Github account.
 
@@ -82,11 +82,11 @@ Select "Variables" and press the "New Variable" button to set the environments v
 
 ![image](https://user-images.githubusercontent.com/70811425/202870681-5c069475-a5d1-4069-8582-c5b549d27aad.png)
 
-Then, we go to Setting and click on "Generate Domain".
+Then, we go to the "Settings" tab and click on "Generate Domain."
 
-We would see the domain generate bellow "Domains".
+We can generate a temporary domain under the "Domains" tab.
 
 ![image](https://user-images.githubusercontent.com/70811425/202870735-6b955752-c5a6-48d5-acbc-1a4ea6fd7574.png)
 
 
-We can go to <domain>/hello and confirm that the message "Hello World" is displayed.  
+We can go to our domain `<domain>/hello` and confirm that the message "Hello World" is displayed.
