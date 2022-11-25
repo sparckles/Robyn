@@ -19,6 +19,12 @@ def test_html(session):
     assert "Hello world. How are you?" in r.text
 
 
+def test_jinja_template(session):
+    r = requests.get(f"{BASE_URL}/template_render")
+    assert "Jinja2" in r.text
+    assert "Robyn" in r.text
+
+
 def test_queries(session):
     r = requests.get(f"{BASE_URL}/query?hello=robyn")
     assert r.json() == {"hello": "robyn"}
