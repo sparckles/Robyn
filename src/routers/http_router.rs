@@ -49,10 +49,10 @@ impl Router<((PyFunction, u8), HashMap<String, String>), Method> for HttpRouter 
 
     fn get_route(
         &self,
-        route_method: Method,
+        route_method: &Method,
         route: &str,
     ) -> Option<((PyFunction, u8), HashMap<String, String>)> {
-        let table = self.routes.get(&route_method)?;
+        let table = self.routes.get(route_method)?;
 
         let table_lock = table.read().ok()?;
         let res = table_lock.at(route).ok()?;

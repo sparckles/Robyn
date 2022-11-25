@@ -6,6 +6,7 @@ use std::sync::RwLock;
 use crate::executors::execute_function;
 use anyhow::Context;
 use log::debug;
+use matchit::Router as MatchItRouter;
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
 
@@ -15,7 +16,7 @@ use anyhow::{Error, Result};
 
 use super::Router;
 
-type RouteMap = RwLock<matchit::Router<String>>;
+type RouteMap = RwLock<MatchItRouter<String>>;
 
 /// Contains the thread safe hashmaps of different routes
 pub struct ConstRouter {
@@ -58,8 +59,8 @@ impl Router<String, Method> for ConstRouter {
         Ok(())
     }
 
-    fn get_route(&self, route_method: Method, route: &str) -> Option<String> {
-        let table = self.routes.get(&route_method)?;
+    fn get_route(&self, route_method: &Method, route: &str) -> Option<String> {
+        let table = self.routes.get(route_method)?;
         let route_map = table.read().ok()?;
 
         match route_map.at(route) {
@@ -72,24 +73,15 @@ impl Router<String, Method> for ConstRouter {
 impl ConstRouter {
     pub fn new() -> Self {
         let mut routes = HashMap::new();
-        routes.insert(Method::GET, Arc::new(RwLock::new(matchit::Router::new())));
-        routes.insert(Method::POST, Arc::new(RwLock::new(matchit::Router::new())));
-        routes.insert(Method::PUT, Arc::new(RwLock::new(matchit::Router::new())));
-        routes.insert(
-            Method::DELETE,
-            Arc::new(RwLock::new(matchit::Router::new())),
-        );
-        routes.insert(Method::PATCH, Arc::new(RwLock::new(matchit::Router::new())));
-        routes.insert(Method::HEAD, Arc::new(RwLock::new(matchit::Router::new())));
-        routes.insert(
-            Method::OPTIONS,
-            Arc::new(RwLock::new(matchit::Router::new())),
-        );
-        routes.insert(
-            Method::CONNECT,
-            Arc::new(RwLock::new(matchit::Router::new())),
-        );
-        routes.insert(Method::TRACE, Arc::new(RwLock::new(matchit::Router::new())));
+        routes.insert(Method::GET, Arc::new(RwLock::new(MatchItRouter::new())));
+        routes.insert(Method::POST, Arc::new(RwLock::new(MatchItRouter::new())));
+        routes.insert(Method::PUT, Arc::new(RwLock::new(MatchItRouter::new())));
+        routes.insert(Method::DELETE, Arc::new(RwLock::new(MatchItRouter::new())));
+        routes.insert(Method::PATCH, Arc::new(RwLock::new(MatchItRouter::new())));
+        routes.insert(Method::HEAD, Arc::new(RwLock::new(MatchItRouter::new())));
+        routes.insert(Method::OPTIONS, Arc::new(RwLock::new(MatchItRouter::new())));
+        routes.insert(Method::CONNECT, Arc::new(RwLock::new(MatchItRouter::new())));
+        routes.insert(Method::TRACE, Arc::new(RwLock::new(MatchItRouter::new())));
         Self { routes }
     }
 

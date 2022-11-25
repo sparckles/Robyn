@@ -1,17 +1,16 @@
 use crate::executors::{execute_http_function, execute_middleware_function};
 
 use log::debug;
-use std::rc::Rc;
+use std::collections::HashMap;
 use std::str::FromStr;
-use std::{cell::RefCell, collections::HashMap};
 
 use actix_web::{web, HttpRequest, HttpResponse, HttpResponseBuilder};
 // pyO3 module
 use crate::types::PyFunction;
 
 #[inline]
-pub fn apply_headers(response: &mut HttpResponseBuilder, headers: HashMap<String, String>) {
-    for (key, val) in (headers).iter() {
+pub fn apply_headers(response: &mut HttpResponseBuilder, headers: &HashMap<String, String>) {
+    for (key, val) in headers.iter() {
         response.insert_header((key.clone(), val.clone()));
     }
 }
@@ -30,16 +29,16 @@ pub fn apply_headers(response: &mut HttpResponseBuilder, headers: HashMap<String
 pub async fn handle_http_request(
     function: PyFunction,
     number_of_params: u8,
-    headers: HashMap<String, String>,
+    headers: &HashMap<String, String>,
     payload: &mut web::Payload,
     req: &HttpRequest,
-    route_params: HashMap<String, String>,
-    queries: Rc<RefCell<HashMap<String, String>>>,
+    route_params: &HashMap<String, String>,
+    queries: &HashMap<String, String>,
 ) -> HttpResponse {
     let contents = match execute_http_function(
         function,
         payload,
-        headers.clone(),
+        headers,
         req,
         route_params,
         queries,
@@ -51,7 +50,7 @@ pub async fn handle_http_request(
         Err(err) => {
             debug!("Error: {:?}", err);
             let mut response = HttpResponse::InternalServerError();
-            apply_headers(&mut response, headers.clone());
+            apply_headers(&mut response, headers);
             return response.finish();
         }
     };
@@ -60,11 +59,8 @@ pub async fn handle_http_request(
     let status_code =
         actix_http::StatusCode::from_str(contents.get("status_code").unwrap()).unwrap();
 
-    let response_headers: HashMap<String, String> = match contents.get("headers") {
-        Some(headers) => {
-            let h: HashMap<String, String> = serde_json::from_str(headers).unwrap();
-            h
-        }
+    let response_headers = match contents.get("headers") {
+        Some(headers) => serde_json::from_str(headers).unwrap(),
         None => HashMap::new(),
     };
 
@@ -74,7 +70,7 @@ pub async fn handle_http_request(
     );
 
     let mut response = HttpResponse::build(status_code);
-    apply_headers(&mut response, response_headers);
+    apply_headers(&mut response, &response_headers);
     let final_response = if !body.is_empty() {
         response.body(body)
     } else {
@@ -95,10 +91,10 @@ pub async fn handle_http_middleware_request(
     headers: &HashMap<String, String>,
     payload: &mut web::Payload,
     req: &HttpRequest,
-    route_params: HashMap<String, String>,
-    queries: Rc<RefCell<HashMap<String, String>>>,
+    route_params: &HashMap<String, String>,
+    queries: &HashMap<String, String>,
 ) -> HashMap<String, HashMap<String, String>> {
-    let contents = match execute_middleware_function(
+    let contents = execute_middleware_function(
         function,
         payload,
         headers,
@@ -108,10 +104,7 @@ pub async fn handle_http_middleware_request(
         number_of_params,
     )
     .await
-    {
-        Ok(res) => res,
-        Err(_err) => HashMap::new(),
-    };
+    .unwrap_or_default();
 
     debug!("These are the middleware response {:?}", contents);
     contents
