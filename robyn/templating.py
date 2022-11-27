@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
+from jinja2 import Environment, FileSystemLoader
 
 
 class TemplateInterface(ABC):
-    def __init__(self, template):
+    def __init__(self):
         ...
 
     @abstractmethod
@@ -12,8 +13,11 @@ class TemplateInterface(ABC):
 
 class JinjaTemplate(TemplateInterface):
     def __init__(self, directory, encoding="utf-8", followlinks=False):
-        from jinja2 import Environment, FileSystemLoader
-        self.env = Environment(loader=FileSystemLoader(searchpath=directory, encoding=encoding, followlinks=followlinks))
+        self.env = Environment(
+            loader=FileSystemLoader(
+                searchpath=directory, encoding=encoding, followlinks=followlinks
+            )
+        )
 
     def render_template(self, template_name, **kwargs):
         return self.env.get_template(template_name).render(**kwargs)

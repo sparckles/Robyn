@@ -43,4 +43,3 @@ def test_const_request_json(session):
     r = requests.get(f"{BASE_URL}/const_request_json")
     assert r.status_code == 200
     assert r.json() == {"hello": "world"}
-
