@@ -1,5 +1,7 @@
 use anyhow::Result;
-use pyo3::{Py, PyAny};
+use pyo3::PyAny;
+
+use crate::types::FunctionInfo;
 
 pub mod const_router;
 pub mod http_router;
@@ -14,9 +16,7 @@ pub trait Router<T, U> {
         &self,
         route_type: &str,
         route: &str,
-        handler: Py<PyAny>,
-        is_async: bool,
-        number_of_params: u8,
+        function: FunctionInfo,
         event_loop: Option<&PyAny>,
     ) -> Result<()>;
 

@@ -1,6 +1,7 @@
 use crate::executors::execute_event_handler;
 use crate::io_helpers::apply_headers;
 use crate::request_handler::{handle_http_middleware_request, handle_http_request};
+use crate::types::Request;
 
 use crate::routers::const_router::ConstRouter;
 use crate::routers::Router;
@@ -9,7 +10,7 @@ use crate::routers::http_router::HttpRouter;
 use crate::routers::types::MiddlewareRoute;
 use crate::routers::{middleware_router::MiddlewareRouter, web_socket_router::WebSocketRouter};
 use crate::shared_socket::SocketHeld;
-use crate::types::{Headers, PyFunction};
+use crate::types::{FunctionInfo, Headers};
 use crate::web_socket_connection::start_web_socket;
 
 use std::collections::HashMap;
@@ -23,6 +24,7 @@ use std::thread;
 use actix_files::Files;
 use actix_http::header::HeaderMap;
 use actix_http::KeepAlive;
+use actix_web::web::Bytes;
 use actix_web::*;
 use dashmap::DashMap;
 
@@ -48,8 +50,8 @@ pub struct Server {
     middleware_router: Arc<MiddlewareRouter>,
     global_headers: Arc<DashMap<String, String>>,
     directories: Arc<RwLock<Vec<Directory>>>,
-    startup_handler: Option<Arc<PyFunction>>,
-    shutdown_handler: Option<Arc<PyFunction>>,
+    startup_handler: Option<Arc<FunctionInfo>>,
+    shutdown_handler: Option<Arc<FunctionInfo>>,
 }
 
 #[pymethods]
@@ -176,7 +178,7 @@ impl Server {
                               const_router: web::Data<Arc<ConstRouter>>,
                               middleware_router: web::Data<Arc<MiddlewareRouter>>,
                               global_headers,
-                              payload,
+                              body,
                               req| {
                             pyo3_asyncio::tokio::scope_local((*task_locals).clone(), async move {
                                 index(
@@ -184,7 +186,7 @@ impl Server {
                                     const_router,
                                     middleware_router,
                                     global_headers,
-                                    payload,
+                                    body,
                                     req,
                                 )
                                 .await
@@ -249,15 +251,12 @@ impl Server {
 
     /// Add a new route to the routing tables
     /// can be called after the server has been started
-    #[allow(clippy::too_many_arguments)]
     pub fn add_route(
         &self,
         py: Python,
         route_type: &str,
         route: &str,
-        handler: Py<PyAny>,
-        is_async: bool,
-        number_of_params: u8,
+        function: FunctionInfo,
         const_route: bool,
     ) {
         debug!("Route added for {} {} ", route_type, route);
@@ -267,35 +266,21 @@ impl Server {
 
         if const_route {
             self.const_router
-                .add_route(
-                    route_type,
-                    route,
-                    handler,
-                    is_async,
-                    number_of_params,
-                    Some(event_loop),
-                )
+                .add_route(route_type, route, function, Some(event_loop))
                 .unwrap();
         } else {
             self.router
-                .add_route(route_type, route, handler, is_async, number_of_params, None)
+                .add_route(route_type, route, function, None)
                 .unwrap();
         }
     }
 
     /// Add a new route to the routing tables
     /// can be called after the server has been started
-    pub fn add_middleware_route(
-        &self,
-        route_type: &str,
-        route: &str,
-        handler: Py<PyAny>,
-        is_async: bool,
-        number_of_params: u8,
-    ) {
+    pub fn add_middleware_route(&self, route_type: &str, route: &str, function: FunctionInfo) {
         debug!("MiddleWare Route added for {} {} ", route_type, route);
         self.middleware_router
-            .add_route(route_type, route, handler, is_async, number_of_params, None)
+            .add_route(route_type, route, function, None)
             .unwrap();
     }
 
@@ -304,33 +289,25 @@ impl Server {
     pub fn add_web_socket_route(
         &mut self,
         route: &str,
-        // handler, is_async, number of params
-        connect_route: (Py<PyAny>, bool, u8),
-        close_route: (Py<PyAny>, bool, u8),
-        message_route: (Py<PyAny>, bool, u8),
+        connect_route: FunctionInfo,
+        close_route: FunctionInfo,
+        message_route: FunctionInfo,
     ) {
         self.websocket_router
             .add_websocket_route(route, connect_route, close_route, message_route);
     }
 
     /// Add a new startup handler
-    pub fn add_startup_handler(&mut self, handler: Py<PyAny>, is_async: bool) {
+    pub fn add_startup_handler(&mut self, function: FunctionInfo) {
         debug!("Adding startup handler");
-        match is_async {
-            true => self.startup_handler = Some(Arc::new(PyFunction::CoRoutine(handler))),
-            false => self.startup_handler = Some(Arc::new(PyFunction::SyncFunction(handler))),
-        };
+        self.startup_handler = Some(Arc::new(function));
         debug!("{:?}", self.startup_handler);
     }
 
     /// Add a new shutdown handler
-    pub fn add_shutdown_handler(&mut self, handler: Py<PyAny>, is_async: bool) {
-        debug!("Adding shutdown handler");
-        match is_async {
-            true => self.shutdown_handler = Some(Arc::new(PyFunction::CoRoutine(handler))),
-            false => self.shutdown_handler = Some(Arc::new(PyFunction::SyncFunction(handler))),
-        };
-        debug!("{:?}", self.startup_handler);
+    pub fn add_shutdown_handler(&mut self, function: FunctionInfo) {
+        debug!("Adding shutdown handler:");
+        self.shutdown_handler = Some(Arc::new(function));
         debug!("{:?}", self.shutdown_handler);
     }
 }
@@ -365,7 +342,7 @@ async fn index(
     const_router: web::Data<Arc<ConstRouter>>,
     middleware_router: web::Data<Arc<MiddlewareRouter>>,
     global_headers: web::Data<Arc<Headers>>,
-    mut payload: web::Payload,
+    body: Bytes,
     req: HttpRequest,
 ) -> impl Responder {
     let mut queries = HashMap::new();
@@ -380,19 +357,19 @@ async fn index(
 
     let headers = merge_headers(&global_headers, req.headers()).await;
 
+    let mut request = Request {
+        queries,
+        headers,
+        method: req.method().clone(),
+        params: HashMap::new(),
+        body,
+    };
+
     let modified_request =
         match middleware_router.get_route(&MiddlewareRoute::BeforeRequest, req.uri().path()) {
-            Some(((handler_function, number_of_params), route_params)) => {
-                let x = handle_http_middleware_request(
-                    handler_function,
-                    number_of_params,
-                    &headers,
-                    &mut payload,
-                    &req,
-                    &route_params,
-                    &queries,
-                )
-                .await;
+            Some((function, route_params)) => {
+                request.params = route_params;
+                let x = handle_http_middleware_request(&request, function).await;
                 debug!("Middleware contents {:?}", x);
                 x
             }
@@ -401,46 +378,32 @@ async fn index(
 
     debug!("These are the tuple params {:?}", modified_request);
 
-    let headers = modified_request.get("headers").unwrap_or(&headers);
+    request.headers = modified_request
+        .get("headers")
+        .unwrap_or(&request.headers)
+        .clone();
 
-    debug!("These are the request headers {:?}", headers);
+    debug!("These are the request headers {:?}", &request.headers);
 
     let response = if let Some(r) = const_router.get_route(req.method(), req.uri().path()) {
         let mut response_builder = HttpResponse::Ok();
-        apply_headers(&mut response_builder, headers);
+        apply_headers(&mut response_builder, &request.headers);
         response_builder.body(r)
-    } else if let Some(((handler_function, number_of_params), route_params)) =
-        router.get_route(req.method(), req.uri().path())
+    } else if let Some((function, route_params)) = router.get_route(req.method(), req.uri().path())
     {
-        handle_http_request(
-            handler_function,
-            number_of_params,
-            headers,
-            &mut payload,
-            &req,
-            &route_params,
-            &queries,
-        )
-        .await
+        request.params = route_params;
+        handle_http_request(&request, function).await
     } else {
         let mut response = HttpResponse::Ok();
-        apply_headers(&mut response, headers);
+        apply_headers(&mut response, &request.headers);
         response.finish()
     };
 
-    if let Some(((handler_function, number_of_params), route_params)) =
+    if let Some((function, route_params)) =
         middleware_router.get_route(&MiddlewareRoute::AfterRequest, req.uri().path())
     {
-        let x = handle_http_middleware_request(
-            handler_function,
-            number_of_params,
-            headers,
-            &mut payload,
-            &req,
-            &route_params,
-            &queries,
-        )
-        .await;
+        request.params = route_params;
+        let x = handle_http_middleware_request(&request, function).await;
         debug!("{:?}", x);
     };
 

@@ -1,11 +1,15 @@
 from __future__ import annotations
 
-from typing import Callable, Optional, Tuple
+from typing import Callable, Optional
 
 class SocketHeld:
     def __init__(self, url: str, port: int):
         pass
     def try_clone(self) -> SocketHeld:
+        pass
+
+class FunctionInfo:
+    def __init__(self, function: Callable, is_async: bool, number_of_params: int):
         pass
 
 class Server:
@@ -25,9 +29,7 @@ class Server:
         self,
         route_type: str,
         route: str,
-        handler: Callable,
-        is_async: bool,
-        number_of_params: int,
+        function: FunctionInfo,
         const: bool,
     ) -> None:
         pass
@@ -35,21 +37,19 @@ class Server:
         self,
         route_type: str,
         route: str,
-        handler: Callable,
-        is_async: bool,
-        number_of_params: int,
+        function: FunctionInfo,
     ) -> None:
         pass
-    def add_startup_handler(self, handler: Callable, is_async: bool) -> None:
+    def add_startup_handler(self, function: FunctionInfo) -> None:
         pass
-    def add_shutdown_handler(self, handler: Callable, is_async: bool) -> None:
+    def add_shutdown_handler(self, function: FunctionInfo) -> None:
         pass
     def add_web_socket_route(
         self,
         route: str,
-        connect_route: Tuple[Callable, bool, int],
-        close_route: Tuple[Callable, bool, int],
-        message_route: Tuple[Callable, bool, int],
+        connect_route: FunctionInfo,
+        close_route: FunctionInfo,
+        message_route: FunctionInfo,
     ) -> None:
         pass
     def start(self, socket: SocketHeld, workers: int) -> None:
