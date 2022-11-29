@@ -24,8 +24,11 @@ def kill_process(process: subprocess.Popen) -> None:
         process.send_signal(signal.CTRL_BREAK_EVENT)
         process.kill()
         return
-    os.killpg(os.getpgid(process.pid), signal.SIGKILL)
-
+    
+    try:
+        os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+    except ProcessLookupError:
+        pass
 
 @pytest.fixture(scope="session")
 def session():
