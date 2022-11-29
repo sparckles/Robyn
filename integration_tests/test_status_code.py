@@ -21,4 +21,3 @@ def test_307_get_request(session):
 def test_int_status_code(session):
     r = requests.get(f"{BASE_URL}/int_status_code")
     assert r.status_code == 202
-

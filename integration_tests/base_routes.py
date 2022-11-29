@@ -1,5 +1,7 @@
 from robyn import Robyn, static_file, jsonify, WS
 
+from robyn.templating import JinjaTemplate
+
 from robyn.log_colors import Colors
 import asyncio
 import os
@@ -11,6 +13,8 @@ websocket = WS(app, "/web_socket")
 i = -1
 
 logger = logging.getLogger(__name__)
+current_file_path = pathlib.Path(__file__).parent.resolve()
+jinja_template = JinjaTemplate(os.path.join(current_file_path, "templates"))
 
 
 @websocket.on("message")
@@ -59,17 +63,17 @@ async def const_request_json():
     return jsonify({"hello": "world"})
 
 
-@app.get('/404')
+@app.get("/404")
 def return_404():
     return {"status_code": "404", "body": "hello", "type": "text"}
 
 
-@app.post('/404')
+@app.post("/404")
 def return_404_post():
     return {"status_code": "404", "body": "hello", "type": "text"}
 
 
-@app.get('/int_status_code')
+@app.get("/int_status_code")
 def return_int_status_code():
     return {"status_code": 202, "body": "hello", "type": "text"}
 
@@ -97,6 +101,14 @@ async def test(request):
     html_file = os.path.join(current_file_path, "index.html")
 
     return static_file(html_file)
+
+
+@app.get("/template_render")
+async def template_render():
+    context = {"framework": "Robyn", "templating_engine": "Jinja2"}
+
+    template = jinja_template.render_template(template_name="test.html", **context)
+    return template
 
 
 @app.get("/jsonify")
@@ -187,7 +199,12 @@ def shutdown_handler():
 
 @app.get("/redirect")
 async def redirect(request):
-    return {"status_code": "307", "body": "", "type": "text", "headers": jsonify({"Location": "redirect_route"})}
+    return {
+        "status_code": "307",
+        "body": "",
+        "type": "text",
+        "headers": jsonify({"Location": "redirect_route"}),
+    }
 
 
 @app.get("/redirect_route")

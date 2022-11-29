@@ -251,3 +251,51 @@ async def h():
     return "Hello, world"
 ```
 
+## Templates
+
+You can render templates in Robyn. We ship `Jinja2` as our out of the box solution. If you would like to add support for other templating engines you can create your own renderer too! Read more at [templating](/templates.md) documentation.
+
+Here is a sample below.
+
+main.py
+```python
+from robyn.templating import JinjaTemplate
+
+current_file_path = pathlib.Path(__file__).parent.resolve()
+JINJA_TEMPLATE = JinjaTemplate(os.path.join(current_file_path, "templates"))
+
+@app.get("/template_render")
+def template_render():
+    context = {
+        "framework": "Robyn",
+        "templating_engine": "Jinja2"
+    }
+
+    template = JINJA_TEMPLATE.render_template(template_name="test.html", **context)
+    return template
+
+```
+
+templates/test.html
+```html
+{# templates/test.html #}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Results</title>
+</head>
+
+<body>
+  <h1>{{framework}} 🤝 {{templating_engine}}</h1>
+</body>
+</html>
+
+```
+
+### Understanding the code
+
+Inside your project, you need to have a directory to store the templates, called `templates` in our case.
+
+You can store and any `Jinja2` templates inside that directory. We are calling it `test.html`.
