@@ -13,6 +13,5 @@
 - [Future Roadmap](roadmap.md)
 - [Plugins](plugins.md)
 - [Hosting](hosting.md)
-- [Templates](templates.md)
 - [Sponsors](sponsors.md)
 
