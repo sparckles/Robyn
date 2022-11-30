@@ -9,7 +9,7 @@ We will be deploying the app on [Railway](https://railway.app/).
 
 A GitHub account is needed as a mandatory pre-requisite.
 
-We will deploy a sample "Hello World," demonstrating a simple GET route and serving an HTML file.
+We will be deploying a sample "Hello World", which will be demonstrating a simple `GET` route and serving an HTML file.
 
 Directory structure:
 
@@ -21,10 +21,12 @@ app folder/
 
 ```
 
-Note - Railway looks for a `main.py` as an entrypoint instead of `app.py`. The build process will fail if there is no `main.py` file.
+This is a template of the Robyn app we will be deploy.
 
+We have to write the code in `main.py` instead `app.py`. If there is no `main.py` file the building process will fail. But that is a thing with Railway, you have to have a main.py to start any app.
 
-*main.py*
+main.py
+
 ```python
 from robyn import Robyn, static_file
 
@@ -41,28 +43,27 @@ async def h(request):
 async def get_page(request):
     return static_file("./index.html")
 
-if __name__=="__main__":
-    app.start(url="0.0.0.0", port=PORT)    
+
+app.start(url="0.0.0.0", port=PORT)    
 
 ```
 
 
-*index.html*
+index.html
 
 ```html
 <h1> Hello World, this is Robyn framework! <h1>
 
 ```
 
-
 ### Exposing Ports
-The Railway documentation says the following about the listening to ports:
+The Railway documentation says the following about exposion an app:
 
 > The easiest way to get up and running is to have your application listen on 0.0.0.0:$PORT, where PORT is a Railway-provided environment variable. 
 
-So, passing the URL as `0.0.0.0` to `app.start()` as an argument is necessary.
+So, is necessary to pass `url` as `0.0.0.0` to `app.start()` as argument. 
 
-We need to create a Railway account to deploy this app on Railway. We can do so by going on the [Railway HomePage](https://railway.app/).
+To deploy this app on Railway, we need to create a Railway account. We can do so by going on the [Railway HomePage](https://railway.app/).
 
 Press the "Login" button and select "login with a GitHub account."
 
@@ -72,7 +73,7 @@ Then, we press the "New Project" button and select "Deploy from GitHub repo".
 
 ![image](https://user-images.githubusercontent.com/70811425/202870632-4d3f46dc-1aa9-4603-9b0f-344ed87ec9d0.png)
 
-Then we select the repo we want to deploy. And click "Deploy Now".
+And we select the repo we want to deploy. And click "Deploy Now".
 ![image](https://user-images.githubusercontent.com/70811425/202870837-16884fef-8900-4ab3-9794-0fb53c3ffd2e.png)
 
 ![image](https://user-images.githubusercontent.com/70811425/202871003-f79a1cef-9a5f-4166-be4f-527c60ec6c79.png)
