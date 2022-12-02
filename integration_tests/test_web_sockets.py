@@ -1,7 +1,7 @@
 from websockets import connect
 import asyncio
 
-BASE_URL = "ws://127.0.0.1:5000"
+BASE_URL = "ws://127.0.0.1:5001"
 
 
 def test_web_socket(session):
