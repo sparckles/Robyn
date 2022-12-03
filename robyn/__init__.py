@@ -2,6 +2,7 @@ import asyncio
 import logging
 import multiprocessing as mp
 import os
+import signal
 import sys
 from typing import Callable, Optional
 
@@ -162,16 +163,19 @@ class Robyn:
 
             process_pool = init_processpool(socket)
 
-            logger.info(f"{Colors.OKGREEN}Press Ctrl + C to stop \n{Colors.ENDC}")
-            try:
-                for process in process_pool:
-                    process.join()
-            except KeyboardInterrupt:
+            def terminating_signal_handler(_sig, _frame):
                 logger.info(
                     f"{Colors.BOLD}{Colors.OKGREEN} Terminating server!! {Colors.ENDC}"
                 )
                 for process in process_pool:
                     process.kill()
+
+            signal.signal(signal.SIGINT, terminating_signal_handler)
+            signal.signal(signal.SIGTERM, terminating_signal_handler)
+
+            logger.info(f"{Colors.OKGREEN}Press Ctrl + C to stop \n{Colors.ENDC}")
+            for process in process_pool:
+                process.join()
         else:
             event_handler = EventHandler(self.file_path)
             event_handler.start_server_first_time()
