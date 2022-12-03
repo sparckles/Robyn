@@ -41,7 +41,7 @@ class Router(BaseRouter):
         return response
 
     def add_route(
-        self, route_type: str, endpoint: str, handler: Callable, const: bool
+        self, route_type: str, endpoint: str, handler: Callable, is_const: bool
     ) -> Union[Callable, CoroutineType]:
         @wraps(handler)
         async def async_inner_handler(*args):
@@ -56,11 +56,11 @@ class Router(BaseRouter):
         number_of_params = len(signature(handler).parameters)
         if iscoroutinefunction(handler):
             function = FunctionInfo(async_inner_handler, True, number_of_params)
-            self.routes.append((route_type, endpoint, function, const))
+            self.routes.append((route_type, endpoint, function, is_const))
             return async_inner_handler
         else:
             function = FunctionInfo(inner_handler, False, number_of_params)
-            self.routes.append((route_type, endpoint, function, const))
+            self.routes.append((route_type, endpoint, function, is_const))
             return inner_handler
 
     def get_routes(self) -> List[Route]:

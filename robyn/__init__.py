@@ -43,7 +43,7 @@ class Robyn:
         load_vars(project_root=directory_path)
         self._config_logger()
 
-    def _add_route(self, route_type, endpoint, handler, const=False):
+    def _add_route(self, route_type, endpoint, handler, is_const=False):
         """
         [This is base handler for all the decorators]
 
@@ -54,7 +54,7 @@ class Robyn:
 
         """ We will add the status code here only
         """
-        return self.router.add_route(route_type, endpoint, handler, const)
+        return self.router.add_route(route_type, endpoint, handler, is_const)
 
     def before_request(self, endpoint: str) -> Callable[..., None]:
         """

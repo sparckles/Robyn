@@ -33,7 +33,7 @@ class Server:
         route_type: str,
         route: str,
         function: FunctionInfo,
-        const: bool,
+        is_const: bool,
     ) -> None:
         pass
     def add_middleware_route(
