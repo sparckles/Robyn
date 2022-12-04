@@ -2,12 +2,12 @@ use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::Arc;
 use std::sync::RwLock;
-// pyo3 modules
-use crate::executors::execute_function;
+
+use crate::executors::execute_http_function;
+use crate::types::{FunctionInfo, Request};
 use anyhow::Context;
 use log::debug;
 use matchit::Router as MatchItRouter;
-use pyo3::prelude::*;
 use pyo3::types::PyAny;
 
 use actix_web::http::Method;
@@ -29,9 +29,7 @@ impl Router<String, Method> for ConstRouter {
         &self,
         route_type: &str, // we can just have route type as WS
         route: &str,
-        function: Py<PyAny>,
-        is_async: bool,
-        number_of_params: u8,
+        function: FunctionInfo,
         event_loop: Option<&PyAny>,
     ) -> Result<(), Error> {
         let table = self
@@ -44,7 +42,7 @@ impl Router<String, Method> for ConstRouter {
             event_loop.context("Event loop must be provided to add a route to the const router")?;
 
         pyo3_asyncio::tokio::run_until_complete(event_loop, async move {
-            let output = execute_function(function, number_of_params, is_async)
+            let output = execute_http_function(&Request::default(), function)
                 .await
                 .unwrap();
             debug!("This is the result of the output {:?}", output);

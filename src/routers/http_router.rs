@@ -1,8 +1,7 @@
 use std::sync::RwLock;
 use std::{collections::HashMap, str::FromStr};
 // pyo3 modules
-use crate::types::PyFunction;
-use pyo3::prelude::*;
+use crate::types::FunctionInfo;
 use pyo3::types::PyAny;
 
 use actix_web::http::Method;
@@ -12,37 +11,27 @@ use anyhow::{Context, Result};
 
 use super::Router;
 
-type RouteMap = RwLock<MatchItRouter<(PyFunction, u8)>>;
+type RouteMap = RwLock<MatchItRouter<FunctionInfo>>;
 
 /// Contains the thread safe hashmaps of different routes
 pub struct HttpRouter {
     routes: HashMap<Method, RouteMap>,
 }
 
-impl Router<((PyFunction, u8), HashMap<String, String>), Method> for HttpRouter {
+impl Router<(FunctionInfo, HashMap<String, String>), Method> for HttpRouter {
     fn add_route(
         &self,
         route_type: &str, // We can just have route type as WS
         route: &str,
-        handler: Py<PyAny>,
-        is_async: bool,
-        number_of_params: u8,
+        function: FunctionInfo,
         _event_loop: Option<&PyAny>,
     ) -> Result<()> {
         let table = self
             .get_relevant_map_str(route_type)
             .context("No relevant map")?;
 
-        let function = match is_async {
-            true => PyFunction::CoRoutine(handler),
-            false => PyFunction::SyncFunction(handler),
-        };
-
         // try removing unwrap here
-        table
-            .write()
-            .unwrap()
-            .insert(route.to_string(), (function, number_of_params))?;
+        table.write().unwrap().insert(route.to_string(), function)?;
 
         Ok(())
     }
@@ -51,7 +40,7 @@ impl Router<((PyFunction, u8), HashMap<String, String>), Method> for HttpRouter 
         &self,
         route_method: &Method,
         route: &str,
-    ) -> Option<((PyFunction, u8), HashMap<String, String>)> {
+    ) -> Option<(FunctionInfo, HashMap<String, String>)> {
         let table = self.routes.get(route_method)?;
 
         let table_lock = table.read().ok()?;
@@ -81,10 +70,7 @@ impl HttpRouter {
     }
 
     #[inline]
-    fn get_relevant_map_str(
-        &self,
-        route: &str,
-    ) -> Option<&RwLock<MatchItRouter<(PyFunction, u8)>>> {
+    fn get_relevant_map_str(&self, route: &str) -> Option<&RouteMap> {
         match route {
             "WS" => None,
             _ => self.routes.get(&Method::from_str(route).ok()?),

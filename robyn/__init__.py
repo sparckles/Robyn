@@ -14,7 +14,7 @@ from robyn.events import Events
 from robyn.log_colors import Colors
 from robyn.processpool import spawn_process
 from robyn.responses import jsonify, static_file
-from robyn.robyn import SocketHeld
+from robyn.robyn import FunctionInfo, SocketHeld
 from robyn.router import MiddlewareRouter, Router, WebSocketRouter
 from robyn.ws import WS
 from robyn.env_populator import load_vars
@@ -43,7 +43,7 @@ class Robyn:
         load_vars(project_root=directory_path)
         self._config_logger()
 
-    def _add_route(self, route_type, endpoint, handler, const=False):
+    def _add_route(self, route_type, endpoint, handler, is_const=False):
         """
         [This is base handler for all the decorators]
 
@@ -54,7 +54,7 @@ class Robyn:
 
         """ We will add the status code here only
         """
-        return self.router.add_route(route_type, endpoint, handler, const)
+        return self.router.add_route(route_type, endpoint, handler, is_const)
 
     def before_request(self, endpoint: str) -> Callable[..., None]:
         """
@@ -89,13 +89,13 @@ class Robyn:
     def add_web_socket(self, endpoint: str, ws: WS) -> None:
         self.web_socket_router.add_route(endpoint, ws)
 
-    def _add_event_handler(self, event_type: Events, handler) -> None:
+    def _add_event_handler(self, event_type: Events, handler: Callable) -> None:
         logger.debug(f"Add event {event_type} handler")
         if event_type not in {Events.STARTUP, Events.SHUTDOWN}:
             return
 
         is_async = asyncio.iscoroutinefunction(handler)
-        self.event_handlers[event_type] = (handler, is_async)
+        self.event_handlers[event_type] = FunctionInfo(handler, is_async, 0)
 
     def startup_handler(self, handler: Callable) -> None:
         self._add_event_handler(Events.STARTUP, handler)

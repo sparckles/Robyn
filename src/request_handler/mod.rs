@@ -1,12 +1,15 @@
-use crate::executors::{execute_http_function, execute_middleware_function};
+use crate::{
+    executors::{execute_http_function, execute_middleware_function},
+    types::Request,
+};
 
 use log::debug;
 use std::collections::HashMap;
 use std::str::FromStr;
 
-use actix_web::{web, HttpRequest, HttpResponse, HttpResponseBuilder};
+use actix_web::{HttpResponse, HttpResponseBuilder};
 // pyO3 module
-use crate::types::PyFunction;
+use crate::types::FunctionInfo;
 
 #[inline]
 pub fn apply_headers(response: &mut HttpResponseBuilder, headers: &HashMap<String, String>) {
@@ -26,31 +29,13 @@ pub fn apply_headers(response: &mut HttpResponseBuilder, headers: &HashMap<Strin
 /// When the route is not found. It should check if the 404 route exist and then serve it back
 /// There can also be PyError due to any mis processing of the files
 ///
-pub async fn handle_http_request(
-    function: PyFunction,
-    number_of_params: u8,
-    headers: &HashMap<String, String>,
-    payload: &mut web::Payload,
-    req: &HttpRequest,
-    route_params: &HashMap<String, String>,
-    queries: &HashMap<String, String>,
-) -> HttpResponse {
-    let contents = match execute_http_function(
-        function,
-        payload,
-        headers,
-        req,
-        route_params,
-        queries,
-        number_of_params,
-    )
-    .await
-    {
+pub async fn handle_http_request(request: &Request, function: FunctionInfo) -> HttpResponse {
+    let contents = match execute_http_function(request, function).await {
         Ok(res) => res,
         Err(err) => {
             debug!("Error: {:?}", err);
             let mut response = HttpResponse::InternalServerError();
-            apply_headers(&mut response, headers);
+            apply_headers(&mut response, &request.headers);
             return response.finish();
         }
     };
@@ -86,25 +71,12 @@ pub async fn handle_http_request(
 }
 
 pub async fn handle_http_middleware_request(
-    function: PyFunction,
-    number_of_params: u8,
-    headers: &HashMap<String, String>,
-    payload: &mut web::Payload,
-    req: &HttpRequest,
-    route_params: &HashMap<String, String>,
-    queries: &HashMap<String, String>,
+    request: &Request,
+    function: FunctionInfo,
 ) -> HashMap<String, HashMap<String, String>> {
-    let contents = execute_middleware_function(
-        function,
-        payload,
-        headers,
-        req,
-        route_params,
-        queries,
-        number_of_params,
-    )
-    .await
-    .unwrap_or_default();
+    let contents = execute_middleware_function(request, function)
+        .await
+        .unwrap_or_default();
 
     debug!("These are the middleware response {:?}", contents);
     contents

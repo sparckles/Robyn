@@ -1,12 +1,19 @@
 from __future__ import annotations
+from dataclasses import dataclass
 
-from typing import Callable, Optional, Tuple
+from typing import Callable, Optional
 
 class SocketHeld:
     def __init__(self, url: str, port: int):
         pass
     def try_clone(self) -> SocketHeld:
         pass
+
+@dataclass
+class FunctionInfo:
+    function: Callable
+    is_async: bool
+    number_of_params: int
 
 class Server:
     def __init__(self) -> None:
@@ -25,31 +32,27 @@ class Server:
         self,
         route_type: str,
         route: str,
-        handler: Callable,
-        is_async: bool,
-        number_of_params: int,
-        const: bool,
+        function: FunctionInfo,
+        is_const: bool,
     ) -> None:
         pass
     def add_middleware_route(
         self,
         route_type: str,
         route: str,
-        handler: Callable,
-        is_async: bool,
-        number_of_params: int,
+        function: FunctionInfo,
     ) -> None:
         pass
-    def add_startup_handler(self, handler: Callable, is_async: bool) -> None:
+    def add_startup_handler(self, function: FunctionInfo) -> None:
         pass
-    def add_shutdown_handler(self, handler: Callable, is_async: bool) -> None:
+    def add_shutdown_handler(self, function: FunctionInfo) -> None:
         pass
     def add_web_socket_route(
         self,
         route: str,
-        connect_route: Tuple[Callable, bool, int],
-        close_route: Tuple[Callable, bool, int],
-        message_route: Tuple[Callable, bool, int],
+        connect_route: FunctionInfo,
+        close_route: FunctionInfo,
+        message_route: FunctionInfo,
     ) -> None:
         pass
     def start(self, socket: SocketHeld, workers: int) -> None:

@@ -4,6 +4,7 @@ from asyncio import iscoroutinefunction
 from inspect import signature
 from typing import Callable, Dict, List, Tuple, Union
 from types import CoroutineType
+from robyn.robyn import FunctionInfo
 
 from robyn.ws import WS
 
@@ -40,7 +41,7 @@ class Router(BaseRouter):
         return response
 
     def add_route(
-        self, route_type: str, endpoint: str, handler: Callable, const: bool
+        self, route_type: str, endpoint: str, handler: Callable, is_const: bool
     ) -> Union[Callable, CoroutineType]:
         @wraps(handler)
         async def async_inner_handler(*args):
@@ -54,22 +55,12 @@ class Router(BaseRouter):
 
         number_of_params = len(signature(handler).parameters)
         if iscoroutinefunction(handler):
-            self.routes.append(
-                (
-                    route_type,
-                    endpoint,
-                    async_inner_handler,
-                    True,
-                    number_of_params,
-                    const,
-                )
-            )
-
+            function = FunctionInfo(async_inner_handler, True, number_of_params)
+            self.routes.append((route_type, endpoint, function, is_const))
             return async_inner_handler
         else:
-            self.routes.append(
-                (route_type, endpoint, inner_handler, False, number_of_params, const)
-            )
+            function = FunctionInfo(inner_handler, False, number_of_params)
+            self.routes.append((route_type, endpoint, function, is_const))
             return inner_handler
 
     def get_routes(self) -> List[Route]:
@@ -83,15 +74,8 @@ class MiddlewareRouter(BaseRouter):
 
     def add_route(self, route_type: str, endpoint: str, handler: Callable) -> Callable:
         number_of_params = len(signature(handler).parameters)
-        self.routes.append(
-            (
-                route_type,
-                endpoint,
-                handler,
-                iscoroutinefunction(handler),
-                number_of_params,
-            )
-        )
+        function = FunctionInfo(handler, iscoroutinefunction(handler), number_of_params)
+        self.routes.append((route_type, endpoint, function))
         return handler
 
     # These inner function is basically a wrapper arround the closure(decorator)
