@@ -10,17 +10,22 @@ use pyo3::prelude::*;
 #[derive(Debug, Clone)]
 pub struct FunctionInfo {
     pub handler: Py<PyAny>,
-    pub is_async: bool,
+    pub function_type: String,
     pub number_of_params: u8,
 }
 
 #[pymethods]
 impl FunctionInfo {
     #[new]
-    pub fn new(handler: Py<PyAny>, is_async: bool, number_of_params: u8) -> Self {
+    pub fn new(handler: Py<PyAny>, function_type: &str, number_of_params: u8) -> Self {
+        match function_type {
+            "sync_function" | "async_function" | "generator_function" => (),
+            _ => panic!("Invalid function type"),
+        }
+
         Self {
             handler,
-            is_async,
+            function_type: function_type.to_string(),
             number_of_params,
         }
     }
