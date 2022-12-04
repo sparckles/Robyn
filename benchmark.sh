@@ -6,17 +6,28 @@
 # several runs on the same machine can give very different results sometimes.
 # Be aware of this when using this script!
 
-# Usage:
-# ./benchmark.sh [-ymn]
-# -y flag skips the prompt
-# -m flag runs maturin develop
-# -n <number> sets the number of requests that oha sends
+Help() {
+    echo "Benchmark script to get info about Robyn's performances."
+    echo
+    echo "USAGE:"
+    echo "    benchmark [-h|m|n|y]"
+    echo
+    echo "OPTIONS:"
+    echo "    -h              Print this help."
+    echo "    -m              Run 'maturin develop' to compile the Rust part of Robyn."
+    echo "    -n <number>     Set the number of requests that oha sends."
+    echo "    -y              Skip prompt"
+    exit 0
+}
 
 yes_flag=false
 run_maturin=false
 number=100000
-while getopts ymn: opt; do
+while getopts hymn: opt; do
     case $opt in
+        h)
+            Help
+            ;;
         y)
             yes_flag=true
             ;;
@@ -28,6 +39,7 @@ while getopts ymn: opt; do
             ;;
         ?)
             echo 'Error in command line parsing' >&2
+            Help
             exit 1
             ;;
     esac
