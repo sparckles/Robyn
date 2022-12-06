@@ -4,6 +4,8 @@ import multiprocessing as mp
 import os
 import sys
 from typing import Callable, Optional
+from asyncio import iscoroutinefunction
+from inspect import isgeneratorfunction
 
 from multiprocess import Process  # type: ignore
 from watchdog.observers import Observer
@@ -94,8 +96,17 @@ class Robyn:
         if event_type not in {Events.STARTUP, Events.SHUTDOWN}:
             return
 
-        is_async = asyncio.iscoroutinefunction(handler)
-        self.event_handlers[event_type] = FunctionInfo(handler, is_async, 0)
+        is_async = iscoroutinefunction(handler)
+        is_generator = isgeneratorfunction(handler)
+
+        if is_async and not is_generator:
+            self.event_handlers[event_type] = FunctionInfo(handler, "async_function", 0)
+        elif not is_async and not is_generator:
+            self.event_handlers[event_type] = FunctionInfo(handler, "sync_function", 0)
+        elif is_generator and not is_async:
+            self.event_handlers[event_type] = FunctionInfo(handler, "sync_generator", 0)
+        else:
+            raise Exception("Async generator not supported")
 
     def startup_handler(self, handler: Callable) -> None:
         self._add_event_handler(Events.STARTUP, handler)

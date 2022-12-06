@@ -19,7 +19,7 @@ impl FunctionInfo {
     #[new]
     pub fn new(handler: Py<PyAny>, function_type: &str, number_of_params: u8) -> Self {
         match function_type {
-            "sync_function" | "async_function" | "generator_function" => (),
+            "sync_function" | "async_function" | "sync_generator" => (),
             _ => panic!("Invalid function type"),
         }
 

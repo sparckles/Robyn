@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from functools import wraps
 from asyncio import iscoroutinefunction
-from inspect import signature
+from inspect import signature, isgeneratorfunction
 from typing import Callable, Dict, List, Tuple, Union
 from types import CoroutineType
 from robyn.robyn import FunctionInfo
@@ -54,14 +54,23 @@ class Router(BaseRouter):
             return response
 
         number_of_params = len(signature(handler).parameters)
-        if iscoroutinefunction(handler):
-            function = FunctionInfo(async_inner_handler, True, number_of_params)
+        is_cortoutine = iscoroutinefunction(handler)
+        is_generator = isgeneratorfunction(handler)
+
+        if is_cortoutine and not is_generator:
+            function = FunctionInfo(async_inner_handler, "async_function", number_of_params)
             self.routes.append((route_type, endpoint, function, is_const))
             return async_inner_handler
-        else:
-            function = FunctionInfo(inner_handler, False, number_of_params)
+        elif not is_cortoutine and not is_generator:
+            function = FunctionInfo(inner_handler, "sync_function", number_of_params)
             self.routes.append((route_type, endpoint, function, is_const))
             return inner_handler
+        elif not is_cortoutine and is_generator:
+            function = FunctionInfo(inner_handler, "sync_generator", number_of_params)
+            self.routes.append((route_type, endpoint, function, is_const))
+            return inner_handler
+        else:
+            raise Exception("Async generator functions are not supported at the moment.")
 
     def get_routes(self) -> List[Route]:
         return self.routes
@@ -70,14 +79,30 @@ class Router(BaseRouter):
 class MiddlewareRouter(BaseRouter):
     def __init__(self) -> None:
         super().__init__()
+        # TODO: Need to add types for this array
         self.routes = []
 
     def add_route(self, route_type: str, endpoint: str, handler: Callable) -> Callable:
         number_of_params = len(signature(handler).parameters)
-        function = FunctionInfo(handler, iscoroutinefunction(handler), number_of_params)
-        self.routes.append((route_type, endpoint, function))
+        is_cortoutine = iscoroutinefunction(handler)
+        is_generator = isgeneratorfunction(handler)
+
+        if is_cortoutine and not is_generator:
+            function = FunctionInfo(handler, "sync_function", number_of_params)
+            self.routes.append((route_type, endpoint, function))
+        elif not is_cortoutine and not is_generator:
+            function = FunctionInfo(handler, "async_function", number_of_params)
+            self.routes.append((route_type, endpoint, function))
+        elif not is_cortoutine and is_generator:
+            function = FunctionInfo(handler, "sync_generator", number_of_params)
+            self.routes.append((route_type, endpoint, function))
+        else:
+            raise Exception("Async generator functions are not supported at the moment.")
+
         return handler
 
+    def get_routes(self) -> List[Route]:
+        return self.routes
     # These inner function is basically a wrapper arround the closure(decorator)
     # being returned.
     # It takes in a handler and converts it in into a closure
