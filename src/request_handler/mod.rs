@@ -3,20 +3,14 @@ use crate::{
     types::Request,
 };
 
+use crate::io_helpers::apply_headers;
 use log::debug;
 use std::collections::HashMap;
 use std::str::FromStr;
 
-use actix_web::{HttpResponse, HttpResponseBuilder};
+use actix_web::HttpResponse;
 // pyO3 module
 use crate::types::FunctionInfo;
-
-#[inline]
-pub fn apply_headers(response: &mut HttpResponseBuilder, headers: &HashMap<String, String>) {
-    for (key, val) in headers.iter() {
-        response.insert_header((key.clone(), val.clone()));
-    }
-}
 
 /// This functions handles the incoming request matches it to the function and serves the response
 ///
@@ -56,6 +50,8 @@ pub async fn handle_http_request(request: &Request, function: FunctionInfo) -> H
 
     let mut response = HttpResponse::build(status_code);
     apply_headers(&mut response, &response_headers);
+    apply_headers(&mut response, &request.headers);
+
     let final_response = if !body.is_empty() {
         response.body(body)
     } else {
