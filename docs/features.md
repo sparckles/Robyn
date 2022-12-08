@@ -105,7 +105,7 @@ async def json(request):
 You can also add global headers for every request.
 
 ```python
-app.add_header("server", "robyn")
+app.add_request_header("server", "robyn")
 
 ```
 

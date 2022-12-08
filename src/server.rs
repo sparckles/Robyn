@@ -48,7 +48,7 @@ pub struct Server {
     const_router: Arc<ConstRouter>,
     websocket_router: Arc<WebSocketRouter>,
     middleware_router: Arc<MiddlewareRouter>,
-    global_headers: Arc<DashMap<String, String>>,
+    global_request_headers: Arc<DashMap<String, String>>,
     directories: Arc<RwLock<Vec<Directory>>>,
     startup_handler: Option<Arc<FunctionInfo>>,
     shutdown_handler: Option<Arc<FunctionInfo>>,
@@ -63,7 +63,7 @@ impl Server {
             const_router: Arc::new(ConstRouter::new()),
             websocket_router: Arc::new(WebSocketRouter::new()),
             middleware_router: Arc::new(MiddlewareRouter::new()),
-            global_headers: Arc::new(DashMap::new()),
+            global_request_headers: Arc::new(DashMap::new()),
             directories: Arc::new(RwLock::new(Vec::new())),
             startup_handler: None,
             shutdown_handler: None,
@@ -92,7 +92,7 @@ impl Server {
         let const_router = self.const_router.clone();
         let middleware_router = self.middleware_router.clone();
         let web_socket_router = self.websocket_router.clone();
-        let global_headers = self.global_headers.clone();
+        let global_request_headers = self.global_request_headers.clone();
         let directories = self.directories.clone();
         let workers = Arc::new(workers);
 
@@ -148,7 +148,7 @@ impl Server {
                         .app_data(web::Data::new(router.clone()))
                         .app_data(web::Data::new(const_router.clone()))
                         .app_data(web::Data::new(middleware_router.clone()))
-                        .app_data(web::Data::new(global_headers.clone()));
+                        .app_data(web::Data::new(global_request_headers.clone()));
 
                     let web_socket_map = web_socket_router.get_web_socket_map();
                     for (elem, value) in (web_socket_map.read().unwrap()).iter() {
@@ -157,19 +157,9 @@ impl Server {
                         let task_locals = task_locals.clone();
                         app = app.route(
                             &route.clone(),
-                            web::get().to(
-                                move |_router: web::Data<Arc<HttpRouter>>,
-                                      _global_headers: web::Data<Arc<Headers>>,
-                                      stream: web::Payload,
-                                      req: HttpRequest| {
-                                    start_web_socket(
-                                        req,
-                                        stream,
-                                        params.clone(),
-                                        task_locals.clone(),
-                                    )
-                                },
-                            ),
+                            web::get().to(move |stream: web::Payload, req: HttpRequest| {
+                                start_web_socket(req, stream, params.clone(), task_locals.clone())
+                            }),
                         );
                     }
 
@@ -177,7 +167,7 @@ impl Server {
                         move |router: web::Data<Arc<HttpRouter>>,
                               const_router: web::Data<Arc<ConstRouter>>,
                               middleware_router: web::Data<Arc<MiddlewareRouter>>,
-                              global_headers,
+                              global_request_headers,
                               body,
                               req| {
                             pyo3_asyncio::tokio::scope_local((*task_locals).clone(), async move {
@@ -185,7 +175,7 @@ impl Server {
                                     router,
                                     const_router,
                                     middleware_router,
-                                    global_headers,
+                                    global_request_headers,
                                     body,
                                     req,
                                 )
@@ -238,15 +228,15 @@ impl Server {
 
     /// Adds a new header to our concurrent hashmap
     /// this can be called after the server has started.
-    pub fn add_header(&self, key: &str, value: &str) {
-        self.global_headers
+    pub fn add_request_header(&self, key: &str, value: &str) {
+        self.global_request_headers
             .insert(key.to_string(), value.to_string());
     }
 
     /// Removes a new header to our concurrent hashmap
     /// this can be called after the server has started.
     pub fn remove_header(&self, key: &str) {
-        self.global_headers.remove(key);
+        self.global_request_headers.remove(key);
     }
 
     /// Add a new route to the routing tables
@@ -341,7 +331,7 @@ async fn index(
     router: web::Data<Arc<HttpRouter>>,
     const_router: web::Data<Arc<ConstRouter>>,
     middleware_router: web::Data<Arc<MiddlewareRouter>>,
-    global_headers: web::Data<Arc<Headers>>,
+    global_request_headers: web::Data<Arc<Headers>>,
     body: Bytes,
     req: HttpRequest,
 ) -> impl Responder {
@@ -355,7 +345,11 @@ async fn index(
         }
     }
 
-    let headers = merge_headers(&global_headers, req.headers()).await;
+    // TODO: we should split two headers
+    // global reponse headers and global request headers
+    // currently, we are merging both in a single one
+
+    let headers = merge_headers(&global_request_headers, req.headers()).await;
 
     let mut request = Request {
         queries,
@@ -392,6 +386,9 @@ async fn index(
     } else if let Some((function, route_params)) = router.get_route(req.method(), req.uri().path())
     {
         request.params = route_params;
+        // apply_headers is called in handle_http_request
+        // the reason is due to the different types being returned in
+        // response.body() and response.headers()
         handle_http_request(&request, function).await
     } else {
         let mut response = HttpResponse::Ok();

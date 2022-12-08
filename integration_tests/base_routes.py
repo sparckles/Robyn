@@ -213,7 +213,7 @@ async def redirect_route(request):
 
 
 if __name__ == "__main__":
-    app.add_header("server", "robyn")
+    app.add_request_header("server", "robyn")
     current_file_path = pathlib.Path(__file__).parent.resolve()
     app.add_directory(
         route="/test_dir",
