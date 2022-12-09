@@ -4,13 +4,27 @@ use std::io::Read;
 
 use actix_web::HttpResponseBuilder;
 use anyhow::Result;
+use dashmap::DashMap;
 
 // this should be something else
 // probably inside the submodule of the http router
 #[inline]
-pub fn apply_headers(response: &mut HttpResponseBuilder, headers: &HashMap<String, String>) {
-    for (key, val) in (headers).iter() {
+pub fn apply_hashmap_headers(
+    response: &mut HttpResponseBuilder,
+    headers: &HashMap<String, String>,
+) {
+    for (key, val) in headers.iter() {
         response.insert_header((key.clone(), val.clone()));
+    }
+}
+
+#[inline]
+pub fn apply_dashmap_headers(
+    response: &mut HttpResponseBuilder,
+    headers: &DashMap<String, String>,
+) {
+    for h in headers.iter() {
+        response.insert_header((h.key().clone(), h.value().clone()));
     }
 }
 

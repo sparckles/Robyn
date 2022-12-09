@@ -1,6 +1,5 @@
 mod executors;
 mod io_helpers;
-mod request_handler;
 mod routers;
 mod server;
 mod shared_socket;
