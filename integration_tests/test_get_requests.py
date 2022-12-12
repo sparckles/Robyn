@@ -43,3 +43,10 @@ def test_const_request_json(session):
     r = requests.get(f"{BASE_URL}/const_request_json")
     assert r.status_code == 200
     assert r.json() == {"hello": "world"}
+
+
+def test_const_request_headers(session):
+    r = requests.get(f"{BASE_URL}/const_request_headers")
+    assert r.status_code == 200
+    assert "Header" in r.headers
+    assert r.headers["Header"] == "header_value"

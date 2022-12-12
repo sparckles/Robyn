@@ -63,7 +63,7 @@ def spawn_process(
         route, directory_path, index_file, show_files_listing = directory
         server.add_directory(route, directory_path, index_file, show_files_listing)
 
-    for key, val in headers:
+    for key, val in request_headers:
         server.add_request_header(key, val)
 
     for route in routes:

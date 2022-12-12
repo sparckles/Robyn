@@ -1,7 +1,7 @@
 /// This is the module that has all the executor functions
 /// i.e. the functions that have the responsibility of parsing and executing functions.
 use crate::io_helpers::read_file;
-use crate::types::Request;
+use crate::types::{FunctionInfo, Request, Response};
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -10,7 +10,6 @@ use anyhow::{Context, Result};
 use log::debug;
 use pyo3_asyncio::TaskLocals;
 // pyO3 module
-use crate::types::FunctionInfo;
 use pyo3::prelude::*;
 
 fn get_function_output<'a>(
@@ -56,14 +55,8 @@ pub async fn execute_middleware_function<'a>(
     }
 }
 
-// Change this!
 #[inline]
-pub async fn execute_http_function(
-    request: &Request,
-    function: FunctionInfo,
-    // need to change this to return a response struct
-    // create a custom struct for this
-) -> Result<HashMap<String, String>> {
+pub async fn execute_http_function(request: &Request, function: FunctionInfo) -> Result<Response> {
     if function.is_async {
         let output = Python::with_gil(|py| {
             let function_output = get_function_output(&function, py, request);
@@ -79,10 +72,11 @@ pub async fn execute_http_function(
             let contents = read_file(file_path).unwrap();
             res.insert("body".to_owned(), contents);
         }
-        Ok(res)
+        Response::from_hashmap(res)
     } else {
-        Python::with_gil(|py| get_function_output(&function, py, request)?.extract())
-            .context("Failed to execute handler function")
+        Response::from_hashmap(Python::with_gil(|py| {
+            get_function_output(&function, py, request)?.extract()
+        })?)
     }
 }
 

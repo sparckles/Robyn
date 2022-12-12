@@ -4,6 +4,7 @@ use std::sync::Arc;
 use std::sync::RwLock;
 
 use crate::executors::execute_http_function;
+use crate::types::Response;
 use crate::types::{FunctionInfo, Request};
 use anyhow::Context;
 use log::debug;
@@ -16,14 +17,14 @@ use anyhow::{Error, Result};
 
 use super::Router;
 
-type RouteMap = RwLock<MatchItRouter<String>>;
+type RouteMap = RwLock<MatchItRouter<Response>>;
 
 /// Contains the thread safe hashmaps of different routes
 pub struct ConstRouter {
     routes: HashMap<Method, Arc<RouteMap>>,
 }
 
-impl Router<String, Method> for ConstRouter {
+impl Router<Response, Method> for ConstRouter {
     /// Doesn't allow query params/body/etc as variables cannot be "memoized"/"const"ified
     fn add_route(
         &self,
@@ -46,18 +47,14 @@ impl Router<String, Method> for ConstRouter {
                 .await
                 .unwrap();
             debug!("This is the result of the output {:?}", output);
-            table
-                .write()
-                .unwrap()
-                .insert(route, output.get("body").unwrap().to_string())
-                .unwrap();
+            table.write().unwrap().insert(route, output).unwrap();
             Ok(())
         })?;
 
         Ok(())
     }
 
-    fn get_route(&self, route_method: &Method, route: &str) -> Option<String> {
+    fn get_route(&self, route_method: &Method, route: &str) -> Option<Response> {
         let table = self.routes.get(route_method)?;
         let route_map = table.read().ok()?;
 
