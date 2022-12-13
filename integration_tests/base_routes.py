@@ -73,6 +73,16 @@ async def const_request_headers():
     }
 
 
+@app.get("/request_headers")
+async def request_headers():
+    return {
+        "status_code": "200",
+        "body": "This is a regular response",
+        "type": "text",
+        "headers": jsonify({"Header": "header_value"}),
+    }
+
+
 @app.get("/404")
 def return_404():
     return {"status_code": "404", "body": "hello", "type": "text"}

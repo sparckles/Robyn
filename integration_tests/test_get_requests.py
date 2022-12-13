@@ -33,6 +33,14 @@ def test_queries(session):
     assert r.json() == {}
 
 
+def test_request_headers(session):
+    r = requests.get(f"{BASE_URL}/request_headers")
+    assert r.status_code == 200
+    assert r.text == "This is a regular response"
+    assert "Header" in r.headers
+    assert r.headers["Header"] == "header_value"
+
+
 def test_const_request(session):
     r = requests.get(f"{BASE_URL}/const_request")
     assert "Hello world" in r.text
