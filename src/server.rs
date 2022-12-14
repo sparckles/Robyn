@@ -1,6 +1,5 @@
-use crate::executors::execute_event_handler;
-use crate::io_helpers::apply_headers;
-use crate::request_handler::{handle_http_middleware_request, handle_http_request};
+use crate::executors::{execute_event_handler, execute_http_function, execute_middleware_function};
+use crate::io_helpers::{apply_dashmap_headers, apply_hashmap_headers};
 use crate::types::Request;
 
 use crate::routers::const_router::ConstRouter;
@@ -22,8 +21,7 @@ use std::sync::{Arc, RwLock};
 use std::thread;
 
 use actix_files::Files;
-use actix_http::header::HeaderMap;
-use actix_http::KeepAlive;
+use actix_http::{KeepAlive, StatusCode};
 use actix_web::web::Bytes;
 use actix_web::*;
 use dashmap::DashMap;
@@ -48,7 +46,7 @@ pub struct Server {
     const_router: Arc<ConstRouter>,
     websocket_router: Arc<WebSocketRouter>,
     middleware_router: Arc<MiddlewareRouter>,
-    global_headers: Arc<DashMap<String, String>>,
+    global_request_headers: Arc<DashMap<String, String>>,
     directories: Arc<RwLock<Vec<Directory>>>,
     startup_handler: Option<Arc<FunctionInfo>>,
     shutdown_handler: Option<Arc<FunctionInfo>>,
@@ -63,7 +61,7 @@ impl Server {
             const_router: Arc::new(ConstRouter::new()),
             websocket_router: Arc::new(WebSocketRouter::new()),
             middleware_router: Arc::new(MiddlewareRouter::new()),
-            global_headers: Arc::new(DashMap::new()),
+            global_request_headers: Arc::new(DashMap::new()),
             directories: Arc::new(RwLock::new(Vec::new())),
             startup_handler: None,
             shutdown_handler: None,
@@ -92,7 +90,7 @@ impl Server {
         let const_router = self.const_router.clone();
         let middleware_router = self.middleware_router.clone();
         let web_socket_router = self.websocket_router.clone();
-        let global_headers = self.global_headers.clone();
+        let global_request_headers = self.global_request_headers.clone();
         let directories = self.directories.clone();
         let workers = Arc::new(workers);
 
@@ -148,7 +146,7 @@ impl Server {
                         .app_data(web::Data::new(router.clone()))
                         .app_data(web::Data::new(const_router.clone()))
                         .app_data(web::Data::new(middleware_router.clone()))
-                        .app_data(web::Data::new(global_headers.clone()));
+                        .app_data(web::Data::new(global_request_headers.clone()));
 
                     let web_socket_map = web_socket_router.get_web_socket_map();
                     for (elem, value) in (web_socket_map.read().unwrap()).iter() {
@@ -157,19 +155,9 @@ impl Server {
                         let task_locals = task_locals.clone();
                         app = app.route(
                             &route.clone(),
-                            web::get().to(
-                                move |_router: web::Data<Arc<HttpRouter>>,
-                                      _global_headers: web::Data<Arc<Headers>>,
-                                      stream: web::Payload,
-                                      req: HttpRequest| {
-                                    start_web_socket(
-                                        req,
-                                        stream,
-                                        params.clone(),
-                                        task_locals.clone(),
-                                    )
-                                },
-                            ),
+                            web::get().to(move |stream: web::Payload, req: HttpRequest| {
+                                start_web_socket(req, stream, params.clone(), task_locals.clone())
+                            }),
                         );
                     }
 
@@ -177,7 +165,7 @@ impl Server {
                         move |router: web::Data<Arc<HttpRouter>>,
                               const_router: web::Data<Arc<ConstRouter>>,
                               middleware_router: web::Data<Arc<MiddlewareRouter>>,
-                              global_headers,
+                              global_request_headers,
                               body,
                               req| {
                             pyo3_asyncio::tokio::scope_local((*task_locals).clone(), async move {
@@ -185,7 +173,7 @@ impl Server {
                                     router,
                                     const_router,
                                     middleware_router,
-                                    global_headers,
+                                    global_request_headers,
                                     body,
                                     req,
                                 )
@@ -238,15 +226,15 @@ impl Server {
 
     /// Adds a new header to our concurrent hashmap
     /// this can be called after the server has started.
-    pub fn add_header(&self, key: &str, value: &str) {
-        self.global_headers
+    pub fn add_request_header(&self, key: &str, value: &str) {
+        self.global_request_headers
             .insert(key.to_string(), value.to_string());
     }
 
     /// Removes a new header to our concurrent hashmap
     /// this can be called after the server has started.
     pub fn remove_header(&self, key: &str) {
-        self.global_headers.remove(key);
+        self.global_request_headers.remove(key);
     }
 
     /// Add a new route to the routing tables
@@ -318,21 +306,29 @@ impl Default for Server {
     }
 }
 
-async fn merge_headers(
-    global_headers: &Arc<Headers>,
-    request_headers: &HeaderMap,
-) -> HashMap<String, String> {
-    let mut headers = HashMap::new();
+async fn apply_middleware(
+    request: &mut Request,
+    middleware_type: MiddlewareRoute,
+    middleware_router: &MiddlewareRouter,
+    route_uri: &str,
+) {
+    let mut modified_request = match middleware_router.get_route(&middleware_type, route_uri) {
+        Some((function, route_params)) => {
+            request.params = route_params;
+            execute_middleware_function(request, function)
+                .await
+                .unwrap_or_default()
+        }
+        None => HashMap::new(),
+    };
 
-    for elem in (global_headers).iter() {
-        headers.insert(elem.key().clone(), elem.value().clone());
+    debug!("This is the modified request {:?}", modified_request);
+
+    if modified_request.contains_key("headers") {
+        request.headers = modified_request.remove("headers").unwrap();
     }
 
-    for (key, value) in (request_headers).iter() {
-        headers.insert(key.to_string(), value.to_str().unwrap().to_string());
-    }
-
-    headers
+    debug!("These are the request headers {:?}", &request.headers);
 }
 
 /// This is our service handler. It receives a Request, routes on it
@@ -341,71 +337,59 @@ async fn index(
     router: web::Data<Arc<HttpRouter>>,
     const_router: web::Data<Arc<ConstRouter>>,
     middleware_router: web::Data<Arc<MiddlewareRouter>>,
-    global_headers: web::Data<Arc<Headers>>,
+    global_request_headers: web::Data<Arc<Headers>>,
     body: Bytes,
     req: HttpRequest,
 ) -> impl Responder {
-    let mut queries = HashMap::new();
+    let mut request = Request::from_actix_request(&req, body);
 
-    if !req.query_string().is_empty() {
-        let split = req.query_string().split('&');
-        for s in split {
-            let params = s.split_once('=').unwrap_or((s, ""));
-            queries.insert(params.0.to_string(), params.1.to_string());
-        }
-    }
+    apply_middleware(
+        &mut request,
+        MiddlewareRoute::BeforeRequest,
+        &middleware_router,
+        req.uri().path(),
+    )
+    .await;
 
-    let headers = merge_headers(&global_headers, req.headers()).await;
-
-    let mut request = Request {
-        queries,
-        headers,
-        method: req.method().clone(),
-        params: HashMap::new(),
-        body,
-    };
-
-    let modified_request =
-        match middleware_router.get_route(&MiddlewareRoute::BeforeRequest, req.uri().path()) {
-            Some((function, route_params)) => {
-                request.params = route_params;
-                let x = handle_http_middleware_request(&request, function).await;
-                debug!("Middleware contents {:?}", x);
-                x
-            }
-            None => HashMap::new(),
-        };
-
-    debug!("These are the tuple params {:?}", modified_request);
-
-    request.headers = modified_request
-        .get("headers")
-        .unwrap_or(&request.headers)
-        .clone();
-
-    debug!("These are the request headers {:?}", &request.headers);
+    let mut response_builder = HttpResponse::Ok();
+    apply_dashmap_headers(&mut response_builder, &global_request_headers);
+    apply_hashmap_headers(&mut response_builder, &request.headers);
 
     let response = if let Some(r) = const_router.get_route(req.method(), req.uri().path()) {
-        let mut response_builder = HttpResponse::Ok();
-        apply_headers(&mut response_builder, &request.headers);
-        response_builder.body(r)
+        apply_hashmap_headers(&mut response_builder, &r.headers);
+        response_builder.status(r.status_code).body(r.body)
     } else if let Some((function, route_params)) = router.get_route(req.method(), req.uri().path())
     {
         request.params = route_params;
-        handle_http_request(&request, function).await
+        match execute_http_function(&request, function).await {
+            Ok(r) => {
+                response_builder.status(r.status_code);
+                apply_hashmap_headers(&mut response_builder, &r.headers);
+                if !r.body.is_empty() {
+                    response_builder.body(r.body)
+                } else {
+                    response_builder.finish()
+                }
+            }
+            Err(e) => {
+                debug!("Error: {:?}", e);
+                response_builder.status(StatusCode::INTERNAL_SERVER_ERROR);
+                response_builder.finish()
+            }
+        }
     } else {
-        let mut response = HttpResponse::Ok();
-        apply_headers(&mut response, &request.headers);
-        response.finish()
+        response_builder.finish()
     };
 
-    if let Some((function, route_params)) =
-        middleware_router.get_route(&MiddlewareRoute::AfterRequest, req.uri().path())
-    {
-        request.params = route_params;
-        let x = handle_http_middleware_request(&request, function).await;
-        debug!("{:?}", x);
-    };
+    apply_middleware(
+        &mut request,
+        MiddlewareRoute::AfterRequest,
+        &middleware_router,
+        req.uri().path(),
+    )
+    .await;
+
+    debug!("Response: {:?}", response);
 
     response
 }

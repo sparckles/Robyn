@@ -63,6 +63,26 @@ async def const_request_json():
     return jsonify({"hello": "world"})
 
 
+@app.get("/const_request_headers", const=True)
+async def const_request_headers():
+    return {
+        "status_code": "200",
+        "body": "",
+        "type": "text",
+        "headers": jsonify({"Header": "header_value"}),
+    }
+
+
+@app.get("/request_headers")
+async def request_headers():
+    return {
+        "status_code": "200",
+        "body": "This is a regular response",
+        "type": "text",
+        "headers": jsonify({"Header": "header_value"}),
+    }
+
+
 @app.get("/404")
 def return_404():
     return {"status_code": "404", "body": "hello", "type": "text"}
@@ -213,7 +233,7 @@ async def redirect_route(request):
 
 
 if __name__ == "__main__":
-    app.add_header("server", "robyn")
+    app.add_request_header("server", "robyn")
     current_file_path = pathlib.Path(__file__).parent.resolve()
     app.add_directory(
         route="/test_dir",

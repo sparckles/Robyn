@@ -37,7 +37,7 @@ class Robyn:
         self.router = Router()
         self.middleware_router = MiddlewareRouter()
         self.web_socket_router = WebSocketRouter()
-        self.headers = []
+        self.request_headers = []  # This needs a better type
         self.directories = []
         self.event_handlers = {}
         load_vars(project_root=directory_path)
@@ -83,8 +83,8 @@ class Robyn:
     ):
         self.directories.append((route, directory_path, index_file, show_files_listing))
 
-    def add_header(self, key: str, value: str) -> None:
-        self.headers.append((key, value))
+    def add_request_header(self, key: str, value: str) -> None:
+        self.request_headers.append((key, value))
 
     def add_web_socket(self, endpoint: str, ws: WS) -> None:
         self.web_socket_router.add_route(endpoint, ws)
@@ -140,7 +140,7 @@ class Robyn:
                     target=spawn_process,
                     args=(
                         self.directories,
-                        self.headers,
+                        self.request_headers,
                         self.router.get_routes(),
                         self.middleware_router.get_routes(),
                         self.web_socket_router.get_routes(),

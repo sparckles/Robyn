@@ -105,7 +105,22 @@ async def json(request):
 You can also add global headers for every request.
 
 ```python
-app.add_header("server", "robyn")
+app.add_request_header("server", "robyn")
+
+```
+
+## Per route headers
+You can also add headers for every route.
+
+```python
+@app.get("/request_headers")
+async def request_headers():
+    return {
+        "status_code": "200",
+        "body": "",
+        "type": "text",
+        "headers": jsonify({"Header": "header_value"}),
+    }
 
 ```
 

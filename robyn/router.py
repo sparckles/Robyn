@@ -5,6 +5,7 @@ from inspect import signature
 from typing import Callable, Dict, List, Tuple, Union
 from types import CoroutineType
 from robyn.robyn import FunctionInfo
+from robyn.responses import jsonify
 
 from robyn.ws import WS
 
@@ -36,7 +37,7 @@ class Router(BaseRouter):
 
                 response = {"status_code": "200", "body": res["body"], **res}
         else:
-            response = {"status_code": "200", "body": res, "type": "text"}
+            response = {"status_code": "200", "body": res, "type": "text", "headers": jsonify({"Content-Type": "text/plain"})}
 
         return response
 

@@ -26,7 +26,7 @@ class Server:
         show_files_listing: bool,
     ) -> None:
         pass
-    def add_header(self, key: str, value: str) -> None:
+    def add_request_header(self, key: str, value: str) -> None:
         pass
     def add_route(
         self,
