@@ -248,18 +248,26 @@ impl Server {
         is_const: bool,
     ) {
         debug!("Route added for {} {} ", route_type, route);
-        // let event_loop = pyo3_asyncio::tokio::get_current_loop(py).unwrap();
         let asyncio = py.import("asyncio").unwrap();
         let event_loop = asyncio.call_method0("get_event_loop").unwrap();
 
         if is_const {
-            self.const_router
+            match self
+                .const_router
                 .add_route(route_type, route, function, Some(event_loop))
-                .unwrap();
+            {
+                Ok(_) => (),
+                Err(e) => {
+                    debug!("Error adding const route {}", e);
+                }
+            }
         } else {
-            self.router
-                .add_route(route_type, route, function, None)
-                .unwrap();
+            match self.router.add_route(route_type, route, function, None) {
+                Ok(_) => (),
+                Err(e) => {
+                    debug!("Error adding route {}", e);
+                }
+            }
         }
     }
 

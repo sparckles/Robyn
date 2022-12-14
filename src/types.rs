@@ -79,6 +79,14 @@ pub struct Response {
 }
 
 impl Response {
+    pub fn new(status_code: String, headers: HashMap<String, String>, body: String) -> Self {
+        Self {
+            status_code: StatusCode::from_str(&status_code).unwrap(),
+            headers,
+            body,
+        }
+    }
+
     pub fn from_hashmap(input: HashMap<String, String>) -> Result<Self> {
         let status_code = actix_http::StatusCode::from_str(
             input
