@@ -14,7 +14,7 @@
 
 [![view - Documentation](https://img.shields.io/badge/view-Documentation-blue?style=for-the-badge)](https://sansyrox.github.io/robyn/#/)
 
-Robyn is an async Python backend server with a runtime written in Rust, btw.
+Robyn is a fast async Python web server with a runtime written in Rust.
 
 
 Check out the talk at **PyCon Sweden 2021** about [Robyn: An async python web framework with a Rust runtime](https://www.youtube.com/watch?v=DK9teAs72Do)
