@@ -14,7 +14,7 @@ def static_file(file_path: str) -> Dict[str, Any]:
         "file_path": file_path,
         # this is a hack for now
         "body": "",
-        "status_code": "200",
+        "status_code": 200,
     }
 
 

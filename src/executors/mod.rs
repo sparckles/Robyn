@@ -71,42 +71,48 @@ pub async fn execute_http_function(request: &Request, function: FunctionInfo) ->
 
             let output_type = output.as_ref(py).get_item("type");
 
-            match output_type {
-                Some(output_type) => {
-                    let output_type: String = output_type.extract()?;
+            if let Some(output_type) = output_type {
+                let output_type: String = output_type.extract()?;
 
-                    if output_type == "static_file" {
-                        let file_path: String =
-                            output.as_ref(py).get_item("file_path").unwrap().extract()?;
-                        let contents = read_file(&file_path).unwrap();
-                        output.as_ref(py).set_item("body", contents);
-                    }
+                if output_type == "static_file" {
+                    let file_path: String =
+                        output.as_ref(py).get_item("file_path").unwrap().extract()?;
+                    let contents = read_file(&file_path).unwrap();
+                    output.as_ref(py).set_item("body", contents)?;
                 }
-                None => {}
             };
 
             let status_code = output.as_ref(py).get_item("status_code").unwrap();
-            let status_code: String = status_code.extract().unwrap();
+            let status_code: u16 = status_code.extract().unwrap();
 
             let body = output.as_ref(py).get_item("body").unwrap();
             let body: String = body.extract().unwrap();
 
-            let headers = output
-                .as_ref(py)
-                .get_item("headers")
-                .unwrap()
-                .extract::<HashMap<String, String>>()
-                .unwrap();
+            let headers = output.as_ref(py).get_item("headers");
 
-            Ok(Response::new(status_code, headers, body))
+            let not_none_headers = if headers.is_some() {
+                let some_headers: HashMap<String, String> = headers
+                    .unwrap()
+                    .extract::<HashMap<String, String>>()
+                    .unwrap();
+                some_headers
+            } else {
+                HashMap::new()
+            };
+
+            Ok(Response::new(status_code, not_none_headers, body))
         })?;
 
         debug!("This is the result of the code {:?}", output);
         Ok(res)
     } else {
-        Response::from_hashmap(Python::with_gil(|py| {
-            get_function_output(&function, py, request)?.extract()
-        })?)
+        let res = Python::with_gil(|py| {
+            let py_obj = get_function_output(&function, py, request).unwrap();
+            Response::from_obj(py, py_obj)
+        })
+        .unwrap();
+
+        Ok(res)
     }
 }
 

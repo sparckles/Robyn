@@ -1,11 +1,12 @@
-use std::{collections::HashMap, str::FromStr};
+use std::collections::HashMap;
 
 use actix_http::StatusCode;
 use actix_web::web::Bytes;
 use actix_web::{http::Method, HttpRequest};
-use anyhow::{Context, Result};
+use anyhow::Result;
 use dashmap::DashMap;
 use pyo3::prelude::*;
+use pyo3::types::PyDict;
 
 #[pyclass]
 #[derive(Debug, Clone)]
@@ -72,6 +73,7 @@ impl Request {
 }
 
 #[derive(Debug, Clone)]
+#[pyclass]
 pub struct Response {
     pub status_code: StatusCode,
     pub headers: HashMap<String, String>,
@@ -79,30 +81,37 @@ pub struct Response {
 }
 
 impl Response {
-    pub fn new(status_code: String, headers: HashMap<String, String>, body: String) -> Self {
+    pub fn new(status_code: u16, headers: HashMap<String, String>, body: String) -> Self {
         Self {
-            status_code: StatusCode::from_str(&status_code).unwrap(),
+            status_code: StatusCode::from_u16(status_code).unwrap(),
             headers,
             body,
         }
     }
+}
 
-    pub fn from_hashmap(input: HashMap<String, String>) -> Result<Self> {
-        let status_code = actix_http::StatusCode::from_str(
-            input
-                .get("status_code")
-                .context("No status code in content")?,
-        )?;
-        let headers = match input.get("headers") {
-            Some(h) => serde_json::from_str(h)?,
-            None => HashMap::new(),
-        };
-        let body = input.get("body").context("No body in content")?.to_owned();
-        Ok(Self {
-            status_code,
-            headers,
-            body,
-        })
+#[pymethods]
+impl Response {
+    #[new]
+    pub fn from_obj(py: Python<'_>, input: &PyAny) -> PyResult<Self> {
+        let input: Py<PyDict> = input.extract().unwrap();
+        let input = input.as_ref(py);
+
+        let status_code = input
+            .get_item("status_code")
+            .unwrap()
+            .extract::<u16>()
+            .unwrap();
+
+        let headers = input
+            .get_item("headers")
+            .unwrap()
+            .extract::<HashMap<String, String>>()
+            .unwrap();
+
+        let body = input.get_item("body").unwrap().to_owned();
+
+        Ok(Self::new(status_code, headers, body.to_string()))
     }
 }
 

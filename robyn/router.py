@@ -29,18 +29,17 @@ class Router(BaseRouter):
         response = {}
         if type(res) == dict:
             if "status_code" not in res:
-                res["status_code"] = "200"
+                res["status_code"] = 200
                 response = res
             else:
-                if type(res["status_code"]) == int:
-                    res["status_code"] = str(res["status_code"])
+                if type(res["status_code"]) == str:
+                    res["status_code"] = int(res["status_code"])
 
-                response = {"status_code": "200", "body": res["body"], **res}
+                response = {"status_code": 200, "body": res["body"], **res}
         else:
-            response = {"status_code": "200", "body": res, "type": "text", "headers": jsonify({"Content-Type": "text/plain"})}
+            response = {"status_code": 200, "body": res, "type": "text", "headers": {"Content-Type": "text/plain"}}
 
         return response
-
     def add_route(
         self, route_type: str, endpoint: str, handler: Callable, is_const: bool
     ) -> Union[Callable, CoroutineType]:
