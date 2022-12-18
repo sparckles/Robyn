@@ -70,37 +70,35 @@ pub async fn execute_http_function(request: &Request, function: FunctionInfo) ->
             let output: Py<PyDict> = output.extract(py)?;
 
             let output_type = output.as_ref(py).get_item("type");
+            let output = output.as_ref(py);
 
             if let Some(output_type) = output_type {
                 let output_type: String = output_type.extract()?;
 
                 if output_type == "static_file" {
-                    let file_path: String =
-                        output.as_ref(py).get_item("file_path").unwrap().extract()?;
+                    let file_path: String = output.get_item("file_path").unwrap().extract()?;
                     let contents = read_file(&file_path).unwrap();
-                    output.as_ref(py).set_item("body", contents)?;
+                    output.set_item("body", contents)?;
                 }
             };
 
-            let status_code = output.as_ref(py).get_item("status_code").unwrap();
+            let status_code = output.get_item("status_code").unwrap();
             let status_code: u16 = status_code.extract().unwrap();
 
-            let body = output.as_ref(py).get_item("body").unwrap();
+            let body = output.get_item("body").unwrap();
             let body: String = body.extract().unwrap();
 
-            let headers = output.as_ref(py).get_item("headers");
+            let headers = output.get_item("headers");
 
-            let not_none_headers = if headers.is_some() {
-                let some_headers: HashMap<String, String> = headers
-                    .unwrap()
-                    .extract::<HashMap<String, String>>()
-                    .unwrap();
+            let headers = if let Some(headers) = headers {
+                let some_headers: HashMap<String, String> =
+                    headers.extract::<HashMap<String, String>>().unwrap();
                 some_headers
             } else {
                 HashMap::new()
             };
 
-            Ok(Response::new(status_code, not_none_headers, body))
+            Ok(Response::new(status_code, headers, body))
         })?;
 
         debug!("This is the result of the code {:?}", output);
