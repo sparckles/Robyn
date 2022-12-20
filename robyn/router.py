@@ -28,16 +28,26 @@ class Router(BaseRouter):
         # handle file handlers
         response = {}
         if type(res) == dict:
-            if "status_code" not in res:
-                res["status_code"] = "200"
-                response = res
-            else:
-                if type(res["status_code"]) == int:
-                    res["status_code"] = str(res["status_code"])
+            status_code = res.get("status_code", 200)
+            headers = res.get("headers", {})
+            body = res.get("body", "")
 
-                response = {"status_code": "200", "body": res["body"], **res}
+            if type(status_code) != int:
+                status_code = int(status_code)  # status_code can potentially be string
+
+            response = {
+                "status_code": status_code,
+                "body": body,
+                "headers": headers,
+                **res,
+            }
         else:
-            response = {"status_code": "200", "body": res, "type": "text", "headers": jsonify({"Content-Type": "text/plain"})}
+            response = {
+                "status_code": 200,
+                "body": res,
+                "type": "text",
+                "headers": {"Content-Type": "text/plain"},
+            }
 
         return response
 

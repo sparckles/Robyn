@@ -116,7 +116,7 @@ You can also add headers for every route.
 @app.get("/request_headers")
 async def request_headers():
     return {
-        "status_code": "200",
+        "status_code": 200,
         "body": "",
         "type": "text",
         "headers": jsonify({"Header": "header_value"}),

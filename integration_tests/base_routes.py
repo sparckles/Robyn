@@ -50,7 +50,7 @@ async def hello(request):
     callCount += 1
     message = "Called " + str(callCount) + " times"
     print(message, request)
-    return {"status_code": "200", "body": "hello", "type": "text"}
+    return {"status_code": 200, "body": "hello", "type": "text"}
 
 
 @app.get("/const_request", const=True)
@@ -66,31 +66,31 @@ async def const_request_json():
 @app.get("/const_request_headers", const=True)
 async def const_request_headers():
     return {
-        "status_code": "200",
+        "status_code": 200,
         "body": "",
         "type": "text",
-        "headers": jsonify({"Header": "header_value"}),
+        "headers": {"Header": "header_value"},
     }
 
 
 @app.get("/request_headers")
 async def request_headers():
     return {
-        "status_code": "200",
+        "status_code": 200,
         "body": "This is a regular response",
         "type": "text",
-        "headers": jsonify({"Header": "header_value"}),
+        "headers": {"Header": "header_value"},
     }
 
 
 @app.get("/404")
 def return_404():
-    return {"status_code": "404", "body": "hello", "type": "text"}
+    return {"status_code": 404, "body": "hello", "type": "text"}
 
 
 @app.post("/404")
 def return_404_post():
-    return {"status_code": "404", "body": "hello", "type": "text"}
+    return {"status_code": 404, "body": "hello", "type": "text"}
 
 
 @app.get("/int_status_code")
@@ -220,10 +220,10 @@ def shutdown_handler():
 @app.get("/redirect")
 async def redirect(request):
     return {
-        "status_code": "307",
+        "status_code": 307,
         "body": "",
         "type": "text",
-        "headers": jsonify({"Location": "redirect_route"}),
+        "headers": {"Location": "redirect_route"},
     }
 
 
