@@ -119,7 +119,7 @@ async def request_headers():
         "status_code": 200,
         "body": "",
         "type": "text",
-        "headers": jsonify({"Header": "header_value"}),
+        "headers": {"Header": "header_value"},
     }
 
 ```
