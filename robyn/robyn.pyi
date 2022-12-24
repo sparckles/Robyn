@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 class SocketHeld:
     def __init__(self, url: str, port: int):
@@ -9,11 +9,13 @@ class SocketHeld:
     def try_clone(self) -> SocketHeld:
         pass
 
+
 @dataclass
 class FunctionInfo:
     function: Callable
-    is_async: bool
+    function_type: str  # sync_function | async_function | sync_generator
     number_of_params: int
+
 
 class Server:
     def __init__(self) -> None:
