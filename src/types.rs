@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 
-use actix_http::StatusCode;
 use actix_web::web::Bytes;
 use actix_web::{http::Method, HttpRequest};
 use anyhow::Result;
 use dashmap::DashMap;
-use pyo3::prelude::*;
-use pyo3::types::PyDict;
+use pyo3::{exceptions, prelude::*};
+
+use crate::io_helpers::read_file;
 
 #[pyclass]
 #[derive(Debug, Clone)]
@@ -75,43 +75,34 @@ impl Request {
 #[derive(Debug, Clone)]
 #[pyclass]
 pub struct Response {
-    pub status_code: StatusCode,
+    pub status_code: u16,
+    pub response_type: String,
     pub headers: HashMap<String, String>,
     pub body: String,
-}
-
-impl Response {
-    pub fn new(status_code: u16, headers: HashMap<String, String>, body: String) -> Self {
-        Self {
-            status_code: StatusCode::from_u16(status_code).unwrap(),
-            headers,
-            body,
-        }
-    }
+    pub file_path: Option<String>,
 }
 
 #[pymethods]
 impl Response {
     #[new]
-    pub fn from_obj(py: Python<'_>, input: &PyAny) -> PyResult<Self> {
-        let input: Py<PyDict> = input.extract().unwrap();
-        let input = input.as_ref(py);
+    pub fn new(status_code: u16, headers: HashMap<String, String>, body: String) -> Self {
+        Self {
+            status_code,
+            response_type: "text".to_string(),
+            headers,
+            body,
+            file_path: None,
+        }
+    }
 
-        let status_code = input
-            .get_item("status_code")
-            .unwrap()
-            .extract::<u16>()
-            .unwrap();
-
-        let headers = input
-            .get_item("headers")
-            .unwrap()
-            .extract::<HashMap<String, String>>()
-            .unwrap();
-
-        let body = input.get_item("body").unwrap().to_owned();
-
-        Ok(Self::new(status_code, headers, body.to_string()))
+    pub fn set_file_path(&mut self, file_path: &str) -> PyResult<()> {
+        self.response_type = "static_file".to_string();
+        self.file_path = Some(file_path.to_string());
+        self.body = match read_file(file_path) {
+            Ok(b) => b,
+            Err(e) => return Err(exceptions::PyIOError::new_err::<String>(e.to_string())),
+        };
+        Ok(())
     }
 }
 

@@ -11,7 +11,7 @@ use shared_socket::SocketHeld;
 
 // pyO3 module
 use pyo3::prelude::*;
-use types::FunctionInfo;
+use types::{FunctionInfo, Response};
 
 #[pymodule]
 pub fn robyn(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
@@ -19,6 +19,7 @@ pub fn robyn(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<Server>()?;
     m.add_class::<SocketHeld>()?;
     m.add_class::<FunctionInfo>()?;
+    m.add_class::<Response>()?;
     pyo3::prepare_freethreaded_python();
     Ok(())
 }

@@ -1,6 +1,5 @@
 /// This is the module that has all the executor functions
 /// i.e. the functions that have the responsibility of parsing and executing functions.
-use crate::io_helpers::read_file;
 use crate::types::{FunctionInfo, Request, Response};
 
 use std::collections::HashMap;
@@ -8,7 +7,6 @@ use std::sync::Arc;
 
 use anyhow::{Context, Result};
 use log::debug;
-use pyo3::types::PyDict;
 use pyo3_asyncio::TaskLocals;
 // pyO3 module
 use pyo3::prelude::*;
@@ -65,52 +63,14 @@ pub async fn execute_http_function(request: &Request, function: FunctionInfo) ->
         })?
         .await?;
 
-        // convert the output to a PyDict
-        let res = Python::with_gil(|py| -> Result<Response> {
-            let output: Py<PyDict> = output.extract(py)?;
-
-            let output_type = output.as_ref(py).get_item("type");
-            let output = output.as_ref(py);
-
-            if let Some(output_type) = output_type {
-                let output_type: String = output_type.extract()?;
-
-                if output_type == "static_file" {
-                    let file_path: String = output.get_item("file_path").unwrap().extract()?;
-                    let contents = read_file(&file_path).unwrap();
-                    output.set_item("body", contents)?;
-                }
-            };
-
-            let status_code = output.get_item("status_code").unwrap();
-            let status_code: u16 = status_code.extract().unwrap();
-
-            let body = output.get_item("body").unwrap();
-            let body: String = body.extract().unwrap();
-
-            let headers = output.get_item("headers");
-
-            let headers = if let Some(headers) = headers {
-                let some_headers: HashMap<String, String> =
-                    headers.extract::<HashMap<String, String>>().unwrap();
-                some_headers
-            } else {
-                HashMap::new()
-            };
-
-            Ok(Response::new(status_code, headers, body))
-        })?;
-
-        debug!("This is the result of the code {:?}", output);
-        Ok(res)
-    } else {
-        let res = Python::with_gil(|py| {
-            let py_obj = get_function_output(&function, py, request).unwrap();
-            Response::from_obj(py, py_obj)
+        Python::with_gil(|py| -> Result<Response> {
+            output.extract(py).context("Failed to get route response")
         })
-        .unwrap();
-
-        Ok(res)
+    } else {
+        Python::with_gil(|py| -> Result<Response> {
+            let output = get_function_output(&function, py, request).unwrap();
+            output.extract().context("Failed to get route response")
+        })
     }
 }
 

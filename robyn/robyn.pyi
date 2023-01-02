@@ -15,6 +15,12 @@ class FunctionInfo:
     is_async: bool
     number_of_params: int
 
+@dataclass
+class Response:
+    status_code: int
+    headers: dict[str, str]
+    body: str
+
 class Server:
     def __init__(self) -> None:
         pass

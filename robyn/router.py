@@ -4,7 +4,7 @@ from asyncio import iscoroutinefunction
 from inspect import signature
 from typing import Callable, Dict, List, Tuple, Union
 from types import CoroutineType
-from robyn.robyn import FunctionInfo
+from robyn.robyn import FunctionInfo, Response
 from robyn.responses import jsonify
 
 from robyn.ws import WS
@@ -29,25 +29,20 @@ class Router(BaseRouter):
         response = {}
         if type(res) == dict:
             status_code = res.get("status_code", 200)
-            headers = res.get("headers", {})
+            headers = res.get("headers", {"Content-Type": "text/plain"})
             body = res.get("body", "")
 
             if type(status_code) != int:
                 status_code = int(status_code)  # status_code can potentially be string
 
-            response = {
-                "status_code": status_code,
-                "body": body,
-                "headers": headers,
-                **res,
-            }
+            response = Response(status_code=status_code, headers=headers, body=body)
+            file_path = res.get("file_path")
+            if file_path is not None:
+                response.set_file_path(file_path)
         else:
-            response = {
-                "status_code": 200,
-                "body": res,
-                "type": "text",
-                "headers": {"Content-Type": "text/plain"},
-            }
+            response = Response(
+                status_code=200, headers={"Content-Type": "text/plain"}, body=res
+            )
 
         return response
 
