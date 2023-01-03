@@ -365,13 +365,15 @@ async fn index(
 
     let response = if let Some(r) = const_router.get_route(req.method(), req.uri().path()) {
         apply_hashmap_headers(&mut response_builder, &r.headers);
-        response_builder.status(r.status_code).body(r.body)
+        response_builder
+            .status(StatusCode::from_u16(r.status_code).unwrap())
+            .body(r.body)
     } else if let Some((function, route_params)) = router.get_route(req.method(), req.uri().path())
     {
         request.params = route_params;
         match execute_http_function(&request, function).await {
             Ok(r) => {
-                response_builder.status(r.status_code);
+                response_builder.status(StatusCode::from_u16(r.status_code).unwrap());
                 apply_hashmap_headers(&mut response_builder, &r.headers);
                 if !r.body.is_empty() {
                     response_builder.body(r.body)
