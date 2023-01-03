@@ -14,7 +14,7 @@ from robyn.dev_event_handler import EventHandler
 from robyn.events import Events
 from robyn.log_colors import Colors
 from robyn.processpool import spawn_process
-from robyn.responses import jsonify, static_file
+from robyn.responses import jsonify, serve_file, serve_html
 from robyn.robyn import FunctionInfo, SocketHeld
 from robyn.router import MiddlewareRouter, Router, WebSocketRouter
 from robyn.ws import WS
@@ -312,3 +312,6 @@ class Robyn:
 
         log_level = self.log_level if self.log_level else log_level
         logging.basicConfig(level=log_level)
+
+
+__all__ = ["Robyn", "jsonify", "serve_file", "serve_html"]

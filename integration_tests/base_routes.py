@@ -1,4 +1,4 @@
-from robyn import Robyn, static_file, jsonify, WS
+from robyn import Robyn, static_file, jsonify, WS, html
 
 from robyn.templating import JinjaTemplate
 
@@ -120,7 +120,7 @@ async def test(request):
     current_file_path = pathlib.Path(__file__).parent.resolve()
     html_file = os.path.join(current_file_path, "index.html")
 
-    return static_file(html_file)
+    return html(html_file)
 
 
 @app.get("/template_render")
