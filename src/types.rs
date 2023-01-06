@@ -88,6 +88,7 @@ impl Response {
     pub fn new(status_code: u16, headers: HashMap<String, String>, body: String) -> Self {
         Self {
             status_code,
+            // we should be handling based on headers but works for now
             response_type: "text".to_string(),
             headers,
             body,
@@ -96,6 +97,7 @@ impl Response {
     }
 
     pub fn set_file_path(&mut self, file_path: &str) -> PyResult<()> {
+        // we should be handling based on headers but works for now
         self.response_type = "static_file".to_string();
         self.file_path = Some(file_path.to_string());
         self.body = match read_file(file_path) {

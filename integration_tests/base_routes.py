@@ -1,4 +1,4 @@
-from robyn import Robyn, static_file, jsonify, WS
+from robyn import Robyn, serve_file, jsonify, WS, serve_html
 
 from robyn.templating import JinjaTemplate
 
@@ -120,7 +120,7 @@ async def test(request):
     current_file_path = pathlib.Path(__file__).parent.resolve()
     html_file = os.path.join(current_file_path, "index.html")
 
-    return static_file(html_file)
+    return serve_html(html_file)
 
 
 @app.get("/template_render")
@@ -230,6 +230,20 @@ async def redirect(request):
 @app.get("/redirect_route")
 async def redirect_route(request):
     return "This is the redirected route"
+
+
+@app.get("/file_download_sync")
+def file_download_sync():
+    current_file_path = pathlib.Path(__file__).parent.resolve()
+    file_path = os.path.join(current_file_path, "downloads", "test.txt")
+    return serve_file(file_path)
+
+
+@app.get("/file_download_async")
+def file_download_async():
+    current_file_path = pathlib.Path(__file__).parent.resolve()
+    file_path = os.path.join(current_file_path, "downloads", "test.txt")
+    return serve_file(file_path)
 
 
 if __name__ == "__main__":

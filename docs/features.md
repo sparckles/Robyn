@@ -164,7 +164,7 @@ You can now serve websockets using Robyn.
 Firstly, you need to create a WebSocket Class and wrap it around your Robyn app.
 
 ```python
-from robyn import Robyn, static_file, jsonify, WS
+from robyn import Robyn, jsonify, WS
 
 
 app = Robyn(__file__)

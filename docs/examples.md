@@ -20,13 +20,28 @@ app.start(port=5000)
 ### Serving simple HTML Files
 ```python
 
-from robyn import Robyn, static_file
+from robyn import Robyn, serve_html
 
 app = Robyn(__file__)
 
 @app.get("/")
 async def h(request):
-    return static_file("./index.html")
+    return serve_html("./index.html")
+
+app.start(port=5000)
+
+```
+
+### Serving files to download
+```python
+
+from robyn import Robyn, serve_file
+
+app = Robyn(__file__)
+
+@app.get("/")
+async def h(request):
+    return serve_file("./index.html")
 
 app.start(port=5000)
 

@@ -26,7 +26,7 @@ Note - Railway looks for a `main.py` as an entrypoint instead of `app.py`. The b
 
 *main.py*
 ```python
-from robyn import Robyn, static_file
+from robyn import Robyn, serve_html
 
 
 app = Robyn(__file__)
@@ -39,7 +39,7 @@ async def h(request):
 
 @app.get("/")
 async def get_page(request):
-    return static_file("./index.html")
+    return serve_html("./index.html")
 
 if __name__=="__main__":
     app.start(url="0.0.0.0", port=PORT)    
