@@ -285,4 +285,4 @@ if __name__ == "__main__":
         index_file="index.html",
     )
     app.startup_handler(startup_handler)
-    app.start(port=5000)
+    app.start(port=8080)

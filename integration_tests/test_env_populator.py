@@ -12,7 +12,7 @@ path = pathlib.Path(__file__).parent
 # create robyn.env before test and delete it after test
 @pytest.fixture
 def env_file():
-    CONTENT = """ROBYN_PORT=8080
+    CONTENT = """ROBYN_PORT=8081
     ROBYN_URL=127.0.0.1"""
     env_path = path / "robyn.env"
     env_path.write_text(CONTENT)

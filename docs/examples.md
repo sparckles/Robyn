@@ -14,8 +14,7 @@ app = Robyn(__file__)
 async def h(request):
     return "Hello, world!"
 
-
-app.start(port=5000)
+app.start(port=8080)
 ```
 
 ### Serving simple HTML Files
@@ -30,8 +29,7 @@ app = Robyn(__file__)
 async def h(request):
     return serve_html("./index.html")
 
-
-app.start(port=5000)
+app.start(port=8080)
 ```
 
 ### Serving files to download
@@ -46,8 +44,8 @@ app = Robyn(__file__)
 async def h(request):
     return serve_file("./index.html")
 
+app.start(port=8080)
 
-app.start(port=5000)
 ```
 
 ### Interaction with a Database
@@ -83,8 +81,7 @@ async def h():
     )
     return user.json(indent=2)
 
-
-app.start(port=5000)
+app.start(port=8080)
 ```
 
 Using this Prisma Schema:

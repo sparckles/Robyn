@@ -167,7 +167,7 @@ async def request_headers():
 
 You can access query params from every HTTP method.
 
-For the url: `http://localhost:5000/query?a=b`
+For the url: `http://localhost:8080/query?a=b`
 
 You can use the following code snippet.
 
