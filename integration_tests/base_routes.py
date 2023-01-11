@@ -1,4 +1,5 @@
 from robyn import Robyn, serve_file, jsonify, WS, serve_html
+from robyn.robyn import Response
 
 from robyn.templating import JinjaTemplate
 
@@ -230,6 +231,36 @@ async def redirect(request):
 @app.get("/redirect_route")
 async def redirect_route(request):
     return "This is the redirected route"
+
+
+@app.get("/types/response")
+def response_type(request):
+    return Response(status_code=200, headers={}, body="OK")
+
+
+@app.get("/types/str")
+def str_type(request):
+    return "OK"
+
+
+@app.get("/types/int")
+def int_type(request):
+    return 0
+
+
+@app.get("/async/types/response")
+async def async_response_type(request):
+    return Response(status_code=200, headers={}, body="OK")
+
+
+@app.get("/async/types/str")
+async def async_str_type(request):
+    return "OK"
+
+
+@app.get("/async/types/int")
+async def async_int_type(request):
+    return 0
 
 
 @app.get("/file_download_sync")
