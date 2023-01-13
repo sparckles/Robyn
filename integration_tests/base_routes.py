@@ -245,9 +245,9 @@ async def file_download_async():
     file_path = os.path.join(current_file_path, "downloads", "test.txt")
     return serve_file(file_path)
 
-@app.post("/query-validation", validate=True)
+@app.post("/query_validation", validate=True)
 async def test_validation(a: int, b: str):
-    return {'a': a, 'b': b}
+    return jsonify({'a': a, 'b': b})
 
 if __name__ == "__main__":
     app.add_request_header("server", "robyn")

@@ -97,7 +97,7 @@ class Robyn:
             return
 
         is_async = asyncio.iscoroutinefunction(handler)
-        self.event_handlers[event_type] = FunctionInfo(handler, is_async, 0)
+        self.event_handlers[event_type] = FunctionInfo(handler, is_async, 0, False)
 
     def startup_handler(self, handler: Callable) -> None:
         self._add_event_handler(Events.STARTUP, handler)

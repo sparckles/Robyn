@@ -11,10 +11,10 @@ INCORRECT_BODY = {
 }
 
 def test_post_correct(session):
-    res = requests.post(f"{BASE_URL}/query-validation", json=CORRECT_BODY)
+    res = requests.post(f"{BASE_URL}/query_validation", json=CORRECT_BODY)
     assert res.status_code == 200
     assert res.json() == CORRECT_BODY
 
 def test_post_incorrect(session):
-    res = requests.post(f"{BASE_URL}/query-validation", json=INCORRECT_BODY)
+    res = requests.post(f"{BASE_URL}/query_validation", json=INCORRECT_BODY)
     assert res.status_code == 500

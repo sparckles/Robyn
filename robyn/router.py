@@ -81,7 +81,7 @@ class MiddlewareRouter(BaseRouter):
 
     def add_route(self, route_type: str, endpoint: str, handler: Callable) -> Callable:
         number_of_params = len(signature(handler).parameters)
-        function = FunctionInfo(handler, iscoroutinefunction(handler), number_of_params)
+        function = FunctionInfo(handler, iscoroutinefunction(handler), number_of_params, False)
         self.routes.append((route_type, endpoint, function))
         return handler
 
