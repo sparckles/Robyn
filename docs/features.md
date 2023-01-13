@@ -97,8 +97,44 @@ from robyn import jsonify
 
 @app.post("/jsonify")
 async def json(request):
-    print(request)
     return jsonify({"hello": "world"})
+```
+
+## Format of the Response
+Robyn supports several kind of Response for your routes
+
+#### Dictionary
+Robyn accepts dictionaries to build a response for the route:
+
+```python
+@app.post("/dictionary")
+async def dictionary(request):
+    return {
+        "status_code": 200,
+        "body": "This is a regular response",
+        "type": "text",
+        "headers": {"Header": "header_value"},
+    }
+```
+
+#### Response object
+Robyn provides a `Response` object to help you build a valid response.
+
+```python
+from robyn.robyn import Response
+
+@app.get("/response")
+async def response(request):
+    return Response(status_code=200, headers={}, body="OK")
+```
+
+#### Other types
+Whenever you want to use an other type for your routes, the `str` method will be called on it and it will be stored in the body of the response. Here is an example that returns a string:
+
+```python
+@app.get("/")
+async def hello(request):
+    return "Hello World"
 ```
 
 ## Global Headers
