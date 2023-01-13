@@ -59,3 +59,38 @@ def test_const_request_headers(session):
     assert "Header" in r.headers
     assert r.headers["Header"] == "header_value"
 
+
+def test_response_type(session):
+    r = requests.get(f"{BASE_URL}/types/response")
+    assert r.status_code == 200
+    assert r.text == "OK"
+
+
+def test_str_type(session):
+    r = requests.get(f"{BASE_URL}/types/str")
+    assert r.status_code == 200
+    assert r.text == "OK"
+
+
+def test_int_type(session):
+    r = requests.get(f"{BASE_URL}/types/int")
+    assert r.status_code == 200
+    assert r.text == "0"
+
+
+def test_async_response_type(session):
+    r = requests.get(f"{BASE_URL}/async/types/response")
+    assert r.status_code == 200
+    assert r.text == "OK"
+
+
+def test_async_str_type(session):
+    r = requests.get(f"{BASE_URL}/async/types/str")
+    assert r.status_code == 200
+    assert r.text == "OK"
+
+
+def test_async_int_type(session):
+    r = requests.get(f"{BASE_URL}/async/types/int")
+    assert r.status_code == 200
+    assert r.text == "0"
