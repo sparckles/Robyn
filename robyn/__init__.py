@@ -18,6 +18,7 @@ from robyn.responses import jsonify, serve_file, serve_html
 from robyn.robyn import FunctionInfo, SocketHeld
 from robyn.router import MiddlewareRouter, Router, WebSocketRouter
 from robyn.ws import WS
+from robyn.dependencies import get_signature, check_params_dependencies
 from robyn.env_populator import load_vars
 
 logger = logging.getLogger(__name__)
@@ -44,7 +45,7 @@ class Robyn:
         load_vars(project_root=directory_path)
         self._config_logger()
 
-    def _add_route(self, route_type, endpoint, handler, is_const=False):
+    def _add_route(self, route_type, endpoint, handler, is_const=False, validate_params=False):
         """
         [This is base handler for all the decorators]
 
@@ -55,7 +56,7 @@ class Robyn:
 
         """ We will add the status code here only
         """
-        return self.router.add_route(route_type, endpoint, handler, is_const)
+        return self.router.add_route(route_type, endpoint, handler, is_const, validate_params)
 
     def before_request(self, endpoint: str) -> Callable[..., None]:
         """
@@ -204,7 +205,7 @@ class Robyn:
 
         return inner
 
-    def post(self, endpoint: str):
+    def post(self, endpoint: str, validate: bool = False):
         """
         The @app.post decorator to add a get route
 
@@ -212,11 +213,11 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("POST", endpoint, handler)
+            return self._add_route("POST", endpoint, handler, validate_params=validate)
 
         return inner
 
-    def put(self, endpoint: str):
+    def put(self, endpoint: str, validate: bool = False):
         """
         The @app.put decorator to add a get route
 
@@ -224,11 +225,11 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("PUT", endpoint, handler)
+            return self._add_route("PUT", endpoint, handler, validate_params=validate)
 
         return inner
 
-    def delete(self, endpoint: str):
+    def delete(self, endpoint: str, validate: bool = False):
         """
         The @app.delete decorator to add a get route
 
@@ -236,11 +237,11 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("DELETE", endpoint, handler)
+            return self._add_route("DELETE", endpoint, handler, validate_params=validate)
 
         return inner
 
-    def patch(self, endpoint: str):
+    def patch(self, endpoint: str, validate: bool = False):
         """
         [The @app.patch decorator to add a get route]
 
@@ -248,11 +249,11 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("PATCH", endpoint, handler)
+            return self._add_route("PATCH", endpoint, handler, validate_params=validate)
 
         return inner
 
-    def head(self, endpoint: str):
+    def head(self, endpoint: str, validate: bool = False):
         """
         The @app.head decorator to add a get route
 
@@ -260,11 +261,11 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("HEAD", endpoint, handler)
+            return self._add_route("HEAD", endpoint, handler, validate_params=validate)
 
         return inner
 
-    def options(self, endpoint: str):
+    def options(self, endpoint: str, validate: bool = False):
         """
         The @app.options decorator to add a get route
 
@@ -272,11 +273,11 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("OPTIONS", endpoint, handler)
+            return self._add_route("OPTIONS", endpoint, handler, validate_params=validate)
 
         return inner
 
-    def connect(self, endpoint: str):
+    def connect(self, endpoint: str, validate: bool = False):
         """
         The @app.connect decorator to add a get route
 
@@ -284,11 +285,11 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("CONNECT", endpoint, handler)
+            return self._add_route("CONNECT", endpoint, handler, validate_params=validate)
 
         return inner
 
-    def trace(self, endpoint: str):
+    def trace(self, endpoint: str, validate: bool = False):
         """
         The @app.trace decorator to add a get route
 
@@ -296,7 +297,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("TRACE", endpoint, handler)
+            return self._add_route("TRACE", endpoint, handler, validate_params=validate)
 
         return inner
 

@@ -1,6 +1,7 @@
 /// This is the module that has all the executor functions
 /// i.e. the functions that have the responsibility of parsing and executing functions.
 use crate::types::{FunctionInfo, Request, Response};
+use std::str;
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -10,6 +11,7 @@ use log::debug;
 use pyo3_asyncio::TaskLocals;
 // pyO3 module
 use pyo3::prelude::*;
+use pyo3::types::PyDict;
 
 fn get_function_output<'a>(
     function: &'a FunctionInfo,
@@ -19,12 +21,30 @@ fn get_function_output<'a>(
     let handler = function.handler.as_ref(py);
     let request_hashmap = request.to_hashmap(py).unwrap();
 
-    // this makes the request object accessible across every route
-    match function.number_of_params {
+    if function.validate_params {
+        let body = request.body.clone().to_vec();
+        let json_str = str::from_utf8(&body).unwrap();
+
+        // Use Python to convert back to PyDict after deserializing
+        let json = py.import("json").unwrap();
+
+        // Extract the route's dependencies from the FunctionInfo
+        let json_dict = json.call_method1("loads", (json_str,)).unwrap();
+
+        // Get kwargs from the PyDict
+        let kwargs: &PyDict = json_dict.try_into().unwrap();
+
+        let test = handler.call((), Some(kwargs)).unwrap();
+
+        Ok(test)
+    } else {
+        // this makes the request object accessible across every route
+        match function.number_of_params {
         0 => handler.call0(),
         1 => handler.call1((request_hashmap,)),
         // this is done to accommodate any future params
         2_u8..=u8::MAX => handler.call1((request_hashmap,)),
+        }
     }
 }
 
@@ -56,6 +76,7 @@ pub async fn execute_middleware_function<'a>(
 
 #[inline]
 pub async fn execute_http_function(request: &Request, function: FunctionInfo) -> Result<Response> {
+    
     if function.is_async {
         let output = Python::with_gil(|py| {
             let function_output = get_function_output(&function, py, request);

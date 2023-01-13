@@ -47,25 +47,26 @@ class Router(BaseRouter):
         return response
 
     def add_route(
-        self, route_type: str, endpoint: str, handler: Callable, is_const: bool
+        self, route_type: str, endpoint: str, handler: Callable, is_const: bool, 
+        validate_params: bool,
     ) -> Union[Callable, CoroutineType]:
         @wraps(handler)
-        async def async_inner_handler(*args):
-            response = self._format_response(await handler(*args))
+        async def async_inner_handler(*args, **kwargs):
+            response = self._format_response(await handler(*args, **kwargs))
             return response
 
         @wraps(handler)
-        def inner_handler(*args):
-            response = self._format_response(handler(*args))
+        def inner_handler(*args, **kwargs):
+            response = self._format_response(handler(*args, **kwargs))
             return response
 
         number_of_params = len(signature(handler).parameters)
         if iscoroutinefunction(handler):
-            function = FunctionInfo(async_inner_handler, True, number_of_params)
+            function = FunctionInfo(async_inner_handler, True, number_of_params, validate_params)
             self.routes.append((route_type, endpoint, function, is_const))
             return async_inner_handler
         else:
-            function = FunctionInfo(inner_handler, False, number_of_params)
+            function = FunctionInfo(inner_handler, False, number_of_params, validate_params)
             self.routes.append((route_type, endpoint, function, is_const))
             return inner_handler
 

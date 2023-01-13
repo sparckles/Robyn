@@ -240,11 +240,14 @@ def file_download_sync():
 
 
 @app.get("/file_download_async")
-def file_download_async():
+async def file_download_async():
     current_file_path = pathlib.Path(__file__).parent.resolve()
     file_path = os.path.join(current_file_path, "downloads", "test.txt")
     return serve_file(file_path)
 
+@app.post("/query-validation", validate=True)
+async def test_validation(a: int, b: str):
+    return {'a': a, 'b': b}
 
 if __name__ == "__main__":
     app.add_request_header("server", "robyn")
