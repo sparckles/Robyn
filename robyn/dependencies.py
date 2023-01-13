@@ -21,18 +21,18 @@ def get_signature(call: Callable[..., Any]) -> Signature:
     return Signature(params)
 
 def check_params_dependencies(expected: Signature, request: Dict[Any, Any]):
-        """
-        Checks if the params match the dependencies of the route
-        """
-        provided = json.loads(decode_bytearray(request))
-        if len(expected.parameters) != len(provided):
+    """
+    Checks if the params match the dependencies of the route
+    """
+    provided = json.loads(decode_bytearray(request))
+    if len(expected.parameters) != len(provided):
+        return False
+    for arg_name, arg_val in provided.items():
+        access = expected.parameters.get(arg_name, None)
+        if not access or not isinstance(arg_val, access.annotation):
             return False
-        for arg_name, arg_val in provided.items():
-            access = expected.parameters.get(arg_name, None)
-            if not access or not isinstance(arg_val, access.annotation):
-                return False
-            
-        return True
+        
+    return True
 
 
 
