@@ -9,8 +9,8 @@ from robyn.responses import jsonify
 
 from robyn.ws import WS
 
-Route = Tuple[str, str, Callable, bool, int, bool]
-MiddlewareRoute = Tuple[str, str, Callable, bool, int]
+Route = Tuple[str, str, Callable, bool]
+MiddlewareRoute = Tuple[str, str, Callable]
 
 
 class BaseRouter(ABC):

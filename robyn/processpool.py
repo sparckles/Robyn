@@ -1,14 +1,13 @@
 import asyncio
 import sys
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 
 from robyn.events import Events
 from robyn.robyn import FunctionInfo, Server, SocketHeld
 from robyn.router import MiddlewareRoute, Route
 from robyn.ws import WS
+from robyn.types import Directory, Header
 
-Directory = Tuple[str, str, str, bool]
-Header = Tuple[str, str]
 
 
 def initialize_event_loop():
@@ -29,10 +28,10 @@ def initialize_event_loop():
 
 
 def spawn_process(
-    directories: Tuple[Directory, ...],
-    request_headers: Tuple[Header, ...],
-    routes: Tuple[Route, ...],
-    middlewares: Tuple[MiddlewareRoute, ...],
+    directories: List[Directory],
+    request_headers: List[Header],
+    routes: List[Route],
+    middlewares: List[MiddlewareRoute],
     web_sockets: Dict[str, WS],
     event_handlers: Dict[Events, FunctionInfo],
     socket: SocketHeld,
@@ -42,7 +41,7 @@ def spawn_process(
     This function is called by the main process handler to create a server runtime.
     This functions allows one runtime per process.
 
-    :param directories tuple: the list of all the directories and related data in a tuple
+    :param directories List: the list of all the directories and related data
     :param headers tuple: All the global headers in a tuple
     :param routes Tuple[Route]: The routes touple, containing the description about every route.
     :param middlewares Tuple[Route]: The middleware router touple, containing the description about every route.
@@ -60,18 +59,17 @@ def spawn_process(
     # TODO: if we remove the dot access
     # the startup time will improve in the server
     for directory in directories:
-        route, directory_path, index_file, show_files_listing = directory
-        server.add_directory(route, directory_path, index_file, show_files_listing)
+        server.add_directory(*directory.as_list())
 
-    for key, val in request_headers:
-        server.add_request_header(key, val)
+    for header in request_headers:
+        server.add_request_header(*header.as_list())
 
     for route in routes:
         route_type, endpoint, function, is_const = route
         server.add_route(route_type, endpoint, function, is_const)
 
-    for route in middlewares:
-        route_type, endpoint, function = route
+    for middleware_route in middlewares:
+        route_type, endpoint, function = middleware_route
         server.add_middleware_route(route_type, endpoint, function)
 
     if "startup" in event_handlers:
