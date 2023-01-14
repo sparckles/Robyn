@@ -4,7 +4,7 @@ import multiprocessing as mp
 import os
 import signal
 import sys
-from typing import Callable, Optional
+from typing import Callable, List, Optional
 
 from multiprocess import Process  # type: ignore
 from watchdog.observers import Observer
@@ -17,6 +17,7 @@ from robyn.processpool import spawn_process
 from robyn.responses import jsonify, serve_file, serve_html
 from robyn.robyn import FunctionInfo, SocketHeld
 from robyn.router import MiddlewareRouter, Router, WebSocketRouter
+from robyn.types import Directory, Header
 from robyn.ws import WS
 from robyn.env_populator import load_vars
 
@@ -38,8 +39,8 @@ class Robyn:
         self.router = Router()
         self.middleware_router = MiddlewareRouter()
         self.web_socket_router = WebSocketRouter()
-        self.request_headers = []  # This needs a better type
-        self.directories = []
+        self.request_headers: List[Header] = []  # This needs a better type
+        self.directories: List[Directory] = []
         self.event_handlers = {}
         load_vars(project_root=directory_path)
         self._config_logger()
@@ -82,10 +83,10 @@ class Robyn:
         index_file: Optional[str] = None,
         show_files_listing: bool = False,
     ):
-        self.directories.append((route, directory_path, index_file, show_files_listing))
+        self.directories.append(Directory(route, directory_path, index_file, show_files_listing))
 
     def add_request_header(self, key: str, value: str) -> None:
-        self.request_headers.append((key, value))
+        self.request_headers.append(Header(key, value))
 
     def add_web_socket(self, endpoint: str, ws: WS) -> None:
         self.web_socket_router.add_route(endpoint, ws)
@@ -124,7 +125,7 @@ class Robyn:
             if sys.platform.startswith("win32"):
                 spawn_process(
                     self.directories,
-                    self.headers,
+                    self.request_headers,
                     self.router.get_routes(),
                     self.middleware_router.get_routes(),
                     self.web_socket_router.get_routes(),
