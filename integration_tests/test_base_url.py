@@ -1,5 +1,6 @@
-import requests
 import os
+
+import requests
 
 
 def test_default_url_index_request(default_session):

@@ -3,54 +3,56 @@
 Below are a few examples of real life use cases of Robyn.
 
 ### Creating a Simple HTTP Service
-```python
 
+```python
 from robyn import Robyn
 
 app = Robyn(__file__)
+
 
 @app.get("/")
 async def h(request):
     return "Hello, world!"
 
-app.start(port=5000)
 
+app.start(port=5000)
 ```
 
 ### Serving simple HTML Files
-```python
 
+```python
 from robyn import Robyn, serve_html
 
 app = Robyn(__file__)
+
 
 @app.get("/")
 async def h(request):
     return serve_html("./index.html")
 
-app.start(port=5000)
 
+app.start(port=5000)
 ```
 
 ### Serving files to download
-```python
 
+```python
 from robyn import Robyn, serve_file
 
 app = Robyn(__file__)
+
 
 @app.get("/")
 async def h(request):
     return serve_file("./index.html")
 
+
 app.start(port=5000)
-
 ```
-
 
 ### Interaction with a Database
 
-It should be fairly easy to make a crud app example. Here's a minimal example using Prisma(`pip install prisma-client-py`) with Robyn.
+It should be fairly easy to make a crud app example. Here's a minimal example using Prisma (`pip install prisma-client-py`) with Robyn.
 
 ```python
 from robyn import Robyn
@@ -60,14 +62,17 @@ from prisma.models import User
 app = Robyn(__file__)
 prisma = Prisma(auto_register=True)
 
+
 @app.startup_handler
 async def startup_handler() -> None:
     await prisma.connect()
+
 
 @app.shutdown_handler
 async def shutdown_handler() -> None:
     if prisma.is_connected():
         await prisma.disconnect()
+
 
 @app.get("/")
 async def h():
@@ -77,6 +82,7 @@ async def h():
         },
     )
     return user.json(indent=2)
+
 
 app.start(port=5000)
 ```
@@ -100,8 +106,8 @@ model User {
 ```
 
 ### Using Middleware
-```python
 
+```python
 @app.before_request("/")
 async def hello_before_request(request):
     print(request)
@@ -110,11 +116,12 @@ async def hello_before_request(request):
 @app.after_request("/")
 def hello_after_request(request):
     print(request)
-
 ```
 
 ### A basic web socket chat app.
+
 Coming Soon....
 
 ### Using Robyn to send an email
+
 Coming Soon....

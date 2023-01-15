@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
-from functools import wraps
 from asyncio import iscoroutinefunction
+from functools import wraps
 from inspect import signature
-from typing import Callable, Dict, List, Tuple, Union
 from types import CoroutineType
-from robyn.robyn import FunctionInfo, Response
-from robyn.responses import jsonify
+from typing import Callable, Dict, List, Tuple, Union
 
+from robyn.responses import jsonify
+from robyn.robyn import FunctionInfo, Response
 from robyn.ws import WS
 
 Route = Tuple[str, str, Callable, bool]

@@ -15,4 +15,3 @@
 - [Hosting](hosting.md)
 - [Templates](templates.md)
 - [Sponsors](sponsors.md)
-

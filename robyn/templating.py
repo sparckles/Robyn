@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+
 from jinja2 import Environment, FileSystemLoader
 
 
