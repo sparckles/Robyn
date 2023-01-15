@@ -13,9 +13,9 @@ dependencies = [
   'watchdog == 2.1.3',
   'multiprocess == 0.70.12.2',
 # conditional
-  'uvloop == 0.16.0; sys_platform == "darwin"',
-  'uvloop == 0.16.0; platform_machine == "x86_64"',
-  'uvloop == 0.16.0; platform_machine == "i686"'
+  'uvloop == 0.17.0; sys_platform == "darwin"',
+  'uvloop == 0.17.0; platform_machine == "x86_64"',
+  'uvloop == 0.17.0; platform_machine == "i686"'
 ]
 classifiers = [
   "Development Status :: 3 - Alpha",
