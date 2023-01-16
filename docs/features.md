@@ -1,11 +1,10 @@
 ## Features
 
-
 ## Synchronous Requests
+
 Robyn supports both sync methods and async methods for fetching requests. Every method gets a request object from the routing decorator.
 
 ```python
-
 @app.get("/")
 def h(request):
     return "Hello, world"
@@ -18,7 +17,6 @@ def h(request):
 async def h(request):
     return "Hello, world"
 ```
-
 
 ## All kinds of HTTP Requests
 
@@ -50,7 +48,6 @@ async def postreq(request):
     return bytearray(request["body"]).decode("utf-8")
 ```
 
-
 #### PATCH Request
 
 ```python
@@ -59,7 +56,6 @@ async def postreq(request):
     return bytearray(request["body"]).decode("utf-8")
 ```
 
-
 #### DELETE Request
 
 ```python
@@ -67,7 +63,6 @@ async def postreq(request):
 async def postreq(request):
     return bytearray(request["body"]).decode("utf-8")
 ```
-
 
 #### Directory Serving
 
@@ -80,6 +75,7 @@ app.add_directory(
 ```
 
 ## Dynamic Routes
+
 You can add params in the routes and access them from the request object.
 
 ```python
@@ -90,10 +86,12 @@ async def json(request):
 ```
 
 ## Returning a JSON Response
+
 You can also serve JSON responses when serving HTTP request using the following way.
 
 ```python
 from robyn import jsonify
+
 
 @app.post("/jsonify")
 async def json(request):
@@ -101,9 +99,11 @@ async def json(request):
 ```
 
 ## Format of the Response
-Robyn supports several kind of Response for your routes
+
+Robyn supports several kinds of Response for your routes
 
 #### Dictionary
+
 Robyn accepts dictionaries to build a response for the route:
 
 ```python
@@ -118,10 +118,12 @@ async def dictionary(request):
 ```
 
 #### Response object
+
 Robyn provides a `Response` object to help you build a valid response.
 
 ```python
 from robyn.robyn import Response
+
 
 @app.get("/response")
 async def response(request):
@@ -129,7 +131,8 @@ async def response(request):
 ```
 
 #### Other types
-Whenever you want to use an other type for your routes, the `str` method will be called on it and it will be stored in the body of the response. Here is an example that returns a string:
+
+Whenever you want to use another type for your routes, the `str` method will be called on it, and it will be stored in the body of the response. Here is an example that returns a string:
 
 ```python
 @app.get("/")
@@ -138,14 +141,15 @@ async def hello(request):
 ```
 
 ## Global Headers
+
 You can also add global headers for every request.
 
 ```python
 app.add_request_header("server", "robyn")
-
 ```
 
 ## Per route headers
+
 You can also add headers for every route.
 
 ```python
@@ -157,9 +161,7 @@ async def request_headers():
         "type": "text",
         "headers": {"Header": "header_value"},
     }
-
 ```
-
 
 ## Query Params
 
@@ -176,17 +178,17 @@ async def query_get(request):
     return jsonify(query_data)
 ```
 
-
 ## Events
 
-You can add startup and shutdown events in robyn. These events will execute before the requests have started serving and after the serving has been completed.
+You can add startup and shutdown events in Robyn. These events will execute before the requests have started serving and after the serving has been completed.
 
 ```python
-
 async def startup_handler():
     print("Starting up")
 
+
 app.startup_handler(startup_handler)
+
 
 @app.shutdown_handler
 def shutdown_handler():
@@ -213,34 +215,35 @@ Now, you can define 3 methods for every web_socket for their life cycle, they ar
 @websocket.on("message")
 def connect():
     global i
-    i+=1
-    if i==0:
+    i += 1
+    if i == 0:
         return "Whaaat??"
-    elif i==1:
+    elif i == 1:
         return "Whooo??"
-    elif i==2:
+    elif i == 2:
         return "*chika* *chika* Slim Shady."
-    elif i==3:
-        i= -1
+    elif i == 3:
+        i = -1
         return ""
+
 
 @websocket.on("close")
 def close():
     return "Goodbye world, from ws"
 
+
 @websocket.on("connect")
 def message():
     return "Hello world, from ws"
-
 ```
 
 The three methods:
- - "message" is called when the socket receives a message
- - "close" is called when the socket is disconnected
- - "connect" is called when the socket connects
+
+- "message" is called when the socket receives a message
+- "close" is called when the socket is disconnected
+- "connect" is called when the socket connects
 
 To see a complete service in action, you can go to the folder [../integration_tests/base_routes.py](../integration_tests/base_routes.py)
-
 
 #### Web Socket Usage
 
@@ -248,25 +251,26 @@ To see a complete service in action, you can go to the folder [../integration_te
 @websocket.on("message")
 async def connect():
     global i
-    i+=1
-    if i==0:
+    i += 1
+    if i == 0:
         return "Whaaat??"
-    elif i==1:
+    elif i == 1:
         return "Whooo??"
-    elif i==2:
+    elif i == 2:
         return "*chika* *chika* Slim Shady."
-    elif i==3:
-        i= -1
+    elif i == 3:
+        i = -1
         return ""
+
 
 @websocket.on("close")
 async def close():
     return "Goodbye world, from ws"
 
+
 @websocket.on("connect")
 async def message():
     return "Hello world, from ws"
-
 ```
 
 ## Middlewares
@@ -290,8 +294,6 @@ To run Robyn across multiple cores, you can use the following command:
 
 `python app.py --workers=N --processes=N`
 
-
-
 ## Const Requests
 
 You can pre-compute the response for each route. This will compute the response even before execution. This will improve the response time bypassing the need to access the router.
@@ -304,30 +306,29 @@ async def h():
 
 ## Templates
 
-You can render templates in Robyn. We ship `Jinja2` as our out of the box solution. If you would like to add support for other templating engines you can create your own renderer too! Read more at [templating](/templates.md) documentation.
+You can render templates in Robyn. We ship `Jinja2` as our out-of-the-box solution. If you would like to add support for other templating engines you can create your own renderer too! Read more at [templating](/templates.md) documentation.
 
 Here is a sample below.
 
 main.py
+
 ```python
 from robyn.templating import JinjaTemplate
 
 current_file_path = pathlib.Path(__file__).parent.resolve()
 JINJA_TEMPLATE = JinjaTemplate(os.path.join(current_file_path, "templates"))
 
+
 @app.get("/template_render")
 def template_render():
-    context = {
-        "framework": "Robyn",
-        "templating_engine": "Jinja2"
-    }
+    context = {"framework": "Robyn", "templating_engine": "Jinja2"}
 
     template = JINJA_TEMPLATE.render_template(template_name="test.html", **context)
     return template
-
 ```
 
 templates/test.html
+
 ```html
 {# templates/test.html #}
 
@@ -342,7 +343,6 @@ templates/test.html
   <h1>{{framework}} 🤝 {{templating_engine}}</h1>
 </body>
 </html>
-
 ```
 
 ### Understanding the code

@@ -2,59 +2,68 @@
 
 ## Read this before you scroll down
 
-The comparison is not meant to defame any of the of the developers or the frameworks listed below. The names of the frameworks have been listed for a clear comparison. All of these frameworks are the reason for me having a high inclination towards the python web ecosystem and I hope to have not caused any offence (to anyone) by listing these frameworks.
+The comparison is not meant to defame any of the developers or the frameworks listed below. The names of the frameworks have been listed for a clear comparison. All of these frameworks are the reason for me having a high inclination towards the python web ecosystem and I hope to have not caused any offense (to anyone) by listing these frameworks.
 
 **Also, these tests were done on my development machine and the numbers portrayed below are not absolute by any means. These numbers only indicate the relative performance of these frameworks.**
 
 I used [oha](https://github.com/hatoo/oha) to perform the testing of 10000 requests on the following frameworks and the results were as follows:
 
 1. Flask(Gunicorn)
+
 ```
-  Total:        5.5254 secs
-  Slowest:      0.0784 secs
-  Fastest:      0.0028 secs
-  Average:      0.0275 secs
-  Requests/sec: 1809.8082
+Total:        5.5254 secs
+Slowest:      0.0784 secs
+Fastest:      0.0028 secs
+Average:      0.0275 secs
+Requests/sec: 1809.8082
 ```
 
-2. FastAPI(Uvicorn)
+1. FastAPI(Uvicorn)
+
 ```
-  Total:        4.1314 secs
-  Slowest:      0.0733 secs
-  Fastest:      0.0027 secs
-  Average:      0.0206 secs
-  Requests/sec: 2420.4851
-```
-3. Django(Gunicorn)
-```
-  Total:        13.5070 secs
-  Slowest:      0.3635 secs
-  Fastest:      0.0249 secs
-  Average:      0.0674 secs
-  Requests/sec: 740.3558
-```
-4. Robyn(Doesn't need a *SGI)
-```
-  Total:	1.8324 secs
-  Slowest:	0.0269 secs
-  Fastest:	0.0024 secs
-  Average:	0.0091 secs
-  Requests/sec:	5457.2339
+Total:        4.1314 secs
+Slowest:      0.0733 secs
+Fastest:      0.0027 secs
+Average:      0.0206 secs
+Requests/sec: 2420.4851
 ```
 
-4. Robyn (5 workers)
+1. Django(Gunicorn)
+
 ```
-  Total:	1.5592 secs
-  Slowest:	0.0211 secs
-  Fastest:	0.0017 secs
-  Average:	0.0078 secs
-  Requests/sec:	6413.6480
+Total:        13.5070 secs
+Slowest:      0.3635 secs
+Fastest:      0.0249 secs
+Average:      0.0674 secs
+Requests/sec: 740.3558
 ```
 
-Robyn is able to serve the 10k requests in 1.8 seconds followed by Flask and FastAPI, which take around 5 seconds(using 5 workers on a dual core machine). Finally, Django takes around 13.5070 seconds.
+1. Robyn(Doesn't need a *SGI)
+
+```
+Total:	1.8324 secs
+Slowest:	0.0269 secs
+Fastest:	0.0024 secs
+Average:	0.0091 secs
+Requests/sec:	5457.2339
+```
+
+1. Robyn (5 workers)
+
+```
+Total:	1.5592 secs
+Slowest:	0.0211 secs
+Fastest:	0.0017 secs
+Average:	0.0078 secs
+Requests/sec:	6413.6480
+```
+
+Robyn is able to serve the 10k requests in 1.8 seconds followed by Flask and FastAPI, which take around 5 seconds(using 5 workers on a dual-core machine). Finally, Django takes around 13.5070 seconds.
 
 ## Verbose Logs
+
 Flask(Gunicorn)
+
 ```
 Summary:
   Success rate: 1.0000
@@ -99,6 +108,7 @@ Status code distribution:
 ```
 
 FastAPI(Uvicorn)
+
 ```
 Summary:
   Success rate: 1.0000
@@ -143,6 +153,7 @@ Status code distribution:
 ```
 
 Robyn
+
 ```
 Summary:
   Success rate:	1.0000
@@ -187,6 +198,7 @@ Status code distribution:
 ```
 
 Django(Gunicorn)
+
 ```
 Summary:
   Success rate: 1.0000
@@ -230,8 +242,8 @@ Status code distribution:
   [200] 10000 responses
 ```
 
-
 Robyn(with 5 workers)
+
 ```
 Summary:
   Success rate:	1.0000

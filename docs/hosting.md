@@ -2,12 +2,11 @@
 
 The process of hosting a Robyn app on various cloud providers.
 
-
 ### Railway
 
 We will be deploying the app on [Railway](https://railway.app/).
 
-A GitHub account is needed as a mandatory pre-requisite.
+A GitHub account is needed as a mandatory prerequisite.
 
 We will deploy a sample "Hello World," demonstrating a simple GET route and serving an HTML file.
 
@@ -18,13 +17,12 @@ app folder/
   main.py
   requirements.txt
   index.html
-
 ```
 
-Note - Railway looks for a `main.py` as an entrypoint instead of `app.py`. The build process will fail if there is no `main.py` file.
+Note - Railway looks for a `main.py` as an entry point instead of `app.py`. The build process will fail if there is no `main.py` file.
 
+_main.py_
 
-*main.py*
 ```python
 from robyn import Robyn, serve_html
 
@@ -37,28 +35,27 @@ async def h(request):
     print(request)
     return "Hello, world!"
 
+
 @app.get("/")
 async def get_page(request):
     return serve_html("./index.html")
 
-if __name__=="__main__":
-    app.start(url="0.0.0.0", port=PORT)    
 
+if __name__ == "__main__":
+    app.start(url="0.0.0.0", port=PORT)
 ```
 
-
-*index.html*
+_index.html_
 
 ```html
 <h1> Hello World, this is Robyn framework! <h1>
-
 ```
 
-
 ### Exposing Ports
+
 The Railway documentation says the following about the listening to ports:
 
-> The easiest way to get up and running is to have your application listen on 0.0.0.0:$PORT, where PORT is a Railway-provided environment variable. 
+> The easiest way to get up and running is to have your application listen on 0.0.0.0:$PORT, where PORT is a Railway-provided environment variable.
 
 So, passing the URL as `0.0.0.0` to `app.start()` as an argument is necessary.
 
@@ -88,6 +85,5 @@ Then, we go to the "Settings" tab and click on "Generate Domain."
 We can generate a temporary domain under the "Domains" tab.
 
 ![image](https://user-images.githubusercontent.com/70811425/202870735-6b955752-c5a6-48d5-acbc-1a4ea6fd7574.png)
-
 
 We can go to our domain `<domain>/hello` and confirm that the message "Hello World" is displayed.
