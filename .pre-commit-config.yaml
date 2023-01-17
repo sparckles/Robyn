@@ -5,14 +5,10 @@ repos:
     hooks:
       - id: black
         args: [--line-length=160]
-  - repo: https://github.com/PyCQA/flake8
-    rev: 6.0.0
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.0.224
     hooks:
-      - id: flake8
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.11.4
-    hooks:
-      - id: isort
+      - id: ruff
 
 ci:
   autoupdate_schedule: weekly
