@@ -23,7 +23,6 @@ from robyn.env_populator import load_vars
 
 logger = logging.getLogger(__name__)
 
-
 class Robyn:
     """This is the python wrapper for the Robyn binaries."""
 

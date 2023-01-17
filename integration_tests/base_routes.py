@@ -1,5 +1,7 @@
 from robyn import Robyn, serve_file, jsonify, WS, serve_html
 from robyn.robyn import Response
+from dataclasses import dataclass
+from typing import Optional
 
 from robyn.templating import JinjaTemplate
 
@@ -8,6 +10,7 @@ import asyncio
 import os
 import pathlib
 import logging
+from query_types import TestQueryType
 
 app = Robyn(__file__)
 websocket = WS(app, "/web_socket")
@@ -276,9 +279,27 @@ async def file_download_async():
     file_path = os.path.join(current_file_path, "downloads", "test.txt")
     return serve_file(file_path)
 
+@dataclass
+class Test():
+    f: int
+    g: int
+
+@dataclass
+class NestedCls():
+    f: Test
+    special: Optional[str] = "Nice"
+
 @app.post("/query_validation", validate=True)
 async def test_validation(a: int, b: str):
     return jsonify({'a': a, 'b': b})
+
+@app.post("/query_validation_complex", validate=True)
+async def test_validation_complex(a: int, b: str, c: NestedCls):
+    return jsonify({'a': a, 'b': b, 'c': c})
+
+@app.post("/query_validation_forwardref", validate=True)
+async def test_validation_forwardref(a: int, b: str, c: TestQueryType):
+    return jsonify({'a': a, 'b': b, 'c': c})
 
 if __name__ == "__main__":
     app.add_request_header("server", "robyn")

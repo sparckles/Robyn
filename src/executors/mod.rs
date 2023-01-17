@@ -1,7 +1,6 @@
 /// This is the module that has all the executor functions
 /// i.e. the functions that have the responsibility of parsing and executing functions.
 use crate::types::{FunctionInfo, Request, Response};
-use std::str;
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -22,21 +21,22 @@ fn get_function_output<'a>(
     let request_hashmap = request.to_hashmap(py).unwrap();
 
     if function.validate_params {
-        let body = request.body.clone().to_vec();
-        let json_str = str::from_utf8(&body).unwrap();
+        // Perform query param validation
+        let request_hashmap = request.to_hashmap(py).unwrap();
+        let handler = function.handler.as_ref(py);
+        let robyn = py.import("robyn").unwrap();
+        let check_dependencies = robyn.call_method1("check_params_dependencies", (handler, request_hashmap,));
 
-        // Use Python to convert back to PyDict after deserializing
-        let json = py.import("json").unwrap();
-
-        // Extract the route's dependencies from the FunctionInfo
-        let json_dict = json.call_method1("loads", (json_str,)).unwrap();
-
-        // Get kwargs from the PyDict
-        let kwargs: &PyDict = json_dict.try_into().unwrap();
-
-        let test = handler.call((), Some(kwargs)).unwrap();
-
-        Ok(test)
+        // Match error so that if the dependencies don't match
+        // we raise an internal server error
+        match check_dependencies {
+            Ok(r) => {
+                let kwargs: &PyDict = r.extract().unwrap();
+                let response = handler.call((), Some(kwargs)).unwrap();
+                Ok(response)
+            }
+            Err(e) => Err(e)
+        }
     } else {
         // this makes the request object accessible across every route
         match function.number_of_params {

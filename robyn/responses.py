@@ -1,4 +1,5 @@
 import json
+import msgspec
 from typing import Any, Dict
 
 
@@ -28,11 +29,12 @@ def serve_file(file_path: str) -> Dict[str, Any]:
     }
 
 
-def jsonify(input_dict: dict) -> str:
+def jsonify(input_dict: dict) -> bytes:
     """
     This function serializes input dict to a json string
 
     :param input_dict dict: response of the function
     """
-
-    return json.dumps(input_dict)
+    # Need to determine how to cache msgspec encoder globally
+    # Need to figure out how to encode to string directly (without decoding from byte format)
+    return msgspec.json.encode(input_dict).decode('utf-8')

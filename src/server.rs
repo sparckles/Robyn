@@ -373,34 +373,6 @@ async fn index(
     {
         request.params = route_params;
 
-        // Perform dependency validation
-        // May bottleneck due to calling GIL
-        if function.validate_params {
-            let mut cont = false;
-            Python::with_gil(|py| {
-                let request_hashmap = request.to_hashmap(py).unwrap();
-
-                // Retrieve the FunctionInfo from the route
-                let handler = function.handler.as_ref(py);
-
-                // Import dependency extraction
-                let robyn = py.import("robyn").unwrap();
-
-                // Extract the route's dependencies from the FunctionInfo
-                let dependencies = robyn.call_method1("get_signature", (handler,)).unwrap();
-
-                // Check if the request params match with the dependencies
-                let check_dependencies = robyn.call_method1("check_params_dependencies", (dependencies, request_hashmap,)).unwrap();
-            
-                cont = check_dependencies.extract().unwrap();
-            });
-
-            if !cont {
-                response_builder.status(StatusCode::INTERNAL_SERVER_ERROR);
-                return response_builder.finish();
-            };
-        };
-
         match execute_http_function(&request, function).await {
             Ok(r) => {
                 response_builder.status(StatusCode::from_u16(r.status_code).unwrap());
