@@ -44,7 +44,7 @@ class Robyn:
         load_vars(project_root=directory_path)
         self._config_logger()
 
-    def _add_route(self, route_type, endpoint, handler, is_const=False, validate_params=False):
+    def _add_route(self, route_type, endpoint, handler, validate_params=False, is_const=False):
         """
         [This is base handler for all the decorators]
 
@@ -200,7 +200,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("GET", endpoint, handler, const)
+            return self._add_route("GET", endpoint, handler, is_const=const)
 
         return inner
 
@@ -212,7 +212,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("POST", endpoint, handler, validate_params=validate)
+            return self._add_route("POST", endpoint, handler, validate)
 
         return inner
 
@@ -224,7 +224,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("PUT", endpoint, handler, validate_params=validate)
+            return self._add_route("PUT", endpoint, handler, validate)
 
         return inner
 
@@ -236,7 +236,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("DELETE", endpoint, handler, validate_params=validate)
+            return self._add_route("DELETE", endpoint, handler, validate)
 
         return inner
 
@@ -248,7 +248,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("PATCH", endpoint, handler, validate_params=validate)
+            return self._add_route("PATCH", endpoint, handler, validate)
 
         return inner
 
@@ -260,7 +260,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("HEAD", endpoint, handler, validate_params=validate)
+            return self._add_route("HEAD", endpoint, handler, validate)
 
         return inner
 
@@ -272,7 +272,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("OPTIONS", endpoint, handler, validate_params=validate)
+            return self._add_route("OPTIONS", endpoint, handler, validate)
 
         return inner
 
@@ -284,7 +284,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("CONNECT", endpoint, handler, validate_params=validate)
+            return self._add_route("CONNECT", endpoint, handler, validate)
 
         return inner
 
@@ -296,7 +296,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("TRACE", endpoint, handler, validate_params=validate)
+            return self._add_route("TRACE", endpoint, handler, validate)
 
         return inner
 

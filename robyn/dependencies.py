@@ -39,6 +39,16 @@ def get_typed_annotation(annotation: Any, globalns: Dict[str, Any]) -> Any:
         annotation = evaluate_forwardref(annotation, globalns, globalns)
     return annotation
 
+def check_custom_class(annotation) -> bool:
+    """
+    Checks if the given class/annotation is a user-defined class
+    """
+    # Check if annotation is a type at all, or if it is a Union first to avoid errors
+    # somewhat hacky solution; refer to Pydantic's lenient_subclass function for improvements
+    return isinstance(annotation, type) and not (annotation is Union) \
+        and not issubclass(annotation, sequence_types + (dict, )) \
+        and not issubclass(annotation, defaults)
+
 def get_signature(call: Callable[..., Any]) -> Signature:
     """
     Gets the dependencies of the function wrapped by the routing decorators
@@ -50,21 +60,10 @@ def get_signature(call: Callable[..., Any]) -> Signature:
         name = param.name,
         kind = param.kind,
         default = param.default,
-        # Add ForwardRef analysis here as the annotation value
         annotation = get_typed_annotation(param.annotation, globalns),
     ) for param in sign.parameters.values()]
 
     return Signature(params)
-
-def check_custom_class(annotation) -> bool:
-    """
-    Checks if the given class/annotation is a user-defined class
-    """
-    # Check if annotation is a type at all, or if it is a Union first to avoid errors
-    # somewhat hacky solution, may change later; refer to Pydantic's lenient_subclass function
-    return isinstance(annotation, type) and not (annotation is Union) \
-        and not issubclass(annotation, sequence_types + (dict, )) \
-        and not issubclass(annotation, defaults)
         
 def model_eval(param, custom_model=None):
     if not param.default == param.empty:
@@ -76,18 +75,14 @@ def create_model(call: Callable[..., Any]) -> msgspec.Struct:
     Creates a validation model for a given handler function
     """
     sign = get_signature(call)
-    print("Signature", sign)
     cstruct = list()
     for param in sign.parameters.values():
         cust_model = None
-        print("Checking custom class on", param.annotation)
         if check_custom_class(param.annotation):
-            print("Custom class", param.annotation)
             cust_model = create_model(param.annotation)
         
         cstruct.append(model_eval(param, cust_model))
 
-    print("cstruct: ", cstruct)
     return msgspec.defstruct(call.__name__, fields=cstruct, bases=(BaseValidation,))
 
 def model_to_dict(model: BaseValidation) -> dict:
@@ -104,16 +99,12 @@ def check_params_dependencies(call: Callable[..., Any], request: Dict[Any, Any])
     """
     # Try to create a model from the given request args
     model = create_model(call)
-    print("Current model is", signature(model))
     func_input = None
     try:
         # Find a way to globally cache decoder? Is it multiprocess safe?
         # Validate the model (annotations are only checked when decoding messages in msgspec)
         func_input = msgspec.json.decode(bytes(request['body']), type=model)
-        print("Decoded model", func_input)
-        print("Valid model!")
     except msgspec.ValidationError as exc:
-        print("Invalid model due to", exc)
         raise msgspec.ValidationError from exc
 
     return model_to_dict(func_input)
