@@ -1,11 +1,11 @@
+import os
+import pathlib
 import signal
+import subprocess
 import sys
 from typing import List, Optional
-import pytest
-import subprocess
-import pathlib
-import os
 import time
+import pytest
 
 
 def spawn_process(command: List[str]) -> subprocess.Popen:
@@ -24,11 +24,12 @@ def kill_process(process: subprocess.Popen) -> None:
         process.send_signal(signal.CTRL_BREAK_EVENT)
         process.kill()
         return
-    
+
     try:
         os.killpg(os.getpgid(process.pid), signal.SIGKILL)
     except ProcessLookupError:
         pass
+
 
 @pytest.fixture(scope="session")
 def session():

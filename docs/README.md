@@ -1,4 +1,3 @@
-
 <img alt="Robyn Logo" src="https://user-images.githubusercontent.com/29942790/140995889-5d91dcff-3aa7-4cfb-8a90-2cddf1337dca.png" width="250" />
 
 # Robyn
@@ -11,11 +10,9 @@
 [![License](https://img.shields.io/badge/License-BSD_2.0-black)](#license)
 [![Discord](https://img.shields.io/discord/999782964143603713?label=discord&logo=discord&logoColor=white&style=for-the-badge&color=blue)](https://discord.gg/qKF5sSnC)
 
-
 [![view - Documentation](https://img.shields.io/badge/view-Documentation-blue?style=for-the-badge)](https://sansyrox.github.io/robyn/#/)
 
 Robyn is an async Python backend server with a runtime written in Rust, btw.
-
 
 ## 📦 Installation
 
@@ -34,20 +31,21 @@ conda install -c conda-forge robyn
 ## 🤔 Usage
 
 ```python
-
 from robyn import Robyn
 
 app = Robyn(__file__)
+
 
 @app.get("/")
 async def h(request):
     return "Hello, world!"
 
-app.start(port=5000)
 
+app.start(port=5000)
 ```
 
 ## 💡 Features
+
 - Under active development!
 - Written in Rust, btw xD
 - A multithreaded Runtime
@@ -60,7 +58,6 @@ app.start(port=5000)
 - Middlewares
 - Hot Reloading
 - Community First and truly FOSS!
-
 
 ## 🗒️ Contributor Guidelines
 
@@ -97,7 +94,6 @@ optional arguments:
   --log-level LEVEL : this flag allows you to set the log level
 ```
 
-
 ## ✨ Contributors/Supporters
 
 To contribute to Robyn, make sure to first go through the [CONTRIBUTING.md](./CONTRIBUTING.md).
@@ -108,8 +104,7 @@ Thanks to all the contributors of the project. Robyn will not be what it is with
   <img src="https://contrib.rocks/image?repo=sansyrox/robyn" />
 </a>
 
-
-Special thanks to the [ PyO3 ](https://pyo3.rs/v0.13.2/) community and [ Andrew from PyO3-asyncio ](https://github.com/awestlake87/pyo3-asyncio) for their amazing libraries and their support for my queries. 💖
+Special thanks to the [PyO3](https://pyo3.rs/v0.13.2/) community and [Andrew from PyO3-asyncio](https://github.com/awestlake87/pyo3-asyncio) for their amazing libraries and their support for my queries. 💖
 
 ## ✨ Sponsors
 
@@ -117,7 +112,4 @@ These sponsors help us make the magic happen!
 
 [![DigitalOcean Referral Badge](https://web-platforms.sfo2.cdn.digitaloceanspaces.com/WWW/Badge%201.svg)](https://www.digitalocean.com/?refcode=3f2b9fd4968d&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge)
 
-- [ Shivay Lamba ](https://github.com/shivaylamba)
-
-
-
+- [Shivay Lamba](https://github.com/shivaylamba)

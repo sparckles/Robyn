@@ -1,9 +1,10 @@
 # from integration_tests.conftest import test_session
-from robyn.env_populator import load_vars, parser
-import pathlib
 import os
+import pathlib
+
 import pytest
 
+from robyn.env_populator import load_vars, parser
 
 path = pathlib.Path(__file__).parent
 
@@ -27,5 +28,5 @@ def test_env_population(test_session, env_file):
     load_vars(variables=parser(config_path=env_path))
     PORT = os.environ["ROBYN_PORT"]
     HOST = os.environ["ROBYN_URL"]
-    assert PORT == '8080'
+    assert PORT == "8080"
     assert HOST == "127.0.0.1"

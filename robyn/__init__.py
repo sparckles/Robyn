@@ -11,6 +11,7 @@ from watchdog.observers import Observer
 
 from robyn.argument_parser import ArgumentParser
 from robyn.dev_event_handler import EventHandler
+from robyn.env_populator import load_vars
 from robyn.events import Events
 from robyn.log_colors import Colors
 from robyn.processpool import spawn_process
@@ -20,7 +21,6 @@ from robyn.router import MiddlewareRouter, Router, WebSocketRouter
 from robyn.types import Directory, Header
 from robyn.dependencies import check_params_dependencies
 from robyn.ws import WS
-from robyn.env_populator import load_vars
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +83,9 @@ class Robyn:
         index_file: Optional[str] = None,
         show_files_listing: bool = False,
     ):
-        self.directories.append(Directory(route, directory_path, index_file, show_files_listing))
+        self.directories.append(
+            Directory(route, directory_path, index_file, show_files_listing)
+        )
 
     def add_request_header(self, key: str, value: str) -> None:
         self.request_headers.append(Header(key, value))

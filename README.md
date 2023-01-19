@@ -1,4 +1,3 @@
-
 <img alt="Robyn Logo" src="https://user-images.githubusercontent.com/29942790/140995889-5d91dcff-3aa7-4cfb-8a90-2cddf1337dca.png" width="250" />
 
 # Robyn
@@ -11,11 +10,9 @@
 [![License](https://img.shields.io/badge/License-BSD_2.0-black)](#license)
 [![Discord](https://img.shields.io/discord/999782964143603713?label=discord&logo=discord&logoColor=white&style=for-the-badge&color=blue)](https://discord.gg/rkERZ5eNU8)
 
-
 [![view - Documentation](https://img.shields.io/badge/view-Documentation-blue?style=for-the-badge)](https://sansyrox.github.io/robyn/#/)
 
 Robyn is a fast async Python web server with a runtime written in Rust.
-
 
 Check out the talk at **PyCon Sweden 2021** about [Robyn: An async python web framework with a Rust runtime](https://www.youtube.com/watch?v=DK9teAs72Do)
 
@@ -36,7 +33,6 @@ conda install -c conda-forge robyn
 ## 🤔 Usage
 
 ```python
-
 from robyn import Robyn
 
 app = Robyn(__file__)
@@ -46,10 +42,10 @@ async def h(request):
     return "Hello, world!"
 
 app.start(port=5000)
-
 ```
 
 ## 💡 Features
+
 - Under active development!
 - Written in Rust, btw xD
 - A multithreaded Runtime
@@ -63,7 +59,6 @@ app.start(port=5000)
 - Hot Reloading
 - Community First and truly FOSS!
 
-
 ## 🗒️ Contributor Guidelines
 
 Feel free to open an issue for any clarification or for any suggestions.
@@ -76,7 +71,7 @@ If you're feeling curious. You can take a look at a more detailed architecture [
 
 1. Install the pre-commit git hooks: `pre-commit install`
 
-1. Add more routes in the `integration_tests/base_routes.py` file(if you like).
+1. Add more routes in the `integration_tests/base_routes.py` file (if you like).
 
 1. Run `maturin develop` or `maturin develop --cargo-extra-args="--features=io-uring"` (if you want to run the experimental version).
 
@@ -99,7 +94,6 @@ optional arguments:
   --log-level LEVEL : this flag allows you to set the log level
 ```
 
-
 ## ✨ Contributors/Supporters
 
 To contribute to Robyn, make sure to first go through the [CONTRIBUTING.md](./CONTRIBUTING.md).
@@ -110,8 +104,7 @@ Thanks to all the contributors of the project. Robyn will not be what it is with
   <img src="https://contrib.rocks/image?repo=sansyrox/robyn" />
 </a>
 
-
-Special thanks to the [ PyO3 ](https://pyo3.rs/v0.13.2/) community and [ Andrew from PyO3-asyncio ](https://github.com/awestlake87/pyo3-asyncio) for their amazing libraries and their support for my queries. 💖
+Special thanks to the [PyO3](https://pyo3.rs/v0.13.2/) community and [Andrew from PyO3-asyncio](https://github.com/awestlake87/pyo3-asyncio) for their amazing libraries and their support for my queries. 💖
 
 ## ✨ Sponsors
 
@@ -119,7 +112,4 @@ These sponsors help us make the magic happen!
 
 [![DigitalOcean Referral Badge](https://web-platforms.sfo2.cdn.digitaloceanspaces.com/WWW/Badge%201.svg)](https://www.digitalocean.com/?refcode=3f2b9fd4968d&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge)
 
-- [ Shivay Lamba ](https://github.com/shivaylamba)
-
-
-
+- [Shivay Lamba](https://github.com/shivaylamba)

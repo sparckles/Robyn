@@ -1,15 +1,18 @@
 default_stages: [push]
 repos:
--   repo: https://github.com/psf/black
-    rev: 21.12b0
+  - repo: https://github.com/psf/black
+    rev: 22.12.0
     hooks:
-    - id: black
-      args: [--line-length=160]
--   repo: https://github.com/PyCQA/flake8
-    rev: 4.0.1
+      - id: black
+        args: [--line-length=160]
+  - repo: https://github.com/PyCQA/flake8
+    rev: 6.0.0
     hooks:
-    - id: flake8
--   repo: https://github.com/PyCQA/isort
-    rev: 5.10.1
+      - id: flake8
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.11.4
     hooks:
-    - id: isort
+      - id: isort
+
+ci:
+  autoupdate_schedule: weekly

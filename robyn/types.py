@@ -10,7 +10,12 @@ class Directory:
     show_files_listing: bool
 
     def as_list(self):
-        return [self.route, self.directory_path, self.index_file, self.show_files_listing]
+        return [
+            self.route,
+            self.directory_path,
+            self.index_file,
+            self.show_files_listing,
+        ]
 
 
 @dataclass
@@ -20,5 +25,3 @@ class Header:
 
     def as_list(self):
         return [self.key, self.val]
-
-
