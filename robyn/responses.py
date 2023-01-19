@@ -29,7 +29,7 @@ def serve_file(file_path: str) -> Dict[str, Any]:
     }
 
 
-def jsonify(input_dict: dict) -> bytes:
+def jsonify(input_dict: dict) -> str:
     """
     This function serializes input dict to a json string
 

@@ -18,8 +18,8 @@ from robyn.responses import jsonify, serve_file, serve_html
 from robyn.robyn import FunctionInfo, SocketHeld
 from robyn.router import MiddlewareRouter, Router, WebSocketRouter
 from robyn.types import Directory, Header
+from robyn.dependencies import check_params_dependencies
 from robyn.ws import WS
-from robyn.dependencies import get_signature, check_params_dependencies
 from robyn.env_populator import load_vars
 
 logger = logging.getLogger(__name__)

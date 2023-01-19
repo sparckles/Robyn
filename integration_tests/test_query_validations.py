@@ -46,21 +46,42 @@ CORRECT_BODY_COMPLEX_NODEFAULT_RESULT = {
 }
 
 CORRECT_BODY_COMPLEX_FORWARDREF = {
-    "a": 5,
-    "b": "hello",
-    "c": {
-        "a": 5,
-	    "b": {"c": 7, "d": "Hello"}
-        }
+    "a": {
+        "a": {"a": 5, "b": "Hello"}
+    }
 }
 
 INCORRECT_BODY_COMPLEX_FORWARDREF = {
-    "a": 5,
-    "b": "hello",
-    "c": {
+    "a": {
+        "a": {"a": 5, "b": 7}
+    }
+}
+
+CORRECT_BODY_COMPLEX_CTOR = {
+    "a": {
         "a": 5,
-	    "b": {"c": 7, "d": 9}
-        }
+        "b": "Nicer"
+    }
+}
+
+INCORRECT_BODY_COMPLEX_CTOR = {
+    "a": {
+        "a": 5,
+        "b": 6
+    }
+}
+
+CORRECT_BODY_COMPLEX_CTOR_NODEFAULT = {
+    "a": {
+        "a": 5
+    }
+}
+
+CORRECT_BODY_COMPLEX_CTOR_NODEFAULT_RESULT = {
+    "a": {
+        "a": 5,
+        "b": "Nice"    
+    }
 }
 
 def test_post_simple_correct(session):
@@ -86,11 +107,17 @@ def test_post_complex_default_correct(session):
     assert res.status_code == 200
     assert res.json() == CORRECT_BODY_COMPLEX_NODEFAULT_RESULT
 
-def test_post_complex_forwardref_correct(session):
-    res = requests.post(f"{BASE_URL}/query_validation_forwardref", json=CORRECT_BODY_COMPLEX_FORWARDREF)
+def test_post_complex_ctor_correct(session):
+    res = requests.post(f"{BASE_URL}/query_validation_ctor", json=CORRECT_BODY_COMPLEX_CTOR)
     assert res.status_code == 200
-    assert res.json() == CORRECT_BODY_COMPLEX_FORWARDREF
+    assert res.json() == CORRECT_BODY_COMPLEX_CTOR
 
-def test_post_complex_forwardref_incorrect(session):
-    res = requests.post(f"{BASE_URL}/query_validation_forwardref", json=INCORRECT_BODY_COMPLEX_FORWARDREF)
+def test_post_complex_ctor_incorrect(session):
+    res = requests.post(f"{BASE_URL}/query_validation_ctor", json=INCORRECT_BODY_COMPLEX_CTOR)
     assert res.status_code == 500
+
+def test_post_complex_ctor_nodefault(session):
+    res = requests.post(f"{BASE_URL}/query_validation_ctor", json=CORRECT_BODY_COMPLEX_CTOR_NODEFAULT)
+    assert res.status_code == 200
+    assert res.json() == CORRECT_BODY_COMPLEX_CTOR_NODEFAULT_RESULT
+

@@ -21,16 +21,18 @@ fn get_function_output<'a>(
     let request_hashmap = request.to_hashmap(py).unwrap();
 
     if function.validate_params {
+        println!("Validating params");
         // Perform query param validation
         let request_hashmap = request.to_hashmap(py).unwrap();
         let handler = function.handler.as_ref(py);
         let robyn = py.import("robyn").unwrap();
         let check_dependencies = robyn.call_method1("check_params_dependencies", (handler, request_hashmap,));
-
+        println!("Got result of check dependencies {:?}", check_dependencies);
         // Match error so that if the dependencies don't match
         // we raise an internal server error
         match check_dependencies {
             Ok(r) => {
+                println!("Okay validation response from check dependencies");
                 let kwargs: &PyDict = r.extract().unwrap();
                 let response = handler.call((), Some(kwargs)).unwrap();
                 Ok(response)

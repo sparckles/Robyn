@@ -1,7 +1,5 @@
 from robyn import Robyn, serve_file, jsonify, WS, serve_html
 from robyn.robyn import Response
-from dataclasses import dataclass
-from typing import Optional
 
 from robyn.templating import JinjaTemplate
 
@@ -10,7 +8,7 @@ import asyncio
 import os
 import pathlib
 import logging
-from query_types import TestQueryType
+from conftest import NestedCls, TestQueryType, TestForwardRef, TestCtor
 
 app = Robyn(__file__)
 websocket = WS(app, "/web_socket")
@@ -279,16 +277,6 @@ async def file_download_async():
     file_path = os.path.join(current_file_path, "downloads", "test.txt")
     return serve_file(file_path)
 
-@dataclass
-class Test():
-    f: int
-    g: int
-
-@dataclass
-class NestedCls():
-    f: Test
-    special: Optional[str] = "Nice"
-
 @app.post("/query_validation", validate=True)
 async def test_validation(a: int, b: str):
     return jsonify({'a': a, 'b': b})
@@ -297,9 +285,17 @@ async def test_validation(a: int, b: str):
 async def test_validation_complex(a: int, b: str, c: NestedCls):
     return jsonify({'a': a, 'b': b, 'c': c})
 
-@app.post("/query_validation_forwardref", validate=True)
-async def test_validation_forwardref(a: int, b: str, c: TestQueryType):
+@app.post("/query_validation_import", validate=True)
+async def test_validation_import(a: int, b: str, c: TestQueryType):
     return jsonify({'a': a, 'b': b, 'c': c})
+
+@app.post("/query_validation_forwardref", validate=True)
+async def test_validation_forwardref(a: TestForwardRef):
+    return jsonify({'a': a})
+
+@app.post("/query_validation_ctor", validate=True)
+async def test_validation_ctor(a: TestCtor):
+    return jsonify({'a': a})
 
 if __name__ == "__main__":
     app.add_request_header("server", "robyn")

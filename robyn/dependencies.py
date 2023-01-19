@@ -1,6 +1,6 @@
 
-from typing import Any, Callable, List, Dict, Union, ForwardRef, cast
-from inspect import signature, Signature, Parameter, getmembers
+from typing import Any, Callable, List, Dict, Union, ForwardRef, cast, get_type_hints
+from inspect import signature, Signature, Parameter, getmembers, isfunction
 import msgspec
 import sys
 
@@ -10,8 +10,11 @@ defaults = (int, float, str, bool, bytes, bytearray)
 class BaseValidation(msgspec.Struct, forbid_unknown_fields=True):
     """
     Base class for validation, used to explicitly forbid unknown fields
-    The response body MUST be exactly as the params specify
+    The response body MUST be exactly as the params specify,
+    hence forbid_unknown_fields = True
     """
+    # Create a metaclass so we can "vary" the arguments sent into msgspec.Struct
+    # to increase user customizability?
     pass
 
 def decode_bytearray(req):
@@ -39,6 +42,14 @@ def get_typed_annotation(annotation: Any, globalns: Dict[str, Any]) -> Any:
         annotation = evaluate_forwardref(annotation, globalns, globalns)
     return annotation
 
+def model_to_dict(model: object) -> dict:
+    ret_val = dict()
+    for key, value in getmembers(model):
+        if not key.startswith('_'):
+            ret_val[key] = value
+    
+    return ret_val
+
 def check_custom_class(annotation) -> bool:
     """
     Checks if the given class/annotation is a user-defined class
@@ -49,9 +60,34 @@ def check_custom_class(annotation) -> bool:
         and not issubclass(annotation, sequence_types + (dict, )) \
         and not issubclass(annotation, defaults)
 
+def get_class_signature(call: Callable[..., Any]):
+    """
+    Gets the signature of a class that has no constructor
+    """
+    # Get the type annotations of the class
+    annotations = get_type_hints(call)
+    actual_params = annotations.keys()
+    globalns = getattr(call, "__globals__", {})
+
+    # Get object representation as dictionary (to get the default values)
+    class_dict = model_to_dict(call)
+
+    # Generate the signature
+    params = [
+        Parameter(
+            name = key,
+            default = class_dict.get(key, Parameter.empty),
+            kind = Parameter.POSITIONAL_OR_KEYWORD,
+            annotation = get_typed_annotation(annotations[key], globalns),
+        ) for key in actual_params
+    ]
+
+    return Signature(params)
+    
+
 def get_signature(call: Callable[..., Any]) -> Signature:
     """
-    Gets the dependencies of the function wrapped by the routing decorators
+    Gets the function signature wrapped by the routing decorators
     """
     # Credit to FastAPI
     sign = signature(call)
@@ -74,7 +110,15 @@ def create_model(call: Callable[..., Any]) -> msgspec.Struct:
     """
     Creates a validation model for a given handler function
     """
-    sign = get_signature(call)
+    sign: Any = Any
+    # If constructor does not exist, and the class is a non-default class
+    # then use get_class_signature. Otherwise, if the constructor exists, we
+    # base the model off of the constructor's type annotations
+    if check_custom_class(type(call)) and not isfunction(call.__init__):
+        sign = get_class_signature(call)
+    else:
+        sign = get_signature(call)
+    
     cstruct = list()
     for param in sign.parameters.values():
         cust_model = None
@@ -84,14 +128,6 @@ def create_model(call: Callable[..., Any]) -> msgspec.Struct:
         cstruct.append(model_eval(param, cust_model))
 
     return msgspec.defstruct(call.__name__, fields=cstruct, bases=(BaseValidation,))
-
-def model_to_dict(model: BaseValidation) -> dict:
-    ret_val = dict()
-    for key, value in getmembers(model):
-        if not key.startswith('_'):
-            ret_val[key] = value
-    
-    return ret_val
 
 def check_params_dependencies(call: Callable[..., Any], request: Dict[Any, Any]):
     """
@@ -106,7 +142,7 @@ def check_params_dependencies(call: Callable[..., Any], request: Dict[Any, Any])
         func_input = msgspec.json.decode(bytes(request['body']), type=model)
     except msgspec.ValidationError as exc:
         raise msgspec.ValidationError from exc
-
+    
     return model_to_dict(func_input)
 
 
