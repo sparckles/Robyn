@@ -21,6 +21,10 @@ class Response:
     headers: dict[str, str]
     body: str
 
+    def set_file_path(file_path):
+        pass
+
+
 class Server:
     def __init__(self) -> None:
         pass
