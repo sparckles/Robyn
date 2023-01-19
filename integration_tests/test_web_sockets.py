@@ -1,19 +1,14 @@
-import asyncio
-
-from websockets import connect
+from websocket import create_connection
 
 BASE_URL = "ws://127.0.0.1:5000"
 
 
 def test_web_socket(session):
-    async def start_ws(uri):
-        async with connect(uri) as websocket:
-            assert await websocket.recv() == "Hello world, from ws"
-            await websocket.send("My name is?")
-            assert await websocket.recv() == "Whaaat??"
-            await websocket.send("My name is?")
-            assert await websocket.recv() == "Whooo??"
-            await websocket.send("My name is?")
-            assert await websocket.recv() == "*chika* *chika* Slim Shady."
-
-    asyncio.run(start_ws(f"{BASE_URL}/web_socket"))
+    ws = create_connection(f"{BASE_URL}/web_socket")
+    assert ws.recv() == "Hello world, from ws"
+    ws.send("My name is?")
+    assert ws.recv() == "Whaaat??"
+    ws.send("My name is?")
+    assert ws.recv() == "Whooo??"
+    ws.send("My name is?")
+    assert ws.recv() == "*chika* *chika* Slim Shady."

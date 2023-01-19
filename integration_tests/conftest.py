@@ -39,7 +39,7 @@ def session():
     base_routes = os.path.join(current_file_path, "./base_routes.py")
     command = ["python3", base_routes]
     process = spawn_process(command)
-    time.sleep(5)
+    time.sleep(1)
     yield
     kill_process(process)
 
@@ -50,7 +50,7 @@ def default_session():
     base_routes = os.path.join(current_file_path, "./base_routes.py")
     command = ["python3", base_routes]
     process = spawn_process(command)
-    time.sleep(5)
+    time.sleep(1)
     yield
     kill_process(process)
 
@@ -75,7 +75,7 @@ def dev_session():
     base_routes = os.path.join(current_file_path, "./base_routes.py")
     command = ["python3", base_routes, "--dev"]
     process = spawn_process(command)
-    time.sleep(5)
+    time.sleep(1)
     yield
     kill_process(process)
 
@@ -88,6 +88,6 @@ def test_session():
     base_routes = os.path.join(current_file_path, "./base_routes.py")
     command = ["python3", base_routes, "--dev"]
     process = spawn_process(command)
-    time.sleep(5)
+    time.sleep(1)
     yield
     kill_process(process)
