@@ -27,7 +27,6 @@ fn get_function_output<'a>(
         let check_dependencies = validator.call1((handler, request_hashmap,));
         // Match error so that if the dependencies don't match
         // we raise an internal server error
-        println!("Check dependencies {:?}", check_dependencies);
         match check_dependencies {
             Ok(r) => {
                 let kwargs: &PyDict = r.extract().unwrap();
