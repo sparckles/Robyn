@@ -4,6 +4,7 @@ use crate::types::{FunctionInfo, Request, Response};
 
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::ops::Not;
 
 use anyhow::{Context, Result};
 use log::debug;
@@ -18,16 +19,15 @@ fn get_function_output<'a>(
     request: &Request,
 ) -> Result<&'a PyAny, PyErr> {
     let handler = function.handler.as_ref(py);
+    let validator = function.validator.as_ref(py);
     let request_hashmap = request.to_hashmap(py).unwrap();
 
-    if function.validate_params {
+    if validator.is_none().not() && validator.is_callable() {
         // Perform query param validation
-        let request_hashmap = request.to_hashmap(py).unwrap();
-        let handler = function.handler.as_ref(py);
-        let robyn = py.import("robyn").unwrap();
-        let check_dependencies = robyn.call_method1("check_params_dependencies", (handler, request_hashmap,));
+        let check_dependencies = validator.call1((handler, request_hashmap,));
         // Match error so that if the dependencies don't match
         // we raise an internal server error
+        println!("Check dependencies {:?}", check_dependencies);
         match check_dependencies {
             Ok(r) => {
                 let kwargs: &PyDict = r.extract().unwrap();

@@ -45,7 +45,7 @@ class Robyn:
         load_vars(project_root=directory_path)
         self._config_logger()
 
-    def _add_route(self, route_type, endpoint, handler, validate_params=False, is_const=False):
+    def _add_route(self, route_type, endpoint, handler, validate_params=False, validator=None, is_const=False):
         """
         [This is base handler for all the decorators]
 
@@ -56,7 +56,7 @@ class Robyn:
 
         """ We will add the status code here only
         """
-        return self.router.add_route(route_type, endpoint, handler, is_const, validate_params)
+        return self.router.add_route(route_type, endpoint, handler, is_const, validate_params, validator)
 
     def before_request(self, endpoint: str) -> Callable[..., None]:
         """
@@ -99,7 +99,7 @@ class Robyn:
             return
 
         is_async = asyncio.iscoroutinefunction(handler)
-        self.event_handlers[event_type] = FunctionInfo(handler, is_async, 0, False)
+        self.event_handlers[event_type] = FunctionInfo(handler, is_async, 0, None)
 
     def startup_handler(self, handler: Callable) -> None:
         self._add_event_handler(Events.STARTUP, handler)
@@ -207,7 +207,7 @@ class Robyn:
 
         return inner
 
-    def post(self, endpoint: str, validate: bool = False):
+    def post(self, endpoint: str, validate: bool = False, validator: Optional[Callable] = check_params_dependencies):
         """
         The @app.post decorator to add a get route
 
@@ -215,11 +215,11 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("POST", endpoint, handler, validate)
+            return self._add_route("POST", endpoint, handler, validate, validator)
 
         return inner
 
-    def put(self, endpoint: str, validate: bool = False):
+    def put(self, endpoint: str, validate: bool = False, validator: Optional[Callable] = check_params_dependencies):
         """
         The @app.put decorator to add a get route
 
@@ -227,11 +227,11 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("PUT", endpoint, handler, validate)
+            return self._add_route("PUT", endpoint, handler, validate, validator)
 
         return inner
 
-    def delete(self, endpoint: str, validate: bool = False):
+    def delete(self, endpoint: str, validate: bool = False, validator: Optional[Callable] = check_params_dependencies):
         """
         The @app.delete decorator to add a get route
 
@@ -239,11 +239,11 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("DELETE", endpoint, handler, validate)
+            return self._add_route("DELETE", endpoint, handler, validate, validator)
 
         return inner
 
-    def patch(self, endpoint: str, validate: bool = False):
+    def patch(self, endpoint: str, validate: bool = False, validator: Optional[Callable] = check_params_dependencies):
         """
         [The @app.patch decorator to add a get route]
 
@@ -251,11 +251,11 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("PATCH", endpoint, handler, validate)
+            return self._add_route("PATCH", endpoint, handler, validate, validator)
 
         return inner
 
-    def head(self, endpoint: str, validate: bool = False):
+    def head(self, endpoint: str, validate: bool = False, validator: Optional[Callable] = check_params_dependencies):
         """
         The @app.head decorator to add a get route
 
@@ -263,11 +263,11 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("HEAD", endpoint, handler, validate)
+            return self._add_route("HEAD", endpoint, handler, validate, validator)
 
         return inner
 
-    def options(self, endpoint: str, validate: bool = False):
+    def options(self, endpoint: str, validate: bool = False, validator: Optional[Callable] = check_params_dependencies):
         """
         The @app.options decorator to add a get route
 
@@ -275,11 +275,11 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("OPTIONS", endpoint, handler, validate)
+            return self._add_route("OPTIONS", endpoint, handler, validate, validator)
 
         return inner
 
-    def connect(self, endpoint: str, validate: bool = False):
+    def connect(self, endpoint: str, validate: bool = False, validator: Optional[Callable] = check_params_dependencies):
         """
         The @app.connect decorator to add a get route
 
@@ -287,11 +287,11 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("CONNECT", endpoint, handler, validate)
+            return self._add_route("CONNECT", endpoint, handler, validate, validator)
 
         return inner
 
-    def trace(self, endpoint: str, validate: bool = False):
+    def trace(self, endpoint: str, validate: bool = False, validator: Optional[Callable] = check_params_dependencies):
         """
         The @app.trace decorator to add a get route
 
@@ -299,7 +299,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("TRACE", endpoint, handler, validate)
+            return self._add_route("TRACE", endpoint, handler, validate, validator)
 
         return inner
 

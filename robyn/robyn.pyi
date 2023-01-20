@@ -14,7 +14,7 @@ class FunctionInfo:
     function: Callable
     is_async: bool
     number_of_params: int
-    validate_params: Optional[bool] = False
+    validator: Callable
 
 @dataclass
 class Response:

@@ -14,18 +14,18 @@ pub struct FunctionInfo {
     pub handler: Py<PyAny>,
     pub is_async: bool,
     pub number_of_params: u8,
-    pub validate_params: bool,
+    pub validator: Py<PyAny>,
 }
 
 #[pymethods]
 impl FunctionInfo {
     #[new]
-    pub fn new(handler: Py<PyAny>, is_async: bool, number_of_params: u8, validate_params: bool) -> Self {
+    pub fn new(handler: Py<PyAny>, is_async: bool, number_of_params: u8, validator: Py<PyAny>) -> Self {
         Self {
             handler,
             is_async,
             number_of_params,
-            validate_params,
+            validator,
         }
     }
 }
