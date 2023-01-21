@@ -1,5 +1,4 @@
 import os
-
 import requests
 
 
@@ -24,7 +23,7 @@ def test_global_index_request(global_session):
 
 
 def test_dev_index_request(dev_session):
-    BASE_URL = "http://127.0.0.1:5001"
+    BASE_URL = "http://127.0.0.1:8081"
     res = requests.get(f"{BASE_URL}")
-    assert os.getenv("ROBYN_PORT") == "5001"
+    assert os.getenv("ROBYN_PORT") == "8081"
     assert res.status_code == 200
