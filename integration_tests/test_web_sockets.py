@@ -1,6 +1,6 @@
 from websocket import create_connection
 
-BASE_URL = "ws://127.0.0.1:5000"
+BASE_URL = "ws://127.0.0.1:8080"
 
 
 def test_web_socket(session):

@@ -70,7 +70,7 @@ def global_session():
 @pytest.fixture(scope="session")
 def dev_session():
     os.environ["ROBYN_URL"] = "127.0.0.1"
-    os.environ["ROBYN_PORT"] = "5001"
+    os.environ["ROBYN_PORT"] = "8081"
     current_file_path = pathlib.Path(__file__).parent.resolve()
     base_routes = os.path.join(current_file_path, "./base_routes.py")
     command = ["python3", base_routes, "--dev"]

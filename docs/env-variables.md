@@ -18,6 +18,6 @@ e.g. structure
 Sample `robyn.env`
 
 ```
-ROBYN_PORT=5000
+ROBYN_PORT=8080
 ROBYN_URL=127.0.0.1
 ```
