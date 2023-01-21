@@ -94,29 +94,27 @@ impl Server {
         let directories = self.directories.clone();
         let workers = Arc::new(workers);
 
-        let asyncio = py.import("asyncio").unwrap();
+        let asyncio = py.import("asyncio")?;
+        let event_loop = asyncio.call_method0("new_event_loop")?;
+        asyncio.call_method1("set_event_loop", (event_loop,))?;
 
-        let event_loop = asyncio.call_method0("new_event_loop").unwrap();
-        asyncio
-            .call_method1("set_event_loop", (event_loop,))
-            .unwrap();
         let startup_handler = self.startup_handler.clone();
         let shutdown_handler = self.shutdown_handler.clone();
 
-        let task_locals = Arc::new(pyo3_asyncio::TaskLocals::new(event_loop).copy_context(py)?);
-        let task_locals_cleanup = task_locals.clone();
+        let task_locals = pyo3_asyncio::TaskLocals::new(event_loop).copy_context(py)?;
+        let task_locals_copy = task_locals.clone();
 
         thread::spawn(move || {
             actix_web::rt::System::new().block_on(async move {
                 debug!("The number of workers are {}", workers.clone());
-                execute_event_handler(startup_handler, &task_locals)
+                execute_event_handler(startup_handler, &task_locals_copy)
                     .await
                     .unwrap();
 
                 HttpServer::new(move || {
                     let mut app = App::new();
 
-                    let task_locals = task_locals.clone();
+                    let task_locals = task_locals_copy.clone();
                     let directories = directories.read().unwrap();
 
                     // this loop matches three types of directory serving
@@ -168,7 +166,7 @@ impl Server {
                               global_request_headers,
                               body,
                               req| {
-                            pyo3_asyncio::tokio::scope_local((*task_locals).clone(), async move {
+                            pyo3_asyncio::tokio::scope_local(task_locals.clone(), async move {
                                 index(
                                     router,
                                     const_router,
@@ -198,13 +196,12 @@ impl Server {
             debug!("Ctrl c handler");
             Python::with_gil(|py| {
                 pyo3_asyncio::tokio::run(py, async move {
-                    execute_event_handler(shutdown_handler, &task_locals_cleanup)
+                    execute_event_handler(shutdown_handler, &task_locals.clone())
                         .await
                         .unwrap();
                     Ok(())
                 })
-                .unwrap();
-            })
+            })?
         }
         Ok(())
     }

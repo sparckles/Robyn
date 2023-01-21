@@ -10,16 +10,13 @@ use pyo3_asyncio::TaskLocals;
 use uuid::Uuid;
 
 use std::collections::HashMap;
-use std::sync::Arc;
 
 /// Define HTTP actor
 #[derive(Clone)]
 struct MyWs {
     id: Uuid,
     router: HashMap<String, FunctionInfo>,
-    // can probably try removing arc from here
-    // and use clone_ref()
-    task_locals: Arc<TaskLocals>,
+    task_locals: TaskLocals,
 }
 
 fn get_function_output<'a>(
@@ -129,10 +126,8 @@ pub async fn start_web_socket(
     req: HttpRequest,
     stream: web::Payload,
     router: HashMap<String, FunctionInfo>,
-    task_locals: Arc<TaskLocals>,
+    task_locals: TaskLocals,
 ) -> Result<HttpResponse, Error> {
-    // execute the async function here
-
     ws::start(
         MyWs {
             router,
