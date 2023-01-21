@@ -1,10 +1,11 @@
-# CI to build the project for Linux, Windows, and MacOS
+# CI to release the project for Linux, Windows, and MacOS
 
-name: Build CI
+name: Release CI
 
 on:
   push:
-  pull_request:
+    tags:
+      - v*
 
 jobs:
   macos:
@@ -172,7 +173,6 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    if: "startsWith(github.ref, 'refs/tags/')"
     needs: [macos, windows, linux, linux-cross]
     steps:
       - uses: actions/download-artifact@v3
