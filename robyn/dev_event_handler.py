@@ -8,9 +8,7 @@ class EventHandler(FileSystemEventHandler):
     def __init__(self, file_name) -> None:
         self.file_name = file_name
         self.processes = []
-        self.python_alias = (
-            "python3" if not sys.platform.startswith("win32") else "python"
-        )
+        self.python_alias = "python3" if not sys.platform.startswith("win32") else "python"
         self.shell = True if sys.platform.startswith("win32") else False
 
     def start_server_first_time(self) -> None:

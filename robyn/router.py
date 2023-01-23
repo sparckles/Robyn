@@ -5,7 +5,6 @@ from inspect import signature
 from types import CoroutineType
 from typing import Callable, Dict, List, Tuple, Union
 
-from robyn.responses import jsonify
 from robyn.robyn import FunctionInfo, Response
 from robyn.ws import WS
 
@@ -41,15 +40,11 @@ class Router(BaseRouter):
         elif type(res) == Response:
             response = res
         else:
-            response = Response(
-                status_code=200, headers={"Content-Type": "text/plain"}, body=str(res)
-            )
+            response = Response(status_code=200, headers={"Content-Type": "text/plain"}, body=str(res))
 
         return response
 
-    def add_route(
-        self, route_type: str, endpoint: str, handler: Callable, is_const: bool
-    ) -> Union[Callable, CoroutineType]:
+    def add_route(self, route_type: str, endpoint: str, handler: Callable, is_const: bool) -> Union[Callable, CoroutineType]:
         @wraps(handler)
         async def async_inner_handler(*args):
             response = self._format_response(await handler(*args))
