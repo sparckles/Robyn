@@ -25,4 +25,3 @@ class Header:
 
     def as_list(self):
         return [self.key, self.val]
-
