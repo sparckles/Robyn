@@ -234,7 +234,7 @@ async def redirect_route(request):
 
 @app.get("/types/response")
 def response_type(request):
-    return Response(status_code=200, headers={}, body="OK")
+    return Response(status_code=200, headers={}, body=b"OK")
 
 
 @app.get("/types/str")
@@ -249,7 +249,7 @@ def int_type(request):
 
 @app.get("/async/types/response")
 async def async_response_type(request):
-    return Response(status_code=200, headers={}, body="OK")
+    return Response(status_code=200, headers={}, body=b"OK")
 
 
 @app.get("/async/types/str")
@@ -270,10 +270,30 @@ def file_download_sync():
 
 
 @app.get("/file_download_async")
-def file_download_async():
+async def file_download_async():
     current_file_path = pathlib.Path(__file__).parent.resolve()
     file_path = os.path.join(current_file_path, "downloads", "test.txt")
     return serve_file(file_path)
+
+
+@app.get("/binary_output_sync")
+def binary_output(request):
+    return b"OK"
+    # response = Response(
+    #     status_code=200,
+    #     headers={"Content-Type": "application/octet-stream"},
+    #     body=b"OK",
+    # )
+
+
+@app.get("/binary_output_async")
+async def binary_output(request):
+    return b"OK"
+    # response = Response(
+    #     status_code=200,
+    #     headers={"Content-Type": "application/octet-stream"},
+    #     body=b"OK",
+    # )
 
 
 if __name__ == "__main__":

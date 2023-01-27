@@ -28,7 +28,7 @@ class Router(BaseRouter):
         if type(res) == dict:
             status_code = res.get("status_code", 200)
             headers = res.get("headers", {"Content-Type": "text/plain"})
-            body = res.get("body", "")
+            body = str(res.get("body", "")).encode("utf-8")
 
             if type(status_code) != int:
                 status_code = int(status_code)  # status_code can potentially be string
@@ -39,12 +39,23 @@ class Router(BaseRouter):
                 response.set_file_path(file_path)
         elif type(res) == Response:
             response = res
+        elif type(res) == bytes:
+            response = Response(
+                status_code=200,
+                headers={"Content-Type": "application/octet-stream"},
+                body=res,
+            )
         else:
-            response = Response(status_code=200, headers={"Content-Type": "text/plain"}, body=str(res))
-
+            response = Response(
+                status_code=200,
+                headers={"Content-Type": "text/plain"},
+                body=str(res).encode("utf-8"),
+            )
         return response
 
-    def add_route(self, route_type: str, endpoint: str, handler: Callable, is_const: bool) -> Union[Callable, CoroutineType]:
+    def add_route(
+        self, route_type: str, endpoint: str, handler: Callable, is_const: bool
+    ) -> Union[Callable, CoroutineType]:
         @wraps(handler)
         async def async_inner_handler(*args):
             response = self._format_response(await handler(*args))

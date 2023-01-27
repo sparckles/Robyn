@@ -83,7 +83,9 @@ class Robyn:
         index_file: Optional[str] = None,
         show_files_listing: bool = False,
     ):
-        self.directories.append(Directory(route, directory_path, index_file, show_files_listing))
+        self.directories.append(
+            Directory(route, directory_path, index_file, show_files_listing)
+        )
 
     def add_request_header(self, key: str, value: str) -> None:
         self.request_headers.append(Header(key, value))
@@ -115,7 +117,9 @@ class Robyn:
         url = os.getenv("ROBYN_URL", url)
         port = int(os.getenv("ROBYN_PORT", port))
 
-        logger.info("%sStarting server at %s:%s %s", Colors.OKGREEN, url, port, Colors.ENDC)
+        logger.info(
+            "%sStarting server at %s:%s %s", Colors.OKGREEN, url, port, Colors.ENDC
+        )
 
         def init_processpool(socket):
 
@@ -163,7 +167,9 @@ class Robyn:
             process_pool = init_processpool(socket)
 
             def terminating_signal_handler(_sig, _frame):
-                logger.info(f"{Colors.BOLD}{Colors.OKGREEN} Terminating server!! {Colors.ENDC}")
+                logger.info(
+                    f"{Colors.BOLD}{Colors.OKGREEN} Terminating server!! {Colors.ENDC}"
+                )
                 for process in process_pool:
                     process.kill()
 
@@ -176,7 +182,9 @@ class Robyn:
         else:
             event_handler = EventHandler(self.file_path)
             event_handler.start_server_first_time()
-            logger.info(f"{Colors.OKBLUE}Dev server initialised with the directory_path : {self.directory_path}{Colors.ENDC}")
+            logger.info(
+                f"{Colors.OKBLUE}Dev server initialised with the directory_path : {self.directory_path}{Colors.ENDC}"
+            )
             observer = Observer()
             observer.schedule(event_handler, path=self.directory_path, recursive=True)
             observer.start()

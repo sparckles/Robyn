@@ -19,11 +19,10 @@ class FunctionInfo:
 class Response:
     status_code: int
     headers: dict[str, str]
-    body: str
+    body: bytes
 
     def set_file_path(self, file_path: str):
         pass
-
 
 class Server:
     def __init__(self) -> None:
