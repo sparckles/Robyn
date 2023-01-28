@@ -11,7 +11,7 @@ class SocketHeld:
 
 @dataclass
 class FunctionInfo:
-    function: Callable
+    handler: Callable
     is_async: bool
     number_of_params: int
 

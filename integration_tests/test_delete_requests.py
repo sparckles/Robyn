@@ -1,15 +1,19 @@
-import requests
-
-BASE_URL = "http://127.0.0.1:8080"
+from utils import delete
 
 
 def test_delete(session):
-    res = requests.delete(f"{BASE_URL}/delete")
-    assert res.status_code == 200
-    assert res.text == "DELETE Request"
+    res = delete("/sync/dict")
+    assert res.text == "sync dict delete"
+    assert "sync" in res.headers
+    assert res.headers["sync"] == "dict"
+    res = delete("/async/dict")
+    assert res.text == "async dict delete"
+    assert "async" in res.headers
+    assert res.headers["async"] == "dict"
 
 
 def test_delete_with_param(session):
-    res = requests.delete(f"{BASE_URL}/delete_with_body", data={"hello": "world"})
-    assert res.status_code == 200
+    res = delete("/sync/body", data={"hello": "world"})
+    assert res.text == "hello=world"
+    res = delete("/async/body", data={"hello": "world"})
     assert res.text == "hello=world"

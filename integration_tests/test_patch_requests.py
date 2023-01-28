@@ -1,15 +1,19 @@
-import requests
-
-BASE_URL = "http://127.0.0.1:8080"
+from utils import patch
 
 
 def test_patch(session):
-    res = requests.patch(f"{BASE_URL}/patch")
-    assert res.status_code == 200
-    assert res.text == "PATCH Request"
+    res = patch("/sync/dict")
+    assert res.text == "sync dict patch"
+    assert "sync" in res.headers
+    assert res.headers["sync"] == "dict"
+    res = patch("/async/dict")
+    assert res.text == "async dict patch"
+    assert "async" in res.headers
+    assert res.headers["async"] == "dict"
 
 
 def test_patch_with_param(session):
-    res = requests.patch(f"{BASE_URL}/patch_with_body", data={"hello": "world"})
-    assert res.status_code == 200
+    res = patch("/sync/body", data={"hello": "world"})
+    assert res.text == "hello=world"
+    res = patch("/async/body", data={"hello": "world"})
     assert res.text == "hello=world"

@@ -112,3 +112,17 @@ def test_session():
     process = start_server(domain, port, is_dev=True)
     yield
     kill_process(process)
+
+
+# create robyn.env before test and delete it after test
+@pytest.fixture
+def env_file():
+    CONTENT = """ROBYN_PORT=8081
+    ROBYN_URL=127.0.0.1"""
+    path = pathlib.Path(__file__).parent
+    env_path = path / "robyn.env"
+    env_path.write_text(CONTENT)
+    yield
+    env_path.unlink()
+    os.unsetenv("ROBYN_PORT")
+    os.unsetenv("ROBYN_URL")
