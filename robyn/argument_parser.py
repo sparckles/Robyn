@@ -3,7 +3,9 @@ import argparse
 
 class ArgumentParser(argparse.ArgumentParser):
     def __init__(self) -> None:
-        self.parser = argparse.ArgumentParser(description="Robyn, a fast async web framework with a rust runtime.")
+        self.parser = argparse.ArgumentParser(
+            description="Robyn, a fast async web framework with a rust runtime."
+        )
         self.parser.add_argument(
             "--processes",
             type=int,

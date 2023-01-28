@@ -7,8 +7,6 @@ from robyn.robyn import FunctionInfo, Server, SocketHeld
 from robyn.router import MiddlewareRoute, Route
 from robyn.types import Directory, Header
 from robyn.ws import WS
-from robyn.types import Directory, Header
-
 
 
 def initialize_event_loop():
