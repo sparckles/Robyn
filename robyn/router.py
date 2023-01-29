@@ -28,7 +28,7 @@ class Router(BaseRouter):
         if type(res) == dict:
             status_code = res.get("status_code", 200)
             headers = res.get("headers", {"Content-Type": "text/plain"})
-            body = str(res.get("body", "")).encode("utf-8")
+            body = res.get("body", "")
 
             if type(status_code) != int:
                 status_code = int(status_code)  # status_code can potentially be string
