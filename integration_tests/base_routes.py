@@ -277,12 +277,12 @@ async def file_download_async():
 
 
 @app.get("/binary_output_sync")
-def binary_output(request):
+def binary_output_sync(request):
     return b"OK"
 
 
 @app.get("/binary_output_response_sync")
-def binary_output_response(request):
+def binary_output_response_sync(request):
     return Response(
         status_code=200,
         headers={"Content-Type": "application/octet-stream"},
@@ -291,12 +291,12 @@ def binary_output_response(request):
 
 
 @app.get("/binary_output_async")
-async def binary_output(request):
+async def binary_output_async(request):
     return b"OK"
 
 
 @app.get("/binary_output_response_async")
-async def binary_output_response(request):
+async def binary_output_response_async(request):
     return Response(
         status_code=200,
         headers={"Content-Type": "application/octet-stream"},
@@ -305,7 +305,7 @@ async def binary_output_response(request):
 
 
 @app.get("/bad_body_type_error_sync")
-def binary_output_response_sync(request):
+def bad_body_type_error_sync(request):
     return Response(
         status_code=200,
         headers={},
