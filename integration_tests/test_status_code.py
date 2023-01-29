@@ -13,6 +13,12 @@ def test_404_post_request_status_code(session):
     assert r.status_code == 404
 
 
+def test_404_not_found(session):
+    r = requests.get(f"{BASE_URL}/actually_not_found_route")
+    assert r.status_code == 404
+    assert r.text == "Not found"
+
+
 def test_307_get_request(session):
     r = requests.get(f"{BASE_URL}/redirect")
     assert r.text == "This is the redirected route"
