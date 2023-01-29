@@ -1,6 +1,6 @@
 pytest==6.2.5
 maturin==0.12.11
-watchdog
+watchdog==2.2.1
 requests==2.26.0
 uvloop==0.17.0; platform_system!="Windows"
 multiprocess==0.70.12.2
