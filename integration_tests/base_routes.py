@@ -304,6 +304,23 @@ async def binary_output_response(request):
     )
 
 
+@app.get("/bad_body_type_error_sync")
+def binary_output_response_sync(request):
+    return Response(
+        status_code=200,
+        headers={},
+        body=None,
+    )
+
+
+# @app.get("/bad_body_type_error_async")
+# async def binary_output_response_async(request):
+#     return Response(
+#         status_code=200,
+#         headers={},
+#         body=None,
+#     )
+
 
 if __name__ == "__main__":
     app.add_request_header("server", "robyn")
