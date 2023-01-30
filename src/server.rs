@@ -385,7 +385,8 @@ async fn index(
             }
         }
     } else {
-        response_builder.finish()
+        response_builder.status(StatusCode::NOT_FOUND);
+        response_builder.body("Not found")
     };
 
     apply_middleware(
