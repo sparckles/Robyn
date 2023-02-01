@@ -2,72 +2,61 @@
 # - the GET method
 # - most common return types
 # - sync and async
-# The syntax for the routes dict is `route: (expected_body, expected_header_key, expected_header_value)`
 
-from utils import get
+from typing import Optional
 
-SYNC_ROUTES = {
-    "/sync/str": ("sync str", None, None),
-    "/sync/dict": ("sync dict", "sync", "dict"),
-    "/sync/response": ("sync response", "sync", "response"),
-}
+import pytest
 
-SYNC_ROUTES_CONST = {
-    "/sync/str/const": ("sync str const", None, None),
-    "/sync/dict/const": ("sync dict const", "sync_const", "dict"),
-    "/sync/response/const": ("sync response const", "sync_const", "response"),
-}
-
-ASYNC_ROUTES = {
-    "/async/str": ("async str", None, None),
-    "/async/dict": ("async dict", "async", "dict"),
-    "/async/response": ("async response", "async", "response"),
-}
-
-ASYNC_ROUTES_CONST = {
-    "/async/str/const": ("async str const", None, None),
-    "/async/dict/const": ("async dict const", "async_const", "dict"),
-    "/async/response/const": ("async response const", "async_const", "response"),
-}
-
-JSON_ROUTES = {
-    "/sync/json": {"sync json": "json"},
-    "/async/json": {"async json": "json"},
-}
-
-JSON_ROUTES_CONST = {
-    "/sync/json/const": {"sync json const": "json"},
-    "/async/json/const": {"async json const": "json"},
-}
+from http_methods_helpers import get
 
 
-def test_sync_get(session):
-    routes = SYNC_ROUTES
-    routes.update(SYNC_ROUTES_CONST)
-    for route, expected in routes.items():
-        res = get(route)
-        assert res.text == expected[0] + " get"
-        if expected[1] is not None:
-            assert expected[1] in res.headers
-            assert res.headers[expected[1]] == expected[2]
+@pytest.mark.parametrize(
+    "route,expected_text,expected_header_key,expected_header_value",
+    [
+        ("/sync/str", "sync str get", None, None),
+        ("/sync/dict", "sync dict get", "sync", "dict"),
+        ("/sync/response", "sync response get", "sync", "response"),
+        ("/sync/str/const", "sync str const get", None, None),
+        ("/sync/dict/const", "sync dict const get", "sync_const", "dict"),
+        ("/sync/response/const", "sync response const get", "sync_const", "response"),
+        ("/async/str", "async str get", None, None),
+        ("/async/dict", "async dict get", "async", "dict"),
+        ("/async/response", "async response get", "async", "response"),
+        ("/async/str/const", "async str const get", None, None),
+        ("/async/dict/const", "async dict const get", "async_const", "dict"),
+        (
+            "/async/response/const",
+            "async response const get",
+            "async_const",
+            "response",
+        ),
+    ],
+)
+def test_basic_get(
+    route: str,
+    expected_text: str,
+    expected_header_key: Optional[str],
+    expected_header_value: Optional[str],
+    session,
+):
+    res = get(route)
+    assert res.text == expected_text
+    if expected_header_key is not None:
+        assert expected_header_key in res.headers
+        assert res.headers[expected_header_key] == expected_header_value
 
 
-def test_async_get(session):
-    routes = ASYNC_ROUTES
-    routes.update(ASYNC_ROUTES_CONST)
-    for route, expected in routes.items():
-        res = get(route)
-        assert res.text == expected[0] + " get"
-        if expected[1] is not None:
-            assert expected[1] in res.headers
-            assert res.headers[expected[1]] == expected[2]
-
-
-def test_json_get(session):
-    routes = JSON_ROUTES
-    routes.update(JSON_ROUTES_CONST)
-    for route, expected in routes.items():
-        res = get(route)
-        for key in expected.keys():
-            assert key + " get" in res.json()
-            assert res.json()[key + " get"] == expected[key]
+@pytest.mark.parametrize(
+    "route, expected_json",
+    [
+        ("/sync/json", {"sync json get": "json"}),
+        ("/async/json", {"async json get": "json"}),
+        ("/sync/json/const", {"sync json const get": "json"}),
+        ("/async/json/const", {"async json const get": "json"}),
+    ],
+)
+def test_json_get(route: str, expected_json: dict, session):
+    res = get(route)
+    for key in expected_json.keys():
+        assert key in res.json()
+        assert res.json()[key] == expected_json[key]

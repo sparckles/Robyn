@@ -1,5 +1,6 @@
 from requests import Response
-from utils import get
+
+from http_methods_helpers import get
 
 
 def test_param(session):

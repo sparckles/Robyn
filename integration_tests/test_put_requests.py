@@ -1,4 +1,4 @@
-from utils import put
+from http_methods_helpers import put
 
 
 def test_put(session):

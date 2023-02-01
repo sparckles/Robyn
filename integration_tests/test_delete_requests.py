@@ -1,4 +1,4 @@
-from utils import delete
+from http_methods_helpers import delete
 
 
 def test_delete(session):

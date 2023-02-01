@@ -1,4 +1,4 @@
-from utils import patch
+from http_methods_helpers import patch
 
 
 def test_patch(session):

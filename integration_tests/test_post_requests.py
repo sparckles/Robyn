@@ -1,4 +1,4 @@
-from utils import post
+from http_methods_helpers import post
 
 
 def test_post(session):

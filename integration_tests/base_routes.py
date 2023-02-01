@@ -39,7 +39,7 @@ def message():
     return "Hello world, from ws"
 
 
-# ===== Lifecucle handlers =====
+# ===== Lifecycle handlers =====
 
 
 async def startup_handler():

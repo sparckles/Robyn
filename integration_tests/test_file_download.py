@@ -1,4 +1,4 @@
-from utils import get
+from http_methods_helpers import get
 
 
 def test_file_download_sync(session):

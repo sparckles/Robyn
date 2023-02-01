@@ -1,6 +1,6 @@
 from typing import Optional
-import requests
 
+import requests
 
 BASE_URL = "http://127.0.0.1:8080"
 
