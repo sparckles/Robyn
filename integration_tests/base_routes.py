@@ -304,6 +304,16 @@ async def binary_output_response_async(request):
     )
 
 
+@app.get("/sync/raise")
+def sync_raise():
+    raise Exception()
+
+
+@app.get("/async/raise")
+async def async_raise():
+    raise Exception()
+
+
 if __name__ == "__main__":
     app.add_request_header("server", "robyn")
     current_file_path = pathlib.Path(__file__).parent.resolve()

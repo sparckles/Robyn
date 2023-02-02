@@ -24,12 +24,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r robyn/test-requirements.txt
       - name: Add macos target
-        if: ${{ matrix.os }} == macos
+        if: matrix.os == 'macos'
         run: rustup target add aarch64-apple-darwin
       - name: Setup Rust part of the project
         run: |
           maturin build -i python --universal2 --out dist --no-sdist
-          pip install --force-reinstall --find-links=.dist/ robyn
+          pip install --no-index --find-links=dist/ robyn
       - name: Test with pytest
         run: |
           pytest ./integration_tests
