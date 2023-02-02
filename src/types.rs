@@ -167,7 +167,7 @@ impl Response {
             // we should be handling based on headers but works for now
             response_type: "text".to_string(),
             headers,
-            body: ActixBytesWrapper::new(body).unwrap(),
+            body: ActixBytesWrapper::new(body)?,
             file_path: None,
         })
     }
