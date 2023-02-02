@@ -1,6 +1,9 @@
 import asyncio
+from multiprocessing import Process
+import signal
 import sys
 from typing import Dict, List
+from robyn.logger import logger
 
 from robyn.events import Events
 from robyn.robyn import FunctionInfo, Server, SocketHeld
@@ -9,8 +12,98 @@ from robyn.types import Directory, Header
 from robyn.ws import WS
 
 
+def run_processes(
+    url: str,
+    port: int,
+    directories: List[Directory],
+    request_headers: List[Header],
+    routes: List[Route],
+    middlewares: List[MiddlewareRoute],
+    web_sockets: Dict[str, WS],
+    event_handlers: Dict[Events, FunctionInfo],
+    workers: int,
+    processes: int,
+    from_event_handler: bool = False,
+) -> List[Process]:
+    socket = SocketHeld(url, port)
+
+    process_pool = init_processpool(
+        directories,
+        request_headers,
+        routes,
+        middlewares,
+        web_sockets,
+        event_handlers,
+        socket,
+        workers,
+        processes,
+    )
+
+    if not from_event_handler:
+
+        def terminating_signal_handler(_sig, _frame):
+            logger.info("Terminating server!!", bold=True)
+            for process in process_pool:
+                process.kill()
+
+        signal.signal(signal.SIGINT, terminating_signal_handler)
+        signal.signal(signal.SIGTERM, terminating_signal_handler)
+
+        logger.info("Press Ctrl + C to stop \n")
+        for process in process_pool:
+            process.join()
+
+    return process_pool
+
+
+def init_processpool(
+    directories: List[Directory],
+    request_headers: List[Header],
+    routes: List[Route],
+    middlewares: List[MiddlewareRoute],
+    web_sockets: Dict[str, WS],
+    event_handlers: Dict[Events, FunctionInfo],
+    socket: SocketHeld,
+    workers: int,
+    processes: int,
+) -> List[Process]:
+    process_pool = []
+    if sys.platform.startswith("win32"):
+        spawn_process(
+            directories,
+            request_headers,
+            routes,
+            middlewares,
+            web_sockets,
+            event_handlers,
+            socket,
+            workers,
+        )
+
+        return process_pool
+
+    for _ in range(processes):
+        copied_socket = socket.try_clone()
+        process = Process(
+            target=spawn_process,
+            args=(
+                directories,
+                request_headers,
+                routes,
+                middlewares,
+                web_sockets,
+                event_handlers,
+                copied_socket,
+                workers,
+            ),
+        )
+        process.start()
+        process_pool.append(process)
+
+    return process_pool
+
+
 def initialize_event_loop():
-    # platform_name = platform.machine()
     if sys.platform.startswith("win32") or sys.platform.startswith("linux-cross"):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
@@ -42,8 +135,8 @@ def spawn_process(
 
     :param directories List: the list of all the directories and related data
     :param headers tuple: All the global headers in a tuple
-    :param routes Tuple[Route]: The routes touple, containing the description about every route.
-    :param middlewares Tuple[Route]: The middleware router touple, containing the description about every route.
+    :param routes Tuple[Route]: The routes tuple, containing the description about every route.
+    :param middlewares Tuple[Route]: The middleware routes tuple, containing the description about every route.
     :param web_sockets list: This is a list of all the web socket routes
     :param event_handlers Dict: This is an event dict that contains the event handlers
     :param socket SocketHeld: This is the main tcp socket, which is being shared across multiple processes.

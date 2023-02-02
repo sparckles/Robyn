@@ -3,25 +3,21 @@ import logging
 import multiprocessing as mp
 import os
 import signal
-import sys
 from typing import Callable, List, Optional
 
-from multiprocess import Process  # type: ignore
 from watchdog.observers import Observer
 
-from robyn.argument_parser import ArgumentParser
+from robyn.argument_parser import Config
 from robyn.dev_event_handler import EventHandler
 from robyn.env_populator import load_vars
 from robyn.events import Events
-from robyn.log_colors import Colors
-from robyn.processpool import spawn_process
+from robyn.logger import Colors, logger
+from robyn.processpool import run_processes
 from robyn.responses import jsonify, serve_file, serve_html
-from robyn.robyn import FunctionInfo, SocketHeld
+from robyn.robyn import FunctionInfo
 from robyn.router import MiddlewareRouter, Router, WebSocketRouter
 from robyn.types import Directory, Header
 from robyn.ws import WS
-
-logger = logging.getLogger(__name__)
 
 
 class Robyn:
@@ -31,11 +27,7 @@ class Robyn:
         directory_path = os.path.dirname(os.path.abspath(file_object))
         self.file_path = file_object
         self.directory_path = directory_path
-        self.parser = ArgumentParser()
-        self.dev = self.parser.is_dev
-        self.processes = self.parser.num_processes
-        self.workers = self.parser.workers
-        self.log_level = self.parser.log_level
+        self.config = Config()
         self.router = Router()
         self.middleware_router = MiddlewareRouter()
         self.web_socket_router = WebSocketRouter()
@@ -43,7 +35,7 @@ class Robyn:
         self.directories: List[Directory] = []
         self.event_handlers = {}
         load_vars(project_root=directory_path)
-        self._config_logger()
+        logging.basicConfig(level=self.config.log_level)
 
     def _add_route(self, route_type, endpoint, handler, is_const=False):
         """
@@ -111,85 +103,64 @@ class Robyn:
         """
         Starts the server
 
-        :param port int: reperesents the port number at which the server is listening
+        :param port int: represents the port number at which the server is listening
         """
 
         url = os.getenv("ROBYN_URL", url)
         port = int(os.getenv("ROBYN_PORT", port))
 
-        logger.info(
-            "%sStarting server at %s:%s %s", Colors.OKGREEN, url, port, Colors.ENDC
-        )
-
-        def init_processpool(socket):
-            process_pool = []
-            if sys.platform.startswith("win32"):
-                spawn_process(
-                    self.directories,
-                    self.request_headers,
-                    self.router.get_routes(),
-                    self.middleware_router.get_routes(),
-                    self.web_socket_router.get_routes(),
-                    self.event_handlers,
-                    socket,
-                    workers,
-                )
-
-                return process_pool
-
-            for _ in range(self.processes):
-                copied_socket = socket.try_clone()
-                process = Process(
-                    target=spawn_process,
-                    args=(
-                        self.directories,
-                        self.request_headers,
-                        self.router.get_routes(),
-                        self.middleware_router.get_routes(),
-                        self.web_socket_router.get_routes(),
-                        self.event_handlers,
-                        copied_socket,
-                        workers,
-                    ),
-                )
-                process.start()
-                process_pool.append(process)
-
-            return process_pool
+        logger.info(f"Starting server at {url}:{port}")
 
         mp.allow_connection_pickling()
 
-        if not self.dev:
-            workers = self.workers
-            socket = SocketHeld(url, port)
-
-            process_pool = init_processpool(socket)
+        if not self.config.dev:
+            run_processes(
+                url,
+                port,
+                self.directories,
+                self.request_headers,
+                self.router.get_routes(),
+                self.middleware_router.get_routes(),
+                self.web_socket_router.get_routes(),
+                self.event_handlers,
+                self.config.workers,
+                self.config.processes,
+            )
+        else:
+            event_handler = EventHandler(
+                url,
+                port,
+                self.directories,
+                self.request_headers,
+                self.router.get_routes(),
+                self.middleware_router.get_routes(),
+                self.web_socket_router.get_routes(),
+                self.event_handlers,
+                self.config.workers,
+                self.config.processes,
+            )
+            event_handler.start_server()
+            logger.info(
+                f"Dev server initialized with the directory_path : {self.directory_path}",
+                Colors.BLUE,
+            )
 
             def terminating_signal_handler(_sig, _frame):
-                logger.info(
-                    f"{Colors.BOLD}{Colors.OKGREEN} Terminating server!! {Colors.ENDC}"
-                )
-                for process in process_pool:
-                    process.kill()
+                logger.info("Terminating server!!", bold=True)
+                event_handler.stop_server()
+                observer.stop()
+                observer.join()
 
             signal.signal(signal.SIGINT, terminating_signal_handler)
             signal.signal(signal.SIGTERM, terminating_signal_handler)
 
-            logger.info(f"{Colors.OKGREEN}Press Ctrl + C to stop \n{Colors.ENDC}")
-            for process in process_pool:
-                process.join()
-        else:
-            event_handler = EventHandler(self.file_path)
-            event_handler.start_server_first_time()
-            logger.info(
-                f"{Colors.OKBLUE}Dev server initialised with the directory_path : {self.directory_path}{Colors.ENDC}"
-            )
             observer = Observer()
             observer.schedule(event_handler, path=self.directory_path, recursive=True)
             observer.start()
+
             try:
-                while True:
-                    pass
+                while observer.is_alive():
+                    observer.join(1)
             finally:
                 observer.stop()
                 observer.join()
@@ -301,19 +272,6 @@ class Robyn:
             return self._add_route("TRACE", endpoint, handler)
 
         return inner
-
-    def _config_logger(self):
-        """
-        This is the method to configure the logger either on the dev mode or the env variable
-        """
-
-        log_level = "WARN"
-
-        if self.dev:
-            log_level = "DEBUG"
-
-        log_level = self.log_level if self.log_level else log_level
-        logging.basicConfig(level=log_level)
 
 
 __all__ = ["Robyn", "jsonify", "serve_file", "serve_html"]
