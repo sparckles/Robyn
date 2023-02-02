@@ -68,9 +68,9 @@ async def postreq(request):
 
 ```python
 app.add_directory(
-    route="/test_dir"
-    directory_path="/build"
-    index_file="index.html"
+    route="/test_dir",
+    directory_path="build/",
+    index_file="index.html",
 )
 ```
 
@@ -79,6 +79,9 @@ app.add_directory(
 You can add params in the routes and access them from the request object.
 
 ```python
+from robyn import jsonify
+
+
 @app.post("/jsonify/:id")
 async def json(request):
     print(request["params"]["id"])
