@@ -3,39 +3,41 @@ import pytest
 from robyn.robyn import Response
 
 
-def test_bad_body_types():
-    class A:
-        pass
-
-    bad_bodies = [
-        None,
-        1,
-        True,
-        A,
-        {"body": "OK"},
-        ["OK", b"OK"],
-        Response(
-            status_code=200,
-            headers={},
-            body=b"OK",
-        ),
-    ]
-
-    for body in bad_bodies:
-        with pytest.raises(ValueError):
-            _ = Response(
-                status_code=200,
-                headers={},
-                body=body,
-            )
+class A:
+    pass
 
 
-def test_good_body_types():
-    good_bodies = ["OK", b"OK"]
+bad_bodies = [
+    None,
+    1,
+    True,
+    A,
+    {"body": "OK"},
+    ["OK", b"OK"],
+    Response(
+        status_code=200,
+        headers={},
+        body=b"OK",
+    ),
+]
 
-    for body in good_bodies:
+good_bodies = ["OK", b"OK"]
+
+
+@pytest.mark.parametrize("body", bad_bodies)
+def test_bad_body_types(body):
+    with pytest.raises(ValueError):
         _ = Response(
             status_code=200,
             headers={},
             body=body,
         )
+
+
+@pytest.mark.parametrize("body", good_bodies)
+def test_good_body_types(body):
+    _ = Response(
+        status_code=200,
+        headers={},
+        body=body,
+    )

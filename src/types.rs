@@ -162,7 +162,7 @@ pub struct Response {
 impl Response {
     #[new]
     pub fn new(status_code: u16, headers: HashMap<String, String>, body: &PyAny) -> PyResult<Self> {
-        return Ok(Self {
+        Ok(Self {
             status_code,
             // we should be handling based on headers but works for now
             response_type: "text".to_string(),
