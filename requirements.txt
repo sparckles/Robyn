@@ -1,4 +1,4 @@
-maturin
+maturin==0.14.12
 uvloop; platform_system!="Windows"
 watchdog==2.2.1
 multiprocess==0.70.14

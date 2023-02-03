@@ -28,7 +28,7 @@ jobs:
         run: rustup target add aarch64-apple-darwin
       - name: Setup Rust part of the project
         run: |
-          maturin build -i python --universal2 --out dist --no-sdist
+          maturin build -i python --universal2 --out dist
           pip install --no-index --find-links=dist/ robyn
       - name: Test with pytest
         run: |
