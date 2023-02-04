@@ -11,8 +11,11 @@ use crate::io_helpers::read_file;
 #[pyclass]
 #[derive(Debug, Clone)]
 pub struct FunctionInfo {
+    #[pyo3(get, set)]
     pub handler: Py<PyAny>,
+    #[pyo3(get, set)]
     pub is_async: bool,
+    #[pyo3(get, set)]
     pub number_of_params: u8,
 }
 

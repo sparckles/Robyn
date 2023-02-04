@@ -1,16 +1,16 @@
-import requests
-
-BASE_URL = "http://127.0.0.1:8080"
-
-
-def test_put(session):
-    res = requests.put(f"{BASE_URL}/put")
-    assert res.status_code == 200
-    assert res.text == "PUT Request"
+import pytest
+from http_methods_helpers import put
 
 
-def test_put_with_param(session):
-    res = requests.put(f"{BASE_URL}/put_with_body", data={"hello": "world"})
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_put(function_type: str, session):
+    res = put(f"/{function_type}/dict")
+    assert res.text == f"{function_type} dict put"
+    assert function_type in res.headers
+    assert res.headers[function_type] == "dict"
 
-    assert res.status_code == 200
+
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_put_with_param(function_type: str, session):
+    res = put(f"/{function_type}/body", data={"hello": "world"})
     assert res.text == "hello=world"

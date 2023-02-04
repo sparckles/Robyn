@@ -1,27 +1,16 @@
-import requests
-
-BASE_URL = "http://127.0.0.1:8080"
-
-
-def test_post(session):
-    res = requests.post(f"{BASE_URL}/post")
-    assert res.status_code == 200
-    assert res.text == "POST Request"
+import pytest
+from http_methods_helpers import post
 
 
-def test_post_with_param(session):
-    res = requests.post(f"{BASE_URL}/post_with_body", data={"hello": "world"})
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_post(function_type: str, session):
+    res = post(f"/{function_type}/dict")
+    assert res.text == f"{function_type} dict post"
+    assert function_type in res.headers
+    assert res.headers[function_type] == "dict"
+
+
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_post_with_param(function_type: str, session):
+    res = post(f"/{function_type}/body", data={"hello": "world"})
     assert res.text == "hello=world"
-    assert res.status_code == 200
-
-
-def test_jsonify_request(session):
-    res = requests.post(f"{BASE_URL}/jsonify/123")
-    assert res.status_code == 200
-    assert res.json() == {"hello": "world"}
-
-
-def test_post_request_headers(session):
-    res = requests.post(f"{BASE_URL}/headers", headers={"hello": "world"})
-    assert res.status_code == 200
-    assert res.json()["hello"] == "world"

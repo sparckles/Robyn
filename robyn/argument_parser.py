@@ -35,7 +35,7 @@ class ArgumentParser(argparse.ArgumentParser):
             help="Set the log level name",
         )
 
-        self.args = self.parser.parse_args()
+        self.args, unknown = self.parser.parse_known_args()
 
     @property
     def num_processes(self) -> int:
