@@ -11,7 +11,7 @@ build-backend = "maturin"
 name = "robyn"
 dependencies = [
   'watchdog == 2.2.1',
-  'multiprocess == 0.70.12.2',
+  'multiprocess == 0.70.14',
 # conditional
   'uvloop == 0.17.0; sys_platform == "darwin"',
   'uvloop == 0.17.0; platform_machine == "x86_64"',

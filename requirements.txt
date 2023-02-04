@@ -1,6 +1,5 @@
-requests==2.26.0
-pytest==6.2.5
-maturin
+maturin==0.14.12
 uvloop; platform_system!="Windows"
 watchdog==2.2.1
-multiprocess==0.70.12.2
+multiprocess==0.70.14
+jinja2==3.1.2

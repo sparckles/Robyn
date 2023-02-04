@@ -122,7 +122,6 @@ class Robyn:
         )
 
         def init_processpool(socket):
-
             process_pool = []
             if sys.platform.startswith("win32"):
                 spawn_process(

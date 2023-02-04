@@ -37,7 +37,7 @@ jobs:
       - name: Build wheels - universal2
         uses: messense/maturin-action@v1
         with:
-          args: -i python --release --universal2 --out dist --no-sdist
+          args: -i python --release --universal2 --out dist
       - name: Install build wheel - universal2
         run: |
           pip install --force-reinstall dist/robyn*_universal2.whl
@@ -70,7 +70,7 @@ jobs:
         uses: messense/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: -i python --release --out dist --no-sdist
+          args: -i python --release --out dist
       - name: Install build wheel
         shell: bash
         run: |
@@ -104,7 +104,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           manylinux: auto
-          args: -i python${{ matrix.python-version }} --release --out dist --no-sdist
+          args: -i python${{ matrix.python-version }} --release --out dist
       - name: Install build wheel
         if: matrix.target == 'x86_64'
         run: |
@@ -138,7 +138,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           manylinux: auto
-          args: -i python3.9 --release --out dist --no-sdist
+          args: -i python3.9 --release --out dist
       - uses: uraimo/run-on-arch-action@v2.2.0
         name: Install build wheel
         with:
