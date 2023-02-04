@@ -39,11 +39,18 @@ class Router(BaseRouter):
                 response.set_file_path(file_path)
         elif type(res) == Response:
             response = res
+        elif type(res) == bytes:
+            response = Response(
+                status_code=200,
+                headers={"Content-Type": "application/octet-stream"},
+                body=res,
+            )
         else:
             response = Response(
-                status_code=200, headers={"Content-Type": "text/plain"}, body=str(res)
+                status_code=200,
+                headers={"Content-Type": "text/plain"},
+                body=str(res).encode("utf-8"),
             )
-
         return response
 
     def add_route(

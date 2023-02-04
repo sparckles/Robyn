@@ -444,7 +444,32 @@ async def async_body_patch(request):
     return bytearray(request["body"]).decode("utf-8")
 
 
-# ===== Main =====
+@app.get("/binary_output_sync")
+def binary_output_sync(request):
+    return b"OK"
+
+
+@app.get("/binary_output_response_sync")
+def binary_output_response_sync(request):
+    return Response(
+        status_code=200,
+        headers={"Content-Type": "application/octet-stream"},
+        body="OK",
+    )
+
+
+@app.get("/binary_output_async")
+async def binary_output_async(request):
+    return b"OK"
+
+
+@app.get("/binary_output_response_async")
+async def binary_output_response_async(request):
+    return Response(
+        status_code=200,
+        headers={"Content-Type": "application/octet-stream"},
+        body="OK",
+    )
 
 
 @app.get("/sync/raise")
@@ -455,6 +480,9 @@ def sync_raise():
 @app.get("/async/raise")
 async def async_raise():
     raise Exception()
+
+
+# ===== Main =====
 
 
 if __name__ == "__main__":
