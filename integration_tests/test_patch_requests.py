@@ -1,19 +1,16 @@
+import pytest
 from http_methods_helpers import patch
 
 
-def test_patch(session):
-    res = patch("/sync/dict")
-    assert res.text == "sync dict patch"
-    assert "sync" in res.headers
-    assert res.headers["sync"] == "dict"
-    res = patch("/async/dict")
-    assert res.text == "async dict patch"
-    assert "async" in res.headers
-    assert res.headers["async"] == "dict"
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_patch(function_type: str, session):
+    res = patch(f"/{function_type}/dict")
+    assert res.text == f"{function_type} dict patch"
+    assert function_type in res.headers
+    assert res.headers[function_type] == "dict"
 
 
-def test_patch_with_param(session):
-    res = patch("/sync/body", data={"hello": "world"})
-    assert res.text == "hello=world"
-    res = patch("/async/body", data={"hello": "world"})
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_patch_with_param(function_type: str, session):
+    res = patch(f"/{function_type}/body", data={"hello": "world"})
     assert res.text == "hello=world"

@@ -1,3 +1,4 @@
+import pytest
 from http_methods_helpers import get
 
 
@@ -14,9 +15,6 @@ def test_202_status_code(session):
     get("/202", expected_status_code=202)
 
 
-def test_sync_500_internal_server_error(session):
-    get("/sync/raise", expected_status_code=500)
-
-
-def test_async_500_internal_server_error(session):
-    get("/async/raise", expected_status_code=500)
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_sync_500_internal_server_error(function_type: str, session):
+    get(f"/{function_type}/raise", expected_status_code=500)

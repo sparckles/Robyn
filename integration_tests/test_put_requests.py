@@ -1,19 +1,16 @@
+import pytest
 from http_methods_helpers import put
 
 
-def test_put(session):
-    res = put("/sync/dict")
-    assert res.text == "sync dict put"
-    assert "sync" in res.headers
-    assert res.headers["sync"] == "dict"
-    res = put("/async/dict")
-    assert res.text == "async dict put"
-    assert "async" in res.headers
-    assert res.headers["async"] == "dict"
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_put(function_type: str, session):
+    res = put(f"/{function_type}/dict")
+    assert res.text == f"{function_type} dict put"
+    assert function_type in res.headers
+    assert res.headers[function_type] == "dict"
 
 
-def test_put_with_param(session):
-    res = put("/sync/body", data={"hello": "world"})
-    assert res.text == "hello=world"
-    res = put("/async/body", data={"hello": "world"})
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_put_with_param(function_type: str, session):
+    res = put(f"/{function_type}/body", data={"hello": "world"})
     assert res.text == "hello=world"
