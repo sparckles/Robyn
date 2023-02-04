@@ -60,7 +60,7 @@ class Robyn:
 
     def before_request(self, endpoint: str) -> Callable[..., None]:
         """
-        The @app.before_request decorator to add a get route
+        You can use the @app.before_request decorator to call a method before routing to the specified endpoint
 
         :param endpoint str: endpoint to server the route
         """
@@ -69,7 +69,7 @@ class Robyn:
 
     def after_request(self, endpoint: str) -> Callable[..., None]:
         """
-        The @app.after_request decorator to add a get route
+        You can use the @app.after_request decorator to call a method after routing to the specified endpoint
 
         :param endpoint str: endpoint to server the route
         """
@@ -122,7 +122,6 @@ class Robyn:
         )
 
         def init_processpool(socket):
-
             process_pool = []
             if sys.platform.startswith("win32"):
                 spawn_process(
@@ -197,7 +196,7 @@ class Robyn:
 
     def get(self, endpoint: str, const: bool = False):
         """
-        The @app.get decorator to add a get route
+        The @app.get decorator to add a route with the GET method
 
         :param endpoint str: endpoint to server the route
         """
@@ -209,7 +208,7 @@ class Robyn:
 
     def post(self, endpoint: str):
         """
-        The @app.post decorator to add a get route
+        The @app.post decorator to add a route with POST method
 
         :param endpoint str: endpoint to server the route
         """
@@ -221,7 +220,7 @@ class Robyn:
 
     def put(self, endpoint: str):
         """
-        The @app.put decorator to add a get route
+        The @app.put decorator to add a get route with PUT method
 
         :param endpoint str: endpoint to server the route
         """
@@ -233,7 +232,7 @@ class Robyn:
 
     def delete(self, endpoint: str):
         """
-        The @app.delete decorator to add a get route
+        The @app.delete decorator to add a route with DELETE method
 
         :param endpoint str: endpoint to server the route
         """
@@ -245,7 +244,7 @@ class Robyn:
 
     def patch(self, endpoint: str):
         """
-        [The @app.patch decorator to add a get route]
+        The @app.patch decorator to add a route with PATCH method
 
         :param endpoint [str]: [endpoint to server the route]
         """
@@ -257,7 +256,7 @@ class Robyn:
 
     def head(self, endpoint: str):
         """
-        The @app.head decorator to add a get route
+        The @app.head decorator to add a route with HEAD method
 
         :param endpoint str: endpoint to server the route
         """
@@ -269,7 +268,7 @@ class Robyn:
 
     def options(self, endpoint: str):
         """
-        The @app.options decorator to add a get route
+        The @app.options decorator to add a route with OPTIONS method
 
         :param endpoint str: endpoint to server the route
         """
@@ -281,7 +280,7 @@ class Robyn:
 
     def connect(self, endpoint: str):
         """
-        The @app.connect decorator to add a get route
+        The @app.connect decorator to add a route with CONNECT method
 
         :param endpoint str: endpoint to server the route
         """
@@ -293,7 +292,7 @@ class Robyn:
 
     def trace(self, endpoint: str):
         """
-        The @app.trace decorator to add a get route
+        The @app.trace decorator to add a route with TRACE method
 
         :param endpoint str: endpoint to server the route
         """

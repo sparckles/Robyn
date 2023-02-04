@@ -1,8 +1,6 @@
--r requirements.txt
-flake8==4.0.1
-black==21.12b0
-websocket-client==1.4.2
-maturin==0.12.11
-isort==5.10.1
-pre-commit==2.19.0
-commitizen==2.27.1
+-r robyn/test-requirements.txt
+ruff==0.0.240
+black==23.1
+isort==5.12
+pre-commit==3.0.4
+commitizen==2.40

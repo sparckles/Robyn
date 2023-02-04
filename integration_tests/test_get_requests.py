@@ -1,96 +1,40 @@
-import requests
+import pytest
+from requests import Response
 
-BASE_URL = "http://127.0.0.1:8080"
-
-
-def test_index_request(session):
-    res = requests.get(f"{BASE_URL}")
-    assert res.status_code == 200
+from http_methods_helpers import get
 
 
-def test_jsonify(session):
-    r = requests.get(f"{BASE_URL}/jsonify")
-    assert r.json() == {"hello": "world"}
-    assert r.status_code == 200
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_param(function_type: str, session):
+    r = get(f"/{function_type}/param/1")
+    assert r.text == "1"
+    r = get(f"/{function_type}/param/12345")
+    assert r.text == "12345"
 
 
-def test_html(session):
-    r = requests.get(f"{BASE_URL}/test/123")
-    assert "Hello world. How are you?" in r.text
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_serve_html(function_type: str, session):
+    def check_response(r: Response):
+        assert r.text.startswith("<!DOCTYPE html>")
+        assert "Hello world. How are you?" in r.text
+
+    check_response(get(f"/{function_type}/serve/html"))
 
 
-def test_jinja_template(session):
-    r = requests.get(f"{BASE_URL}/template_render")
-    assert "Jinja2" in r.text
-    assert "Robyn" in r.text
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_template(function_type: str, session):
+    def check_response(r: Response):
+        assert r.text.startswith("\n\n<!DOCTYPE html>")
+        assert "Jinja2" in r.text
+        assert "Robyn" in r.text
+
+    check_response(get(f"/{function_type}/template"))
 
 
-def test_queries(session):
-    r = requests.get(f"{BASE_URL}/query?hello=robyn")
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_queries(function_type: str, session):
+    r = get(f"/{function_type}/queries?hello=robyn")
     assert r.json() == {"hello": "robyn"}
 
-    r = requests.get(f"{BASE_URL}/query")
+    r = get(f"/{function_type}/queries")
     assert r.json() == {}
-
-
-def test_request_headers(session):
-    r = requests.get(f"{BASE_URL}/request_headers")
-    assert r.status_code == 200
-    assert r.text == "This is a regular response"
-    assert "Header" in r.headers
-    assert r.headers["Header"] == "header_value"
-
-
-def test_const_request(session):
-    r = requests.get(f"{BASE_URL}/const_request")
-    assert "Hello world" in r.text
-    assert r.status_code == 200
-
-
-def test_const_request_json(session):
-    r = requests.get(f"{BASE_URL}/const_request_json")
-    assert r.status_code == 200
-    assert r.json() == {"hello": "world"}
-
-
-def test_const_request_headers(session):
-    r = requests.get(f"{BASE_URL}/const_request_headers")
-    assert r.status_code == 200
-    assert "Header" in r.headers
-    assert r.headers["Header"] == "header_value"
-
-
-def test_response_type(session):
-    r = requests.get(f"{BASE_URL}/types/response")
-    assert r.status_code == 200
-    assert r.text == "OK"
-
-
-def test_str_type(session):
-    r = requests.get(f"{BASE_URL}/types/str")
-    assert r.status_code == 200
-    assert r.text == "OK"
-
-
-def test_int_type(session):
-    r = requests.get(f"{BASE_URL}/types/int")
-    assert r.status_code == 200
-    assert r.text == "0"
-
-
-def test_async_response_type(session):
-    r = requests.get(f"{BASE_URL}/async/types/response")
-    assert r.status_code == 200
-    assert r.text == "OK"
-
-
-def test_async_str_type(session):
-    r = requests.get(f"{BASE_URL}/async/types/str")
-    assert r.status_code == 200
-    assert r.text == "OK"
-
-
-def test_async_int_type(session):
-    r = requests.get(f"{BASE_URL}/async/types/int")
-    assert r.status_code == 200
-    assert r.text == "0"
