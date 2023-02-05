@@ -18,6 +18,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::{Relaxed, SeqCst};
 use std::sync::{Arc, RwLock};
 
+use std::process::abort;
 use std::thread;
 
 use actix_files::Files;
@@ -201,7 +202,8 @@ impl Server {
                         .unwrap();
                     Ok(())
                 })
-            })?
+            })?;
+            abort();
         }
         Ok(())
     }
