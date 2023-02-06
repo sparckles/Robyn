@@ -133,6 +133,34 @@ async def response(request):
     return Response(status_code=200, headers={}, body="OK")
 ```
 
+#### Returning a byte response
+You can also return byte response when serving HTTP requests using the following way
+
+```python
+@app.get("/binary_output_response_sync")
+def binary_output_response_sync(request):
+    return Response(
+        status_code=200,
+        headers={"Content-Type": "application/octet-stream"},
+        body="OK",
+    )
+
+
+@app.get("/binary_output_async")
+async def binary_output_async(request):
+    return b"OK"
+
+
+@app.get("/binary_output_response_async")
+async def binary_output_response_async(request):
+    return Response(
+        status_code=200,
+        headers={"Content-Type": "application/octet-stream"},
+        body="OK",
+    )
+```
+
+
 #### Other types
 
 Whenever you want to use another type for your routes, the `str` method will be called on it, and it will be stored in the body of the response. Here is an example that returns a string:
