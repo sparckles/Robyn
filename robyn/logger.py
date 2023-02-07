@@ -11,13 +11,12 @@ class Colors(Enum):
     RED = "\033[91m"
 
 
-HEADER = "\033[95m"
-ENDC = "\033[0m"
-BOLD = "\033[1m"
-UNDERLINE = "\033[4m"
-
-
 class Logger:
+    HEADER = "\033[95m"
+    ENDC = "\033[0m"
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
+
     def __init__(self):
         self.logger = logging.getLogger(__name__)
 
@@ -30,11 +29,11 @@ class Logger:
     ):
         result = msg
         if color is not None:
-            result = f"{color.value}{result}{ENDC}"
+            result = f"{color.value}{result}{Logger.ENDC}"
         if bold:
-            result = f"{BOLD}{result}"
+            result = f"{Logger.BOLD}{result}"
         if underline:
-            result = f"{UNDERLINE}{result}"
+            result = f"{Logger.UNDERLINE}{result}"
         return result
 
     def error(

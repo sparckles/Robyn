@@ -49,15 +49,3 @@ class Config:
             self.log_level = "INFO"
         else:
             self.log_level = args.log_level
-
-    def as_str(self):
-        return [
-            "--processes",
-            f"{self.processes}",
-            "--workers",
-            f"{self.workers}",
-            "--dev",
-            f"{self.dev}",
-            "--log-level",
-            f"{self.log_level}",
-        ]
