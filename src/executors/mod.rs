@@ -2,55 +2,54 @@
 /// i.e. the functions that have the responsibility of parsing and executing functions.
 use crate::types::{FunctionInfo, Request, Response};
 
-use std::collections::HashMap;
 use std::sync::Arc;
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use log::debug;
 use pyo3_asyncio::TaskLocals;
 // pyO3 module
-use pyo3::prelude::*;
+use pyo3::{prelude::*, PyClass};
 
-fn get_function_output<'a>(
+fn get_function_output<'a, T>(
     function: &'a FunctionInfo,
     py: Python<'a>,
-    request: &Request,
-) -> Result<&'a PyAny, PyErr> {
+    input: &T,
+) -> Result<&'a PyAny, PyErr>
+where
+    T: Clone + IntoPy<Py<PyAny>>,
+{
     let handler = function.handler.as_ref(py);
-    let request_hashmap = request.to_hashmap(py).unwrap();
 
     // this makes the request object accessible across every route
     match function.number_of_params {
         0 => handler.call0(),
-        1 => handler.call1((request_hashmap,)),
+        1 => handler.call1((input.clone(),)),
         // this is done to accommodate any future params
-        2_u8..=u8::MAX => handler.call1((request_hashmap,)),
+        2_u8..=u8::MAX => handler.call1((input.clone(),)),
     }
 }
 
-pub async fn execute_middleware_function<'a>(
-    request: &Request,
-    function: FunctionInfo,
-) -> Result<HashMap<String, HashMap<String, String>>> {
-    // TODO:
-    // add body in middlewares too
-
+pub async fn execute_middleware_function<'a, T>(input: &T, function: FunctionInfo) -> Result<T>
+where
+    T: Clone + PyClass + IntoPy<Py<PyAny>>,
+{
     if function.is_async {
         let output = Python::with_gil(|py| {
-            let function_output = get_function_output(&function, py, request);
-            pyo3_asyncio::tokio::into_future(function_output?)
+            pyo3_asyncio::tokio::into_future(get_function_output(&function, py, input)?)
         })?
         .await?;
 
-        Python::with_gil(|py| -> PyResult<HashMap<String, HashMap<String, String>>> {
-            let output: Vec<HashMap<String, HashMap<String, String>>> = output.extract(py)?;
-            let responses = output[0].clone();
-            Ok(responses)
+        Python::with_gil(|py| -> PyResult<T> {
+            let output: (T,) = output.extract(py)?;
+            Ok(output.0)
         })
-        .context("Failed to execute handler function")
+        .map_err(|e| anyhow!(e))
     } else {
-        Python::with_gil(|py| get_function_output(&function, py, request)?.extract())
-            .context("Failed to execute handler function")
+        Python::with_gil(|py| -> PyResult<T> {
+            let output: (T,) = get_function_output(&function, py, input)?.extract()?;
+            Ok(output.0)
+        })
+        .map_err(|e| anyhow!(e))
     }
 }
 

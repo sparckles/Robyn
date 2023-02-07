@@ -4,10 +4,11 @@ from helpers.http_methods_helpers import get
 
 
 @pytest.mark.benchmark
-@pytest.mark.skip(reason="Fix middleware request headers modification")
-def test_middlewares(session):
-    r = get("/")
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_middlewares(function_type: str, session):
+    r = get(f"/{function_type}/middlewares")
     assert "before" in r.headers
-    assert r.headers["before"] == "before_request"
+    assert r.headers["before"] == f"{function_type}_before_request"
     assert "after" in r.headers
-    assert r.headers["after"] == "after_request"
+    assert r.headers["after"] == f"{function_type}_after_request"
+    assert r.text == f"{function_type} middlewares after"

@@ -16,10 +16,31 @@ class FunctionInfo:
     number_of_params: int
 
 @dataclass
+class Body:
+    content: Union[str, bytes]
+
+    def __add__(self, other: Union[Body, str]):
+        if isinstance(other, self.__class__):
+            return Body(self.content + other.content)
+        elif isinstance(other, str):
+            return Body(self.content + other)
+        else:
+            raise TypeError("unsupported operand type(s) for +: '{}' and '{}'").format(
+                self.__class__, type(other)
+            )
+
+@dataclass
+class Request:
+    queries: dict[str, str]
+    headers: dict[str, str]
+    params: dict[str, str]
+    body: Body
+
+@dataclass
 class Response:
     status_code: int
     headers: dict[str, str]
-    body: Union[str, bytes]
+    body: Body
 
     def set_file_path(self, file_path: str):
         pass

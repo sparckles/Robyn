@@ -1,36 +1,21 @@
-import requests
 import pytest
+
+from helpers.http_methods_helpers import get
 
 BASE_URL = "http://127.0.0.1:8080"
 
 
 @pytest.mark.benchmark
-def test_binary_output_sync(session):
-    r = requests.get(f"{BASE_URL}/binary_output_sync")
-    assert r.status_code == 200
-    assert r.headers["Content-Type"] == "application/octet-stream"
-    assert r.text == "OK"
-
-
-@pytest.mark.benchmark
-def test_binary_output_response_sync(session):
-    r = requests.get(f"{BASE_URL}/binary_output_response_sync")
-    assert r.status_code == 200
-    assert r.headers["Content-Type"] == "application/octet-stream"
-    assert r.text == "OK"
-
-
-@pytest.mark.benchmark
-def test_binary_output_async(session):
-    r = requests.get(f"{BASE_URL}/binary_output_async")
-    assert r.status_code == 200
-    assert r.headers["Content-Type"] == "application/octet-stream"
-    assert r.text == "OK"
-
-
-@pytest.mark.benchmark
-def test_binary_output_response_async(session):
-    r = requests.get(f"{BASE_URL}/binary_output_response_async")
-    assert r.status_code == 200
+@pytest.mark.parametrize(
+    "route, text",
+    [
+        ("/sync/octet", "sync octet"),
+        ("/async/octet", "async octet"),
+        ("/sync/octet/response", "sync octet response"),
+        ("/async/octet/response", "async octet response"),
+    ],
+)
+def test_binary_output(route: str, text: str, session):
+    r = get(route)
     assert r.headers["Content-Type"] == "application/octet-stream"
     assert r.text == "OK"

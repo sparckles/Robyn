@@ -7,10 +7,12 @@ use std::{
     task::{Context, Poll},
 };
 
-use actix_http::body::BodySize;
 use actix_http::body::MessageBody;
+use actix_http::body::{BodySize, BoxBody};
+use actix_http::StatusCode;
 use actix_web::web::Bytes;
 use actix_web::{http::Method, HttpRequest};
+use actix_web::{HttpResponse, HttpResponseBuilder, Responder};
 
 use anyhow::Result;
 use dashmap::DashMap;
@@ -18,15 +20,57 @@ use pyo3::exceptions::PyValueError;
 use pyo3::types::{PyBytes, PyDict, PyString};
 use pyo3::{exceptions, intern, prelude::*};
 
-use crate::io_helpers::read_file;
+use crate::io_helpers::{apply_hashmap_headers, read_file};
 
 fn type_of<T>(_: &T) -> String {
     std::any::type_name::<T>().to_string()
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
-pub struct ActixBytesWrapper(Bytes);
+#[derive(Debug, Clone, Default)]
+#[pyclass(name = "Body")]
+pub struct ActixBytesWrapper {
+    content: Bytes,
+}
+
+#[pymethods]
+impl ActixBytesWrapper {
+    #[getter]
+    pub fn get_content(&self) -> PyResult<String> {
+        Ok(String::from_utf8(self.content.to_vec())?)
+    }
+
+    #[setter]
+    pub fn set_content(&mut self, content: &PyAny) -> PyResult<()> {
+        let value = if let Ok(v) = content.downcast::<PyString>() {
+            v.to_string().into_bytes()
+        } else if let Ok(v) = content.downcast::<PyBytes>() {
+            v.as_bytes().to_vec()
+        } else {
+            return Err(PyValueError::new_err(format!(
+                "Could not convert {} specified body to bytes",
+                type_of(content)
+            )));
+        };
+        self.content = Bytes::from(value);
+        Ok(())
+    }
+
+    pub fn __add__(&self, object: &PyAny) -> PyResult<Self> {
+        let value = if let Ok(v) = object.downcast::<PyString>() {
+            v.to_string()
+        } else if let Ok(v) = object.downcast::<PyBytes>() {
+            v.to_string()
+        } else {
+            return Err(PyValueError::new_err(format!(
+                "Could not convert {} specified body to bytes",
+                type_of(object)
+            )));
+        };
+        Ok(Self {
+            content: Bytes::from(String::from_utf8(self.content.to_vec())? + &value),
+        })
+    }
+}
 
 // provides an interface between pyo3::types::{PyString, PyBytes} and actix_web::web::Bytes
 impl ActixBytesWrapper {
@@ -41,7 +85,15 @@ impl ActixBytesWrapper {
                 type_of(raw_body)
             )));
         };
-        Ok(Self(Bytes::from(value)))
+        Ok(Self {
+            content: Bytes::from(value),
+        })
+    }
+
+    pub fn from_str(raw_body: &str) -> Self {
+        Self {
+            content: Bytes::from(raw_body.to_string()),
+        }
     }
 }
 
@@ -49,13 +101,13 @@ impl Deref for ActixBytesWrapper {
     type Target = Bytes;
 
     fn deref(&self) -> &Self::Target {
-        &self.0
+        &self.content
     }
 }
 
 impl DerefMut for ActixBytesWrapper {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
+        &mut self.content
     }
 }
 
@@ -81,7 +133,7 @@ impl MessageBody for ActixBytesWrapper {
 
     #[inline]
     fn try_into_bytes(self) -> Result<Bytes, Self> {
-        Ok(self.0)
+        Ok(self.content)
     }
 }
 
@@ -108,7 +160,7 @@ impl FunctionInfo {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Url {
     pub scheme: String,
     pub host: String,
@@ -133,18 +185,26 @@ impl Url {
     }
 }
 
-#[derive(Default)]
+#[pyclass]
+#[derive(Default, Clone)]
 pub struct Request {
+    #[pyo3(get, set)]
     pub queries: HashMap<String, String>,
+    #[pyo3(get, set)]
     pub headers: HashMap<String, String>,
     pub method: Method,
+    #[pyo3(get, set)]
     pub params: HashMap<String, String>,
     pub body: Bytes,
     pub url: Url,
 }
 
 impl Request {
-    pub fn from_actix_request(req: &HttpRequest, body: Bytes) -> Self {
+    pub fn from_actix_request(
+        req: &HttpRequest,
+        body: Bytes,
+        global_headers: &DashMap<String, String>,
+    ) -> Self {
         let mut queries = HashMap::new();
         if !req.query_string().is_empty() {
             let split = req.query_string().split('&');
@@ -157,6 +217,11 @@ impl Request {
             .headers()
             .iter()
             .map(|(k, v)| (k.to_string(), v.to_str().unwrap().to_string()))
+            .chain(
+                global_headers
+                    .iter()
+                    .map(|h| (h.key().clone(), h.value().clone())),
+            )
             .collect();
 
         Self {
@@ -172,29 +237,51 @@ impl Request {
             ),
         }
     }
-
-    pub fn to_hashmap(&self, py: Python<'_>) -> Result<HashMap<&str, Py<PyAny>>> {
-        let mut result = HashMap::new();
-
-        result.insert("method", self.method.as_ref().to_object(py));
-        result.insert("params", self.params.to_object(py));
-        result.insert("queries", self.queries.to_object(py));
-        result.insert("headers", self.headers.to_object(py));
-        result.insert("body", self.body.to_object(py));
-        result.insert("url", self.url.to_object(py)?);
-
-        Ok(result)
-    }
 }
 
-#[derive(Debug, Clone)]
 #[pyclass]
+#[derive(Debug, Clone)]
 pub struct Response {
     pub status_code: u16,
     pub response_type: String,
+    #[pyo3(get, set)]
     pub headers: HashMap<String, String>,
+    #[pyo3(get, set)]
     pub body: ActixBytesWrapper,
     pub file_path: Option<String>,
+}
+
+impl Responder for Response {
+    type Body = BoxBody;
+
+    fn respond_to(self, _req: &HttpRequest) -> HttpResponse<Self::Body> {
+        let mut response_builder =
+            HttpResponseBuilder::new(StatusCode::from_u16(self.status_code).unwrap());
+        apply_hashmap_headers(&mut response_builder, &self.headers);
+        response_builder.body(self.body)
+    }
+}
+
+impl Response {
+    pub fn not_found(headers: &HashMap<String, String>) -> Self {
+        Self {
+            status_code: 404,
+            response_type: "text".to_string(),
+            headers: headers.clone(),
+            body: ActixBytesWrapper::from_str("Not found"),
+            file_path: None,
+        }
+    }
+
+    pub fn internal_server_error(headers: &HashMap<String, String>) -> Self {
+        Self {
+            status_code: 500,
+            response_type: "text".to_string(),
+            headers: headers.clone(),
+            body: ActixBytesWrapper::from_str("Internal server error"),
+            file_path: None,
+        }
+    }
 }
 
 #[pymethods]
@@ -216,11 +303,12 @@ impl Response {
         // we should be handling based on headers but works for now
         self.response_type = "static_file".to_string();
         self.file_path = Some(file_path.to_string());
-        let response = match read_file(file_path) {
-            Ok(b) => b,
-            Err(e) => return Err(exceptions::PyIOError::new_err::<String>(e.to_string())),
+        self.body = ActixBytesWrapper {
+            content: Bytes::from(
+                read_file(file_path)
+                    .map_err(|e| PyErr::new::<exceptions::PyIOError, _>(e.to_string()))?,
+            ),
         };
-        self.body = ActixBytesWrapper(Bytes::from(response));
         Ok(())
     }
 }
