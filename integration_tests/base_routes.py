@@ -457,6 +457,7 @@ def binary_output_response_sync(request):
         body="OK",
     )
 
+
 @app.get("/binary_output_response_sync_with_constructor")
 def binary_output_response_sync_with_constructor(request):
     return Response(
@@ -489,9 +490,10 @@ def sync_raise():
 async def async_raise():
     raise Exception()
 
+
 # CORS
 @app.get("/cors")
-@app.allow_cors([ "*" ])
+@app.allow_cors(["*"])
 def cors(request):
     print(request)
     return {"status_code": 200, "body": "cors", "type": "text"}
