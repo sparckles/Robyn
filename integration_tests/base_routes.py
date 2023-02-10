@@ -489,6 +489,13 @@ def sync_raise():
 async def async_raise():
     raise Exception()
 
+# CORS
+@app.get("/cors")
+@app.allow_cors([ "*" ])
+def cors(request):
+    print(request)
+    return {"status_code": 200, "body": "cors", "type": "text"}
+
 
 # ===== Main =====
 

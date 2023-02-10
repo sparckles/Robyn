@@ -76,6 +76,17 @@ class Robyn:
 
         return self.middleware_router.add_after_request(endpoint)
 
+    def allow_cors(self, origins: List[str]) -> Callable[..., None]:
+        """Allows CORS for the given origins for a particular router.
+        """
+        def inner(handler):
+            for origin in origins:
+                self.request_headers.append(Header("Access-Control-Allow-Origin", origin))
+                return handler
+
+        return inner
+
+
     def add_directory(
         self,
         route: str,
@@ -315,5 +326,11 @@ class Robyn:
         log_level = self.log_level if self.log_level else log_level
         logging.basicConfig(level=log_level)
 
+
+def ALLOW_CORS(app: Robyn, origins: List[str]):
+    """Allows CORS for the given origins for the entire router.
+    """
+    for origin in origins:
+        app.add_request_header("Access-Control-Allow-Origin", origin)
 
 __all__ = ["Robyn", "jsonify", "serve_file", "serve_html"]
