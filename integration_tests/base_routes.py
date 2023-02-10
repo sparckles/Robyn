@@ -457,6 +457,14 @@ def binary_output_response_sync(request):
         body="OK",
     )
 
+@app.get("/binary_output_response_sync_with_constructor")
+def binary_output_response_sync_with_constructor(request):
+    return Response(
+        status_code=200,
+        headers={"Content-Type": "application/octet-stream"},
+        body=b"OK",
+    )
+
 
 @app.get("/binary_output_async")
 async def binary_output_async(request):
