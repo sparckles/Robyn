@@ -1,6 +1,6 @@
 import asyncio
 import logging
-import multiprocessing as mp
+import multiprocess as mp
 import os
 import signal
 from typing import Callable, List, Optional

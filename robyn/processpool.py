@@ -1,5 +1,5 @@
 import asyncio
-from multiprocessing import Process
+from multiprocess import Process
 import signal
 import sys
 from typing import Dict, List
