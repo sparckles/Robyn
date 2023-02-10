@@ -124,5 +124,5 @@ def env_file():
     env_path.write_text(CONTENT)
     yield
     env_path.unlink()
-    os.unsetenv("ROBYN_PORT")
-    os.unsetenv("ROBYN_URL")
+    del os.environ["ROBYN_PORT"]
+    del os.environ["ROBYN_URL"]
