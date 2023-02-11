@@ -45,6 +45,25 @@ app.start(port=8080)
 
 ```
 
+## Python Version Support
+
+Robyn is compatible with the following Python versions:
+
+> Python >= 3.6
+
+It is recommended to use the latest version of Python for the best performance
+and compatibility
+
+Please make sure you have the correct version of Python installed before starting to use
+this project. You can check your Python version by running the following command in your
+terminal:
+
+```
+python --version
+
+```
+
+
 ## 💡 Features
 
 - Under active development!
