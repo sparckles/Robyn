@@ -79,13 +79,11 @@ app.add_directory(
 You can add params in the routes and access them from the request object.
 
 ```python
-from robyn import jsonify
-
 
 @app.post("/jsonify/:id")
 async def json(request):
     print(request["params"]["id"])
-    return jsonify({"hello": "world"})
+    return {"hello": "world"}
 ```
 
 ## Returning a JSON Response
@@ -93,12 +91,9 @@ async def json(request):
 You can also serve JSON responses when serving HTTP request using the following way.
 
 ```python
-from robyn import jsonify
-
-
 @app.post("/jsonify")
 async def json(request):
-    return jsonify({"hello": "world"})
+    return {"hello": "world"}
 ```
 
 ## Format of the Response

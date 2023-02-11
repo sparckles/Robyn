@@ -1,7 +1,7 @@
 import os
 import pathlib
 
-from robyn import WS, Robyn, jsonify, serve_file, serve_html
+from robyn import WS, Robyn, serve_file, serve_html
 from robyn.robyn import Response
 from robyn.templating import JinjaTemplate
 
@@ -97,50 +97,6 @@ def sync_str_const_get():
 async def async_str_const_get():
     return "async str const get"
 
-
-# dict
-
-
-@app.get("/sync/dict")
-def sync_dict_get():
-    return {
-        "status_code": 200,
-        "body": "sync dict get",
-        "type": "text",
-        "headers": {"sync": "dict"},
-    }
-
-
-@app.get("/async/dict")
-async def async_dict_get():
-    return {
-        "status_code": 200,
-        "body": "async dict get",
-        "type": "text",
-        "headers": {"async": "dict"},
-    }
-
-
-@app.get("/sync/dict/const", const=True)
-def sync_dict_const_get():
-    return {
-        "status_code": 200,
-        "body": "sync dict const get",
-        "type": "text",
-        "headers": {"sync_const": "dict"},
-    }
-
-
-@app.get("/async/dict/const", const=True)
-async def async_dict_const_get():
-    return {
-        "status_code": 200,
-        "body": "async dict const get",
-        "type": "text",
-        "headers": {"async_const": "dict"},
-    }
-
-
 # Response
 
 
@@ -169,22 +125,22 @@ async def async_response_const_get():
 
 @app.get("/sync/json")
 def sync_json_get():
-    return jsonify({"sync json get": "json"})
+    return {"sync json get": "json"}
 
 
 @app.get("/async/json")
 async def async_json_get():
-    return jsonify({"async json get": "json"})
+    return {"async json get": "json"}
 
 
 @app.get("/sync/json/const", const=True)
 def sync_json_const_get():
-    return jsonify({"sync json const get": "json"})
+    return {"sync json const get": "json"}
 
 
 @app.get("/async/json/const", const=True)
 async def async_json_const_get():
-    return jsonify({"async json const get": "json"})
+    return {"async json const get": "json"}
 
 
 # Param
@@ -255,13 +211,13 @@ async def file_download_async():
 @app.get("/sync/queries")
 def sync_queries(request):
     query_data = request["queries"]
-    return jsonify(query_data)
+    return query_data
 
 
 @app.get("/async/queries")
 async def async_query(request):
     query_data = request["queries"]
-    return jsonify(query_data)
+    return query_data
 
 
 # Status code
@@ -294,29 +250,6 @@ async def redirect_route(request):
 
 # --- POST ---
 
-# dict
-
-
-@app.post("/sync/dict")
-def sync_dict_post():
-    return {
-        "status_code": 200,
-        "body": "sync dict post",
-        "type": "text",
-        "headers": {"sync": "dict"},
-    }
-
-
-@app.post("/async/dict")
-async def async_dict_post():
-    return {
-        "status_code": 200,
-        "body": "async dict post",
-        "type": "text",
-        "headers": {"async": "dict"},
-    }
-
-
 # Body
 
 
@@ -331,29 +264,6 @@ async def async_body_post(request):
 
 
 # --- PUT ---
-
-# dict
-
-
-@app.put("/sync/dict")
-def sync_dict_put():
-    return {
-        "status_code": 200,
-        "body": "sync dict put",
-        "type": "text",
-        "headers": {"sync": "dict"},
-    }
-
-
-@app.put("/async/dict")
-async def async_dict_put():
-    return {
-        "status_code": 200,
-        "body": "async dict put",
-        "type": "text",
-        "headers": {"async": "dict"},
-    }
-
 
 # Body
 
@@ -370,29 +280,6 @@ async def async_body_put(request):
 
 # --- DELETE ---
 
-# dict
-
-
-@app.delete("/sync/dict")
-def sync_dict_delete():
-    return {
-        "status_code": 200,
-        "body": "sync dict delete",
-        "type": "text",
-        "headers": {"sync": "dict"},
-    }
-
-
-@app.delete("/async/dict")
-async def async_dict_delete():
-    return {
-        "status_code": 200,
-        "body": "async dict delete",
-        "type": "text",
-        "headers": {"async": "dict"},
-    }
-
-
 # Body
 
 
@@ -407,29 +294,6 @@ async def async_body_delete(request):
 
 
 # --- PATCH ---
-
-# dict
-
-
-@app.patch("/sync/dict")
-def sync_dict_patch():
-    return {
-        "status_code": 200,
-        "body": "sync dict patch",
-        "type": "text",
-        "headers": {"sync": "dict"},
-    }
-
-
-@app.patch("/async/dict")
-async def async_dict_patch():
-    return {
-        "status_code": 200,
-        "body": "async dict patch",
-        "type": "text",
-        "headers": {"async": "dict"},
-    }
-
 
 # Body
 
