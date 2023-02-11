@@ -22,6 +22,7 @@ from robyn.ws import WS
 
 logger = logging.getLogger(__name__)
 
+
 class Robyn:
     """This is the python wrapper for the Robyn binaries."""
 
@@ -167,7 +168,6 @@ class Robyn:
                 observer.stop()
                 observer.join()
 
-
     def add_view(self, endpoint: str, view, const: bool = False):
         """
         [This is base handler for the view decorators]
@@ -175,18 +175,27 @@ class Robyn:
         :param endpoint [str]: [endpoint for the route added]
         :param handler [function]: [represents the function passed as a parent handler for single route with different route types]
         """
+
         def get_functions(view):
             functions = get_all_nested(view)
             output = []
-            for (name, handler) in functions:
+            for name, handler in functions:
                 route_type = name.upper()
-                if route_type in ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS']:
+                if route_type in [
+                    "GET",
+                    "POST",
+                    "PUT",
+                    "DELETE",
+                    "PATCH",
+                    "HEAD",
+                    "OPTIONS",
+                ]:
                     output.append((route_type.upper(), handler))
             return output
 
         handlers = get_functions(view)
         routes = []
-        for (route_type, handler) in handlers:
+        for route_type, handler in handlers:
             routes.append(self._add_route(route_type, endpoint, handler, const))
         return routes
 
@@ -196,6 +205,7 @@ class Robyn:
 
         :param endpoint str: endpoint to server the route
         """
+
         def inner(handler):
             return self.add_view(endpoint, handler, const)
 
