@@ -28,9 +28,9 @@ class Router(BaseRouter):
         response = {}
         if type(res) == dict:
             response = Response(
-                status_code=200, 
-                headers={"Content-Type": "application/json"}, 
-                body=jsonify(res)
+                status_code=200,
+                headers={"Content-Type": "application/json"},
+                body=jsonify(res),
             )
         elif type(res) == Response:
             response = res
