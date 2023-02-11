@@ -5,6 +5,7 @@ use crate::types::FunctionInfo;
 
 pub mod const_router;
 pub mod http_router;
+pub mod route_set;
 pub mod middleware_router;
 pub mod types;
 pub mod web_socket_router;

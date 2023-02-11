@@ -6,6 +6,7 @@ use crate::routers::const_router::ConstRouter;
 use crate::routers::Router;
 
 use crate::routers::http_router::HttpRouter;
+use crate::routers::route_set::RouteSet;
 use crate::routers::types::MiddlewareRoute;
 use crate::routers::{middleware_router::MiddlewareRouter, web_socket_router::WebSocketRouter};
 use crate::shared_socket::SocketHeld;
@@ -43,6 +44,7 @@ struct Directory {
 
 #[pyclass]
 pub struct Server {
+    route_set: Arc<RouteSet>,
     router: Arc<HttpRouter>,
     const_router: Arc<ConstRouter>,
     websocket_router: Arc<WebSocketRouter>,
@@ -58,6 +60,7 @@ impl Server {
     #[new]
     pub fn new() -> Self {
         Self {
+            route_set: Arc::new(RouteSet::new()),
             router: Arc::new(HttpRouter::new()),
             const_router: Arc::new(ConstRouter::new()),
             websocket_router: Arc::new(WebSocketRouter::new()),
@@ -87,6 +90,7 @@ impl Server {
 
         let raw_socket = socket.try_borrow_mut()?.get_socket();
 
+        let route_set = self.route_set.clone();
         let router = self.router.clone();
         let const_router = self.const_router.clone();
         let middleware_router = self.middleware_router.clone();
@@ -143,6 +147,7 @@ impl Server {
 
                     app = app
                         .app_data(web::Data::new(router.clone()))
+                        .app_data(web::Data::new(route_set.clone()))
                         .app_data(web::Data::new(const_router.clone()))
                         .app_data(web::Data::new(middleware_router.clone()))
                         .app_data(web::Data::new(global_request_headers.clone()));
@@ -161,7 +166,8 @@ impl Server {
                     }
 
                     app.default_service(web::route().to(
-                        move |router: web::Data<Arc<HttpRouter>>,
+                        move |route_set: web::Data<Arc<RouteSet>>,
+                              router: web::Data<Arc<HttpRouter>>,
                               const_router: web::Data<Arc<ConstRouter>>,
                               middleware_router: web::Data<Arc<MiddlewareRouter>>,
                               global_request_headers,
@@ -169,6 +175,7 @@ impl Server {
                               req| {
                             pyo3_asyncio::tokio::scope_local(task_locals.clone(), async move {
                                 index(
+                                    route_set,
                                     router,
                                     const_router,
                                     middleware_router,
@@ -260,8 +267,23 @@ impl Server {
                     debug!("Error adding const route {}", e);
                 }
             }
+            match self
+                .route_set
+                .add_route(route_type, route)
+            {
+                Ok(_) => (),
+                Err(e) => {
+                    debug!("Error adding const route {}", e);
+                }
+            }
         } else {
             match self.router.add_route(route_type, route, function, None) {
+                Ok(_) => (),
+                Err(e) => {
+                    debug!("Error adding route {}", e);
+                }
+            }
+            match self.route_set.add_route(route_type, route) {
                 Ok(_) => (),
                 Err(e) => {
                     debug!("Error adding route {}", e);
@@ -341,6 +363,7 @@ async fn apply_middleware(
 /// This is our service handler. It receives a Request, routes on it
 /// path, and returns a Future of a Response.
 async fn index(
+    route_set: web::Data<Arc<RouteSet>>,
     router: web::Data<Arc<HttpRouter>>,
     const_router: web::Data<Arc<ConstRouter>>,
     middleware_router: web::Data<Arc<MiddlewareRouter>>,
@@ -362,29 +385,35 @@ async fn index(
     apply_dashmap_headers(&mut response_builder, &global_request_headers);
     apply_hashmap_headers(&mut response_builder, &request.headers);
 
-    let response = if let Some(r) = const_router.get_route(req.method(), req.uri().path()) {
-        apply_hashmap_headers(&mut response_builder, &r.headers);
-        response_builder
-            .status(StatusCode::from_u16(r.status_code).unwrap())
-            .body(r.body)
-    } else if let Some((function, route_params)) = router.get_route(req.method(), req.uri().path())
-    {
-        request.params = route_params;
-        match execute_http_function(&request, function).await {
-            Ok(r) => {
-                response_builder.status(StatusCode::from_u16(r.status_code).unwrap());
-                apply_hashmap_headers(&mut response_builder, &r.headers);
-                if !r.body.is_empty() {
-                    response_builder.body(r.body)
-                } else {
+    let response = if let Some(true) = route_set.has_route(req.method(), req.uri().path()) {
+        if let Some(r) = const_router.get_route(req.method(), req.uri().path()) {
+            apply_hashmap_headers(&mut response_builder, &r.headers);
+            response_builder
+                .status(StatusCode::from_u16(r.status_code).unwrap())
+                .body(r.body)
+        } else if let Some((function, route_params)) = router.get_route(req.method(), req.uri().path())
+        {
+            request.params = route_params;
+            match execute_http_function(&request, function).await {
+                Ok(r) => {
+                    response_builder.status(StatusCode::from_u16(r.status_code).unwrap());
+                    apply_hashmap_headers(&mut response_builder, &r.headers);
+                    if !r.body.is_empty() {
+                        response_builder.body(r.body)
+                    } else {
+                        response_builder.finish()
+                    }
+                }
+                Err(e) => {
+                    debug!("Error: {:?}", e);
+                    response_builder.status(StatusCode::INTERNAL_SERVER_ERROR);
                     response_builder.finish()
                 }
             }
-            Err(e) => {
-                debug!("Error: {:?}", e);
-                response_builder.status(StatusCode::INTERNAL_SERVER_ERROR);
-                response_builder.finish()
-            }
+        } else {
+            debug!("Error route {:?}:{:?} not found!", req.method(), req.uri().path());
+            response_builder.status(StatusCode::INTERNAL_SERVER_ERROR);
+            response_builder.finish()
         }
     } else {
         response_builder.status(StatusCode::NOT_FOUND);
