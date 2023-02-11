@@ -5,6 +5,7 @@ import os
 import signal
 import sys
 from typing import Callable, List, Optional
+from nestd import get_all_nested
 
 from multiprocess import Process  # type: ignore
 from watchdog.observers import Observer
@@ -20,6 +21,7 @@ from robyn.robyn import FunctionInfo, SocketHeld
 from robyn.router import MiddlewareRouter, Router, WebSocketRouter
 from robyn.types import Directory, Header
 from robyn.ws import WS
+
 
 logger = logging.getLogger(__name__)
 
@@ -193,6 +195,40 @@ class Robyn:
             finally:
                 observer.stop()
                 observer.join()
+
+
+    def add_view(self, endpoint: str, view, const: bool = False):
+        """
+        [This is base handler for the view decorators]
+
+        :param endpoint [str]: [endpoint for the route added]
+        :param handler [function]: [represents the function passed as a parent handler for single route with different route types]
+        """
+        def get_functions(view):
+            functions = get_all_nested(view)
+            output = []
+            for (name, handler) in functions:
+                route_type = name.upper()
+                if route_type in ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS']:
+                    output.append((route_type.upper(), handler))
+            return output
+
+        handlers = get_functions(view)
+        routes = []
+        for (route_type, handler) in handlers:
+            routes.append(self._add_route(route_type, endpoint, handler, const))
+        return routes
+
+    def view(self, endpoint: str, const: bool = False):
+        """
+        The @app.view decorator to add a view with the GET/POST/PUT/DELETE/PATCH/HEAD/OPTIONS method
+
+        :param endpoint str: endpoint to server the route
+        """
+        def inner(handler):
+            return self.add_view(endpoint, handler, const)
+
+        return inner
 
     def get(self, endpoint: str, const: bool = False):
         """
