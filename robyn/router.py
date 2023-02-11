@@ -6,6 +6,7 @@ from types import CoroutineType
 from typing import Callable, Dict, List, Tuple, Union
 
 from robyn.robyn import FunctionInfo, Response
+from robyn.responses import jsonify
 from robyn.ws import WS
 
 Route = Tuple[str, str, FunctionInfo, bool]
@@ -26,17 +27,11 @@ class Router(BaseRouter):
     def _format_response(self, res):
         response = {}
         if type(res) == dict:
-            status_code = res.get("status_code", 200)
-            headers = res.get("headers", {"Content-Type": "text/plain"})
-            body = res.get("body", "")
-
-            if type(status_code) != int:
-                status_code = int(status_code)  # status_code can potentially be string
-
-            response = Response(status_code=status_code, headers=headers, body=body)
-            file_path = res.get("file_path")
-            if file_path is not None:
-                response.set_file_path(file_path)
+            response = Response(
+                status_code=200, 
+                headers={"Content-Type": "application/json"}, 
+                body=jsonify(res)
+            )
         elif type(res) == Response:
             response = res
         elif type(res) == bytes:
