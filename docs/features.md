@@ -100,21 +100,6 @@ async def json(request):
 
 Robyn supports several kinds of Response for your routes
 
-#### Dictionary
-
-Robyn accepts dictionaries to build a response for the route:
-
-```python
-@app.post("/dictionary")
-async def dictionary(request):
-    return {
-        "status_code": 200,
-        "body": "This is a regular response",
-        "type": "text",
-        "headers": {"Header": "header_value"},
-    }
-```
-
 #### Response object
 
 Robyn provides a `Response` object to help you build a valid response.

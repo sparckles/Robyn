@@ -14,16 +14,12 @@ from http_methods_helpers import get
     "route,expected_text,expected_header_key,expected_header_value",
     [
         ("/sync/str", "sync str get", None, None),
-        ("/sync/dict", "sync dict get", "sync", "dict"),
         ("/sync/response", "sync response get", "sync", "response"),
         ("/sync/str/const", "sync str const get", None, None),
-        ("/sync/dict/const", "sync dict const get", "sync_const", "dict"),
         ("/sync/response/const", "sync response const get", "sync_const", "response"),
         ("/async/str", "async str get", None, None),
-        ("/async/dict", "async dict get", "async", "dict"),
         ("/async/response", "async response get", "async", "response"),
         ("/async/str/const", "async str const get", None, None),
-        ("/async/dict/const", "async dict const get", "async_const", "dict"),
         (
             "/async/response/const",
             "async response const get",
