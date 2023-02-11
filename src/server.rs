@@ -107,7 +107,7 @@ impl Server {
 
         thread::spawn(move || {
             actix_web::rt::System::new().block_on(async move {
-                debug!("The number of workers are {}", workers.clone());
+                debug!("The number of workers is {}", workers.clone());
                 execute_event_handler(startup_handler, &task_locals_copy)
                     .await
                     .unwrap();

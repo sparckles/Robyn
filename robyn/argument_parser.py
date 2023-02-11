@@ -1,57 +1,51 @@
 import argparse
 
 
-class ArgumentParser(argparse.ArgumentParser):
+class Config:
     def __init__(self) -> None:
-        self.parser = argparse.ArgumentParser(
+        parser = argparse.ArgumentParser(
             description="Robyn, a fast async web framework with a rust runtime."
         )
-        self.parser.add_argument(
+        parser.add_argument(
             "--processes",
             type=int,
             default=1,
             required=False,
             help="Choose the number of processes. [Default: 1]",
         )
-        self.parser.add_argument(
+        parser.add_argument(
             "--workers",
             type=int,
             default=1,
             required=False,
             help="Choose the number of workers. [Default: 1]",
         )
-        self.parser.add_argument(
+        parser.add_argument(
             "--dev",
             dest="dev",
             action="store_true",
             default=False,
             help="Development mode. It restarts the server based on file changes.",
         )
-
-        self.parser.add_argument(
+        parser.add_argument(
             "--log-level",
             dest="log_level",
-            default="INFO",
+            default=None,
             help="Set the log level name",
         )
 
-        self.args, unknown = self.parser.parse_known_args()
+        args, unknown = parser.parse_known_args()
 
-    @property
-    def num_processes(self) -> int:
-        return self.args.processes
+        self.processes = args.processes
+        self.workers = args.workers
+        self.dev = args.dev
 
-    @property
-    def workers(self) -> int:
-        return self.args.workers
-
-    @property
-    def log_level(self) -> str:
-        return self.args.log_level
-
-    @property
-    def is_dev(self) -> bool:
-        _is_dev = self.args.dev
-        if _is_dev and (self.num_processes != 1 or self.workers != 1):
+        if self.dev and (self.processes != 1 or self.workers != 1):
             raise Exception("--processes and --workers shouldn't be used with --dev")
-        return _is_dev
+
+        if self.dev and args.log_level is None:
+            self.log_level = "DEBUG"
+        elif args.log_level is None:
+            self.log_level = "INFO"
+        else:
+            self.log_level = args.log_level
