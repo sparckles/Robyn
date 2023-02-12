@@ -19,17 +19,18 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r robyn/test-requirements.txt
+      - uses: dtolnay/rust-toolchain@stable
       - name: Add macos target
         if: matrix.os == 'macos'
         run: rustup target add aarch64-apple-darwin
-      - name: Setup Rust part of the project
+      - uses: PyO3/maturin-action@v1
+        with:
+          args: -i python --universal2 --out dist
+      - name: Install dependencies
         run: |
-          maturin build -i python --universal2 --out dist
-          pip install --no-index --find-links=dist/ robyn
+          python -m pip install --upgrade pip
+          pip install -r requirements-test.txt
+      - name: Install wheel
+        run: pip install --no-index --find-links=dist/ robyn
       - name: Test with pytest
-        run: |
-          pytest ./integration_tests
+        run: pytest ./integration_tests

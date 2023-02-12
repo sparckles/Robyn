@@ -66,7 +66,7 @@ If you're feeling curious. You can take a look at a more detailed architecture [
 
 ## ⚙️ To Develop Locally
 
-1. Install the development dependencies: `pip install -r dev-requirements.txt`
+1. Install the development dependencies: `pip install -r requirements-dev.txt`
 
 1. Install the pre-commit git hooks: `pre-commit install`
 

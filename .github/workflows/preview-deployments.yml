@@ -25,11 +25,11 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: x86_64
-          args: -i python --release --out dist --no-sdist
+          args: -i python --release --out dist
       - name: Build wheels - universal2
         uses: PyO3/maturin-action@v1
         with:
-          args: -i python --release --universal2 --out dist --no-sdist
+          args: -i python --release --universal2 --out dist
       - name: Upload wheels
         uses: actions/upload-artifact@v3
         with:
@@ -52,7 +52,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: -i python3.7 --release --out dist --no-sdist
+          args: -i python3.7 --release --out dist
       - name: Upload wheels
         uses: actions/upload-artifact@v3
         with:
@@ -75,7 +75,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           manylinux: auto
-          args: -i python3.7 --out dist --no-sdist
+          args: -i python3.7 --out dist
       - name: Upload wheels
         uses: actions/upload-artifact@v3
         with:
@@ -97,7 +97,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           manylinux: auto
-          args: -i python3.7 --release --out dist --no-sdist
+          args: -i python3.7 --release --out dist
       - name: Upload wheels
         uses: actions/upload-artifact@v3
         with:
