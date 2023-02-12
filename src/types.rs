@@ -1,22 +1,22 @@
-use core::{mem};
+use core::mem;
+use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
 use std::{
     convert::Infallible,
-    task::{Context, Poll},
     pin::Pin,
+    task::{Context, Poll},
 };
-use std::collections::HashMap;
 
+use actix_http::body::BodySize;
+use actix_http::body::MessageBody;
 use actix_web::web::Bytes;
 use actix_web::{http::Method, HttpRequest};
-use actix_http::body::MessageBody;
-use actix_http::body::BodySize;
 
 use anyhow::Result;
 use dashmap::DashMap;
-use pyo3::{exceptions, prelude::*};
-use pyo3::types::{PyBytes, PyString};
 use pyo3::exceptions::PyValueError;
+use pyo3::types::{PyBytes, PyString};
+use pyo3::{exceptions, prelude::*};
 
 use crate::io_helpers::read_file;
 
@@ -36,9 +36,10 @@ impl ActixBytesWrapper {
         } else if let Ok(v) = raw_body.downcast::<PyBytes>() {
             v.as_bytes().to_vec()
         } else {
-            return Err(PyValueError::new_err(
-                format!("Could not convert {} specified body to bytes", type_of(raw_body))
-            ));
+            return Err(PyValueError::new_err(format!(
+                "Could not convert {} specified body to bytes",
+                type_of(raw_body)
+            )));
         };
         Ok(Self(Bytes::from(value)))
     }
