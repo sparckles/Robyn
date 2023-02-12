@@ -3,7 +3,7 @@ import logging
 import os
 import pathlib
 import logging
-from conftest import NestedCls, TestQueryType, TestForwardRef, TestCtor
+from validation_classes import NestedCls, TestQueryType, TestForwardRef, TestCtor
 
 from robyn import WS, Robyn, jsonify, serve_file, serve_html
 from robyn.log_colors import Colors
