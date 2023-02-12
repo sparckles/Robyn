@@ -46,10 +46,11 @@ app.start(port=8080)
 ```
 
 ## Python Version Support
+https://img.shields.io/badge/Support-Version%20%E2%89%A5%203.7-brightgreen
 
 Robyn is compatible with the following Python versions:
 
-> Python >= 3.6
+> Python >= 3.7
 
 It is recommended to use the latest version of Python for the best performance
 and compatibility
