@@ -48,6 +48,7 @@ pub struct Server {
     websocket_router: Arc<WebSocketRouter>,
     middleware_router: Arc<MiddlewareRouter>,
     global_request_headers: Arc<DashMap<String, String>>,
+    global_response_headers: Arc<DashMap<String, String>>,
     directories: Arc<RwLock<Vec<Directory>>>,
     startup_handler: Option<Arc<FunctionInfo>>,
     shutdown_handler: Option<Arc<FunctionInfo>>,
@@ -63,6 +64,7 @@ impl Server {
             websocket_router: Arc::new(WebSocketRouter::new()),
             middleware_router: Arc::new(MiddlewareRouter::new()),
             global_request_headers: Arc::new(DashMap::new()),
+            global_response_headers: Arc::new(DashMap::new()),
             directories: Arc::new(RwLock::new(Vec::new())),
             startup_handler: None,
             shutdown_handler: None,
@@ -92,6 +94,7 @@ impl Server {
         let middleware_router = self.middleware_router.clone();
         let web_socket_router = self.websocket_router.clone();
         let global_request_headers = self.global_request_headers.clone();
+        let global_response_headers = self.global_response_headers.clone();
         let directories = self.directories.clone();
         let workers = Arc::new(workers);
 
@@ -145,7 +148,8 @@ impl Server {
                         .app_data(web::Data::new(router.clone()))
                         .app_data(web::Data::new(const_router.clone()))
                         .app_data(web::Data::new(middleware_router.clone()))
-                        .app_data(web::Data::new(global_request_headers.clone()));
+                        .app_data(web::Data::new(global_request_headers.clone()))
+                        .app_data(web::Data::new(global_response_headers.clone()));
 
                     let web_socket_map = web_socket_router.get_web_socket_map();
                     for (elem, value) in (web_socket_map.read().unwrap()).iter() {
@@ -165,6 +169,7 @@ impl Server {
                               const_router: web::Data<Arc<ConstRouter>>,
                               middleware_router: web::Data<Arc<MiddlewareRouter>>,
                               global_request_headers,
+                              global_response_headers,
                               body,
                               req| {
                             pyo3_asyncio::tokio::scope_local(task_locals.clone(), async move {
@@ -173,6 +178,7 @@ impl Server {
                                     const_router,
                                     middleware_router,
                                     global_request_headers,
+                                    global_response_headers,
                                     body,
                                     req,
                                 )
@@ -223,17 +229,30 @@ impl Server {
         });
     }
 
-    /// Adds a new header to our concurrent hashmap
+    /// Adds a new request header to our concurrent hashmap
     /// this can be called after the server has started.
     pub fn add_request_header(&self, key: &str, value: &str) {
         self.global_request_headers
             .insert(key.to_string(), value.to_string());
     }
 
-    /// Removes a new header to our concurrent hashmap
+    /// Adds a new response header to our concurrent hashmap
+    /// this can be called after the server has started.
+    pub fn add_response_header(&self, key: &str, value: &str) {
+        self.global_response_headers
+            .insert(key.to_string(), value.to_string());
+    }
+
+    /// Removes a new request header to our concurrent hashmap
     /// this can be called after the server has started.
     pub fn remove_header(&self, key: &str) {
         self.global_request_headers.remove(key);
+    }
+
+    /// Removes a new response header to our concurrent hashmap
+    /// this can be called after the server has started.
+    pub fn remove_response_header(&self, key: &str) {
+        self.global_response_headers.remove(key);
     }
 
     /// Add a new route to the routing tables
@@ -345,6 +364,7 @@ async fn index(
     const_router: web::Data<Arc<ConstRouter>>,
     middleware_router: web::Data<Arc<MiddlewareRouter>>,
     global_request_headers: web::Data<Arc<Headers>>,
+    global_response_headers: web::Data<Arc<Headers>>,
     body: Bytes,
     req: HttpRequest,
 ) -> impl Responder {
@@ -360,6 +380,7 @@ async fn index(
 
     let mut response_builder = HttpResponse::Ok();
     apply_dashmap_headers(&mut response_builder, &global_request_headers);
+    apply_dashmap_headers(&mut response_builder, &global_response_headers);
     apply_hashmap_headers(&mut response_builder, &request.headers);
 
     let response = if let Some(r) = const_router.get_route(req.method(), req.uri().path()) {

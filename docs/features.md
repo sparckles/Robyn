@@ -171,7 +171,7 @@ async def hello(request):
     return "Hello World"
 ```
 
-## Global Headers
+## Global Request Headers
 
 You can also add global headers for every request.
 
@@ -179,9 +179,17 @@ You can also add global headers for every request.
 app.add_request_header("server", "robyn")
 ```
 
+## Global Response Headers
+
+You can also add global response headers for every request.
+
+```python
+app.add_response_header("content-type", "application/json")
+```
+
 ## Per route headers
 
-You can also add headers for every route.
+You can also add request and response headers for every route.
 
 ```python
 @app.get("/request_headers")
@@ -190,6 +198,14 @@ async def request_headers():
         "status_code": 200,
         "body": "",
         "type": "text",
+        "headers": {"Header": "header_value"},
+    }
+```
+
+```python
+@app.get("/response_headers")
+async def response_headers():
+    return {
         "headers": {"Header": "header_value"},
     }
 ```

@@ -164,6 +164,7 @@ pub struct Response {
 
 #[pymethods]
 impl Response {
+    // To do: Add check for content-type in header and change response_type accordingly
     #[new]
     pub fn new(status_code: u16, headers: HashMap<String, String>, body: &PyAny) -> PyResult<Self> {
         Ok(Self {
