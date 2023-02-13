@@ -95,7 +95,7 @@ optional arguments:
 
 ## ✨ Contributors/Supporters
 
-To contribute to Robyn, make sure to first go through the [CONTRIBUTING.md](./CONTRIBUTING.md).
+To contribute to Robyn, make sure to first go through the [CONTRIBUTING.md](https://github.com/sansyrox/robyn/blob/main/CONTRIBUTING.md).
 
 Thanks to all the contributors of the project. Robyn will not be what it is without all your support :heart:.
 
