@@ -3,15 +3,16 @@ import pathlib
 import signal
 import socket
 import subprocess
-import sys
 import time
 from typing import List
+import platform
 
 import pytest
+from helpers.network_helpers import get_network_host
 
 
 def spawn_process(command: List[str]) -> subprocess.Popen:
-    if sys.platform.startswith("win32"):
+    if platform.system() == "Windows":
         command[0] = "python"
         process = subprocess.Popen(
             command, shell=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
@@ -22,7 +23,7 @@ def spawn_process(command: List[str]) -> subprocess.Popen:
 
 
 def kill_process(process: subprocess.Popen) -> None:
-    if sys.platform.startswith("win32"):
+    if platform.system() == "Windows":
         process.send_signal(signal.CTRL_BREAK_EVENT)
         process.kill()
         return
@@ -84,7 +85,7 @@ def default_session():
 
 @pytest.fixture(scope="session")
 def global_session():
-    domain = "0.0.0.0"
+    domain = get_network_host()
     port = 8080
     os.environ["ROBYN_URL"] = domain
     process = start_server(domain, port)

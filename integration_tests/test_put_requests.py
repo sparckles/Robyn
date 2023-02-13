@@ -1,5 +1,5 @@
 import pytest
-from http_methods_helpers import put
+from helpers.http_methods_helpers import put
 
 
 @pytest.mark.parametrize("function_type", ["sync", "async"])
