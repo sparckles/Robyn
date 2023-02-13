@@ -8,6 +8,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![GitHub tag](https://img.shields.io/github/tag/sansyrox/robyn?include_prereleases=&sort=semver&color=black)](https://github.com/sansyrox/robyn/releases/)
 [![License](https://img.shields.io/badge/License-BSD_2.0-black)](#license)
+![Python](https://img.shields.io/badge/Support-Version%20%E2%89%A5%203.7-brightgreen)
 [![Discord](https://img.shields.io/discord/999782964143603713?label=discord&logo=discord&logoColor=white&style=for-the-badge&color=blue)](https://discord.gg/rkERZ5eNU8)
 
 [![view - Documentation](https://img.shields.io/badge/view-Documentation-blue?style=for-the-badge)](https://sansyrox.github.io/robyn/#/)
@@ -45,7 +46,7 @@ app.start(port=8080)
 
 ```
 
-## ![Python Version Support](https://img.shields.io/badge/Support-Version%20%E2%89%A5%203.7-brightgreen)
+## Python Version Support
 
 Robyn is compatible with the following Python versions:
 
