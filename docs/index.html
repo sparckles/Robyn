@@ -12,9 +12,11 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, minimum-scale=1.0"
     />
-    <link
+    <link 
       rel="stylesheet"
-      href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css"
+      href="//cdn.jsdelivr.net/npm/docsify-darklight-theme@latest/dist/style.min.css"
+      title="docsify-darklight-theme"
+      type="text/css"
     />
   </head>
   <body>
@@ -69,10 +71,50 @@
           // the matching substring will be used to identify the index
           pathNamespaces: /^(\/(zh-cn|ru-ru))?(\/(v1|v2))?/,
         },
+        darklightTheme: {
+          siteFont : "PT Sans",
+          defaultTheme : 'dark',
+          codeFontFamily : 'Roboto Mono, Monaco, courier, monospace',
+          bodyFontSize : '17px',
+          dark: {
+            accent: '#f1c40f',
+            toogleBackground : '#c4c4b4',
+            background: '#021115',
+            textColor: '#c4c4b4',
+            codeTextColor : '#e1c38a',
+            codeBackgroundColor : '#071d26',
+            borderColor : '#173953',
+            blockQuoteColor : '#858585',
+            highlightColor : '#f1c40f',
+            sidebarSublink : '#cccbc5',
+            codeTypeColor : '#eff0e6',
+            coverBackground : 'linear-gradient(to left bottom, hsl(118, 100%, 85%) 0%,hsl(181, 100%, 85%) 100%)',
+            toogleImage : 'url(https://cdn.jsdelivr.net/npm/docsify-darklight-theme@latest/icons/sun.svg)'
+          },
+          light: {
+            accent: '#e6bc13',
+            toogleBackground : '#091a28',
+            background: '#eff0e6',
+            textColor: '#34495e',
+            codeTextColor : '#574912',
+            codeBackgroundColor : '#f8f9f4',
+            borderColor : 'rgba(0, 0, 0, 0.2)',
+            blockQuoteColor : '#858585',
+            highlightColor : '#e6bc13',
+            sidebarSublink : '#a0a0a0',
+            codeTypeColor : '#091a28',
+            coverBackground : 'linear-gradient(to left bottom, hsl(118, 100%, 85%) 0%,hsl(181, 100%, 85%) 100%)',
+            toogleImage : 'url(https://cdn.jsdelivr.net/npm/docsify-darklight-theme@latest/icons/moon.svg)'
+          }
+        }
       };
     </script>
     <!-- Docsify v4 -->
     <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
     <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
+    <script 
+      src="//cdn.jsdelivr.net/npm/docsify-darklight-theme@latest/dist/index.min.js"
+      type="text/javascript">
+    </script>
   </body>
 </html>
