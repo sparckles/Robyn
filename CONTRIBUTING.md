@@ -109,7 +109,7 @@ Let's walk through the steps to create an issue:
 **4.** Select one of the Issue Templates to get started.
 <br><br><img src="https://i.imgur.com/xz2KAwU.png" width="750" /><br>
 
-**4.** Fill in the appropriate `Title` and `Issue description` and click on `Submit new issue`.
+**5.** Fill in the appropriate `Title` and `Issue description` and click on `Submit new issue`.
 <br><br><img src="https://i.imgur.com/XwjtGG1.png" width="750" /><br>
 
 ### Tutorials that may help you:
