@@ -486,6 +486,7 @@ async def async_raise():
 
 # ===== Views =====
 
+
 @app.view("/sync_decorator_view")
 def sync_decorator_view():
     def get():
@@ -504,6 +505,7 @@ def async_decorator_view():
     async def post(request):
         body = bytearray(request["body"]).decode("utf-8")
         return {"status_code": 200, "body": body}
+
 
 # ===== Main =====
 

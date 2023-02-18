@@ -194,6 +194,7 @@ class Robyn:
 
         :param endpoint str: endpoint to server the route
         """
+
         def inner(handler):
             return self.add_view(endpoint, handler, const)
 
