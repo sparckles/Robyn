@@ -5,6 +5,8 @@ from robyn import WS, Robyn, jsonify, serve_file, serve_html
 from robyn.robyn import Response
 from robyn.templating import JinjaTemplate
 
+from integration_tests.views.test_view import TestView
+
 app = Robyn(__file__)
 websocket = WS(app, "/web_socket")
 
@@ -484,6 +486,16 @@ async def async_raise():
 
 # ===== Main =====
 
+@app.view("/test_decorator_view")
+def decorator_view():
+    def get():
+        return "Hello, world!"
+
+    def post(request):
+        body = bytearray(request["body"]).decode("utf-8")
+        return {"status_code": 200, "body": body}
+
+
 
 if __name__ == "__main__":
     app.add_request_header("server", "robyn")
@@ -493,4 +505,5 @@ if __name__ == "__main__":
         index_file="index.html",
     )
     app.startup_handler(startup_handler)
+    app.add_view("/test_view", TestView)
     app.start(port=8080)
