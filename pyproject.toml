@@ -44,6 +44,9 @@ Changelog = "https://github.com/sansyrox/robyn/blob/main/CHANGELOG.md"
 [project.optional-dependencies]
 "templating" = ["jinja2 == 3.0.1"]
 
+[tool.pytest.ini_options]
+pythonpaths = ["."]
+
 
 [tool.ruff]
 line-length = 160

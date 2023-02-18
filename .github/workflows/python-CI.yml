@@ -32,4 +32,4 @@ jobs:
           pip install --no-index --find-links=dist/ robyn
       - name: Test with pytest
         run: |
-          pytest ./integration_tests
+          pytest
