@@ -8,7 +8,7 @@ from typing import List
 import platform
 
 import pytest
-from integration_tests.helpers.network_helpers import get_network_host
+from helpers.network_helpers import get_network_host
 
 
 def spawn_process(command: List[str]) -> subprocess.Popen:

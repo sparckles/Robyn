@@ -5,7 +5,7 @@ from robyn import WS, Robyn, jsonify, serve_file, serve_html
 from robyn.robyn import Response
 from robyn.templating import JinjaTemplate
 
-from integration_tests.views import SyncView, AsyncView
+from views import SyncView, AsyncView
 
 app = Robyn(__file__)
 websocket = WS(app, "/web_socket")

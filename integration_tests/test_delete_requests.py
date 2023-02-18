@@ -1,5 +1,5 @@
 import pytest
-from integration_tests.helpers.http_methods_helpers import delete
+from helpers.http_methods_helpers import delete
 
 
 @pytest.mark.parametrize("function_type", ["sync", "async"])

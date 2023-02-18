@@ -2,7 +2,7 @@ import os
 
 import requests
 
-from integration_tests.helpers.network_helpers import get_network_host
+from helpers.network_helpers import get_network_host
 
 
 def test_default_url_index_request(default_session):

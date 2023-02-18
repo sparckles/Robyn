@@ -1,4 +1,4 @@
-from integration_tests.helpers.http_methods_helpers import get, post
+from helpers.http_methods_helpers import get, post
 
 
 def test_get_async_view(session):

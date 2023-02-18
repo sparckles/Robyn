@@ -1,6 +1,6 @@
 import pytest
 
-from integration_tests.helpers.http_methods_helpers import get
+from helpers.http_methods_helpers import get
 
 
 @pytest.mark.skip(reason="Fix middleware request headers modification")
