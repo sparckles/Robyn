@@ -487,7 +487,7 @@ async def async_raise():
 # ===== Views =====
 
 
-@app.view("/sync_decorator_view")
+@app.view("/sync/view/decorator")
 def sync_decorator_view():
     def get():
         return "Hello, world!"
@@ -497,7 +497,7 @@ def sync_decorator_view():
         return {"status_code": 200, "body": body}
 
 
-@app.view("/async_decorator_view")
+@app.view("/async/view/decorator")
 def async_decorator_view():
     async def get():
         return "Hello, world!"
@@ -518,6 +518,6 @@ if __name__ == "__main__":
         index_file="index.html",
     )
     app.startup_handler(startup_handler)
-    app.add_view("/sync_view", SyncView)
-    app.add_view("/async_view", AsyncView)
+    app.add_view("/sync/view", SyncView)
+    app.add_view("/async/view", AsyncView)
     app.start(port=8080)

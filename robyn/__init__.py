@@ -40,11 +40,11 @@ class Robyn:
 
     def _add_route(self, route_type, endpoint, handler, is_const=False):
         """
-        [This is base handler for all the decorators]
+        This is base handler for all the decorators
 
-        :param route_type [str]: [route type between GET/POST/PUT/DELETE/PATCH]
-        :param endpoint [str]: [endpoint for the route added]
-        :param handler [function]: [represents the sync or async function passed as a handler for the route]
+        :param route_type str: route type between GET/POST/PUT/DELETE/PATCH
+        :param endpoint str: endpoint for the route added
+        :param handler function: represents the sync or async function passed as a handler for the route
         """
 
         """ We will add the status code here only
@@ -168,10 +168,10 @@ class Robyn:
 
     def add_view(self, endpoint: str, view: Callable, const: bool = False):
         """
-        [This is base handler for the view decorators]
+        This is base handler for the view decorators
 
-        :param endpoint [str]: [endpoint for the route added]
-        :param handler [function]: [represents the function passed as a parent handler for single route with different route types]
+        :param endpoint str: endpoint for the route added
+        :param handler function: represents the function passed as a parent handler for single route with different route types
         """
         http_methods = {"GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"}
 
@@ -181,7 +181,7 @@ class Robyn:
             for name, handler in functions:
                 route_type = name.upper()
                 if route_type in http_methods:
-                    output.append((route_type.upper(), handler))
+                    output.append((route_type, handler))
             return output
 
         handlers = get_functions(view)
