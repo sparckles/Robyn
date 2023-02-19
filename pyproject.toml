@@ -12,6 +12,7 @@ name = "robyn"
 dependencies = [
   'watchdog == 2.2.1',
   'multiprocess == 0.70.14',
+  'nestd==0.3.1',
 # conditional
   'uvloop == 0.17.0; sys_platform == "darwin"',
   'uvloop == 0.17.0; platform_machine == "x86_64"',
@@ -42,7 +43,6 @@ Changelog = "https://github.com/sansyrox/robyn/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 "templating" = ["jinja2 == 3.0.1"]
-
 
 [tool.ruff]
 line-length = 160

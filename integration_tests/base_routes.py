@@ -5,6 +5,8 @@ from robyn import WS, Robyn, jsonify, serve_file, serve_html
 from robyn.robyn import Response
 from robyn.templating import JinjaTemplate
 
+from views import SyncView, AsyncView
+
 app = Robyn(__file__)
 websocket = WS(app, "/web_socket")
 
@@ -482,6 +484,29 @@ async def async_raise():
     raise Exception()
 
 
+# ===== Views =====
+
+
+@app.view("/sync/view/decorator")
+def sync_decorator_view():
+    def get():
+        return "Hello, world!"
+
+    def post(request):
+        body = bytearray(request["body"]).decode("utf-8")
+        return {"status_code": 200, "body": body}
+
+
+@app.view("/async/view/decorator")
+def async_decorator_view():
+    async def get():
+        return "Hello, world!"
+
+    async def post(request):
+        body = bytearray(request["body"]).decode("utf-8")
+        return {"status_code": 200, "body": body}
+
+
 # ===== Main =====
 
 
@@ -493,4 +518,6 @@ if __name__ == "__main__":
         index_file="index.html",
     )
     app.startup_handler(startup_handler)
+    app.add_view("/sync/view", SyncView)
+    app.add_view("/async/view", AsyncView)
     app.start(port=8080)
