@@ -25,7 +25,7 @@ class Router(BaseRouter):
 
     def _format_response(self, res):
         response = {}
-        if type(res) == dict:
+        if isinstance(res, dict):
             status_code = res.get("status_code", 200)
             headers = res.get("headers", {"Content-Type": "text/plain"})
             body = res.get("body", "")
@@ -37,9 +37,9 @@ class Router(BaseRouter):
             file_path = res.get("file_path")
             if file_path is not None:
                 response.set_file_path(file_path)
-        elif type(res) == Response:
+        elif isinstance(res, Response):
             response = res
-        elif type(res) == bytes:
+        elif isinstance(res, bytes):
             response = Response(
                 status_code=200,
                 headers={"Content-Type": "application/octet-stream"},
