@@ -24,7 +24,11 @@ class JinjaTemplate(TemplateInterface):
 
     def render_template(self, template_name, **kwargs) -> Response:
         rendered_template = self.env.get_template(template_name).render(**kwargs)
-        return Response(status_code=200, body=rendered_template, headers={"Content-Type": "text/html; charset=utf-8"})
+        return Response(
+            status_code=200,
+            body=rendered_template,
+            headers={"Content-Type": "text/html; charset=utf-8"},
+        )
 
 
 __all__ = ["TemplateInterface", "JinjaTemplate"]
