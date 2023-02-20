@@ -381,3 +381,76 @@ templates/test.html
 Inside your project, you need to have a directory to store the templates, called `templates` in our case.
 
 You can store and any `Jinja2` templates inside that directory. We are calling it `test.html`.
+
+## Views
+
+To organise your code in a better way - either to group by responsibility or for code splitting, you can use `views`.
+
+A view, simply is a function with a collection of other closures. e.g.
+```python
+def sample_view():
+    def get():
+        return "Hello, world!"
+
+    def post(request):
+        body = bytearray(request["body"]).decode("utf-8")
+        return {"status_code": 200, "body": body}
+```
+
+The above view contains two closures for the `get` and the `post` request.
+
+You can serve views in two ways:
+
+1. Using an `@app.view` decorator.
+```python
+@app.view("/sync/view/decorator")
+def sync_decorator_view():
+    def get():
+        return "Hello, world!"
+
+    def post(request):
+        body = bytearray(request["body"]).decode("utf-8")
+        return {"status_code": 200, "body": body}
+
+
+@app.view("/async/view/decorator")
+def async_decorator_view():
+    async def get():
+        return "Hello, world!"
+
+    async def post(request):
+        body = bytearray(request["body"]).decode("utf-8")
+        return {"status_code": 200, "body": body}
+```
+
+
+2. Importing it from a different file.
+
+```python
+#views.py
+def View():
+    async def get():
+        return "Hello, world!"
+
+    async def post(request):
+        body = bytes(request["body"]).decode("utf-8")
+        return {
+            "status": 200,
+            "body": body,
+            "headers": {"Content-Type": "text/json"},
+        }
+```
+
+app.py
+```python
+from .views import View
+
+...
+...
+
+app.add_view("/", View)
+
+```
+
+
+
