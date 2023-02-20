@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from .robyn import Response
+
 from jinja2 import Environment, FileSystemLoader
 
 
@@ -8,7 +10,7 @@ class TemplateInterface(ABC):
         ...
 
     @abstractmethod
-    def render_template(self, *args, **kwargs):
+    def render_template(self, *args, **kwargs) -> Response:
         ...
 
 
@@ -20,8 +22,13 @@ class JinjaTemplate(TemplateInterface):
             )
         )
 
-    def render_template(self, template_name, **kwargs):
-        return self.env.get_template(template_name).render(**kwargs)
+    def render_template(self, template_name, **kwargs) -> Response:
+        rendered_template = self.env.get_template(template_name).render(**kwargs)
+        return Response(
+            status_code=200,
+            body=rendered_template,
+            headers={"Content-Type": "text/html; charset=utf-8"},
+        )
 
 
 __all__ = ["TemplateInterface", "JinjaTemplate"]

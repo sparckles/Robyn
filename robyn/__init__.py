@@ -15,7 +15,7 @@ from robyn.events import Events
 from robyn.logger import Colors, logger
 from robyn.processpool import run_processes
 from robyn.responses import jsonify, serve_file, serve_html
-from robyn.robyn import FunctionInfo
+from robyn.robyn import FunctionInfo, Response
 from robyn.router import MiddlewareRouter, Router, WebSocketRouter
 from robyn.types import Directory, Header
 from robyn.ws import WS
@@ -309,4 +309,4 @@ class Robyn:
         return inner
 
 
-__all__ = ["Robyn", "jsonify", "serve_file", "serve_html"]
+__all__ = ["Robyn", "jsonify", "serve_file", "serve_html", "Response"]

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 class SocketHeld:
     def __init__(self, url: str, port: int):
@@ -19,7 +19,7 @@ class FunctionInfo:
 class Response:
     status_code: int
     headers: dict[str, str]
-    body: bytes
+    body: Union[str, bytes]
 
     def set_file_path(self, file_path: str):
         pass
