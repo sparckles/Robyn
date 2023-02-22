@@ -512,23 +512,28 @@ def async_decorator_view():
 # ===== Main =====
 @app.post("/query_validation", validate=True)
 async def test_validation(a: int, b: str):
-    return jsonify({'a': a, 'b': b})
+    return jsonify({"a": a, "b": b})
+
 
 @app.post("/query_validation_complex", validate=True)
 async def test_validation_complex(a: int, b: str, c: NestedCls):
-    return jsonify({'a': a, 'b': b, 'c': c})
+    return jsonify({"a": a, "b": b, "c": c})
+
 
 @app.post("/query_validation_import", validate=True)
 async def test_validation_import(a: int, b: str, c: TestQueryType):
-    return jsonify({'a': a, 'b': b, 'c': c})
+    return jsonify({"a": a, "b": b, "c": c})
+
 
 @app.post("/query_validation_forwardref", validate=True)
 async def test_validation_forwardref(a: TestForwardRef):
-    return jsonify({'a': a})
+    return jsonify({"a": a})
+
 
 @app.post("/query_validation_ctor", validate=True)
 async def test_validation_ctor(a: TestCtor):
-    return jsonify({'a': a})
+    return jsonify({"a": a})
+
 
 if __name__ == "__main__":
     app.add_request_header("server", "robyn")

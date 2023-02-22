@@ -24,8 +24,7 @@ class WS:
                 raise Exception(f"Socket method {type} does not exist")
             else:
                 self.methods[type] = FunctionInfo(
-                    handler, self._is_async(handler), self._num_params(handler),
-                    False
+                    handler, self._is_async(handler), self._num_params(handler), False
                 )
                 self.robyn_object.add_web_socket(self.endpoint, self)
 

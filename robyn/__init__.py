@@ -39,7 +39,15 @@ class Robyn:
         load_vars(project_root=directory_path)
         logging.basicConfig(level=self.config.log_level)
 
-    def _add_route(self, route_type, endpoint, handler, validate_params=False, validator=None, is_const=False):
+    def _add_route(
+        self,
+        route_type,
+        endpoint,
+        handler,
+        validate_params=False,
+        validator=None,
+        is_const=False,
+    ):
         """
         This is base handler for all the decorators
 
@@ -50,7 +58,9 @@ class Robyn:
 
         """ We will add the status code here only
         """
-        return self.router.add_route(route_type, endpoint, handler, is_const, validate_params, validator)
+        return self.router.add_route(
+            route_type, endpoint, handler, is_const, validate_params, validator
+        )
 
     def before_request(self, endpoint: str) -> Callable[..., None]:
         """
@@ -213,7 +223,12 @@ class Robyn:
 
         return inner
 
-    def post(self, endpoint: str, validate: bool = False, validator: Optional[Callable] = check_params_dependencies):
+    def post(
+        self,
+        endpoint: str,
+        validate: bool = False,
+        validator: Optional[Callable] = check_params_dependencies,
+    ):
         """
         The @app.post decorator to add a route with POST method
 
@@ -225,7 +240,12 @@ class Robyn:
 
         return inner
 
-    def put(self, endpoint: str, validate: bool = False, validator: Optional[Callable] = check_params_dependencies):
+    def put(
+        self,
+        endpoint: str,
+        validate: bool = False,
+        validator: Optional[Callable] = check_params_dependencies,
+    ):
         """
         The @app.put decorator to add a get route with PUT method
 
@@ -237,7 +257,12 @@ class Robyn:
 
         return inner
 
-    def delete(self, endpoint: str, validate: bool = False, validator: Optional[Callable] = check_params_dependencies):
+    def delete(
+        self,
+        endpoint: str,
+        validate: bool = False,
+        validator: Optional[Callable] = check_params_dependencies,
+    ):
         """
         The @app.delete decorator to add a route with DELETE method
 
@@ -249,7 +274,12 @@ class Robyn:
 
         return inner
 
-    def patch(self, endpoint: str, validate: bool = False, validator: Optional[Callable] = check_params_dependencies):
+    def patch(
+        self,
+        endpoint: str,
+        validate: bool = False,
+        validator: Optional[Callable] = check_params_dependencies,
+    ):
         """
         The @app.patch decorator to add a route with PATCH method
 
@@ -261,7 +291,12 @@ class Robyn:
 
         return inner
 
-    def head(self, endpoint: str, validate: bool = False, validator: Optional[Callable] = check_params_dependencies):
+    def head(
+        self,
+        endpoint: str,
+        validate: bool = False,
+        validator: Optional[Callable] = check_params_dependencies,
+    ):
         """
         The @app.head decorator to add a route with HEAD method
 
@@ -273,7 +308,12 @@ class Robyn:
 
         return inner
 
-    def options(self, endpoint: str, validate: bool = False, validator: Optional[Callable] = check_params_dependencies):
+    def options(
+        self,
+        endpoint: str,
+        validate: bool = False,
+        validator: Optional[Callable] = check_params_dependencies,
+    ):
         """
         The @app.options decorator to add a route with OPTIONS method
 
@@ -285,7 +325,12 @@ class Robyn:
 
         return inner
 
-    def connect(self, endpoint: str, validate: bool = False, validator: Optional[Callable] = check_params_dependencies):
+    def connect(
+        self,
+        endpoint: str,
+        validate: bool = False,
+        validator: Optional[Callable] = check_params_dependencies,
+    ):
         """
         The @app.connect decorator to add a route with CONNECT method
 
@@ -297,7 +342,12 @@ class Robyn:
 
         return inner
 
-    def trace(self, endpoint: str, validate: bool = False, validator: Optional[Callable] = check_params_dependencies):
+    def trace(
+        self,
+        endpoint: str,
+        validate: bool = False,
+        validator: Optional[Callable] = check_params_dependencies,
+    ):
         """
         The @app.trace decorator to add a route with TRACE method
 

@@ -37,4 +37,4 @@ def jsonify(input_dict: dict) -> str:
     """
     # Need to determine how to cache msgspec encoder globally
     # Need to figure out how to encode to string directly (without decoding from byte format)
-    return msgspec.json.encode(input_dict).decode('utf-8')
+    return msgspec.json.encode(input_dict).decode("utf-8")

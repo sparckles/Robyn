@@ -54,8 +54,13 @@ class Router(BaseRouter):
         return response
 
     def add_route(
-        self, route_type: str, endpoint: str, handler: Callable, is_const: bool, 
-        validate_params: bool, validator: Optional[Callable] = None
+        self,
+        route_type: str,
+        endpoint: str,
+        handler: Callable,
+        is_const: bool,
+        validate_params: bool,
+        validator: Optional[Callable] = None,
     ) -> Union[Callable, CoroutineType]:
         @wraps(handler)
         async def async_inner_handler(*args, **kwargs):
@@ -69,11 +74,21 @@ class Router(BaseRouter):
 
         number_of_params = len(signature(handler).parameters)
         if iscoroutinefunction(handler):
-            function = FunctionInfo(async_inner_handler, True, number_of_params, validator if validate_params else None)
+            function = FunctionInfo(
+                async_inner_handler,
+                True,
+                number_of_params,
+                validator if validate_params else None,
+            )
             self.routes.append((route_type, endpoint, function, is_const))
             return async_inner_handler
         else:
-            function = FunctionInfo(inner_handler, False, number_of_params, validator if validate_params else None)
+            function = FunctionInfo(
+                inner_handler,
+                False,
+                number_of_params,
+                validator if validate_params else None,
+            )
             self.routes.append((route_type, endpoint, function, is_const))
             return inner_handler
 
@@ -88,7 +103,9 @@ class MiddlewareRouter(BaseRouter):
 
     def add_route(self, route_type: str, endpoint: str, handler: Callable) -> Callable:
         number_of_params = len(signature(handler).parameters)
-        function = FunctionInfo(handler, iscoroutinefunction(handler), number_of_params, None)
+        function = FunctionInfo(
+            handler, iscoroutinefunction(handler), number_of_params, None
+        )
         self.routes.append((route_type, endpoint, function))
         return handler
 
