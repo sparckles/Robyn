@@ -1,7 +1,6 @@
 from enum import Enum
 
 class StatusCodes(Enum):
-
     HTTP_100_CONTINUE = 100
     HTTP_101_SWITCHING_PROTOCOLS = 101
     HTTP_102_PROCESSING = 102
