@@ -18,6 +18,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::{Relaxed, SeqCst};
 use std::sync::{Arc, RwLock};
 
+use std::process::abort;
 use std::thread;
 
 use actix_files::Files;
@@ -106,7 +107,7 @@ impl Server {
 
         thread::spawn(move || {
             actix_web::rt::System::new().block_on(async move {
-                debug!("The number of workers are {}", workers.clone());
+                debug!("The number of workers is {}", workers.clone());
                 execute_event_handler(startup_handler, &task_locals_copy)
                     .await
                     .unwrap();
@@ -201,7 +202,8 @@ impl Server {
                         .unwrap();
                     Ok(())
                 })
-            })?
+            })?;
+            abort();
         }
         Ok(())
     }
@@ -387,7 +389,8 @@ async fn index(
             }
         }
     } else {
-        response_builder.finish()
+        response_builder.status(StatusCode::NOT_FOUND);
+        response_builder.body("Not found")
     };
 
     apply_middleware(

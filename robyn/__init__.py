@@ -1,28 +1,26 @@
 import asyncio
 import logging
-import multiprocessing as mp
+import multiprocess as mp
 import os
 import signal
-import sys
 from typing import Callable, List, Optional
+from nestd import get_all_nested
 
-from multiprocess import Process  # type: ignore
 from watchdog.observers import Observer
 
-from robyn.argument_parser import ArgumentParser
+from robyn.argument_parser import Config
 from robyn.dev_event_handler import EventHandler
 from robyn.env_populator import load_vars
 from robyn.events import Events
-from robyn.log_colors import Colors
-from robyn.processpool import spawn_process
+from robyn.logger import Colors, logger
+from robyn.processpool import run_processes
 from robyn.responses import jsonify, serve_file, serve_html
-from robyn.robyn import FunctionInfo, SocketHeld
+from robyn.robyn import FunctionInfo, Response
 from robyn.router import MiddlewareRouter, Router, WebSocketRouter
 from robyn.types import Directory, Header
 from robyn.dependencies import check_params_dependencies
 from robyn.ws import WS
 
-logger = logging.getLogger(__name__)
 
 class Robyn:
     """This is the python wrapper for the Robyn binaries."""
@@ -31,11 +29,7 @@ class Robyn:
         directory_path = os.path.dirname(os.path.abspath(file_object))
         self.file_path = file_object
         self.directory_path = directory_path
-        self.parser = ArgumentParser()
-        self.dev = self.parser.is_dev
-        self.processes = self.parser.num_processes
-        self.workers = self.parser.workers
-        self.log_level = self.parser.log_level
+        self.config = Config()
         self.router = Router()
         self.middleware_router = MiddlewareRouter()
         self.web_socket_router = WebSocketRouter()
@@ -43,15 +37,15 @@ class Robyn:
         self.directories: List[Directory] = []
         self.event_handlers = {}
         load_vars(project_root=directory_path)
-        self._config_logger()
+        logging.basicConfig(level=self.config.log_level)
 
     def _add_route(self, route_type, endpoint, handler, validate_params=False, validator=None, is_const=False):
         """
-        [This is base handler for all the decorators]
+        This is base handler for all the decorators
 
-        :param route_type [str]: [route type between GET/POST/PUT/DELETE/PATCH]
-        :param endpoint [str]: [endpoint for the route added]
-        :param handler [function]: [represents the sync or async function passed as a handler for the route]
+        :param route_type str: route type between GET/POST/PUT/DELETE/PATCH
+        :param endpoint str: endpoint for the route added
+        :param handler function: represents the sync or async function passed as a handler for the route
         """
 
         """ We will add the status code here only
@@ -60,7 +54,7 @@ class Robyn:
 
     def before_request(self, endpoint: str) -> Callable[..., None]:
         """
-        The @app.before_request decorator to add a get route
+        You can use the @app.before_request decorator to call a method before routing to the specified endpoint
 
         :param endpoint str: endpoint to server the route
         """
@@ -69,7 +63,7 @@ class Robyn:
 
     def after_request(self, endpoint: str) -> Callable[..., None]:
         """
-        The @app.after_request decorator to add a get route
+        You can use the @app.after_request decorator to call a method after routing to the specified endpoint
 
         :param endpoint str: endpoint to server the route
         """
@@ -107,97 +101,109 @@ class Robyn:
     def shutdown_handler(self, handler: Callable) -> None:
         self._add_event_handler(Events.SHUTDOWN, handler)
 
-    def start(self, url: str = "127.0.0.1", port: int = 5000):
+    def start(self, url: str = "127.0.0.1", port: int = 8080):
         """
         Starts the server
 
-        :param port int: reperesents the port number at which the server is listening
+        :param port int: represents the port number at which the server is listening
         """
 
         url = os.getenv("ROBYN_URL", url)
         port = int(os.getenv("ROBYN_PORT", port))
 
-        logger.info(
-            "%sStarting server at %s:%s %s", Colors.OKGREEN, url, port, Colors.ENDC
-        )
-
-        def init_processpool(socket):
-
-            process_pool = []
-            if sys.platform.startswith("win32"):
-                spawn_process(
-                    self.directories,
-                    self.request_headers,
-                    self.router.get_routes(),
-                    self.middleware_router.get_routes(),
-                    self.web_socket_router.get_routes(),
-                    self.event_handlers,
-                    socket,
-                    workers,
-                )
-
-                return process_pool
-
-            for _ in range(self.processes):
-                copied_socket = socket.try_clone()
-                process = Process(
-                    target=spawn_process,
-                    args=(
-                        self.directories,
-                        self.request_headers,
-                        self.router.get_routes(),
-                        self.middleware_router.get_routes(),
-                        self.web_socket_router.get_routes(),
-                        self.event_handlers,
-                        copied_socket,
-                        workers,
-                    ),
-                )
-                process.start()
-                process_pool.append(process)
-
-            return process_pool
+        logger.info(f"Starting server at {url}:{port}")
 
         mp.allow_connection_pickling()
 
-        if not self.dev:
-            workers = self.workers
-            socket = SocketHeld(url, port)
-
-            process_pool = init_processpool(socket)
+        if not self.config.dev:
+            run_processes(
+                url,
+                port,
+                self.directories,
+                self.request_headers,
+                self.router.get_routes(),
+                self.middleware_router.get_routes(),
+                self.web_socket_router.get_routes(),
+                self.event_handlers,
+                self.config.workers,
+                self.config.processes,
+            )
+        else:
+            event_handler = EventHandler(
+                url,
+                port,
+                self.directories,
+                self.request_headers,
+                self.router.get_routes(),
+                self.middleware_router.get_routes(),
+                self.web_socket_router.get_routes(),
+                self.event_handlers,
+                self.config.workers,
+                self.config.processes,
+            )
+            event_handler.start_server()
+            logger.info(
+                f"Dev server initialized with the directory_path : {self.directory_path}",
+                Colors.BLUE,
+            )
 
             def terminating_signal_handler(_sig, _frame):
-                logger.info(
-                    f"{Colors.BOLD}{Colors.OKGREEN} Terminating server!! {Colors.ENDC}"
-                )
-                for process in process_pool:
-                    process.kill()
+                logger.info("Terminating server!!", bold=True)
+                event_handler.stop_server()
+                observer.stop()
+                observer.join()
 
             signal.signal(signal.SIGINT, terminating_signal_handler)
             signal.signal(signal.SIGTERM, terminating_signal_handler)
 
-            logger.info(f"{Colors.OKGREEN}Press Ctrl + C to stop \n{Colors.ENDC}")
-            for process in process_pool:
-                process.join()
-        else:
-            event_handler = EventHandler(self.file_path)
-            event_handler.start_server_first_time()
-            logger.info(
-                f"{Colors.OKBLUE}Dev server initialised with the directory_path : {self.directory_path}{Colors.ENDC}"
-            )
             observer = Observer()
             observer.schedule(event_handler, path=self.directory_path, recursive=True)
             observer.start()
+
             try:
-                while True:
-                    pass
+                while observer.is_alive():
+                    observer.join(1)
             finally:
                 observer.stop()
                 observer.join()
 
+    def add_view(self, endpoint: str, view: Callable, const: bool = False):
+        """
+        This is base handler for the view decorators
+
+        :param endpoint str: endpoint for the route added
+        :param handler function: represents the function passed as a parent handler for single route with different route types
+        """
+        http_methods = {"GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"}
+
+        def get_functions(view):
+            functions = get_all_nested(view)
+            output = []
+            for name, handler in functions:
+                route_type = name.upper()
+                if route_type in http_methods:
+                    output.append((route_type, handler))
+            return output
+
+        handlers = get_functions(view)
+        for route_type, handler in handlers:
+            self._add_route(route_type, endpoint, handler, const)
+
+    def view(self, endpoint: str, const: bool = False):
+        """
+        The @app.view decorator to add a view with the GET/POST/PUT/DELETE/PATCH/HEAD/OPTIONS method
+
+        :param endpoint str: endpoint to server the route
+        """
+
+        def inner(handler):
+            return self.add_view(endpoint, handler, const)
+
+        return inner
+
     def get(self, endpoint: str, const: bool = False):
         """
-        The @app.get decorator to add a get route
+        The @app.get decorator to add a route with the GET method
 
         :param endpoint str: endpoint to server the route
         """
@@ -209,7 +215,7 @@ class Robyn:
 
     def post(self, endpoint: str, validate: bool = False, validator: Optional[Callable] = check_params_dependencies):
         """
-        The @app.post decorator to add a get route
+        The @app.post decorator to add a route with POST method
 
         :param endpoint str: endpoint to server the route
         """
@@ -221,7 +227,7 @@ class Robyn:
 
     def put(self, endpoint: str, validate: bool = False, validator: Optional[Callable] = check_params_dependencies):
         """
-        The @app.put decorator to add a get route
+        The @app.put decorator to add a get route with PUT method
 
         :param endpoint str: endpoint to server the route
         """
@@ -233,7 +239,7 @@ class Robyn:
 
     def delete(self, endpoint: str, validate: bool = False, validator: Optional[Callable] = check_params_dependencies):
         """
-        The @app.delete decorator to add a get route
+        The @app.delete decorator to add a route with DELETE method
 
         :param endpoint str: endpoint to server the route
         """
@@ -245,7 +251,7 @@ class Robyn:
 
     def patch(self, endpoint: str, validate: bool = False, validator: Optional[Callable] = check_params_dependencies):
         """
-        [The @app.patch decorator to add a get route]
+        The @app.patch decorator to add a route with PATCH method
 
         :param endpoint [str]: [endpoint to server the route]
         """
@@ -257,7 +263,7 @@ class Robyn:
 
     def head(self, endpoint: str, validate: bool = False, validator: Optional[Callable] = check_params_dependencies):
         """
-        The @app.head decorator to add a get route
+        The @app.head decorator to add a route with HEAD method
 
         :param endpoint str: endpoint to server the route
         """
@@ -269,7 +275,7 @@ class Robyn:
 
     def options(self, endpoint: str, validate: bool = False, validator: Optional[Callable] = check_params_dependencies):
         """
-        The @app.options decorator to add a get route
+        The @app.options decorator to add a route with OPTIONS method
 
         :param endpoint str: endpoint to server the route
         """
@@ -281,7 +287,7 @@ class Robyn:
 
     def connect(self, endpoint: str, validate: bool = False, validator: Optional[Callable] = check_params_dependencies):
         """
-        The @app.connect decorator to add a get route
+        The @app.connect decorator to add a route with CONNECT method
 
         :param endpoint str: endpoint to server the route
         """
@@ -293,7 +299,7 @@ class Robyn:
 
     def trace(self, endpoint: str, validate: bool = False, validator: Optional[Callable] = check_params_dependencies):
         """
-        The @app.trace decorator to add a get route
+        The @app.trace decorator to add a route with TRACE method
 
         :param endpoint str: endpoint to server the route
         """
@@ -303,18 +309,5 @@ class Robyn:
 
         return inner
 
-    def _config_logger(self):
-        """
-        This is the method to configure the logger either on the dev mode or the env variable
-        """
 
-        log_level = "WARN"
-
-        if self.dev:
-            log_level = "DEBUG"
-
-        log_level = self.log_level if self.log_level else log_level
-        logging.basicConfig(level=log_level)
-
-
-__all__ = ["Robyn", "jsonify", "serve_file", "serve_html"]
+__all__ = ["Robyn", "jsonify", "serve_file", "serve_html", "Response"]

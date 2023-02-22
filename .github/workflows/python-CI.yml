@@ -1,17 +1,18 @@
-# CI to build the Python code
+# CI to test Robyn on major Linux, MacOS and Windows
 
 on: [push, pull_request]
 
 name: Python Continuous integration
 
 jobs:
-  test:
-    name: Test
-    runs-on: ubuntu-latest
+  tests:
     strategy:
+      fail-fast: false
       matrix:
+        os: ["windows", "ubuntu", "macos"]
         python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
-
+    name: ${{ matrix.os }} tests with python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}-latest
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
@@ -22,12 +23,13 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r robyn/test-requirements.txt
-          curl https://sh.rustup.rs -sSf | sh -s -- -y
+      - name: Add macos target
+        if: matrix.os == 'macos'
+        run: rustup target add aarch64-apple-darwin
       - name: Setup Rust part of the project
         run: |
-          source $HOME/.cargo/env
-          maturin build -i python --release --universal2 --out dist --no-sdist
-          pip install --force-reinstall dist/robyn*.whl
+          maturin build -i python --universal2 --out dist
+          pip install --no-index --find-links=dist/ robyn
       - name: Test with pytest
         run: |
-          pytest ./integration_tests
+          pytest

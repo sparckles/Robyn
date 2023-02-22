@@ -1,15 +1,16 @@
-import requests
-
-BASE_URL = "http://127.0.0.1:5000"
-
-
-def test_patch(session):
-    res = requests.patch(f"{BASE_URL}/patch")
-    assert res.status_code == 200
-    assert res.text == "PATCH Request"
+import pytest
+from helpers.http_methods_helpers import patch
 
 
-def test_patch_with_param(session):
-    res = requests.patch(f"{BASE_URL}/patch_with_body", data={"hello": "world"})
-    assert res.status_code == 200
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_patch(function_type: str, session):
+    res = patch(f"/{function_type}/dict")
+    assert res.text == f"{function_type} dict patch"
+    assert function_type in res.headers
+    assert res.headers[function_type] == "dict"
+
+
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_patch_with_param(function_type: str, session):
+    res = patch(f"/{function_type}/body", data={"hello": "world"})
     assert res.text == "hello=world"

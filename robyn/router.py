@@ -8,8 +8,8 @@ from typing import Callable, Dict, List, Tuple, Union, Optional
 from robyn.robyn import FunctionInfo, Response
 from robyn.ws import WS
 
-Route = Tuple[str, str, Callable, bool]
-MiddlewareRoute = Tuple[str, str, Callable]
+Route = Tuple[str, str, FunctionInfo, bool]
+MiddlewareRoute = Tuple[str, str, FunctionInfo]
 
 
 class BaseRouter(ABC):
@@ -25,7 +25,7 @@ class Router(BaseRouter):
 
     def _format_response(self, res):
         response = {}
-        if type(res) == dict:
+        if isinstance(res, dict):
             status_code = res.get("status_code", 200)
             headers = res.get("headers", {"Content-Type": "text/plain"})
             body = res.get("body", "")
@@ -37,13 +37,20 @@ class Router(BaseRouter):
             file_path = res.get("file_path")
             if file_path is not None:
                 response.set_file_path(file_path)
-        elif type(res) == Response:
+        elif isinstance(res, Response):
             response = res
+        elif isinstance(res, bytes):
+            response = Response(
+                status_code=200,
+                headers={"Content-Type": "application/octet-stream"},
+                body=res,
+            )
         else:
             response = Response(
-                status_code=200, headers={"Content-Type": "text/plain"}, body=str(res)
+                status_code=200,
+                headers={"Content-Type": "text/plain"},
+                body=str(res).encode("utf-8"),
             )
-
         return response
 
     def add_route(

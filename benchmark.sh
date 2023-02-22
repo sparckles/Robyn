@@ -70,7 +70,7 @@ python3 ./integration_tests/base_routes.py &
 sleep 1
 
 # oha will display benchmark results
-oha -n "$number" http://localhost:5000/sync
+oha -n "$number" http://localhost:8080/sync
 
 # Kill subprocesses after exiting the script (python + robyn server)
 # (see https://stackoverflow.com/questions/360201/how-do-i-kill-background-processes-jobs-when-my-shell-script-exits)

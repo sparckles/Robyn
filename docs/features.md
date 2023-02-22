@@ -68,9 +68,9 @@ async def postreq(request):
 
 ```python
 app.add_directory(
-    route="/test_dir"
-    directory_path="/build"
-    index_file="index.html"
+    route="/test_dir",
+    directory_path="build/",
+    index_file="index.html",
 )
 ```
 
@@ -79,6 +79,9 @@ app.add_directory(
 You can add params in the routes and access them from the request object.
 
 ```python
+from robyn import jsonify
+
+
 @app.post("/jsonify/:id")
 async def json(request):
     print(request["params"]["id"])
@@ -130,6 +133,34 @@ async def response(request):
     return Response(status_code=200, headers={}, body="OK")
 ```
 
+#### Returning a byte response
+You can also return byte response when serving HTTP requests using the following way
+
+```python
+@app.get("/binary_output_response_sync")
+def binary_output_response_sync(request):
+    return Response(
+        status_code=200,
+        headers={"Content-Type": "application/octet-stream"},
+        body="OK",
+    )
+
+
+@app.get("/binary_output_async")
+async def binary_output_async(request):
+    return b"OK"
+
+
+@app.get("/binary_output_response_async")
+async def binary_output_response_async(request):
+    return Response(
+        status_code=200,
+        headers={"Content-Type": "application/octet-stream"},
+        body="OK",
+    )
+```
+
+
 #### Other types
 
 Whenever you want to use another type for your routes, the `str` method will be called on it, and it will be stored in the body of the response. Here is an example that returns a string:
@@ -167,7 +198,7 @@ async def request_headers():
 
 You can access query params from every HTTP method.
 
-For the url: `http://localhost:5000/query?a=b`
+For the url: `http://localhost:8080/query?a=b`
 
 You can use the following code snippet.
 
@@ -350,3 +381,76 @@ templates/test.html
 Inside your project, you need to have a directory to store the templates, called `templates` in our case.
 
 You can store and any `Jinja2` templates inside that directory. We are calling it `test.html`.
+
+## Views
+
+To organise your code in a better way - either to group by responsibility or for code splitting, you can use `views`.
+
+A view, simply is a function with a collection of other closures. e.g.
+```python
+def sample_view():
+    def get():
+        return "Hello, world!"
+
+    def post(request):
+        body = bytearray(request["body"]).decode("utf-8")
+        return {"status_code": 200, "body": body}
+```
+
+The above view contains two closures for the `get` and the `post` request.
+
+You can serve views in two ways:
+
+1. Using an `@app.view` decorator.
+```python
+@app.view("/sync/view/decorator")
+def sync_decorator_view():
+    def get():
+        return "Hello, world!"
+
+    def post(request):
+        body = bytearray(request["body"]).decode("utf-8")
+        return {"status_code": 200, "body": body}
+
+
+@app.view("/async/view/decorator")
+def async_decorator_view():
+    async def get():
+        return "Hello, world!"
+
+    async def post(request):
+        body = bytearray(request["body"]).decode("utf-8")
+        return {"status_code": 200, "body": body}
+```
+
+
+2. Importing it from a different file.
+
+```python
+#views.py
+def View():
+    async def get():
+        return "Hello, world!"
+
+    async def post(request):
+        body = bytes(request["body"]).decode("utf-8")
+        return {
+            "status": 200,
+            "body": body,
+            "headers": {"Content-Type": "text/json"},
+        }
+```
+
+app.py
+```python
+from .views import View
+
+...
+...
+
+app.add_view("/", View)
+
+```
+
+
+

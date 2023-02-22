@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Discord Community Support
+    url: https://discord.gg/rkERZ5eNU8
+    about: You can ask and answer questions here.
+  - name: Documentation
+    url: https://sansyrox.github.io/robyn/#/
+    about: The Robyn documentation.

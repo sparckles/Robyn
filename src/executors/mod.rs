@@ -87,7 +87,7 @@ pub async fn execute_http_function(request: &Request, function: FunctionInfo) ->
         })
     } else {
         Python::with_gil(|py| -> Result<Response> {
-            let output = get_function_output(&function, py, request).unwrap();
+            let output = get_function_output(&function, py, request)?;
             output.extract().context("Failed to get route response")
         })
     }

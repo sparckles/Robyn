@@ -1,0 +1,67 @@
+name: 🐛 Bug Report
+description: Create a bug report
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to fill out this bug report!
+        Please fill out the form below...
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: Please provide a clear and concise description of what the bug is, and what you would expect to happen.
+      placeholder: The bug is...
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Please provide the steps to reproduce this bug. You can include your code here if it is relevant.
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: false
+  - type: dropdown
+    id: os
+    attributes:
+      label: Your operating system
+      options:
+      - Windows
+      - MacOS
+      - Linux
+      - Other (specify below)
+    validations:
+      required: false
+  - type: dropdown
+    id: py_version
+    attributes:
+      label: Your Python version (`python --version`)
+      options:
+      - 3.7
+      - 3.8
+      - 3.9
+      - 3.10
+      - 3.11
+      - Other (specify below)
+    validations:
+      required: false
+  - type: dropdown
+    id: robyn_version
+    attributes:
+      label: Your Robyn version
+      options:
+      - main branch
+      - latest
+      - Other (specify below)
+    validations:
+      required: false
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Additional Info
+      description: Any additional info that you think might be useful or relevant to this bug

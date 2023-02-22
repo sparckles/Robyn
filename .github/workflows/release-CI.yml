@@ -1,10 +1,11 @@
-# CI to build the project for Linux, Windows, and MacOS
+# CI to release the project for Linux, Windows, and MacOS
 
-name: Build CI
+name: Release CI
 
 on:
   push:
-  pull_request:
+    tags:
+      - v*
 
 jobs:
   macos:
@@ -17,15 +18,11 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          target: aarch64-apple-darwin
-          profile: minimal
-          default: true
+          targets: aarch64-apple-darwin
       - name: Build wheels - x86_64
-        uses: messense/maturin-action@v1
+        uses: PyO3/maturin-action@v1
         with:
           target: x86_64
           args: -i python --release --out dist
@@ -34,9 +31,9 @@ jobs:
           pip install --force-reinstall dist/robyn*.whl
           cd ~ && python -c 'import robyn'
       - name: Build wheels - universal2
-        uses: messense/maturin-action@v1
+        uses: PyO3/maturin-action@v1
         with:
-          args: -i python --release --universal2 --out dist --no-sdist
+          args: -i python --release --universal2 --out dist
       - name: Install build wheel - universal2
         run: |
           pip install --force-reinstall dist/robyn*_universal2.whl
@@ -59,17 +56,12 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.target }}
-      - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          default: true
+      - uses: dtolnay/rust-toolchain@stable
       - name: Build wheels
-        uses: messense/maturin-action@v1
+        uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: -i python --release --out dist --no-sdist
+          args: -i python --release --out dist
       - name: Install build wheel
         shell: bash
         run: |
@@ -89,21 +81,16 @@ jobs:
         target: [x86_64, i686]
     steps:
       - uses: actions/checkout@v3
-      - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          default: true
+      - uses: dtolnay/rust-toolchain@stable
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Build Wheels
-        uses: messense/maturin-action@v1
+        uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
           manylinux: auto
-          args: -i python${{ matrix.python-version }} --release --out dist --no-sdist
+          args: -i python${{ matrix.python-version }} --release --out dist
       - name: Install build wheel
         if: matrix.target == 'x86_64'
         run: |
@@ -131,13 +118,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Build Wheels
-        uses: messense/maturin-action@v1
+        uses: PyO3/maturin-action@v1
         env:
           PYO3_CROSS_LIB_DIR: /opt/python/${{ matrix.python.abi }}/lib
         with:
           target: ${{ matrix.target }}
           manylinux: auto
-          args: -i python3.9 --release --out dist --no-sdist
+          args: -i python${{matrix.python.version}} --release --out dist
       - uses: uraimo/run-on-arch-action@v2.2.0
         name: Install build wheel
         with:
@@ -172,7 +159,6 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    if: "startsWith(github.ref, 'refs/tags/')"
     needs: [macos, windows, linux, linux-cross]
     steps:
       - uses: actions/download-artifact@v3

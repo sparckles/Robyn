@@ -1,27 +1,14 @@
 ---
 name: 💡 Feature request
-about: Suggest an enhancement to Robyn
-title: '[Feature Request]'
-labels: 'kind/enhancement'
-assignees: ''
+about: Suggest an idea to improve Robyn
+labels: [enhancement]
 ---
 
-**Current Behavior**
+<!-- 
+Thank you for considering improving Robyn!
 
-<!-- A brief description of what the problem is. (e.g. I need to be able to...) -->
-
-**Desired Behavior**
-
-<!-- A brief description of the enhancement. -->
-
----
-
-**Screenshots / Mockups**
-
-<!-- Add any other context or screenshots about the feature request here. -->
-
-**Alternatives**
-
-<!-- A brief description of any alternative solutions or features you've considered. -->
-
----
+Please describe your idea in depth. If you're not sure what to write, imagine the following:
+  - How is this important to you? How would you use it?
+  - Can you think of any alternatives?
+  - Do you have any ideas about how it can be implemented? Are you willing/able to implement it? Do you need mentoring?
+-->

@@ -1,18 +1,98 @@
+use core::mem;
 use std::collections::HashMap;
+use std::ops::{Deref, DerefMut};
+use std::{
+    convert::Infallible,
+    pin::Pin,
+    task::{Context, Poll},
+};
 
+use actix_http::body::BodySize;
+use actix_http::body::MessageBody;
 use actix_web::web::Bytes;
 use actix_web::{http::Method, HttpRequest};
+
 use anyhow::Result;
 use dashmap::DashMap;
+use pyo3::exceptions::PyValueError;
+use pyo3::types::{PyBytes, PyString};
 use pyo3::{exceptions, prelude::*};
 
 use crate::io_helpers::read_file;
 
+fn type_of<T>(_: &T) -> String {
+    std::any::type_name::<T>().to_string()
+}
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub struct ActixBytesWrapper(Bytes);
+
+// provides an interface between pyo3::types::{PyString, PyBytes} and actix_web::web::Bytes
+impl ActixBytesWrapper {
+    pub fn new(raw_body: &PyAny) -> PyResult<Self> {
+        let value = if let Ok(v) = raw_body.downcast::<PyString>() {
+            v.to_string().into_bytes()
+        } else if let Ok(v) = raw_body.downcast::<PyBytes>() {
+            v.as_bytes().to_vec()
+        } else {
+            return Err(PyValueError::new_err(format!(
+                "Could not convert {} specified body to bytes",
+                type_of(raw_body)
+            )));
+        };
+        Ok(Self(Bytes::from(value)))
+    }
+}
+
+impl Deref for ActixBytesWrapper {
+    type Target = Bytes;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for ActixBytesWrapper {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl MessageBody for ActixBytesWrapper {
+    type Error = Infallible;
+
+    #[inline]
+    fn size(&self) -> BodySize {
+        BodySize::Sized(self.len() as u64)
+    }
+
+    #[inline]
+    fn poll_next(
+        self: Pin<&mut Self>,
+        _cx: &mut Context<'_>,
+    ) -> Poll<Option<Result<Bytes, Self::Error>>> {
+        if self.is_empty() {
+            Poll::Ready(None)
+        } else {
+            Poll::Ready(Some(Ok(mem::take(self.get_mut()))))
+        }
+    }
+
+    #[inline]
+    fn try_into_bytes(self) -> Result<Bytes, Self> {
+        Ok(self.0)
+    }
+}
+
 #[pyclass]
 #[derive(Debug, Clone)]
 pub struct FunctionInfo {
+    #[pyo3(get, set)]
     pub handler: Py<PyAny>,
+    #[pyo3(get, set)]
     pub is_async: bool,
+    #[pyo3(get, set)]
     pub number_of_params: u8,
     pub validator: Py<PyAny>,
 }
@@ -80,32 +160,33 @@ pub struct Response {
     pub status_code: u16,
     pub response_type: String,
     pub headers: HashMap<String, String>,
-    pub body: String,
+    pub body: ActixBytesWrapper,
     pub file_path: Option<String>,
 }
 
 #[pymethods]
 impl Response {
     #[new]
-    pub fn new(status_code: u16, headers: HashMap<String, String>, body: String) -> Self {
-        Self {
+    pub fn new(status_code: u16, headers: HashMap<String, String>, body: &PyAny) -> PyResult<Self> {
+        Ok(Self {
             status_code,
             // we should be handling based on headers but works for now
             response_type: "text".to_string(),
             headers,
-            body,
+            body: ActixBytesWrapper::new(body)?,
             file_path: None,
-        }
+        })
     }
 
     pub fn set_file_path(&mut self, file_path: &str) -> PyResult<()> {
         // we should be handling based on headers but works for now
         self.response_type = "static_file".to_string();
         self.file_path = Some(file_path.to_string());
-        self.body = match read_file(file_path) {
+        let response = match read_file(file_path) {
             Ok(b) => b,
             Err(e) => return Err(exceptions::PyIOError::new_err::<String>(e.to_string())),
         };
+        self.body = ActixBytesWrapper(Bytes::from(response));
         Ok(())
     }
 }

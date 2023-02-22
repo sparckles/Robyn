@@ -12,129 +12,131 @@ Custom CSS
 }
 
 a:not(.heading-brand) {
-  font-weight: 500;  
+  font-weight: 500;
 }
 
 .font-weight-medium {
-    font-weight: 500;
+  font-weight: 500;
 }
 
 .heading-brand {
-    font-weight: 800;
-    font-size: 1.75rem;
+  font-weight: 800;
+  font-size: 1.75rem;
 }
 
 .svg-icon {
-    display: inline-flex;
-    flex-direction: row;
-    align-items: center;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
 }
 
 /* Buttons */
 .btn {
-    box-shadow: 0 4px 6px rgba($primary,.11), 0 1px 3px rgba($black,.08);
+  box-shadow: 0 4px 6px rgba($primary, 0.11), 0 1px 3px rgba($black, 0.08);
 
-    &:active, &:focus, &:focus {
-       box-shadow: none !important;
-    }
+  &:active,
+  &:focus,
+  &:focus {
+    box-shadow: none !important;
+  }
 }
 
 /*Forms*/
 .form-control {
-    font-weight: $font-weight-bold;
+  font-weight: $font-weight-bold;
 }
 
 /*Feature Grid*/
 .feature-grid {
-    margin-top: 3rem;
+  margin-top: 3rem;
 
-    .media {
-        display: flex;
-        align-items: center;
-        flex-direction: row;
-        margin-bottom: 2.5rem;
+  .media {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    margin-bottom: 2.5rem;
 
-        .media-body {
-            font-size: 1.125rem;
-            font-weight: $font-weight-bold;
-        }
+    .media-body {
+      font-size: 1.125rem;
+      font-weight: $font-weight-bold;
     }
+  }
 }
 
 /*Press Icons*/
 .press-icons img {
-    &:not(:last-child) {
-        margin-right: 4rem;
-        margin-bottom: 1rem;
-    }
+  &:not(:last-child) {
+    margin-right: 4rem;
+    margin-bottom: 1rem;
+  }
 }
 
 /*footer*/
 footer {
-    ul > li:not(:last-child) {
-        margin-right: 1.5rem !important;
-    }
+  ul > li:not(:last-child) {
+    margin-right: 1.5rem !important;
+  }
 
-    a {
-        color: $black;
-        font-weight: $font-weight-bold;
-    }
+  a {
+    color: $black;
+    font-weight: $font-weight-bold;
+  }
 }
 
 /* Icon Boxes */
 .icon-box {
-    position: relative;
-    border-radius: 50%;
-    display: inline-block;
-    vertical-align: middle;
-    background-color: $white;
-    margin-right: 1rem;
-    color: $success;
+  position: relative;
+  border-radius: 50%;
+  display: inline-block;
+  vertical-align: middle;
+  background-color: $white;
+  margin-right: 1rem;
+  color: $success;
 
-    .icon-box-inner {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        padding: 1rem;
-    }
+  .icon-box-inner {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 1rem;
+  }
 }
 
 /*Gradients*/
 .bg-gradient {
-    background: linear-gradient($primary, lighten($primary, 15%));
+  background: linear-gradient($primary, lighten($primary, 15%));
 }
 
 /*Code Window*/
 .code-window {
-    border-radius: .45rem;
-    background-color: $white;
-    padding: 1.52rem;
-    box-shadow: 0 8px 24px 0 rgba($black,.1);
+  border-radius: 0.45rem;
+  background-color: $white;
+  padding: 1.52rem;
+  box-shadow: 0 8px 24px 0 rgba($black, 0.1);
 
-    .dots {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: flex-start;
+  .dots {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
 
-        div{
-            margin-right: .5rem;
-            width: .75rem;
-            height: .75rem;
-            border-radius: 50%;
-            background-color: $gray-200;
+    div {
+      margin-right: 0.5rem;
+      width: 0.75rem;
+      height: 0.75rem;
+      border-radius: 50%;
+      background-color: $gray-200;
 
-            &.red {
-                background-color: $red;
-            }
-            &.orange {
-                background-color: $orange;
-            }
-            &.green {
-                background-color: $green;
-            }
-        }
+      &.red {
+        background-color: $red;
+      }
+      &.orange {
+        background-color: $orange;
+      }
+      &.green {
+        background-color: $green;
+      }
     }
+  }
 }
 
 /**
@@ -145,52 +147,52 @@ footer {
 
 code[class*="language-"],
 pre[class*="language-"] {
-	color: $black;
-	background: none;
-	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-	text-align: left;
-	white-space: pre;
-	word-spacing: normal;
-	word-break: normal;
-	word-wrap: normal;
-	line-height: 1.5;
-	tab-size: 4;
-	hyphens: none;
+  color: $black;
+  background: none;
+  font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
+  text-align: left;
+  white-space: pre;
+  word-spacing: normal;
+  word-break: normal;
+  word-wrap: normal;
+  line-height: 1.5;
+  tab-size: 4;
+  hyphens: none;
 }
 
 /* Code blocks */
 pre[class*="language-"] {
-	padding: 1em;
-	margin: .5em 0;
-	overflow: auto;
-	border-radius: 0.3em;
+  padding: 1em;
+  margin: 0.5em 0;
+  overflow: auto;
+  border-radius: 0.3em;
 }
 
 :not(pre) > code[class*="language-"],
 pre[class*="language-"] {
-	background: $white;
+  background: $white;
 }
 
 /* Inline code */
 :not(pre) > code[class*="language-"] {
-	padding: .1em;
-	border-radius: .3em;
-	white-space: normal;
+  padding: 0.1em;
+  border-radius: 0.3em;
+  white-space: normal;
 }
 
 .token.comment,
 .token.prolog,
 .token.doctype,
 .token.cdata {
-	color: slategray;
+  color: slategray;
 }
 
 .token.punctuation {
-	color: $gray-500;
+  color: $gray-500;
 }
 
 .namespace {
-	opacity: .7;
+  opacity: 0.7;
 }
 
 .token.property,
@@ -198,12 +200,12 @@ pre[class*="language-"] {
 .token.constant,
 .token.symbol,
 .token.deleted {
-	color: #f92672;
+  color: #f92672;
 }
 
 .token.boolean,
 .token.number {
-	color: #ae81ff;
+  color: #ae81ff;
 }
 
 .token.selector,
@@ -212,7 +214,7 @@ pre[class*="language-"] {
 .token.char,
 .token.builtin,
 .token.inserted {
-	color: $green;
+  color: $green;
 }
 
 .token.operator,
@@ -221,70 +223,70 @@ pre[class*="language-"] {
 .language-css .token.string,
 .style .token.string,
 .token.variable {
-	color: #f8f8f2;
+  color: #f8f8f2;
 }
 
 .token.atrule,
 .token.attr-value,
 .token.function,
 .token.class-name {
-	color: $red;
+  color: $red;
 }
 
 .token.keyword {
-	color: $purple;
+  color: $purple;
 }
 
 .token.regex,
 .token.important {
-	color: #fd971f;
+  color: #fd971f;
 }
 
 .token.important,
 .token.bold {
-	font-weight: bold;
+  font-weight: bold;
 }
 .token.italic {
-	font-style: italic;
+  font-style: italic;
 }
 
 .token.entity {
-	cursor: help;
+  cursor: help;
 }
 
 pre[class*="language-"].line-numbers {
-	position: relative;
-	padding-left: 2.5em;
-	counter-reset: linenumber;
+  position: relative;
+  padding-left: 2.5em;
+  counter-reset: linenumber;
 }
 
 pre[class*="language-"].line-numbers > code {
-	position: relative;
-	white-space: inherit;
+  position: relative;
+  white-space: inherit;
 }
 
 .line-numbers .line-numbers-rows {
-	position: absolute;
-	pointer-events: none;
-	top: 0;
-	font-size: 100%;
-	left: -3.8em;
-	width: 3em; /* works for line-numbers below 1000 lines */
-	letter-spacing: -1px;
-	user-select: none;
-
+  position: absolute;
+  pointer-events: none;
+  top: 0;
+  font-size: 100%;
+  left: -3.8em;
+  width: 3em; /* works for line-numbers below 1000 lines */
+  letter-spacing: -1px;
+  user-select: none;
 }
 
 .line-numbers-rows > span {
-    pointer-events: none;
-    display: block;
-    counter-increment: linenumber;
+  pointer-events: none;
+  display: block;
+  counter-increment: linenumber;
 }
 
 .line-numbers-rows > span:before {
-    content: counter(linenumber);
-    color: $gray-400;
-    display: block;
-    padding-right: 0.8em;
-    text-align: right;
+  content: counter(linenumber);
+  color: $gray-400;
+  display: block;
+  padding-right: 0.8em;
+  text-align: right;
 }
+
