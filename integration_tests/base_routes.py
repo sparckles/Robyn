@@ -511,7 +511,7 @@ def async_decorator_view():
 
 
 if __name__ == "__main__":
-    app.add_request_header("server", "robyn")
+    app.add_response_header("server", "robyn")
     app.add_directory(
         route="/test_dir",
         directory_path=os.path.join(current_file_path, "build"),
