@@ -3,7 +3,7 @@ def SyncView():
         return "Hello, world!"
 
     def post(request):
-        body = bytes(request["body"]).decode("utf-8")
+        body = request['body'].to_str()
         return {
             "status": 200,
             "body": body,

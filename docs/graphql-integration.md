@@ -60,7 +60,7 @@ async def get():
 
 @app.post("/")
 async def post(request):
-    body = json.loads(bytearray(request["body"]).decode("utf-8"))
+    body = json.loads(request["body"].to_str())
     query = body["query"]
     variables = body.get("variables", None)
     context_value = {"request": request}
@@ -140,7 +140,7 @@ We are populating the html page with the GraphiQL IDE using `strawberry`. We are
 ```python
 @app.post("/")
 async def post(request):
-    body = json.loads(bytearray(request["body"]).decode("utf-8"))
+    body = json.loads(request["body"].to_str())
     query = body["query"]
     variables = body.get("variables", None)
     context_value = {"request": request}

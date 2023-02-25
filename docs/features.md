@@ -37,7 +37,7 @@ async def h(request):
 ```python
 @app.post("/post")
 async def postreq(request):
-    return bytearray(request["body"]).decode("utf-8")
+    return request["body"].to_str()
 ```
 
 #### PUT Request
@@ -45,7 +45,7 @@ async def postreq(request):
 ```python
 @app.put("/put")
 async def postreq(request):
-    return bytearray(request["body"]).decode("utf-8")
+    return request["body"].to_str()
 ```
 
 #### PATCH Request
@@ -53,7 +53,7 @@ async def postreq(request):
 ```python
 @app.patch("/patch")
 async def postreq(request):
-    return bytearray(request["body"]).decode("utf-8")
+    return request["body"].to_str()
 ```
 
 #### DELETE Request
@@ -61,7 +61,7 @@ async def postreq(request):
 ```python
 @app.delete("/delete")
 async def postreq(request):
-    return bytearray(request["body"]).decode("utf-8")
+    return request["body"].to_str()
 ```
 
 #### Directory Serving
@@ -409,7 +409,7 @@ def sample_view():
         return "Hello, world!"
 
     def post(request):
-        body = bytearray(request["body"]).decode("utf-8")
+        body = request["body"].to_str()
         return {"status_code": 200, "body": body}
 ```
 
@@ -425,7 +425,7 @@ def sync_decorator_view():
         return "Hello, world!"
 
     def post(request):
-        body = bytearray(request["body"]).decode("utf-8")
+        body = request["body"].to_str()
         return {"status_code": 200, "body": body}
 
 
@@ -435,7 +435,7 @@ def async_decorator_view():
         return "Hello, world!"
 
     async def post(request):
-        body = bytearray(request["body"]).decode("utf-8")
+        body = request["body"].to_str()
         return {"status_code": 200, "body": body}
 ```
 
@@ -449,7 +449,7 @@ def View():
         return "Hello, world!"
 
     async def post(request):
-        body = bytes(request["body"]).decode("utf-8")
+        body = request["body"].to_str()
         return {
             "status": 200,
             "body": body,

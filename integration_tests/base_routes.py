@@ -324,12 +324,12 @@ async def async_dict_post():
 
 @app.post("/sync/body")
 def sync_body_post(request):
-    return bytearray(request["body"]).decode("utf-8")
+    return request["body"].to_str()
 
 
 @app.post("/async/body")
 async def async_body_post(request):
-    return bytearray(request["body"]).decode("utf-8")
+    return request["body"].to_str()
 
 
 # --- PUT ---
@@ -362,12 +362,12 @@ async def async_dict_put():
 
 @app.put("/sync/body")
 def sync_body_put(request):
-    return bytearray(request["body"]).decode("utf-8")
+    return request["body"].to_str()
 
 
 @app.put("/async/body")
 async def async_body_put(request):
-    return bytearray(request["body"]).decode("utf-8")
+    return request["body"].to_str()
 
 
 # --- DELETE ---
@@ -400,12 +400,12 @@ async def async_dict_delete():
 
 @app.delete("/sync/body")
 def sync_body_delete(request):
-    return bytearray(request["body"]).decode("utf-8")
+    return request["body"].to_str()
 
 
 @app.delete("/async/body")
 async def async_body_delete(request):
-    return bytearray(request["body"]).decode("utf-8")
+    return request["body"].to_str()
 
 
 # --- PATCH ---
@@ -438,12 +438,12 @@ async def async_dict_patch():
 
 @app.patch("/sync/body")
 def sync_body_patch(request):
-    return bytearray(request["body"]).decode("utf-8")
+    return request["body"].to_str()
 
 
 @app.patch("/async/body")
 async def async_body_patch(request):
-    return bytearray(request["body"]).decode("utf-8")
+    return request["body"].to_str()
 
 
 @app.get("/binary_output_sync")
@@ -493,7 +493,7 @@ def sync_decorator_view():
         return "Hello, world!"
 
     def post(request):
-        body = bytearray(request["body"]).decode("utf-8")
+        body = request["body"].to_str()
         return {"status_code": 200, "body": body}
 
 
@@ -503,7 +503,7 @@ def async_decorator_view():
         return "Hello, world!"
 
     async def post(request):
-        body = bytearray(request["body"]).decode("utf-8")
+        body = request["body"].to_str()
         return {"status_code": 200, "body": body}
 
 

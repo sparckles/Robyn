@@ -147,8 +147,32 @@ impl Request {
         result.insert("params", self.params.to_object(py));
         result.insert("queries", self.queries.to_object(py));
         result.insert("headers", self.headers.to_object(py));
-        result.insert("body", self.body.to_object(py));
+        let body = Py::new(py, PyBody::new(self.body.clone().to_vec()))?;
+        result.insert("body", body.to_object(py));
         Ok(result)
+    }
+}
+
+#[pyclass(extends=PyAny)]
+pub struct PyBody {
+    pub body: Vec<u8>,
+}
+
+#[pymethods]
+impl PyBody {
+    #[new]
+    pub fn new(body: Vec<u8>) -> Self {
+        Self {
+            body: body.to_vec(),
+        }
+    }
+
+    pub fn to_str(&self) -> String {
+        String::from_utf8(self.body.to_vec()).unwrap()
+    }
+
+    pub fn to_bytes(&self) -> Vec<u8> {
+        self.body.clone()
     }
 }
 
