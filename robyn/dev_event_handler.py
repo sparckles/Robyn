@@ -23,11 +23,13 @@ class EventHandler(FileSystemEventHandler):
         event_handlers: Dict[Events, FunctionInfo],
         workers: int,
         processes: int,
+        response_headers: List[Header],
     ) -> None:
         self.url = url
         self.port = port
         self.directories = directories
         self.request_headers = request_headers
+        self.response_headers = response_headers
         self.routes = routes
         self.middlewares = middlewares
         self.web_sockets = web_sockets
@@ -48,6 +50,7 @@ class EventHandler(FileSystemEventHandler):
             self.event_handlers,
             self.n_workers,
             self.n_processes,
+            self.response_headers,
             True,
         )
 

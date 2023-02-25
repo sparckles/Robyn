@@ -9,6 +9,12 @@ def test_add_request_header():
     assert app.request_headers == [Header(key="server", val="robyn")]
 
 
+def test_add_response_header():
+    app = Robyn(__file__)
+    app.add_response_header("content-type", "application/json")
+    assert app.response_headers == [Header(key="content-type", val="application/json")]
+
+
 def test_lifecycle_handlers():
     def mock_startup_handler():
         pass

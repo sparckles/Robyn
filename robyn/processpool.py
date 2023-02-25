@@ -23,6 +23,7 @@ def run_processes(
     event_handlers: Dict[Events, FunctionInfo],
     workers: int,
     processes: int,
+    response_headers: List[Header],
     from_event_handler: bool = False,
 ) -> List[Process]:
     socket = SocketHeld(url, port)
@@ -37,6 +38,7 @@ def run_processes(
         socket,
         workers,
         processes,
+        response_headers,
     )
 
     if not from_event_handler:
@@ -66,6 +68,7 @@ def init_processpool(
     socket: SocketHeld,
     workers: int,
     processes: int,
+    response_headers: List[Header],
 ) -> List[Process]:
     process_pool = []
     if sys.platform.startswith("win32"):
@@ -78,6 +81,7 @@ def init_processpool(
             event_handlers,
             socket,
             workers,
+            response_headers,
         )
 
         return process_pool
@@ -95,6 +99,7 @@ def init_processpool(
                 event_handlers,
                 copied_socket,
                 workers,
+                response_headers,
             ),
         )
         process.start()
@@ -128,6 +133,7 @@ def spawn_process(
     event_handlers: Dict[Events, FunctionInfo],
     socket: SocketHeld,
     workers: int,
+    response_headers: List[Header],
 ):
     """
     This function is called by the main process handler to create a server runtime.
@@ -155,6 +161,9 @@ def spawn_process(
 
     for header in request_headers:
         server.add_request_header(*header.as_list())
+
+    for header in response_headers:
+        server.add_response_header(*header.as_list())
 
     for route in routes:
         route_type, endpoint, function, is_const = route
