@@ -142,6 +142,10 @@ impl Request {
         }
     }
 
+    pub fn insert_header(&mut self, key: &str, value: &str) {
+        self.headers.insert(key.to_string(), value.to_string());
+    }
+
     pub fn to_hashmap(&self, py: Python<'_>) -> Result<HashMap<&str, Py<PyAny>>> {
         let mut result = HashMap::new();
         result.insert("params", self.params.to_object(py));

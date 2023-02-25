@@ -1,5 +1,7 @@
 use crate::executors::{execute_event_handler, execute_http_function, execute_middleware_function};
-use crate::io_helpers::{apply_dashmap_headers, apply_hashmap_headers};
+use crate::io_helpers::{
+    apply_dashmap_headers, apply_hashmap_headers, apply_request_dashmap_headers,
+};
 use crate::types::Request;
 
 use crate::routers::const_router::ConstRouter;
@@ -369,6 +371,7 @@ async fn index(
     req: HttpRequest,
 ) -> impl Responder {
     let mut request = Request::from_actix_request(&req, body);
+    apply_request_dashmap_headers(&mut request, &global_request_headers);
 
     apply_middleware(
         &mut request,
@@ -379,9 +382,7 @@ async fn index(
     .await;
 
     let mut response_builder = HttpResponse::Ok();
-    apply_dashmap_headers(&mut response_builder, &global_request_headers);
     apply_dashmap_headers(&mut response_builder, &global_response_headers);
-    apply_hashmap_headers(&mut response_builder, &request.headers);
 
     let response = if let Some(r) = const_router.get_route(req.method(), req.uri().path()) {
         apply_hashmap_headers(&mut response_builder, &r.headers);
