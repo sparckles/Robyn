@@ -1,5 +1,6 @@
 from helpers.http_methods_helpers import get
 
+
 def test_middlewares(session):
     r = get("/")
     assert "before" in r.headers
