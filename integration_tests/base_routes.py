@@ -257,7 +257,7 @@ async def file_download_async():
 
 
 @app.get("/sync/queries")
-def sync_queries(request):
+def sync_queries(request, response):
     query_data = request["queries"]
     return jsonify(query_data)
 

@@ -22,28 +22,17 @@ fn get_function_output<'a>(
     let request_hashmap = request.to_hashmap(py).unwrap();
     let response_hashmap = response.to_hashmap(py).unwrap();
 
-    debug!("Calling handler");
-    debug!("Request: {:?}", request_hashmap);
-    // debug!("Response: {:?}", response_hashmap);
-
     // this makes the request object accessible across every route
     let function_response = match function.number_of_params {
         0 => handler.call0(),
-        1 => handler.call1((request_hashmap, response_hashmap)),
+        1 => handler.call1((request_hashmap,)),
         // this is done to accommodate any future params
         2_u8..=u8::MAX => handler.call1((request_hashmap, response_hashmap)),
     };
 
-    debug!("After handler");
-
     function_response
 }
 
-#[derive(Debug)]
-enum RequestKeys {
-    Hashmap,
-    Vector,
-}
 pub async fn execute_middleware_function<'a>(
     request: &mut Request,
     response: &mut Response,
@@ -59,8 +48,6 @@ pub async fn execute_middleware_function<'a>(
         })?
         .await?;
 
-        debug!("Best output Output: {:?}", output);
-
         let output = Python::with_gil(
             |py| -> PyResult<(HashMap<String, Py<PyAny>>, HashMap<String, Py<PyAny>>)> {
                 // This is the arguments
@@ -73,7 +60,6 @@ pub async fn execute_middleware_function<'a>(
         )
         .context("Failed to execute handler function");
 
-        debug!("Output: {:?}", output);
         output
     } else {
         Python::with_gil(|py| get_function_output(&function, py, request, response)?.extract())

@@ -2,7 +2,7 @@ use crate::executors::{execute_event_handler, execute_http_function, execute_mid
 use crate::io_helpers::{
     apply_dashmap_headers, apply_hashmap_headers, apply_request_dashmap_headers,
 };
-use crate::types::{Request, Response};
+use crate::types::{ActixBytesWrapper, Request, Response};
 
 use crate::routers::const_router::ConstRouter;
 use crate::routers::Router;
@@ -24,9 +24,7 @@ use std::process::abort;
 use std::thread;
 
 use actix_files::Files;
-use actix_http::header::{HeaderName, HeaderValue};
 use actix_http::{KeepAlive, StatusCode};
-use actix_web::http::header::ContentType;
 use actix_web::web::Bytes;
 use actix_web::*;
 use dashmap::DashMap;
@@ -343,7 +341,7 @@ async fn apply_middleware(
     middleware_router: &MiddlewareRouter,
     route_uri: &str,
 ) {
-    let (mut modified_request, mut modified_response) =
+    let (modified_request, modified_response) =
         match middleware_router.get_route(&middleware_type, route_uri) {
             Some((function, route_params)) => {
                 request.params = route_params;
@@ -367,6 +365,19 @@ async fn apply_middleware(
         });
     }
 
+    // queries
+    if modified_request.contains_key("queries") {
+        Python::with_gil(|py| {
+            let query_params = modified_request.get("queries").unwrap();
+            let query_params = query_params.extract::<HashMap<String, String>>(py).unwrap();
+            for (key, value) in query_params {
+                request.queries.insert(key, value);
+            }
+        });
+    }
+
+    // params
+
     if modified_response.contains_key("headers") {
         Python::with_gil(|py| {
             let headers = modified_response.get("headers").unwrap();
@@ -377,20 +388,33 @@ async fn apply_middleware(
         });
     }
 
-    // if modified_response.contains_key("body") {
-    //     Python::with_gil(|py| {
-    //         let body = modified_response.get("body").unwrap();
-    //         let body = body.extract::<Vec<i32>>(py).unwrap();
-    //         // TODO: Sanskar
-    // add a check on body exists or not
-    //         // response.body = body;
-    //     });
-    // }
+    if modified_response.contains_key("body") {
+        // need to parse the body
+        let body = modified_response.get("body").unwrap();
+        Python::with_gil(|py| {
+            let body = body.extract::<Vec<u8>>(py).unwrap();
+            debug!("This is the modified body {:?}", body);
+            if !body.is_empty() {
+                let bytes = Bytes::from(body);
+                response.body = ActixBytesWrapper::new_from_bytes(bytes);
+            }
+            // response.body = body;
+        });
+        // Python::with_gil(|py| {
+        //     response.set_body(body.as_ref(py)).unwrap();
+        //     // TODO: Sanskar
+        //     // add a check on body exists or not
+        //     // response.body = body;
+        // });
+    }
 
-    // if modified_response.contains_key("status") {
-    //     let status = modified_response.get("status").unwrap();
-    //     response.status = status.as_u64().unwrap() as u16;
-    // }
+    if modified_response.contains_key("status") {
+        let status = modified_response.get("status").unwrap();
+        Python::with_gil(|py| {
+            let status = status.extract::<u16>(py).unwrap();
+            response.status_code = status;
+        });
+    }
 
     // if keys are headers then get them and parse them
     // if keys are body and then do something with them too
@@ -400,6 +424,7 @@ async fn apply_middleware(
 
     debug!("These are the request headers {:?}", &request.headers);
     debug!("These are the response headers {:?}", &response.headers);
+    (request, response);
 }
 
 /// This is our service handler. It receives a Request, routes on it
@@ -457,8 +482,6 @@ async fn index(
         response.status_code = StatusCode::NOT_FOUND.as_u16();
     };
 
-    debug!("Final Response: ");
-
     apply_middleware(
         &mut request,
         &mut response,
@@ -468,11 +491,33 @@ async fn index(
     )
     .await;
 
-    let mut final_response: HttpResponse =
-        HttpResponseBuilder::new(StatusCode::from_u16(response.status_code).unwrap())
-            // .headers(response.headers.clone())
-            // fifure something about headesr
-            .body(response.body.clone());
+    debug!("Final Request: {:?}", &request);
+    debug!("Final Response: {:?}", &response);
+    // let mut final_response: HttpResponse =
+    //     HttpResponseBuilder::new(StatusCode::from_u16(response.status_code).unwrap())
+    //         // .headers(response.headers.clone())
+    //         // fifure something about headesr
+    //         .body(response.body.clone());
+    let mut final_response = HttpResponse::Ok();
+
+    // apply headers
+    for (key, value) in response.headers.iter() {
+        final_response.insert_header((key.clone(), value.clone()));
+    }
+
+    // apply body
+    let ff_response = if !response.body.is_empty() {
+        final_response
+            .status(StatusCode::from_u16(response.status_code).unwrap())
+            .body(response.body.clone())
+    } else {
+        final_response
+            .status(StatusCode::from_u16(response.status_code).unwrap())
+            .finish()
+    };
+
+    // for
+
     //insert ehader in response builder
-    final_response
+    ff_response
 }

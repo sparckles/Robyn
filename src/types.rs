@@ -46,6 +46,10 @@ impl ActixBytesWrapper {
         };
         Ok(Self(Bytes::from(value)))
     }
+
+    pub fn new_from_bytes(value: Bytes) -> Self {
+        Self(value)
+    }
 }
 
 impl Deref for ActixBytesWrapper {
@@ -113,7 +117,7 @@ impl FunctionInfo {
 
 // can we make this a pyclass too??
 // we won't need an external dataclass then
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Request {
     pub queries: HashMap<String, String>,
     pub headers: HashMap<String, String>,
@@ -201,6 +205,11 @@ impl Response {
         self.body = ActixBytesWrapper(Bytes::from(response));
         Ok(())
     }
+
+    pub fn set_body(&mut self, body: &PyAny) -> PyResult<()> {
+        self.body = ActixBytesWrapper::new(body)?;
+        Ok(())
+    }
 }
 
 impl Response {
@@ -218,12 +227,10 @@ impl Response {
         let mut response_builder =
             HttpResponseBuilder::new(StatusCode::from_u16(self.status_code).unwrap());
 
-        debug!("Final Response: ");
         for (k, v) in self.headers.iter() {
             response_builder.append_header((k.as_str(), v.as_str()));
         }
 
-        debug!("Final Response:");
         match self.response_type.as_str() {
             "text" => response_builder.body(self.body.clone()),
             "static_file" => {
