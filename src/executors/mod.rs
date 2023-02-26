@@ -39,11 +39,16 @@ fn get_function_output<'a>(
     function_response
 }
 
+#[derive(Debug)]
+enum RequestKeys {
+    Hashmap,
+    Vector,
+}
 pub async fn execute_middleware_function<'a>(
     request: &mut Request,
     response: &mut Response,
     function: FunctionInfo,
-) -> Result<HashMap<String, HashMap<String, String>>> {
+) -> Result<(HashMap<String, Py<PyAny>>, HashMap<String, Py<PyAny>>)> {
     // TODO:
     // add body in middlewares too
 
@@ -54,12 +59,22 @@ pub async fn execute_middleware_function<'a>(
         })?
         .await?;
 
-        Python::with_gil(|py| -> PyResult<HashMap<String, HashMap<String, String>>> {
-            let output: Vec<HashMap<String, HashMap<String, String>>> = output.extract(py)?;
-            let responses = output[0].clone();
-            Ok(responses)
-        })
-        .context("Failed to execute handler function")
+        debug!("Best output Output: {:?}", output);
+
+        let output = Python::with_gil(
+            |py| -> PyResult<(HashMap<String, Py<PyAny>>, HashMap<String, Py<PyAny>>)> {
+                // This is the arguments
+                // Need to fix the api here
+                let (request, response): (HashMap<String, Py<PyAny>>, HashMap<String, Py<PyAny>>) =
+                    output.extract(py)?;
+                // let responses = output[0].clone();
+                Ok((request, response))
+            },
+        )
+        .context("Failed to execute handler function");
+
+        debug!("Output: {:?}", output);
+        output
     } else {
         Python::with_gil(|py| get_function_output(&function, py, request, response)?.extract())
             .context("Failed to execute handler function")

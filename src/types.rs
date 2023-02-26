@@ -16,6 +16,7 @@ use actix_web::{HttpResponse, HttpResponseBuilder};
 
 use anyhow::Result;
 use dashmap::DashMap;
+use log::debug;
 use pyo3::exceptions::PyValueError;
 use pyo3::types::{PyBytes, PyString};
 use pyo3::{exceptions, prelude::*};
@@ -215,10 +216,28 @@ impl Response {
 
     pub fn to_response_builder(&self) -> HttpResponseBuilder {
         let mut response_builder =
-            HttpResponse::build(StatusCode::from_u16(self.status_code).unwrap());
+            HttpResponseBuilder::new(StatusCode::from_u16(self.status_code).unwrap());
+
+        debug!("Final Response: ");
         for (k, v) in self.headers.iter() {
             response_builder.append_header((k.as_str(), v.as_str()));
         }
+
+        debug!("Final Response:");
+        match self.response_type.as_str() {
+            "text" => response_builder.body(self.body.clone()),
+            "static_file" => {
+                let file_path = self.file_path.as_ref().unwrap();
+                response_builder
+                    .append_header((
+                        "Content-Disposition",
+                        format!("attachment; filename=\"{}\"", file_path),
+                    ))
+                    .body(self.body.clone())
+            }
+            _ => response_builder.body(self.body.clone()),
+        };
+
         response_builder
     }
 

@@ -24,7 +24,9 @@ use std::process::abort;
 use std::thread;
 
 use actix_files::Files;
+use actix_http::header::{HeaderName, HeaderValue};
 use actix_http::{KeepAlive, StatusCode};
+use actix_web::http::header::ContentType;
 use actix_web::web::Bytes;
 use actix_web::*;
 use dashmap::DashMap;
@@ -341,23 +343,63 @@ async fn apply_middleware(
     middleware_router: &MiddlewareRouter,
     route_uri: &str,
 ) {
-    let mut modified_request = match middleware_router.get_route(&middleware_type, route_uri) {
-        Some((function, route_params)) => {
-            request.params = route_params;
-            execute_middleware_function(request, response, function)
-                .await
-                .unwrap_or_default()
-        }
-        None => HashMap::new(),
-    };
+    let (mut modified_request, mut modified_response) =
+        match middleware_router.get_route(&middleware_type, route_uri) {
+            Some((function, route_params)) => {
+                request.params = route_params;
+                execute_middleware_function(request, response, function)
+                    .await
+                    .unwrap_or_default()
+            }
+            None => (HashMap::new(), HashMap::new()),
+        };
 
     debug!("This is the modified request {:?}", modified_request);
+    debug!("This is the modified response {:?}", modified_request);
 
     if modified_request.contains_key("headers") {
-        request.headers = modified_request.remove("headers").unwrap();
+        Python::with_gil(|py| {
+            let headers = modified_request.get("headers").unwrap();
+            let headers = headers.extract::<HashMap<String, String>>(py).unwrap();
+            for (key, value) in headers {
+                request.headers.insert(key, value);
+            }
+        });
     }
 
+    if modified_response.contains_key("headers") {
+        Python::with_gil(|py| {
+            let headers = modified_response.get("headers").unwrap();
+            let headers = headers.extract::<HashMap<String, String>>(py).unwrap();
+            for (key, value) in headers {
+                response.headers.insert(key, value);
+            }
+        });
+    }
+
+    // if modified_response.contains_key("body") {
+    //     Python::with_gil(|py| {
+    //         let body = modified_response.get("body").unwrap();
+    //         let body = body.extract::<Vec<i32>>(py).unwrap();
+    //         // TODO: Sanskar
+    // add a check on body exists or not
+    //         // response.body = body;
+    //     });
+    // }
+
+    // if modified_response.contains_key("status") {
+    //     let status = modified_response.get("status").unwrap();
+    //     response.status = status.as_u64().unwrap() as u16;
+    // }
+
+    // if keys are headers then get them and parse them
+    // if keys are body and then do something with them too
+    // if modified_request.contains_key("headers") {
+    //     request.headers = modified_request.remove("headers").unwrap();
+    // }
+
     debug!("These are the request headers {:?}", &request.headers);
+    debug!("These are the response headers {:?}", &response.headers);
 }
 
 /// This is our service handler. It receives a Request, routes on it
@@ -415,6 +457,8 @@ async fn index(
         response.status_code = StatusCode::NOT_FOUND.as_u16();
     };
 
+    debug!("Final Response: ");
+
     apply_middleware(
         &mut request,
         &mut response,
@@ -424,7 +468,11 @@ async fn index(
     )
     .await;
 
-    debug!("Response: {:?}", response);
-
-    response.to_response_builder()
+    let mut final_response: HttpResponse =
+        HttpResponseBuilder::new(StatusCode::from_u16(response.status_code).unwrap())
+            // .headers(response.headers.clone())
+            // fifure something about headesr
+            .body(response.body.clone());
+    //insert ehader in response builder
+    final_response
 }

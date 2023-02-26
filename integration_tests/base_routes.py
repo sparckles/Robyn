@@ -60,18 +60,19 @@ def shutdown_handler():
 async def hello_before_request(request, response):
     request["headers"]["before"] = "before_request"
     response["headers"]["before"] = "before_request"
-    return request
+    return ""
 
 
 @app.after_request("/")
-async def hello_after_request(request):
+async def hello_after_request(request, response):
     request["headers"]["after"] = "after_request"
-    return request
+    response["headers"]["after"] = "after_request"
+    return ""
 
 
 @app.get("/")
 async def middlewares(request, response):
-    return ""
+    return "Hello world"
 
 
 # ===== Routes =====
