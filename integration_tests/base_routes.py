@@ -57,8 +57,9 @@ def shutdown_handler():
 
 
 @app.before_request("/")
-async def hello_before_request(request):
+async def hello_before_request(request, response):
     request["headers"]["before"] = "before_request"
+    response["headers"]["before"] = "before_request"
     return request
 
 
@@ -69,7 +70,7 @@ async def hello_after_request(request):
 
 
 @app.get("/")
-async def middlewares():
+async def middlewares(request, response):
     return ""
 
 

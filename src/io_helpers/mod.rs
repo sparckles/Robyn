@@ -6,27 +6,21 @@ use actix_web::HttpResponseBuilder;
 use anyhow::Result;
 use dashmap::DashMap;
 
-use crate::types::Request;
+use crate::types::{Request, Response};
 
 // this should be something else
 // probably inside the submodule of the http router
 #[inline]
-pub fn apply_hashmap_headers(
-    response: &mut HttpResponseBuilder,
-    headers: &HashMap<String, String>,
-) {
+pub fn apply_hashmap_headers(response: &mut Response, headers: &HashMap<String, String>) {
     for (key, val) in headers.iter() {
-        response.insert_header((key.clone(), val.clone()));
+        response.add_header(key, val);
     }
 }
 
 #[inline]
-pub fn apply_dashmap_headers(
-    response: &mut HttpResponseBuilder,
-    headers: &DashMap<String, String>,
-) {
+pub fn apply_dashmap_headers(response: &mut Response, headers: &DashMap<String, String>) {
     for h in headers.iter() {
-        response.insert_header((h.key().clone(), h.value().clone()));
+        response.add_header(h.key(), h.value());
     }
 }
 

@@ -14,22 +14,34 @@ use pyo3::prelude::*;
 fn get_function_output<'a>(
     function: &'a FunctionInfo,
     py: Python<'a>,
-    request: &Request,
+    request: &mut Request,
+    response: &mut Response,
 ) -> Result<&'a PyAny, PyErr> {
     let handler = function.handler.as_ref(py);
+    // let response = PyCell::new(py, response).unwrap();
     let request_hashmap = request.to_hashmap(py).unwrap();
+    let response_hashmap = response.to_hashmap(py).unwrap();
+
+    debug!("Calling handler");
+    debug!("Request: {:?}", request_hashmap);
+    // debug!("Response: {:?}", response_hashmap);
 
     // this makes the request object accessible across every route
-    match function.number_of_params {
+    let function_response = match function.number_of_params {
         0 => handler.call0(),
-        1 => handler.call1((request_hashmap,)),
+        1 => handler.call1((request_hashmap, response_hashmap)),
         // this is done to accommodate any future params
-        2_u8..=u8::MAX => handler.call1((request_hashmap,)),
-    }
+        2_u8..=u8::MAX => handler.call1((request_hashmap, response_hashmap)),
+    };
+
+    debug!("After handler");
+
+    function_response
 }
 
 pub async fn execute_middleware_function<'a>(
-    request: &Request,
+    request: &mut Request,
+    response: &mut Response,
     function: FunctionInfo,
 ) -> Result<HashMap<String, HashMap<String, String>>> {
     // TODO:
@@ -37,7 +49,7 @@ pub async fn execute_middleware_function<'a>(
 
     if function.is_async {
         let output = Python::with_gil(|py| {
-            let function_output = get_function_output(&function, py, request);
+            let function_output = get_function_output(&function, py, request, response);
             pyo3_asyncio::tokio::into_future(function_output?)
         })?
         .await?;
@@ -49,16 +61,20 @@ pub async fn execute_middleware_function<'a>(
         })
         .context("Failed to execute handler function")
     } else {
-        Python::with_gil(|py| get_function_output(&function, py, request)?.extract())
+        Python::with_gil(|py| get_function_output(&function, py, request, response)?.extract())
             .context("Failed to execute handler function")
     }
 }
 
 #[inline]
-pub async fn execute_http_function(request: &Request, function: FunctionInfo) -> Result<Response> {
+pub async fn execute_http_function(
+    request: &mut Request,
+    response: &mut Response,
+    function: FunctionInfo,
+) -> Result<Response> {
     if function.is_async {
         let output = Python::with_gil(|py| {
-            let function_output = get_function_output(&function, py, request);
+            let function_output = get_function_output(&function, py, request, response);
             pyo3_asyncio::tokio::into_future(function_output?)
         })?
         .await?;
@@ -68,7 +84,7 @@ pub async fn execute_http_function(request: &Request, function: FunctionInfo) ->
         })
     } else {
         Python::with_gil(|py| -> Result<Response> {
-            let output = get_function_output(&function, py, request)?;
+            let output = get_function_output(&function, py, request, response)?;
             output.extract().context("Failed to get route response")
         })
     }

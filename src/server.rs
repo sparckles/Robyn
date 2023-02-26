@@ -2,7 +2,7 @@ use crate::executors::{execute_event_handler, execute_http_function, execute_mid
 use crate::io_helpers::{
     apply_dashmap_headers, apply_hashmap_headers, apply_request_dashmap_headers,
 };
-use crate::types::Request;
+use crate::types::{Request, Response};
 
 use crate::routers::const_router::ConstRouter;
 use crate::routers::Router;
@@ -336,6 +336,7 @@ impl Default for Server {
 
 async fn apply_middleware(
     request: &mut Request,
+    response: &mut Response,
     middleware_type: MiddlewareRoute,
     middleware_router: &MiddlewareRouter,
     route_uri: &str,
@@ -343,7 +344,7 @@ async fn apply_middleware(
     let mut modified_request = match middleware_router.get_route(&middleware_type, route_uri) {
         Some((function, route_params)) => {
             request.params = route_params;
-            execute_middleware_function(request, function)
+            execute_middleware_function(request, response, function)
                 .await
                 .unwrap_or_default()
         }
@@ -373,48 +374,50 @@ async fn index(
     let mut request = Request::from_actix_request(&req, body);
     apply_request_dashmap_headers(&mut request, &global_request_headers);
 
+    //we start building a reponse here
+    //we can start by creating an empty response object
+    let mut response = Response::default();
+    apply_dashmap_headers(&mut response, &global_response_headers);
+    debug!("Original Response {:?}", &response);
+
     apply_middleware(
         &mut request,
+        &mut response,
         MiddlewareRoute::BeforeRequest,
         &middleware_router,
         req.uri().path(),
     )
     .await;
+    debug!("Modified Response {:?}", &response);
 
-    let mut response_builder = HttpResponse::Ok();
-    apply_dashmap_headers(&mut response_builder, &global_response_headers);
-
-    let response = if let Some(r) = const_router.get_route(req.method(), req.uri().path()) {
-        apply_hashmap_headers(&mut response_builder, &r.headers);
-        response_builder
-            .status(StatusCode::from_u16(r.status_code).unwrap())
-            .body(r.body)
+    if let Some(r) = const_router.get_route(req.method(), req.uri().path()) {
+        apply_hashmap_headers(&mut response, &r.headers);
+        response.status_code = r.status_code;
+        response.body = r.body;
     } else if let Some((function, route_params)) = router.get_route(req.method(), req.uri().path())
     {
         request.params = route_params;
-        match execute_http_function(&request, function).await {
+        match execute_http_function(&mut request, &mut response, function).await {
             Ok(r) => {
-                response_builder.status(StatusCode::from_u16(r.status_code).unwrap());
-                apply_hashmap_headers(&mut response_builder, &r.headers);
+                response.status_code = r.status_code;
+                apply_hashmap_headers(&mut response, &r.headers);
                 if !r.body.is_empty() {
-                    response_builder.body(r.body)
+                    response.body = r.body;
                 } else {
-                    response_builder.finish()
                 }
             }
             Err(e) => {
                 debug!("Error: {:?}", e);
-                response_builder.status(StatusCode::INTERNAL_SERVER_ERROR);
-                response_builder.finish()
+                response.status_code = StatusCode::INTERNAL_SERVER_ERROR.as_u16();
             }
         }
     } else {
-        response_builder.status(StatusCode::NOT_FOUND);
-        response_builder.body("Not found")
+        response.status_code = StatusCode::NOT_FOUND.as_u16();
     };
 
     apply_middleware(
         &mut request,
+        &mut response,
         MiddlewareRoute::AfterRequest,
         &middleware_router,
         req.uri().path(),
@@ -423,5 +426,5 @@ async fn index(
 
     debug!("Response: {:?}", response);
 
-    response
+    response.to_response_builder()
 }

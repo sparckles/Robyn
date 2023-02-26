@@ -9,8 +9,10 @@ use std::{
 
 use actix_http::body::BodySize;
 use actix_http::body::MessageBody;
+use actix_http::StatusCode;
 use actix_web::web::Bytes;
 use actix_web::{http::Method, HttpRequest};
+use actix_web::{HttpResponse, HttpResponseBuilder};
 
 use anyhow::Result;
 use dashmap::DashMap;
@@ -108,6 +110,8 @@ impl FunctionInfo {
     }
 }
 
+// can we make this a pyclass too??
+// we won't need an external dataclass then
 #[derive(Default)]
 pub struct Request {
     pub queries: HashMap<String, String>,
@@ -181,6 +185,10 @@ impl Response {
         })
     }
 
+    pub fn add_header(&mut self, key: &str, value: &str) {
+        self.headers.insert(key.to_string(), value.to_string());
+    }
+
     pub fn set_file_path(&mut self, file_path: &str) -> PyResult<()> {
         // we should be handling based on headers but works for now
         self.response_type = "static_file".to_string();
@@ -191,6 +199,37 @@ impl Response {
         };
         self.body = ActixBytesWrapper(Bytes::from(response));
         Ok(())
+    }
+}
+
+impl Response {
+    pub fn default() -> Self {
+        Self {
+            status_code: 200,
+            response_type: "text".to_string(),
+            headers: HashMap::new(),
+            body: ActixBytesWrapper(Bytes::from_static(b"")),
+            file_path: None,
+        }
+    }
+
+    pub fn to_response_builder(&self) -> HttpResponseBuilder {
+        let mut response_builder =
+            HttpResponse::build(StatusCode::from_u16(self.status_code).unwrap());
+        for (k, v) in self.headers.iter() {
+            response_builder.append_header((k.as_str(), v.as_str()));
+        }
+        response_builder
+    }
+
+    pub fn to_hashmap(&self, py: Python<'_>) -> Result<HashMap<&str, Py<PyAny>>> {
+        let mut result = HashMap::new();
+        result.insert("status_code", self.status_code.to_object(py));
+        result.insert("response_type", self.response_type.to_object(py));
+        result.insert("headers", self.headers.to_object(py));
+        result.insert("body", self.body.to_object(py));
+        result.insert("file_path", self.file_path.to_object(py));
+        Ok(result)
     }
 }
 
