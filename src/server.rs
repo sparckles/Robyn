@@ -388,8 +388,8 @@ async fn apply_middleware(
         });
     }
 
+    // 🤮 so many gil calls - need to find a better way to do this
     if modified_response.contains_key("body") {
-        // need to parse the body
         let body = modified_response.get("body").unwrap();
         Python::with_gil(|py| {
             let body = body.extract::<Vec<u8>>(py).unwrap();
@@ -398,14 +398,7 @@ async fn apply_middleware(
                 let bytes = Bytes::from(body);
                 response.body = ActixBytesWrapper::new_from_bytes(bytes);
             }
-            // response.body = body;
         });
-        // Python::with_gil(|py| {
-        //     response.set_body(body.as_ref(py)).unwrap();
-        //     // TODO: Sanskar
-        //     // add a check on body exists or not
-        //     // response.body = body;
-        // });
     }
 
     if modified_response.contains_key("status") {
@@ -416,15 +409,8 @@ async fn apply_middleware(
         });
     }
 
-    // if keys are headers then get them and parse them
-    // if keys are body and then do something with them too
-    // if modified_request.contains_key("headers") {
-    //     request.headers = modified_request.remove("headers").unwrap();
-    // }
-
-    debug!("These are the request headers {:?}", &request.headers);
-    debug!("These are the response headers {:?}", &response.headers);
-    (request, response);
+    debug!("Modified request headers {:?}", &request.headers);
+    debug!("Modified response headers {:?}", &response.headers);
 }
 
 /// This is our service handler. It receives a Request, routes on it
@@ -441,8 +427,6 @@ async fn index(
     let mut request = Request::from_actix_request(&req, body);
     apply_request_dashmap_headers(&mut request, &global_request_headers);
 
-    //we start building a reponse here
-    //we can start by creating an empty response object
     let mut response = Response::default();
     apply_dashmap_headers(&mut response, &global_response_headers);
     debug!("Original Response {:?}", &response);
@@ -480,6 +464,7 @@ async fn index(
         }
     } else {
         response.status_code = StatusCode::NOT_FOUND.as_u16();
+        response.set_body_from_bytes(Bytes::from("Not found"));
     };
 
     apply_middleware(
@@ -493,11 +478,7 @@ async fn index(
 
     debug!("Final Request: {:?}", &request);
     debug!("Final Response: {:?}", &response);
-    // let mut final_response: HttpResponse =
-    //     HttpResponseBuilder::new(StatusCode::from_u16(response.status_code).unwrap())
-    //         // .headers(response.headers.clone())
-    //         // fifure something about headesr
-    //         .body(response.body.clone());
+
     let mut final_response = HttpResponse::Ok();
 
     // apply headers
@@ -516,8 +497,5 @@ async fn index(
             .finish()
     };
 
-    // for
-
-    //insert ehader in response builder
     ff_response
 }

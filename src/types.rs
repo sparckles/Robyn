@@ -182,7 +182,6 @@ impl Response {
     pub fn new(status_code: u16, headers: HashMap<String, String>, body: &PyAny) -> PyResult<Self> {
         Ok(Self {
             status_code,
-            // we should be handling based on headers but works for now
             response_type: "text".to_string(),
             headers,
             body: ActixBytesWrapper::new(body)?,
@@ -195,7 +194,6 @@ impl Response {
     }
 
     pub fn set_file_path(&mut self, file_path: &str) -> PyResult<()> {
-        // we should be handling based on headers but works for now
         self.response_type = "static_file".to_string();
         self.file_path = Some(file_path.to_string());
         let response = match read_file(file_path) {
@@ -221,6 +219,10 @@ impl Response {
             body: ActixBytesWrapper(Bytes::from_static(b"")),
             file_path: None,
         }
+    }
+
+    pub fn set_body_from_bytes(&mut self, body: Bytes) {
+        self.body = ActixBytesWrapper::new_from_bytes(body);
     }
 
     pub fn to_response_builder(&self) -> HttpResponseBuilder {

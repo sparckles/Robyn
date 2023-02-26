@@ -2,7 +2,6 @@ use std::sync::RwLock;
 use std::{collections::HashMap, str::FromStr};
 // pyo3 modules
 use crate::types::FunctionInfo;
-use log::debug;
 use pyo3::types::PyAny;
 
 use actix_web::http::Method;
@@ -49,7 +48,6 @@ impl Router<(FunctionInfo, HashMap<String, String>), Method> for HttpRouter {
         let mut route_params = HashMap::new();
 
         for (key, value) in res.params.iter() {
-            debug!("These are the res params {}: {}", key, value);
             route_params.insert(key.to_string(), value.to_string());
         }
 

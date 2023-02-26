@@ -100,17 +100,12 @@ class MiddlewareRouter(BaseRouter):
         def inner(handler):
             @wraps(handler)
             async def async_inner_handler(*args):
-                response = await handler(*args)
-                #TODO: Sanskar - we need to somehow return the response as well as the route
-                print("This is the g", response)
+                await handler(*args)
                 return args
 
             @wraps(handler)
             def inner_handler(*args):
-                response = handler(*args)
-                # TODO: Sanskar we need to somehow return the response as well as the route
-                print("This is the g", args)
-                
+                handler(*args)
                 return args
 
             if iscoroutinefunction(handler):
@@ -124,14 +119,12 @@ class MiddlewareRouter(BaseRouter):
         def inner(handler):
             @wraps(handler)
             async def async_inner_handler(*args):
-                response = await handler(*args)
-                print("This is the g", args)
+                await handler(*args)
                 return args
 
             @wraps(handler)
             def inner_handler(*args):
-                response = handler(*args)
-                print("This is the g", response)
+                handler(*args)
                 return args
 
             if iscoroutinefunction(handler):

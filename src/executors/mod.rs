@@ -18,19 +18,17 @@ fn get_function_output<'a>(
     response: &mut Response,
 ) -> Result<&'a PyAny, PyErr> {
     let handler = function.handler.as_ref(py);
-    // let response = PyCell::new(py, response).unwrap();
     let request_hashmap = request.to_hashmap(py).unwrap();
     let response_hashmap = response.to_hashmap(py).unwrap();
 
-    // this makes the request object accessible across every route
-    let function_response = match function.number_of_params {
+    // this returns a response of function execute in case of http functions
+    // and the request,response tuple in case of middleware functions
+    match function.number_of_params {
         0 => handler.call0(),
         1 => handler.call1((request_hashmap,)),
         // this is done to accommodate any future params
         2_u8..=u8::MAX => handler.call1((request_hashmap, response_hashmap)),
-    };
-
-    function_response
+    }
 }
 
 pub async fn execute_middleware_function<'a>(
@@ -38,9 +36,6 @@ pub async fn execute_middleware_function<'a>(
     response: &mut Response,
     function: FunctionInfo,
 ) -> Result<(HashMap<String, Py<PyAny>>, HashMap<String, Py<PyAny>>)> {
-    // TODO:
-    // add body in middlewares too
-
     if function.is_async {
         let output = Python::with_gil(|py| {
             let function_output = get_function_output(&function, py, request, response);
@@ -50,11 +45,8 @@ pub async fn execute_middleware_function<'a>(
 
         let output = Python::with_gil(
             |py| -> PyResult<(HashMap<String, Py<PyAny>>, HashMap<String, Py<PyAny>>)> {
-                // This is the arguments
-                // Need to fix the api here
                 let (request, response): (HashMap<String, Py<PyAny>>, HashMap<String, Py<PyAny>>) =
                     output.extract(py)?;
-                // let responses = output[0].clone();
                 Ok((request, response))
             },
         )
