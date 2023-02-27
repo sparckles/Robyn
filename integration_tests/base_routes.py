@@ -555,8 +555,8 @@ def sync_decorator_view():
     def get():
         return "Hello, world!"
 
-    def post(request):
-        body = bytearray(request["body"]).decode("utf-8")
+    def post(request: Request):
+        body = request.body.content
         return {"status_code": 200, "body": body}
 
 
@@ -565,8 +565,8 @@ def async_decorator_view():
     async def get():
         return "Hello, world!"
 
-    async def post(request):
-        body = bytearray(request["body"]).decode("utf-8")
+    async def post(request: Request):
+        body = request.body.content
         return {"status_code": 200, "body": body}
 
 

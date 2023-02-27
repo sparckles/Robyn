@@ -1,9 +1,12 @@
+from robyn.robyn import Request
+
+
 def SyncView():
     def get():
         return "Hello, world!"
 
-    def post(request):
-        body = bytes(request["body"]).decode("utf-8")
+    def post(request: Request):
+        body = request.body.content
         return {
             "status": 200,
             "body": body,

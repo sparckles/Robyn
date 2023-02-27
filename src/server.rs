@@ -373,7 +373,11 @@ async fn index(
         Response::not_found(&request.headers)
     };
 
-    response.headers.extend(request.headers.into_iter());
+    response.headers.extend(
+        global_response_headers
+            .iter()
+            .map(|elt| (elt.key().clone(), elt.value().clone())),
+    );
 
     // After middleware
     response = match middleware_router.get_route(&MiddlewareRoute::AfterRequest, req.uri().path()) {
