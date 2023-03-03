@@ -6,7 +6,7 @@ def SyncView():
         return "Hello, world!"
 
     def post(request: Request):
-        body = request.body.content
+        body = request.body.as_str()
         return {
             "status": 200,
             "body": body,

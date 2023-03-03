@@ -13,7 +13,6 @@ use actix_http::StatusCode;
 use actix_web::web::Bytes;
 use actix_web::{http::Method, HttpRequest};
 use actix_web::{HttpResponse, HttpResponseBuilder, Responder};
-
 use anyhow::Result;
 use dashmap::DashMap;
 use pyo3::exceptions::PyValueError;
@@ -34,13 +33,15 @@ pub struct ActixBytesWrapper {
 
 #[pymethods]
 impl ActixBytesWrapper {
-    #[getter]
-    pub fn get_content(&self) -> PyResult<String> {
+    pub fn as_str(&self) -> PyResult<String> {
         Ok(String::from_utf8(self.content.to_vec())?)
     }
 
-    #[setter]
-    pub fn set_content(&mut self, content: &PyAny) -> PyResult<()> {
+    pub fn as_bytes(&self) -> PyResult<Vec<u8>> {
+        Ok(self.content.to_vec())
+    }
+
+    pub fn set(&mut self, content: &PyAny) -> PyResult<()> {
         let value = if let Ok(v) = content.downcast::<PyString>() {
             v.to_string().into_bytes()
         } else if let Ok(v) = content.downcast::<PyBytes>() {
@@ -53,22 +54,6 @@ impl ActixBytesWrapper {
         };
         self.content = Bytes::from(value);
         Ok(())
-    }
-
-    pub fn __add__(&self, object: &PyAny) -> PyResult<Self> {
-        let value = if let Ok(v) = object.downcast::<PyString>() {
-            v.to_string()
-        } else if let Ok(v) = object.downcast::<PyBytes>() {
-            v.to_string()
-        } else {
-            return Err(PyValueError::new_err(format!(
-                "Could not convert {} specified body to bytes",
-                type_of(object)
-            )));
-        };
-        Ok(Self {
-            content: Bytes::from(String::from_utf8(self.content.to_vec())? + &value),
-        })
     }
 }
 
@@ -246,7 +231,7 @@ pub struct Response {
     pub response_type: String,
     #[pyo3(get, set)]
     pub headers: HashMap<String, String>,
-    #[pyo3(get, set)]
+    #[pyo3(get)]
     pub body: ActixBytesWrapper,
     pub file_path: Option<String>,
 }
@@ -297,6 +282,11 @@ impl Response {
             body: ActixBytesWrapper::new(body)?,
             file_path: None,
         })
+    }
+
+    pub fn set_body(&mut self, body: &PyAny) -> PyResult<()> {
+        self.body = ActixBytesWrapper::new(body)?;
+        Ok(())
     }
 
     pub fn set_file_path(&mut self, file_path: &str) -> PyResult<()> {

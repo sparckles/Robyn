@@ -6,7 +6,7 @@ def AsyncView():
         return "Hello, world!"
 
     async def post(request: Request):
-        body = request.body.content
+        body = request.body.as_str()
         return {
             "status": 200,
             "body": body,

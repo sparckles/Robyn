@@ -19,15 +19,12 @@ class FunctionInfo:
 class Body:
     content: Union[str, bytes]
 
-    def __add__(self, other: Union[Body, str]):
-        if isinstance(other, self.__class__):
-            return Body(self.content + other.content)
-        elif isinstance(other, str):
-            return Body(self.content + other)
-        else:
-            raise TypeError("unsupported operand type(s) for +: '{}' and '{}'").format(
-                self.__class__, type(other)
-            )
+    def as_str(self) -> str:
+        pass
+    def as_bytes(self) -> bytes:
+        pass
+    def set(self, content: Union[str, bytes]):
+        pass
 
 @dataclass
 class Request:

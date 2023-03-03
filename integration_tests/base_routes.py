@@ -69,12 +69,14 @@ def sync_after_request(response: Response):
     new_headers = response.headers
     new_headers["after"] = "sync_after_request"
     response.headers = new_headers
-    response.body = response.body + " after"
+    response.set_body(response.body.as_str() + " after")
     return response
 
 
 @app.get("/sync/middlewares")
-def sync_middlewares():
+def sync_middlewares(request: Request):
+    assert "before" in request.headers
+    assert request.headers["before"] == "sync_before_request"
     return "sync middlewares"
 
 
@@ -91,12 +93,14 @@ async def async_after_request(response: Response):
     new_headers = response.headers
     new_headers["after"] = "async_after_request"
     response.headers = new_headers
-    response.body = response.body + " after"
+    response.set_body(response.body.as_str() + " after")
     return response
 
 
 @app.get("/async/middlewares")
-async def async_middlewares():
+async def async_middlewares(request: Request):
+    assert "before" in request.headers
+    assert request.headers["before"] == "async_before_request"
     return "async middlewares"
 
 
@@ -425,12 +429,12 @@ async def async_dict_post():
 
 @app.post("/sync/body")
 def sync_body_post(request: Request):
-    return request.body.content
+    return request.body.as_str()
 
 
 @app.post("/async/body")
 async def async_body_post(request: Request):
-    return request.body.content
+    return request.body.as_str()
 
 
 # --- PUT ---
@@ -463,12 +467,12 @@ async def async_dict_put():
 
 @app.put("/sync/body")
 def sync_body_put(request: Request):
-    return request.body.content
+    return request.body.as_str()
 
 
 @app.put("/async/body")
 async def async_body_put(request: Request):
-    return request.body.content
+    return request.body.as_str()
 
 
 # --- DELETE ---
@@ -501,12 +505,12 @@ async def async_dict_delete():
 
 @app.delete("/sync/body")
 def sync_body_delete(request: Request):
-    return request.body.content
+    return request.body.as_str()
 
 
 @app.delete("/async/body")
 async def async_body_delete(request: Request):
-    return request.body.content
+    return request.body.as_str()
 
 
 # --- PATCH ---
@@ -539,12 +543,12 @@ async def async_dict_patch():
 
 @app.patch("/sync/body")
 def sync_body_patch(request: Request):
-    return request.body.content
+    return request.body.as_str()
 
 
 @app.patch("/async/body")
 async def async_body_patch(request: Request):
-    return request.body.content
+    return request.body.as_str()
 
 
 # ===== Views =====
@@ -556,7 +560,7 @@ def sync_decorator_view():
         return "Hello, world!"
 
     def post(request: Request):
-        body = request.body.content
+        body = request.body.as_str()
         return {"status_code": 200, "body": body}
 
 
@@ -566,7 +570,7 @@ def async_decorator_view():
         return "Hello, world!"
 
     async def post(request: Request):
-        body = request.body.content
+        body = request.body.as_str()
         return {"status_code": 200, "body": body}
 
 
