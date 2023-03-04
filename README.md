@@ -148,3 +148,7 @@ These sponsors help us make the magic happen!
 [![Appwrite Logo](https://avatars.githubusercontent.com/u/25003669?s=105&v=1)](https://github.com/appwrite)
 
 - [Shivay Lamba](https://github.com/shivaylamba)
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=sansyrox/robyn&type=Date)](https://star-history.com/#sansyrox/robyn&Date)
