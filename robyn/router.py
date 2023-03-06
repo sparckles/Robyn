@@ -6,6 +6,7 @@ from types import CoroutineType
 from typing import Callable, Dict, List, Tuple, Union
 
 from robyn.robyn import FunctionInfo, Response
+from robyn.status_codes import StatusCodes
 from robyn.ws import WS
 
 Route = Tuple[str, str, FunctionInfo, bool]
@@ -26,7 +27,7 @@ class Router(BaseRouter):
     def _format_response(self, res):
         response = {}
         if isinstance(res, dict):
-            status_code = res.get("status_code", 200)
+            status_code = res.get("status_code", StatusCodes.HTTP_200_OK.value)
             headers = res.get("headers", {"Content-Type": "text/plain"})
             body = res.get("body", "")
 
@@ -41,13 +42,13 @@ class Router(BaseRouter):
             response = res
         elif isinstance(res, bytes):
             response = Response(
-                status_code=200,
+                status_code=StatusCodes.HTTP_200_OK.value,
                 headers={"Content-Type": "application/octet-stream"},
                 body=res,
             )
         else:
             response = Response(
-                status_code=200,
+                status_code=StatusCodes.HTTP_200_OK.value,
                 headers={"Content-Type": "text/plain"},
                 body=str(res).encode("utf-8"),
             )
