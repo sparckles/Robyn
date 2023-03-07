@@ -383,6 +383,7 @@ async fn index(
     apply_dashmap_headers(&mut response_builder, &global_response_headers);
     apply_hashmap_headers(&mut response_builder, &request.headers);
 
+
     let response = if let Some(r) = const_router.get_route(req.method(), req.uri().path()) {
         apply_hashmap_headers(&mut response_builder, &r.headers);
         response_builder
@@ -391,6 +392,7 @@ async fn index(
     } else if let Some((function, route_params)) = router.get_route(req.method(), req.uri().path())
     {
         request.params = route_params;
+
         match execute_http_function(&request, function).await {
             Ok(r) => {
                 response_builder.status(StatusCode::from_u16(r.status_code).unwrap());

@@ -1,4 +1,5 @@
 import json
+import msgspec
 from typing import Any, Dict
 
 
@@ -34,5 +35,6 @@ def jsonify(input_dict: dict) -> str:
 
     :param input_dict dict: response of the function
     """
-
-    return json.dumps(input_dict)
+    # Need to determine how to cache msgspec encoder globally
+    # Need to figure out how to encode to string directly (without decoding from byte format)
+    return msgspec.json.encode(input_dict).decode("utf-8")
