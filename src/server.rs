@@ -8,7 +8,7 @@ use crate::routers::http_router::HttpRouter;
 use crate::routers::types::MiddlewareRoute;
 use crate::routers::{middleware_router::MiddlewareRouter, web_socket_router::WebSocketRouter};
 use crate::shared_socket::SocketHeld;
-use crate::types::{FunctionInfo, Headers};
+use crate::types::FunctionInfo;
 use crate::web_socket_connection::start_web_socket;
 
 use std::convert::TryInto;
@@ -336,8 +336,8 @@ async fn index(
     router: web::Data<Arc<HttpRouter>>,
     const_router: web::Data<Arc<ConstRouter>>,
     middleware_router: web::Data<Arc<MiddlewareRouter>>,
-    global_request_headers: web::Data<Arc<Headers>>,
-    global_response_headers: web::Data<Arc<Headers>>,
+    global_request_headers: web::Data<Arc<DashMap<String, String>>>,
+    global_response_headers: web::Data<Arc<DashMap<String, String>>>,
     body: Bytes,
     req: HttpRequest,
 ) -> impl Responder {
@@ -358,8 +358,8 @@ async fn index(
     };
 
     // Route execution
-    let mut response = if let Some(r) = const_router.get_route(req.method(), req.uri().path()) {
-        r
+    let mut response = if let Some(res) = const_router.get_route(req.method(), req.uri().path()) {
+        res
     } else if let Some((function, route_params)) = router.get_route(req.method(), req.uri().path())
     {
         request.params = route_params;

@@ -1,8 +1,7 @@
 import os
 import pathlib
 
-from robyn import WS, Robyn, jsonify, serve_file, serve_html
-from robyn.robyn import Request, Response
+from robyn import WS, Robyn, Request, Response, jsonify, serve_file, serve_html
 from robyn.templating import JinjaTemplate
 
 from views import SyncView, AsyncView
@@ -69,7 +68,7 @@ def sync_after_request(response: Response):
     new_headers = response.headers
     new_headers["after"] = "sync_after_request"
     response.headers = new_headers
-    response.set_body(response.body.as_str() + " after")
+    response.body = response.body + " after"
     return response
 
 
@@ -93,7 +92,7 @@ async def async_after_request(response: Response):
     new_headers = response.headers
     new_headers["after"] = "async_after_request"
     response.headers = new_headers
-    response.set_body(response.body.as_str() + " after")
+    response.body = response.body + " after"
     return response
 
 
@@ -429,12 +428,12 @@ async def async_dict_post():
 
 @app.post("/sync/body")
 def sync_body_post(request: Request):
-    return request.body.as_str()
+    return request.body
 
 
 @app.post("/async/body")
 async def async_body_post(request: Request):
-    return request.body.as_str()
+    return request.body
 
 
 # --- PUT ---
@@ -467,12 +466,12 @@ async def async_dict_put():
 
 @app.put("/sync/body")
 def sync_body_put(request: Request):
-    return request.body.as_str()
+    return request.body
 
 
 @app.put("/async/body")
 async def async_body_put(request: Request):
-    return request.body.as_str()
+    return request.body
 
 
 # --- DELETE ---
@@ -505,12 +504,12 @@ async def async_dict_delete():
 
 @app.delete("/sync/body")
 def sync_body_delete(request: Request):
-    return request.body.as_str()
+    return request.body
 
 
 @app.delete("/async/body")
 async def async_body_delete(request: Request):
-    return request.body.as_str()
+    return request.body
 
 
 # --- PATCH ---
@@ -543,12 +542,12 @@ async def async_dict_patch():
 
 @app.patch("/sync/body")
 def sync_body_patch(request: Request):
-    return request.body.as_str()
+    return request.body
 
 
 @app.patch("/async/body")
 async def async_body_patch(request: Request):
-    return request.body.as_str()
+    return request.body
 
 
 # ===== Views =====
@@ -560,7 +559,7 @@ def sync_decorator_view():
         return "Hello, world!"
 
     def post(request: Request):
-        body = request.body.as_str()
+        body = request.body
         return {"status_code": 200, "body": body}
 
 
@@ -570,7 +569,7 @@ def async_decorator_view():
         return "Hello, world!"
 
     async def post(request: Request):
-        body = request.body.as_str()
+        body = request.body
         return {"status_code": 200, "body": body}
 
 

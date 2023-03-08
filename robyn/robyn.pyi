@@ -19,8 +19,6 @@ class FunctionInfo:
 class Body:
     content: Union[str, bytes]
 
-    def as_str(self) -> str:
-        pass
     def as_bytes(self) -> bytes:
         pass
     def set(self, content: Union[str, bytes]):

@@ -33,10 +33,6 @@ pub struct ActixBytesWrapper {
 
 #[pymethods]
 impl ActixBytesWrapper {
-    pub fn as_str(&self) -> PyResult<String> {
-        Ok(String::from_utf8(self.content.to_vec())?)
-    }
-
     pub fn as_bytes(&self) -> PyResult<Vec<u8>> {
         Ok(self.content.to_vec())
     }
@@ -48,7 +44,7 @@ impl ActixBytesWrapper {
             v.as_bytes().to_vec()
         } else {
             return Err(PyValueError::new_err(format!(
-                "Could not convert {} specified body to bytes",
+                "Could not convert body of type {} to bytes",
                 type_of(content)
             )));
         };
@@ -184,6 +180,23 @@ pub struct Request {
     pub url: Url,
 }
 
+#[pymethods]
+impl Request {
+    #[getter]
+    pub fn get_body(&self) -> PyResult<String> {
+        Ok(String::from_utf8(self.body.to_vec())?)
+    }
+
+    #[setter]
+    pub fn set_body(&mut self, content: &PyAny) -> PyResult<()> {
+        self.body.set(content)
+    }
+
+    pub fn get_body_as_bytes(&self) -> PyResult<Vec<u8>> {
+        self.body.as_bytes()
+    }
+}
+
 impl Request {
     pub fn from_actix_request(
         req: &HttpRequest,
@@ -198,7 +211,7 @@ impl Request {
                 queries.insert(params.0.to_string(), params.1.to_string());
             }
         }
-        let request_headers = req
+        let headers = req
             .headers()
             .iter()
             .map(|(k, v)| (k.to_string(), v.to_str().unwrap().to_string()))
@@ -211,7 +224,7 @@ impl Request {
 
         Self {
             queries,
-            headers: request_headers,
+            headers,
             method: req.method().clone(),
             params: HashMap::new(),
             body,
@@ -231,7 +244,6 @@ pub struct Response {
     pub response_type: String,
     #[pyo3(get, set)]
     pub headers: HashMap<String, String>,
-    #[pyo3(get)]
     pub body: ActixBytesWrapper,
     pub file_path: Option<String>,
 }
@@ -284,9 +296,18 @@ impl Response {
         })
     }
 
-    pub fn set_body(&mut self, body: &PyAny) -> PyResult<()> {
-        self.body = ActixBytesWrapper::new(body)?;
-        Ok(())
+    #[getter]
+    pub fn get_body(&self) -> PyResult<String> {
+        Ok(String::from_utf8(self.body.to_vec())?)
+    }
+
+    #[setter]
+    pub fn set_body(&mut self, content: &PyAny) -> PyResult<()> {
+        self.body.set(content)
+    }
+
+    pub fn get_body_as_bytes(&self) -> PyResult<Vec<u8>> {
+        self.body.as_bytes()
     }
 
     pub fn set_file_path(&mut self, file_path: &str) -> PyResult<()> {
@@ -302,5 +323,3 @@ impl Response {
         Ok(())
     }
 }
-
-pub type Headers = DashMap<String, String>;

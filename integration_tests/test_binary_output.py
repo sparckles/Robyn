@@ -18,4 +18,4 @@ BASE_URL = "http://127.0.0.1:8080"
 def test_binary_output(route: str, text: str, session):
     r = get(route)
     assert r.headers["Content-Type"] == "application/octet-stream"
-    assert r.text == "OK"
+    assert r.text == text

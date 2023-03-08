@@ -1,4 +1,4 @@
-from robyn.robyn import Request
+from robyn import Request
 
 
 def AsyncView():
@@ -6,7 +6,7 @@ def AsyncView():
         return "Hello, world!"
 
     async def post(request: Request):
-        body = request.body.as_str()
+        body = request.body
         return {
             "status": 200,
             "body": body,
