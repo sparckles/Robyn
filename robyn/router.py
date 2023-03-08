@@ -6,7 +6,7 @@ from types import CoroutineType
 from typing import Callable, Dict, List, Tuple, Union
 
 from robyn.robyn import FunctionInfo, Response
-from robyn import StatusCodes
+from robyn.status_codes import StatusCodes
 from robyn.ws import WS
 
 Route = Tuple[str, str, FunctionInfo, bool]
