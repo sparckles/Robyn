@@ -203,6 +203,7 @@ async def async_param(request):
     id = request["params"]["id"]
     return id
 
+
 @app.get("/sync/extra/*extra")
 def sync_param_extra(request):
     extra = request["params"]["extra"]
@@ -220,22 +221,26 @@ async def async_param_extra(request):
 
 @app.get("/sync/http/param")
 def sync_http_param(request):
-    return jsonify({
-        "method": request["method"],
-        "host": request["host"],
-        "protocol": request["protocol"],
-        "path": request["path"],
-    })
+    return jsonify(
+        {
+            "method": request["method"],
+            "host": request["host"],
+            "protocol": request["protocol"],
+            "path": request["path"],
+        }
+    )
 
 
 @app.get("/async/http/param")
 async def async_http_param(request):
-    return jsonify({
-        "method": request["method"],
-        "host": request["host"],
-        "protocol": request["protocol"],
-        "path": request["path"],
-    })
+    return jsonify(
+        {
+            "method": request["method"],
+            "host": request["host"],
+            "protocol": request["protocol"],
+            "path": request["path"],
+        }
+    )
 
 
 # HTML serving
