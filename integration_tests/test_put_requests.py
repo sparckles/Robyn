@@ -2,6 +2,7 @@ import pytest
 from helpers.http_methods_helpers import put
 
 
+@pytest.mark.benchmark
 @pytest.mark.parametrize("function_type", ["sync", "async"])
 def test_put(function_type: str, session):
     res = put(f"/{function_type}/dict")
@@ -10,6 +11,7 @@ def test_put(function_type: str, session):
     assert res.headers[function_type] == "dict"
 
 
+@pytest.mark.benchmark
 @pytest.mark.parametrize("function_type", ["sync", "async"])
 def test_put_with_param(function_type: str, session):
     res = put(f"/{function_type}/body", data={"hello": "world"})

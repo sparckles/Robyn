@@ -1,8 +1,10 @@
 from websocket import create_connection
+import pytest
 
 BASE_URL = "ws://127.0.0.1:8080"
 
 
+@pytest.mark.benchmark
 def test_web_socket(session):
     ws = create_connection(f"{BASE_URL}/web_socket")
     assert ws.recv() == "Hello world, from ws"

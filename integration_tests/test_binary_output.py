@@ -1,8 +1,10 @@
 import requests
+import pytest
 
 BASE_URL = "http://127.0.0.1:8080"
 
 
+@pytest.mark.benchmark
 def test_binary_output_sync(session):
     r = requests.get(f"{BASE_URL}/binary_output_sync")
     assert r.status_code == 200
@@ -10,6 +12,7 @@ def test_binary_output_sync(session):
     assert r.text == "OK"
 
 
+@pytest.mark.benchmark
 def test_binary_output_response_sync(session):
     r = requests.get(f"{BASE_URL}/binary_output_response_sync")
     assert r.status_code == 200
@@ -17,6 +20,7 @@ def test_binary_output_response_sync(session):
     assert r.text == "OK"
 
 
+@pytest.mark.benchmark
 def test_binary_output_async(session):
     r = requests.get(f"{BASE_URL}/binary_output_async")
     assert r.status_code == 200
@@ -24,6 +28,7 @@ def test_binary_output_async(session):
     assert r.text == "OK"
 
 
+@pytest.mark.benchmark
 def test_binary_output_response_async(session):
     r = requests.get(f"{BASE_URL}/binary_output_response_async")
     assert r.status_code == 200

@@ -4,6 +4,7 @@ from requests import Response
 from helpers.http_methods_helpers import get
 
 
+@pytest.mark.benchmark
 @pytest.mark.parametrize("function_type", ["sync", "async"])
 def test_param(function_type: str, session):
     r = get(f"/{function_type}/param/1")
@@ -12,6 +13,7 @@ def test_param(function_type: str, session):
     assert r.text == "12345"
 
 
+@pytest.mark.benchmark
 @pytest.mark.parametrize("function_type", ["sync", "async"])
 def test_serve_html(function_type: str, session):
     def check_response(r: Response):
@@ -21,6 +23,7 @@ def test_serve_html(function_type: str, session):
     check_response(get(f"/{function_type}/serve/html"))
 
 
+@pytest.mark.benchmark
 @pytest.mark.parametrize("function_type", ["sync", "async"])
 def test_template(function_type: str, session):
     def check_response(r: Response):
@@ -31,6 +34,7 @@ def test_template(function_type: str, session):
     check_response(get(f"/{function_type}/template"))
 
 
+@pytest.mark.benchmark
 @pytest.mark.parametrize("function_type", ["sync", "async"])
 def test_queries(function_type: str, session):
     r = get(f"/{function_type}/queries?hello=robyn")

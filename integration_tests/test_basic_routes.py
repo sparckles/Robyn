@@ -10,6 +10,7 @@ import pytest
 from helpers.http_methods_helpers import get
 
 
+@pytest.mark.benchmark
 @pytest.mark.parametrize(
     "route,expected_text,expected_header_key,expected_header_value",
     [
@@ -46,6 +47,7 @@ def test_basic_get(
         assert res.headers[expected_header_key] == expected_header_value
 
 
+@pytest.mark.benchmark
 @pytest.mark.parametrize(
     "route, expected_json",
     [
