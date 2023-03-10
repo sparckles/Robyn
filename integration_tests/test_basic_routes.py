@@ -62,3 +62,16 @@ def test_json_get(route: str, expected_json: dict, session):
     for key in expected_json.keys():
         assert key in res.json()
         assert res.json()[key] == expected_json[key]
+
+@pytest.mark.parametrize(
+    "route, expected_json",
+    [
+        ("/sync/http/param", {"host":"127.0.0.1:8080","method":"GET","path":"/sync/http/param","protocol":"http"}),
+        ("/async/http/param", {"host":"127.0.0.1:8080","method":"GET","path":"/async/http/param","protocol":"http"}),
+    ],
+)
+def test_http_request_info_get(route: str, expected_json: dict, session):
+    res = get(route)
+    for key in expected_json.keys():
+        assert key in res.json()
+        assert res.json()[key] == expected_json[key]

@@ -115,6 +115,9 @@ pub struct Request {
     pub method: Method,
     pub params: HashMap<String, String>,
     pub body: Bytes,
+    pub path: String,
+    pub host: String,
+    pub protocol: String,
 }
 
 impl Request {
@@ -139,15 +142,28 @@ impl Request {
             method: req.method().clone(),
             params: HashMap::new(),
             body,
+            path: req.path().to_lowercase().to_string(),
+            host: req.connection_info().host().to_string(),
+            protocol: req.connection_info().scheme().to_string(),
         }
     }
 
     pub fn to_hashmap(&self, py: Python<'_>) -> Result<HashMap<&str, Py<PyAny>>> {
         let mut result = HashMap::new();
+
         result.insert("params", self.params.to_object(py));
         result.insert("queries", self.queries.to_object(py));
         result.insert("headers", self.headers.to_object(py));
         result.insert("body", self.body.to_object(py));
+        let method = PyString::new(py, &self.method.to_string()).to_object(py);
+        result.insert("method", method);
+        let path = PyString::new(py, &self.path.to_string()).to_object(py);
+        result.insert("path", path);
+        let host = PyString::new(py, &self.host.to_string()).to_object(py);
+        result.insert("host", host);
+        let protocol = PyString::new(py, &self.protocol.to_string()).to_object(py);
+        result.insert("protocol", protocol);
+
         Ok(result)
     }
 }
