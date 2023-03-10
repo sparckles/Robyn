@@ -203,6 +203,11 @@ async def async_param(request):
     id = request["params"]["id"]
     return id
 
+@app.get("/async/extra/*extra")
+async def async_str_const_get_suffix(request):
+    extra = request["params"]["extra"]
+    return extra
+
 
 # HTML serving
 
