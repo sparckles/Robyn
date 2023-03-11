@@ -2,6 +2,7 @@ import pytest
 from helpers.http_methods_helpers import delete
 
 
+@pytest.mark.benchmark
 @pytest.mark.parametrize("function_type", ["sync", "async"])
 def test_delete(function_type: str, session):
     res = delete(f"/{function_type}/dict")
@@ -10,6 +11,7 @@ def test_delete(function_type: str, session):
     assert res.headers[function_type] == "dict"
 
 
+@pytest.mark.benchmark
 @pytest.mark.parametrize("function_type", ["sync", "async"])
 def test_delete_with_param(function_type: str, session):
     res = delete(f"/{function_type}/body", data={"hello": "world"})

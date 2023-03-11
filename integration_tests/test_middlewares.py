@@ -3,6 +3,7 @@ import pytest
 from helpers.http_methods_helpers import get
 
 
+@pytest.mark.benchmark
 @pytest.mark.skip(reason="Fix middleware request headers modification")
 def test_middlewares(session):
     r = get("/")

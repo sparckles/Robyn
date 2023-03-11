@@ -2,19 +2,24 @@ from robyn import Robyn
 from robyn.events import Events
 from robyn.types import Header
 
+import pytest
 
+
+@pytest.mark.benchmark
 def test_add_request_header():
     app = Robyn(__file__)
     app.add_request_header("server", "robyn")
     assert app.request_headers == [Header(key="server", val="robyn")]
 
 
+@pytest.mark.benchmark
 def test_add_response_header():
     app = Robyn(__file__)
     app.add_response_header("content-type", "application/json")
     assert app.response_headers == [Header(key="content-type", val="application/json")]
 
 
+@pytest.mark.benchmark
 def test_lifecycle_handlers():
     def mock_startup_handler():
         pass
