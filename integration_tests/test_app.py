@@ -18,6 +18,7 @@ def test_add_response_header():
     app.add_response_header("content-type", "application/json")
     assert app.response_headers == [Header(key="content-type", val="application/json")]
 
+
 @pytest.mark.benchmark
 def test_lifecycle_handlers():
     def mock_startup_handler():
