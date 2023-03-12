@@ -221,12 +221,12 @@ async def async_param_extra(request):
 
 @app.get("/sync/http/param")
 def sync_http_param(request):
-    return jsonify(request["connection_info"])
+    return jsonify({"url": request["url"], "method": request["method"]})
 
 
 @app.get("/async/http/param")
 async def async_http_param(request):
-    return jsonify(request["connection_info"])
+    return jsonify({"url": request["url"], "method": request["method"]})
 
 
 # HTML serving

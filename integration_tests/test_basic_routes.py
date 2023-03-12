@@ -71,19 +71,23 @@ def test_json_get(route: str, expected_json: dict, session):
         (
             "/sync/http/param",
             {
-                "host": "127.0.0.1:8080",
                 "method": "GET",
-                "path": "/sync/http/param",
-                "protocol": "http",
+                "url": {
+                    "host": "127.0.0.1:8080",
+                    "path": "/sync/http/param",
+                    "scheme": "http",
+                },
             },
         ),
         (
             "/async/http/param",
             {
-                "host": "127.0.0.1:8080",
                 "method": "GET",
-                "path": "/async/http/param",
-                "protocol": "http",
+                "url": {
+                    "host": "127.0.0.1:8080",
+                    "path": "/async/http/param",
+                    "scheme": "http",
+                },
             },
         ),
     ],
