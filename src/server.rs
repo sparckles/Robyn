@@ -37,8 +37,8 @@ static STARTED: AtomicBool = AtomicBool::new(false);
 struct Directory {
     route: String,
     directory_path: String,
-    index_file: Option<String>,
     show_files_listing: bool,
+    index_file: Option<String>,
 }
 
 #[pyclass]
@@ -218,14 +218,14 @@ impl Server {
         &mut self,
         route: String,
         directory_path: String,
-        index_file: Option<String>,
         show_files_listing: bool,
+        index_file: Option<String>,
     ) {
         self.directories.write().unwrap().push(Directory {
             route,
             directory_path,
-            index_file,
             show_files_listing,
+            index_file,
         });
     }
 

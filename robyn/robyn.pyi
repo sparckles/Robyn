@@ -31,8 +31,8 @@ class Server:
         self,
         route: str,
         directory_path: str,
-        index_file: Optional[str],
         show_files_listing: bool,
+        index_file: Optional[str],
     ) -> None:
         pass
     def add_request_header(self, key: str, value: str) -> None:

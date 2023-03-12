@@ -13,32 +13,28 @@ readme = "README.md"
 name = "robyn"
 crate-type = ["cdylib", "rlib"]
 
-[dependencies.pyo3]
-version = "0.17.2"
-features = ["extension-module"]
-
 [dependencies]
-tokio = { version = "1.7.0", features = ["full"] }
-dashmap = {git = "https://github.com/quake/dashmap", branch = "parking_lot", features = ["parking_lot"]}
-pyo3-asyncio = { version="0.17.0" , features = ["attributes", "tokio-runtime"] }
-anyhow = "1.0.38"
-actix-web = "4.0.1"
-actix-files = "0.6.0"
-futures-util = "0.3.15"
-matchit = "0.6.0"
-actix-http = "3.0.4"
-socket2 = { version = "0.4.1", features = ["all"] }
+pyo3 = { version = "0.18.1", features = ["extension-module"] }
+pyo3-asyncio = { version="0.18.0" , features = ["attributes", "tokio-runtime"] }
+pyo3-log = "0.8.1"
+tokio = { version = "1.26.0", features = ["full"] }
+dashmap = "5.4.0"
+anyhow = "1.0.69"
 actix = "0.13.0"
-actix-web-actors = "4.1.0"
-uuid = { version = "1.2.1", features = ["serde", "v4"] }
-serde = "1.0.136"
-serde_json = "1.0.79"
-futures = "0.3.21"
-pyo3-log = "0.7.0"
+actix-web-actors = "4.2.0"
+actix-web = "4.3.1"
+actix-http = "3.3.1"
+actix-files = "0.6.2"
+futures = "0.3.27"
+futures-util = "0.3.27"
+matchit = "0.7.0"
+socket2 = { version = "0.5.1", features = ["all"] }
+uuid = { version = "1.3.0", features = ["serde", "v4"] }
+serde = "1.0.155"
+serde_json = "1.0.94"
 log = "0.4.17"
 
 [features]
-# Defines a feature named `webp` that does not enable any other features.
 io-uring = ["actix-web/experimental-io-uring"]
 
 
