@@ -155,14 +155,15 @@ impl Request {
         result.insert("queries", self.queries.to_object(py));
         result.insert("headers", self.headers.to_object(py));
         result.insert("body", self.body.to_object(py));
-        let method = PyString::new(py, self.method.as_ref()).to_object(py);
-        result.insert("method", method);
-        let path = PyString::new(py, self.path.as_ref()).to_object(py);
-        result.insert("path", path);
-        let host = PyString::new(py, self.host.as_ref()).to_object(py);
-        result.insert("host", host);
-        let protocol = PyString::new(py, self.protocol.as_ref()).to_object(py);
-        result.insert("protocol", protocol);
+
+        let mut connection_info = HashMap::new();
+
+        connection_info.insert("method", self.method.to_string());
+        connection_info.insert("path", self.path.to_string());
+        connection_info.insert("host", self.host.to_string());
+        connection_info.insert("protocol", self.protocol.to_string());
+
+        result.insert("connection_info", connection_info.to_object(py));
 
         Ok(result)
     }
