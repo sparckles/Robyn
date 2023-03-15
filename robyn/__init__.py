@@ -79,7 +79,7 @@ class Robyn:
         show_files_listing: bool = False,
     ):
         self.directories.append(
-            Directory(route, directory_path, index_file, show_files_listing)
+            Directory(route, directory_path, show_files_listing, index_file)
         )
 
     def add_request_header(self, key: str, value: str) -> None:
