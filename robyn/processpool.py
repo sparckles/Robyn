@@ -24,7 +24,6 @@ def run_processes(
     workers: int,
     processes: int,
     response_headers: List[Header],
-    from_event_handler: bool = False,
 ) -> List[Process]:
     socket = SocketHeld(url, port)
 
@@ -41,19 +40,17 @@ def run_processes(
         response_headers,
     )
 
-    if not from_event_handler:
-
-        def terminating_signal_handler(_sig, _frame):
-            logger.info("Terminating server!!", bold=True)
-            for process in process_pool:
-                process.kill()
-
-        signal.signal(signal.SIGINT, terminating_signal_handler)
-        signal.signal(signal.SIGTERM, terminating_signal_handler)
-
-        logger.info("Press Ctrl + C to stop \n")
+    def terminating_signal_handler(_sig, _frame):
+        logger.info("Terminating server!!", bold=True)
         for process in process_pool:
-            process.join()
+            process.kill()
+
+    signal.signal(signal.SIGINT, terminating_signal_handler)
+    signal.signal(signal.SIGTERM, terminating_signal_handler)
+
+    logger.info("Press Ctrl + C to stop \n")
+    for process in process_pool:
+        process.join()
 
     return process_pool
 
