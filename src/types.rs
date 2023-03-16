@@ -115,9 +115,7 @@ pub struct Request {
     pub method: Method,
     pub params: HashMap<String, String>,
     pub body: Bytes,
-    pub path: String,
-    pub host: String,
-    pub scheme: String,
+    pub url: HashMap<String, String>,
 }
 
 impl Request {
@@ -142,9 +140,17 @@ impl Request {
             method: req.method().clone(),
             params: HashMap::new(),
             body,
-            path: req.path().to_string(),
-            host: req.connection_info().host().to_string(),
-            scheme: req.connection_info().scheme().to_string(),
+            url: HashMap::from([
+                (String::from("path"), req.path().to_string()),
+                (
+                    String::from("host"),
+                    req.connection_info().host().to_string(),
+                ),
+                (
+                    String::from("scheme"),
+                    req.connection_info().scheme().to_string(),
+                ),
+            ]),
         }
     }
 
@@ -156,12 +162,7 @@ impl Request {
         result.insert("queries", self.queries.to_object(py));
         result.insert("headers", self.headers.to_object(py));
         result.insert("body", self.body.to_object(py));
-
-        let mut url = HashMap::new();
-        url.insert("path", self.path.to_string());
-        url.insert("host", self.host.to_string());
-        url.insert("scheme", self.scheme.to_string());
-        result.insert("url", url.to_object(py));
+        result.insert("url", self.url.to_object(py));
 
         Ok(result)
     }
