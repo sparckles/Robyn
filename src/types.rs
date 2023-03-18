@@ -15,8 +15,8 @@ use actix_web::{http::Method, HttpRequest};
 use anyhow::Result;
 use dashmap::DashMap;
 use pyo3::exceptions::PyValueError;
-use pyo3::types::{PyBytes, PyString};
-use pyo3::{exceptions, prelude::*};
+use pyo3::types::{PyBytes, PyDict, PyString};
+use pyo3::{exceptions, intern, prelude::*};
 
 use crate::io_helpers::read_file;
 
@@ -109,13 +109,38 @@ impl FunctionInfo {
 }
 
 #[derive(Default)]
+pub struct Url {
+    pub scheme: String,
+    pub host: String,
+    pub path: String,
+}
+
+impl Url {
+    fn new(scheme: &str, host: &str, path: &str) -> Self {
+        Self {
+            scheme: scheme.to_string(),
+            host: host.to_string(),
+            path: path.to_string(),
+        }
+    }
+
+    pub fn to_object(&self, py: Python<'_>) -> PyResult<PyObject> {
+        let dict = PyDict::new(py);
+        dict.set_item(intern!(py, "scheme"), self.scheme.as_str())?;
+        dict.set_item(intern!(py, "host"), self.host.as_str())?;
+        dict.set_item(intern!(py, "path"), self.path.as_str())?;
+        Ok(dict.into_py(py))
+    }
+}
+
+#[derive(Default)]
 pub struct Request {
     pub queries: HashMap<String, String>,
     pub headers: HashMap<String, String>,
     pub method: Method,
     pub params: HashMap<String, String>,
     pub body: Bytes,
-    pub url: HashMap<String, String>,
+    pub url: Url,
 }
 
 impl Request {
@@ -140,17 +165,11 @@ impl Request {
             method: req.method().clone(),
             params: HashMap::new(),
             body,
-            url: HashMap::from([
-                (String::from("path"), req.path().to_string()),
-                (
-                    String::from("host"),
-                    req.connection_info().host().to_string(),
-                ),
-                (
-                    String::from("scheme"),
-                    req.connection_info().scheme().to_string(),
-                ),
-            ]),
+            url: Url::new(
+                req.connection_info().scheme(),
+                req.connection_info().host(),
+                req.path(),
+            ),
         }
     }
 
@@ -162,7 +181,7 @@ impl Request {
         result.insert("queries", self.queries.to_object(py));
         result.insert("headers", self.headers.to_object(py));
         result.insert("body", self.body.to_object(py));
-        result.insert("url", self.url.to_object(py));
+        result.insert("url", self.url.to_object(py)?);
 
         Ok(result)
     }
