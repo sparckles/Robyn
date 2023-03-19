@@ -1,14 +1,13 @@
 /// This is the module that has all the executor functions
 /// i.e. the functions that have the responsibility of parsing and executing functions.
-use crate::types::{FunctionInfo, Request, Response};
-
 use std::sync::Arc;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use log::debug;
+use pyo3::prelude::*;
 use pyo3_asyncio::TaskLocals;
-// pyO3 module
-use pyo3::{prelude::*, PyClass};
+
+use crate::types::{function_info::FunctionInfo, request::Request, response::Response};
 
 fn get_function_output<'a, T>(
     function: &'a FunctionInfo,
@@ -16,40 +15,42 @@ fn get_function_output<'a, T>(
     input: &T,
 ) -> Result<&'a PyAny, PyErr>
 where
-    T: Clone + IntoPy<Py<PyAny>>,
+    T: ToPyObject,
 {
     let handler = function.handler.as_ref(py);
 
     // this makes the request object accessible across every route
     match function.number_of_params {
         0 => handler.call0(),
-        1 => handler.call1((input.clone(),)),
+        1 => handler.call1((input.to_object(py),)),
         // this is done to accommodate any future params
-        2_u8..=u8::MAX => handler.call1((input.clone(),)),
+        2_u8..=u8::MAX => handler.call1((input.to_object(py),)),
     }
 }
 
-pub async fn execute_middleware_function<'a, T>(input: &T, function: FunctionInfo) -> Result<T>
+pub async fn execute_middleware_function<T>(input: &T, function: FunctionInfo) -> Result<T>
 where
-    T: Clone + PyClass + IntoPy<Py<PyAny>>,
+    T: for<'a> FromPyObject<'a> + ToPyObject,
 {
     if function.is_async {
-        let output = Python::with_gil(|py| {
+        let output: Py<PyAny> = Python::with_gil(|py| {
             pyo3_asyncio::tokio::into_future(get_function_output(&function, py, input)?)
         })?
         .await?;
 
-        Python::with_gil(|py| -> PyResult<T> {
-            let output: (T,) = output.extract(py)?;
+        Python::with_gil(|py| -> Result<T> {
+            let output: (T,) = output
+                .extract(py)
+                .context("Failed to get middleware response")?;
             Ok(output.0)
         })
-        .map_err(|e| anyhow!(e))
     } else {
-        Python::with_gil(|py| -> PyResult<T> {
-            let output: (T,) = get_function_output(&function, py, input)?.extract()?;
+        Python::with_gil(|py| -> Result<T> {
+            let output: (T,) = get_function_output(&function, py, input)?
+                .extract()
+                .context("Failed to get middleware response")?;
             Ok(output.0)
         })
-        .map_err(|e| anyhow!(e))
     }
 }
 
@@ -67,8 +68,9 @@ pub async fn execute_http_function(request: &Request, function: FunctionInfo) ->
         })
     } else {
         Python::with_gil(|py| -> Result<Response> {
-            let output = get_function_output(&function, py, request)?;
-            output.extract().context("Failed to get route response")
+            get_function_output(&function, py, request)?
+                .extract()
+                .context("Failed to get route response")
         })
     }
 }

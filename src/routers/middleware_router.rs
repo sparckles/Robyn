@@ -1,14 +1,12 @@
 use std::collections::HashMap;
 use std::sync::RwLock;
-// pyo3 modules
-use crate::types::FunctionInfo;
+
 use anyhow::{Context, Error, Result};
 use matchit::Router as MatchItRouter;
 use pyo3::types::PyAny;
 
-use crate::routers::types::MiddlewareRoute;
-
-use super::Router;
+use crate::routers::Router;
+use crate::{routers::types::MiddlewareRoute, types::function_info::FunctionInfo};
 
 type RouteMap = RwLock<MatchItRouter<FunctionInfo>>;
 

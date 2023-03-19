@@ -4,8 +4,9 @@ use std::sync::Arc;
 use std::sync::RwLock;
 
 use crate::executors::execute_http_function;
-use crate::types::Response;
-use crate::types::{FunctionInfo, Request};
+use crate::types::function_info::FunctionInfo;
+use crate::types::request::Request;
+use crate::types::response::Response;
 use anyhow::Context;
 use log::debug;
 use matchit::Router as MatchItRouter;
@@ -15,7 +16,7 @@ use actix_web::http::Method;
 
 use anyhow::{Error, Result};
 
-use super::Router;
+use crate::routers::Router;
 
 type RouteMap = RwLock<MatchItRouter<Response>>;
 

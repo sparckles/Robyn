@@ -1,5 +1,4 @@
 use crate::executors::{execute_event_handler, execute_http_function, execute_middleware_function};
-use crate::types::{Request, Response};
 
 use crate::routers::const_router::ConstRouter;
 use crate::routers::Router;
@@ -8,7 +7,9 @@ use crate::routers::http_router::HttpRouter;
 use crate::routers::types::MiddlewareRoute;
 use crate::routers::{middleware_router::MiddlewareRouter, web_socket_router::WebSocketRouter};
 use crate::shared_socket::SocketHeld;
-use crate::types::FunctionInfo;
+use crate::types::function_info::FunctionInfo;
+use crate::types::request::Request;
+use crate::types::response::Response;
 use crate::web_socket_connection::start_web_socket;
 
 use std::convert::TryInto;

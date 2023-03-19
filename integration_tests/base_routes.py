@@ -57,17 +57,13 @@ def shutdown_handler():
 
 @app.before_request("/sync/middlewares")
 def sync_before_request(request: Request):
-    new_headers = request.headers
-    new_headers["before"] = "sync_before_request"
-    request.headers = new_headers
+    request.headers["before"] = "sync_before_request"
     return request
 
 
 @app.after_request("/sync/middlewares")
 def sync_after_request(response: Response):
-    new_headers = response.headers
-    new_headers["after"] = "sync_after_request"
-    response.headers = new_headers
+    response.headers["after"] = "sync_after_request"
     response.body = response.body + " after"
     return response
 
@@ -81,17 +77,13 @@ def sync_middlewares(request: Request):
 
 @app.before_request("/async/middlewares")
 async def async_before_request(request: Request):
-    new_headers = request.headers
-    new_headers["before"] = "async_before_request"
-    request.headers = new_headers
+    request.headers["before"] = "async_before_request"
     return request
 
 
 @app.after_request("/async/middlewares")
 async def async_after_request(response: Response):
-    new_headers = response.headers
-    new_headers["after"] = "async_after_request"
-    response.headers = new_headers
+    response.headers["after"] = "async_after_request"
     response.body = response.body + " after"
     return response
 
@@ -274,14 +266,14 @@ async def async_param(request: Request):
 
 
 @app.get("/sync/extra/*extra")
-def sync_param_extra(request):
-    extra = request["params"]["extra"]
+def sync_param_extra(request: Request):
+    extra = request.params["extra"]
     return extra
 
 
 @app.get("/async/extra/*extra")
-async def async_param_extra(request):
-    extra = request["params"]["extra"]
+async def async_param_extra(request: Request):
+    extra = request.params["extra"]
     return extra
 
 
@@ -289,13 +281,31 @@ async def async_param_extra(request):
 
 
 @app.get("/sync/http/param")
-def sync_http_param(request):
-    return jsonify({"url": request["url"], "method": request["method"]})
+def sync_http_param(request: Request):
+    return jsonify(
+        {
+            "url": {
+                "scheme": request.url.scheme,
+                "host": request.url.host,
+                "path": request.url.path,
+            },
+            "method": request.method,
+        }
+    )
 
 
 @app.get("/async/http/param")
-async def async_http_param(request):
-    return jsonify({"url": request["url"], "method": request["method"]})
+async def async_http_param(request: Request):
+    return jsonify(
+        {
+            "url": {
+                "scheme": request.url.scheme,
+                "host": request.url.host,
+                "path": request.url.path,
+            },
+            "method": request.method,
+        }
+    )
 
 
 # HTML serving

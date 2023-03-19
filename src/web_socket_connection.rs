@@ -1,4 +1,4 @@
-use crate::types::FunctionInfo;
+use crate::types::function_info::FunctionInfo;
 
 use actix::prelude::*;
 use actix::{Actor, AsyncContext, StreamHandler};
