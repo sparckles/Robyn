@@ -204,6 +204,31 @@ async def async_param(request):
     return id
 
 
+@app.get("/sync/extra/*extra")
+def sync_param_extra(request):
+    extra = request["params"]["extra"]
+    return extra
+
+
+@app.get("/async/extra/*extra")
+async def async_param_extra(request):
+    extra = request["params"]["extra"]
+    return extra
+
+
+# Request Info
+
+
+@app.get("/sync/http/param")
+def sync_http_param(request):
+    return jsonify({"url": request["url"], "method": request["method"]})
+
+
+@app.get("/async/http/param")
+async def async_http_param(request):
+    return jsonify({"url": request["url"], "method": request["method"]})
+
+
 # HTML serving
 
 

@@ -15,6 +15,15 @@ def test_param(function_type: str, session):
 
 @pytest.mark.benchmark
 @pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_param_suffix(function_type: str, session):
+    r = get(f"/{function_type}/extra/foo/1/baz")
+    assert r.text == "foo/1/baz"
+    r = get(f"/{function_type}/extra/foo/bar/baz")
+    assert r.text == "foo/bar/baz"
+
+
+@pytest.mark.benchmark
+@pytest.mark.parametrize("function_type", ["sync", "async"])
 def test_serve_html(function_type: str, session):
     def check_response(r: Response):
         assert r.text.startswith("<!DOCTYPE html>")
