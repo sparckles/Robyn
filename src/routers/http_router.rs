@@ -1,15 +1,14 @@
 use std::sync::RwLock;
 use std::{collections::HashMap, str::FromStr};
-// pyo3 modules
-use crate::types::FunctionInfo;
-use pyo3::types::PyAny;
 
 use actix_web::http::Method;
 use matchit::Router as MatchItRouter;
+use pyo3::types::PyAny;
 
 use anyhow::{Context, Result};
 
-use super::Router;
+use crate::routers::Router;
+use crate::types::function_info::FunctionInfo;
 
 type RouteMap = RwLock<MatchItRouter<FunctionInfo>>;
 

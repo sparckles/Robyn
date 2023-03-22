@@ -37,7 +37,7 @@ class Router(BaseRouter):
             response = Response(status_code=status_code, headers=headers, body=body)
             file_path = res.get("file_path")
             if file_path is not None:
-                response.set_file_path(file_path)
+                response.file_path = file_path
         elif isinstance(res, Response):
             response = res
         elif isinstance(res, bytes):

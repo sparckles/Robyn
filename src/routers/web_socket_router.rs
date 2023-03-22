@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 use std::sync::RwLock;
-// pyo3 modules
-use crate::types::FunctionInfo;
+
 use log::debug;
 
-/// Contains the thread safe hashmaps of different routes
+use crate::types::function_info::FunctionInfo;
 
+/// Contains the thread safe hashmaps of different routes
 type WebSocketRoutes = RwLock<HashMap<String, HashMap<String, FunctionInfo>>>;
 
 pub struct WebSocketRouter {

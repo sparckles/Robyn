@@ -16,13 +16,27 @@ class FunctionInfo:
     number_of_params: int
 
 @dataclass
+class Url:
+    scheme: str
+    host: str
+    path: str
+
+@dataclass
+class Request:
+    queries: dict[str, str]
+    headers: dict[str, str]
+    params: dict[str, str]
+    body: Union[str, bytes]
+    method: str
+    url: Url
+
+@dataclass
 class Response:
     status_code: int
+    response_type: str
     headers: dict[str, str]
     body: Union[str, bytes]
-
-    def set_file_path(self, file_path: str):
-        pass
+    file_path: str
 
 class Server:
     def __init__(self) -> None:

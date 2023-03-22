@@ -1,6 +1,4 @@
 use crate::executors::{execute_event_handler, execute_http_function, execute_middleware_function};
-use crate::io_helpers::{apply_dashmap_headers, apply_hashmap_headers};
-use crate::types::Request;
 
 use crate::routers::const_router::ConstRouter;
 use crate::routers::Router;
@@ -9,10 +7,11 @@ use crate::routers::http_router::HttpRouter;
 use crate::routers::types::MiddlewareRoute;
 use crate::routers::{middleware_router::MiddlewareRouter, web_socket_router::WebSocketRouter};
 use crate::shared_socket::SocketHeld;
-use crate::types::{FunctionInfo, Headers};
+use crate::types::function_info::FunctionInfo;
+use crate::types::request::Request;
+use crate::types::response::Response;
 use crate::web_socket_connection::start_web_socket;
 
-use std::collections::HashMap;
 use std::convert::TryInto;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::{Relaxed, SeqCst};
@@ -22,13 +21,13 @@ use std::process::abort;
 use std::thread;
 
 use actix_files::Files;
-use actix_http::{KeepAlive, StatusCode};
+use actix_http::KeepAlive;
 use actix_web::web::Bytes;
 use actix_web::*;
 use dashmap::DashMap;
 
 // pyO3 module
-use log::debug;
+use log::{debug, error};
 use pyo3::prelude::*;
 
 static STARTED: AtomicBool = AtomicBool::new(false);
@@ -332,93 +331,68 @@ impl Default for Server {
     }
 }
 
-async fn apply_middleware(
-    request: &mut Request,
-    middleware_type: MiddlewareRoute,
-    middleware_router: &MiddlewareRouter,
-    route_uri: &str,
-) {
-    let mut modified_request = match middleware_router.get_route(&middleware_type, route_uri) {
-        Some((function, route_params)) => {
-            request.params = route_params;
-            execute_middleware_function(request, function)
-                .await
-                .unwrap_or_default()
-        }
-        None => HashMap::new(),
-    };
-
-    debug!("This is the modified request {:?}", modified_request);
-
-    if modified_request.contains_key("headers") {
-        request.headers = modified_request.remove("headers").unwrap();
-    }
-
-    debug!("These are the request headers {:?}", &request.headers);
-}
-
 /// This is our service handler. It receives a Request, routes on it
 /// path, and returns a Future of a Response.
 async fn index(
     router: web::Data<Arc<HttpRouter>>,
     const_router: web::Data<Arc<ConstRouter>>,
     middleware_router: web::Data<Arc<MiddlewareRouter>>,
-    global_request_headers: web::Data<Arc<Headers>>,
-    global_response_headers: web::Data<Arc<Headers>>,
+    global_request_headers: web::Data<Arc<DashMap<String, String>>>,
+    global_response_headers: web::Data<Arc<DashMap<String, String>>>,
     body: Bytes,
     req: HttpRequest,
 ) -> impl Responder {
-    let mut request = Request::from_actix_request(&req, body);
+    let mut request = Request::from_actix_request(&req, body, &global_request_headers);
 
-    apply_middleware(
-        &mut request,
-        MiddlewareRoute::BeforeRequest,
-        &middleware_router,
-        req.uri().path(),
-    )
-    .await;
+    // Before middleware
+    request = match middleware_router.get_route(&MiddlewareRoute::BeforeRequest, req.uri().path()) {
+        Some((function, route_params)) => {
+            request.params = route_params;
+            execute_middleware_function(&request, function)
+                .await
+                .unwrap_or_else(|e| {
+                    error!("Error while executing before middleware: {e}");
+                    request
+                })
+        }
+        None => request,
+    };
 
-    let mut response_builder = HttpResponse::Ok();
-    apply_dashmap_headers(&mut response_builder, &global_request_headers);
-    apply_dashmap_headers(&mut response_builder, &global_response_headers);
-    apply_hashmap_headers(&mut response_builder, &request.headers);
-
-    let response = if let Some(r) = const_router.get_route(req.method(), req.uri().path()) {
-        apply_hashmap_headers(&mut response_builder, &r.headers);
-        response_builder
-            .status(StatusCode::from_u16(r.status_code).unwrap())
-            .body(r.body)
+    // Route execution
+    let mut response = if let Some(res) = const_router.get_route(req.method(), req.uri().path()) {
+        res
     } else if let Some((function, route_params)) = router.get_route(req.method(), req.uri().path())
     {
         request.params = route_params;
-        match execute_http_function(&request, function).await {
-            Ok(r) => {
-                response_builder.status(StatusCode::from_u16(r.status_code).unwrap());
-                apply_hashmap_headers(&mut response_builder, &r.headers);
-                if !r.body.is_empty() {
-                    response_builder.body(r.body)
-                } else {
-                    response_builder.finish()
-                }
-            }
-            Err(e) => {
-                debug!("Error: {:?}", e);
-                response_builder.status(StatusCode::INTERNAL_SERVER_ERROR);
-                response_builder.finish()
-            }
-        }
+        execute_http_function(&request, function)
+            .await
+            .unwrap_or_else(|e| {
+                error!("Error while executing route function: {:?}", e);
+                Response::internal_server_error(&request.headers)
+            })
     } else {
-        response_builder.status(StatusCode::NOT_FOUND);
-        response_builder.body("Not found")
+        Response::not_found(&request.headers)
     };
 
-    apply_middleware(
-        &mut request,
-        MiddlewareRoute::AfterRequest,
-        &middleware_router,
-        req.uri().path(),
-    )
-    .await;
+    response.headers.extend(
+        global_response_headers
+            .iter()
+            .map(|elt| (elt.key().clone(), elt.value().clone())),
+    );
+
+    // After middleware
+    response = match middleware_router.get_route(&MiddlewareRoute::AfterRequest, req.uri().path()) {
+        Some((function, route_params)) => {
+            request.params = route_params;
+            execute_middleware_function(&response, function)
+                .await
+                .unwrap_or_else(|e| {
+                    error!("Error while executing after middleware: {e}");
+                    response
+                })
+        }
+        None => response,
+    };
 
     debug!("Response: {:?}", response);
 

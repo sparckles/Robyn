@@ -1,8 +1,7 @@
 import os
 import pathlib
 
-from robyn import WS, Robyn, jsonify, serve_file, serve_html
-from robyn.robyn import Response
+from robyn import WS, Robyn, Request, Response, jsonify, serve_file, serve_html
 from robyn.templating import JinjaTemplate
 
 from views import SyncView, AsyncView
@@ -56,26 +55,57 @@ def shutdown_handler():
 # ===== Middlewares =====
 
 
-@app.before_request("/")
-async def hello_before_request(request):
-    request["headers"]["before"] = "before_request"
+@app.before_request("/sync/middlewares")
+def sync_before_request(request: Request):
+    request.headers["before"] = "sync_before_request"
     return request
 
 
-@app.after_request("/")
-async def hello_after_request(request):
-    request["headers"]["after"] = "after_request"
+@app.after_request("/sync/middlewares")
+def sync_after_request(response: Response):
+    response.headers["after"] = "sync_after_request"
+    response.body = response.body + " after"
+    return response
+
+
+@app.get("/sync/middlewares")
+def sync_middlewares(request: Request):
+    assert "before" in request.headers
+    assert request.headers["before"] == "sync_before_request"
+    return "sync middlewares"
+
+
+@app.before_request("/async/middlewares")
+async def async_before_request(request: Request):
+    request.headers["before"] = "async_before_request"
     return request
 
 
-@app.get("/")
-async def middlewares():
-    return ""
+@app.after_request("/async/middlewares")
+async def async_after_request(response: Response):
+    response.headers["after"] = "async_after_request"
+    response.body = response.body + " after"
+    return response
+
+
+@app.get("/async/middlewares")
+async def async_middlewares(request: Request):
+    assert "before" in request.headers
+    assert request.headers["before"] == "async_before_request"
+    return "async middlewares"
 
 
 # ===== Routes =====
 
 # --- GET ---
+
+# Hello world
+
+
+@app.get("/")
+async def hello_world():
+    return "Hello world"
+
 
 # str
 
@@ -166,6 +196,37 @@ async def async_response_const_get():
     return Response(200, {"async_const": "response"}, "async response const get")
 
 
+# Binary
+
+
+@app.get("/sync/octet")
+def sync_octet_get():
+    return b"sync octet"
+
+
+@app.get("/async/octet")
+async def async_octet_get():
+    return b"async octet"
+
+
+@app.get("/sync/octet/response")
+def sync_octet_response_get():
+    return Response(
+        status_code=200,
+        headers={"Content-Type": "application/octet-stream"},
+        body="sync octet response",
+    )
+
+
+@app.get("/async/octet/response")
+async def async_octet_response_get():
+    return Response(
+        status_code=200,
+        headers={"Content-Type": "application/octet-stream"},
+        body="async octet response",
+    )
+
+
 # JSON
 
 
@@ -193,26 +254,26 @@ async def async_json_const_get():
 
 
 @app.get("/sync/param/:id")
-def sync_param(request):
-    id = request["params"]["id"]
+def sync_param(request: Request):
+    id = request.params["id"]
     return id
 
 
 @app.get("/async/param/:id")
-async def async_param(request):
-    id = request["params"]["id"]
+async def async_param(request: Request):
+    id = request.params["id"]
     return id
 
 
 @app.get("/sync/extra/*extra")
-def sync_param_extra(request):
-    extra = request["params"]["extra"]
+def sync_param_extra(request: Request):
+    extra = request.params["extra"]
     return extra
 
 
 @app.get("/async/extra/*extra")
-async def async_param_extra(request):
-    extra = request["params"]["extra"]
+async def async_param_extra(request: Request):
+    extra = request.params["extra"]
     return extra
 
 
@@ -220,13 +281,31 @@ async def async_param_extra(request):
 
 
 @app.get("/sync/http/param")
-def sync_http_param(request):
-    return jsonify({"url": request["url"], "method": request["method"]})
+def sync_http_param(request: Request):
+    return jsonify(
+        {
+            "url": {
+                "scheme": request.url.scheme,
+                "host": request.url.host,
+                "path": request.url.path,
+            },
+            "method": request.method,
+        }
+    )
 
 
 @app.get("/async/http/param")
-async def async_http_param(request):
-    return jsonify({"url": request["url"], "method": request["method"]})
+async def async_http_param(request: Request):
+    return jsonify(
+        {
+            "url": {
+                "scheme": request.url.scheme,
+                "host": request.url.host,
+                "path": request.url.path,
+            },
+            "method": request.method,
+        }
+    )
 
 
 # HTML serving
@@ -280,14 +359,14 @@ async def file_download_async():
 
 
 @app.get("/sync/queries")
-def sync_queries(request):
-    query_data = request["queries"]
+def sync_queries(request: Request):
+    query_data = request.queries
     return jsonify(query_data)
 
 
 @app.get("/async/queries")
-async def async_query(request):
-    query_data = request["queries"]
+async def async_query(request: Request):
+    query_data = request.queries
     return jsonify(query_data)
 
 
@@ -305,7 +384,7 @@ def return_202():
 
 
 @app.get("/307")
-async def redirect(request):
+async def redirect():
     return {
         "status_code": 307,
         "body": "",
@@ -315,8 +394,18 @@ async def redirect(request):
 
 
 @app.get("/redirect_route")
-async def redirect_route(request):
+async def redirect_route():
     return "This is the redirected route"
+
+
+@app.get("/sync/raise")
+def sync_raise():
+    raise Exception()
+
+
+@app.get("/async/raise")
+async def async_raise():
+    raise Exception()
 
 
 # --- POST ---
@@ -348,13 +437,13 @@ async def async_dict_post():
 
 
 @app.post("/sync/body")
-def sync_body_post(request):
-    return bytearray(request["body"]).decode("utf-8")
+def sync_body_post(request: Request):
+    return request.body
 
 
 @app.post("/async/body")
-async def async_body_post(request):
-    return bytearray(request["body"]).decode("utf-8")
+async def async_body_post(request: Request):
+    return request.body
 
 
 # --- PUT ---
@@ -386,13 +475,13 @@ async def async_dict_put():
 
 
 @app.put("/sync/body")
-def sync_body_put(request):
-    return bytearray(request["body"]).decode("utf-8")
+def sync_body_put(request: Request):
+    return request.body
 
 
 @app.put("/async/body")
-async def async_body_put(request):
-    return bytearray(request["body"]).decode("utf-8")
+async def async_body_put(request: Request):
+    return request.body
 
 
 # --- DELETE ---
@@ -424,13 +513,13 @@ async def async_dict_delete():
 
 
 @app.delete("/sync/body")
-def sync_body_delete(request):
-    return bytearray(request["body"]).decode("utf-8")
+def sync_body_delete(request: Request):
+    return request.body
 
 
 @app.delete("/async/body")
-async def async_body_delete(request):
-    return bytearray(request["body"]).decode("utf-8")
+async def async_body_delete(request: Request):
+    return request.body
 
 
 # --- PATCH ---
@@ -462,51 +551,13 @@ async def async_dict_patch():
 
 
 @app.patch("/sync/body")
-def sync_body_patch(request):
-    return bytearray(request["body"]).decode("utf-8")
+def sync_body_patch(request: Request):
+    return request.body
 
 
 @app.patch("/async/body")
-async def async_body_patch(request):
-    return bytearray(request["body"]).decode("utf-8")
-
-
-@app.get("/binary_output_sync")
-def binary_output_sync(request):
-    return b"OK"
-
-
-@app.get("/binary_output_response_sync")
-def binary_output_response_sync(request):
-    return Response(
-        status_code=200,
-        headers={"Content-Type": "application/octet-stream"},
-        body="OK",
-    )
-
-
-@app.get("/binary_output_async")
-async def binary_output_async(request):
-    return b"OK"
-
-
-@app.get("/binary_output_response_async")
-async def binary_output_response_async(request):
-    return Response(
-        status_code=200,
-        headers={"Content-Type": "application/octet-stream"},
-        body="OK",
-    )
-
-
-@app.get("/sync/raise")
-def sync_raise():
-    raise Exception()
-
-
-@app.get("/async/raise")
-async def async_raise():
-    raise Exception()
+async def async_body_patch(request: Request):
+    return request.body
 
 
 # ===== Views =====
@@ -517,8 +568,8 @@ def sync_decorator_view():
     def get():
         return "Hello, world!"
 
-    def post(request):
-        body = bytearray(request["body"]).decode("utf-8")
+    def post(request: Request):
+        body = request.body
         return {"status_code": 200, "body": body}
 
 
@@ -527,8 +578,8 @@ def async_decorator_view():
     async def get():
         return "Hello, world!"
 
-    async def post(request):
-        body = bytearray(request["body"]).decode("utf-8")
+    async def post(request: Request):
+        body = request.body
         return {"status_code": 200, "body": body}
 
 

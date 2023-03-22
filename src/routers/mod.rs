@@ -1,7 +1,7 @@
 use anyhow::Result;
 use pyo3::PyAny;
 
-use crate::types::FunctionInfo;
+use crate::types::function_info::FunctionInfo;
 
 pub mod const_router;
 pub mod http_router;
