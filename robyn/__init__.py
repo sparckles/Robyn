@@ -172,7 +172,7 @@ class Robyn:
 
         return inner
 
-    def get(self, endpoint: str, const: bool = False):
+    def get(self, endpoint: str, const: bool = False, cors_origin: List[str] = []):
         """
         The @app.get decorator to add a route with the GET method
 
@@ -280,5 +280,12 @@ class Robyn:
 
         return inner
 
+def ALLOW_CORS(app: Robyn, origins: List[str]):
+    """Allows CORS for the given origins for the entire router."""
+    for origin in origins:
+        app.add_request_header("Access-Control-Allow-Origin", origin)
+        app.add_request_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS")
+        app.add_request_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        app.add_request_header("Access-Control-Allow-Credentials", "true")
 
 __all__ = [Robyn, Request, Response, StatusCodes, jsonify, serve_file, serve_html]
