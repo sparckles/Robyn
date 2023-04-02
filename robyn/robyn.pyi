@@ -25,7 +25,7 @@ class Url:
 class Request:
     queries: dict[str, str]
     headers: dict[str, str]
-    params: dict[str, str]
+    path_params: dict[str, str]
     body: Union[str, bytes]
     method: str
     url: Url
