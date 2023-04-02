@@ -25,6 +25,7 @@ class Url:
         host (str): The host of the url. e.g. localhost,
         path (str): The path of the url. e.g. /user
     """
+
     scheme: str
     host: str
     path: str
@@ -41,6 +42,7 @@ class Request:
         body (Union[str, bytes]): The body of the request. If the request is a JSON, it will be a dict.
         method (str): The method of the request. e.g. GET, POST, PUT, DELETE
     """
+
     queries: dict[str, str]
     headers: dict[str, str]
     params: dict[str, str]
@@ -60,6 +62,7 @@ class Response:
         body (Union[str, bytes]): The body of the response. If the response is a JSON, it will be a dict.
         file_path (str): The file path of the response. e.g. /home/user/file.txt
     """
+
     status_code: int
     response_type: str
     headers: dict[str, str]
