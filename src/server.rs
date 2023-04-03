@@ -153,12 +153,12 @@ impl Server {
                     let web_socket_map = web_socket_router.get_web_socket_map();
                     for (elem, value) in (web_socket_map.read().unwrap()).iter() {
                         let route = elem.clone();
-                        let params = value.clone();
+                        let path_params = value.clone();
                         let task_locals = task_locals.clone();
                         app = app.route(
                             &route.clone(),
                             web::get().to(move |stream: web::Payload, req: HttpRequest| {
-                                start_web_socket(req, stream, params.clone(), task_locals.clone())
+                                start_web_socket(req, stream, path_params.clone(), task_locals.clone())
                             }),
                         );
                     }
@@ -347,7 +347,7 @@ async fn index(
     // Before middleware
     request = match middleware_router.get_route(&MiddlewareRoute::BeforeRequest, req.uri().path()) {
         Some((function, route_params)) => {
-            request.params = route_params;
+            request.path_params = route_params;
             execute_middleware_function(&request, function)
                 .await
                 .unwrap_or_else(|e| {
@@ -363,7 +363,7 @@ async fn index(
         res
     } else if let Some((function, route_params)) = router.get_route(req.method(), req.uri().path())
     {
-        request.params = route_params;
+        request.path_params = route_params;
         execute_http_function(&request, function)
             .await
             .unwrap_or_else(|e| {
@@ -383,7 +383,7 @@ async fn index(
     // After middleware
     response = match middleware_router.get_route(&MiddlewareRoute::AfterRequest, req.uri().path()) {
         Some((function, route_params)) => {
-            request.params = route_params;
+            request.path_params = route_params;
             execute_middleware_function(&response, function)
                 .await
                 .unwrap_or_else(|e| {
