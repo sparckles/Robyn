@@ -1,5 +1,5 @@
 name = "robyn"
-version = "0.26.0"
+version = "0.26.1"
 description = "A web server that is fast!"
 authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 
@@ -12,7 +12,8 @@ name = "robyn"
 dependencies = [
   'watchdog == 2.2.1',
   'multiprocess == 0.70.14',
-  'nestd==0.3.1',
+  'psutil == 5.9.4',
+  'nestd == 0.3.1',
 # conditional
   'uvloop == 0.17.0; sys_platform == "darwin"',
   'uvloop == 0.17.0; platform_machine == "aarch_64"',
@@ -52,3 +53,6 @@ exclude = ["src/*" , ".git" , "docs"]
 
 [tool.ruff.mccabe]
 max-complexity = 10
+
+[tool.maturin]
+module-name = "robyn"
