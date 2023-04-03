@@ -17,12 +17,32 @@ class FunctionInfo:
 
 @dataclass
 class Url:
+    """
+    The url object passed to the route handler.
+
+    Attributes:
+        scheme (str): The scheme of the url. e.g. http, https
+        host (str): The host of the url. e.g. localhost,
+        path (str): The path of the url. e.g. /user
+    """
+
     scheme: str
     host: str
     path: str
 
 @dataclass
 class Request:
+    """
+    The request object passed to the route handler.
+
+    Attributes:
+        queries (dict[str, str]): The query parameters of the request. e.g. /user?id=123 -> {"id": "123"}
+        headers (dict[str, str]): The headers of the request. e.g. {"Content-Type": "application/json"}
+        params (dict[str, str]): The parameters of the request. e.g. /user/:id -> {"id": "123"}
+        body (Union[str, bytes]): The body of the request. If the request is a JSON, it will be a dict.
+        method (str): The method of the request. e.g. GET, POST, PUT, DELETE
+    """
+
     queries: dict[str, str]
     headers: dict[str, str]
     params: dict[str, str]
@@ -32,6 +52,17 @@ class Request:
 
 @dataclass
 class Response:
+    """
+    The response object passed to the route handler.
+
+    Attributes:
+        status_code (int): The status code of the response. e.g. 200, 404, 500 etc.
+        response_type (str): The response type of the response. e.g. text, json, html, file etc.
+        headers (dict[str, str]): The headers of the response. e.g. {"Content-Type": "application/json"}
+        body (Union[str, bytes]): The body of the response. If the response is a JSON, it will be a dict.
+        file_path (str): The file path of the response. e.g. /home/user/file.txt
+    """
+
     status_code: int
     response_type: str
     headers: dict[str, str]
