@@ -12,7 +12,6 @@ name = "robyn"
 dependencies = [
   'watchdog == 2.2.1',
   'multiprocess == 0.70.14',
-  'psutil == 5.9.4',
   'nestd == 0.3.1',
 # conditional
   'uvloop == 0.17.0; sys_platform == "darwin"',

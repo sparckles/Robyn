@@ -33,7 +33,7 @@ class Robyn:
 
         # If we are in dev mode, we need to setup the reloader
         # This process will be used by the watchdog observer while running the actual server as children processes
-        if self.config.dev and not os.environ.get("IS_RELOADER_SETUP", False):
+        if self.config.dev and not os.environ.get("IS_RELOADER_RUNNING", False):
             setup_reloader(self.directory_path, self.file_path)
             exit(0)
 
