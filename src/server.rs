@@ -158,7 +158,12 @@ impl Server {
                         app = app.route(
                             &route.clone(),
                             web::get().to(move |stream: web::Payload, req: HttpRequest| {
-                                start_web_socket(req, stream, path_params.clone(), task_locals.clone())
+                                start_web_socket(
+                                    req,
+                                    stream,
+                                    path_params.clone(),
+                                    task_locals.clone(),
+                                )
                             }),
                         );
                     }
