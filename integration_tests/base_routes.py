@@ -255,8 +255,8 @@ async def async_json_const_get():
 
 
 @app.get("/sync/param/:id")
-def sync_param(Request):
-    id = Request.path_params["id"]
+def sync_param(request: Request):
+    id = request.path_params["id"]
     return id
 
 
