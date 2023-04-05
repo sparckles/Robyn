@@ -46,11 +46,15 @@ class EventHandler(FileSystemEventHandler):
         self.file_path = file_path
         self.process = None  # Keep track of the subprocess
 
-        self.last_reload = time.time() # Keep track of the last reload. EventHandler is initialized with the process.
+        self.last_reload = (
+            time.time()
+        )  # Keep track of the last reload. EventHandler is initialized with the process.
 
     def stop_server(self):
         if self.process:
-            os.kill(self.process.pid, signal.SIGTERM)  # Stop the subprocess using os.kill()
+            os.kill(
+                self.process.pid, signal.SIGTERM
+            )  # Stop the subprocess using os.kill()
 
     def reload(self):
         self.stop_server()
@@ -81,4 +85,3 @@ class EventHandler(FileSystemEventHandler):
 
         time.sleep(0.2)  # Wait for the file to be fully written
         self.reload()
-
