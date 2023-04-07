@@ -3,7 +3,7 @@ import os
 
 import pathlib
 
-from robyn import WS, Robyn, Request, Response, jsonify, serve_file, serve_html
+from robyn import WS, Robyn, Request, Response, jsonify, serve_file, serve_html, ALLOW_CORS
 from robyn.templating import JinjaTemplate
 
 
@@ -11,6 +11,7 @@ from views import SyncView, AsyncView
 
 app = Robyn(__file__)
 websocket = WS(app, "/web_socket")
+ALLOW_CORS(app, ["*"])
 
 current_file_path = pathlib.Path(__file__).parent.resolve()
 jinja_template = JinjaTemplate(os.path.join(current_file_path, "templates"))

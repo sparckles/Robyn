@@ -172,7 +172,7 @@ class Robyn:
 
         return inner
 
-    def get(self, endpoint: str, const: bool = False, cors_origin: List[str] = []):
+    def get(self, endpoint: str, const: bool = False):
         """
         The @app.get decorator to add a route with the GET method
 
