@@ -8,7 +8,7 @@ The server will check for the `robyn.env` file in the root of the project. If it
 
 e.g. structure
 
-```
+```bash
 --project/
   --robyn.env
   --index.py
@@ -17,7 +17,16 @@ e.g. structure
 
 Sample `robyn.env`
 
-```
+```bash
 ROBYN_PORT=8080
 ROBYN_URL=127.0.0.1
+RANDOM_ENV=123
 ```
+
+To configure the max payload size, you can set the `ROBYN_MAX_PAYLOAD_SIZE` environment variable. The default value is `1000000` bytes.
+
+```bash
+#robyn.env
+ROBYN_MAX_PAYLOAD_SIZE=1000000
+```
+
