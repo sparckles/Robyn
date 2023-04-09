@@ -495,17 +495,6 @@ app.add_view("/", View)
 ```
 
 
-## Populating Environment Variables
-
-Robyn uses a custom `robyn.env` file to populate environment variables. You can just add a `robyn.env` file in your project directory and add the environment variables you want to populate.
-
-```bash
-# robyn.env
-ROBYN_ENV=development
-ROBYN_PORT=8000
-RANDOM_ENV=123
-```
-
 ## Allow CORS
 
 You can allow CORS for your application by adding the following code:

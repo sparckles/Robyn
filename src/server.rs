@@ -18,7 +18,7 @@ use std::sync::atomic::Ordering::{Relaxed, SeqCst};
 use std::sync::{Arc, RwLock};
 
 use std::process::abort;
-use std::thread;
+use std::{env, thread};
 
 use actix_files::Files;
 use actix_http::KeepAlive;
@@ -168,28 +168,36 @@ impl Server {
                         );
                     }
 
-                    app.default_service(web::route().to(
-                        move |router: web::Data<Arc<HttpRouter>>,
-                              const_router: web::Data<Arc<ConstRouter>>,
-                              middleware_router: web::Data<Arc<MiddlewareRouter>>,
-                              global_request_headers,
-                              global_response_headers,
-                              body,
-                              req| {
-                            pyo3_asyncio::tokio::scope_local(task_locals.clone(), async move {
-                                index(
-                                    router,
-                                    const_router,
-                                    middleware_router,
-                                    global_request_headers,
-                                    global_response_headers,
-                                    body,
-                                    req,
-                                )
-                                .await
-                            })
-                        },
-                    ))
+                    let max_payload_size = env::var("ROBYN_MAX_PAYLOAD_SIZE");
+                    let max_payload_size = match max_payload_size {
+                        Ok(val) => val.parse::<usize>().unwrap(),
+                        Err(_) => 1000000, // 1 MB
+                    };
+                    debug!("Max payload size is {}", max_payload_size);
+
+                    app.app_data(web::PayloadConfig::new(max_payload_size))
+                        .default_service(web::route().to(
+                            move |router: web::Data<Arc<HttpRouter>>,
+                                  const_router: web::Data<Arc<ConstRouter>>,
+                                  middleware_router: web::Data<Arc<MiddlewareRouter>>,
+                                  global_request_headers,
+                                  global_response_headers,
+                                  body,
+                                  req| {
+                                pyo3_asyncio::tokio::scope_local(task_locals.clone(), async move {
+                                    index(
+                                        router,
+                                        const_router,
+                                        middleware_router,
+                                        global_request_headers,
+                                        global_response_headers,
+                                        body,
+                                        req,
+                                    )
+                                    .await
+                                })
+                            },
+                        ))
                 })
                 .keep_alive(KeepAlive::Os)
                 .workers(*workers.clone())
