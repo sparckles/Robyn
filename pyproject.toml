@@ -1,5 +1,5 @@
 name = "robyn"
-version = "0.26.1"
+version = "0.27.0"
 description = "A web server that is fast!"
 authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 

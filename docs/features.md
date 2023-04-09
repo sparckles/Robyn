@@ -76,7 +76,7 @@ app.add_directory(
 
 ## Dynamic Routes
 
-You can add params in the routes and access them from the request object.
+You can add path params in the routes and access them from the request object.
 
 ```python
 from robyn import jsonify
@@ -84,7 +84,7 @@ from robyn import jsonify
 
 @app.post("/jsonify/:id")
 async def json(request):
-    print(request["params"]["id"])
+    print(request["path_params"]["id"])
     return jsonify({"hello": "world"})
 ```
 
