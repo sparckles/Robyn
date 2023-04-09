@@ -1,9 +1,10 @@
 import os
+import click
 
-
-project_name = input("Enter the project name: ")
-project_dir = input("Enter the name of the project directory: ")
-def create(project_name, project_dir):
+@click.command()
+def create():
+    project_name = input("Enter the project name: ")
+    project_dir = input("Enter the name of the project directory: ")
     # Initailize a new Robyn project
 
     print(f"Creating a new Robyn project '{project_name}' in '{project_dir}'...")
@@ -23,4 +24,4 @@ def create(project_name, project_dir):
 
 
 if __name__ == "__main__":
-    create(project_name, project_dir)
+    create()
