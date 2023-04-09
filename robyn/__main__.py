@@ -1,25 +1,12 @@
-import click
 import os
-from robyn import Robyn
 
 
-@click.command()
-@click.option(
-    "--project-name",
-    prompt="Enter project name",
-    default="Sample-project",
-    help="The name of your new Robyn project",
-)
-@click.option(
-    "--project-dir",
-    prompt="Enter project directory",
-    default=os.getcwd(),
-    help="The directory where your new Robyn project is created",
-)
+project_name = input("Enter the project name: ")
+project_dir = input("Enter the name of the project directory: ")
 def create(project_name, project_dir):
     # Initailize a new Robyn project
 
-    click.echo(f"Creating a new Robyn project '{project_name}' in '{project_dir}'...")
+    print(f"Creating a new Robyn project '{project_name}' in '{project_dir}'...")
 
     # Create a new directory for the project
     project_path = os.path.join(project_dir, project_name)
@@ -32,8 +19,8 @@ def create(project_name, project_dir):
             'from robyn import Robyn\n\napp = Robyn()\n\nif __name__ == "__main__":\n app.run()'
         )
 
-    click.echo(f"New Robyn project '{project_name}' created in '{project_dir}' ")
+    print(f"New Robyn project '{project_name}' created in '{project_dir}' ")
 
 
 if __name__ == "__main__":
-    create()
+    create(project_name, project_dir)
