@@ -3,6 +3,8 @@ import os
 
 project_name = input("Enter the project name: ")
 project_dir = input("Enter the name of the project directory: ")
+
+
 def create(project_name, project_dir):
     # Initailize a new Robyn project
 
