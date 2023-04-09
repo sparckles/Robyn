@@ -17,7 +17,7 @@ def create():
     app_file_path = os.path.join(project_path, "app.py")
     with open(app_file_path, "w") as f:
         f.write(
-            'from robyn import Robyn\n\napp = Robyn()\n\nif __name__ == "__main__":\n app.run()'
+            'from robyn import Robyn\n\napp = Robyn(__file__)\n\nif __name__ == "__main__":\n app.run()'
         )
 
     print(f"New Robyn project '{project_name}' created in '{project_dir}' ")
