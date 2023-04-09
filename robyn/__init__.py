@@ -295,4 +295,13 @@ def ALLOW_CORS(app: Robyn, origins: List[str]):
         app.add_request_header("Access-Control-Allow-Credentials", "true")
 
 
-__all__ = ["Robyn", "Request", "Response", "StatusCodes", "jsonify", "serve_file", "serve_html", "ALLOW_CORS"]
+__all__ = [
+    "Robyn",
+    "Request",
+    "Response",
+    "StatusCodes",
+    "jsonify",
+    "serve_file",
+    "serve_html",
+    "ALLOW_CORS",
+]
