@@ -506,4 +506,13 @@ ROBYN_PORT=8000
 RANDOM_ENV=123
 ```
 
+## Allow CORS
 
+You can allow CORS for your application by adding the following code:
+
+```python
+from robyn import Robyn, ALLOW_CORS
+
+app = Robyn(__file__)
+ALLOW_CORS(app)
+```

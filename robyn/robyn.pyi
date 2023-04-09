@@ -57,17 +57,17 @@ class Response:
 
     Attributes:
         status_code (int): The status code of the response. e.g. 200, 404, 500 etc.
-        response_type (str): The response type of the response. e.g. text, json, html, file etc.
+        response_type (Optional[str]): The response type of the response. e.g. text, json, html, file etc.
         headers (dict[str, str]): The headers of the response. e.g. {"Content-Type": "application/json"}
         body (Union[str, bytes]): The body of the response. If the response is a JSON, it will be a dict.
-        file_path (str): The file path of the response. e.g. /home/user/file.txt
+        file_path (Optional[str]): The file path of the response. e.g. /home/user/file.txt
     """
 
     status_code: int
-    response_type: str
+    response_type: Optional[str]
     headers: dict[str, str]
     body: Union[str, bytes]
-    file_path: str
+    file_path: Optional[str]
 
 class Server:
     def __init__(self) -> None:
