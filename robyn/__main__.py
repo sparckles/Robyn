@@ -1,6 +1,7 @@
 import os
 import click
 
+
 @click.command()
 def create():
     project_name = input("Enter the project name: ")
