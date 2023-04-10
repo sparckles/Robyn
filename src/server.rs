@@ -325,16 +325,14 @@ impl Server {
 
     /// Add a new startup handler
     pub fn add_startup_handler(&mut self, function: FunctionInfo) {
-        debug!("Adding startup handler");
         self.startup_handler = Some(Arc::new(function));
-        debug!("{:?}", self.startup_handler);
+        debug!("Added startup handler {:?}", self.startup_handler);
     }
 
     /// Add a new shutdown handler
     pub fn add_shutdown_handler(&mut self, function: FunctionInfo) {
-        debug!("Adding shutdown handler:");
         self.shutdown_handler = Some(Arc::new(function));
-        debug!("{:?}", self.shutdown_handler);
+        debug!("Added shutdown handler {:?}", self.shutdown_handler);
     }
 }
 

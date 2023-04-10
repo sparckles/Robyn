@@ -170,10 +170,10 @@ def spawn_process(
         route_type, endpoint, function = middleware_route
         server.add_middleware_route(route_type, endpoint, function)
 
-    if "startup" in event_handlers:
+    if Events.STARTUP in event_handlers:
         server.add_startup_handler(event_handlers[Events.STARTUP])
 
-    if "shutdown" in event_handlers:
+    if Events.SHUTDOWN in event_handlers:
         server.add_shutdown_handler(event_handlers[Events.SHUTDOWN])
 
     for endpoint in web_sockets:
