@@ -64,10 +64,10 @@ class Response:
     """
 
     status_code: int
-    response_type: Optional[str]
     headers: dict[str, str]
     body: Union[str, bytes]
-    file_path: Optional[str]
+    response_type: Optional[str] = None
+    file_path: Optional[str] = None
 
 class Server:
     def __init__(self) -> None:
