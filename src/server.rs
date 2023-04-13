@@ -28,7 +28,11 @@ use dashmap::DashMap;
 
 // pyO3 module
 use log::{debug, error};
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
+
+const MAX_PAYLOAD_SIZE: &str = "ROBYN_MAX_PAYLOAD_SIZE";
+const DEFAULT_MAX_PAYLOAD_SIZE: usize = 1_000_000; // 1Mb
 
 static STARTED: AtomicBool = AtomicBool::new(false);
 
@@ -107,6 +111,16 @@ impl Server {
         let task_locals = pyo3_asyncio::TaskLocals::new(event_loop).copy_context(py)?;
         let task_locals_copy = task_locals.clone();
 
+        let max_payload_size = env::var(MAX_PAYLOAD_SIZE)
+            .unwrap_or(DEFAULT_MAX_PAYLOAD_SIZE.to_string())
+            .trim()
+            .parse::<usize>()
+            .map_err(|e| {
+                PyValueError::new_err(format!(
+                    "Failed to parse environment variable {MAX_PAYLOAD_SIZE} - {e}"
+                ))
+            })?;
+
         thread::spawn(move || {
             actix_web::rt::System::new().block_on(async move {
                 debug!("The number of workers is {}", workers.clone());
@@ -168,11 +182,6 @@ impl Server {
                         );
                     }
 
-                    let max_payload_size = env::var("ROBYN_MAX_PAYLOAD_SIZE");
-                    let max_payload_size = match max_payload_size {
-                        Ok(val) => val.parse::<usize>().unwrap(),
-                        Err(_) => 1000000, // 1 MB
-                    };
                     debug!("Max payload size is {}", max_payload_size);
 
                     app.app_data(web::PayloadConfig::new(max_payload_size))
