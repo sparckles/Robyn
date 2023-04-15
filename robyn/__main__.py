@@ -4,6 +4,7 @@ from .argument_parser import Config
 
 def create():
     project_dir = input("Enter the name of the project directory: ")
+    docker = input("Do you want Docker? ")
     # Initailize a new Robyn project
 
     print(f"Creating a new Robyn project '{project_dir}'...")
@@ -31,6 +32,39 @@ if __name__ == "__main__":
             """
         )
 
+    # DockerFile configuration
+    if docker == "yes":
+        print(f"Generating docker configuration for {project_dir}")
+        dockerfile_path = os.path.join(project_dir, "DockerFile")
+        with open(dockerfile_path, "w") as f:
+            f.write(
+                """
+FROM ubuntu:22.04
+
+WORKDIR /workspace
+
+RUN apt-get update -y && \
+    apt-get install -y python 3.10
+python3-pip
+
+RUN pip install --no-cache-dir
+--upgrade robyn
+
+COPY ./src/workspace/
+
+EXPOSE 8080
+
+CMD ["python3.10", "/workspace/foo/
+app.py", "--log-level=DEBUG"]
+
+                """
+        )
+    elif docker == "no":
+        print("Docker not included")
+    else:
+        print("Unknown Command")
+    
+    # Final
     print(f"New Robyn project created in '{project_dir}' ")
 
 
