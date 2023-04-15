@@ -34,10 +34,16 @@ class Config:
             help="Set the log level name",
         )
         parser.add_argument(
-            "create",
+            "--create",
             action="store_true",
             default=False,
             help="Create a new project template.",
+        )
+        parser.add_argument(
+            "--docs",
+            action="store_true",
+            default=False,
+            help="Open the Robyn documentation.",
         )
 
         args, _ = parser.parse_known_args()
@@ -49,6 +55,7 @@ class Config:
         self.workers = args.workers
         self.dev = args.dev
         self.create = args.create
+        self.docs = args.docs
 
         if self.dev and (self.processes != 1 or self.workers != 1):
             raise Exception("--processes and --workers shouldn't be used with --dev")

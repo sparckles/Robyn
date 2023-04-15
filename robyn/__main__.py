@@ -1,4 +1,6 @@
 import os
+import webbrowser
+
 from .argument_parser import Config
 
 
@@ -34,7 +36,15 @@ if __name__ == "__main__":
     print(f"New Robyn project created in '{project_dir}' ")
 
 
+def docs():
+    print("Opening Robyn documentation... | Offline docs coming soon!")
+    webbrowser.open("https://sansyrox.github.io/robyn/#/")
+
+
 if __name__ == "__main__":
     config = Config()
     if config.create:
         create()
+
+    if config.docs:
+        docs()
