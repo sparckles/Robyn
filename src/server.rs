@@ -388,7 +388,7 @@ async fn index(
             .await
             .unwrap_or_else(|e| {
                 error!(
-                    "Error while executing route function for endpoint `{}`:\n{}",
+                    "Error while executing route function for endpoint `{}`: {}",
                     req.uri().path(),
                     get_traceback(&e)
                 );
@@ -428,7 +428,7 @@ fn get_traceback(error: &PyErr) -> String {
     Python::with_gil(|py| -> String {
         if let Some(traceback) = error.traceback(py) {
             let msg = match traceback.format() {
-                Ok(msg) => format!("{} {}", msg, error),
+                Ok(msg) => format!("\n{} {}", msg, error),
                 Err(e) => e.to_string(),
             };
             return msg;
