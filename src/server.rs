@@ -30,6 +30,7 @@ use dashmap::DashMap;
 use log::{debug, error};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
+use pyo3::types::PyTraceback;
 
 const MAX_PAYLOAD_SIZE: &str = "ROBYN_MAX_PAYLOAD_SIZE";
 const DEFAULT_MAX_PAYLOAD_SIZE: usize = 1_000_000; // 1Mb
@@ -387,14 +388,12 @@ async fn index(
         execute_http_function(&request, function)
             .await
             .unwrap_or_else(|e| {
-                Python::with_gil(|py| {
-                    error!(
-                        "Error while executing route function for endpoint `{}`:\n{} {}",
-                        req.uri().path(),
-                        e.traceback(py).unwrap().format().unwrap(), // Always get PyErr with traceback, so unwrap ok.
-                        e
-                    );
-                });
+                error!(
+                    "Error while executing route function for endpoint `{}`:\n{}",
+                    req.uri().path(),
+                    get_traceback(&e)
+                );
+
                 Response::internal_server_error(&request.headers)
             })
     } else {
@@ -424,4 +423,18 @@ async fn index(
     debug!("Response: {:?}", response);
 
     response
+}
+
+fn get_traceback(error: &PyErr) -> String {
+    Python::with_gil(|py| -> String {
+        if let Some(traceback) = error.traceback(py) {
+            let msg = match traceback.format() {
+                Ok(msg) => format!("{} {}", msg, error),
+                Err(e) => e.to_string(),
+            };
+            return msg;
+        };
+
+        error.value(py).to_string()
+    })
 }
