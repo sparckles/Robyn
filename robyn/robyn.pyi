@@ -3,6 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable, Optional, Union
 
+def get_version() -> str:
+    pass
+
 class SocketHeld:
     def __init__(self, url: str, port: int):
         pass
