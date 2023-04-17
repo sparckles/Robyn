@@ -387,7 +387,14 @@ async fn index(
         execute_http_function(&request, function)
             .await
             .unwrap_or_else(|e| {
-                error!("Error while executing route function: {:?}", e);
+                Python::with_gil(|py| {
+                    error!(
+                        "Error while executing route function for endpoint `{}`:\n{} {}",
+                        req.uri().path(),
+                        e.traceback(py).unwrap().format().unwrap(), // Always get PyErr with traceback, so unwrap ok.
+                        e
+                    );
+                });
                 Response::internal_server_error(&request.headers)
             })
     } else {
