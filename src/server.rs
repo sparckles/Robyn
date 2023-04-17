@@ -30,7 +30,6 @@ use dashmap::DashMap;
 use log::{debug, error};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3::types::PyTraceback;
 
 const MAX_PAYLOAD_SIZE: &str = "ROBYN_MAX_PAYLOAD_SIZE";
 const DEFAULT_MAX_PAYLOAD_SIZE: usize = 1_000_000; // 1Mb
