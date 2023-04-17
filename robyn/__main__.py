@@ -60,12 +60,12 @@ CMD ["python3.10", "/workspace/foo/
 app.py", "--log-level=DEBUG"]
 
                 """
-        )
+            )
     elif docker == "no":
         print("Docker not included")
     else:
         print("Unknown Command")
-    
+
     # Final
     print(f"New Robyn project created in '{project_dir}' ")
 
