@@ -116,8 +116,8 @@ impl Server {
 
                 HttpServer::new(move || {
                     let mut app = App::new()
-                    .wrap(middleware::Logger::default())
-                    .wrap(middleware::Logger::new("%a %{User-Agent}i"));
+                        .wrap(middleware::Logger::default())
+                        .wrap(middleware::Logger::new("%a %{User-Agent}i"));
 
                     let task_locals = task_locals_copy.clone();
                     let directories = directories.read().unwrap();
