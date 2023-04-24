@@ -36,7 +36,10 @@ class Robyn:
         logging.basicConfig(level=self.config.log_level)
 
         if self.config.log_level.lower() != "warn":
-            logger.info("SERVER IS RUNNING IN VERBOSE/DEBUG MODE. Set --log-level to WARN to run in production mode.", Colors.BLUE)
+            logger.info(
+                "SERVER IS RUNNING IN VERBOSE/DEBUG MODE. Set --log-level to WARN to run in production mode.",
+                Colors.BLUE,
+            )
         # If we are in dev mode, we need to setup the reloader
         # This process will be used by the watchdog observer while running the actual server as children processes
         if self.config.dev and not os.environ.get("IS_RELOADER_RUNNING", False):
