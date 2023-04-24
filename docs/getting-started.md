@@ -64,7 +64,7 @@ python3 app.py
 if you want to run the production version, and
 
 ```
-python3 app.py --dev=true
+python3 app.py --dev
 ```
 
 if you want to enable hot reloading or the development version.
