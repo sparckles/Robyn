@@ -50,7 +50,7 @@ app.start(port=8080)
 Simply run the app.py file you created. You will then have access to a server on the `localhost:8080`, that you can request from an other program. Robyn provides several options to customize your web server.
 
 ```
-$ python3 app.py -h
+$ python3 app.py
 
 usage: app.py [-h] [--processes PROCESSES] [--workers WORKERS] [--dev] [--log-level LOG_LEVEL]
 
