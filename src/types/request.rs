@@ -21,7 +21,11 @@ impl ToPyObject for Request {
         let queries = self.queries.clone().into_py(py).extract(py).unwrap();
         let headers = self.headers.clone().into_py(py).extract(py).unwrap();
         let path_params = self.path_params.clone().into_py(py).extract(py).unwrap();
-        let body = String::from_utf8(self.body.to_vec()).unwrap().to_object(py);
+        let body = match String::from_utf8(self.body.clone()) {
+            Ok(s) => s.into_py(py),
+            Err(_) => self.body.clone().into_py(py),
+        };
+
         let request = PyRequest {
             queries,
             path_params,
