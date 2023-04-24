@@ -6,6 +6,7 @@ from typing import Callable, List, Optional
 from nestd import get_all_nested
 
 from robyn.argument_parser import Config
+from robyn.logger import Colors
 from robyn.reloader import setup_reloader
 from robyn.env_populator import load_vars
 from robyn.events import Events
@@ -34,6 +35,8 @@ class Robyn:
         load_vars(project_root=directory_path)
         logging.basicConfig(level=self.config.log_level)
 
+        if self.config.log_level.lower() != "warn":
+            logger.info("SERVER IS RUNNING IN VERBOSE/DEBUG MODE. Set --log-level to WARN to run in production mode.", Colors.BLUE)
         # If we are in dev mode, we need to setup the reloader
         # This process will be used by the watchdog observer while running the actual server as children processes
         if self.config.dev and not os.environ.get("IS_RELOADER_RUNNING", False):

@@ -48,9 +48,6 @@ class Config:
 
         args, _ = parser.parse_known_args()
 
-        # since we are using this argparse at different places, we need to
-        # remove this self assignmets
-        # TODO: need to remove these in the Future
         self.processes = args.processes
         self.workers = args.workers
         self.dev = args.dev
