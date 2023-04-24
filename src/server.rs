@@ -387,7 +387,12 @@ async fn index(
         execute_http_function(&request, function)
             .await
             .unwrap_or_else(|e| {
-                error!("Error while executing route function: {:?}", e);
+                error!(
+                    "Error while executing route function for endpoint `{}`: {}",
+                    req.uri().path(),
+                    get_traceback(&e)
+                );
+
                 Response::internal_server_error(&request.headers)
             })
     } else {
@@ -417,4 +422,18 @@ async fn index(
     debug!("Response: {:?}", response);
 
     response
+}
+
+fn get_traceback(error: &PyErr) -> String {
+    Python::with_gil(|py| -> String {
+        if let Some(traceback) = error.traceback(py) {
+            let msg = match traceback.format() {
+                Ok(msg) => format!("\n{} {}", msg, error),
+                Err(e) => e.to_string(),
+            };
+            return msg;
+        };
+
+        error.value(py).to_string()
+    })
 }
