@@ -51,7 +51,9 @@ Simply run the app.py file you created. You will then have access to a server on
 
 ```
 $ python3 app.py
-
+```
+To see the usage
+```
 usage: app.py [-h] [--processes PROCESSES] [--workers WORKERS] [--dev] [--log-level LOG_LEVEL]
 
 Robyn, a fast async web framework with a rust runtime.
@@ -63,7 +65,6 @@ options:
   --dev                     Development mode. It restarts the server based on file changes.
   --log-level LOG_LEVEL     Set the log level name
 ```
-
 Log level can be `DEBUG`, `INFO`, `WARNING`, or `ERROR`.
 
 ### 💻 Add more routes
@@ -82,9 +83,8 @@ Please make sure you have the correct version of Python installed before startin
 this project. You can check your Python version by running the following command in your
 terminal:
 
-```
+```bash
 python --version
-
 ```
 
 ## 💡 Features
@@ -124,7 +124,7 @@ If you still need help to get started, feel free to reach out on our [community 
 4. Run `python3 integration_tests/base_routes.py`. This file contains several examples of routes we use for testing purposes. You can modify or add some to your likings.
 
 You can then request the server you ran from an other terminal. Here is a `GET` request done using [curl](https://curl.se/) for example:
-```
+```bash
 curl http://localhost:8080/sync/str
 ```
 
