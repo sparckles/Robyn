@@ -12,11 +12,14 @@ from robyn.events import Events
 from robyn.logger import logger
 from robyn.processpool import run_processes
 from robyn.responses import jsonify, serve_file, serve_html
-from robyn.robyn import FunctionInfo, Request, Response
+from robyn.robyn import FunctionInfo, Request, Response, get_version
 from robyn.router import MiddlewareRouter, Router, WebSocketRouter
 from robyn.types import Directory, Header
 from robyn.status_codes import StatusCodes
 from robyn.ws import WS
+
+
+__version__ = get_version()
 
 
 class Robyn:
@@ -120,6 +123,7 @@ class Robyn:
         url = os.getenv("ROBYN_URL", url)
         port = int(os.getenv("ROBYN_PORT", port))
 
+        logger.info(f"Robyn version: {__version__}")
         logger.info(f"Starting server at {url}:{port}")
 
         mp.allow_connection_pickling()
