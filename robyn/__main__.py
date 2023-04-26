@@ -6,8 +6,15 @@ from .argument_parser import Config
 
 def create():
     project_dir = input("Enter the name of the project directory: ")
-    docker = input("Do you want Docker? ")
+    docker = input("Need Docker? (Y/N) ")
+    docker = check(value)
     # Initailize a new Robyn project
+    def check(value):
+        while value not in ['Y', 'N']:
+            print("Invalid input. Please enter Y or N")
+            value = input("Need Docker? (Y/N) ")
+        return value
+    docker = check(docker)
 
     print(f"Creating a new Robyn project '{project_dir}'...")
 
@@ -35,7 +42,7 @@ if __name__ == "__main__":
         )
 
     # DockerFile configuration
-    if docker == "yes":
+    if docker == "Y":
         print(f"Generating docker configuration for {project_dir}")
         dockerfile_path = os.path.join(project_dir, "DockerFile")
         with open(dockerfile_path, "w") as f:
@@ -61,12 +68,12 @@ app.py", "--log-level=DEBUG"]
 
                 """
             )
-    elif docker == "no":
+    elif docker == "N":
         print("Docker not included")
     else:
         print("Unknown Command")
 
-    # Final
+
     print(f"New Robyn project created in '{project_dir}' ")
 
 
