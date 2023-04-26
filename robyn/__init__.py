@@ -312,6 +312,17 @@ class Robyn:
 
         return inner
 
+    def include_router(self, router):
+        # WTF This looks horrible
+        self.router.routes.extend(router.router.routes)
+        self.middleware_router.routes.extend(router.middleware_router.routes)
+        """ self.web_socket_router.routes.update(router.router.routes) """
+
+
+class SubRouter(Robyn):
+    def __init__(self, file_object: str, config: Config = Config()) -> None:
+        super().__init__(file_object, config)
+
 
 def ALLOW_CORS(app: Robyn, origins: List[str]):
     """Allows CORS for the given origins for the entire router."""
