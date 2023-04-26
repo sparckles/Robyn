@@ -7,12 +7,14 @@ from .argument_parser import Config
 def create():
     project_dir = input("Enter the name of the project directory: ")
     docker = input("Need Docker? (Y/N) ")
+
     # Initailize a new Robyn project
     def check(value):
-        while value not in ['Y', 'N']:
+        while value not in ["Y", "N"]:
             print("Invalid input. Please enter Y or N")
             value = input("Need Docker? (Y/N) ")
         return value
+
     docker = check(docker)
 
     print(f"Creating a new Robyn project '{project_dir}'...")
@@ -71,7 +73,6 @@ app.py", "--log-level=DEBUG"]
         print("Docker not included")
     else:
         print("Unknown Command")
-
 
     print(f"New Robyn project created in '{project_dir}' ")
 
