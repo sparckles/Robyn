@@ -313,7 +313,6 @@ class Robyn:
         return inner
 
     def include_router(self, router):
-        # WTF This looks horrible
         self.router.routes.extend(router.router.routes)
         self.middleware_router.routes.extend(router.middleware_router.routes)
         """ self.web_socket_router.routes.update(router.router.routes) """
