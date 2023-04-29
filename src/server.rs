@@ -25,7 +25,7 @@ use actix_http::KeepAlive;
 use actix_web::web::Bytes;
 use actix_web::*;
 use dashmap::DashMap;
-
+use tracing_actix_web::TracingLogger;
 // pyO3 module
 use log::{debug, error};
 use pyo3::prelude::*;
@@ -116,8 +116,7 @@ impl Server {
 
                 HttpServer::new(move || {
                     let mut app = App::new()
-                        .wrap(middleware::Logger::default())
-                        .wrap(middleware::Logger::new("%a %{User-Agent}i"));
+                        .wrap(TracingLogger::default());
 
                     let task_locals = task_locals_copy.clone();
                     let directories = directories.read().unwrap();
