@@ -4,18 +4,19 @@ import webbrowser
 from .argument_parser import Config
 
 
-def create():
+def check(value, input_name):
+    while value not in ["Y", "N"]:
+        print("Invalid input. Please enter Y or N")
+        value = input(f"Need {input_name}? (Y/N) ")
+    return value
+
+
+def create_robyn_app():
     project_dir = input("Enter the name of the project directory: ")
     docker = input("Need Docker? (Y/N) ")
 
     # Initailize a new Robyn project
-    def check(value):
-        while value not in ["Y", "N"]:
-            print("Invalid input. Please enter Y or N")
-            value = input("Need Docker? (Y/N) ")
-        return value
-
-    docker = check(docker)
+    docker = check(docker, "Docker")
 
     print(f"Creating a new Robyn project '{project_dir}'...")
 
@@ -85,7 +86,7 @@ def docs():
 if __name__ == "__main__":
     config = Config()
     if config.create:
-        create()
+        create_robyn_app()
 
     if config.docs:
         docs()
