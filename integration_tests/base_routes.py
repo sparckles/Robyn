@@ -1,8 +1,11 @@
 import os
+
+
 import pathlib
 
 from robyn import WS, Robyn, Request, Response, jsonify, serve_file, serve_html
 from robyn.templating import JinjaTemplate
+
 
 from views import SyncView, AsyncView
 
@@ -255,25 +258,25 @@ async def async_json_const_get():
 
 @app.get("/sync/param/:id")
 def sync_param(request: Request):
-    id = request.params["id"]
+    id = request.path_params["id"]
     return id
 
 
 @app.get("/async/param/:id")
 async def async_param(request: Request):
-    id = request.params["id"]
+    id = request.path_params["id"]
     return id
 
 
 @app.get("/sync/extra/*extra")
 def sync_param_extra(request: Request):
-    extra = request.params["extra"]
+    extra = request.path_params["extra"]
     return extra
 
 
 @app.get("/async/extra/*extra")
 async def async_param_extra(request: Request):
-    extra = request.params["extra"]
+    extra = request.path_params["extra"]
     return extra
 
 

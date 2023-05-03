@@ -3,7 +3,6 @@ import signal
 import subprocess
 import sys
 import time
-import psutil
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
@@ -45,23 +44,27 @@ def setup_reloader(directory_path: str, file_path: str):
 class EventHandler(FileSystemEventHandler):
     def __init__(self, file_path: str) -> None:
         self.file_path = file_path
+        self.process = None  # Keep track of the subprocess
 
-        self.last_reload = time.time()
+        self.last_reload = (
+            time.time()
+        )  # Keep track of the last reload. EventHandler is initialized with the process.
 
     def stop_server(self):
-        for process in psutil.Process().children(recursive=True):
-            process.kill()
-            process.wait()  # Required to avoid zombies
+        if self.process:
+            os.kill(
+                self.process.pid, signal.SIGTERM
+            )  # Stop the subprocess using os.kill()
 
     def reload(self):
         self.stop_server()
 
         new_env = os.environ.copy()
         new_env[
-            "IS_RELOADER_SETUP"
+            "IS_RELOADER_RUNNING"
         ] = "True"  # This is used to check if a reloader is already running
 
-        subprocess.Popen(
+        self.process = subprocess.Popen(
             [sys.executable, *sys.argv],
             env=new_env,
             start_new_session=False,

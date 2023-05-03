@@ -6,17 +6,21 @@ from typing import Callable, List, Optional
 from nestd import get_all_nested
 
 from robyn.argument_parser import Config
+from robyn.logger import Colors
 from robyn.reloader import setup_reloader
 from robyn.env_populator import load_vars
 from robyn.events import Events
 from robyn.logger import logger
 from robyn.processpool import run_processes
 from robyn.responses import jsonify, serve_file, serve_html
-from robyn.robyn import FunctionInfo, Request, Response
+from robyn.robyn import FunctionInfo, Request, Response, get_version
 from robyn.router import MiddlewareRouter, Router, WebSocketRouter
 from robyn.types import Directory, Header
 from robyn.status_codes import StatusCodes
 from robyn.ws import WS
+
+
+__version__ = get_version()
 
 
 class Robyn:
@@ -31,9 +35,14 @@ class Robyn:
         load_vars(project_root=directory_path)
         logging.basicConfig(level=self.config.log_level)
 
+        if self.config.log_level.lower() != "warn":
+            logger.info(
+                "SERVER IS RUNNING IN VERBOSE/DEBUG MODE. Set --log-level to WARN to run in production mode.",
+                Colors.BLUE,
+            )
         # If we are in dev mode, we need to setup the reloader
         # This process will be used by the watchdog observer while running the actual server as children processes
-        if self.config.dev and not os.environ.get("IS_RELOADER_SETUP", False):
+        if self.config.dev and not os.environ.get("IS_RELOADER_RUNNING", False):
             setup_reloader(self.directory_path, self.file_path)
             exit(0)
 
@@ -120,6 +129,7 @@ class Robyn:
         url = os.getenv("ROBYN_URL", url)
         port = int(os.getenv("ROBYN_PORT", port))
 
+        logger.info(f"Robyn version: {__version__}")
         logger.info(f"Starting server at {url}:{port}")
 
         mp.allow_connection_pickling()
@@ -281,4 +291,27 @@ class Robyn:
         return inner
 
 
-__all__ = [Robyn, Request, Response, StatusCodes, jsonify, serve_file, serve_html]
+def ALLOW_CORS(app: Robyn, origins: List[str]):
+    """Allows CORS for the given origins for the entire router."""
+    for origin in origins:
+        app.add_request_header("Access-Control-Allow-Origin", origin)
+        app.add_request_header(
+            "Access-Control-Allow-Methods",
+            "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS",
+        )
+        app.add_request_header(
+            "Access-Control-Allow-Headers", "Content-Type, Authorization"
+        )
+        app.add_request_header("Access-Control-Allow-Credentials", "true")
+
+
+__all__ = [
+    "Robyn",
+    "Request",
+    "Response",
+    "StatusCodes",
+    "jsonify",
+    "serve_file",
+    "serve_html",
+    "ALLOW_CORS",
+]

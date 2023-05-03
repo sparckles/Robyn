@@ -1,4 +1,4 @@
-from robyn import Robyn
+from robyn import Robyn, ALLOW_CORS
 from robyn.events import Events
 from robyn.types import Header
 
@@ -42,3 +42,18 @@ def test_lifecycle_handlers():
     assert shutdown.handler == mock_shutdown_handler
     assert shutdown.is_async is True
     assert shutdown.number_of_params == 0
+
+
+@pytest.mark.benchmark
+def test_allow_cors():
+    app = Robyn(__file__)
+    ALLOW_CORS(app, ["*"])
+    assert app.request_headers == [
+        Header(key="Access-Control-Allow-Origin", val="*"),
+        Header(
+            key="Access-Control-Allow-Methods",
+            val="GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS",
+        ),
+        Header(key="Access-Control-Allow-Headers", val="Content-Type, Authorization"),
+        Header(key="Access-Control-Allow-Credentials", val="true"),
+    ]

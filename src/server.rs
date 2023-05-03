@@ -18,7 +18,7 @@ use std::sync::atomic::Ordering::{Relaxed, SeqCst};
 use std::sync::{Arc, RwLock};
 
 use std::process::abort;
-use std::thread;
+use std::{env, thread};
 
 use actix_files::Files;
 use actix_http::KeepAlive;
@@ -28,7 +28,11 @@ use dashmap::DashMap;
 use tracing_actix_web::TracingLogger;
 // pyO3 module
 use log::{debug, error};
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
+
+const MAX_PAYLOAD_SIZE: &str = "ROBYN_MAX_PAYLOAD_SIZE";
+const DEFAULT_MAX_PAYLOAD_SIZE: usize = 1_000_000; // 1Mb
 
 static STARTED: AtomicBool = AtomicBool::new(false);
 
@@ -107,6 +111,16 @@ impl Server {
         let task_locals = pyo3_asyncio::TaskLocals::new(event_loop).copy_context(py)?;
         let task_locals_copy = task_locals.clone();
 
+        let max_payload_size = env::var(MAX_PAYLOAD_SIZE)
+            .unwrap_or(DEFAULT_MAX_PAYLOAD_SIZE.to_string())
+            .trim()
+            .parse::<usize>()
+            .map_err(|e| {
+                PyValueError::new_err(format!(
+                    "Failed to parse environment variable {MAX_PAYLOAD_SIZE} - {e}"
+                ))
+            })?;
+
         thread::spawn(move || {
             actix_web::rt::System::new().block_on(async move {
                 debug!("The number of workers is {}", workers.clone());
@@ -153,38 +167,46 @@ impl Server {
                     let web_socket_map = web_socket_router.get_web_socket_map();
                     for (elem, value) in (web_socket_map.read().unwrap()).iter() {
                         let route = elem.clone();
-                        let params = value.clone();
+                        let path_params = value.clone();
                         let task_locals = task_locals.clone();
                         app = app.route(
                             &route.clone(),
                             web::get().to(move |stream: web::Payload, req: HttpRequest| {
-                                start_web_socket(req, stream, params.clone(), task_locals.clone())
+                                start_web_socket(
+                                    req,
+                                    stream,
+                                    path_params.clone(),
+                                    task_locals.clone(),
+                                )
                             }),
                         );
                     }
 
-                    app.default_service(web::route().to(
-                        move |router: web::Data<Arc<HttpRouter>>,
-                              const_router: web::Data<Arc<ConstRouter>>,
-                              middleware_router: web::Data<Arc<MiddlewareRouter>>,
-                              global_request_headers,
-                              global_response_headers,
-                              body,
-                              req| {
-                            pyo3_asyncio::tokio::scope_local(task_locals.clone(), async move {
-                                index(
-                                    router,
-                                    const_router,
-                                    middleware_router,
-                                    global_request_headers,
-                                    global_response_headers,
-                                    body,
-                                    req,
-                                )
-                                .await
-                            })
-                        },
-                    ))
+                    debug!("Max payload size is {}", max_payload_size);
+
+                    app.app_data(web::PayloadConfig::new(max_payload_size))
+                        .default_service(web::route().to(
+                            move |router: web::Data<Arc<HttpRouter>>,
+                                  const_router: web::Data<Arc<ConstRouter>>,
+                                  middleware_router: web::Data<Arc<MiddlewareRouter>>,
+                                  global_request_headers,
+                                  global_response_headers,
+                                  body,
+                                  req| {
+                                pyo3_asyncio::tokio::scope_local(task_locals.clone(), async move {
+                                    index(
+                                        router,
+                                        const_router,
+                                        middleware_router,
+                                        global_request_headers,
+                                        global_response_headers,
+                                        body,
+                                        req,
+                                    )
+                                    .await
+                                })
+                            },
+                        ))
                 })
                 .keep_alive(KeepAlive::Os)
                 .workers(*workers.clone())
@@ -312,16 +334,14 @@ impl Server {
 
     /// Add a new startup handler
     pub fn add_startup_handler(&mut self, function: FunctionInfo) {
-        debug!("Adding startup handler");
         self.startup_handler = Some(Arc::new(function));
-        debug!("{:?}", self.startup_handler);
+        debug!("Added startup handler {:?}", self.startup_handler);
     }
 
     /// Add a new shutdown handler
     pub fn add_shutdown_handler(&mut self, function: FunctionInfo) {
-        debug!("Adding shutdown handler:");
         self.shutdown_handler = Some(Arc::new(function));
-        debug!("{:?}", self.shutdown_handler);
+        debug!("Added shutdown handler {:?}", self.shutdown_handler);
     }
 }
 
@@ -347,7 +367,7 @@ async fn index(
     // Before middleware
     request = match middleware_router.get_route(&MiddlewareRoute::BeforeRequest, req.uri().path()) {
         Some((function, route_params)) => {
-            request.params = route_params;
+            request.path_params = route_params;
             execute_middleware_function(&request, function)
                 .await
                 .unwrap_or_else(|e| {
@@ -363,11 +383,16 @@ async fn index(
         res
     } else if let Some((function, route_params)) = router.get_route(req.method(), req.uri().path())
     {
-        request.params = route_params;
+        request.path_params = route_params;
         execute_http_function(&request, function)
             .await
             .unwrap_or_else(|e| {
-                error!("Error while executing route function: {:?}", e);
+                error!(
+                    "Error while executing route function for endpoint `{}`: {}",
+                    req.uri().path(),
+                    get_traceback(&e)
+                );
+
                 Response::internal_server_error(&request.headers)
             })
     } else {
@@ -383,7 +408,7 @@ async fn index(
     // After middleware
     response = match middleware_router.get_route(&MiddlewareRoute::AfterRequest, req.uri().path()) {
         Some((function, route_params)) => {
-            request.params = route_params;
+            request.path_params = route_params;
             execute_middleware_function(&response, function)
                 .await
                 .unwrap_or_else(|e| {
@@ -397,4 +422,18 @@ async fn index(
     debug!("Response: {:?}", response);
 
     response
+}
+
+fn get_traceback(error: &PyErr) -> String {
+    Python::with_gil(|py| -> String {
+        if let Some(traceback) = error.traceback(py) {
+            let msg = match traceback.format() {
+                Ok(msg) => format!("\n{} {}", msg, error),
+                Err(e) => e.to_string(),
+            };
+            return msg;
+        };
+
+        error.value(py).to_string()
+    })
 }

@@ -37,7 +37,7 @@ async def h(request):
 ```python
 @app.post("/post")
 async def postreq(request):
-    return bytearray(request["body"]).decode("utf-8")
+    return request.body
 ```
 
 #### PUT Request
@@ -45,7 +45,7 @@ async def postreq(request):
 ```python
 @app.put("/put")
 async def postreq(request):
-    return bytearray(request["body"]).decode("utf-8")
+    return request.body
 ```
 
 #### PATCH Request
@@ -53,7 +53,7 @@ async def postreq(request):
 ```python
 @app.patch("/patch")
 async def postreq(request):
-    return bytearray(request["body"]).decode("utf-8")
+    return request.body
 ```
 
 #### DELETE Request
@@ -61,7 +61,7 @@ async def postreq(request):
 ```python
 @app.delete("/delete")
 async def postreq(request):
-    return bytearray(request["body"]).decode("utf-8")
+    return request.body
 ```
 
 #### Directory Serving
@@ -76,7 +76,7 @@ app.add_directory(
 
 ## Dynamic Routes
 
-You can add params in the routes and access them from the request object.
+You can add path params in the routes and access them from the request object.
 
 ```python
 from robyn import jsonify
@@ -84,7 +84,7 @@ from robyn import jsonify
 
 @app.post("/jsonify/:id")
 async def json(request):
-    print(request["params"]["id"])
+    print(request["path_params"]["id"])
     return jsonify({"hello": "world"})
 ```
 
@@ -131,6 +131,20 @@ from robyn.robyn import Response
 @app.get("/response")
 async def response(request):
     return Response(status_code=200, headers={}, body="OK")
+```
+
+#### Status Codes
+
+Robyn provides `StatusCodes` if you want to return type safe Status Responses.
+
+```python
+
+from robyn import StatusCodes
+
+
+@app.get("/response")
+async def response(request):
+    return Response(status_code=StatusCodes.HTTP_200_OK.value, headers={}, body="OK")
 ```
 
 #### Returning a byte response
@@ -208,6 +222,16 @@ async def response_headers():
     return {
         "headers": {"Header": "header_value"},
     }
+```
+
+
+Additionally, you can access headers for per route.
+
+```python
+@app.get("/test-headers")
+def sync_before_request(request: Request):
+    request.headers["test"] = "we are modifying the request headers in the middle of the request!"
+    print(rquest)
 ```
 
 ## Query Params
@@ -326,13 +350,15 @@ You can use both sync and async functions for middlewares!
 
 ```python
 @app.before_request("/")
-async def hello_before_request(request):
+async def hello_before_request(request: Request):
+    request.headers["before"] = "sync_before_request"
     print(request)
 
 
 @app.after_request("/")
-def hello_after_request(request):
-    print(request)
+def hello_after_request(response: Response):
+    response.headers["after"] = "sync_after_request"
+    print(response)
 ```
 
 ## MultiCore Scaling
@@ -409,7 +435,7 @@ def sample_view():
         return "Hello, world!"
 
     def post(request):
-        body = bytearray(request["body"]).decode("utf-8")
+        body = request.body
         return {"status_code": 200, "body": body}
 ```
 
@@ -425,7 +451,7 @@ def sync_decorator_view():
         return "Hello, world!"
 
     def post(request):
-        body = bytearray(request["body"]).decode("utf-8")
+        body = request.body
         return {"status_code": 200, "body": body}
 
 
@@ -435,7 +461,7 @@ def async_decorator_view():
         return "Hello, world!"
 
     async def post(request):
-        body = bytearray(request["body"]).decode("utf-8")
+        body = request.body
         return {"status_code": 200, "body": body}
 ```
 
@@ -449,7 +475,7 @@ def View():
         return "Hello, world!"
 
     async def post(request):
-        body = bytes(request["body"]).decode("utf-8")
+        body = request.body
         return {
             "status": 200,
             "body": body,
@@ -469,4 +495,13 @@ app.add_view("/", View)
 ```
 
 
+## Allow CORS
 
+You can allow CORS for your application by adding the following code:
+
+```python
+from robyn import Robyn, ALLOW_CORS
+
+app = Robyn(__file__)
+ALLOW_CORS(app)
+```

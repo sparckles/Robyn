@@ -136,6 +136,7 @@ jobs:
             --volume "${PWD}/dist:/artifacts"
           install: |
             apt update -y
+            apt install -y gcc musl-dev python3-dev # this is needed for psutil
             apt install -y --no-install-recommends software-properties-common
             add-apt-repository ppa:deadsnakes/ppa
             apt update -y

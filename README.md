@@ -1,4 +1,4 @@
-<img alt="Robyn Logo" src="https://user-images.githubusercontent.com/29942790/140995889-5d91dcff-3aa7-4cfb-8a90-2cddf1337dca.png" width="250" />
+<p align="center"><img alt="Robyn Logo" src="https://user-images.githubusercontent.com/29942790/140995889-5d91dcff-3aa7-4cfb-8a90-2cddf1337dca.png" width="250" /><p>
 
 # Robyn
 
@@ -11,7 +11,7 @@
 [![view - Documentation](https://img.shields.io/badge/view-Documentation-blue?style=for-the-badge)](https://sansyrox.github.io/robyn/#/)
 [![Discord](https://img.shields.io/discord/999782964143603713?label=discord&logo=discord&logoColor=white&style=for-the-badge&color=blue)](https://discord.gg/rkERZ5eNU8)
 
-Robyn is a fast async Python web framework coupled with a web server written in Rust. You can learn more by checking our [community resources](https://sansyrox.github.io/robyn/#/community-resources)!
+Robyn is a High-Performance, Community-Driven, and Innovator Friendly Web Framework with a Rust runtime. You can learn more by checking our [community resources](https://sansyrox.github.io/robyn/#/community-resources)!
 
 ## 📦 Installation
 
@@ -50,8 +50,10 @@ app.start(port=8080)
 Simply run the app.py file you created. You will then have access to a server on the `localhost:8080`, that you can request from an other program. Robyn provides several options to customize your web server.
 
 ```
-$ python3 app.py -h
-
+$ python3 app.py
+```
+To see the usage
+```
 usage: app.py [-h] [--processes PROCESSES] [--workers WORKERS] [--dev] [--log-level LOG_LEVEL]
 
 Robyn, a fast async web framework with a rust runtime.
@@ -63,7 +65,6 @@ options:
   --dev                     Development mode. It restarts the server based on file changes.
   --log-level LOG_LEVEL     Set the log level name
 ```
-
 Log level can be `DEBUG`, `INFO`, `WARNING`, or `ERROR`.
 
 ### 💻 Add more routes
@@ -82,9 +83,8 @@ Please make sure you have the correct version of Python installed before startin
 this project. You can check your Python version by running the following command in your
 terminal:
 
-```
+```bash
 python --version
-
 ```
 
 ## 💡 Features
@@ -124,7 +124,7 @@ If you still need help to get started, feel free to reach out on our [community 
 4. Run `python3 integration_tests/base_routes.py`. This file contains several examples of routes we use for testing purposes. You can modify or add some to your likings.
 
 You can then request the server you ran from an other terminal. Here is a `GET` request done using [curl](https://curl.se/) for example:
-```
+```bash
 curl http://localhost:8080/sync/str
 ```
 

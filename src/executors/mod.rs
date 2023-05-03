@@ -55,24 +55,23 @@ where
 }
 
 #[inline]
-pub async fn execute_http_function(request: &Request, function: FunctionInfo) -> Result<Response> {
+pub async fn execute_http_function(
+    request: &Request,
+    function: FunctionInfo,
+) -> PyResult<Response> {
     if function.is_async {
         let output = Python::with_gil(|py| {
-            let function_output = get_function_output(&function, py, request);
-            pyo3_asyncio::tokio::into_future(function_output?)
+            let function_output = get_function_output(&function, py, request)?;
+            pyo3_asyncio::tokio::into_future(function_output)
         })?
         .await?;
 
-        Python::with_gil(|py| -> Result<Response> {
-            output.extract(py).context("Failed to get route response")
-        })
-    } else {
-        Python::with_gil(|py| -> Result<Response> {
-            get_function_output(&function, py, request)?
-                .extract()
-                .context("Failed to get route response")
-        })
-    }
+        return Python::with_gil(|py| -> PyResult<Response> { output.extract(py) });
+    };
+
+    Python::with_gil(|py| -> PyResult<Response> {
+        get_function_output(&function, py, request)?.extract()
+    })
 }
 
 pub async fn execute_event_handler(
