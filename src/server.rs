@@ -115,8 +115,7 @@ impl Server {
                     .unwrap();
 
                 HttpServer::new(move || {
-                    let mut app = App::new()
-                        .wrap(TracingLogger::default());
+                    let mut app = App::new().wrap(TracingLogger::default());
 
                     let task_locals = task_locals_copy.clone();
                     let directories = directories.read().unwrap();
