@@ -319,8 +319,36 @@ class Robyn:
 
 
 class SubRouter(Robyn):
-    def __init__(self, file_object: str, config: Config = Config()) -> None:
+    def __init__(self, file_object: str, prefix: str = "", config: Config = Config()) -> None:
         super().__init__(file_object, config)
+        self.prefix = prefix
+
+    def __add_prefix(self, endpoint: str):
+        return f"{self.prefix}{endpoint}"
+
+    def get(self, endpoint: str, const: bool = False):
+        return super().get(self.__add_prefix(endpoint), const)
+
+    def post(self, endpoint: str):
+        return super().post(self.__add_prefix(endpoint))
+
+    def put(self, endpoint: str):
+        return super().put(self.__add_prefix(endpoint))
+
+    def delete(self, endpoint: str):
+        return super().delete(self.__add_prefix(endpoint))
+
+    def patch(self, endpoint: str):
+        return super().patch(self.__add_prefix(endpoint))
+
+    def head(self, endpoint: str):
+        return super().head(self.__add_prefix(endpoint))
+
+    def trace(self, endpoint: str):
+        return super().trace(self.__add_prefix(endpoint))
+
+    def options(self, endpoint: str):
+        return super().options(self.__add_prefix(endpoint))
 
 
 def ALLOW_CORS(app: Robyn, origins: List[str]):
