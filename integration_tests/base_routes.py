@@ -586,6 +586,19 @@ def async_decorator_view():
         return {"status_code": 200, "body": body}
 
 
+# ==== Exception Handling ====
+
+
+@app.exception
+def handle_exception(error):
+    return {"status_code": 500, "body": f"error msg: {error}"}
+
+
+@app.get("/sync/exception")
+def sync_exception():
+    raise ValueError("value error")
+
+
 # ===== Main =====
 
 

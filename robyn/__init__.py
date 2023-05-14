@@ -53,6 +53,7 @@ class Robyn:
         self.response_headers: List[Header] = []  # This needs a better type
         self.directories: List[Directory] = []
         self.event_handlers = {}
+        self.exception_handler: Optional[Callable] = None
 
     def _add_route(self, route_type, endpoint, handler, is_const=False):
         """
@@ -65,7 +66,9 @@ class Robyn:
 
         """ We will add the status code here only
         """
-        return self.router.add_route(route_type, endpoint, handler, is_const)
+        return self.router.add_route(
+            route_type, endpoint, handler, is_const, self.exception_handler
+        )
 
     def before_request(self, endpoint: str) -> Callable[..., None]:
         """
@@ -147,6 +150,9 @@ class Robyn:
             self.config.processes,
             self.response_headers,
         )
+
+    def exception(self, exception_handler: Callable):
+        self.exception_handler = exception_handler
 
     def add_view(self, endpoint: str, view: Callable, const: bool = False):
         """

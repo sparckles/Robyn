@@ -3,7 +3,7 @@ from asyncio import iscoroutinefunction
 from functools import wraps
 from inspect import signature
 from types import CoroutineType
-from typing import Callable, Dict, List, Tuple, Union
+from typing import Callable, Dict, List, Tuple, Union, Optional
 
 from robyn.robyn import FunctionInfo, Response
 from robyn.status_codes import StatusCodes
@@ -55,7 +55,12 @@ class Router(BaseRouter):
         return response
 
     def add_route(
-        self, route_type: str, endpoint: str, handler: Callable, is_const: bool
+        self,
+        route_type: str,
+        endpoint: str,
+        handler: Callable,
+        is_const: bool,
+        exception_handler: Optional[Callable],
     ) -> Union[Callable, CoroutineType]:
         @wraps(handler)
         async def async_inner_handler(*args):
@@ -64,7 +69,12 @@ class Router(BaseRouter):
 
         @wraps(handler)
         def inner_handler(*args):
-            response = self._format_response(handler(*args))
+            try:
+                response = self._format_response(handler(*args))
+            except Exception as err:
+                if exception_handler is None:
+                    raise
+                response = self._format_response(exception_handler(err))
             return response
 
         number_of_params = len(signature(handler).parameters)
