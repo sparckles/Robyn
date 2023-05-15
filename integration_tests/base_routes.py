@@ -7,7 +7,7 @@ from robyn import WS, Robyn, Request, Response, jsonify, serve_file, serve_html
 from robyn.templating import JinjaTemplate
 
 
-from views import SyncView, AsyncView
+from integration_tests.views import SyncView, AsyncView
 
 app = Robyn(__file__)
 websocket = WS(app, "/web_socket")
@@ -589,7 +589,7 @@ def async_decorator_view():
 # ===== Main =====
 
 
-if __name__ == "__main__":
+def main():
     app.add_response_header("server", "robyn")
     app.add_directory(
         route="/test_dir",
@@ -600,3 +600,7 @@ if __name__ == "__main__":
     app.add_view("/sync/view", SyncView)
     app.add_view("/async/view", AsyncView)
     app.start(port=8080)
+
+
+if __name__ == "__main__":
+    main()

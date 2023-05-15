@@ -1,24 +1,10 @@
+[tool.poetry]
 name = "robyn"
 version = "0.29.0"
 description = "A web server that is fast!"
 authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
-
-[build-system]
-requires = ["maturin>=0.12,<0.13"]
-build-backend = "maturin"
-
-[project]
-name = "robyn"
-dependencies = [
-  'watchdog == 2.2.1',
-  'multiprocess == 0.70.14',
-  'nestd == 0.3.1',
-# conditional
-  'uvloop == 0.17.0; sys_platform == "darwin"',
-  'uvloop == 0.17.0; platform_machine == "aarch_64"',
-  'uvloop == 0.17.0; platform_machine == "x86_64"',
-  'uvloop == 0.17.0; platform_machine == "i686"'
-]
+repository = "https://github.com/sansyrox/robyn"
+documentation = "https://robyn.tech/"
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Environment :: Web Environment",
@@ -35,20 +21,42 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
 ]
 
-
-[project.urls]
-"Source Code" = "https://github.com/sansyrox/robyn"
-Issues = "https://github.com/sansyrox/robyn/issues"
-Documentation = "https://robyn.tech/"
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/sansyrox/robyn/issues"
 Changelog = "https://github.com/sansyrox/robyn/blob/main/CHANGELOG.md"
 
-[project.optional-dependencies]
-"templating" = ["jinja2 == 3.0.1"]
+[tool.poetry.dependencies]
+python = "^3.8"
+maturin = "0.14.12"
+watchdog = "2.2.1"
+multiprocess = "0.70.14"
+nestd = "0.3.1"
+uvloop = { version = "0.17.0", markers = "sys_platform == 'darwin' or platform_machine == 'aarch_64' or platform_machine == 'x86_84' or platform_machine == 'i686'" }
+jinja2 = { version = "3.0.1", optional = true }
+
+[tool.poetry.extras]
+templating = ["jinja2"]
+
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+ruff = "0.0.240"
+black = "23.1"
+isort = "5.12"
+pre-commit = "3.0.4"
+commitizen = "2.40"
+
+[tool.poetry.scripts]
+devserver = { callable = "integration_tests.base_routes:main" }
+
+[build-system]
+requires = ["maturin>=0.14,<0.15"]
+build-backend = "maturin"
 
 [tool.ruff]
 line-length = 160
 exclude = ["src/*" , ".git" , "docs"]
-
 
 [tool.ruff.mccabe]
 max-complexity = 10
