@@ -1,45 +1,19 @@
-from robyn import Robyn, SubRouter, jsonify
-
-app = Robyn(__name__)
-
-router = SubRouter(__name__, prefix="/subrouter")
+import pytest
+import requests
 
 
-@router.get("/foo")
-def get_foo(name):
-    return jsonify({"message": "foo"})
+@pytest.mark.parametrize(
+    "http_method_type",
+    ["get", "post", "put", "delete", "patch", "options", "trace"],
+)
+def test_sub_router(http_method_type, session):
+    response = requests.request(http_method_type, "http://127.01:8080/sub_router/foo")
+    assert response.status_code == 200
+    assert response.json() == {"message": "foo"}
 
 
-@router.put("/foo")
-def put_foo(name):
-    return jsonify({"message": "foo"})
-
-
-@router.delete("/foo")
-def delete_foo(name):
-    return jsonify({"message": "foo"})
-
-
-@router.patch("/foo")
-def patch_foo(name):
-    return jsonify({"message": "foo"})
-
-
-@router.options("/foo")
-def option_foo(name):
-    return jsonify({"message": "foo"})
-
-
-@router.trace("/foo")
-def trace_foo(name):
-    return jsonify({"message": "foo"})
-
-
-@router.head("/foo")
-def head_foo(name):
-    return jsonify({"message": "foo"})
-
-
-app.include_router(router)
-
-app.start()
+# head request
+def test_sub_router_head(session):
+    response = requests.head("http://127.0.0.1:8080/sub_router/foo")
+    assert response.status_code == 200
+    assert response.text == ""  # response body is expected to be empty

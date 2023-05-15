@@ -115,7 +115,7 @@ class Robyn:
         self.web_socket_router.add_route(endpoint, ws)
 
     def _add_event_handler(self, event_type: Events, handler: Callable) -> None:
-        logger.debug(f"Add event {event_type} handler")
+        logger.info(f"Add event {event_type} handler")
         if event_type not in {Events.STARTUP, Events.SHUTDOWN}:
             return
 
@@ -313,6 +313,11 @@ class Robyn:
         return inner
 
     def include_router(self, router):
+        """
+        The include_router method to include the routes from another router
+        """
+
+        logger.info(f"Adding routes from {router.__class__.__name__}")
         self.router.routes.extend(router.router.routes)
         self.middleware_router.routes.extend(router.middleware_router.routes)
         """ self.web_socket_router.routes.update(router.router.routes) """

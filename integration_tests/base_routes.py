@@ -8,6 +8,7 @@ from robyn.templating import JinjaTemplate
 
 
 from views import SyncView, AsyncView
+from subroutes import sub_router
 
 app = Robyn(__file__)
 websocket = WS(app, "/web_socket")
@@ -661,4 +662,5 @@ if __name__ == "__main__":
     app.startup_handler(startup_handler)
     app.add_view("/sync/view", SyncView)
     app.add_view("/async/view", AsyncView)
+    app.include_router(sub_router)
     app.start(port=8080)
