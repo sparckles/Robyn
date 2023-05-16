@@ -19,10 +19,16 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Install poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.4.2
+          virtualenvs-create: true
+          virtualenvs-in-project: true
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r robyn/test-requirements.txt
+          poetry install --no-interaction --no-root --with test
       - name: Add macos target
         if: matrix.os == 'macos'
         run: rustup target add aarch64-apple-darwin

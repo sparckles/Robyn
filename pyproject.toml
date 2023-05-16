@@ -47,6 +47,15 @@ isort = "5.12"
 pre-commit = "3.0.4"
 commitizen = "2.40"
 
+[tool.poetry.group.test]
+optional = true
+
+[tool.poetry.group.test.dependencies]
+requests = "2.28.2"
+pytest = "7.2.1"
+websocket-client = "1.5.0"
+pytest-codspeed = "1.2.2"
+
 [tool.poetry.scripts]
 devserver = { callable = "integration_tests.base_routes:main" }
 
