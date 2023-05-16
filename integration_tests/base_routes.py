@@ -594,8 +594,33 @@ def handle_exception(error):
     return {"status_code": 500, "body": f"error msg: {error}"}
 
 
-@app.get("/sync/exception")
-def sync_exception():
+@app.get("/sync/exception/get")
+def sync_exception_get():
+    raise ValueError("value error")
+
+
+@app.get("/async/exception/get")
+async def async_exception_get():
+    raise ValueError("value error")
+
+
+@app.put("/sync/exception/put")
+def sync_exception_put(_: Request):
+    raise ValueError("value error")
+
+
+@app.put("/async/exception/put")
+async def async_exception_put(_: Request):
+    raise ValueError("value error")
+
+
+@app.post("/sync/exception/post")
+def sync_exception_post(_: Request):
+    raise ValueError("value error")
+
+
+@app.post("/async/exception/post")
+async def async_exception_post(_: Request):
     raise ValueError("value error")
 
 

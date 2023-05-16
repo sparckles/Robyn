@@ -64,7 +64,12 @@ class Router(BaseRouter):
     ) -> Union[Callable, CoroutineType]:
         @wraps(handler)
         async def async_inner_handler(*args):
-            response = self._format_response(await handler(*args))
+            try:
+                response = self._format_response(await handler(*args))
+            except Exception as err:
+                if exception_handler is None:
+                    raise
+                response = self._format_response(exception_handler(err))
             return response
 
         @wraps(handler)
