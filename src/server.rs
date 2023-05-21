@@ -387,6 +387,7 @@ async fn index(
         .get_global_middlewares(&MiddlewareType::BeforeRequest)
         .iter()
         .fold(request, |request, function| {
+// TODO: parallelize in the future
             block_on(execute_middleware_function(&request, function)).unwrap_or_else(|e| {
                 error!("Error while executing before middleware: {e}");
                 request
