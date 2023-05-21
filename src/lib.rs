@@ -11,7 +11,12 @@ use shared_socket::SocketHeld;
 
 // pyO3 module
 use pyo3::prelude::*;
-use types::{function_info::FunctionInfo, request::PyRequest, response::PyResponse};
+use types::{
+    function_info::{FunctionInfo, MiddlewareType},
+    request::PyRequest,
+    response::PyResponse,
+    HttpMethod,
+};
 
 #[pyfunction]
 fn get_version() -> String {
@@ -27,6 +32,8 @@ pub fn robyn(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<FunctionInfo>()?;
     m.add_class::<PyRequest>()?;
     m.add_class::<PyResponse>()?;
+    m.add_class::<MiddlewareType>()?;
+    m.add_class::<HttpMethod>()?;
     pyo3::prepare_freethreaded_python();
     Ok(())
 }

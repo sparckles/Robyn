@@ -28,13 +28,13 @@ where
     }
 }
 
-pub async fn execute_middleware_function<T>(input: &T, function: FunctionInfo) -> Result<T>
+pub async fn execute_middleware_function<T>(input: &T, function: &FunctionInfo) -> Result<T>
 where
     T: for<'a> FromPyObject<'a> + ToPyObject,
 {
     if function.is_async {
         let output: Py<PyAny> = Python::with_gil(|py| {
-            pyo3_asyncio::tokio::into_future(get_function_output(&function, py, input)?)
+            pyo3_asyncio::tokio::into_future(get_function_output(function, py, input)?)
         })?
         .await?;
 
@@ -46,7 +46,7 @@ where
         })
     } else {
         Python::with_gil(|py| -> Result<T> {
-            let output: (T,) = get_function_output(&function, py, input)?
+            let output: (T,) = get_function_output(function, py, input)?
                 .extract()
                 .context("Failed to get middleware response")?;
             Ok(output.0)
@@ -57,11 +57,11 @@ where
 #[inline]
 pub async fn execute_http_function(
     request: &Request,
-    function: FunctionInfo,
+    function: &FunctionInfo,
 ) -> PyResult<Response> {
     if function.is_async {
         let output = Python::with_gil(|py| {
-            let function_output = get_function_output(&function, py, request)?;
+            let function_output = get_function_output(function, py, request)?;
             pyo3_asyncio::tokio::into_future(function_output)
         })?
         .await?;
@@ -70,7 +70,7 @@ pub async fn execute_http_function(
     };
 
     Python::with_gil(|py| -> PyResult<Response> {
-        get_function_output(&function, py, request)?.extract()
+        get_function_output(function, py, request)?.extract()
     })
 }
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 from typing import Callable, Optional, Union
 
 def get_version() -> str:
@@ -11,6 +12,21 @@ class SocketHeld:
         pass
     def try_clone(self) -> SocketHeld:
         pass
+
+class MiddlewareType(Enum):
+    BEFORE_REQUEST: str
+    AFTER_REQUEST: str
+
+class HttpMethod(Enum):
+    GET: str
+    POST: str
+    PUT: str
+    DELETE: str
+    PATCH: str
+    OPTIONS: str
+    HEAD: str
+    TRACE: str
+    CONNECT: str
 
 @dataclass
 class FunctionInfo:
@@ -89,15 +105,19 @@ class Server:
         pass
     def add_route(
         self,
-        route_type: str,
+        route_type: HttpMethod,
         route: str,
         function: FunctionInfo,
         is_const: bool,
     ) -> None:
         pass
+    def add_global_middleware(
+        self, middleware_type: MiddlewareType, function: FunctionInfo
+    ) -> None:
+        pass
     def add_middleware_route(
         self,
-        route_type: str,
+        middleware_type: MiddlewareType,
         route: str,
         function: FunctionInfo,
     ) -> None:
