@@ -444,6 +444,7 @@ async fn index(
         .get_global_middlewares(&MiddlewareType::AfterRequest)
         .iter()
         .fold(response, |response, function| {
+// TODO: parallelize in the future
             block_on(execute_middleware_function(&response, function)).unwrap_or_else(|e| {
                 error!("Error while executing after middleware: {e}");
                 response
