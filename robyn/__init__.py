@@ -2,7 +2,7 @@ import asyncio
 import logging
 import multiprocess as mp
 import os
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Tuple
 from nestd import get_all_nested
 
 from robyn.argument_parser import Config
@@ -13,8 +13,8 @@ from robyn.events import Events
 from robyn.logger import logger
 from robyn.processpool import run_processes
 from robyn.responses import jsonify, serve_file, serve_html
-from robyn.robyn import FunctionInfo, Request, Response, get_version
-from robyn.router import MiddlewareRouter, Router, WebSocketRouter
+from robyn.robyn import FunctionInfo, HttpMethod, Request, Response, get_version
+from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory, Header
 from robyn.status_codes import StatusCodes
 from robyn.ws import WS
@@ -55,7 +55,9 @@ class Robyn:
         self.event_handlers = {}
         self.exception_handler: Optional[Callable] = None
 
-    def _add_route(self, route_type, endpoint, handler, is_const=False):
+    def _add_route(
+        self, route_type: HttpMethod, endpoint: str, handler: Callable, is_const=False
+    ):
         """
         This is base handler for all the decorators
 
@@ -70,23 +72,27 @@ class Robyn:
             route_type, endpoint, handler, is_const, self.exception_handler
         )
 
-    def before_request(self, endpoint: str) -> Callable[..., None]:
+    def before_request(self, endpoint: Optional[str] = None) -> Callable[..., None]:
         """
         You can use the @app.before_request decorator to call a method before routing to the specified endpoint
 
         :param endpoint str: endpoint to server the route
         """
 
-        return self.middleware_router.add_before_request(endpoint)
+        return self.middleware_router.add_middleware(
+            MiddlewareType.BEFORE_REQUEST, endpoint
+        )
 
-    def after_request(self, endpoint: str) -> Callable[..., None]:
+    def after_request(self, endpoint: Optional[str] = None) -> Callable[..., None]:
         """
         You can use the @app.after_request decorator to call a method after routing to the specified endpoint
 
         :param endpoint str: endpoint to server the route
         """
 
-        return self.middleware_router.add_after_request(endpoint)
+        return self.middleware_router.add_middleware(
+            MiddlewareType.AFTER_REQUEST, endpoint
+        )
 
     def add_directory(
         self,
@@ -143,7 +149,8 @@ class Robyn:
             self.directories,
             self.request_headers,
             self.router.get_routes(),
-            self.middleware_router.get_routes(),
+            self.middleware_router.get_global_middlewares(),
+            self.middleware_router.get_route_middlewares(),
             self.web_socket_router.get_routes(),
             self.event_handlers,
             self.config.workers,
@@ -161,15 +168,24 @@ class Robyn:
         :param endpoint str: endpoint for the route added
         :param handler function: represents the function passed as a parent handler for single route with different route types
         """
-        http_methods = {"GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"}
+        http_methods = {
+            "GET": HttpMethod.GET,
+            "POST": HttpMethod.POST,
+            "PUT": HttpMethod.PUT,
+            "DELETE": HttpMethod.DELETE,
+            "PATCH": HttpMethod.PATCH,
+            "HEAD": HttpMethod.HEAD,
+            "OPTIONS": HttpMethod.OPTIONS,
+        }
 
-        def get_functions(view):
+        def get_functions(view) -> List[Tuple[HttpMethod, Callable]]:
             functions = get_all_nested(view)
             output = []
             for name, handler in functions:
                 route_type = name.upper()
-                if route_type in http_methods:
-                    output.append((route_type, handler))
+                method = http_methods.get(route_type)
+                if method is not None:
+                    output.append((method, handler))
             return output
 
         handlers = get_functions(view)
@@ -196,7 +212,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("GET", endpoint, handler, const)
+            return self._add_route(HttpMethod.GET, endpoint, handler, const)
 
         return inner
 
@@ -208,7 +224,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("POST", endpoint, handler)
+            return self._add_route(HttpMethod.POST, endpoint, handler)
 
         return inner
 
@@ -220,7 +236,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("PUT", endpoint, handler)
+            return self._add_route(HttpMethod.PUT, endpoint, handler)
 
         return inner
 
@@ -232,7 +248,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("DELETE", endpoint, handler)
+            return self._add_route(HttpMethod.DELETE, endpoint, handler)
 
         return inner
 
@@ -244,7 +260,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("PATCH", endpoint, handler)
+            return self._add_route(HttpMethod.PATCH, endpoint, handler)
 
         return inner
 
@@ -256,7 +272,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("HEAD", endpoint, handler)
+            return self._add_route(HttpMethod.HEAD, endpoint, handler)
 
         return inner
 
@@ -268,7 +284,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("OPTIONS", endpoint, handler)
+            return self._add_route(HttpMethod.OPTIONS, endpoint, handler)
 
         return inner
 
@@ -280,7 +296,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("CONNECT", endpoint, handler)
+            return self._add_route(HttpMethod.CONNECT, endpoint, handler)
 
         return inner
 
@@ -292,7 +308,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route("TRACE", endpoint, handler)
+            return self._add_route(HttpMethod.TRACE, endpoint, handler)
 
         return inner
 

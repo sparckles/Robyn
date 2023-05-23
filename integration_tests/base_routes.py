@@ -57,6 +57,30 @@ def shutdown_handler():
 
 # ===== Middlewares =====
 
+# --- Global ---
+
+
+@app.before_request()
+def global_before_request(request: Request):
+    request.headers["global_before"] = "global_before_request"
+    return request
+
+
+@app.after_request()
+def global_after_request(response: Response):
+    response.headers["global_after"] = "global_after_request"
+    return response
+
+
+@app.get("/sync/global/middlewares")
+def sync_global_middlewares(request: Request):
+    assert "global_before" in request.headers
+    assert request.headers["global_before"] == "global_before_request"
+    return "sync global middlewares"
+
+
+# --- Route specific ---
+
 
 @app.before_request("/sync/middlewares")
 def sync_before_request(request: Request):

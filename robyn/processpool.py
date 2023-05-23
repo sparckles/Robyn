@@ -7,7 +7,7 @@ from robyn.logger import logger
 
 from robyn.events import Events
 from robyn.robyn import FunctionInfo, Server, SocketHeld
-from robyn.router import MiddlewareRoute, Route
+from robyn.router import GlobalMiddleware, RouteMiddleware, Route
 from robyn.types import Directory, Header
 from robyn.ws import WS
 
@@ -18,7 +18,8 @@ def run_processes(
     directories: List[Directory],
     request_headers: List[Header],
     routes: List[Route],
-    middlewares: List[MiddlewareRoute],
+    global_middlewares: List[GlobalMiddleware],
+    route_middlewares: List[RouteMiddleware],
     web_sockets: Dict[str, WS],
     event_handlers: Dict[Events, FunctionInfo],
     workers: int,
@@ -31,7 +32,8 @@ def run_processes(
         directories,
         request_headers,
         routes,
-        middlewares,
+        global_middlewares,
+        route_middlewares,
         web_sockets,
         event_handlers,
         socket,
@@ -59,7 +61,8 @@ def init_processpool(
     directories: List[Directory],
     request_headers: List[Header],
     routes: List[Route],
-    middlewares: List[MiddlewareRoute],
+    global_middlewares: List[GlobalMiddleware],
+    route_middlewares: List[RouteMiddleware],
     web_sockets: Dict[str, WS],
     event_handlers: Dict[Events, FunctionInfo],
     socket: SocketHeld,
@@ -73,7 +76,8 @@ def init_processpool(
             directories,
             request_headers,
             routes,
-            middlewares,
+            global_middlewares,
+            route_middlewares,
             web_sockets,
             event_handlers,
             socket,
@@ -91,7 +95,8 @@ def init_processpool(
                 directories,
                 request_headers,
                 routes,
-                middlewares,
+                global_middlewares,
+                route_middlewares,
                 web_sockets,
                 event_handlers,
                 copied_socket,
@@ -125,7 +130,8 @@ def spawn_process(
     directories: List[Directory],
     request_headers: List[Header],
     routes: List[Route],
-    middlewares: List[MiddlewareRoute],
+    global_middlewares: List[GlobalMiddleware],
+    route_middlewares: List[RouteMiddleware],
     web_sockets: Dict[str, WS],
     event_handlers: Dict[Events, FunctionInfo],
     socket: SocketHeld,
@@ -166,8 +172,10 @@ def spawn_process(
         route_type, endpoint, function, is_const = route
         server.add_route(route_type, endpoint, function, is_const)
 
-    for middleware_route in middlewares:
-        route_type, endpoint, function = middleware_route
+    for middleware_type, middleware_function in global_middlewares:
+        server.add_global_middleware(middleware_type, middleware_function)
+
+    for route_type, endpoint, function in route_middlewares:
         server.add_middleware_route(route_type, endpoint, function)
 
     if Events.STARTUP in event_handlers:
