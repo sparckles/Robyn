@@ -519,3 +519,15 @@ from robyn import Robyn, ALLOW_CORS
 app = Robyn(__file__)
 ALLOW_CORS(app)
 ```
+
+## Exceptions
+
+You can raise exceptions in your code and Robyn will handle them for you.
+
+```python
+@app.exception
+def handle_exception(error):
+    return {"status_code": 500, "body": f"error msg: {error}"}
+
+```
+
