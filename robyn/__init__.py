@@ -153,6 +153,7 @@ class Robyn:
             self.config.workers,
             self.config.processes,
             self.response_headers,
+            self.config.open_browser,
         )
 
     def add_view(self, endpoint: str, view: Callable, const: bool = False):
