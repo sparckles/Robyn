@@ -1,4 +1,3 @@
-
 import asyncio
 from websockets.sync.client import connect
 
@@ -9,5 +8,6 @@ def hello():
             websocket.send(f"Hello world! {i}")
             message = websocket.recv()
             print(f"Received: {message}")
+
 
 hello()

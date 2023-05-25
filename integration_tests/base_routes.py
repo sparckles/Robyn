@@ -22,7 +22,7 @@ websocket_state = 0
 
 @websocket.on("message")
 async def connect(websocket_id):
-    message =  websocket.recv()
+    message = websocket.recv()
     print(f"Server Received: {message}")
 
     return f"Hello world, from modified {message}"
