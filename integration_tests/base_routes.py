@@ -22,20 +22,10 @@ websocket_state = 0
 
 @websocket.on("message")
 async def connect(websocket_id):
-    global websocket_state
-    if websocket_state == 0:
-        response = "Whaaat??"
-    elif websocket_state == 1:
-        response = "Whooo??"
-    elif websocket_state == 2:
-        response = "*chika* *chika* Slim Shady."
-    websocket_state = (websocket_state + 1) % 3
+    message =  websocket.recv()
+    print(f"Server Received: {message}")
 
-    for i in range(10):
-        import time
-        ws.send(f"Hello world! {i}")
-        message = ws.recv()
-    return response
+    return f"Hello world, from modified {message}"
 
 
 @websocket.on("close")

@@ -5,7 +5,8 @@ from inspect import signature
 from typing import TYPE_CHECKING, Callable
 
 from robyn.robyn import FunctionInfo
-import websockets
+from websockets.sync.client import connect as sync_connect
+from websockets import connect
 
 if TYPE_CHECKING:
     from robyn import Robyn
@@ -18,6 +19,7 @@ class WS:
         self.robyn_object = robyn_object
         self.endpoint = endpoint
         self.methods = {}
+        self.url = f"ws://127.0.0.1:8080{endpoint}"
 
     def on(self, type: str) -> Callable[..., None]:
         def inner(handler):
@@ -38,18 +40,24 @@ class WS:
         return asyncio.iscoroutinefunction(handler)
 
     def send(self, message: str) -> None:
-        with websockets.sync.client.connect(self.endpoint) as websocket:
+        print("This is the url ", self.url)
+        # making new connection each time
+        # is very slow
+        # expose sync_connect outside of this class
+        with sync_connect(self.url) as websocket:
             websocket.send(message)
 
-    def recv(self) -> str:
-        with websockets.sync.client.connect(self.endpoint) as websocket:
+    def recv(self):
+        with sync_connect(self.url) as websocket:
             return websocket.recv()
 
     async def send_async(self, message: str) -> None:
-        async with websockets.connect(self.endpoint) as websocket:
+        async with connect(self.url) as websocket:
             await websocket.send(message)
 
     async def recv_async(self) -> str:
-        async with websockets.connect(self.endpoint) as websocket:
+        async with connect(self.url) as websocket:
             return await websocket.recv()
 
+
+__all__ = ["WS", "connect", "sync_connect"]

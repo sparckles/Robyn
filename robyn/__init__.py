@@ -54,6 +54,9 @@ class Robyn:
         self.directories: List[Directory] = []
         self.event_handlers = {}
         self.exception_handler: Optional[Callable] = None
+        ## need to fix this
+        self.url = "127.0.0.1"
+        self.port = "8000"
 
     def _add_route(
         self, route_type: HttpMethod, endpoint: str, handler: Callable, is_const=False
@@ -137,6 +140,8 @@ class Robyn:
 
         url = os.getenv("ROBYN_URL", url)
         port = int(os.getenv("ROBYN_PORT", port))
+        self.url = url
+        self.port = port
 
         logger.info(f"Robyn version: {__version__}")
         logger.info(f"Starting server at {url}:{port}")
