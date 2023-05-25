@@ -30,6 +30,11 @@ async def connect(websocket_id):
     elif websocket_state == 2:
         response = "*chika* *chika* Slim Shady."
     websocket_state = (websocket_state + 1) % 3
+
+    for i in range(10):
+        import time
+        ws.send(f"Hello world! {i}")
+        message = ws.recv()
     return response
 
 

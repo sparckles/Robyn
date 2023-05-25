@@ -5,6 +5,7 @@ from inspect import signature
 from typing import TYPE_CHECKING, Callable
 
 from robyn.robyn import FunctionInfo
+import websockets
 
 if TYPE_CHECKING:
     from robyn import Robyn
@@ -35,3 +36,20 @@ class WS:
 
     def _is_async(self, handler):
         return asyncio.iscoroutinefunction(handler)
+
+    def send(self, message: str) -> None:
+        with websockets.sync.client.connect(self.endpoint) as websocket:
+            websocket.send(message)
+
+    def recv(self) -> str:
+        with websockets.sync.client.connect(self.endpoint) as websocket:
+            return websocket.recv()
+
+    async def send_async(self, message: str) -> None:
+        async with websockets.connect(self.endpoint) as websocket:
+            await websocket.send(message)
+
+    async def recv_async(self) -> str:
+        async with websockets.connect(self.endpoint) as websocket:
+            return await websocket.recv()
+
