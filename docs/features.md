@@ -245,7 +245,7 @@ You can use the following code snippet.
 ```python
 @app.get("/query")
 async def query_get(request):
-    query_data = request["queries"]
+    query_data = request.queries
     return jsonify(query_data)
 ```
 
