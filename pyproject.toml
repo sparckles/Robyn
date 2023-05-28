@@ -1,23 +1,20 @@
-name = "robyn"
-version = "0.31.0"
-description = "A web server that is fast!"
-authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
-
 [build-system]
 requires = ["maturin>=0.12,<0.13"]
 build-backend = "maturin"
 
 [project]
 name = "robyn"
+version = "0.31.0"
+description = "A web server that is fast!"
+authors = [{ name = "Sanskar Jethi", email = "sansyrox@gmail.com" }]
 dependencies = [
   'watchdog == 2.2.1',
   'multiprocess == 0.70.14',
   'nestd == 0.3.1',
-# conditional
   'uvloop == 0.17.0; sys_platform == "darwin"',
   'uvloop == 0.17.0; platform_machine == "aarch_64"',
   'uvloop == 0.17.0; platform_machine == "x86_64"',
-  'uvloop == 0.17.0; platform_machine == "i686"'
+  'uvloop == 0.17.0; platform_machine == "i686"',
 ]
 classifiers = [
   "Development Status :: 3 - Alpha",
@@ -47,7 +44,7 @@ Changelog = "https://github.com/sansyrox/robyn/blob/main/CHANGELOG.md"
 
 [tool.ruff]
 line-length = 160
-exclude = ["src/*" , ".git" , "docs"]
+exclude = ["src/*", ".git", "docs"]
 
 
 [tool.ruff.mccabe]
