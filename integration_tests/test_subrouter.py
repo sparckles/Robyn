@@ -7,7 +7,7 @@ import requests
     ["get", "post", "put", "delete", "patch", "options", "trace"],
 )
 def test_sub_router(http_method_type, session):
-    response = requests.request(http_method_type, "http://127.01:8080/sub_router/foo")
+    response = requests.request(http_method_type, "http://127.0.0.1:8080/sub_router/foo")
     assert response.status_code == 200
     assert response.json() == {"message": "foo"}
 
