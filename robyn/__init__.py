@@ -317,7 +317,9 @@ class Robyn:
         The include_router method to include the routes from another router
         """
 
-        logger.info(f"Adding routes from {router.__class__.__name__}")
+        logger.info(f"Adding routes from {router.__class__.__name__} to {self.__class__.__name__}")
+
+        logger.info(f"Adding routes {router.router.routes} to {self.router.routes}")
         self.router.routes.extend(router.router.routes)
         self.middleware_router.routes.extend(router.middleware_router.routes)
         """ self.web_socket_router.routes.update(router.router.routes) """
