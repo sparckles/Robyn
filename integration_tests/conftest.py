@@ -99,7 +99,8 @@ def dev_session():
     port = 8081
     os.environ["ROBYN_URL"] = domain
     os.environ["ROBYN_PORT"] = str(port)
-    process = start_server(domain, port, is_dev=True)
+    # This doesn't test is_dev=True!!!!
+    process = start_server(domain, port)
     yield
     kill_process(process)
 
@@ -110,7 +111,7 @@ def test_session():
     port = 8080
     os.environ["ROBYN_URL"] = domain
     os.environ["ROBYN_PORT"] = str(port)
-    process = start_server(domain, port)
+    process = start_server(domain, port, is_dev=True)
     yield
     kill_process(process)
 
