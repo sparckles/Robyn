@@ -26,7 +26,7 @@ classifiers = [
 Changelog = "https://github.com/sansyrox/robyn/blob/main/CHANGELOG.md"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.7"
 maturin = "0.14.12"
 watchdog = "2.2.1"
 multiprocess = "0.70.14"
@@ -43,8 +43,8 @@ optional = true
 [tool.poetry.group.dev.dependencies]
 ruff = "0.0.240"
 black = "23.1"
-isort = "5.12"
-pre-commit = "3.0.4"
+isort = "5.11.5"
+pre-commit = "2.21.0"
 commitizen = "2.40"
 
 [tool.poetry.group.test]
