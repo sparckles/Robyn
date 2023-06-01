@@ -4,12 +4,12 @@ use crate::routers::const_router::ConstRouter;
 use crate::routers::Router;
 
 use crate::routers::http_router::HttpRouter;
-use crate::routers::types::MiddlewareRoute;
 use crate::routers::{middleware_router::MiddlewareRouter, web_socket_router::WebSocketRouter};
 use crate::shared_socket::SocketHeld;
-use crate::types::function_info::FunctionInfo;
+use crate::types::function_info::{FunctionInfo, MiddlewareType};
 use crate::types::request::Request;
 use crate::types::response::Response;
+use crate::types::HttpMethod;
 use crate::web_socket_connection::start_web_socket;
 
 use std::convert::TryInto;
@@ -26,6 +26,7 @@ use actix_web::web::Bytes;
 use actix_web::*;
 use dashmap::DashMap;
 
+use futures::executor::block_on;
 // pyO3 module
 use log::{debug, error};
 use pyo3::exceptions::PyValueError;
@@ -281,12 +282,12 @@ impl Server {
     pub fn add_route(
         &self,
         py: Python,
-        route_type: &str,
+        route_type: &HttpMethod,
         route: &str,
         function: FunctionInfo,
         is_const: bool,
     ) {
-        debug!("Route added for {} {} ", route_type, route);
+        debug!("Route added for {:?} {} ", route_type, route);
         let asyncio = py.import("asyncio").unwrap();
         let event_loop = asyncio.call_method0("get_event_loop").unwrap();
 
@@ -310,12 +311,28 @@ impl Server {
         }
     }
 
+    /// Add a new global middleware
+    /// can be called after the server has been started
+    pub fn add_global_middleware(&self, middleware_type: &MiddlewareType, function: FunctionInfo) {
+        self.middleware_router
+            .add_global_middleware(middleware_type, function)
+            .unwrap();
+    }
+
     /// Add a new route to the routing tables
     /// can be called after the server has been started
-    pub fn add_middleware_route(&self, route_type: &str, route: &str, function: FunctionInfo) {
-        debug!("MiddleWare Route added for {} {} ", route_type, route);
+    pub fn add_middleware_route(
+        &self,
+        middleware_type: &MiddlewareType,
+        route: &str,
+        function: FunctionInfo,
+    ) {
+        debug!(
+            "MiddleWare Route added for {:?} {} ",
+            middleware_type, route
+        );
         self.middleware_router
-            .add_route(route_type, route, function, None)
+            .add_route(middleware_type, route, function, None)
             .unwrap();
     }
 
@@ -365,10 +382,22 @@ async fn index(
     let mut request = Request::from_actix_request(&req, body, &global_request_headers);
 
     // Before middleware
-    request = match middleware_router.get_route(&MiddlewareRoute::BeforeRequest, req.uri().path()) {
+    // Global
+    request = middleware_router
+        .get_global_middlewares(&MiddlewareType::BeforeRequest)
+        .iter()
+        .fold(request, |request, function| {
+            // TODO: parallelize in the future
+            block_on(execute_middleware_function(&request, function)).unwrap_or_else(|e| {
+                error!("Error while executing before middleware: {e}");
+                request
+            })
+        });
+    // Route specific
+    request = match middleware_router.get_route(&MiddlewareType::BeforeRequest, req.uri().path()) {
         Some((function, route_params)) => {
             request.path_params = route_params;
-            execute_middleware_function(&request, function)
+            execute_middleware_function(&request, &function)
                 .await
                 .unwrap_or_else(|e| {
                     error!("Error while executing before middleware: {e}");
@@ -379,12 +408,17 @@ async fn index(
     };
 
     // Route execution
-    let mut response = if let Some(res) = const_router.get_route(req.method(), req.uri().path()) {
+    let mut response = if let Some(res) = const_router.get_route(
+        &HttpMethod::from_actix_method(req.method()),
+        req.uri().path(),
+    ) {
         res
-    } else if let Some((function, route_params)) = router.get_route(req.method(), req.uri().path())
-    {
+    } else if let Some((function, route_params)) = router.get_route(
+        &HttpMethod::from_actix_method(req.method()),
+        req.uri().path(),
+    ) {
         request.path_params = route_params;
-        execute_http_function(&request, function)
+        execute_http_function(&request, &function)
             .await
             .unwrap_or_else(|e| {
                 error!(
@@ -406,10 +440,22 @@ async fn index(
     );
 
     // After middleware
-    response = match middleware_router.get_route(&MiddlewareRoute::AfterRequest, req.uri().path()) {
+    // Global
+    response = middleware_router
+        .get_global_middlewares(&MiddlewareType::AfterRequest)
+        .iter()
+        .fold(response, |response, function| {
+            // TODO: parallelize in the future
+            block_on(execute_middleware_function(&response, function)).unwrap_or_else(|e| {
+                error!("Error while executing after middleware: {e}");
+                response
+            })
+        });
+    // Route specific
+    response = match middleware_router.get_route(&MiddlewareType::AfterRequest, req.uri().path()) {
         Some((function, route_params)) => {
             request.path_params = route_params;
-            execute_middleware_function(&response, function)
+            execute_middleware_function(&response, &function)
                 .await
                 .unwrap_or_else(|e| {
                     error!("Error while executing after middleware: {e}");
@@ -428,7 +474,7 @@ fn get_traceback(error: &PyErr) -> String {
     Python::with_gil(|py| -> String {
         if let Some(traceback) = error.traceback(py) {
             let msg = match traceback.format() {
-                Ok(msg) => format!("\n{} {}", msg, error),
+                Ok(msg) => format!("\n{msg} {error}"),
                 Err(e) => e.to_string(),
             };
             return msg;

@@ -7,6 +7,8 @@ BASE_URL = "http://127.0.0.1:8080"
 
 def check_response(response: requests.Response, expected_status_code: int):
     assert response.status_code == expected_status_code
+    assert "global_after" in response.headers
+    assert response.headers["global_after"] == "global_after_request"
     assert "server" in response.headers
     assert response.headers["server"] == "robyn"
 

@@ -245,7 +245,7 @@ You can use the following code snippet.
 ```python
 @app.get("/query")
 async def query_get(request):
-    query_data = request["queries"]
+    query_data = request.queries
     return jsonify(query_data)
 ```
 
@@ -351,7 +351,7 @@ You can use both sync and async functions for middlewares!
 ```python
 @app.before_request("/")
 async def hello_before_request(request: Request):
-    request.headers["before"] = "sync_before_request"
+    request.headers["before"] = "async_before_request"
     print(request)
 
 
@@ -359,6 +359,20 @@ async def hello_before_request(request: Request):
 def hello_after_request(response: Response):
     response.headers["after"] = "sync_after_request"
     print(response)
+```
+
+Middlewares can be bound to a route or run before/after every request:
+
+```python
+# This middleware runs before all requests
+@app.before_request()
+async def global_before_request(request: Request):
+    request.headers["before"] = "global_before_request"
+
+# This middleware runs only before requests to "/your/route"
+@app.before_request("/your/route")
+async def route_before_request(request: Request):
+    request.headers["before"] = "route_before_request"
 ```
 
 ## MultiCore Scaling
@@ -505,3 +519,15 @@ from robyn import Robyn, ALLOW_CORS
 app = Robyn(__file__)
 ALLOW_CORS(app)
 ```
+
+## Exceptions
+
+You can raise exceptions in your code and Robyn will handle them for you.
+
+```python
+@app.exception
+def handle_exception(error):
+    return {"status_code": 500, "body": f"error msg: {error}"}
+
+```
+

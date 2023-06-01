@@ -57,6 +57,30 @@ def shutdown_handler():
 
 # ===== Middlewares =====
 
+# --- Global ---
+
+
+@app.before_request()
+def global_before_request(request: Request):
+    request.headers["global_before"] = "global_before_request"
+    return request
+
+
+@app.after_request()
+def global_after_request(response: Response):
+    response.headers["global_after"] = "global_after_request"
+    return response
+
+
+@app.get("/sync/global/middlewares")
+def sync_global_middlewares(request: Request):
+    assert "global_before" in request.headers
+    assert request.headers["global_before"] == "global_before_request"
+    return "sync global middlewares"
+
+
+# --- Route specific ---
+
 
 @app.before_request("/sync/middlewares")
 def sync_before_request(request: Request):
@@ -584,6 +608,44 @@ def async_decorator_view():
     async def post(request: Request):
         body = request.body
         return {"status_code": 200, "body": body}
+
+
+# ==== Exception Handling ====
+
+
+@app.exception
+def handle_exception(error):
+    return {"status_code": 500, "body": f"error msg: {error}"}
+
+
+@app.get("/sync/exception/get")
+def sync_exception_get():
+    raise ValueError("value error")
+
+
+@app.get("/async/exception/get")
+async def async_exception_get():
+    raise ValueError("value error")
+
+
+@app.put("/sync/exception/put")
+def sync_exception_put(_: Request):
+    raise ValueError("value error")
+
+
+@app.put("/async/exception/put")
+async def async_exception_put(_: Request):
+    raise ValueError("value error")
+
+
+@app.post("/sync/exception/post")
+def sync_exception_post(_: Request):
+    raise ValueError("value error")
+
+
+@app.post("/async/exception/post")
+async def async_exception_post(_: Request):
+    raise ValueError("value error")
 
 
 # ===== Main =====

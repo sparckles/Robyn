@@ -3,14 +3,29 @@ from asyncio import iscoroutinefunction
 from functools import wraps
 from inspect import signature
 from types import CoroutineType
-from typing import Callable, Dict, List, Tuple, Union
+from typing import Callable, Dict, List, NamedTuple, Union, Optional
 
-from robyn.robyn import FunctionInfo, Response
+from robyn.robyn import FunctionInfo, HttpMethod, MiddlewareType, Response
 from robyn.status_codes import StatusCodes
 from robyn.ws import WS
 
-Route = Tuple[str, str, FunctionInfo, bool]
-MiddlewareRoute = Tuple[str, str, FunctionInfo]
+
+class Route(NamedTuple):
+    route_type: HttpMethod
+    route: str
+    function: FunctionInfo
+    is_const: bool
+
+
+class RouteMiddleware(NamedTuple):
+    middleware_type: MiddlewareType
+    route: str
+    function: FunctionInfo
+
+
+class GlobalMiddleware(NamedTuple):
+    middleware_type: MiddlewareType
+    function: FunctionInfo
 
 
 class BaseRouter(ABC):
@@ -22,7 +37,7 @@ class BaseRouter(ABC):
 class Router(BaseRouter):
     def __init__(self) -> None:
         super().__init__()
-        self.routes = []
+        self.routes: List[Route] = []
 
     def _format_response(self, res):
         response = {}
@@ -55,26 +70,41 @@ class Router(BaseRouter):
         return response
 
     def add_route(
-        self, route_type: str, endpoint: str, handler: Callable, is_const: bool
+        self,
+        route_type: HttpMethod,
+        endpoint: str,
+        handler: Callable,
+        is_const: bool,
+        exception_handler: Optional[Callable],
     ) -> Union[Callable, CoroutineType]:
         @wraps(handler)
         async def async_inner_handler(*args):
-            response = self._format_response(await handler(*args))
+            try:
+                response = self._format_response(await handler(*args))
+            except Exception as err:
+                if exception_handler is None:
+                    raise
+                response = self._format_response(exception_handler(err))
             return response
 
         @wraps(handler)
         def inner_handler(*args):
-            response = self._format_response(handler(*args))
+            try:
+                response = self._format_response(handler(*args))
+            except Exception as err:
+                if exception_handler is None:
+                    raise
+                response = self._format_response(exception_handler(err))
             return response
 
         number_of_params = len(signature(handler).parameters)
         if iscoroutinefunction(handler):
             function = FunctionInfo(async_inner_handler, True, number_of_params)
-            self.routes.append((route_type, endpoint, function, is_const))
+            self.routes.append(Route(route_type, endpoint, function, is_const))
             return async_inner_handler
         else:
             function = FunctionInfo(inner_handler, False, number_of_params)
-            self.routes.append((route_type, endpoint, function, is_const))
+            self.routes.append(Route(route_type, endpoint, function, is_const))
             return inner_handler
 
     def get_routes(self) -> List[Route]:
@@ -84,20 +114,25 @@ class Router(BaseRouter):
 class MiddlewareRouter(BaseRouter):
     def __init__(self) -> None:
         super().__init__()
-        self.routes = []
+        self.global_middlewares: List[GlobalMiddleware] = []
+        self.route_middlewares: List[RouteMiddleware] = []
 
-    def add_route(self, route_type: str, endpoint: str, handler: Callable) -> Callable:
+    def add_route(
+        self, middleware_type: MiddlewareType, endpoint: str, handler: Callable
+    ) -> Callable:
         number_of_params = len(signature(handler).parameters)
         function = FunctionInfo(handler, iscoroutinefunction(handler), number_of_params)
-        self.routes.append((route_type, endpoint, function))
+        self.route_middlewares.append(
+            RouteMiddleware(middleware_type, endpoint, function)
+        )
         return handler
 
-    # These inner function is basically a wrapper arround the closure(decorator)
-    # being returned.
-    # It takes in a handler and converts it in into a closure
-    # and returns the arguments.
+    # These inner functions are basically a wrapper around the closure(decorator) being returned.
+    # They take a handler, convert it into a closure and return the arguments.
     # Arguments are returned as they could be modified by the middlewares.
-    def add_after_request(self, endpoint: str) -> Callable[..., None]:
+    def add_middleware(
+        self, middleware_type: MiddlewareType, endpoint: Optional[str]
+    ) -> Callable[..., None]:
         def inner(handler):
             @wraps(handler)
             async def async_inner_handler(*args):
@@ -109,34 +144,42 @@ class MiddlewareRouter(BaseRouter):
                 handler(*args)
                 return args
 
-            if iscoroutinefunction(handler):
-                self.add_route("AFTER_REQUEST", endpoint, async_inner_handler)
+            if endpoint is not None:
+                if iscoroutinefunction(handler):
+                    self.add_route(middleware_type, endpoint, async_inner_handler)
+                else:
+                    self.add_route(middleware_type, endpoint, inner_handler)
             else:
-                self.add_route("AFTER_REQUEST", endpoint, inner_handler)
+                if iscoroutinefunction(handler):
+                    self.global_middlewares.append(
+                        GlobalMiddleware(
+                            middleware_type,
+                            FunctionInfo(
+                                async_inner_handler,
+                                True,
+                                len(signature(async_inner_handler).parameters),
+                            ),
+                        )
+                    )
+                else:
+                    self.global_middlewares.append(
+                        GlobalMiddleware(
+                            middleware_type,
+                            FunctionInfo(
+                                inner_handler,
+                                False,
+                                len(signature(inner_handler).parameters),
+                            ),
+                        )
+                    )
 
         return inner
 
-    def add_before_request(self, endpoint: str) -> Callable[..., None]:
-        def inner(handler):
-            @wraps(handler)
-            async def async_inner_handler(*args):
-                await handler(*args)
-                return args
+    def get_route_middlewares(self) -> List[RouteMiddleware]:
+        return self.route_middlewares
 
-            @wraps(handler)
-            def inner_handler(*args):
-                handler(*args)
-                return args
-
-            if iscoroutinefunction(handler):
-                self.add_route("BEFORE_REQUEST", endpoint, async_inner_handler)
-            else:
-                self.add_route("BEFORE_REQUEST", endpoint, inner_handler)
-
-        return inner
-
-    def get_routes(self) -> List[MiddlewareRoute]:
-        return self.routes
+    def get_global_middlewares(self) -> List[GlobalMiddleware]:
+        return self.global_middlewares
 
 
 class WebSocketRouter(BaseRouter):
