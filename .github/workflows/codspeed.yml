@@ -21,30 +21,19 @@ jobs:
         uses: snok/install-poetry@v1
         with:
           version: 1.3.0
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-      - name: Load cached venv
-        uses: actions/cache@v3
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
       - name: Install dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root --with test
-      - name: Install library
-        run: poetry install --no-interaction --with test
+        run: |
+          poetry export -f requirements.txt --with test --output requirements.txt
+          pip install -r requirements.txt
       - name: Add macos target
         if: matrix.os == 'macos'
         run: rustup target add aarch64-apple-darwin
       - name: Setup Rust part of the project
         run: |
-          source .venv/bin/activate
           maturin build -i python --universal2 --out dist
           pip install --no-index --find-links=dist/ robyn
       - name: Run benchmarks
         uses: CodSpeedHQ/action@v1
         with:
           token: ${{ secrets.CODSPEED_TOKEN }}
-        run: |
-          source .venv/bin/activate
-          pytest integration_tests --codspeed
+          run: pytest integration_tests --codspeed
