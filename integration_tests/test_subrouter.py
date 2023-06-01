@@ -1,5 +1,4 @@
 import pytest
-import requests
 
 from helpers.http_methods_helpers import generic_http_helper, head
 

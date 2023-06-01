@@ -321,8 +321,14 @@ class Robyn:
 
         logger.info(f"Adding routes {router.router.routes} to {self.router.routes}")
         self.router.routes.extend(router.router.routes)
-        self.middleware_router.routes.extend(router.middleware_router.routes)
-        """ self.web_socket_router.routes.update(router.router.routes) """
+        self.middleware_router.global_middlewares.extend(router.middleware_router.global_middlewares)
+        self.middleware_router.route_middlewares.extend(router.middleware_router.route_middlewares)
+
+        # extend the websocket routes
+        suffix = router.prefix
+        for route in router.web_socket_router.routes:
+            new_endpoint = f"{suffix}{route.endpoint}"
+            self.web_socket_router.routes[new_endpoint] = router.web_socket_router.routes[route]
 
 
 class SubRouter(Robyn):
