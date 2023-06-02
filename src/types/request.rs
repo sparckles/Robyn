@@ -14,6 +14,7 @@ pub struct Request {
     #[pyo3(from_py_with = "get_body_from_pyobject")]
     pub body: Vec<u8>,
     pub url: Url,
+    pub ip_addr: String,
 }
 
 impl ToPyObject for Request {
@@ -33,6 +34,7 @@ impl ToPyObject for Request {
             body,
             method: self.method.clone(),
             url: self.url.clone(),
+            ip_addr: self.ip_addr.clone(),
         };
         Py::new(py, request).unwrap().as_ref(py).into()
     }
@@ -76,6 +78,7 @@ impl Request {
             path_params: HashMap::new(),
             body: body.to_vec(),
             url,
+            ip_addr: String::new(),
         }
     }
 }
@@ -95,6 +98,8 @@ pub struct PyRequest {
     pub method: String,
     #[pyo3(get)]
     pub url: Url,
+    #[pyo3(get)]
+    pub ip_addr: String,
 }
 
 #[pymethods]

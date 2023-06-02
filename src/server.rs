@@ -380,6 +380,10 @@ async fn index(
     req: HttpRequest,
 ) -> impl Responder {
     let mut request = Request::from_actix_request(&req, body, &global_request_headers);
+    request.ip_addr = req
+        .peer_addr()
+        .map(|val| val.ip().to_string())
+        .unwrap_or_else(String::new);
 
     // Before middleware
     // Global
