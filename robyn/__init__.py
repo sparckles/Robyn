@@ -314,12 +314,10 @@ class Robyn:
 
     def include_router(self, router):
         """
-        The include_router method to include the routes from another router
+        The method to include the routes from another router
+
+        :param router Robyn: the router object to include the routes from
         """
-
-        logger.info(f"Adding routes from {router.__class__.__name__} to {self.__class__.__name__}")
-
-        logger.info(f"Adding routes {router.router.routes} to {self.router.routes}")
         self.router.routes.extend(router.router.routes)
         self.middleware_router.global_middlewares.extend(router.middleware_router.global_middlewares)
         self.middleware_router.route_middlewares.extend(router.middleware_router.route_middlewares)
