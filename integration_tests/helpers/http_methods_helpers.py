@@ -69,6 +69,7 @@ def delete(
     check_response(response, expected_status_code)
     return response
 
+
 def head(
     endpoint: str,
     data: Optional[dict] = None,
@@ -80,6 +81,7 @@ def head(
     check_response(response, expected_status_code)
     return response
 
+
 def generic_http_helper(
     method: str,
     endpoint: str,
@@ -89,14 +91,19 @@ def generic_http_helper(
 ) -> requests.Response:
     endpoint = endpoint.strip("/")
     if method not in ["get", "post", "put", "patch", "delete", "options", "trace"]:
-        raise ValueError(f"{method} method must be one of get, post, put, patch, delete")
+        raise ValueError(
+            f"{method} method must be one of get, post, put, patch, delete"
+        )
     if method == "get":
         response = requests.get(f"{BASE_URL}/{endpoint}", headers=headers)
     else:
-        response = requests.request(method, f"{BASE_URL}/{endpoint}", data=data, headers=headers)
+        response = requests.request(
+            method, f"{BASE_URL}/{endpoint}", data=data, headers=headers
+        )
     try:
         check_response(response, expected_status_code)
     except AssertionError:
-        raise AssertionError(f"response status code is {response.status_code}, expected {expected_status_code} of method {method}")
+        raise AssertionError(
+            f"response status code is {response.status_code}, expected {expected_status_code} of method {method}"
+        )
     return response
-

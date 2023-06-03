@@ -319,14 +319,20 @@ class Robyn:
         :param router Robyn: the router object to include the routes from
         """
         self.router.routes.extend(router.router.routes)
-        self.middleware_router.global_middlewares.extend(router.middleware_router.global_middlewares)
-        self.middleware_router.route_middlewares.extend(router.middleware_router.route_middlewares)
+        self.middleware_router.global_middlewares.extend(
+            router.middleware_router.global_middlewares
+        )
+        self.middleware_router.route_middlewares.extend(
+            router.middleware_router.route_middlewares
+        )
 
         # extend the websocket routes
         prefix = router.prefix
         for route in router.web_socket_router.routes:
             new_endpoint = f"{prefix}{route}"
-            self.web_socket_router.routes[new_endpoint] = router.web_socket_router.routes[route]
+            self.web_socket_router.routes[
+                new_endpoint
+            ] = router.web_socket_router.routes[route]
 
 
 class SubRouter(Robyn):
