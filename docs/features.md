@@ -531,3 +531,30 @@ def handle_exception(error):
 
 ```
 
+## SubRouters
+
+You can create subrouters in Robyn. This is useful when you want to group routes together.
+
+Subrouters can be used for both normal routes and web sockets. They are basically a mini version of the main router and can be used in the same way.
+
+The only caveat is that you need to add the subrouter to the main router.
+
+```python
+from robyn import Robyn, SubRouter
+
+app = Robyn(__file__)
+
+sub_router = SubRouter("/sub_router")
+
+@sub_router.get("/hello")
+def hello():
+    return "Hello, world"
+
+web_socket = SubRouter("/web_socket")
+
+@web_socket.message()
+async def hello():
+    return "Hello, world"
+
+app.add_sub_router(sub_router)
+```

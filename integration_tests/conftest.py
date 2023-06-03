@@ -99,6 +99,7 @@ def dev_session():
     port = 8081
     os.environ["ROBYN_URL"] = domain
     os.environ["ROBYN_PORT"] = str(port)
+    # This doesn't test is_dev=True!!!!
     process = start_server(domain, port)
     yield
     kill_process(process)
