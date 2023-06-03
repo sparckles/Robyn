@@ -1,8 +1,21 @@
-from robyn import SubRouter, jsonify
+from robyn import SubRouter, jsonify, WS
 
 
 sub_router = SubRouter(__name__, prefix="/sub_router")
 
+websocket = WS(sub_router, "/ws")
+
+@websocket.on("connect")
+async def connect(ws):
+    return "Hello world, from ws"
+
+@websocket.on("message")
+async def message():
+    return "Message"
+
+@websocket.on("close")
+async def close(ws):
+    return jsonify({"message": "closed"})
 
 @sub_router.get("/foo")
 def get_foo(name):

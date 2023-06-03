@@ -325,9 +325,9 @@ class Robyn:
         self.middleware_router.route_middlewares.extend(router.middleware_router.route_middlewares)
 
         # extend the websocket routes
-        suffix = router.prefix
+        prefix = router.prefix
         for route in router.web_socket_router.routes:
-            new_endpoint = f"{suffix}{route.endpoint}"
+            new_endpoint = f"{prefix}{route}"
             self.web_socket_router.routes[new_endpoint] = router.web_socket_router.routes[route]
 
 
