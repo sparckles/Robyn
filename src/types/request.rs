@@ -70,10 +70,10 @@ impl Request {
             req.connection_info().host(),
             req.path(),
         );
-         let ip_addr = req
-             .peer_addr()
-             .map(|val| val.ip().to_string())
-             .unwrap_or_else(String::new);
+        let ip_addr = req
+            .peer_addr()
+            .map(|val| val.ip().to_string())
+            .unwrap_or_else(String::new);
 
         Self {
             queries,
