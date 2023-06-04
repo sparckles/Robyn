@@ -60,7 +60,7 @@ class Request:
         params (dict[str, str]): The parameters of the request. e.g. /user/:id -> {"id": "123"}
         body (Union[str, bytes]): The body of the request. If the request is a JSON, it will be a dict.
         method (str): The method of the request. e.g. GET, POST, PUT, DELETE
-        ip_addr (str): The IP Address of the client
+        ip_addr (Optional[str]): The IP Address of the client
     """
 
     queries: dict[str, str]
@@ -69,7 +69,7 @@ class Request:
     body: Union[str, bytes]
     method: str
     url: Url
-    ip_addr: str
+    ip_addr: Optional[str]
 
 @dataclass
 class Response:

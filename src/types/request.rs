@@ -14,7 +14,7 @@ pub struct Request {
     #[pyo3(from_py_with = "get_body_from_pyobject")]
     pub body: Vec<u8>,
     pub url: Url,
-    pub ip_addr: String,
+    pub ip_addr: Option<String>,
 }
 
 impl ToPyObject for Request {
@@ -70,10 +70,7 @@ impl Request {
             req.connection_info().host(),
             req.path(),
         );
-        let ip_addr = req
-            .peer_addr()
-            .map(|val| val.ip().to_string())
-            .unwrap_or_else(String::new);
+        let ip_addr = req.peer_addr().map(|val| val.ip().to_string());
 
         Self {
             queries,
@@ -103,7 +100,7 @@ pub struct PyRequest {
     #[pyo3(get)]
     pub url: Url,
     #[pyo3(get)]
-    pub ip_addr: String,
+    pub ip_addr: Option<String>,
 }
 
 #[pymethods]
