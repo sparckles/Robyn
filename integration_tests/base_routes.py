@@ -123,6 +123,16 @@ async def async_middlewares(request: Request):
     return "async middlewares"
 
 
+@app.before_request("/sync/middlewares/401")
+def sync_before_request_401():
+    return Response(401, {}, "sync before request 401")
+
+
+@app.get("/sync/middlewares/401")
+def sync_middlewares_401():
+    pass
+
+
 # ===== Routes =====
 
 # --- GET ---

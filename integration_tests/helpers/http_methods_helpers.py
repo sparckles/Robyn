@@ -6,6 +6,10 @@ BASE_URL = "http://127.0.0.1:8080"
 
 
 def check_response(response: requests.Response, expected_status_code: int):
+    """
+    Raises if the response status code is not the expected one or if one of the global
+    headers is not present in the response.
+    """
     assert response.status_code == expected_status_code
     assert "global_after" in response.headers
     assert response.headers["global_after"] == "global_after_request"
@@ -14,11 +18,15 @@ def check_response(response: requests.Response, expected_status_code: int):
 
 
 def get(
-    endpoint: str, expected_status_code: int = 200, headers: dict = {}
+    endpoint: str,
+    expected_status_code: int = 200,
+    headers: dict = {},
+    should_check_response: bool = True,
 ) -> requests.Response:
     endpoint = endpoint.strip("/")
     response = requests.get(f"{BASE_URL}/{endpoint}", headers=headers)
-    check_response(response, expected_status_code)
+    if should_check_response:
+        check_response(response, expected_status_code)
     return response
 
 
@@ -27,10 +35,12 @@ def post(
     data: Optional[dict] = None,
     expected_status_code: int = 200,
     headers: dict = {},
+    should_check_response: bool = True,
 ) -> requests.Response:
     endpoint = endpoint.strip("/")
     response = requests.post(f"{BASE_URL}/{endpoint}", data=data, headers=headers)
-    check_response(response, expected_status_code)
+    if should_check_response:
+        check_response(response, expected_status_code)
     return response
 
 
@@ -39,10 +49,12 @@ def put(
     data: Optional[dict] = None,
     expected_status_code: int = 200,
     headers: dict = {},
+    should_check_response: bool = True,
 ) -> requests.Response:
     endpoint = endpoint.strip("/")
     response = requests.put(f"{BASE_URL}/{endpoint}", data=data, headers=headers)
-    check_response(response, expected_status_code)
+    if should_check_response:
+        check_response(response, expected_status_code)
     return response
 
 
@@ -51,10 +63,12 @@ def patch(
     data: Optional[dict] = None,
     expected_status_code: int = 200,
     headers: dict = {},
+    should_check_response: bool = True,
 ) -> requests.Response:
     endpoint = endpoint.strip("/")
     response = requests.patch(f"{BASE_URL}/{endpoint}", data=data, headers=headers)
-    check_response(response, expected_status_code)
+    if should_check_response:
+        check_response(response, expected_status_code)
     return response
 
 
@@ -63,10 +77,12 @@ def delete(
     data: Optional[dict] = None,
     expected_status_code: int = 200,
     headers: dict = {},
+    should_check_response: bool = True,
 ) -> requests.Response:
     endpoint = endpoint.strip("/")
     response = requests.delete(f"{BASE_URL}/{endpoint}", data=data, headers=headers)
-    check_response(response, expected_status_code)
+    if should_check_response:
+        check_response(response, expected_status_code)
     return response
 
 
@@ -75,10 +91,12 @@ def head(
     data: Optional[dict] = None,
     expected_status_code: int = 200,
     headers: dict = {},
+    should_check_response: bool = True,
 ) -> requests.Response:
     endpoint = endpoint.strip("/")
     response = requests.head(f"{BASE_URL}/{endpoint}", data=data, headers=headers)
-    check_response(response, expected_status_code)
+    if should_check_response:
+        check_response(response, expected_status_code)
     return response
 
 
@@ -88,6 +106,7 @@ def generic_http_helper(
     data: Optional[dict] = None,
     expected_status_code: int = 200,
     headers: dict = {},
+    should_check_response: bool = True,
 ) -> requests.Response:
     endpoint = endpoint.strip("/")
     if method not in ["get", "post", "put", "patch", "delete", "options", "trace"]:
@@ -100,10 +119,6 @@ def generic_http_helper(
         response = requests.request(
             method, f"{BASE_URL}/{endpoint}", data=data, headers=headers
         )
-    try:
+    if should_check_response:
         check_response(response, expected_status_code)
-    except AssertionError:
-        raise AssertionError(
-            f"response status code is {response.status_code}, expected {expected_status_code} of method {method}"
-        )
     return response

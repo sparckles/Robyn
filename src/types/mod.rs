@@ -8,6 +8,11 @@ pub mod function_info;
 pub mod request;
 pub mod response;
 
+pub enum MiddlewareReturn {
+    Request(request::Request),
+    Response(response::Response),
+}
+
 #[pyclass]
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -41,7 +46,7 @@ impl HttpMethod {
 }
 
 #[pyclass]
-#[derive(Default, Clone)]
+#[derive(Default, Debug, Clone)]
 pub struct Url {
     #[pyo3(get)]
     pub scheme: String,
