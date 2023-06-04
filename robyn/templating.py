@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from robyn.status_codes import StatusCodes
+import status_codes as StatusCodes
 
 from .robyn import Response
 

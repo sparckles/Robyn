@@ -6,7 +6,7 @@ from types import CoroutineType
 from typing import Callable, Dict, List, NamedTuple, Union, Optional
 
 from robyn.robyn import FunctionInfo, HttpMethod, MiddlewareType, Response
-from robyn.status_codes import StatusCodes
+import robyn.status_codes as StatusCodes
 from robyn.ws import WS
 
 
