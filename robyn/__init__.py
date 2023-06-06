@@ -16,7 +16,7 @@ from robyn.responses import jsonify, serve_file, serve_html
 from robyn.robyn import FunctionInfo, HttpMethod, Request, Response, get_version
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory, Header
-from robyn.status_codes import StatusCodes
+import robyn.status_codes as StatusCodes
 from robyn.ws import WS
 
 
