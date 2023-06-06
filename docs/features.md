@@ -139,12 +139,12 @@ Robyn provides `StatusCodes` if you want to return type safe Status Responses.
 
 ```python
 
-from robyn import StatusCodes
+from robyn import status_codes
 
 
 @app.get("/response")
 async def response(request):
-    return Response(status_code=StatusCodes.HTTP_200_OK.value, headers={}, body="OK")
+    return Response(status_code=status_codes.HTTP_200_OK.value, headers={}, body="OK")
 ```
 
 #### Returning a byte response
