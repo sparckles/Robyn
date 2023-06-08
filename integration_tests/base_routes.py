@@ -23,9 +23,7 @@ websocket_state = defaultdict(int)
 
 @websocket.on("message")
 async def connect(websocket_id: str, msg: str) -> str:
-    response: dict = {"ws_id": websocket_id,
-                      "resp": "",
-                      "msg": msg}
+    response: dict = {"ws_id": websocket_id, "resp": "", "msg": msg}
     global websocket_state
     state = websocket_state[websocket_id]
     if state == 0:
