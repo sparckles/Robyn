@@ -1,11 +1,11 @@
+import json
 import os
 
-
 import pathlib
+from collections import defaultdict
 
 from robyn import WS, Robyn, Request, Response, jsonify, serve_file, serve_html
 from robyn.templating import JinjaTemplate
-
 
 from views import SyncView, AsyncView
 
@@ -17,20 +17,25 @@ jinja_template = JinjaTemplate(os.path.join(current_file_path, "templates"))
 
 # ===== Websockets =====
 
-websocket_state = 0
+# Make it easier for multiple test runs
+websocket_state = defaultdict(int)
 
 
 @websocket.on("message")
-async def connect(websocket_id):
+async def connect(websocket_id: str, msg: str) -> str:
+    response: dict = {"ws_id": websocket_id,
+                      "resp": "",
+                      "msg": msg}
     global websocket_state
-    if websocket_state == 0:
-        response = "Whaaat??"
-    elif websocket_state == 1:
-        response = "Whooo??"
-    elif websocket_state == 2:
-        response = "*chika* *chika* Slim Shady."
-    websocket_state = (websocket_state + 1) % 3
-    return response
+    state = websocket_state[websocket_id]
+    if state == 0:
+        response["resp"] = "Whaaat??"
+    elif state == 1:
+        response["resp"] = "Whooo??"
+    elif state == 2:
+        response["resp"] = "*chika* *chika* Slim Shady."
+    websocket_state[websocket_id] = (state + 1) % 3
+    return json.dumps(response)
 
 
 @websocket.on("close")
