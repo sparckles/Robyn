@@ -144,7 +144,7 @@ from robyn import status_codes
 
 @app.get("/response")
 async def response(request):
-    return Response(status_code=status_codes.HTTP_200_OK.value, headers={}, body="OK")
+    return Response(status_code=status_codes.HTTP_200_OK, headers={}, body="OK")
 ```
 
 #### Returning a byte response
