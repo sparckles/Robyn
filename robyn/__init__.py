@@ -16,7 +16,7 @@ from robyn.responses import jsonify, serve_file, serve_html
 from robyn.robyn import FunctionInfo, HttpMethod, Request, Response, get_version
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory, Header
-from robyn.status_codes import StatusCodes
+from robyn import status_codes
 from robyn.ws import WS
 
 
@@ -388,7 +388,7 @@ __all__ = [
     "Robyn",
     "Request",
     "Response",
-    "StatusCodes",
+    "status_codes",
     "jsonify",
     "serve_file",
     "serve_html",
