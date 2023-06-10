@@ -53,6 +53,7 @@ class Robyn:
         self.response_headers: List[Header] = []  # This needs a better type
         self.directories: List[Directory] = []
         self.event_handlers = {}
+        self.exception_handler: Optional[Callable] = None
 
     def _add_route(
         self, route_type: HttpMethod, endpoint: str, handler: Callable, is_const=False
@@ -67,7 +68,9 @@ class Robyn:
 
         """ We will add the status code here only
         """
-        return self.router.add_route(route_type, endpoint, handler, is_const)
+        return self.router.add_route(
+            route_type, endpoint, handler, is_const, self.exception_handler
+        )
 
     def before_request(self, endpoint: Optional[str] = None) -> Callable[..., None]:
         """
@@ -112,7 +115,7 @@ class Robyn:
         self.web_socket_router.add_route(endpoint, ws)
 
     def _add_event_handler(self, event_type: Events, handler: Callable) -> None:
-        logger.debug(f"Add event {event_type} handler")
+        logger.info(f"Add event {event_type} handler")
         if event_type not in {Events.STARTUP, Events.SHUTDOWN}:
             return
 
@@ -155,6 +158,9 @@ class Robyn:
             self.response_headers,
             self.config.open_browser,
         )
+
+    def exception(self, exception_handler: Callable):
+        self.exception_handler = exception_handler
 
     def add_view(self, endpoint: str, view: Callable, const: bool = False):
         """
@@ -306,6 +312,63 @@ class Robyn:
             return self._add_route(HttpMethod.TRACE, endpoint, handler)
 
         return inner
+
+    def include_router(self, router):
+        """
+        The method to include the routes from another router
+
+        :param router Robyn: the router object to include the routes from
+        """
+        self.router.routes.extend(router.router.routes)
+        self.middleware_router.global_middlewares.extend(
+            router.middleware_router.global_middlewares
+        )
+        self.middleware_router.route_middlewares.extend(
+            router.middleware_router.route_middlewares
+        )
+
+        # extend the websocket routes
+        prefix = router.prefix
+        for route in router.web_socket_router.routes:
+            new_endpoint = f"{prefix}{route}"
+            self.web_socket_router.routes[
+                new_endpoint
+            ] = router.web_socket_router.routes[route]
+
+
+class SubRouter(Robyn):
+    def __init__(
+        self, file_object: str, prefix: str = "", config: Config = Config()
+    ) -> None:
+        super().__init__(file_object, config)
+        self.prefix = prefix
+
+    def __add_prefix(self, endpoint: str):
+        return f"{self.prefix}{endpoint}"
+
+    def get(self, endpoint: str, const: bool = False):
+        return super().get(self.__add_prefix(endpoint), const)
+
+    def post(self, endpoint: str):
+        return super().post(self.__add_prefix(endpoint))
+
+    def put(self, endpoint: str):
+        return super().put(self.__add_prefix(endpoint))
+
+    def delete(self, endpoint: str):
+        return super().delete(self.__add_prefix(endpoint))
+
+    def patch(self, endpoint: str):
+        return super().patch(self.__add_prefix(endpoint))
+
+    def head(self, endpoint: str):
+        return super().head(self.__add_prefix(endpoint))
+
+    def trace(self, endpoint: str):
+        return super().trace(self.__add_prefix(endpoint))
+
+    def options(self, endpoint: str):
+        return super().options(self.__add_prefix(endpoint))
 
 
 def ALLOW_CORS(app: Robyn, origins: List[str]):

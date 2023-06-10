@@ -8,6 +8,7 @@ from robyn.templating import JinjaTemplate
 
 
 from views import SyncView, AsyncView
+from subroutes import sub_router
 
 app = Robyn(__file__)
 websocket = WS(app, "/web_socket")
@@ -610,6 +611,44 @@ def async_decorator_view():
         return {"status_code": 200, "body": body}
 
 
+# ==== Exception Handling ====
+
+
+@app.exception
+def handle_exception(error):
+    return {"status_code": 500, "body": f"error msg: {error}"}
+
+
+@app.get("/sync/exception/get")
+def sync_exception_get():
+    raise ValueError("value error")
+
+
+@app.get("/async/exception/get")
+async def async_exception_get():
+    raise ValueError("value error")
+
+
+@app.put("/sync/exception/put")
+def sync_exception_put(_: Request):
+    raise ValueError("value error")
+
+
+@app.put("/async/exception/put")
+async def async_exception_put(_: Request):
+    raise ValueError("value error")
+
+
+@app.post("/sync/exception/post")
+def sync_exception_post(_: Request):
+    raise ValueError("value error")
+
+
+@app.post("/async/exception/post")
+async def async_exception_post(_: Request):
+    raise ValueError("value error")
+
+
 # ===== Main =====
 
 
@@ -623,4 +662,5 @@ if __name__ == "__main__":
     app.startup_handler(startup_handler)
     app.add_view("/sync/view", SyncView)
     app.add_view("/async/view", AsyncView)
+    app.include_router(sub_router)
     app.start(port=8080)
