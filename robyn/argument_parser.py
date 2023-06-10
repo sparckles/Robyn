@@ -46,7 +46,7 @@ class Config:
             help="Open the Robyn documentation.",
         )
         parser.add_argument(
-            "--open",
+            "--open-browser",
             action="store_true",
             default=False,
             help="Open the browser on successful start.",
@@ -59,7 +59,7 @@ class Config:
         self.dev = args.dev
         self.create = args.create
         self.docs = args.docs
-        self.open_browser = args.open
+        self.open_browser = args.open_browser
 
         if self.dev and (self.processes != 1 or self.workers != 1):
             raise Exception("--processes and --workers shouldn't be used with --dev")
