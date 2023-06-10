@@ -100,6 +100,7 @@ def sync_after_request(response: Response):
 def sync_middlewares(request: Request):
     assert "before" in request.headers
     assert request.headers["before"] == "sync_before_request"
+    assert request.ip_addr == "127.0.0.1"
     return "sync middlewares"
 
 
@@ -120,6 +121,7 @@ async def async_after_request(response: Response):
 async def async_middlewares(request: Request):
     assert "before" in request.headers
     assert request.headers["before"] == "async_before_request"
+    assert request.ip_addr == "127.0.0.1"
     return "async middlewares"
 
 
