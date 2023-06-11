@@ -136,5 +136,9 @@ class Server:
         message_route: FunctionInfo,
     ) -> None:
         pass
+    def get_calls_count(
+        self, limit_key: str, limit_ttl: int, current_timestamp: int
+    ) -> int:
+        pass
     def start(self, socket: SocketHeld, workers: int) -> None:
         pass

@@ -1,3 +1,4 @@
+use crate::cache::{MemoryStore, get_calls_count};
 use crate::executors::{execute_event_handler, execute_http_function, execute_middleware_function};
 
 use crate::routers::const_router::ConstRouter;
@@ -12,10 +13,11 @@ use crate::types::response::Response;
 use crate::types::HttpMethod;
 use crate::web_socket_connection::start_web_socket;
 
+use std::collections::HashMap;
 use std::convert::TryInto;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::{Relaxed, SeqCst};
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, RwLock, Mutex};
 
 use std::process::abort;
 use std::{env, thread};
@@ -56,6 +58,7 @@ pub struct Server {
     directories: Arc<RwLock<Vec<Directory>>>,
     startup_handler: Option<Arc<FunctionInfo>>,
     shutdown_handler: Option<Arc<FunctionInfo>>,
+    memory_store: MemoryStore,
 }
 
 #[pymethods]
@@ -72,6 +75,7 @@ impl Server {
             directories: Arc::new(RwLock::new(Vec::new())),
             startup_handler: None,
             shutdown_handler: None,
+            memory_store: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
@@ -359,6 +363,21 @@ impl Server {
     pub fn add_shutdown_handler(&mut self, function: FunctionInfo) {
         self.shutdown_handler = Some(Arc::new(function));
         debug!("Added shutdown handler {:?}", self.shutdown_handler);
+    }
+
+    /// Get and set call count from memory store
+    pub fn get_calls_count(
+        &mut self,
+        limit_key: String,
+        limit_ttl: u32,
+        current_timestamp: u32
+        ) -> usize {
+        get_calls_count(
+            &self.memory_store,
+            limit_key,
+            limit_ttl,
+            current_timestamp
+        )
     }
 }
 

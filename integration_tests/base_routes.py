@@ -5,6 +5,7 @@ import pathlib
 
 from robyn import WS, Robyn, Request, Response, jsonify, serve_file, serve_html
 from robyn.templating import JinjaTemplate
+from robyn.throttling import RateLimiter
 
 
 from views import SyncView, AsyncView
@@ -649,6 +650,41 @@ def sync_exception_post(_: Request):
 @app.post("/async/exception/post")
 async def async_exception_post(_: Request):
     raise ValueError("value error")
+
+
+# ===== Rate Limiting ====
+
+rate_limiter = RateLimiter(app=app, calls_limit=3, limit_ttl=60)
+
+
+@app.get("/sync/rate/get", rate_limiter=rate_limiter)
+def sync_rate_get(request: Request):
+    return "OK"
+
+
+@app.get("/async/rate/get", rate_limiter=rate_limiter)
+async def async_rate_get(request: Request):
+    return "OK"
+
+
+@app.put("/sync/rate/put", rate_limiter=rate_limiter)
+def sync_rate_put(request: Request):
+    return "OK"
+
+
+@app.put("/async/rate/put", rate_limiter=rate_limiter)
+async def async_rate_put(request: Request):
+    return "OK"
+
+
+@app.post("/sync/rate/post", rate_limiter=rate_limiter)
+def sync_rate_post(request: Request):
+    return "OK"
+
+
+@app.post("/async/rate/post", rate_limiter=rate_limiter)
+async def async_rate_post(request: Request):
+    return "OK"
 
 
 # ===== Main =====

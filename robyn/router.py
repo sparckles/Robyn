@@ -5,9 +5,14 @@ from inspect import signature
 from types import CoroutineType
 from typing import Callable, Dict, List, NamedTuple, Union, Optional
 
-from robyn.robyn import FunctionInfo, HttpMethod, MiddlewareType, Response
+import redis
+
+from robyn.logger import logger
+from robyn.robyn import FunctionInfo, HttpMethod, MiddlewareType, Request, Response
 from robyn import status_codes
 from robyn.ws import WS
+
+from robyn.throttling import RateLimiter
 
 
 class Route(NamedTuple):
@@ -76,9 +81,22 @@ class Router(BaseRouter):
         handler: Callable,
         is_const: bool,
         exception_handler: Optional[Callable],
+        redis_pool: Optional[redis.ConnectionPool],
+        rate_limiter: RateLimiter,
     ) -> Union[Callable, CoroutineType]:
         @wraps(handler)
         async def async_inner_handler(*args):
+            request = [r for r in args if isinstance(r, Request)]
+            client = request[0].ip_addr if request else None
+            if client and rate_limiter.limit_exceeded(
+                route_type, endpoint, client, redis_pool
+            ):
+                return self._format_response(
+                    {
+                        "status_code": status_codes.HTTP_429_TOO_MANY_REQUESTS,
+                        "body": "Rate limit exceeded",
+                    }
+                )
             try:
                 response = self._format_response(await handler(*args))
             except Exception as err:
@@ -89,6 +107,17 @@ class Router(BaseRouter):
 
         @wraps(handler)
         def inner_handler(*args):
+            request = [r for r in args if isinstance(r, Request)]
+            client = request[0].ip_addr if request else None
+            if client and rate_limiter.limit_exceeded(
+                route_type, endpoint, client, redis_pool
+            ):
+                return self._format_response(
+                    {
+                        "status_code": status_codes.HTTP_429_TOO_MANY_REQUESTS,
+                        "body": "Rate limit exceeded",
+                    }
+                )
             try:
                 response = self._format_response(handler(*args))
             except Exception as err:

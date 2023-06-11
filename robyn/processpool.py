@@ -15,6 +15,7 @@ from robyn.ws import WS
 def run_processes(
     url: str,
     port: int,
+    server: Server,
     directories: List[Directory],
     request_headers: List[Header],
     routes: List[Route],
@@ -29,6 +30,7 @@ def run_processes(
     socket = SocketHeld(url, port)
 
     process_pool = init_processpool(
+        server,
         directories,
         request_headers,
         routes,
@@ -58,6 +60,7 @@ def run_processes(
 
 
 def init_processpool(
+    server: Server,
     directories: List[Directory],
     request_headers: List[Header],
     routes: List[Route],
@@ -73,6 +76,7 @@ def init_processpool(
     process_pool = []
     if sys.platform.startswith("win32"):
         spawn_process(
+            server,
             directories,
             request_headers,
             routes,
@@ -92,6 +96,7 @@ def init_processpool(
         process = Process(
             target=spawn_process,
             args=(
+                server,
                 directories,
                 request_headers,
                 routes,
@@ -127,6 +132,7 @@ def initialize_event_loop():
 
 
 def spawn_process(
+    server: Server,
     directories: List[Directory],
     request_headers: List[Header],
     routes: List[Route],
@@ -154,8 +160,6 @@ def spawn_process(
     """
 
     loop = initialize_event_loop()
-
-    server = Server()
 
     # TODO: if we remove the dot access
     # the startup time will improve in the server

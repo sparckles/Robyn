@@ -45,6 +45,12 @@ class Config:
             default=False,
             help="Open the Robyn documentation.",
         )
+        parser.add_argument(
+            "--redis",
+            type=str,
+            default=None,
+            help="Redis host for storing rate limit values",
+        )
 
         args, _ = parser.parse_known_args()
 
@@ -53,6 +59,7 @@ class Config:
         self.dev = args.dev
         self.create = args.create
         self.docs = args.docs
+        self.redis = args.redis
 
         if self.dev and (self.processes != 1 or self.workers != 1):
             raise Exception("--processes and --workers shouldn't be used with --dev")
