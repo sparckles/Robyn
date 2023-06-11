@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "robyn"
-version = "0.32.0"
+version = "0.33.0"
 description = "A web server that is fast!"
 authors = [{ name = "Sanskar Jethi", email = "sansyrox@gmail.com" }]
 dependencies = [
