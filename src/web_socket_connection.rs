@@ -104,7 +104,6 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
             }
             Ok(ws::Message::Pong(msg)) => {
                 debug!("Pong message {:?}", msg);
-                ctx.pong(&msg)
             }
             Ok(ws::Message::Text(_text)) => {
                 // need to also pass this text as a param
