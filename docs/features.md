@@ -384,16 +384,17 @@ def is_user_logged(request: Request):
 
 @app.before_request("/")
 async def hello_before_request(request: Request):
-    if is_user_logged(request):
+    if not is_user_logged(request):
+        # The request is aborted, we are returning an error before reaching the route method
         return Response(401, {}, "User isn't logged in!")
 
 @app.get("/")
 async def route(request: Request):
-    print("This won't be executed if user isn't logged")
+    print("This won't be executed if user isn't logged in")
 
 @app.after_request("/")
 async def hello_after_request(response: Response):
-    print("This won't be executed if user isn't logged")
+    print("This won't be executed if user isn't logged in")
 ```
 
 ## MultiCore Scaling
