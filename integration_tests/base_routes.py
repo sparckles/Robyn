@@ -1,4 +1,3 @@
-import json
 import os
 
 import pathlib
@@ -33,7 +32,7 @@ async def connect(websocket_id: str, msg: str) -> str:
     elif state == 2:
         response["resp"] = "*chika* *chika* Slim Shady."
     websocket_state[websocket_id] = (state + 1) % 3
-    return json.dumps(response)
+    return jsonify(response)
 
 
 @websocket.on("close")
