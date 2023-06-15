@@ -367,7 +367,6 @@ impl Server {
 
     /// Get and set call count from memory store
     pub fn get_calls_count(
-        &self,
         self_: &PyCell<Self>,
         limit_key: String,
         limit_ttl: u32,
