@@ -25,7 +25,7 @@ websocket_state = defaultdict(int)
 
 
 @websocket_json.on("message")
-async def message(websocket_id: str, msg: str) -> str:
+async def jsonws_message(websocket_id: str, msg: str) -> str:
     response: dict = {"ws_id": websocket_id, "resp": "", "msg": msg}
     global websocket_state
     state = websocket_state[websocket_id]
@@ -60,7 +60,7 @@ def close():
 
 
 @websocket_json.on("close")
-def close():
+def jsonws_close():
     return "GoodBye world, from ws"
 
 
@@ -70,7 +70,7 @@ def connect():
 
 
 @websocket_json.on("connect")
-def connect():
+def jsonws_connect():
     return "Hello world, from ws"
 
 
