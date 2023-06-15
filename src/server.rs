@@ -1,4 +1,4 @@
-use crate::cache::{MemoryStore, get_calls_count};
+use crate::cache::{get_calls_count, MemoryStore};
 use crate::executors::{execute_event_handler, execute_http_function, execute_middleware_function};
 
 use crate::routers::const_router::ConstRouter;
@@ -17,7 +17,7 @@ use std::collections::HashMap;
 use std::convert::TryInto;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::{Relaxed, SeqCst};
-use std::sync::{Arc, RwLock, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 
 use std::process::abort;
 use std::{env, thread};
@@ -370,14 +370,9 @@ impl Server {
         &mut self,
         limit_key: String,
         limit_ttl: u32,
-        current_timestamp: u32
-        ) -> usize {
-        get_calls_count(
-            &self.memory_store,
-            limit_key,
-            limit_ttl,
-            current_timestamp
-        )
+        current_timestamp: u32,
+    ) -> usize {
+        get_calls_count(&self.memory_store, limit_key, limit_ttl, current_timestamp)
     }
 }
 
