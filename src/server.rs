@@ -367,12 +367,22 @@ impl Server {
 
     /// Get and set call count from memory store
     pub fn get_calls_count(
-        &mut self,
+        &self,
+        self_: &PyCell<Self>,
         limit_key: String,
         limit_ttl: u32,
         current_timestamp: u32,
     ) -> usize {
-        get_calls_count(&self.memory_store, limit_key, limit_ttl, current_timestamp)
+        let server = self_.try_borrow_mut();
+        match server {
+            Ok(server) => get_calls_count(
+                &server.memory_store,
+                limit_key,
+                limit_ttl,
+                current_timestamp,
+            ),
+            Err(_) => 0,
+        }
     }
 }
 
