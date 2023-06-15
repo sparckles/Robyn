@@ -7,8 +7,23 @@ BASE_URL = "ws://127.0.0.1:8080"
 
 
 @pytest.mark.benchmark
-def test_web_socket(session):
+def test_web_socket_raw_benchmark(session):
     ws = create_connection(f"{BASE_URL}/web_socket")
+    assert ws.recv() == "Hello world, from ws"
+    ws.send("My name is?")
+    assert ws.recv() == "Whaaat??"
+    ws.send("My name is?")
+    assert ws.recv() == "Whooo??"
+    ws.send("My name is?")
+    assert ws.recv() == "*chika* *chika* Slim Shady."
+
+
+def test_web_socket_json(session):
+    """
+    Not using this as the benchmark test since this involves JSON marshalling/unmarshalling
+    which pollutes the benchmark measurement.
+    """
+    ws = create_connection(f"{BASE_URL}/web_socket_json")
     assert ws.recv() == "Hello world, from ws"
 
     msg = "My name is?"
