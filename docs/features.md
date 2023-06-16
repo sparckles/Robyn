@@ -556,5 +556,5 @@ web_socket = SubRouter("/web_socket")
 async def hello():
     return "Hello, world"
 
-app.add_sub_router(sub_router)
+app.include_router(sub_router)
 ```
