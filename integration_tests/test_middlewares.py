@@ -21,3 +21,9 @@ def test_global_middleware(session):
     assert "global_after" in r.headers
     assert r.headers["global_after"] == "global_after_request"
     assert r.text == "sync global middlewares"
+
+
+@pytest.mark.benchmark
+def test_response_in_before_middleware(session):
+    r = get("/sync/middlewares/401", should_check_response=False)
+    assert r.status_code == 401
