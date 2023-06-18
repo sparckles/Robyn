@@ -108,7 +108,11 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
                 debug!("Pong message {:?}", msg);
             }
             Ok(ws::Message::Text(text)) => {
-                // need to also pass this text as a param
+                // we need to structure this as a room
+                // this connection should also have a new uuid
+                // and we should check where the message is directed toward.
+                // if the message is directed to the room, then we execute the function below
+
                 let function = self.router.get("message").unwrap();
                 execute_ws_function(
                     function,
@@ -117,6 +121,13 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
                     ctx,
                     self,
                 );
+                // however, if the message is directed to a specific user, then we need to
+                // store the socket id of the user and send the message to that socket id
+                // we can do this by storing the socket id in a hashmap
+                // and then we can send the message to the socket id
+
+                // client.do_send(CommandRunner(text));
+                // but the client needs to stored in the hashmap
             }
             Ok(ws::Message::Binary(bin)) => ctx.binary(bin),
             Ok(ws::Message::Close(_close_reason)) => {
