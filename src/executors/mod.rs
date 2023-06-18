@@ -2,12 +2,14 @@
 /// i.e. the functions that have the responsibility of parsing and executing functions.
 use std::sync::Arc;
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use log::debug;
 use pyo3::prelude::*;
 use pyo3_asyncio::TaskLocals;
 
-use crate::types::{function_info::FunctionInfo, request::Request, response::Response};
+use crate::types::{
+    function_info::FunctionInfo, request::Request, response::Response, MiddlewareReturn,
+};
 
 fn get_function_output<'a, T>(
     function: &'a FunctionInfo,
@@ -28,7 +30,13 @@ where
     }
 }
 
-pub async fn execute_middleware_function<T>(input: &T, function: &FunctionInfo) -> Result<T>
+// Execute the middleware function
+// type T can be either Request (before middleware) or Response (after middleware)
+// Return type can either be a Request or a Response, we wrap it inside an enum for easier handling
+pub async fn execute_middleware_function<T>(
+    input: &T,
+    function: &FunctionInfo,
+) -> Result<MiddlewareReturn>
 where
     T: for<'a> FromPyObject<'a> + ToPyObject,
 {
@@ -38,18 +46,20 @@ where
         })?
         .await?;
 
-        Python::with_gil(|py| -> Result<T> {
-            let output: (T,) = output
-                .extract(py)
-                .context("Failed to get middleware response")?;
-            Ok(output.0)
+        Python::with_gil(|py| -> Result<MiddlewareReturn> {
+            let output_response = output.extract::<Response>(py);
+            match output_response {
+                Ok(o) => Ok(MiddlewareReturn::Response(o)),
+                Err(_) => Ok(MiddlewareReturn::Request(output.extract::<Request>(py)?)),
+            }
         })
     } else {
-        Python::with_gil(|py| -> Result<T> {
-            let output: (T,) = get_function_output(function, py, input)?
-                .extract()
-                .context("Failed to get middleware response")?;
-            Ok(output.0)
+        Python::with_gil(|py| -> Result<MiddlewareReturn> {
+            let output = get_function_output(function, py, input)?;
+            match output.extract::<Response>() {
+                Ok(o) => Ok(MiddlewareReturn::Response(o)),
+                Err(_) => Ok(MiddlewareReturn::Request(output.extract::<Request>()?)),
+            }
         })
     }
 }

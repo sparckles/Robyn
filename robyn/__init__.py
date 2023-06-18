@@ -158,6 +158,7 @@ class Robyn:
 
         url = os.getenv("ROBYN_URL", url)
         port = int(os.getenv("ROBYN_PORT", port))
+        open_browser = bool(os.getenv("ROBYN_BROWSER_OPEN", self.config.open_browser))
 
         logger.info(f"Robyn version: {__version__}")
         logger.info(f"Starting server at {url}:{port}")
@@ -178,6 +179,7 @@ class Robyn:
             self.config.workers,
             self.config.processes,
             self.response_headers,
+            open_browser,
         )
 
     def exception(self, exception_handler: Callable):

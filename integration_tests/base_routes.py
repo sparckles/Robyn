@@ -1,12 +1,11 @@
 import os
 
-
 import pathlib
+from collections import defaultdict
 
 from robyn import WS, Robyn, Request, Response, jsonify, serve_file, serve_html
 from robyn.templating import JinjaTemplate
 from robyn.throttling import RateLimiter
-
 
 from views import SyncView, AsyncView
 from subroutes import sub_router
@@ -14,25 +13,47 @@ from subroutes import sub_router
 app = Robyn(__file__)
 websocket = WS(app, "/web_socket")
 
+# Creating a new WS app to test json handling + to serve an example to future users of this lib
+# while the original "raw" web_socket is used with benchmark tests
+websocket_json = WS(app, "/web_socket_json")
+
 current_file_path = pathlib.Path(__file__).parent.resolve()
 jinja_template = JinjaTemplate(os.path.join(current_file_path, "templates"))
 
 # ===== Websockets =====
 
-websocket_state = 0
+# Make it easier for multiple test runs
+websocket_state = defaultdict(int)
+
+
+@websocket_json.on("message")
+async def jsonws_message(websocket_id: str, msg: str) -> str:
+    response: dict = {"ws_id": websocket_id, "resp": "", "msg": msg}
+    global websocket_state
+    state = websocket_state[websocket_id]
+    if state == 0:
+        response["resp"] = "Whaaat??"
+    elif state == 1:
+        response["resp"] = "Whooo??"
+    elif state == 2:
+        response["resp"] = "*chika* *chika* Slim Shady."
+    websocket_state[websocket_id] = (state + 1) % 3
+    return jsonify(response)
 
 
 @websocket.on("message")
-async def connect(websocket_id):
+async def message(websocket_id: str, msg: str) -> str:
     global websocket_state
-    if websocket_state == 0:
-        response = "Whaaat??"
-    elif websocket_state == 1:
-        response = "Whooo??"
-    elif websocket_state == 2:
-        response = "*chika* *chika* Slim Shady."
-    websocket_state = (websocket_state + 1) % 3
-    return response
+    state = websocket_state[websocket_id]
+    resp = ""
+    if state == 0:
+        resp = "Whaaat??"
+    elif state == 1:
+        resp = "Whooo??"
+    elif state == 2:
+        resp = "*chika* *chika* Slim Shady."
+    websocket_state[websocket_id] = (state + 1) % 3
+    return resp
 
 
 @websocket.on("close")
@@ -40,8 +61,18 @@ def close():
     return "GoodBye world, from ws"
 
 
+@websocket_json.on("close")
+def jsonws_close():
+    return "GoodBye world, from ws"
+
+
 @websocket.on("connect")
-def message():
+def connect():
+    return "Hello world, from ws"
+
+
+@websocket_json.on("connect")
+def jsonws_connect():
     return "Hello world, from ws"
 
 
@@ -124,6 +155,16 @@ async def async_middlewares(request: Request):
     assert request.headers["before"] == "async_before_request"
     assert request.ip_addr == "127.0.0.1"
     return "async middlewares"
+
+
+@app.before_request("/sync/middlewares/401")
+def sync_before_request_401():
+    return Response(401, {}, "sync before request 401")
+
+
+@app.get("/sync/middlewares/401")
+def sync_middlewares_401():
+    pass
 
 
 # ===== Routes =====

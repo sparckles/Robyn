@@ -1,4 +1,5 @@
 import asyncio
+import webbrowser
 from multiprocess import Process
 import signal
 import sys
@@ -26,6 +27,7 @@ def run_processes(
     workers: int,
     processes: int,
     response_headers: List[Header],
+    open_browser: bool,
 ) -> List[Process]:
     socket = SocketHeld(url, port)
 
@@ -51,6 +53,10 @@ def run_processes(
 
     signal.signal(signal.SIGINT, terminating_signal_handler)
     signal.signal(signal.SIGTERM, terminating_signal_handler)
+
+    if open_browser:
+        logger.info("Opening browser...")
+        webbrowser.open_new_tab(f"http://{url}:{port}/")
 
     logger.info("Press Ctrl + C to stop \n")
     for process in process_pool:

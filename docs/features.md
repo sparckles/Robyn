@@ -375,6 +375,28 @@ async def route_before_request(request: Request):
     request.headers["before"] = "route_before_request"
 ```
 
+In the before middleware, you can choose to directly return a `Response` object. When doing so, the route method and the after middlewares will not be executed.
+
+```python
+def is_user_logged(request: Request):
+    # Check the validity of a JWT cookie for example
+    ...
+
+@app.before_request("/")
+async def hello_before_request(request: Request):
+    if not is_user_logged(request):
+        # The request is aborted, we are returning an error before reaching the route method
+        return Response(401, {}, "User isn't logged in!")
+
+@app.get("/")
+async def route(request: Request):
+    print("This won't be executed if user isn't logged in")
+
+@app.after_request("/")
+async def hello_after_request(response: Response):
+    print("This won't be executed if user isn't logged in")
+```
+
 ## MultiCore Scaling
 
 To run Robyn across multiple cores, you can use the following command:
@@ -556,5 +578,5 @@ web_socket = SubRouter("/web_socket")
 async def hello():
     return "Hello, world"
 
-app.add_sub_router(sub_router)
+app.include_router(sub_router)
 ```

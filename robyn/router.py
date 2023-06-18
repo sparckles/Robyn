@@ -7,7 +7,6 @@ from typing import Callable, Dict, List, NamedTuple, Union, Optional
 
 import redis
 
-from robyn.logger import logger
 from robyn.robyn import FunctionInfo, HttpMethod, MiddlewareType, Request, Response
 from robyn import status_codes
 from robyn.ws import WS
@@ -165,13 +164,11 @@ class MiddlewareRouter(BaseRouter):
         def inner(handler):
             @wraps(handler)
             async def async_inner_handler(*args):
-                await handler(*args)
-                return args
+                return await handler(*args)
 
             @wraps(handler)
             def inner_handler(*args):
-                handler(*args)
-                return args
+                return handler(*args)
 
             if endpoint is not None:
                 if iscoroutinefunction(handler):

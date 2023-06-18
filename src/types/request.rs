@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 use crate::types::{check_body_type, get_body_from_pyobject, Url};
 
-#[derive(Default, Clone, FromPyObject)]
+#[derive(Default, Debug, Clone, FromPyObject)]
 pub struct Request {
     pub queries: HashMap<String, String>,
     pub headers: HashMap<String, String>,
