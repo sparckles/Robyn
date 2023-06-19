@@ -1,4 +1,3 @@
-mod cache;
 mod executors;
 mod io_helpers;
 mod routers;

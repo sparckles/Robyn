@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Callable, Optional, Union
+from typing import Callable, List, Optional, Union
 
 def get_version() -> str:
     pass
@@ -136,9 +136,9 @@ class Server:
         message_route: FunctionInfo,
     ) -> None:
         pass
-    def get_calls_count(
+    def get_calls_list(
         self, limit_key: str, limit_ttl: int, current_timestamp: int
-    ) -> int:
+    ) -> List[int]:
         pass
     def start(self, socket: SocketHeld, workers: int) -> None:
         pass

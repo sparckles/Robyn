@@ -381,13 +381,13 @@ class Robyn:
                 new_endpoint
             ] = router.web_socket_router.routes[route]
 
-    def get_calls_count(
+    def get_calls_list(
         self,
         limit_key: str,
         limit_ttl: int,
         current_timestamp: int,
-    ) -> int:
-        return self.server.get_calls_count(limit_key, limit_ttl, current_timestamp)
+    ) -> List[int]:
+        return self.server.get_calls_list(limit_key, limit_ttl, current_timestamp)
 
 
 class SubRouter(Robyn):

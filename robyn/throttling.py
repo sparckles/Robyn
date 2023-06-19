@@ -45,9 +45,10 @@ class RateLimiter:
             conn.expire(limit_key, self.limit_ttl)
             calls_count = conn.zcard(limit_key)
         elif self.app:
-            calls_count = self.app.get_calls_count(
+            calls = self.app.get_calls_list(
                 limit_key, self.limit_ttl, current_timestamp
             )
+            calls_count = len(calls)
         else:
             raise ValueError("Both app and pool are None, no cache exists!")
         return calls_count > self.calls_limit

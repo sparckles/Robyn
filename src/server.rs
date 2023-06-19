@@ -1,4 +1,3 @@
-use crate::cache::{get_calls_count, MemoryStore};
 use crate::executors::{execute_event_handler, execute_http_function, execute_middleware_function};
 
 use crate::routers::const_router::ConstRouter;
@@ -58,7 +57,7 @@ pub struct Server {
     directories: Arc<RwLock<Vec<Directory>>>,
     startup_handler: Option<Arc<FunctionInfo>>,
     shutdown_handler: Option<Arc<FunctionInfo>>,
-    memory_store: MemoryStore,
+    memory_store: Arc<Mutex<HashMap<String, Vec<u32>>>>,
 }
 
 #[pymethods]
@@ -365,22 +364,36 @@ impl Server {
         debug!("Added shutdown handler {:?}", self.shutdown_handler);
     }
 
-    /// Get and set call count from memory store
-    pub fn get_calls_count(
+    /// Get and set call list from memory store
+    pub fn get_calls_list(
         self_: &PyCell<Self>,
         limit_key: String,
         limit_ttl: u32,
         current_timestamp: u32,
-    ) -> usize {
+    ) -> Vec<u32> {
         let server = self_.try_borrow_mut();
         match server {
-            Ok(server) => get_calls_count(
-                &server.memory_store,
-                limit_key,
-                limit_ttl,
-                current_timestamp,
-            ),
-            Err(_) => 0,
+            Ok(server) => {
+                let mut cache = server.memory_store.lock().unwrap();
+                let ttl = current_timestamp - limit_ttl;
+                if let Some(timestamps) = cache.get_mut(&limit_key) {
+                    let mut valid_timestamps: Vec<u32> = timestamps
+                        .iter()
+                        .copied()
+                        .filter(|timestamp| timestamp >= &ttl)
+                        .collect();
+                    valid_timestamps.push(current_timestamp);
+                    *timestamps = valid_timestamps;
+                } else {
+                    cache.insert(limit_key.to_owned(), vec![current_timestamp]);
+                }
+
+                cache.get(&limit_key).unwrap().clone()
+            },
+            Err(_) => {
+                debug!("Error getting calls count for {}", limit_key);
+                Vec::new()
+            }
         }
     }
 }
