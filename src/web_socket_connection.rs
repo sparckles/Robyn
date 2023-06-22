@@ -61,11 +61,13 @@ fn execute_ws_function(
         ctx.spawn(f);
     } else {
         Python::with_gil(|py| {
-             if let Some(op) = get_function_output(function, text, py, ws)
+            if let Some(op) = get_function_output(function, text, py, ws)
                 .unwrap()
-                .extract::<Option<&str>>().unwrap() {
-                 ctx.text(op);
-             }
+                .extract::<Option<&str>>()
+                .unwrap()
+            {
+                ctx.text(op);
+            }
         });
     }
 }
