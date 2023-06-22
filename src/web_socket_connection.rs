@@ -1,4 +1,4 @@
-use crate::types::function_info::FunctionInfo;
+use std::collections::HashMap;
 
 use actix::prelude::*;
 use actix::{Actor, AsyncContext, StreamHandler};
@@ -9,7 +9,7 @@ use pyo3::prelude::*;
 use pyo3_asyncio::TaskLocals;
 use uuid::Uuid;
 
-use std::collections::HashMap;
+use crate::types::function_info::FunctionInfo;
 
 /// Define HTTP actor
 #[derive(Clone)]
@@ -61,13 +61,24 @@ fn execute_ws_function(
         ctx.spawn(f);
     } else {
         Python::with_gil(|py| {
-            if let Some(op) = get_function_output(function, text, py, ws)
-                .unwrap()
-                .extract::<Option<&str>>()
-                .unwrap()
-            {
-                ctx.text(op);
-            }
+            match get_function_output(function, text, py, ws) {
+                Ok(result) => match result.extract::<Option<&str>>() {
+                    Ok(op) => {
+                        op.map(|s| ctx.text(s));
+                    }
+                    Err(e) => println!(
+                        "robyn: error extracting py websocket message \
+                        handler return value: {}. Only string return values are supported. \
+                        A return value is not required.",
+                        e
+                    ),
+                },
+                Err(e) => println!(
+                    "robyn: error running py websocket \
+                    message handler function: {}",
+                    e
+                ),
+            };
         });
     }
 }
