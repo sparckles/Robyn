@@ -267,6 +267,49 @@ async def async_response_const_get():
     return Response(200, {"async_const": "response"}, "async response const get")
 
 
+# HTML
+
+
+@app.get("/sync/html")
+def sync_html_get():
+    return {
+        "status_code": 200,
+        "body": "sync html get",
+        "type": "text",
+        "headers": {"Content-Type": "text/html"},
+    }
+
+
+@app.get("/async/html")
+async def async_html_get():
+    return {
+        "status_code": 200,
+        "body": "async html get",
+        "type": "text",
+        "headers": {"Content-Type": "text/html"},
+    }
+
+
+@app.get("/sync/html/const", const=True)
+def sync_html_const_get():
+    return {
+        "status_code": 200,
+        "body": "sync html const get",
+        "type": "text",
+        "headers": {"Content-Type": "text/html"},
+    }
+
+
+@app.get("/async/html/const", const=True)
+async def async_html_const_get():
+    return {
+        "status_code": 200,
+        "body": "async html const get",
+        "type": "text",
+        "headers": {"Content-Type": "text/html"},
+    }
+
+
 # Binary
 
 
