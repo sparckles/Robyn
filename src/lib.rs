@@ -13,6 +13,7 @@ use shared_socket::SocketHeld;
 use pyo3::prelude::*;
 use types::{
     function_info::{FunctionInfo, MiddlewareType},
+    identity::Identity,
     request::PyRequest,
     response::PyResponse,
     HttpMethod,
@@ -30,6 +31,7 @@ pub fn robyn(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<Server>()?;
     m.add_class::<SocketHeld>()?;
     m.add_class::<FunctionInfo>()?;
+    m.add_class::<Identity>()?;
     m.add_class::<PyRequest>()?;
     m.add_class::<PyResponse>()?;
     m.add_class::<MiddlewareType>()?;
