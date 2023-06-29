@@ -397,6 +397,35 @@ async def hello_after_request(response: Response):
     print("This won't be executed if user isn't logged in")
 ```
 
+## Authentication
+
+Robyn provides an easy way to add an authentication middleware to your application. You can then specify `auth_required=True` in your routes to make them accessible only to authenticated users.
+
+```python
+@app.get("/auth", auth_required=True)
+async def auth(request: Request):
+    # This route method will only be executed if the user is authenticated
+    # Otherwise, a 401 response will be returned
+    return "Hello, world"
+```
+
+To add an authentication middleware, you can use the `configure_authentication` method. This method requires an `AuthenticationHandler` object as an argument. This object specifies how to authenticate a user, and uses a `TokenGetter` object to retrieve the token from the request. Robyn does currently provide a `BearerGetter` class that gets the token from the `Authorization` header, using the `Bearer` scheme. Here is an example of a basic authentication handler:
+
+```python
+class BasicAuthHandler(AuthenticationHandler):
+    def authenticate(self, request: Request) -> Optional[Identity]:
+        token = self.token_getter.get_token(request)
+        if token == "valid":
+            return Identity(claims={})
+        return None
+
+app.configure_authentication(BasicAuthHandler(token_getter=BearerGetter()))
+```
+
+Your `authenticate` method should return an `Identity` object if the user is authenticated, or `None` otherwise. The `Identity` object can contain any data you want, and will be accessible in your route methods using the `request.identity` attribute.
+
+Note that this authentication system is basically only using a "before request" middleware under the hood. This means you can overlook it and create your own authentication system using middlewares if you want to. However, Robyn still provide this easy to implement solution that should suit most use cases.
+
 ## MultiCore Scaling
 
 To run Robyn across multiple cores, you can use the following command:

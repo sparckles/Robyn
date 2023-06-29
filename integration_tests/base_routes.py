@@ -2,8 +2,10 @@ import os
 
 import pathlib
 from collections import defaultdict
+from typing import Optional
 
 from robyn import WS, Robyn, Request, Response, jsonify, serve_file, serve_html
+from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.templating import JinjaTemplate
 
 from views import SyncView, AsyncView
@@ -735,6 +737,23 @@ async def async_exception_post(_: Request):
     raise ValueError("value error")
 
 
+# ===== Authentication =====
+
+
+@app.get("/sync/auth", auth_required=True)
+def sync_auth(request: Request):
+    assert request.identity is not None
+    assert request.identity.claims == {"key": "value"}
+    return "authenticated"
+
+
+@app.get("/async/auth", auth_required=True)
+async def async_auth(request: Request):
+    assert request.identity is not None
+    assert request.identity.claims == {"key": "value"}
+    return "authenticated"
+
+
 # ===== Main =====
 
 
@@ -749,4 +768,13 @@ if __name__ == "__main__":
     app.add_view("/sync/view", SyncView)
     app.add_view("/async/view", AsyncView)
     app.include_router(sub_router)
+
+    class BasicAuthHandler(AuthenticationHandler):
+        def authenticate(self, request: Request) -> Optional[Identity]:
+            token = self.token_getter.get_token(request)
+            if token == "valid":
+                return Identity(claims={"key": "value"})
+            return None
+
+    app.configure_authentication(BasicAuthHandler(token_getter=BearerGetter()))
     app.start(port=8080)
