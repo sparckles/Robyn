@@ -88,7 +88,7 @@ class Robyn:
         """
         You can use the @app.before_request decorator to call a method before routing to the specified endpoint
 
-        :param endpoint str: endpoint to server the route
+        :param endpoint str|None: endpoint to server the route. If None, the middleware will be applied to all the routes.
         """
 
         return self.middleware_router.add_middleware(
@@ -99,7 +99,7 @@ class Robyn:
         """
         You can use the @app.after_request decorator to call a method after routing to the specified endpoint
 
-        :param endpoint str: endpoint to server the route
+        :param endpoint str|None: endpoint to server the route. If None, the middleware will be applied to all the routes.
         """
 
         return self.middleware_router.add_middleware(
