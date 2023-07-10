@@ -13,13 +13,13 @@ use crate::types::HttpMethod;
 use crate::types::MiddlewareReturn;
 use crate::web_socket_connection::start_web_socket;
 
-use std::collections::HashMap;
 use std::convert::TryInto;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::{Relaxed, SeqCst};
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, RwLock};
 
 use std::process::abort;
+use std::time::{SystemTime, UNIX_EPOCH};
 use std::{env, thread};
 
 use actix_files::Files;
@@ -54,10 +54,10 @@ pub struct Server {
     middleware_router: Arc<MiddlewareRouter>,
     global_request_headers: Arc<DashMap<String, String>>,
     global_response_headers: Arc<DashMap<String, String>>,
+    calls_count: Arc<DashMap<String, Vec<u64>>>,
     directories: Arc<RwLock<Vec<Directory>>>,
     startup_handler: Option<Arc<FunctionInfo>>,
     shutdown_handler: Option<Arc<FunctionInfo>>,
-    memory_store: Arc<Mutex<HashMap<String, Vec<u32>>>>,
 }
 
 #[pymethods]
@@ -74,7 +74,7 @@ impl Server {
             directories: Arc::new(RwLock::new(Vec::new())),
             startup_handler: None,
             shutdown_handler: None,
-            memory_store: Arc::new(Mutex::new(HashMap::new())),
+            calls_count: Arc::new(DashMap::new()),
         }
     }
 
@@ -103,6 +103,7 @@ impl Server {
         let global_request_headers = self.global_request_headers.clone();
         let global_response_headers = self.global_response_headers.clone();
         let directories = self.directories.clone();
+        let calls_count = self.calls_count.clone();
         let workers = Arc::new(workers);
 
         let asyncio = py.import("asyncio")?;
@@ -166,7 +167,8 @@ impl Server {
                         .app_data(web::Data::new(const_router.clone()))
                         .app_data(web::Data::new(middleware_router.clone()))
                         .app_data(web::Data::new(global_request_headers.clone()))
-                        .app_data(web::Data::new(global_response_headers.clone()));
+                        .app_data(web::Data::new(global_response_headers.clone()))
+                        .app_data(web::Data::new(calls_count.clone()));
 
                     let web_socket_map = web_socket_router.get_web_socket_map();
                     for (elem, value) in (web_socket_map.read().unwrap()).iter() {
@@ -195,6 +197,7 @@ impl Server {
                                   middleware_router: web::Data<Arc<MiddlewareRouter>>,
                                   global_request_headers,
                                   global_response_headers,
+                                  calls_count: web::Data<Arc<DashMap<String, Vec<u64>>>>,
                                   body,
                                   req| {
                                 pyo3_asyncio::tokio::scope_local(task_locals.clone(), async move {
@@ -204,6 +207,7 @@ impl Server {
                                         middleware_router,
                                         global_request_headers,
                                         global_response_headers,
+                                        calls_count,
                                         body,
                                         req,
                                     )
@@ -363,39 +367,6 @@ impl Server {
         self.shutdown_handler = Some(Arc::new(function));
         debug!("Added shutdown handler {:?}", self.shutdown_handler);
     }
-
-    /// Get and set call list from memory store
-    pub fn get_calls_list(
-        self_: &PyCell<Self>,
-        limit_key: String,
-        limit_ttl: u32,
-        current_timestamp: u32,
-    ) -> Vec<u32> {
-        let server = self_.try_borrow_mut();
-        match server {
-            Ok(server) => {
-                let mut cache = server.memory_store.lock().unwrap();
-                let ttl = current_timestamp - limit_ttl;
-                if let Some(timestamps) = cache.get_mut(&limit_key) {
-                    let mut valid_timestamps: Vec<u32> = timestamps
-                        .iter()
-                        .copied()
-                        .filter(|timestamp| timestamp >= &ttl)
-                        .collect();
-                    valid_timestamps.push(current_timestamp);
-                    *timestamps = valid_timestamps;
-                } else {
-                    cache.insert(limit_key.to_owned(), vec![current_timestamp]);
-                }
-
-                cache.get(&limit_key).unwrap().clone()
-            },
-            Err(_) => {
-                debug!("Error getting calls count for {}", limit_key);
-                Vec::new()
-            }
-        }
-    }
 }
 
 impl Default for Server {
@@ -412,10 +383,40 @@ async fn index(
     middleware_router: web::Data<Arc<MiddlewareRouter>>,
     global_request_headers: web::Data<Arc<DashMap<String, String>>>,
     global_response_headers: web::Data<Arc<DashMap<String, String>>>,
+    calls_count: web::Data<Arc<DashMap<String, Vec<u64>>>>,
     body: Bytes,
     req: HttpRequest,
 ) -> impl Responder {
     let mut request = Request::from_actix_request(&req, body, &global_request_headers);
+
+    // Update calls count
+    let limit_key = format!(
+        "{}::{}::{}",
+        req.uri().path(),
+        req.method(),
+        req.peer_addr().map(|val| val.ip().to_string()).unwrap()
+    );
+    let current_timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    if let Some(mut timestamps) = calls_count.get_mut(&limit_key) {
+        let mut valid_timestamps: Vec<u64> = timestamps.iter().copied().collect();
+        valid_timestamps.push(current_timestamp);
+        *timestamps = valid_timestamps;
+    } else {
+        calls_count.insert(limit_key.to_owned(), vec![current_timestamp]);
+    }
+    let calls_count_header = calls_count
+        .get(&limit_key)
+        .unwrap()
+        .iter()
+        .map(ToString::to_string)
+        .collect::<Vec<String>>()
+        .join(",");
+    request
+        .headers
+        .insert(String::from("x-robyncc"), calls_count_header);
 
     // Before middleware
     // Global

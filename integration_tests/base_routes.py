@@ -695,7 +695,7 @@ async def async_exception_post(_: Request):
 
 # ===== Rate Limiting ====
 
-rate_limiter = RateLimiter(app=app, calls_limit=3, limit_ttl=60)
+rate_limiter = RateLimiter(calls_limit=3, limit_ttl=60)
 
 
 @app.get("/sync/rate/get", rate_limiter=rate_limiter)

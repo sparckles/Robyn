@@ -4,7 +4,6 @@ import multiprocess as mp
 import os
 from typing import Callable, List, Optional, Tuple
 from nestd import get_all_nested
-from redis import ConnectionPool
 
 from robyn.argument_parser import Config
 from robyn.logger import Colors
@@ -20,7 +19,7 @@ from robyn.types import Directory, Header
 from robyn import status_codes
 from robyn.ws import WS
 
-from robyn.throttling import RateLimiter, initialize_redis_pool
+from robyn.throttling import RateLimiter
 
 
 __version__ = get_version()
@@ -58,10 +57,7 @@ class Robyn:
         self.directories: List[Directory] = []
         self.event_handlers = {}
         self.exception_handler: Optional[Callable] = None
-        self.redis_pool: Optional[ConnectionPool] = initialize_redis_pool(
-            self.config.redis
-        )
-        self.rate_limiter = RateLimiter(app=self)
+        self.rate_limiter = RateLimiter()
 
     def _add_route(
         self,
@@ -89,7 +85,6 @@ class Robyn:
             handler,
             is_const,
             self.exception_handler,
-            self.redis_pool,
             rate_limiter,
         )
 
@@ -380,14 +375,6 @@ class Robyn:
             self.web_socket_router.routes[
                 new_endpoint
             ] = router.web_socket_router.routes[route]
-
-    def get_calls_list(
-        self,
-        limit_key: str,
-        limit_ttl: int,
-        current_timestamp: int,
-    ) -> List[int]:
-        return self.server.get_calls_list(limit_key, limit_ttl, current_timestamp)
 
 
 class SubRouter(Robyn):
