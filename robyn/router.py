@@ -4,6 +4,7 @@ from functools import wraps
 from inspect import signature
 from types import CoroutineType
 from typing import Callable, Dict, List, NamedTuple, Union, Optional
+from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
 
 from robyn.robyn import FunctionInfo, HttpMethod, MiddlewareType, Request, Response
 from robyn import status_codes
@@ -137,6 +138,10 @@ class MiddlewareRouter(BaseRouter):
         super().__init__()
         self.global_middlewares: List[GlobalMiddleware] = []
         self.route_middlewares: List[RouteMiddleware] = []
+        self.authentication_handler: Optional[AuthenticationHandler] = None
+
+    def set_authentication_handler(self, authentication_handler: AuthenticationHandler):
+        self.authentication_handler = authentication_handler
 
     def add_route(
         self, middleware_type: MiddlewareType, endpoint: str, handler: Callable
@@ -147,6 +152,26 @@ class MiddlewareRouter(BaseRouter):
             RouteMiddleware(middleware_type, endpoint, function)
         )
         return handler
+
+    def add_auth_middleware(self, endpoint: str):
+        """
+        This method adds an authentication middleware to the specified endpoint.
+        """
+
+        def inner(handler):
+            def inner_handler(request: Request, *args):
+                if not self.authentication_handler:
+                    raise AuthenticationNotConfiguredError()
+                identity = self.authentication_handler.authenticate(request)
+                if identity is None:
+                    return self.authentication_handler.unauthorized_response
+                request.identity = identity
+                return request
+
+            self.add_route(MiddlewareType.BEFORE_REQUEST, endpoint, inner_handler)
+            return inner_handler
+
+        return inner
 
     # These inner functions are basically a wrapper around the closure(decorator) being returned.
     # They take a handler, convert it into a closure and return the arguments.

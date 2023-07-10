@@ -438,7 +438,7 @@ async fn index(
             }
             Err(e) => {
                 error!(
-                    "Error while executing after middleware function for endpoint `{}`: {}",
+                    "Error while executing before middleware function for endpoint `{}`: {}",
                     req.uri().path(),
                     get_traceback(e.downcast_ref::<PyErr>().unwrap())
                 );

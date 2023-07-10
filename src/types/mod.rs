@@ -5,9 +5,11 @@ use pyo3::{
 };
 
 pub mod function_info;
+pub mod identity;
 pub mod request;
 pub mod response;
 
+#[allow(clippy::large_enum_variant)]
 pub enum MiddlewareReturn {
     Request(request::Request),
     Response(response::Response),

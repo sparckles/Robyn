@@ -6,6 +6,7 @@ from typing import Callable, List, Optional, Tuple
 from nestd import get_all_nested
 
 from robyn.argument_parser import Config
+from robyn.authentication import AuthenticationHandler
 from robyn.logger import Colors
 from robyn.reloader import setup_reloader
 from robyn.env_populator import load_vars
@@ -56,6 +57,7 @@ class Robyn:
         self.directories: List[Directory] = []
         self.event_handlers = {}
         self.exception_handler: Optional[Callable] = None
+        self.authentication_handler: Optional[AuthenticationHandler] = None
         self.rate_limiter = RateLimiter()
 
     def _add_route(
@@ -64,20 +66,27 @@ class Robyn:
         endpoint: str,
         handler: Callable,
         is_const: bool = False,
+        auth_required: bool = False,
         rate_limiter: Optional[RateLimiter] = None,
     ):
         """
-        This is base handler for all the decorators
+        This is base handler for all the route decorators
 
-        :param route_type str: route type between GET/POST/PUT/DELETE/PATCH
+        :param route_type str: route type between GET/POST/PUT/DELETE/PATCH/HEAD/OPTIONS/TRACE
         :param endpoint str: endpoint for the route added
         :param handler function: represents the sync or async function passed as a handler for the route
+        :param is_const bool: represents if the handler is a const function or not
+        :param auth_required bool: represents if the route needs authentication or not
+        :param rate_limiter RateLimiter: rate limiter class to throttle API calls
         """
 
         """ We will add the status code here only
         """
+        if auth_required:
+            self.middleware_router.add_auth_middleware(endpoint)(handler)
         if rate_limiter is None:
             rate_limiter = self.rate_limiter
+
         return self.router.add_route(
             route_type,
             endpoint,
@@ -91,7 +100,7 @@ class Robyn:
         """
         You can use the @app.before_request decorator to call a method before routing to the specified endpoint
 
-        :param endpoint str: endpoint to server the route
+        :param endpoint str|None: endpoint to server the route. If None, the middleware will be applied to all the routes.
         """
 
         return self.middleware_router.add_middleware(
@@ -102,7 +111,7 @@ class Robyn:
         """
         You can use the @app.after_request decorator to call a method after routing to the specified endpoint
 
-        :param endpoint str: endpoint to server the route
+        :param endpoint str|None: endpoint to server the route. If None, the middleware will be applied to all the routes.
         """
 
         return self.middleware_router.add_middleware(
@@ -225,6 +234,7 @@ class Robyn:
         self,
         endpoint: str,
         const: bool = False,
+        auth_required: bool = False,
         rate_limiter: Optional[RateLimiter] = None,
     ):
         """
@@ -239,12 +249,18 @@ class Robyn:
                 endpoint,
                 handler,
                 const,
-                rate_limiter=rate_limiter,
+                auth_required,
+                rate_limiter,
             )
 
         return inner
 
-    def post(self, endpoint: str, rate_limiter: Optional[RateLimiter] = None):
+    def post(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        rate_limiter: Optional[RateLimiter] = None,
+    ):
         """
         The @app.post decorator to add a route with POST method
 
@@ -253,12 +269,21 @@ class Robyn:
 
         def inner(handler):
             return self._add_route(
-                HttpMethod.POST, endpoint, handler, rate_limiter=rate_limiter
+                HttpMethod.POST,
+                endpoint,
+                handler,
+                auth_required=auth_required,
+                rate_limiter=rate_limiter,
             )
 
         return inner
 
-    def put(self, endpoint: str, rate_limiter: Optional[RateLimiter] = None):
+    def put(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        rate_limiter: Optional[RateLimiter] = None,
+    ):
         """
         The @app.put decorator to add a get route with PUT method
 
@@ -267,12 +292,21 @@ class Robyn:
 
         def inner(handler):
             return self._add_route(
-                HttpMethod.PUT, endpoint, handler, rate_limiter=rate_limiter
+                HttpMethod.PUT,
+                endpoint,
+                handler,
+                auth_required=auth_required,
+                rate_limiter=rate_limiter,
             )
 
         return inner
 
-    def delete(self, endpoint: str, rate_limiter: Optional[RateLimiter] = None):
+    def delete(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        rate_limiter: Optional[RateLimiter] = None,
+    ):
         """
         The @app.delete decorator to add a route with DELETE method
 
@@ -281,12 +315,21 @@ class Robyn:
 
         def inner(handler):
             return self._add_route(
-                HttpMethod.DELETE, endpoint, handler, rate_limiter=rate_limiter
+                HttpMethod.DELETE,
+                endpoint,
+                handler,
+                auth_required=auth_required,
+                rate_limiter=rate_limiter,
             )
 
         return inner
 
-    def patch(self, endpoint: str, rate_limiter: Optional[RateLimiter] = None):
+    def patch(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        rate_limiter: Optional[RateLimiter] = None,
+    ):
         """
         The @app.patch decorator to add a route with PATCH method
 
@@ -295,12 +338,21 @@ class Robyn:
 
         def inner(handler):
             return self._add_route(
-                HttpMethod.PATCH, endpoint, handler, rate_limiter=rate_limiter
+                HttpMethod.PATCH,
+                endpoint,
+                handler,
+                auth_required=auth_required,
+                rate_limiter=rate_limiter,
             )
 
         return inner
 
-    def head(self, endpoint: str, rate_limiter: Optional[RateLimiter] = None):
+    def head(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        rate_limiter: Optional[RateLimiter] = None,
+    ):
         """
         The @app.head decorator to add a route with HEAD method
 
@@ -309,12 +361,21 @@ class Robyn:
 
         def inner(handler):
             return self._add_route(
-                HttpMethod.HEAD, endpoint, handler, rate_limiter=rate_limiter
+                HttpMethod.HEAD,
+                endpoint,
+                handler,
+                auth_required=auth_required,
+                rate_limiter=rate_limiter,
             )
 
         return inner
 
-    def options(self, endpoint: str, rate_limiter: Optional[RateLimiter] = None):
+    def options(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        rate_limiter: Optional[RateLimiter] = None,
+    ):
         """
         The @app.options decorator to add a route with OPTIONS method
 
@@ -323,12 +384,16 @@ class Robyn:
 
         def inner(handler):
             return self._add_route(
-                HttpMethod.OPTIONS, endpoint, handler, rate_limiter=rate_limiter
+                HttpMethod.OPTIONS,
+                endpoint,
+                handler,
+                auth_required=auth_required,
+                rate_limiter=rate_limiter,
             )
 
         return inner
 
-    def connect(self, endpoint: str):
+    def connect(self, endpoint: str, auth_required: bool = False):
         """
         The @app.connect decorator to add a route with CONNECT method
 
@@ -336,11 +401,13 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route(HttpMethod.CONNECT, endpoint, handler)
+            return self._add_route(
+                HttpMethod.CONNECT, endpoint, handler, auth_required=auth_required
+            )
 
         return inner
 
-    def trace(self, endpoint: str):
+    def trace(self, endpoint: str, auth_required: bool = False):
         """
         The @app.trace decorator to add a route with TRACE method
 
@@ -348,7 +415,9 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route(HttpMethod.TRACE, endpoint, handler)
+            return self._add_route(
+                HttpMethod.TRACE, endpoint, handler, auth_required=auth_required
+            )
 
         return inner
 
@@ -374,6 +443,15 @@ class Robyn:
                 new_endpoint
             ] = router.web_socket_router.routes[route]
 
+    def configure_authentication(self, authentication_handler: AuthenticationHandler):
+        """
+        Configures the authentication handler for the application.
+
+        :param authentication_handler: the instance of a class inheriting the AuthenticationHandler base class
+        """
+        self.authentication_handler = authentication_handler
+        self.middleware_router.set_authentication_handler(authentication_handler)
+
 
 class SubRouter(Robyn):
     def __init__(
@@ -391,28 +469,30 @@ class SubRouter(Robyn):
         const: bool = False,
         rate_limiter: Optional[RateLimiter] = None,
     ):
-        return super().get(self.__add_prefix(endpoint), const, rate_limiter)
+        return super().get(
+            self.__add_prefix(endpoint), const, rate_limiter=rate_limiter
+        )
 
     def post(self, endpoint: str, rate_limiter: Optional[RateLimiter] = None):
-        return super().post(self.__add_prefix(endpoint), rate_limiter)
+        return super().post(self.__add_prefix(endpoint), rate_limiter=rate_limiter)
 
     def put(self, endpoint: str, rate_limiter: Optional[RateLimiter] = None):
-        return super().put(self.__add_prefix(endpoint), rate_limiter)
+        return super().put(self.__add_prefix(endpoint), rate_limiter=rate_limiter)
 
     def delete(self, endpoint: str, rate_limiter: Optional[RateLimiter] = None):
-        return super().delete(self.__add_prefix(endpoint), rate_limiter)
+        return super().delete(self.__add_prefix(endpoint), rate_limiter=rate_limiter)
 
     def patch(self, endpoint: str, rate_limiter: Optional[RateLimiter] = None):
-        return super().patch(self.__add_prefix(endpoint), rate_limiter)
+        return super().patch(self.__add_prefix(endpoint), rate_limiter=rate_limiter)
 
     def head(self, endpoint: str, rate_limiter: Optional[RateLimiter] = None):
-        return super().head(self.__add_prefix(endpoint), rate_limiter)
+        return super().head(self.__add_prefix(endpoint), rate_limiter=rate_limiter)
 
     def trace(self, endpoint: str):
         return super().trace(self.__add_prefix(endpoint))
 
     def options(self, endpoint: str, rate_limiter: Optional[RateLimiter] = None):
-        return super().options(self.__add_prefix(endpoint), rate_limiter)
+        return super().options(self.__add_prefix(endpoint), rate_limiter=rate_limiter)
 
 
 def ALLOW_CORS(app: Robyn, origins: List[str]):

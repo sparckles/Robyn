@@ -50,6 +50,10 @@ class Url:
     path: str
 
 @dataclass
+class Identity:
+    claims: dict[str, str]
+
+@dataclass
 class Request:
     """
     The request object passed to the route handler.
@@ -70,6 +74,7 @@ class Request:
     method: str
     url: Url
     ip_addr: Optional[str]
+    identity: Optional[Identity]
 
 @dataclass
 class Response:
