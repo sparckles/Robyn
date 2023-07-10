@@ -13,7 +13,7 @@ from robyn.events import Events
 from robyn.logger import logger
 from robyn.processpool import run_processes
 from robyn.responses import jsonify, serve_file, serve_html
-from robyn.robyn import FunctionInfo, HttpMethod, Request, Response, Server, get_version
+from robyn.robyn import FunctionInfo, HttpMethod, Request, Response, get_version
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory, Header
 from robyn import status_codes
@@ -48,7 +48,6 @@ class Robyn:
             setup_reloader(self.directory_path, self.file_path)
             exit(0)
 
-        self.server = Server()
         self.router = Router()
         self.middleware_router = MiddlewareRouter()
         self.web_socket_router = WebSocketRouter()
@@ -163,7 +162,6 @@ class Robyn:
         run_processes(
             url,
             port,
-            self.server,
             self.directories,
             self.request_headers,
             self.router.get_routes(),
