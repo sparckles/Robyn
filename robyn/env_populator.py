@@ -11,8 +11,6 @@ def parser(config_path=None, project_root=""):
     if config_path is None:
         config_path = Path(project_root) / "robyn.env"
 
-    os.environ.setdefault("ENABLE_ROBYN_LOGS", "false")
-
     if config_path.exists():
         with open(config_path, "r") as f:
             for line in f:
@@ -27,6 +25,8 @@ def load_vars(variables=None, project_root=""):
 
     if variables is None:
         variables = parser(project_root=project_root)
+        
+    os.environ.setdefault("ENABLE_ROBYN_LOGS", "false")
 
     for var in variables:
         if var[0] in os.environ:
