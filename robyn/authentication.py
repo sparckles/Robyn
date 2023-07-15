@@ -84,7 +84,7 @@ class BearerGetter(TokenGetter):
         if not authorization_header or not authorization_header.startswith("Bearer "):
             return None
 
-        return authorization_header[7:]
+        return authorization_header[7:] # Remove the "Bearer " prefix
 
     @classmethod
     def set_token(cls, request: Request, token: str):
