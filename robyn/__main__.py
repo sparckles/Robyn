@@ -43,10 +43,10 @@ if __name__ == "__main__":
             """
         )
 
-    # DockerFile configuration
+    # Dockerfile configuration
     if docker == "Y":
         print(f"Generating docker configuration for {project_dir}")
-        dockerfile_path = os.path.join(project_dir, "DockerFile")
+        dockerfile_path = os.path.join(project_dir, "Dockerfile")
         with open(dockerfile_path, "w") as f:
             f.write(
                 """
