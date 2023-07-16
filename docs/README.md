@@ -62,6 +62,7 @@ options:
   --workers WORKERS         Choose the number of workers. [Default: 1]
   --dev                     Development mode. It restarts the server based on file changes.
   --log-level LOG_LEVEL     Set the log level name
+  --version                 Know the current installed version of Robyn
 ```
 
 Log level can be `DEBUG`, `INFO`, `WARNING`, or `ERROR`.
