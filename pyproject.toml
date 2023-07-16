@@ -57,6 +57,7 @@ Changelog = "https://github.com/sparckles/robyn/blob/main/CHANGELOG.md"
 
 [tool.poetry.dependencies]
 python = "^3.7"
+inquirerpy = "0.3.4"
 maturin = "0.14.12"
 watchdog = "2.2.1"
 multiprocess = "0.70.14"

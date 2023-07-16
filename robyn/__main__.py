@@ -1,22 +1,26 @@
 import os
 import webbrowser
+from InquirerPy import prompt
+from InquirerPy.base.control import Choice
 from .argument_parser import Config
-from robyn import __version__
-
-
-def check(value, input_name):
-    while value not in ["Y", "N"]:
-        print("Invalid input. Please enter Y or N")
-        value = input(f"Need {input_name}? (Y/N) ")
-    return value
 
 
 def create_robyn_app():
-    project_dir = input("Enter the name of the project directory: ")
-    docker = input("Need Docker? (Y/N) ")
-
-    # Initailize a new Robyn project
-    docker = check(docker, "Docker")
+    questions = [
+        {"type": "input", "message": "Enter the name of the project directory:"},
+        {
+            "type": "list",
+            "message": "Need Docker? (Y/N)",
+            "choices": [
+                Choice("Y", name="Y"),
+                Choice("N", name="N"),
+            ],
+            "default": None,
+        },
+    ]
+    result = prompt(questions=questions)
+    project_dir = result[0]
+    docker = result[1]
 
     print(f"Creating a new Robyn project '{project_dir}'...")
 
@@ -74,11 +78,8 @@ CMD ["python3.10", "/workspace/foo/app.py", "--log-level=DEBUG"]
 
 def docs():
     print("Opening Robyn documentation... | Offline docs coming soon!")
-    webbrowser.open("https://sansyrox.github.io/robyn/#/")
+    webbrowser.open("https://sparckles.github.io/robyn/#/")
 
-
-def version():
-    print(f"Robyn {__version__}")
 
 
 if __name__ == "__main__":
@@ -88,6 +89,3 @@ if __name__ == "__main__":
 
     if config.docs:
         docs()
-
-    if config.version:
-        version()
