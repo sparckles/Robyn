@@ -51,6 +51,12 @@ class Config:
             default=False,
             help="Open the browser on successful start.",
         )
+        parser.add_argument(
+            "--version",
+            action="store_true",
+            default=False,
+            help="Know the current installed version of Robyn",
+        )
 
         args, _ = parser.parse_known_args()
 
@@ -60,6 +66,7 @@ class Config:
         self.create = args.create
         self.docs = args.docs
         self.open_browser = args.open_browser
+        self.version = args.version
 
         if self.dev and (self.processes != 1 or self.workers != 1):
             raise Exception("--processes and --workers shouldn't be used with --dev")

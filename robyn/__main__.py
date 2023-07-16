@@ -1,7 +1,7 @@
 import os
 import webbrowser
-
 from .argument_parser import Config
+from robyn import __version__
 
 
 def check(value, input_name):
@@ -77,6 +77,10 @@ def docs():
     webbrowser.open("https://sansyrox.github.io/robyn/#/")
 
 
+def version():
+    print(f"Robyn {__version__}")
+
+
 if __name__ == "__main__":
     config = Config()
     if config.create:
@@ -84,3 +88,6 @@ if __name__ == "__main__":
 
     if config.docs:
         docs()
+
+    if config.version:
+        version()
