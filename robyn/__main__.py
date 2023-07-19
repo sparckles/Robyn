@@ -79,7 +79,7 @@ CMD ["python3.10", "/workspace/foo/app.py", "--log-level=DEBUG"]
 
 def docs():
     print("Opening Robyn documentation... | Offline docs coming soon!")
-    webbrowser.open("https://sansyrox.github.io/robyn/#/")
+    webbrowser.open("https://robyn.tech/")
 
 
 def version():
