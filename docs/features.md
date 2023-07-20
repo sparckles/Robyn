@@ -231,7 +231,7 @@ Additionally, you can access headers for per route.
 @app.get("/test-headers")
 def sync_before_request(request: Request):
     request.headers["test"] = "we are modifying the request headers in the middle of the request!"
-    print(rquest)
+    print(request)
 ```
 
 ## Query Params
