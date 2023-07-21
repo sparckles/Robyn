@@ -19,7 +19,7 @@ use std::sync::atomic::Ordering::{Relaxed, SeqCst};
 use std::sync::{Arc, RwLock};
 
 use std::process::abort;
-use std::time::{SystemTime, UNIX_EPOCH, Duration};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use std::{env, thread};
 
 use actix_files::Files;
@@ -230,20 +230,18 @@ impl Server {
         let calls_count = self.calls_count.clone();
         Python::with_gil(|py| {
             py.allow_threads(|| {
-                thread::spawn(move || {
-                    loop {
-                        let ttl = SystemTime::now()
-                            .duration_since(UNIX_EPOCH)
-                            .unwrap()
-                            .as_secs();
-                        for item in calls_count.iter() {
-                            let mut valid_timestamps = item.value().clone();
-                            valid_timestamps.retain(|timestamp| timestamp >= &ttl);
-                            calls_count.insert(item.key().clone(), valid_timestamps);
-                            calls_count.remove_if(item.key(), |_, t| t.is_empty());
-                        }
-                        thread::sleep(Duration::from_secs(60));
+                thread::spawn(move || loop {
+                    let ttl = SystemTime::now()
+                        .duration_since(UNIX_EPOCH)
+                        .unwrap()
+                        .as_secs();
+                    for item in calls_count.iter() {
+                        let mut valid_timestamps = item.value().clone();
+                        valid_timestamps.retain(|timestamp| timestamp >= &ttl);
+                        calls_count.insert(item.key().clone(), valid_timestamps);
+                        calls_count.remove_if(item.key(), |_, t| t.is_empty());
                     }
+                    thread::sleep(Duration::from_secs(60));
                 });
             });
         });
