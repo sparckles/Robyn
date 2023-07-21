@@ -1,4 +1,4 @@
-import json
+import orjson
 from typing import Any, Dict
 
 
@@ -35,4 +35,7 @@ def jsonify(input_dict: dict) -> str:
     :param input_dict dict: response of the function
     """
 
-    return json.dumps(input_dict)
+    return orjson.dumps(input_dict).decode()
+
+
+json = orjson

@@ -11,6 +11,7 @@ dependencies = [
   'watchdog == 2.2.1',
   'multiprocess == 0.70.14',
   'nestd == 0.3.1',
+  'orjson == 3.9.2',
 # conditional
   'uvloop == 0.17.0; sys_platform == "darwin"',
   'uvloop == 0.17.0; platform_machine == "aarch_64"',
