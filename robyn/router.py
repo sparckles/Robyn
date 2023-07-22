@@ -9,6 +9,7 @@ from robyn.authentication import AuthenticationHandler, AuthenticationNotConfigu
 from robyn.robyn import FunctionInfo, HttpMethod, MiddlewareType, Request, Response
 from robyn import status_codes
 from robyn.ws import WS
+import inspect
 
 
 class Route(NamedTuple):
@@ -76,6 +77,7 @@ class Router(BaseRouter):
         endpoint: str,
         handler: Callable,
         is_const: bool,
+        dependencies: Dict[str,any],
         exception_handler: Optional[Callable],
     ) -> Union[Callable, CoroutineType]:
         @wraps(handler)
@@ -90,8 +92,29 @@ class Router(BaseRouter):
 
         @wraps(handler)
         def inner_handler(*args):
+            depToPass = ""
+            signatureObj = (inspect.signature(handler))
+            argsFromHandler = signatureObj.parameters.values() #holds all args from func args
+            specificDep = dependencies.get(endpoint, dependencies["all"])
+            depToPass = []
+            if specificDep != dependencies["all"]: #if specific dep dict is not the one accessible to all
+                for a in argsFromHandler:
+                    if a.name in specificDep: 
+                        depToPass.append(specificDep[a.name])
+                    elif a.name not in specificDep: #check all dict
+                        for dep_dict in dependencies["all"]:
+                            if a.name in dep_dict:
+                                depToPass.append(dep_dict[a.name])
+            else: #if specified dep dict is the same as the "all" dict
+                for a in argsFromHandler:
+                    for dep_dict in dependencies["all"]:
+                        if a.name in dep_dict:
+                            depToPass.append(dep_dict[a.name])
             try:
-                response = self._format_response(handler(*args))
+                if depToPass: #specificDep != dependencies["all"] and inSpecific is True:#depToPass != "" and inSpecific is True:
+                    response = self._format_response(handler(*args, *depToPass))#next(iter(depToPass.values()))))
+                else:
+                    response = self._format_response(handler(*args,))
             except Exception as err:
                 if exception_handler is None:
                     raise

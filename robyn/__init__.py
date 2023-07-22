@@ -28,11 +28,12 @@ class Robyn:
     """This is the python wrapper for the Robyn binaries."""
 
     def __init__(self, file_object: str, config: Config = Config()) -> None:
+        self.dependencies = {"all":[]}
         directory_path = os.path.dirname(os.path.abspath(file_object))
         self.file_path = file_object
         self.directory_path = directory_path
         self.config = config
-
+        print("Ciorrect init")
         load_vars(project_root=directory_path)
         logging.basicConfig(level=self.config.log_level)
 
@@ -81,8 +82,20 @@ class Robyn:
             self.middleware_router.add_auth_middleware(endpoint)(handler)
 
         return self.router.add_route(
-            route_type, endpoint, handler, is_const, self.exception_handler
+            route_type, endpoint, handler, is_const, self.dependencies, self.exception_handler
         )
+    def inject(self, route = None, http_method=None, **kwargs:Callable[...,any]):
+        if route:
+            self.dependencies[route] = kwargs
+            print("init.py, inject(), Route specified:",route,"Injected dependency:",self.dependencies[route]," Updated dependencies:",self.dependencies)
+        else:
+            for endpoint,dependency in kwargs.items():
+                self.dependencies["all"].append({endpoint:dependency})
+                print("init.py, inject(), route not specified, injected at 'all', Updated Dependencies",self.dependencies)
+    def get_injected_dependencies(self, route = None) -> dict:
+        if route in self.dependencies:
+            return self.dependencies[route]
+        return self.dependencies
 
     def before_request(self, endpoint: Optional[str] = None) -> Callable[..., None]:
         """
