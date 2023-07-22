@@ -103,6 +103,18 @@ class Robyn:
         return self.router.add_route(
             route_type, endpoint, handler, is_const, self.dependencies.dependency_map,self.exception_handler
         )
+    def inject(self, route = None, http_method=None, **kwargs:Callable[...,any]):
+        if route:
+            self.dependencies[route] = kwargs
+            print("init.py, inject(), Route specified:",route,"Injected dependency:",self.dependencies[route]," Updated dependencies:",self.dependencies)
+        else:
+            for endpoint,dependency in kwargs.items():
+                self.dependencies["all"].append({endpoint:dependency})
+                print("init.py, inject(), route not specified, injected at 'all', Updated Dependencies",self.dependencies)
+    def get_injected_dependencies(self, route = None) -> dict:
+        if route in self.dependencies:
+            return self.dependencies[route]
+        return self.dependencies
 
     def inject(self, route=None, **kwargs):
         if route:

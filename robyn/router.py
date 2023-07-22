@@ -10,6 +10,7 @@ from robyn.authentication import AuthenticationHandler, AuthenticationNotConfigu
 from robyn.robyn import FunctionInfo, HttpMethod, MiddlewareType, Request, Response
 from robyn import status_codes
 from robyn.ws import WS
+import inspect
 
 
 class Route(NamedTuple):
