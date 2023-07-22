@@ -4,4 +4,4 @@ watchdog==2.2.1
 multiprocess==0.70.14
 jinja2==3.1.2
 nestd==0.3.1
-ujson==5.8.0 
+ujson==5.7.0 
