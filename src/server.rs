@@ -35,6 +35,8 @@ use pyo3::prelude::*;
 
 const MAX_PAYLOAD_SIZE: &str = "ROBYN_MAX_PAYLOAD_SIZE";
 const DEFAULT_MAX_PAYLOAD_SIZE: usize = 1_000_000; // 1Mb
+const CACHE_RETENTION: &str = "ROBYN_CACHE_RETENTION";
+const DEFAULT_CACHE_RETENTION: u64 = 60; // 1 Minute
 
 static STARTED: AtomicBool = AtomicBool::new(false);
 
@@ -228,6 +230,16 @@ impl Server {
         });
 
         let calls_count = self.calls_count.clone();
+        let cache_retention = env::var(CACHE_RETENTION)
+            .unwrap_or(DEFAULT_CACHE_RETENTION.to_string())
+            .trim()
+            .parse::<u64>()
+            .map_err(|e| {
+                PyValueError::new_err(format!(
+                    "Failed to parse environment variable {MAX_PAYLOAD_SIZE} - {e}"
+                ))
+            })?;
+
         Python::with_gil(|py| {
             py.allow_threads(|| {
                 thread::spawn(move || loop {
@@ -241,7 +253,7 @@ impl Server {
                         calls_count.insert(item.key().clone(), valid_timestamps);
                         calls_count.remove_if(item.key(), |_, t| t.is_empty());
                     }
-                    thread::sleep(Duration::from_secs(60));
+                    thread::sleep(Duration::from_secs(cache_retention));
                 });
             });
         });
