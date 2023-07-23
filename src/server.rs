@@ -243,14 +243,13 @@ impl Server {
         Python::with_gil(|py| {
             py.allow_threads(|| {
                 thread::spawn(move || loop {
-                    let ttl = SystemTime::now()
+                    let mut ttl = SystemTime::now()
                         .duration_since(UNIX_EPOCH)
                         .unwrap()
                         .as_secs();
-                    for item in calls_count.iter() {
-                        let mut valid_timestamps = item.value().clone();
-                        valid_timestamps.retain(|timestamp| timestamp >= &ttl);
-                        calls_count.insert(item.key().clone(), valid_timestamps);
+                    for mut item in calls_count.iter_mut() {
+                        let valid_timestamps = item.value_mut();
+                        valid_timestamps.retain_mut(|timestamp| timestamp >= &mut ttl);
                         calls_count.remove_if(item.key(), |_, t| t.is_empty());
                     }
                     thread::sleep(Duration::from_secs(cache_retention));
