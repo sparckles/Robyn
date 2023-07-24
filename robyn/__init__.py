@@ -29,7 +29,12 @@ __version__ = get_version()
 class Robyn:
     """This is the python wrapper for the Robyn binaries."""
 
-    def __init__(self, file_object: str, config: Config = Config()) -> None:
+    def __init__(
+        self,
+        file_object: str,
+        config: Config = Config(),
+        rate_limiter: RateLimiter = RateLimiter(),
+    ) -> None:
         directory_path = os.path.dirname(os.path.abspath(file_object))
         self.file_path = file_object
         self.directory_path = directory_path
@@ -58,7 +63,7 @@ class Robyn:
         self.event_handlers = {}
         self.exception_handler: Optional[Callable] = None
         self.authentication_handler: Optional[AuthenticationHandler] = None
-        self.rate_limiter = RateLimiter()
+        self.rate_limiter = rate_limiter
 
     def _add_route(
         self,

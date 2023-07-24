@@ -51,5 +51,5 @@ class RateLimiter:
             return False
         current_timestamp = int(time.time())
         ttl = current_timestamp - self.limit_ttl
-        valid_calls = [c for c in calls if int(c) >= ttl]
+        valid_calls = [c for c in calls if c and int(c) >= ttl]
         return len(valid_calls) > self.calls_limit
