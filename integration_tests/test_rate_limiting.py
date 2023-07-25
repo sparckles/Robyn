@@ -18,13 +18,14 @@ from helpers.http_methods_helpers import get, post, put
 def test_throttling(
     route: str,
     method: Callable,
-    session,
+    test_rate_limiting_session,
 ):
-    r = method(route, expected_status_code=200)
+    BASE_URL = "http://127.0.0.1:8082"
+    r = method(route, expected_status_code=200, base_url=BASE_URL)
     assert r.text == "OK"
-    r = method(route, expected_status_code=200)
+    r = method(route, expected_status_code=200, base_url=BASE_URL)
     assert r.text == "OK"
-    r = method(route, expected_status_code=200)
+    r = method(route, expected_status_code=200, base_url=BASE_URL)
     assert r.text == "OK"
-    r = method(route, expected_status_code=429)
+    r = method(route, expected_status_code=429, base_url=BASE_URL)
     assert r.text == "Rate limit exceeded"

@@ -22,6 +22,8 @@ def get(
     expected_status_code: int = 200,
     headers: dict = {},
     should_check_response: bool = True,
+    *,
+    base_url: str = BASE_URL,
 ) -> requests.Response:
     """
     Makes a GET request to the given endpoint and checks the response.
@@ -32,7 +34,7 @@ def get(
     should_check_response bool: A boolean to indicate if the status code and headers should be checked.
     """
     endpoint = endpoint.strip("/")
-    response = requests.get(f"{BASE_URL}/{endpoint}", headers=headers)
+    response = requests.get(f"{base_url}/{endpoint}", headers=headers)
     if should_check_response:
         check_response(response, expected_status_code)
     return response
@@ -44,6 +46,8 @@ def post(
     expected_status_code: int = 200,
     headers: dict = {},
     should_check_response: bool = True,
+    *,
+    base_url: str = BASE_URL,
 ) -> requests.Response:
     """
     Makes a POST request to the given endpoint and checks the response.
@@ -55,7 +59,7 @@ def post(
     """
 
     endpoint = endpoint.strip("/")
-    response = requests.post(f"{BASE_URL}/{endpoint}", data=data, headers=headers)
+    response = requests.post(f"{base_url}/{endpoint}", data=data, headers=headers)
     if should_check_response:
         check_response(response, expected_status_code)
     return response
@@ -67,6 +71,8 @@ def put(
     expected_status_code: int = 200,
     headers: dict = {},
     should_check_response: bool = True,
+    *,
+    base_url: str = BASE_URL,
 ) -> requests.Response:
     """
     Makes a PUT request to the given endpoint and checks the response.
@@ -78,7 +84,7 @@ def put(
     """
 
     endpoint = endpoint.strip("/")
-    response = requests.put(f"{BASE_URL}/{endpoint}", data=data, headers=headers)
+    response = requests.put(f"{base_url}/{endpoint}", data=data, headers=headers)
     if should_check_response:
         check_response(response, expected_status_code)
     return response
@@ -90,6 +96,8 @@ def patch(
     expected_status_code: int = 200,
     headers: dict = {},
     should_check_response: bool = True,
+    *,
+    base_url: str = BASE_URL,
 ) -> requests.Response:
     """
     Makes a PATCH request to the given endpoint and checks the response.
@@ -101,7 +109,7 @@ def patch(
     """
 
     endpoint = endpoint.strip("/")
-    response = requests.patch(f"{BASE_URL}/{endpoint}", data=data, headers=headers)
+    response = requests.patch(f"{base_url}/{endpoint}", data=data, headers=headers)
     if should_check_response:
         check_response(response, expected_status_code)
     return response
@@ -113,6 +121,8 @@ def delete(
     expected_status_code: int = 200,
     headers: dict = {},
     should_check_response: bool = True,
+    *,
+    base_url: str = BASE_URL,
 ) -> requests.Response:
     """
     Makes a DELETE request to the given endpoint and checks the response.
@@ -124,7 +134,7 @@ def delete(
     """
 
     endpoint = endpoint.strip("/")
-    response = requests.delete(f"{BASE_URL}/{endpoint}", data=data, headers=headers)
+    response = requests.delete(f"{base_url}/{endpoint}", data=data, headers=headers)
     if should_check_response:
         check_response(response, expected_status_code)
     return response
@@ -136,6 +146,8 @@ def head(
     expected_status_code: int = 200,
     headers: dict = {},
     should_check_response: bool = True,
+    *,
+    base_url: str = BASE_URL,
 ) -> requests.Response:
     """
     Makes a HEAD request to the given endpoint and checks the response.
@@ -147,7 +159,7 @@ def head(
     """
 
     endpoint = endpoint.strip("/")
-    response = requests.head(f"{BASE_URL}/{endpoint}", data=data, headers=headers)
+    response = requests.head(f"{base_url}/{endpoint}", data=data, headers=headers)
     if should_check_response:
         check_response(response, expected_status_code)
     return response
@@ -162,6 +174,8 @@ def generic_http_helper(
     expected_status_code: int = 200,
     headers: dict = {},
     should_check_response: bool = True,
+    *,
+    base_url: str = BASE_URL,
 ) -> requests.Response:
     """
     Makes a request to the given endpoint and checks the response.
@@ -178,10 +192,10 @@ def generic_http_helper(
             f"{method} method must be one of get, post, put, patch, delete"
         )
     if method == "get":
-        response = requests.get(f"{BASE_URL}/{endpoint}", headers=headers)
+        response = requests.get(f"{base_url}/{endpoint}", headers=headers)
     else:
         response = requests.request(
-            method, f"{BASE_URL}/{endpoint}", data=data, headers=headers
+            method, f"{base_url}/{endpoint}", data=data, headers=headers
         )
     if should_check_response:
         check_response(response, expected_status_code)

@@ -116,6 +116,17 @@ def test_session():
     kill_process(process)
 
 
+@pytest.fixture
+def test_rate_limiting_session():
+    domain = "127.0.0.1"
+    port = 8082
+    os.environ["ROBYN_URL"] = domain
+    os.environ["ROBYN_PORT"] = str(port)
+    process = start_server(domain, port, is_dev=True)
+    yield
+    kill_process(process)
+
+
 # create robyn.env before test and delete it after test
 @pytest.fixture
 def env_file():
