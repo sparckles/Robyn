@@ -103,18 +103,22 @@ class Robyn:
         return self.router.add_route(
             route_type, endpoint, handler, is_const, self.dependencies.dependency_map,self.exception_handler
         )
-    def inject(self, route = None, http_method=None, **kwargs:Callable[...,any]):
+
+    def inject(self, route=None, **kwargs):
         if route:
-            self.dependencies[route] = kwargs
-            print("init.py, inject(), Route specified:",route,"Injected dependency:",self.dependencies[route]," Updated dependencies:",self.dependencies)
+            self.dependencies.add_route_dependency(route, **kwargs)
         else:
-            for endpoint,dependency in kwargs.items():
-                self.dependencies["all"].append({endpoint:dependency})
-                print("init.py, inject(), route not specified, injected at 'all', Updated Dependencies",self.dependencies)
-    def get_injected_dependencies(self, route = None) -> dict:
-        if route in self.dependencies:
-            return self.dependencies[route]
-        return self.dependencies
+            self.dependencies.add_global_dependency(**kwargs)
+
+    def get_injected_dependencies(self, route=None) -> dict:
+        # How will we access these from sub routes?
+        # @Darren, @Ido ?? Any ideas?
+        # Should we add a method to get the dependencies somewhere else?
+        # or maybe make it a class method/variable?
+        if route:
+            return self.dependencies.get_route_dependencies(route)
+        else:
+            return self.dependencies.get_global_dependencies()
 
     def inject(self, route=None, **kwargs):
         if route:
