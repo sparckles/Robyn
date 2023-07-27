@@ -70,6 +70,7 @@ class Logger:
         bold: bool = False,
         underline: bool = False,
     ):
+        self.logger("This is Python")
         self.logger.debug(self._format_msg(msg, color, bold, underline))
 
 
