@@ -123,7 +123,7 @@ If you still need help to get started, feel free to reach out on our [community 
 
 ### ⚙️ To Develop Locally
 
-1. Install the development dependencies: `poetry install --with dev`
+1. Install the development dependencies: `poetry install --with dev --with test`
 
 2. Install the pre-commit git hooks: `pre-commit install`
 

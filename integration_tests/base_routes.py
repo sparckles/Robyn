@@ -9,7 +9,7 @@ from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.templating import JinjaTemplate
 
 from integration_tests.views import SyncView, AsyncView
-from subroutes import sub_router
+from integration_tests.subroutes import sub_router
 
 app = Robyn(__file__)
 websocket = WS(app, "/web_socket")
