@@ -1,8 +1,12 @@
+[build-system]
+requires = ["maturin>=0.12,<0.13"]
+build-backend = "maturin"
+
 [project]
 name = "robyn"
 version = "0.36.2"
 description = "A web server that is fast!"
-authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
+authors = [{ name = "Sanskar Jethi", email = "sansyrox@gmail.com" }]
 repository = "https://github.com/sansyrox/robyn"
 documentation = "https://robyn.tech/"
 classifiers = [
@@ -25,7 +29,7 @@ classifiers = [
 name = "robyn"
 version = "0.36.2"
 description = "A web server that is fast!"
-authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
+authors = [{ name = "Sanskar Jethi", email = "sansyrox@gmail.com" }]
 repository = "https://github.com/sansyrox/robyn"
 documentation = "https://robyn.tech/"
 classifiers = [
@@ -81,10 +85,6 @@ pytest-codspeed = "1.2.2"
 
 [tool.poetry.scripts]
 devserver = { callable = "integration_tests.base_routes:main" }
-
-[build-system]
-requires = ["maturin>=0.14,<0.15"]
-build-backend = "maturin"
 
 [tool.ruff]
 line-length = 160
