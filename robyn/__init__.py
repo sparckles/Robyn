@@ -19,15 +19,7 @@ from robyn.types import Directory, Header
 from robyn import status_codes
 from robyn.ws import WS
 from collections import defaultdict
-'''
-Goal: be able to inject dependencies from one file to another 
 
-inject_dependency goes in robyn/__init__.py
-
-in mod.rs' get_function_output, dependencies argument needs to be added
-
-router and subrouter class in init.py
-'''
 
 __version__ = get_version()
 
@@ -36,15 +28,12 @@ class Robyn:
     """This is the python wrapper for the Robyn binaries."""
 
     def __init__(self, file_object: str, config: Config = Config()) -> None:
-        #how does server class defined in robyn.pyi have to do with init.py? how does this init start the server?
         directory_path = os.path.dirname(os.path.abspath(file_object))
         self.file_path = file_object
         self.directory_path = directory_path
         self.testName = ""
         self.config = config
-        self.dependencies = {"all":{'request':Request, 'response':Response}}
-        #self.dependencies = {"all": set()}#{"all":set()} #{function name: dependency object} changed "[] to {}"
-        #find way to avoid collision, like if example defined in sub_router and main
+        self.dependencies = {"all":{'request':Request, 'response':Response}} #new
         load_vars(project_root=directory_path)
         logging.basicConfig(level=self.config.log_level)
 
@@ -82,36 +71,20 @@ class Robyn:
 
         """ We will add the status code here only
         """
-        #print("init.py: About to call Router.py and router.py's add_route()")
         return self.router.add_route(
-            route_type, endpoint, handler, is_const, self.dependencies,self.exception_handler
+            route_type, endpoint, handler, is_const, self.dependencies,self.exception_handler #added deps
         )
     
-    def inject(self, route = None, http_method=None, **kwargs:Callable[...,any]): #change kwargs to smth else?
+    def inject(self, route = None, http_method=None, **kwargs:Callable[...,any]): #new
         endpoint, dependency = next(iter(kwargs.items()))
-        if route: #route specified
+        if route: 
             if route not in self.dependencies:
                 self.dependencies[route] = {}
             self.dependencies[route][endpoint] = dependency
             self.dependencies[route] |= self.dependencies["all"]
-            '''if route in self.dependencies:
-                print("init.py, yes in dict")
-                self.dependencies[route][endpoint] = dependency
-                #self.dependencies[route].add((endpoint,dependency))
-                self.dependencies[route] |= self.dependencies["all"]
-            else: #route not in dep dict
-                print("init.py, not in dict")
-                #self.dependencies[route] = set(kwargs.items())
-                self.dependencies[route] = {}
-                self.dependencies[route][endpoint] = dependency
-                self.dependencies[route] |= self.dependencies["all"]'''
-            print("init.py, inject(), Route specified:",route,"Injected dependency:",self.dependencies[route]," Updated dependencies:",self.dependencies)
         else: #no route specified
-            #self.dependencies["all"].add((kwargs.items()))
             for element in self.dependencies:
-                self.dependencies[element][endpoint] = dependency
-                #self.dependencies[element].add((endpoint,dependency))
-            print("init.py, inject(), route not specified, injected at 'all', Updated Dependencies",self.dependencies)
+                self.dependencies[element][endpoint] = dependency #add dep to all elements in deps dictionary
     def get_injected_dependencies(self, route = None) -> dict:
         if route in self.dependencies:
             return self.dependencies[route]
@@ -179,35 +152,13 @@ class Robyn:
 
         :param port int: represents the port number at which the server is listening
         """
-        print("init.py, Start()")
         url = os.getenv("ROBYN_URL", url)
         port = int(os.getenv("ROBYN_PORT", port))
         open_browser = bool(os.getenv("ROBYN_BROWSER_OPEN", self.config.open_browser))
 
         logger.info(f"Robyn version: {__version__}")
         logger.info(f"Starting server at {url}:{port}")
-        '''
-        sequence of events: 
-        main app initialized. dependencies injected and add_routes called when you use @app.get("/").
-        add_route in router.py gets called: check if any of function's args match the name of any of main.py's dependencies. 
-        --> if so, use dependencies[exampleArgs]. if exampleArgs is not empty, then format response 
-             using response = self._format_response(handler(*args, dependencies[exampleArgs])) #handler = callable function
-        --> if no deps in the args, run the format response without dep param
-        --> return inner handler/function object and gets added to self.router
-        main.py continues adding routes until you get to main.start(...)
-        init.py's start calls run_process and passes routes
-        app.py start -> run_process(self.dependencies) -> processpool.py: run_process(dependencies)-> spawn_process(dependencies) start Server() ->
-        goes to processpool.py -> processpool.py's spawn_process starts server
-        in server.rs' route section, execute_http_function is called when we try to access some route like 127.0.0.1:8080/sssssss, mod.rs next
-        in mod.rs: get_function_output(...) defined and used by all the 3 execute functions. For args:
-            function: &'a FunctionInfo, FunctionInfo class defined in src/types/function_info.rs with args handler, is_async,number_of_params
-            -- handler = function, is_async = bool, number_of_params = number of params the function takes
-            py: Python<'a>,
-            input: &T,
-            -- ask again abt what needs to be changed in mod.rs
-        '''
         mp.allow_connection_pickling()
-        print("init.py, run_process()")
         run_processes(
             url,
             port,
@@ -399,19 +350,17 @@ class Robyn:
             self.web_socket_router.routes[
                 new_endpoint
             ] = router.web_socket_router.routes[route]
-        #print(self.router.routes)
-        #router.dependencies["all"].update(self.dependencies["all"]), before we had just this line, main Route would overwrite subroute
-        for dep in self.dependencies["all"]: #dep = key. for each key in all dict
+        #include router for deps
+        for dep in self.dependencies["all"]: 
             if dep in router.dependencies["all"]:
                 continue
             router.dependencies["all"][dep] = self.dependencies["all"][dep] #here, extend super's global deps to subrouters
-        print("init.py, include router, sub's deps:", router.dependencies)
 
-class SubRouter(Robyn): #way to organize your code, basicaly an app class
+class SubRouter(Robyn): 
     def __init__(
         self, file_object: str, prefix: str = "", config: Config = Config()
     ) -> None:
-        super().__init__(file_object, config) #super = temporary Robyn object, so we can use init
+        super().__init__(file_object, config) 
         self.prefix = prefix
 
     def __add_prefix(self, endpoint: str):

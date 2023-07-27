@@ -40,7 +40,6 @@ class Router(BaseRouter): #base class of app=Route(__file__) declared here
     def __init__(self) -> None:
         super().__init__()
         self.routes: List[Route] = []
-        #self.dependencies = {}
 
     def _format_response(self, res, request=None):
         if callable(res):
@@ -87,18 +86,14 @@ class Router(BaseRouter): #base class of app=Route(__file__) declared here
         dependencies: Dict[str,any],
         exception_handler: Optional[Callable],
     ) -> Union[Callable, CoroutineType]:
-        #print("router.py, add_route(), dependencies:", dependencies)
-        #print("router.py, add_route, Endpoint:", endpoint)
         @wraps(handler)
         async def async_inner_handler(*args):
             signatureObj = (inspect.signature(handler))
             argsFromHandler = signatureObj.parameters.values() #holds all args from func args
             specificDep = dependencies.get(endpoint, dependencies["all"])
             depToPass = [] 
-            #not_deps = ""
-            for a in argsFromHandler: #for each handler func param
-                #if a.name != "request" and a.name!= "response": #if not request, response
-                if not any(a.name == key for key, _ in specificDep.items()): #if param was not specified in app's dep dictionary
+            for a in argsFromHandler: 
+                if not any(a.name == key for key, _ in specificDep.items()): 
                     raise ValueError("Required dependency,", a.name, "has not been injected for this route.")
                 for key,value in specificDep.items(): 
                     if key == a.name:
@@ -117,128 +112,34 @@ class Router(BaseRouter): #base class of app=Route(__file__) declared here
 
         @wraps(handler) 
         def inner_handler(*args):
-            print("router.py,inner_handler, route:",endpoint)
             signatureObj = (inspect.signature(handler))
-            argsFromHandler = signatureObj.parameters.values() #holds all args from func args
-            print("router.py, inner_handler: Args from handler",(argsFromHandler))
+            argsFromHandler = signatureObj.parameters.values() 
             specificDep = dependencies.get(endpoint, dependencies["all"])
-            print("router.py, inner_handler, specificDep",specificDep)
-            '''if endpoint in dependencies: #if endpoint mentioned in handler is an entry in dependencies list
-                print(endpoint, "is in dependencies",dependencies)
-                #inSpecific = True
-                specificDep = dependencies[endpoint] #specific dependency dictionary entry,need to find way to allow specified dep to use all
-            else:
-                print(endpoint, "not specified in dependencies", dependencies) #ex: /ssssss is written endpoint but not specf'd in deps
-                #inSpecific = False
-                specificDep = dependencies["all"] #dep[all] is list of dicts
-                print("specificDep",specificDep)'''
             depToPass = [] 
-            #not_deps = ""
-            for a in argsFromHandler: #for each handler func param
-                print("A",a.name)
-                print("router.py, a.name",a.name, " specificDep:",specificDep)
-                '''if a.name == "request" or a.name == "response":
-                    not_deps = a
-                    print("Not deps in fxn:", a)'''
-                #if a.name != "request" and a.name!= "response": #if not request, response
+            for a in argsFromHandler: 
                 if not any(a.name == key for key, _ in specificDep.items()): #if param was not specified in app's dep dictionary
-                    raise ValueError("Required dependency,", a.name, "has not been injected for this route.")
+                    raise ValueError("Required dependency:", a.name, ", has not been injected for this route.")
                 for key,value in specificDep.items(): #compare each handler func param with each key,value pair
                     if key == a.name:
-                        print("router.py, a.name",a.name, " key:",key," value:",value)
                         depToPass.append(value)
-                        print("router.py, inner_handler, depToPass update:",depToPass)
-                
-            '''if specificDep == "not supposed to run":#!= dependencies["all"]: #if specific dep dict is not the one accessible to all
-                for a in argsFromHandler:
-                    print("router.py, inner handler, arg from handler",a.name, "    dependency dict:",specificDep)
-                    if a.name in specificDep: #check specificDep to see if func param is there
-                        #depToPass = specificDep#a.name commented after creating depToPass list
-                        #print("Dep to pass was valid", depToPass)
-                        depToPass.append(specificDep[a.name])
-                    elif a.name not in specificDep: #check all dict
-                        print("router.py, inner handler, a.name not in specDep", a.name, " specificDep:", specificDep, " Dep to pass was empty", depToPass)
-                        for dep_dict in dependencies["all"]:
-                            print("router.py, inner handler, dependency dict in dependencies all", dep_dict)
-                            if a.name in dep_dict:
-                                depToPass.append(dep_dict[a.name])
-                                print("router.py, inner handler, dep to pass after checking all dict:", depToPass)
-                    #if depToPass == []: # = "" #means func param not in specificDep, have to check the one accessible to all
-                    print("Dep to pass was empty", depToPass)
-                    for a in argsFromHandler:
-                        for dep_dict in dependencies["all"]:
-                            if a.name in dep_dict:
-                                depToPass.append(specificDep[a.name])
-                                print("Dep to pass from specified route that has to access all dict:", depToPass)
-            else: #if specified dep dict is the same as the "all" dict
-                for a in argsFromHandler:
-                    print("router.py, inner_handler(), arg from handler",a.name, "    dependency dict being looked through:",specificDep)
-                    for dep_dict in dependencies["all"]:
-                        if a.name in dep_dict:
-                            depToPass.append(dep_dict[a.name])
-                            print("router.py, inner_handler(), Unspecified route's depToPass:",depToPass) #retrieve specific dict of the dependency listed in func args'''
-                #if a.name in [i for i in specificDep if a.name in i] or a.name in [i for i in dependencies["all"] if a.name in i] :
-                    #depToPass = a.name
-                    #print("dep to pass", dependencies[depToPass])
-            '''
-            Test cases: (+)=done (-)=ToDo
-            - unspecified injection: make sure accessible by any    -> /    
-            - unspecified injection: make sure accessible by routes that had specified dep inject      ->      /s    
-            - specified injection: make sure accessible by spec'd routes   ->    /s
-            - specified injection: make sure unaccessible by any route   ->     /
-            --> all work for now
-            ToDo:
-            * subrouters to have own set of dependencies, inherit deps from greater route. If we have dep mapped to global router.
-            ... should be accessible via subrouter
-            * try "app.inject_dependency("/route", HTTP.GET, dependency2)"
-            * take in multiple dependency args from inject fxn
-            '''
+                        #print("router.py, inner_handler, depToPass update:",depToPass)
             try:
-                #if depToPass: #specificDep != dependencies["all"] and inSpecific is True:#depToPass != "" and inSpecific is True:
-                #    print("try block, dep specified")
                 if depToPass:
-                    print("router.py, args",args,"depToPass",depToPass)
-                    response = self._format_response(handler( *depToPass))#next(iter(depToPass.values()))))
+                    response = self._format_response(handler( *depToPass))
                 else: 
                     response = self._format_response(handler(*args,))
-                '''elif specificDep != dependencies["all"] and inSpecific is False:
-                    response = self._format_response(handler(*args, next(iter(depToPass.values()))))
-                elif specificDep == dependencies["all"]:#depToPass != "" and specific is False:
-                    response = self._format_response(handler(*args, next(iter(depToPass.values()))))
-                    #for dep in dependencies["all"]:
-                        #if depToPass == dependencies[dep]:
-                         #   response = self._format_response(handler(*args,dependencies[dep]))'''
-                '''else:
-                    print("try block, no dep specified")
-                    response = self._format_response(handler(*args,))'''
             except Exception as err:
                 if exception_handler is None:
                     raise
                 response = self._format_response(exception_handler(err))
             return response
-        number_of_params = len(signature(handler).parameters) #this was already defined. extracting # of params passed to rust
-        #print("router.py, add_route, ran before inner_handler, Params:", signature(handler).parameters, "   NUMBER OF PARAMS",number_of_params)
-        #depending on that, we are executing whatever
-        '''params = signature(handler).parameters 
-        for param in params:
-            if param is not Request and params is not Response:
-                if param not in dependencies:
-                    print("dependencies: ",dependencies, ",param,", param,   "   Not in DEPENDENCIES")
-                else:
-                    depToInject = param
-                    print('dep to inject',depToInject)    
-        print("Endpoint", endpoint, '   these are params: ',params) #gives ordered dict of params'''
-        '''extract num of parameters extracting to rust. we can find params 
-        check if self.dependencies dictionary or "parameters that we are passing are not of the keyword request or response" '''
-        #print("router.py, add_route, Dependencies from router.py",dependencies)
+        number_of_params = len(signature(handler).parameters) 
         if iscoroutinefunction(handler):
-            function = FunctionInfo(async_inner_handler, True, number_of_params) #can have argument for functioninfo
-            #parameters can get passed to get function putput. FunctionInfo used in get_function_output
+            function = FunctionInfo(async_inner_handler, True, number_of_params) 
             self.routes.append(Route(route_type, endpoint, function, is_const))
             return async_inner_handler
         else:
-            print("router.py, inner handler, gets called upon init.py _add_route()")
-            function = FunctionInfo(inner_handler, False, number_of_params) #this one gets called for our example
+            function = FunctionInfo(inner_handler, False, number_of_params) 
             self.routes.append(Route(route_type, endpoint, function, is_const))
             return inner_handler
 
