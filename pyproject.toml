@@ -1,3 +1,26 @@
+[project]
+name = "robyn"
+version = "0.36.2"
+description = "A web server that is fast!"
+authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
+repository = "https://github.com/sansyrox/robyn"
+documentation = "https://robyn.tech/"
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Web Environment",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: BSD License",
+  "Operating System :: OS Independent",
+  "Topic :: Internet :: WWW/HTTP",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: Implementation :: CPython",
+]
+
 [tool.poetry]
 name = "robyn"
 version = "0.36.2"
