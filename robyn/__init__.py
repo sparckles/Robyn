@@ -42,9 +42,8 @@ class Robyn:
         self.directory_path = directory_path
         self.testName = ""
         self.config = config
-        self.dependencies = {"all":{}}
+        self.dependencies = {"all":{'request':Request, 'response':Response}}
         #self.dependencies = {"all": set()}#{"all":set()} #{function name: dependency object} changed "[] to {}"
-        print('init.py,init, self.deps',self.dependencies)
         #find way to avoid collision, like if example defined in sub_router and main
         load_vars(project_root=directory_path)
         logging.basicConfig(level=self.config.log_level)
@@ -117,16 +116,6 @@ class Robyn:
         if route in self.dependencies:
             return self.dependencies[route]
         return self.dependencies
-    def inject_dependency(self, **kwargs:Callable[...,any]) -> None: #dependency:Callable[..., any], endpoint: Optional[str]= None) -> None:
-        
-        #inject a dependency to be used by routes
-        #dependency: dependency to be injected
-        #endpoint: optional endpoint to associate dependency with
-
-        for endpoint,dependency in kwargs.items():
-            print("Endpoint",endpoint,"   Dependency",dependency)
-            self.dependencies[endpoint] = dependency
-            print("Dependencies",self.dependencies)
 
     def before_request(self, endpoint: Optional[str] = None) -> Callable[..., None]:
         """
@@ -410,7 +399,7 @@ class Robyn:
             self.web_socket_router.routes[
                 new_endpoint
             ] = router.web_socket_router.routes[route]
-        print(self.router.routes)
+        #print(self.router.routes)
         #router.dependencies["all"].update(self.dependencies["all"]), before we had just this line, main Route would overwrite subroute
         for dep in self.dependencies["all"]: #dep = key. for each key in all dict
             if dep in router.dependencies["all"]:
