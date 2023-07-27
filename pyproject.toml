@@ -29,7 +29,7 @@ classifiers = [
 name = "robyn"
 version = "0.36.2"
 description = "A web server that is fast!"
-authors = [{ name = "Sanskar Jethi", email = "sansyrox@gmail.com" }]
+authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 repository = "https://github.com/sansyrox/robyn"
 documentation = "https://robyn.tech/"
 classifiers = [
