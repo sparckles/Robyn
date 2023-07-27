@@ -25,7 +25,7 @@ def load_vars(variables=None, project_root=""):
 
     if variables is None:
         variables = parser(project_root=project_root)
-        
+
     os.environ.setdefault("ENABLE_ROBYN_LOGS", "false")
 
     for var in variables:
