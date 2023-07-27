@@ -99,7 +99,8 @@ class Router(BaseRouter): #base class of app=Route(__file__) declared here
         dependencies: Dict[str, any],
         exception_handler: Optional[Callable],
     ) -> Union[Callable, CoroutineType]:
-        print("router.py, add_route(), dependencies:", dependencies)
+        #print("router.py, add_route(), dependencies:", dependencies)
+        #print("router.py, add_route, Endpoint:", endpoint)
         @wraps(handler)
         async def async_inner_handler(*args):
             param_list, dependency_dict = self.validate_handler_args(handler, endpoint, dependencies)
@@ -141,7 +142,7 @@ class Router(BaseRouter): #base class of app=Route(__file__) declared here
                 response = self._format_response(exception_handler(err))
             return response
         number_of_params = len(signature(handler).parameters) #this was already defined. extracting # of params passed to rust
-        print("router.py, add_route, ran before inner_handler, Params:", signature(handler).parameters, "   NUMBER OF PARAMS",number_of_params)
+        #print("router.py, add_route, ran before inner_handler, Params:", signature(handler).parameters, "   NUMBER OF PARAMS",number_of_params)
         #depending on that, we are executing whatever
         '''params = signature(handler).parameters 
         for param in params:
@@ -154,16 +155,15 @@ class Router(BaseRouter): #base class of app=Route(__file__) declared here
         print("Endpoint", endpoint, '   these are params: ',params) #gives ordered dict of params'''
         '''extract num of parameters extracting to rust. we can find params 
         check if self.dependencies dictionary or "parameters that we are passing are not of the keyword request or response" '''
-        print("router.py, add_route, Dependencies from router.py",dependencies)
+        #print("router.py, add_route, Dependencies from router.py",dependencies)
         if iscoroutinefunction(handler):
             function = FunctionInfo(async_inner_handler, True, number_of_params) #can have argument for functioninfo
             #parameters can get passed to get function putput. FunctionInfo used in get_function_output
             self.routes.append(Route(route_type, endpoint, function, is_const))
             return async_inner_handler
         else:
-            print("router.py, inner handler, gets called upon accessing url")
+            print("router.py, inner handler, gets called upon init.py _add_route()")
             function = FunctionInfo(inner_handler, False, number_of_params) #this one gets called for our example
-            print("function=functionInfo")
             self.routes.append(Route(route_type, endpoint, function, is_const))
             return inner_handler
 

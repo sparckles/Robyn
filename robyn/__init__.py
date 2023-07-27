@@ -42,6 +42,9 @@ class Robyn:
         self.directory_path = directory_path
         self.config = config
         self.dependencies = dependencies
+        self.dependencies = {"all":{'request':Request, 'response':Response}}
+        #self.dependencies = {"all": set()}#{"all":set()} #{function name: dependency object} changed "[] to {}"
+        #find way to avoid collision, like if example defined in sub_router and main
         load_vars(project_root=directory_path)
         logging.basicConfig(level=self.config.log_level)
 
