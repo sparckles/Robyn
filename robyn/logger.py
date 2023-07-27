@@ -43,7 +43,8 @@ class Logger:
         bold: bool = False,
         underline: bool = False,
     ):
-        self.logger.error(self._format_msg(msg, color, bold, underline))
+        log = self.logger
+        log.error(self._format_msg(msg, color, bold, underline))
 
     def warn(
         self,
@@ -70,7 +71,7 @@ class Logger:
         bold: bool = False,
         underline: bool = False,
     ):
-        self.logger("This is Python")
+        self.logger("This is Python now")
         self.logger.debug(self._format_msg(msg, color, bold, underline))
 
 
