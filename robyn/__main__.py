@@ -38,15 +38,15 @@ def index():
 
 
 if __name__ == "__main__":
-    app.run()
+    app.start()
 
             """
         )
 
-    # DockerFile configuration
+    # Dockerfile configuration
     if docker == "Y":
         print(f"Generating docker configuration for {project_dir}")
-        dockerfile_path = os.path.join(project_dir, "DockerFile")
+        dockerfile_path = os.path.join(project_dir, "Dockerfile")
         with open(dockerfile_path, "w") as f:
             f.write(
                 """
@@ -54,20 +54,14 @@ FROM ubuntu:22.04
 
 WORKDIR /workspace
 
-RUN apt-get update -y && \
-    apt-get install -y python 3.10
-python3-pip
-
-RUN pip install --no-cache-dir
---upgrade robyn
+RUN apt-get update -y && apt-get install -y python 3.10 python3-pip
+RUN pip install --no-cache-dir --upgrade robyn
 
 COPY ./src/workspace/
 
 EXPOSE 8080
 
-CMD ["python3.10", "/workspace/foo/
-app.py", "--log-level=DEBUG"]
-
+CMD ["python3.10", "/workspace/foo/app.py", "--log-level=DEBUG"]
                 """
             )
     elif docker == "N":

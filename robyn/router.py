@@ -4,9 +4,10 @@ from functools import wraps
 from inspect import signature
 from types import CoroutineType
 from typing import Callable, Dict, List, NamedTuple, Union, Optional
+from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
 
-from robyn.robyn import FunctionInfo, HttpMethod, MiddlewareType, Response
-from robyn.status_codes import StatusCodes
+from robyn.robyn import FunctionInfo, HttpMethod, MiddlewareType, Request, Response
+from robyn import status_codes
 from robyn.ws import WS
 
 
@@ -42,7 +43,7 @@ class Router(BaseRouter):
     def _format_response(self, res):
         response = {}
         if isinstance(res, dict):
-            status_code = res.get("status_code", StatusCodes.HTTP_200_OK.value)
+            status_code = res.get("status_code", status_codes.HTTP_200_OK)
             headers = res.get("headers", {"Content-Type": "text/plain"})
             body = res.get("body", "")
 
@@ -57,13 +58,13 @@ class Router(BaseRouter):
             response = res
         elif isinstance(res, bytes):
             response = Response(
-                status_code=StatusCodes.HTTP_200_OK.value,
+                status_code=status_codes.HTTP_200_OK,
                 headers={"Content-Type": "application/octet-stream"},
                 body=res,
             )
         else:
             response = Response(
-                status_code=StatusCodes.HTTP_200_OK.value,
+                status_code=status_codes.HTTP_200_OK,
                 headers={"Content-Type": "text/plain"},
                 body=str(res).encode("utf-8"),
             )
@@ -116,6 +117,10 @@ class MiddlewareRouter(BaseRouter):
         super().__init__()
         self.global_middlewares: List[GlobalMiddleware] = []
         self.route_middlewares: List[RouteMiddleware] = []
+        self.authentication_handler: Optional[AuthenticationHandler] = None
+
+    def set_authentication_handler(self, authentication_handler: AuthenticationHandler):
+        self.authentication_handler = authentication_handler
 
     def add_route(
         self, middleware_type: MiddlewareType, endpoint: str, handler: Callable
@@ -127,6 +132,26 @@ class MiddlewareRouter(BaseRouter):
         )
         return handler
 
+    def add_auth_middleware(self, endpoint: str):
+        """
+        This method adds an authentication middleware to the specified endpoint.
+        """
+
+        def inner(handler):
+            def inner_handler(request: Request, *args):
+                if not self.authentication_handler:
+                    raise AuthenticationNotConfiguredError()
+                identity = self.authentication_handler.authenticate(request)
+                if identity is None:
+                    return self.authentication_handler.unauthorized_response
+                request.identity = identity
+                return request
+
+            self.add_route(MiddlewareType.BEFORE_REQUEST, endpoint, inner_handler)
+            return inner_handler
+
+        return inner
+
     # These inner functions are basically a wrapper around the closure(decorator) being returned.
     # They take a handler, convert it into a closure and return the arguments.
     # Arguments are returned as they could be modified by the middlewares.
@@ -136,13 +161,11 @@ class MiddlewareRouter(BaseRouter):
         def inner(handler):
             @wraps(handler)
             async def async_inner_handler(*args):
-                await handler(*args)
-                return args
+                return await handler(*args)
 
             @wraps(handler)
             def inner_handler(*args):
-                handler(*args)
-                return args
+                return handler(*args)
 
             if endpoint is not None:
                 if iscoroutinefunction(handler):

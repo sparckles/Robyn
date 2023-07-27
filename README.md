@@ -64,8 +64,16 @@ options:
   --workers WORKERS         Choose the number of workers. [Default: 1]
   --dev                     Development mode. It restarts the server based on file changes.
   --log-level LOG_LEVEL     Set the log level name
+  --create                  Create a new project template.
+  --docs                    Open the Robyn documentation.
+  --open-browser            Open the browser on successful start.
 ```
 Log level can be `DEBUG`, `INFO`, `WARNING`, or `ERROR`.
+    
+When running the app using `--open-browser` a new browser window will open at the app location, e.g:
+```
+$ python3 app.py --open-browser
+```
 
 ### 💻 Add more routes
 

@@ -5,8 +5,15 @@ use pyo3::{
 };
 
 pub mod function_info;
+pub mod identity;
 pub mod request;
 pub mod response;
+
+#[allow(clippy::large_enum_variant)]
+pub enum MiddlewareReturn {
+    Request(request::Request),
+    Response(response::Response),
+}
 
 #[pyclass]
 #[allow(clippy::upper_case_acronyms)]
@@ -41,7 +48,7 @@ impl HttpMethod {
 }
 
 #[pyclass]
-#[derive(Default, Clone)]
+#[derive(Default, Debug, Clone)]
 pub struct Url {
     #[pyo3(get)]
     pub scheme: String,
