@@ -75,16 +75,15 @@ class Robyn:
             route_type, endpoint, handler, is_const, self.dependencies,self.exception_handler #added deps
         )
     
-    def inject(self, route = None, http_method=None, **kwargs:Callable[...,any]): #new
-        endpoint, dependency = next(iter(kwargs.items()))
-        if route: 
+    def inject(self, route = None, http_method=None, **kwargs:Callable[...,any]): 
+        if route: #route specified
             if route not in self.dependencies:
                 self.dependencies[route] = {}
-            self.dependencies[route][endpoint] = dependency
+            self.dependencies[route].update(kwargs) #multiple dependencies can be passed through kwargs
             self.dependencies[route] |= self.dependencies["all"]
         else: #no route specified
             for element in self.dependencies:
-                self.dependencies[element][endpoint] = dependency #add dep to all elements in deps dictionary
+                self.dependencies[element].update(kwargs)
     def get_injected_dependencies(self, route = None) -> dict:
         if route in self.dependencies:
             return self.dependencies[route]
