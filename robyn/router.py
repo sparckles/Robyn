@@ -92,12 +92,11 @@ class Router(BaseRouter): #base class of app=Route(__file__) declared here
             argsFromHandler = signatureObj.parameters.values() #holds all args from func args
             specificDep = dependencies.get(endpoint, dependencies["all"])
             depToPass = [] 
-            for a in argsFromHandler: 
-                if not any(a.name == key for key, _ in specificDep.items()): 
-                    raise ValueError("Required dependency,", a.name, "has not been injected for this route.")
-                for key,value in specificDep.items(): 
-                    if key == a.name:
-                        depToPass.append(value)
+            paramList = [a.name for a in argsFromHandler]
+            if any(key not in specificDep for key in paramList):
+                missing_deps = [key for key in paramList if key not in specificDep]
+                raise ValueError("Parameter not specified in dependencies dictionary:", missing_deps)
+            depToPass = [specificDep[key] for key in paramList if key in specificDep]
             try:
                 if depToPass:
                     response = self._format_response(await handler( *depToPass))#next(iter(depToPass.values()))))
@@ -116,13 +115,11 @@ class Router(BaseRouter): #base class of app=Route(__file__) declared here
             argsFromHandler = signatureObj.parameters.values() 
             specificDep = dependencies.get(endpoint, dependencies["all"])
             depToPass = [] 
-            for a in argsFromHandler: 
-                if not any(a.name == key for key, _ in specificDep.items()): #if param was not specified in app's dep dictionary
-                    raise ValueError("Required dependency:", a.name, ", has not been injected for this route.")
-                for key,value in specificDep.items(): #compare each handler func param with each key,value pair
-                    if key == a.name:
-                        depToPass.append(value)
-                        #print("router.py, inner_handler, depToPass update:",depToPass)
+            paramList = [a.name for a in argsFromHandler]
+            if any(key not in specificDep for key in paramList):
+                missing_deps = [key for key in paramList if key not in specificDep]
+                raise ValueError("Parameter not specified in dependencies dictionary:", missing_deps)
+            depToPass = [specificDep[key] for key in paramList if key in specificDep]
             try:
                 if depToPass:
                     response = self._format_response(handler( *depToPass))
