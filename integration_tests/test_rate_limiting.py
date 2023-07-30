@@ -3,7 +3,6 @@ import pytest
 from helpers.http_methods_helpers import get, post, put
 
 
-@pytest.mark.benchmark
 @pytest.mark.parametrize(
     "route,method",
     [
