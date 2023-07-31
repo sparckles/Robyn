@@ -19,6 +19,10 @@ use types::{
     HttpMethod,
 };
 
+#[cfg(not(target_env = "msvc"))]
+#[global_allocator]
+static ALLOC: snmalloc_rs::SnMalloc = snmalloc_rs::SnMalloc;
+
 #[pyfunction]
 fn get_version() -> String {
     env!("CARGO_PKG_VERSION").into()

@@ -34,9 +34,11 @@ serde = "1.0.157"
 serde_json = "1.0.94"
 log = "0.4.17"
 
+[target.'cfg(not(target_env = "msvc"))'.dependencies]
+snmalloc-rs = { version = "0.3.0", features = ["build_cc", "usecxx17", "local_dynamic_tls"] }
+
 [features]
 io-uring = ["actix-web/experimental-io-uring"]
-
 
 [package.metadata.maturin]
 name = "robyn"
