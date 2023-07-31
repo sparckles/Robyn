@@ -7,7 +7,6 @@ from typing import Optional
 from robyn import WS, Robyn, Request, Response, jsonify, serve_file, serve_html
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.templating import JinjaTemplate
-from robyn.throttling import RateLimiter
 
 from views import SyncView, AsyncView
 from subroutes import sub_router
@@ -710,41 +709,6 @@ async def async_auth(request: Request):
     assert request.identity is not None
     assert request.identity.claims == {"key": "value"}
     return "authenticated"
-
-
-# ===== Rate Limiting ====
-
-rate_limiter = RateLimiter(calls_limit=3, limit_ttl=60)
-
-
-@app.get("/sync/rate/get", rate_limiter=rate_limiter)
-def sync_rate_get(request: Request):
-    return "OK"
-
-
-@app.get("/async/rate/get", rate_limiter=rate_limiter)
-async def async_rate_get(request: Request):
-    return "OK"
-
-
-@app.put("/sync/rate/put", rate_limiter=rate_limiter)
-def sync_rate_put(request: Request):
-    return "OK"
-
-
-@app.put("/async/rate/put", rate_limiter=rate_limiter)
-async def async_rate_put(request: Request):
-    return "OK"
-
-
-@app.post("/sync/rate/post", rate_limiter=rate_limiter)
-def sync_rate_post(request: Request):
-    return "OK"
-
-
-@app.post("/async/rate/post", rate_limiter=rate_limiter)
-async def async_rate_post(request: Request):
-    return "OK"
 
 
 # ===== Main =====

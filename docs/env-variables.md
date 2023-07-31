@@ -30,10 +30,3 @@ To configure the max payload size, you can set the `ROBYN_MAX_PAYLOAD_SIZE` envi
 ROBYN_MAX_PAYLOAD_SIZE=1000000
 ```
 
-To configure the cache retention period, you can set the `ROBYN_CACHE_RETENTION` environment variable. The default value is `60` seconds.
-
-```bash
-#robyn.env
-ROBYN_MAX_PAYLOAD_SIZE=60
-```
-
