@@ -603,3 +603,25 @@ def hello():
 
 app.include_router(sub_router)
 ```
+
+## Rate limiting
+
+Robyn provides built-in rate limiting functionality, allowing you to control the frequency of requests made to the API.
+
+By implementing rate limiting, you can manage resource consumption, prevent abuse, and maintain system stability, ensuring a smooth and reliable user experience.
+
+In order to the rate limiter to properly identify users, a `Request` object must be defined as an input parameter for the route.
+
+```python
+from robyn import Robyn, RateLimiter
+
+app = Robyn(__file__)
+
+rate_limiter = RateLimiter(calls_limit=3, limit_ttl=60)
+
+@app.get("/throttled_route", rate_limiter=rate_limiter)
+def throttled_route(request: Request):
+    return "OK"
+```
+
+In this example the limit for `/throttled_route` is 3 calls per 1 minutes (60 seconds)

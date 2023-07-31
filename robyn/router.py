@@ -10,6 +10,8 @@ from robyn.robyn import FunctionInfo, HttpMethod, MiddlewareType, Request, Respo
 from robyn import status_codes
 from robyn.ws import WS
 
+from robyn.throttling import RateLimiter
+
 
 class Route(NamedTuple):
     route_type: HttpMethod
@@ -77,9 +79,19 @@ class Router(BaseRouter):
         handler: Callable,
         is_const: bool,
         exception_handler: Optional[Callable],
+        rate_limiter: RateLimiter,
     ) -> Union[Callable, CoroutineType]:
         @wraps(handler)
         async def async_inner_handler(*args):
+            request = [r for r in args if isinstance(r, Request)]
+            headers = request[0].headers if request else {}
+            if rate_limiter.limit_exceeded(headers):
+                return self._format_response(
+                    {
+                        "status_code": status_codes.HTTP_429_TOO_MANY_REQUESTS,
+                        "body": "Rate limit exceeded",
+                    }
+                )
             try:
                 response = self._format_response(await handler(*args))
             except Exception as err:
@@ -90,6 +102,15 @@ class Router(BaseRouter):
 
         @wraps(handler)
         def inner_handler(*args):
+            request = [r for r in args if isinstance(r, Request)]
+            headers = request[0].headers if request else {}
+            if rate_limiter.limit_exceeded(headers):
+                return self._format_response(
+                    {
+                        "status_code": status_codes.HTTP_429_TOO_MANY_REQUESTS,
+                        "body": "Rate limit exceeded",
+                    }
+                )
             try:
                 response = self._format_response(handler(*args))
             except Exception as err:
