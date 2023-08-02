@@ -5,6 +5,7 @@ import os
 from typing import Callable, List, Optional, Tuple
 from nestd import get_all_nested
 
+
 from robyn.argument_parser import Config
 from robyn.logger import Colors
 from robyn.reloader import setup_reloader
@@ -12,8 +13,8 @@ from robyn.env_populator import load_vars
 from robyn.events import Events
 from robyn.logger import logger
 from robyn.processpool import run_processes
-from robyn.responses import jsonify, serve_file, serve_html
-from robyn.robyn import FunctionInfo, HttpMethod, Request, Response, get_version
+from robyn.responses import serve_file, serve_html
+from robyn.robyn import FunctionInfo, HttpMethod, Request, Response, get_version, jsonify
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory, Header
 from robyn import status_codes
