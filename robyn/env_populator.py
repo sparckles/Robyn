@@ -26,8 +26,6 @@ def load_vars(variables=None, project_root=""):
     if variables is None:
         variables = parser(project_root=project_root)
 
-    os.environ.setdefault("ENABLE_ROBYN_LOGS", "false")
-
     for var in variables:
         if var[0] in os.environ:
             logger.info(f" Variable {var[0]} already set")
