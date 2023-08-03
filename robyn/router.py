@@ -1,12 +1,11 @@
 from abc import ABC, abstractmethod
 from asyncio import iscoroutinefunction
 from functools import wraps
-import inspect
 from inspect import signature
 from types import CoroutineType
 from typing import Callable, Dict, List, NamedTuple, Union, Optional
 from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
-
+import inspect
 from robyn.robyn import FunctionInfo, HttpMethod, MiddlewareType, Request, Response
 from robyn import status_codes
 from robyn.ws import WS
@@ -36,17 +35,12 @@ class BaseRouter(ABC):
         ...
 
 
-class Router(BaseRouter): #base class of app=Route(__file__) declared here
+class Router(BaseRouter):
     def __init__(self) -> None:
         super().__init__()
         self.routes: List[Route] = []
 
-    def _format_response(self, res, request=None):
-        if callable(res):
-            if request is not None:
-                return res(request)
-            else:
-                return res()
+    def _format_response(self, res):
         response = {}
         if isinstance(res, dict):
             status_code = res.get("status_code", status_codes.HTTP_200_OK)
@@ -75,76 +69,64 @@ class Router(BaseRouter): #base class of app=Route(__file__) declared here
                 body=str(res).encode("utf-8"),
             )
         return response
-    #certain methods like add_route and other decorators
-    #return self._add_route(HttpMethod.GET, endpoint, handler, const)
+
     def add_route(
         self,
         route_type: HttpMethod,
         endpoint: str,
-        handler: Callable, #hello world function
+        handler: Callable,
         is_const: bool,
         dependencies: Dict[str,any],
         exception_handler: Optional[Callable],
     ) -> Union[Callable, CoroutineType]:
         @wraps(handler)
         async def async_inner_handler(*args):
-            signatureObj = (inspect.signature(handler))
-            argsFromHandler = signatureObj.parameters.values() #holds all args from func args
-            specificDep = dependencies.get(endpoint, dependencies["all"])
-            depToPass = [] 
+            argsFromHandler = (inspect.signature(handler)).parameters.values()
             paramList = [a.name for a in argsFromHandler]
-            if any(key not in specificDep for key in paramList):
-                missing_deps = [key for key in paramList if key not in specificDep]
-                raise ValueError("Parameter not specified in dependencies dictionary:", missing_deps)
+            specificDep = dependencies.get(endpoint, dependencies["all"])
+            if any(key not in specificDep and specificDep.get(key) is not Request and specificDep.get(key) is not Response
+    for key in paramList):
+                raise ValueError("Unknown Argument")
             depToPass = [specificDep[key] for key in paramList if key in specificDep]
             try:
-                if depToPass:
-                    response = self._format_response(await handler( *depToPass))#next(iter(depToPass.values()))))
-                else: 
-                    response = self._format_response(await handler(*args,))
+                response = self._format_response(await handler(*depToPass))
             except Exception as err:
                 if exception_handler is None:
                     raise
                 response = self._format_response(exception_handler(err))
             return response
 
-
-        @wraps(handler) 
+        @wraps(handler)
         def inner_handler(*args):
-            signatureObj = (inspect.signature(handler))
-            argsFromHandler = signatureObj.parameters.values() 
-            specificDep = dependencies.get(endpoint, dependencies["all"])
-            depToPass = [] 
+            argsFromHandler = (inspect.signature(handler)).parameters.values()
             paramList = [a.name for a in argsFromHandler]
-            if any(key not in specificDep for key in paramList):
-                missing_deps = [key for key in paramList if key not in specificDep]
-                raise ValueError("Parameter not specified in dependencies dictionary:", missing_deps)
-            depToPass = [specificDep[key] for key in paramList if key in specificDep]
+            specificDep = dependencies.get(endpoint, dependencies["all"])
+            if any(key not in specificDep and specificDep.get(key) is not Request and specificDep.get(key) is not Response
+    for key in paramList):
+                raise ValueError("Unknown Argument")
+            depToPass = [specificDep[key] for key in paramList if key in specificDep]         
             try:
-                if depToPass:
-                    response = self._format_response(handler( *depToPass))
-                else: 
-                    response = self._format_response(handler(*args,))
+                response = self._format_response(handler(*depToPass))
             except Exception as err:
                 if exception_handler is None:
                     raise
                 response = self._format_response(exception_handler(err))
             return response
-        number_of_params = len(signature(handler).parameters) 
+
+        number_of_params = len(signature(handler).parameters)
         if iscoroutinefunction(handler):
-            function = FunctionInfo(async_inner_handler, True, number_of_params) 
+            function = FunctionInfo(async_inner_handler, True, number_of_params)
             self.routes.append(Route(route_type, endpoint, function, is_const))
             return async_inner_handler
         else:
-            function = FunctionInfo(inner_handler, False, number_of_params) 
+            function = FunctionInfo(inner_handler, False, number_of_params)
             self.routes.append(Route(route_type, endpoint, function, is_const))
             return inner_handler
 
     def get_routes(self) -> List[Route]:
         return self.routes
-    
 
-#associated with middlewares. used for @app.before_request() and @app.after_request()
+
 class MiddlewareRouter(BaseRouter):
     def __init__(self) -> None:
         super().__init__()
