@@ -16,6 +16,7 @@ from robyn.events import Events
 from robyn.logger import logger
 from robyn.processpool import run_processes
 from robyn.responses import serve_file, serve_html
+<<<<<<< HEAD
 from robyn.robyn import (
     FunctionInfo,
     HttpMethod,
@@ -24,6 +25,9 @@ from robyn.robyn import (
     get_version,
     jsonify,
 )
+=======
+from robyn.robyn import FunctionInfo, HttpMethod, Request, Response, get_version
+>>>>>>> 8b5a160 (Fixed missing authentication methods, unnecessary comments, and modified code according to Sanskar's feedback)
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory, Header
 from robyn import status_codes
@@ -41,10 +45,14 @@ class Robyn:
         self.file_path = file_object
         self.directory_path = directory_path
         self.config = config
+<<<<<<< HEAD
         self.dependencies = dependencies
         self.dependencies = {"all":{'request':Request, 'response':Response}}
         #self.dependencies = {"all": set()}#{"all":set()} #{function name: dependency object} changed "[] to {}"
         #find way to avoid collision, like if example defined in sub_router and main
+=======
+        self.dependencies = {"all":{'request':Request, 'response':Response}}
+>>>>>>> 8b5a160 (Fixed missing authentication methods, unnecessary comments, and modified code according to Sanskar's feedback)
         load_vars(project_root=directory_path)
         logging.basicConfig(level=self.config.log_level)
 
@@ -420,6 +428,10 @@ class Robyn:
             self.web_socket_router.routes[
                 new_endpoint
             ] = router.web_socket_router.routes[route]
+        for dep in self.dependencies["all"]: 
+            if dep in router.dependencies["all"]:
+                continue
+            router.dependencies["all"][dep] = self.dependencies["all"][dep]
 
         self.dependencies.merge_dependencies(router)
 
