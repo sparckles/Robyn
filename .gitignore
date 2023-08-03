@@ -14,7 +14,6 @@ dist/
 
 # python venv
 venv
-env
 robyn.code-workspace
 hello_robyn.py
 robyn.env
