@@ -85,7 +85,7 @@ class Robyn:
             route_type, endpoint, handler, is_const, self.dependencies, self.exception_handler
         )
 
-    def inject(self, route = None, http_method=None, **kwargs:Callable[...,any]): #change kwargs to smth else?
+    def inject(self, route = None, http_method=None, **kwargs:Callable[...,any]): 
         if route: 
             if route not in self.dependencies:
                 self.dependencies[route] = {}
