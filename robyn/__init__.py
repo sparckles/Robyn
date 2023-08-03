@@ -15,7 +15,7 @@ from robyn.events import Events
 from robyn.logger import logger
 from robyn.processpool import run_processes
 from robyn.responses import serve_file, serve_html
-from robyn.robyn import FunctionInfo, HttpMethod, Request, Response, get_version, jsonify
+from robyn.robyn import FunctionInfo, HttpMethod, Request, Response, get_version
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory, Header
 from robyn import status_codes
@@ -33,7 +33,7 @@ class Robyn:
         self.file_path = file_object
         self.directory_path = directory_path
         self.config = config
-
+        self.dependencies = {"all":{'request':Request, 'response':Response}}
         load_vars(project_root=directory_path)
         logging.basicConfig(level=self.config.log_level)
 
@@ -82,8 +82,23 @@ class Robyn:
             self.middleware_router.add_auth_middleware(endpoint)(handler)
 
         return self.router.add_route(
-            route_type, endpoint, handler, is_const, self.exception_handler
+            route_type, endpoint, handler, is_const, self.dependencies, self.exception_handler
         )
+
+    def inject(self, route = None, http_method=None, **kwargs:Callable[...,any]): #change kwargs to smth else?
+        if route: 
+            if route not in self.dependencies:
+                self.dependencies[route] = {}
+            self.dependencies[route].update(kwargs)
+            self.dependencies[route] |= self.dependencies["all"]
+        else: 
+            for element in self.dependencies:
+                self.dependencies[element].update(kwargs)
+
+    def get_injected_dependencies(self, route = None) -> dict:
+        if route in self.dependencies:
+            return self.dependencies[route]
+        return self.dependencies  
 
     def before_request(self, endpoint: Optional[str] = None) -> Callable[..., None]:
         """
@@ -366,6 +381,10 @@ class Robyn:
             self.web_socket_router.routes[
                 new_endpoint
             ] = router.web_socket_router.routes[route]
+        for dep in self.dependencies["all"]: 
+            if dep in router.dependencies["all"]:
+                continue
+            router.dependencies["all"][dep] = self.dependencies["all"][dep]
 
     def configure_authentication(self, authentication_handler: AuthenticationHandler):
         """

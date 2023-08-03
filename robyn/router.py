@@ -5,7 +5,7 @@ from inspect import signature
 from types import CoroutineType
 from typing import Callable, Dict, List, NamedTuple, Union, Optional
 from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
-
+import inspect
 from robyn.robyn import FunctionInfo, HttpMethod, MiddlewareType, Request, Response
 from robyn import status_codes
 from robyn.ws import WS
@@ -76,12 +76,20 @@ class Router(BaseRouter):
         endpoint: str,
         handler: Callable,
         is_const: bool,
+        dependencies: Dict[str,any],
         exception_handler: Optional[Callable],
     ) -> Union[Callable, CoroutineType]:
         @wraps(handler)
         async def async_inner_handler(*args):
+            argsFromHandler = (inspect.signature(handler)).parameters.values()
+            paramList = [a.name for a in argsFromHandler]
+            specificDep = dependencies.get(endpoint, dependencies["all"])
+            if any(key not in specificDep and specificDep.get(key) is not Request and specificDep.get(key) is not Response
+    for key in paramList):
+                raise ValueError("Unknown Argument")
+            depToPass = [specificDep[key] for key in paramList if key in specificDep]
             try:
-                response = self._format_response(await handler(*args))
+                response = self._format_response(await handler(*depToPass))
             except Exception as err:
                 if exception_handler is None:
                     raise
@@ -90,8 +98,15 @@ class Router(BaseRouter):
 
         @wraps(handler)
         def inner_handler(*args):
+            argsFromHandler = (inspect.signature(handler)).parameters.values()
+            paramList = [a.name for a in argsFromHandler]
+            specificDep = dependencies.get(endpoint, dependencies["all"])
+            if any(key not in specificDep and specificDep.get(key) is not Request and specificDep.get(key) is not Response
+    for key in paramList):
+                raise ValueError("Unknown Argument")
+            depToPass = [specificDep[key] for key in paramList if key in specificDep]         
             try:
-                response = self._format_response(handler(*args))
+                response = self._format_response(handler(*depToPass))
             except Exception as err:
                 if exception_handler is None:
                     raise
