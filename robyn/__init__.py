@@ -201,6 +201,7 @@ class Robyn:
 
         :param port int: represents the port number at which the server is listening
         """
+
         url = os.getenv("ROBYN_URL", url)
         port = int(os.getenv("ROBYN_PORT", port))
         open_browser = bool(os.getenv("ROBYN_BROWSER_OPEN", self.config.open_browser))

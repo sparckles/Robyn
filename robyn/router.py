@@ -2,12 +2,11 @@ import inspect
 from abc import ABC, abstractmethod
 from asyncio import iscoroutinefunction
 from functools import wraps
-import inspect
 from inspect import signature
 from types import CoroutineType
 from typing import Callable, Dict, List, NamedTuple, Union, Optional
 from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
-
+import inspect
 from robyn.robyn import FunctionInfo, HttpMethod, MiddlewareType, Request, Response
 from robyn import status_codes
 from robyn.ws import WS
@@ -37,17 +36,12 @@ class BaseRouter(ABC):
         ...
 
 
-class Router(BaseRouter): #base class of app=Route(__file__) declared here
+class Router(BaseRouter):
     def __init__(self) -> None:
         super().__init__()
         self.routes: List[Route] = []
 
-    def _format_response(self, res, request=None):
-        if callable(res):
-            if request is not None:
-                return res(request)
-            else:
-                return res()
+    def _format_response(self, res):
         response = {}
         if isinstance(res, dict):
             status_code = res.get("status_code", status_codes.HTTP_200_OK)
@@ -93,7 +87,7 @@ class Router(BaseRouter): #base class of app=Route(__file__) declared here
         self,
         route_type: HttpMethod,
         endpoint: str,
-        handler: Callable, #hello world function
+        handler: Callable,
         is_const: bool,
         dependencies: Dict[str, any],
         exception_handler: Optional[Callable],
@@ -114,8 +108,7 @@ class Router(BaseRouter): #base class of app=Route(__file__) declared here
                 response = self._format_response(exception_handler(err))
             return response
 
-
-        @wraps(handler) 
+        @wraps(handler)
         def inner_handler(*args):
             param_list, dependency_dict = self.validate_handler_args(handler, endpoint, dependencies)
 
@@ -138,21 +131,21 @@ class Router(BaseRouter): #base class of app=Route(__file__) declared here
                     raise
                 response = self._format_response(exception_handler(err))
             return response
-        number_of_params = len(signature(handler).parameters) 
+
+        number_of_params = len(signature(handler).parameters)
         if iscoroutinefunction(handler):
-            function = FunctionInfo(async_inner_handler, True, number_of_params) 
+            function = FunctionInfo(async_inner_handler, True, number_of_params)
             self.routes.append(Route(route_type, endpoint, function, is_const))
             return async_inner_handler
         else:
-            function = FunctionInfo(inner_handler, False, number_of_params) 
+            function = FunctionInfo(inner_handler, False, number_of_params)
             self.routes.append(Route(route_type, endpoint, function, is_const))
             return inner_handler
 
     def get_routes(self) -> List[Route]:
         return self.routes
-    
 
-#associated with middlewares. used for @app.before_request() and @app.after_request()
+
 class MiddlewareRouter(BaseRouter):
     def __init__(self) -> None:
         super().__init__()
