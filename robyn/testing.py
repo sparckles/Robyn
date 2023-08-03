@@ -28,5 +28,8 @@ class TestingClient:
 		if route == None:
 			return None
 		return asyncio.run(route.function.handler(None))
+	
+	def post(self):
+		pass
 		
 
