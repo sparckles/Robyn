@@ -84,8 +84,7 @@ class Router(BaseRouter):
             argsFromHandler = (inspect.signature(handler)).parameters.values()
             paramList = [a.name for a in argsFromHandler]
             specificDep = dependencies.get(endpoint, dependencies["all"])
-            if any(key not in specificDep and specificDep.get(key) is not Request and specificDep.get(key) is not Response
-    for key in paramList):
+            if any(key not in specificDep for key in paramList):
                 raise ValueError("Unknown Argument")
             depToPass = [specificDep[key] for key in paramList if key in specificDep]
             try:
@@ -101,8 +100,7 @@ class Router(BaseRouter):
             argsFromHandler = (inspect.signature(handler)).parameters.values()
             paramList = [a.name for a in argsFromHandler]
             specificDep = dependencies.get(endpoint, dependencies["all"])
-            if any(key not in specificDep and specificDep.get(key) is not Request and specificDep.get(key) is not Response
-    for key in paramList):
+            if any(key not in specificDep for key in paramList):
                 raise ValueError("Unknown Argument")
             depToPass = [specificDep[key] for key in paramList if key in specificDep]         
             try:
