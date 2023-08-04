@@ -27,7 +27,7 @@ classifiers = [
 
 [tool.poetry]
 name = "robyn"
-version = "0.36.2"
+version = "0.37.0"
 description = "A High-Performance, Community-Driven, and Innovator Friendly Web Framework with a Rust runtime."
 authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 repository = "https://github.com/sparckles/robyn"
