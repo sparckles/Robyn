@@ -121,7 +121,7 @@ If you still need help to get started, feel free to reach out on our [community 
 
 3. Run `maturin develop` or `maturin develop --cargo-extra-args="--features=io-uring"` for using the experimental version of actix-web. This command will build the Robyn Rust package and install it in your virtual environment.
 
-4. Run `poetry run devserver`. This will run a server containing several examples of routes we use for testing purposes. You can see them at `integration_tests/base_routes.py`. You can modify or add some to your likings.
+4. Run `poetry run test_server`. This will run a server containing several examples of routes we use for testing purposes. You can see them at `integration_tests/base_routes.py`. You can modify or add some to your likings.
 
 You can then request the server you ran from an other terminal. Here is a `GET` request done using [curl](https://curl.se/) for example:
 ```
