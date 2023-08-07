@@ -33,7 +33,7 @@ class Robyn:
         self.file_path = file_object
         self.directory_path = directory_path
         self.config = config
-        self.dependencies = {"all":{'request':Request, 'response':Response}}
+        self.dependencies = {"ALL":{'request':Request, 'response':Response}}
         load_vars(project_root=directory_path)
         logging.basicConfig(level=self.config.log_level)
 
@@ -90,7 +90,7 @@ class Robyn:
             if route not in self.dependencies:
                 self.dependencies[route] = {}
             self.dependencies[route].update(kwargs)
-            self.dependencies[route] |= self.dependencies["all"]
+            self.dependencies[route] |= self.dependencies["ALL"]
         else: 
             for element in self.dependencies:
                 self.dependencies[element].update(kwargs)
@@ -381,10 +381,11 @@ class Robyn:
             self.web_socket_router.routes[
                 new_endpoint
             ] = router.web_socket_router.routes[route]
-        for dep in self.dependencies["all"]: 
-            if dep in router.dependencies["all"]:
+            
+        for dep in self.dependencies["ALL"]: 
+            if dep in router.dependencies["ALL"]:
                 continue
-            router.dependencies["all"][dep] = self.dependencies["all"][dep]
+            router.dependencies["ALL"][dep] = self.dependencies["ALL"][dep]
 
     def configure_authentication(self, authentication_handler: AuthenticationHandler):
         """

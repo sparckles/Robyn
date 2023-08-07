@@ -81,14 +81,14 @@ class Router(BaseRouter):
     ) -> Union[Callable, CoroutineType]:
         @wraps(handler)
         async def async_inner_handler(*args):
-            argsFromHandler = (inspect.signature(handler)).parameters.values()
-            paramList = [a.name for a in argsFromHandler]
-            specificDep = dependencies.get(endpoint, dependencies["all"])
-            if any(key not in specificDep for key in paramList):
+            handler_args = (inspect.signature(handler)).parameters.values()
+            param_list = [a.name for a in handler_args]
+            deps_dict = dependencies.get(endpoint, dependencies["ALL"])
+            if any(key not in deps_dict for key in param_list):
                 raise ValueError("Unknown Argument")
-            depToPass = [specificDep[key] for key in paramList if key in specificDep]
+            deps_to_pass = [deps_dict[key] for key in param_list if key in deps_dict]
             try:
-                response = self._format_response(await handler(*depToPass))
+                response = self._format_response(await handler(*deps_to_pass))
             except Exception as err:
                 if exception_handler is None:
                     raise
@@ -97,14 +97,14 @@ class Router(BaseRouter):
 
         @wraps(handler)
         def inner_handler(*args):
-            argsFromHandler = (inspect.signature(handler)).parameters.values()
-            paramList = [a.name for a in argsFromHandler]
-            specificDep = dependencies.get(endpoint, dependencies["all"])
-            if any(key not in specificDep for key in paramList):
+            handler_args = (inspect.signature(handler)).parameters.values()
+            param_list = [a.name for a in handler_args]
+            deps_dict = dependencies.get(endpoint, dependencies["ALL"])
+            if any(key not in deps_dict for key in param_list):
                 raise ValueError("Unknown Argument")
-            depToPass = [specificDep[key] for key in paramList if key in specificDep]         
+            deps_to_pass = [deps_dict[key] for key in param_list if key in deps_dict]         
             try:
-                response = self._format_response(handler(*depToPass))
+                response = self._format_response(handler(*deps_to_pass))
             except Exception as err:
                 if exception_handler is None:
                     raise
