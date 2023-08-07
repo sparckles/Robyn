@@ -34,6 +34,7 @@ use pyo3::prelude::*;
 
 const MAX_PAYLOAD_SIZE: &str = "ROBYN_MAX_PAYLOAD_SIZE";
 const DEFAULT_MAX_PAYLOAD_SIZE: usize = 1_000_000; // 1Mb
+const ENABLE_ROBYN_LOGS: &str = "ENABLE_ROBYN_LOGS";
 
 static STARTED: AtomicBool = AtomicBool::new(false);
 
@@ -122,9 +123,18 @@ impl Server {
                 ))
             })?;
 
+        let enable_robyn_logs = env::var(ENABLE_ROBYN_LOGS)
+            .unwrap_or(ENABLE_ROBYN_LOGS.to_string());
+
+        let empty_space = "";
+        
         thread::spawn(move || {
             actix_web::rt::System::new().block_on(async move {
-                debug!("The number of workers is {}", workers.clone());
+                if enable_robyn_logs == "true" {
+                    print!("{}", empty_space);
+                } else {
+                    debug!("The number of workers is {}", workers.clone());
+                }
                 execute_event_handler(startup_handler, &task_locals_copy)
                     .await
                     .unwrap();
@@ -183,7 +193,11 @@ impl Server {
                         );
                     }
 
-                    debug!("Max payload size is {}", max_payload_size);
+                    if enable_robyn_logs == "true" {
+                        print!("{}", empty_space);
+                    } else {
+                        debug!("Max payload size is {}", max_payload_size);
+                    }
 
                     app.app_data(web::PayloadConfig::new(max_payload_size))
                         .default_service(web::route().to(
