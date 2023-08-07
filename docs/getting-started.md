@@ -24,12 +24,6 @@ source venv/bin/activate
 pip install robyn
 ```
 
-#### Verifying Robyn Installation
-
-```
-python3 -m robyn --version
-```
-
 ### Step 3: Creating the App.
 
 - Create a file called `app.py`.
