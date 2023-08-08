@@ -57,7 +57,9 @@ impl Response {
 impl ToPyObject for Response {
     fn to_object(&self, py: Python) -> PyObject {
         let headers = self.headers.clone().into_py(py).extract(py).unwrap();
-        let description = String::from_utf8(self.description.to_vec()).unwrap().to_object(py);
+        let description = String::from_utf8(self.description.to_vec())
+            .unwrap()
+            .to_object(py);
         let response = PyResponse {
             status_code: self.status_code,
             response_type: self.response_type.clone(),
@@ -94,7 +96,9 @@ impl PyResponse {
         headers: Py<PyDict>,
         description: Py<PyAny>,
     ) -> PyResult<Self> {
-        if description.downcast::<PyString>(py).is_err() && description.downcast::<PyBytes>(py).is_err() {
+        if description.downcast::<PyString>(py).is_err()
+            && description.downcast::<PyBytes>(py).is_err()
+        {
             return Err(PyValueError::new_err(
                 "Could not convert specified body to bytes",
             ));
