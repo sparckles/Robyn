@@ -12,7 +12,7 @@ dependencies = [
   'multiprocess == 0.70.14',
   'nestd == 0.3.1',
 # conditional
-  "uvloop>=0.17.0; sys_platform != 'win32' and (sys_platform != 'cygwin' and platform_python_implementation != 'PyPy')"
+  "uvloop>=0.17.0; sys_platform == 'darwin' and platform_machine == 'aarch_64' and platform_machine == 'x86_64' and platform_machine == 'i686'"
   ]
 classifiers = [
   "Development Status :: 3 - Alpha",
