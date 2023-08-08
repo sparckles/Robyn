@@ -131,9 +131,9 @@ impl Server {
         thread::spawn(move || {
             actix_web::rt::System::new().block_on(async move {
                 if enable_robyn_logs == "true" {
-                    print!("{}", empty_space);
-                } else {
                     debug!("The number of workers is {}", workers.clone());
+                } else {
+                    print!("{}", empty_space);
                 }
                 execute_event_handler(startup_handler, &task_locals_copy)
                     .await
@@ -194,9 +194,9 @@ impl Server {
                     }
 
                     if enable_robyn_logs == "true" {
-                        print!("{}", empty_space);
-                    } else {
                         debug!("Max payload size is {}", max_payload_size);
+                    } else {
+                        print!("{}", empty_space);
                     }
 
                     app.app_data(web::PayloadConfig::new(max_payload_size))
