@@ -17,7 +17,7 @@ bad_bodies = [
     Response(
         status_code=200,
         headers={},
-        body=b"OK",
+        description=b"OK",
     ),
 ]
 
@@ -25,19 +25,19 @@ good_bodies = ["OK", b"OK"]
 
 
 @pytest.mark.parametrize("body", bad_bodies)
-def test_bad_body_types(body):
+def test_bad_body_types(description):
     with pytest.raises(ValueError):
         _ = Response(
             status_code=200,
             headers={},
-            body=body,
+            descrption=description,
         )
 
 
 @pytest.mark.parametrize("body", good_bodies)
-def test_good_body_types(body):
+def test_good_body_types(description):
     _ = Response(
         status_code=200,
         headers={},
-        body=body,
+        description=description,
     )
