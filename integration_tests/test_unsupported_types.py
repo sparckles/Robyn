@@ -30,7 +30,7 @@ def test_bad_body_types(description):
         _ = Response(
             status_code=200,
             headers={},
-            descrption=description,
+            description=description,
         )
 
 
