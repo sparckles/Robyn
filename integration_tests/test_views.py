@@ -1,4 +1,4 @@
-from helpers.http_methods_helpers import get, post
+from integration_tests.helpers.http_methods_helpers import get, post
 import pytest
 
 

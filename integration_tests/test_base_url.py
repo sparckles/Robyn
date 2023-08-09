@@ -3,7 +3,7 @@ import pytest
 
 import requests
 
-from helpers.network_helpers import get_network_host
+from integration_tests.helpers.network_helpers import get_network_host
 
 
 @pytest.mark.benchmark

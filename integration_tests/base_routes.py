@@ -8,8 +8,8 @@ from robyn import WS, Robyn, Request, Response, jsonify, serve_file, serve_html
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.templating import JinjaTemplate
 
-from views import SyncView, AsyncView
-from subroutes import sub_router
+from integration_tests.views import SyncView, AsyncView
+from integration_tests.subroutes import sub_router
 
 app = Robyn(__file__)
 websocket = WS(app, "/web_socket")
@@ -714,7 +714,7 @@ async def async_auth(request: Request):
 # ===== Main =====
 
 
-if __name__ == "__main__":
+def main():
     app.add_response_header("server", "robyn")
     app.add_directory(
         route="/test_dir",
@@ -735,3 +735,7 @@ if __name__ == "__main__":
 
     app.configure_authentication(BasicAuthHandler(token_getter=BearerGetter()))
     app.start(port=8080)
+
+
+if __name__ == "__main__":
+    main()
