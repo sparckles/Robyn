@@ -12,6 +12,8 @@ use crate::types::response::Response;
 use crate::types::HttpMethod;
 use crate::types::MiddlewareReturn;
 use crate::web_socket_connection::start_web_socket;
+use crate::logger::enable_robyn_logs;
+
 
 use std::convert::TryInto;
 use std::sync::atomic::AtomicBool;
@@ -124,6 +126,7 @@ impl Server {
 
         thread::spawn(move || {
             actix_web::rt::System::new().block_on(async move {
+                //enable_robyn_logs(&format!("The number of workers is {}", workers.clone()));
                 debug!("The number of workers is {}", workers.clone());
                 execute_event_handler(startup_handler, &task_locals_copy)
                     .await
@@ -471,6 +474,7 @@ async fn index(
     }
 
     debug!("Response: {:?}", response);
+    //enable_robyn_logs(&format!("Response: {:?}", response));
 
     response
 }
