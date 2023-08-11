@@ -5,30 +5,40 @@ use std::collections::HashMap;
 
 use crate::types::{check_body_type, get_body_from_pyobject, Url};
 
-#[derive(Default, Clone, FromPyObject)]
+use super::identity::Identity;
+
+#[derive(Default, Debug, Clone, FromPyObject)]
 pub struct Request {
     pub queries: HashMap<String, String>,
     pub headers: HashMap<String, String>,
     pub method: String,
-    pub params: HashMap<String, String>,
+    pub path_params: HashMap<String, String>,
     #[pyo3(from_py_with = "get_body_from_pyobject")]
     pub body: Vec<u8>,
     pub url: Url,
+    pub ip_addr: Option<String>,
+    pub identity: Option<Identity>,
 }
 
 impl ToPyObject for Request {
     fn to_object(&self, py: Python) -> PyObject {
         let queries = self.queries.clone().into_py(py).extract(py).unwrap();
         let headers = self.headers.clone().into_py(py).extract(py).unwrap();
-        let params = self.params.clone().into_py(py).extract(py).unwrap();
-        let body = String::from_utf8(self.body.to_vec()).unwrap().to_object(py);
+        let path_params = self.path_params.clone().into_py(py).extract(py).unwrap();
+        let body = match String::from_utf8(self.body.clone()) {
+            Ok(s) => s.into_py(py),
+            Err(_) => self.body.clone().into_py(py),
+        };
+
         let request = PyRequest {
             queries,
-            params,
+            path_params,
             headers,
             body,
             method: self.method.clone(),
             url: self.url.clone(),
+            ip_addr: self.ip_addr.clone(),
+            identity: self.identity.clone(),
         };
         Py::new(py, request).unwrap().as_ref(py).into()
     }
@@ -44,8 +54,8 @@ impl Request {
         if !req.query_string().is_empty() {
             let split = req.query_string().split('&');
             for s in split {
-                let params = s.split_once('=').unwrap_or((s, ""));
-                queries.insert(params.0.to_string(), params.1.to_string());
+                let path_params = s.split_once('=').unwrap_or((s, ""));
+                queries.insert(path_params.0.to_string(), path_params.1.to_string());
             }
         }
         let headers = req
@@ -64,14 +74,17 @@ impl Request {
             req.connection_info().host(),
             req.path(),
         );
+        let ip_addr = req.peer_addr().map(|val| val.ip().to_string());
 
         Self {
             queries,
             headers,
             method: req.method().as_str().to_owned(),
-            params: HashMap::new(),
+            path_params: HashMap::new(),
             body: body.to_vec(),
             url,
+            ip_addr,
+            identity: None,
         }
     }
 }
@@ -84,13 +97,17 @@ pub struct PyRequest {
     #[pyo3(get, set)]
     pub headers: Py<PyDict>,
     #[pyo3(get, set)]
-    pub params: Py<PyDict>,
+    pub path_params: Py<PyDict>,
+    #[pyo3(get, set)]
+    pub identity: Option<Identity>,
     #[pyo3(get)]
     pub body: Py<PyAny>,
     #[pyo3(get)]
     pub method: String,
     #[pyo3(get)]
     pub url: Url,
+    #[pyo3(get)]
+    pub ip_addr: Option<String>,
 }
 
 #[pymethods]

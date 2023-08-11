@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from robyn.status_codes import StatusCodes
+from robyn import status_codes
 
 from .robyn import Response
 
@@ -27,7 +27,7 @@ class JinjaTemplate(TemplateInterface):
     def render_template(self, template_name, **kwargs) -> Response:
         rendered_template = self.env.get_template(template_name).render(**kwargs)
         return Response(
-            status_code=StatusCodes.HTTP_200_OK.value,
+            status_code=status_codes.HTTP_200_OK,
             body=rendered_template,
             headers={"Content-Type": "text/html; charset=utf-8"},
         )

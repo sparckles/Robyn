@@ -1,7 +1,6 @@
+use std::collections::HashMap;
 use std::sync::RwLock;
-use std::{collections::HashMap, str::FromStr};
 
-use actix_web::http::Method;
 use matchit::Router as MatchItRouter;
 use pyo3::types::PyAny;
 
@@ -9,25 +8,24 @@ use anyhow::{Context, Result};
 
 use crate::routers::Router;
 use crate::types::function_info::FunctionInfo;
+use crate::types::HttpMethod;
 
 type RouteMap = RwLock<MatchItRouter<FunctionInfo>>;
 
 /// Contains the thread safe hashmaps of different routes
 pub struct HttpRouter {
-    routes: HashMap<Method, RouteMap>,
+    routes: HashMap<HttpMethod, RouteMap>,
 }
 
-impl Router<(FunctionInfo, HashMap<String, String>), Method> for HttpRouter {
+impl Router<(FunctionInfo, HashMap<String, String>), HttpMethod> for HttpRouter {
     fn add_route(
         &self,
-        route_type: &str, // We can just have route type as WS
+        route_type: &HttpMethod,
         route: &str,
         function: FunctionInfo,
         _event_loop: Option<&PyAny>,
     ) -> Result<()> {
-        let table = self
-            .get_relevant_map_str(route_type)
-            .context("No relevant map")?;
+        let table = self.routes.get(route_type).context("No relevant map")?;
 
         // try removing unwrap here
         table.write().unwrap().insert(route.to_string(), function)?;
@@ -37,7 +35,7 @@ impl Router<(FunctionInfo, HashMap<String, String>), Method> for HttpRouter {
 
     fn get_route(
         &self,
-        route_method: &Method,
+        route_method: &HttpMethod,
         route: &str,
     ) -> Option<(FunctionInfo, HashMap<String, String>)> {
         let table = self.routes.get(route_method)?;
@@ -56,23 +54,15 @@ impl Router<(FunctionInfo, HashMap<String, String>), Method> for HttpRouter {
 impl HttpRouter {
     pub fn new() -> Self {
         let mut routes = HashMap::new();
-        routes.insert(Method::GET, RwLock::new(MatchItRouter::new()));
-        routes.insert(Method::POST, RwLock::new(MatchItRouter::new()));
-        routes.insert(Method::PUT, RwLock::new(MatchItRouter::new()));
-        routes.insert(Method::DELETE, RwLock::new(MatchItRouter::new()));
-        routes.insert(Method::PATCH, RwLock::new(MatchItRouter::new()));
-        routes.insert(Method::HEAD, RwLock::new(MatchItRouter::new()));
-        routes.insert(Method::OPTIONS, RwLock::new(MatchItRouter::new()));
-        routes.insert(Method::CONNECT, RwLock::new(MatchItRouter::new()));
-        routes.insert(Method::TRACE, RwLock::new(MatchItRouter::new()));
+        routes.insert(HttpMethod::GET, RwLock::new(MatchItRouter::new()));
+        routes.insert(HttpMethod::POST, RwLock::new(MatchItRouter::new()));
+        routes.insert(HttpMethod::PUT, RwLock::new(MatchItRouter::new()));
+        routes.insert(HttpMethod::DELETE, RwLock::new(MatchItRouter::new()));
+        routes.insert(HttpMethod::PATCH, RwLock::new(MatchItRouter::new()));
+        routes.insert(HttpMethod::HEAD, RwLock::new(MatchItRouter::new()));
+        routes.insert(HttpMethod::OPTIONS, RwLock::new(MatchItRouter::new()));
+        routes.insert(HttpMethod::CONNECT, RwLock::new(MatchItRouter::new()));
+        routes.insert(HttpMethod::TRACE, RwLock::new(MatchItRouter::new()));
         Self { routes }
-    }
-
-    #[inline]
-    fn get_relevant_map_str(&self, route: &str) -> Option<&RouteMap> {
-        match route {
-            "WS" => None,
-            _ => self.routes.get(&Method::from_str(route).ok()?),
-        }
     }
 }

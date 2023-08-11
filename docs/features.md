@@ -37,7 +37,7 @@ async def h(request):
 ```python
 @app.post("/post")
 async def postreq(request):
-    return bytearray(request["body"]).decode("utf-8")
+    return request.body
 ```
 
 #### PUT Request
@@ -45,7 +45,7 @@ async def postreq(request):
 ```python
 @app.put("/put")
 async def postreq(request):
-    return bytearray(request["body"]).decode("utf-8")
+    return request.body
 ```
 
 #### PATCH Request
@@ -53,7 +53,7 @@ async def postreq(request):
 ```python
 @app.patch("/patch")
 async def postreq(request):
-    return bytearray(request["body"]).decode("utf-8")
+    return request.body
 ```
 
 #### DELETE Request
@@ -61,7 +61,7 @@ async def postreq(request):
 ```python
 @app.delete("/delete")
 async def postreq(request):
-    return bytearray(request["body"]).decode("utf-8")
+    return request.body
 ```
 
 #### Directory Serving
@@ -76,7 +76,7 @@ app.add_directory(
 
 ## Dynamic Routes
 
-You can add params in the routes and access them from the request object.
+You can add path params in the routes and access them from the request object.
 
 ```python
 from robyn import jsonify
@@ -84,7 +84,7 @@ from robyn import jsonify
 
 @app.post("/jsonify/:id")
 async def json(request):
-    print(request["params"]["id"])
+    print(request["path_params"]["id"])
     return jsonify({"hello": "world"})
 ```
 
@@ -131,6 +131,20 @@ from robyn.robyn import Response
 @app.get("/response")
 async def response(request):
     return Response(status_code=200, headers={}, body="OK")
+```
+
+#### Status Codes
+
+Robyn provides `StatusCodes` if you want to return type safe Status Responses.
+
+```python
+
+from robyn import status_codes
+
+
+@app.get("/response")
+async def response(request):
+    return Response(status_code=status_codes.HTTP_200_OK, headers={}, body="OK")
 ```
 
 #### Returning a byte response
@@ -210,6 +224,16 @@ async def response_headers():
     }
 ```
 
+
+Additionally, you can access headers for per route.
+
+```python
+@app.get("/test-headers")
+def sync_before_request(request: Request):
+    request.headers["test"] = "we are modifying the request headers in the middle of the request!"
+    print(request)
+```
+
 ## Query Params
 
 You can access query params from every HTTP method.
@@ -221,7 +245,7 @@ You can use the following code snippet.
 ```python
 @app.get("/query")
 async def query_get(request):
-    query_data = request["queries"]
+    query_data = request.queries
     return jsonify(query_data)
 ```
 
@@ -326,14 +350,81 @@ You can use both sync and async functions for middlewares!
 
 ```python
 @app.before_request("/")
-async def hello_before_request(request):
+async def hello_before_request(request: Request):
+    request.headers["before"] = "async_before_request"
     print(request)
 
 
 @app.after_request("/")
-def hello_after_request(request):
-    print(request)
+def hello_after_request(response: Response):
+    response.headers["after"] = "sync_after_request"
+    print(response)
 ```
+
+Middlewares can be bound to a route or run before/after every request:
+
+```python
+# This middleware runs before all requests
+@app.before_request()
+async def global_before_request(request: Request):
+    request.headers["before"] = "global_before_request"
+
+# This middleware runs only before requests to "/your/route"
+@app.before_request("/your/route")
+async def route_before_request(request: Request):
+    request.headers["before"] = "route_before_request"
+```
+
+In the before middleware, you can choose to directly return a `Response` object. When doing so, the route method and the after middlewares will not be executed.
+
+```python
+def is_user_logged(request: Request):
+    # Check the validity of a JWT cookie for example
+    ...
+
+@app.before_request("/")
+async def hello_before_request(request: Request):
+    if not is_user_logged(request):
+        # The request is aborted, we are returning an error before reaching the route method
+        return Response(401, {}, "User isn't logged in!")
+
+@app.get("/")
+async def route(request: Request):
+    print("This won't be executed if user isn't logged in")
+
+@app.after_request("/")
+async def hello_after_request(response: Response):
+    print("This won't be executed if user isn't logged in")
+```
+
+## Authentication
+
+Robyn provides an easy way to add an authentication middleware to your application. You can then specify `auth_required=True` in your routes to make them accessible only to authenticated users.
+
+```python
+@app.get("/auth", auth_required=True)
+async def auth(request: Request):
+    # This route method will only be executed if the user is authenticated
+    # Otherwise, a 401 response will be returned
+    return "Hello, world"
+```
+
+To add an authentication middleware, you can use the `configure_authentication` method. This method requires an `AuthenticationHandler` object as an argument. This object specifies how to authenticate a user, and uses a `TokenGetter` object to retrieve the token from the request. Robyn does currently provide a `BearerGetter` class that gets the token from the `Authorization` header, using the `Bearer` scheme. Here is an example of a basic authentication handler:
+
+```python
+class BasicAuthHandler(AuthenticationHandler):
+    def authenticate(self, request: Request) -> Optional[Identity]:
+        token = self.token_getter.get_token(request)
+        if token == "valid":
+            return Identity(claims={})
+        return None
+
+app.configure_authentication(BasicAuthHandler(token_getter=BearerGetter()))
+```
+
+Your `authenticate` method should return an `Identity` object if the user is authenticated, or `None` otherwise. The `Identity` object can contain any data you want, and will be accessible in your route methods using the `request.identity` attribute.
+
+Note that this authentication system is basically only using a "before request" middleware under the hood. This means you can overlook it and create your own authentication system using middlewares if you want to. However, Robyn still provide this easy to implement solution that should suit most use cases.
 
 ## MultiCore Scaling
 
@@ -409,7 +500,7 @@ def sample_view():
         return "Hello, world!"
 
     def post(request):
-        body = bytearray(request["body"]).decode("utf-8")
+        body = request.body
         return {"status_code": 200, "body": body}
 ```
 
@@ -425,7 +516,7 @@ def sync_decorator_view():
         return "Hello, world!"
 
     def post(request):
-        body = bytearray(request["body"]).decode("utf-8")
+        body = request.body
         return {"status_code": 200, "body": body}
 
 
@@ -435,7 +526,7 @@ def async_decorator_view():
         return "Hello, world!"
 
     async def post(request):
-        body = bytearray(request["body"]).decode("utf-8")
+        body = request.body
         return {"status_code": 200, "body": body}
 ```
 
@@ -449,7 +540,7 @@ def View():
         return "Hello, world!"
 
     async def post(request):
-        body = bytes(request["body"]).decode("utf-8")
+        body = request.body
         return {
             "status": 200,
             "body": body,
@@ -469,4 +560,46 @@ app.add_view("/", View)
 ```
 
 
+## Allow CORS
 
+You can allow CORS for your application by adding the following code:
+
+```python
+from robyn import Robyn, ALLOW_CORS
+
+app = Robyn(__file__)
+ALLOW_CORS(app)
+```
+
+## Exceptions
+
+You can raise exceptions in your code and Robyn will handle them for you.
+
+```python
+@app.exception
+def handle_exception(error):
+    return {"status_code": 500, "body": f"error msg: {error}"}
+
+```
+
+## SubRouters
+
+You can create subrouters in Robyn. This is useful when you want to group routes together.
+
+Subrouters can be used for both normal routes and web sockets. They are basically a mini version of the main router and can be used in the same way.
+
+The only caveat is that you need to add the subrouter to the main router.
+
+```python
+from robyn import Robyn, SubRouter
+
+app = Robyn(__file__)
+
+sub_router = SubRouter(__file__, "/sub_router")
+
+@sub_router.get("/hello")
+def hello():
+    return "Hello, world"
+
+app.include_router(sub_router)
+```

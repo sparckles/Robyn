@@ -1,34 +1,60 @@
 import os
+
 import pathlib
+from collections import defaultdict
+from typing import Optional
 
 from robyn import WS, Robyn, Request, Response, jsonify, serve_file, serve_html
+from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.templating import JinjaTemplate
 
-
-from views import SyncView, AsyncView
+from integration_tests.views import SyncView, AsyncView
+from integration_tests.subroutes import sub_router
 
 app = Robyn(__file__)
 websocket = WS(app, "/web_socket")
+
+# Creating a new WS app to test json handling + to serve an example to future users of this lib
+# while the original "raw" web_socket is used with benchmark tests
+websocket_json = WS(app, "/web_socket_json")
 
 current_file_path = pathlib.Path(__file__).parent.resolve()
 jinja_template = JinjaTemplate(os.path.join(current_file_path, "templates"))
 
 # ===== Websockets =====
 
-websocket_state = 0
+# Make it easier for multiple test runs
+websocket_state = defaultdict(int)
+
+
+@websocket_json.on("message")
+async def jsonws_message(websocket_id: str, msg: str) -> str:
+    response: dict = {"ws_id": websocket_id, "resp": "", "msg": msg}
+    global websocket_state
+    state = websocket_state[websocket_id]
+    if state == 0:
+        response["resp"] = "Whaaat??"
+    elif state == 1:
+        response["resp"] = "Whooo??"
+    elif state == 2:
+        response["resp"] = "*chika* *chika* Slim Shady."
+    websocket_state[websocket_id] = (state + 1) % 3
+    return jsonify(response)
 
 
 @websocket.on("message")
-async def connect(websocket_id):
+async def message(websocket_id: str, msg: str) -> str:
     global websocket_state
-    if websocket_state == 0:
-        response = "Whaaat??"
-    elif websocket_state == 1:
-        response = "Whooo??"
-    elif websocket_state == 2:
-        response = "*chika* *chika* Slim Shady."
-    websocket_state = (websocket_state + 1) % 3
-    return response
+    state = websocket_state[websocket_id]
+    resp = ""
+    if state == 0:
+        resp = "Whaaat??"
+    elif state == 1:
+        resp = "Whooo??"
+    elif state == 2:
+        resp = "*chika* *chika* Slim Shady."
+    websocket_state[websocket_id] = (state + 1) % 3
+    return resp
 
 
 @websocket.on("close")
@@ -36,8 +62,18 @@ def close():
     return "GoodBye world, from ws"
 
 
+@websocket_json.on("close")
+def jsonws_close():
+    return "GoodBye world, from ws"
+
+
 @websocket.on("connect")
-def message():
+def connect():
+    return "Hello world, from ws"
+
+
+@websocket_json.on("connect")
+def jsonws_connect():
     return "Hello world, from ws"
 
 
@@ -54,6 +90,30 @@ def shutdown_handler():
 
 
 # ===== Middlewares =====
+
+# --- Global ---
+
+
+@app.before_request()
+def global_before_request(request: Request):
+    request.headers["global_before"] = "global_before_request"
+    return request
+
+
+@app.after_request()
+def global_after_request(response: Response):
+    response.headers["global_after"] = "global_after_request"
+    return response
+
+
+@app.get("/sync/global/middlewares")
+def sync_global_middlewares(request: Request):
+    assert "global_before" in request.headers
+    assert request.headers["global_before"] == "global_before_request"
+    return "sync global middlewares"
+
+
+# --- Route specific ---
 
 
 @app.before_request("/sync/middlewares")
@@ -73,6 +133,7 @@ def sync_after_request(response: Response):
 def sync_middlewares(request: Request):
     assert "before" in request.headers
     assert request.headers["before"] == "sync_before_request"
+    assert request.ip_addr == "127.0.0.1"
     return "sync middlewares"
 
 
@@ -93,7 +154,18 @@ async def async_after_request(response: Response):
 async def async_middlewares(request: Request):
     assert "before" in request.headers
     assert request.headers["before"] == "async_before_request"
+    assert request.ip_addr == "127.0.0.1"
     return "async middlewares"
+
+
+@app.before_request("/sync/middlewares/401")
+def sync_before_request_401():
+    return Response(401, {}, "sync before request 401")
+
+
+@app.get("/sync/middlewares/401")
+def sync_middlewares_401():
+    pass
 
 
 # ===== Routes =====
@@ -262,7 +334,7 @@ def sync_param(request: Request):
 
 @app.get("/async/param/:id")
 async def async_param(request: Request):
-    id = Request.path_params["id"]
+    id = request.path_params["id"]
     return id
 
 
@@ -584,10 +656,65 @@ def async_decorator_view():
         return {"status_code": 200, "body": body}
 
 
+# ==== Exception Handling ====
+
+
+@app.exception
+def handle_exception(error):
+    return {"status_code": 500, "body": f"error msg: {error}"}
+
+
+@app.get("/sync/exception/get")
+def sync_exception_get():
+    raise ValueError("value error")
+
+
+@app.get("/async/exception/get")
+async def async_exception_get():
+    raise ValueError("value error")
+
+
+@app.put("/sync/exception/put")
+def sync_exception_put(_: Request):
+    raise ValueError("value error")
+
+
+@app.put("/async/exception/put")
+async def async_exception_put(_: Request):
+    raise ValueError("value error")
+
+
+@app.post("/sync/exception/post")
+def sync_exception_post(_: Request):
+    raise ValueError("value error")
+
+
+@app.post("/async/exception/post")
+async def async_exception_post(_: Request):
+    raise ValueError("value error")
+
+
+# ===== Authentication =====
+
+
+@app.get("/sync/auth", auth_required=True)
+def sync_auth(request: Request):
+    assert request.identity is not None
+    assert request.identity.claims == {"key": "value"}
+    return "authenticated"
+
+
+@app.get("/async/auth", auth_required=True)
+async def async_auth(request: Request):
+    assert request.identity is not None
+    assert request.identity.claims == {"key": "value"}
+    return "authenticated"
+
+
 # ===== Main =====
 
 
-if __name__ == "__main__":
+def main():
     app.add_response_header("server", "robyn")
     app.add_directory(
         route="/test_dir",
@@ -597,4 +724,18 @@ if __name__ == "__main__":
     app.startup_handler(startup_handler)
     app.add_view("/sync/view", SyncView)
     app.add_view("/async/view", AsyncView)
+    app.include_router(sub_router)
+
+    class BasicAuthHandler(AuthenticationHandler):
+        def authenticate(self, request: Request) -> Optional[Identity]:
+            token = self.token_getter.get_token(request)
+            if token == "valid":
+                return Identity(claims={"key": "value"})
+            return None
+
+    app.configure_authentication(BasicAuthHandler(token_getter=BearerGetter()))
     app.start(port=8080)
+
+
+if __name__ == "__main__":
+    main()

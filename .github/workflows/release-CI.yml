@@ -136,10 +136,12 @@ jobs:
             --volume "${PWD}/dist:/artifacts"
           install: |
             apt update -y
+            apt install -y gcc musl-dev python3-dev # this is needed for psutil
             apt install -y --no-install-recommends software-properties-common
             add-apt-repository ppa:deadsnakes/ppa
             apt update -y
             PYTHON=python${{ matrix.python.version }}
+            pip install --upgrade pip setuptools wheel
             apt install -y $PYTHON $PYTHON-distutils $PYTHON-venv
           run: |
             ls -lrth /artifacts
@@ -147,7 +149,7 @@ jobs:
             $PYTHON --version
             $PYTHON -m venv venv
             source venv/bin/activate
-            pip install --upgrade pip
+            pip install --upgrade pip setuptools wheel
             pip install --force-reinstall dist/robyn*.whl
             cd ~ && python -c 'import robyn'
       - name: Upload wheels
