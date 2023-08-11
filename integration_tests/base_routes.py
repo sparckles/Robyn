@@ -125,7 +125,7 @@ def sync_before_request(request: Request):
 @app.after_request("/sync/middlewares")
 def sync_after_request(response: Response):
     response.headers["after"] = "sync_after_request"
-    response.description = response.description + " after"
+    response.body = response.description + " after"
     return response
 
 
@@ -146,7 +146,7 @@ async def async_before_request(request: Request):
 @app.after_request("/async/middlewares")
 async def async_after_request(response: Response):
     response.headers["after"] = "async_after_request"
-    response.description = response.description + " after"
+    response.body = response.description + " after"
     return response
 
 
