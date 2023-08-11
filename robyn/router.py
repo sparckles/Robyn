@@ -45,7 +45,7 @@ class Router(BaseRouter):
         if isinstance(res, dict):
             status_code = res.get("status_code", status_codes.HTTP_200_OK)
             headers = res.get("headers", {"Content-Type": "text/plain"})
-            description = res.get("description", "")
+            description = res.get("body", "")
 
             if type(status_code) != int:
                 status_code = int(status_code)  # status_code can potentially be string
