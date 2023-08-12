@@ -141,7 +141,6 @@ jobs:
             add-apt-repository ppa:deadsnakes/ppa
             apt update -y
             PYTHON=python${{ matrix.python.version }}
-            pip install --upgrade pip setuptools wheel
             apt install -y $PYTHON $PYTHON-distutils $PYTHON-venv
           run: |
             ls -lrth /artifacts
