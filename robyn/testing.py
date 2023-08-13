@@ -8,7 +8,6 @@
 # Route, Request, Response
 
 import asyncio
-from robyn.robyn import Response, Request
 from typing import Callable, Optional, Union
 
 # until we figure out a better method, I will be copying the classes over
@@ -77,14 +76,14 @@ class TestClient:
         route = self.get_route(method_path)
         if route == None:
             return None
-        req = Request()
+        req = TestRequest()
         return asyncio.run(route.function.handler(req))
     
     def post(self, method_path, data=None, json=None, headers=None, files=None):
         route = self.get_route(method_path)
         if route == None:
             return None
-        req = Request(method = "POST")
+        req = TestRequest(method = "POST")
 		return asyncio.run(route.function.handler(req))
         
 
