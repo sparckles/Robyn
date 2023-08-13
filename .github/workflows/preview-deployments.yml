@@ -29,7 +29,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: x86_64
-          args: -i python --release --out dist
+          args: -i python --release --out dist --no-sdist
       - name: Install build wheel - x86_64
         run: |
           pip install --force-reinstall dist/robyn*.whl
@@ -37,16 +37,11 @@ jobs:
       - name: Build wheels - universal2
         uses: PyO3/maturin-action@v1
         with:
-          args: -i python --release --universal2 --out dist
+          args: -i python --release --universal2 --out dist --no-sdist
       - name: Install build wheel - universal2
         run: |
           pip install --force-reinstall dist/robyn*_universal2.whl
           cd ~ && python -c 'import robyn'
-      - name: Upload wheels
-        uses: actions/upload-artifact@v3
-        with:
-          name: wheels
-          path: dist
 
   windows:
     runs-on: windows-latest
@@ -65,17 +60,12 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: -i python --release --out dist
+          args: -i python --release --out dist --no-sdist
       - name: Install build wheel
         shell: bash
         run: |
           pip install --force-reinstall dist/robyn*.whl
           cd ~ && python -c 'import robyn'
-      - name: Upload wheels
-        uses: actions/upload-artifact@v3
-        with:
-          name: wheels
-          path: dist
 
   linux:
     runs-on: ubuntu-latest
@@ -94,17 +84,12 @@ jobs:
         with:
           target: ${{ matrix.target }}
           manylinux: auto
-          args: -i python${{ matrix.python-version }} --release --out dist
+          args: -i python${{ matrix.python-version }} --release --out dist --no-sdist
       - name: Install build wheel
         if: matrix.target == 'x86_64'
         run: |
           pip install --force-reinstall dist/robyn*.whl
           cd ~ && python -c 'import robyn'
-      - name: Upload wheels
-        uses: actions/upload-artifact@v3
-        with:
-          name: wheels
-          path: dist
 
   linux-cross:
     runs-on: ubuntu-latest
@@ -128,7 +113,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           manylinux: auto
-          args: -i python${{matrix.python.version}} --release --out dist
+          args: -i python${{matrix.python.version}} --release --out dist --no-sdist
       - uses: uraimo/run-on-arch-action@v2.2.0
         name: Install build wheel
         with:
@@ -155,8 +140,3 @@ jobs:
             pip install --upgrade pip setuptools wheel
             pip install --force-reinstall dist/robyn*.whl
             cd ~ && python -c 'import robyn'
-      - name: Upload wheels
-        uses: actions/upload-artifact@v3
-        with:
-          name: wheels
-          path: dist

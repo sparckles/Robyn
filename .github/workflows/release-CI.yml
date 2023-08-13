@@ -124,7 +124,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           manylinux: auto
-          args: -i python${{matrix.python.version}} --release --out dist
+          args: -i python${{matrix.python.version}} --release --out dist --no-sdist
       - uses: uraimo/run-on-arch-action@v2.2.0
         name: Install build wheel
         with:
