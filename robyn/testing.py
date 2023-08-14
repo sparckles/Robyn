@@ -9,6 +9,7 @@
 
 import asyncio
 from typing import Callable, Optional, Union
+from urllib3 import encode_multipart_formdata
 
 # until we figure out a better method, I will be copying the classes over
 class TestUrl:
@@ -84,6 +85,10 @@ class TestClient:
         if route == None:
             return None
         req = TestRequest(method = "POST")
+        if files != None:
+            body, header = encode_multipart_formdata(files)
+            req.headers["content-type"] = header
+            req.body = list(body)
 		return asyncio.run(route.function.handler(req))
         
 
