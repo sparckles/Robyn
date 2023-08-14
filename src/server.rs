@@ -84,11 +84,20 @@ impl Server {
     ) -> PyResult<()> {
         pyo3_log::init();
 
+        let enable_robyn_logs_0 = env::var("ENABLE_ROBYN_LOGS")
+            .unwrap_or(ENABLE_ROBYN_LOGS.to_string());
+
+        let empty_space_0 = "";
+
         if STARTED
             .compare_exchange(false, true, SeqCst, Relaxed)
             .is_err()
         {
-            debug!("Robyn is already running...");
+            if enable_robyn_logs_0 == "true" {
+                debug!("Robyn is already running...");
+            } else {
+                print!("{}", empty_space_0);
+            }
             return Ok(());
         }
 
@@ -236,7 +245,11 @@ impl Server {
 
         let event_loop = (*event_loop).call_method0("run_forever");
         if event_loop.is_err() {
-            debug!("Ctrl c handler");
+            if enable_robyn_logs_0 == "true" {
+                debug!("Ctrl c handler");
+            } else {
+                print!("{}", empty_space_0);
+            }
             Python::with_gil(|py| {
                 pyo3_asyncio::tokio::run(py, async move {
                     execute_event_handler(shutdown_handler, &task_locals.clone())
@@ -301,7 +314,14 @@ impl Server {
         function: FunctionInfo,
         is_const: bool,
     ) {
-        debug!("Route added for {:?} {} ", route_type, route);
+        let enable_robyn_logs_2 = env::var(ENABLE_ROBYN_LOGS)
+            .unwrap_or(ENABLE_ROBYN_LOGS.to_string());
+        let empty_space_2 = "";
+        if enable_robyn_logs_2 == "true" {
+            debug!("Route added for {:?} {} ", route_type, route);
+        } else {
+            print!("{}", empty_space_2);
+        }
         let asyncio = py.import("asyncio").unwrap();
         let event_loop = asyncio.call_method0("get_event_loop").unwrap();
 
@@ -312,14 +332,22 @@ impl Server {
             {
                 Ok(_) => (),
                 Err(e) => {
-                    debug!("Error adding const route {}", e);
+                    if enable_robyn_logs_2 == "true" {
+                        debug!("Error adding const route {}", e);
+                    } else {
+                        print!("{}", empty_space_2);
+                    }
                 }
             }
         } else {
             match self.router.add_route(route_type, route, function, None) {
                 Ok(_) => (),
                 Err(e) => {
-                    debug!("Error adding route {}", e);
+                    if enable_robyn_logs_2 == "true" {
+                        debug!("Error adding route {}", e);
+                    } else {
+                        print!("{}", empty_space_2);
+                    }
                 }
             }
         }
@@ -341,10 +369,18 @@ impl Server {
         route: &str,
         function: FunctionInfo,
     ) {
-        debug!(
-            "MiddleWare Route added for {:?} {} ",
-            middleware_type, route
-        );
+        let enable_robyn_logs_3 = env::var(ENABLE_ROBYN_LOGS)
+            .unwrap_or(ENABLE_ROBYN_LOGS.to_string());
+        let empty_space_3 = "";
+        if enable_robyn_logs_3 == "true" {
+            debug!(
+                "MiddleWare Route added for {:?} {} ",
+                middleware_type, route
+            );
+        } else {
+            print!("{}", empty_space_3);
+        }
+
         self.middleware_router
             .add_route(middleware_type, route, function, None)
             .unwrap();
@@ -366,13 +402,27 @@ impl Server {
     /// Add a new startup handler
     pub fn add_startup_handler(&mut self, function: FunctionInfo) {
         self.startup_handler = Some(Arc::new(function));
-        debug!("Added startup handler {:?}", self.startup_handler);
+        let enable_robyn_logs_4 = env::var(ENABLE_ROBYN_LOGS)
+            .unwrap_or(ENABLE_ROBYN_LOGS.to_string());
+        let empty_space_4 = "";
+        if enable_robyn_logs_4 == "true" {
+            debug!("Added startup handler {:?}", self.startup_handler);
+        } else {
+            print!("{}", empty_space_4);
+        }
     }
 
     /// Add a new shutdown handler
     pub fn add_shutdown_handler(&mut self, function: FunctionInfo) {
         self.shutdown_handler = Some(Arc::new(function));
-        debug!("Added shutdown handler {:?}", self.shutdown_handler);
+        let enable_robyn_logs_5 = env::var(ENABLE_ROBYN_LOGS)
+            .unwrap_or(ENABLE_ROBYN_LOGS.to_string());
+        let empty_space_5 = "";
+        if enable_robyn_logs_5 == "true" {
+            debug!("Added shutdown handler {:?}", self.shutdown_handler);
+        } else {
+            print!("{}", empty_space_5);
+        }
     }
 }
 
@@ -483,8 +533,16 @@ async fn index(
             }
         };
     }
+    let enable_robyn_logs_6 = env::var(ENABLE_ROBYN_LOGS)
+        .unwrap_or(ENABLE_ROBYN_LOGS.to_string());
+    let empty_space_6 = "";
 
-    debug!("Response: {:?}", response);
+    if enable_robyn_logs_6 == "true" {
+        debug!("Response: {:?}", response);
+    } else {
+        print!("{}", empty_space_6);
+    }
+//    debug!("Response: {:?}", response);
 
     response
 }
