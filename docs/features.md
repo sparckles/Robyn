@@ -231,7 +231,7 @@ Additionally, you can access headers for per route.
 @app.get("/test-headers")
 def sync_before_request(request: Request):
     request.headers["test"] = "we are modifying the request headers in the middle of the request!"
-    print(rquest)
+    print(request)
 ```
 
 ## Query Params
@@ -595,16 +595,10 @@ from robyn import Robyn, SubRouter
 
 app = Robyn(__file__)
 
-sub_router = SubRouter("/sub_router")
+sub_router = SubRouter(__file__, "/sub_router")
 
 @sub_router.get("/hello")
 def hello():
-    return "Hello, world"
-
-web_socket = SubRouter("/web_socket")
-
-@web_socket.message()
-async def hello():
     return "Hello, world"
 
 app.include_router(sub_router)
