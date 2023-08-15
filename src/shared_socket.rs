@@ -1,5 +1,5 @@
 use pyo3::prelude::*;
-
+use crate::logger::enable_robyn_logs;
 use log::debug;
 use socket2::{Domain, Protocol, Socket, Type};
 use std::net::{IpAddr, SocketAddr};
@@ -21,7 +21,8 @@ impl SocketHeld {
             Socket::new(Domain::IPV6, Type::STREAM, Some(Protocol::TCP))?
         };
         let address = SocketAddr::new(ip, port);
-        debug!("{}", address);
+        enable_robyn_logs(&format!("{}", address));
+        //debug!("{}", address);
         // reuse port is not available on windows
         #[cfg(not(target_os = "windows"))]
         socket.set_reuse_port(true)?;
