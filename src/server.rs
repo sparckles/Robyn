@@ -13,10 +13,6 @@ use crate::types::HttpMethod;
 use crate::types::MiddlewareReturn;
 use crate::web_socket_connection::start_web_socket;
 use crate::logger::enable_robyn_logs;
-<<<<<<< HEAD
-=======
-
->>>>>>> 3e6c00b1f3ec6bf6bec14b307a05f866591351fb
 
 use std::convert::TryInto;
 use std::sync::atomic::AtomicBool;
