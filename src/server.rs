@@ -12,6 +12,7 @@ use crate::types::response::Response;
 use crate::types::HttpMethod;
 use crate::types::MiddlewareReturn;
 use crate::web_socket_connection::start_web_socket;
+use crate::logger::enable_robyn_logs;
 
 use std::convert::TryInto;
 use std::sync::atomic::AtomicBool;
@@ -34,7 +35,6 @@ use pyo3::prelude::*;
 
 const MAX_PAYLOAD_SIZE: &str = "ROBYN_MAX_PAYLOAD_SIZE";
 const DEFAULT_MAX_PAYLOAD_SIZE: usize = 1_000_000; // 1Mb
-const ENABLE_ROBYN_LOGS: &str = "ENABLE_ROBYN_LOGS";
 
 static STARTED: AtomicBool = AtomicBool::new(false);
 
@@ -84,20 +84,11 @@ impl Server {
     ) -> PyResult<()> {
         pyo3_log::init();
 
-        let enable_robyn_logs_0 = env::var("ENABLE_ROBYN_LOGS")
-            .unwrap_or(ENABLE_ROBYN_LOGS.to_string());
-
-        let empty_space_0 = "";
-
         if STARTED
             .compare_exchange(false, true, SeqCst, Relaxed)
             .is_err()
         {
-            if enable_robyn_logs_0 == "true" {
-                debug!("Robyn is already running...");
-            } else {
-                print!("{}", empty_space_0);
-            }
+            enable_robyn_logs(&format!("Robyn is already running..."));
             return Ok(());
         }
 
@@ -131,19 +122,10 @@ impl Server {
                     "Failed to parse environment variable {MAX_PAYLOAD_SIZE} - {e}"
                 ))
             })?;
-
-        let enable_robyn_logs = env::var(ENABLE_ROBYN_LOGS)
-            .unwrap_or(ENABLE_ROBYN_LOGS.to_string());
-
-        let empty_space = "";
         
         thread::spawn(move || {
             actix_web::rt::System::new().block_on(async move {
-                if enable_robyn_logs == "true" {
-                    debug!("The number of workers is {}", workers.clone());
-                } else {
-                    print!("{}", empty_space);
-                }
+                enable_robyn_logs(&format!("The number of workers is {}", workers.clone()));
                 execute_event_handler(startup_handler, &task_locals_copy)
                     .await
                     .unwrap();
@@ -202,11 +184,7 @@ impl Server {
                         );
                     }
 
-                    if enable_robyn_logs == "true" {
-                        debug!("Max payload size is {}", max_payload_size);
-                    } else {
-                        print!("{}", empty_space);
-                    }
+                    enable_robyn_logs(&format!("Max payload size is {}", max_payload_size));
 
                     app.app_data(web::PayloadConfig::new(max_payload_size))
                         .default_service(web::route().to(
@@ -245,11 +223,7 @@ impl Server {
 
         let event_loop = (*event_loop).call_method0("run_forever");
         if event_loop.is_err() {
-            if enable_robyn_logs_0 == "true" {
-                debug!("Ctrl c handler");
-            } else {
-                print!("{}", empty_space_0);
-            }
+            enable_robyn_logs(&format!("Ctrl c handler"));
             Python::with_gil(|py| {
                 pyo3_asyncio::tokio::run(py, async move {
                     execute_event_handler(shutdown_handler, &task_locals.clone())
@@ -314,14 +288,7 @@ impl Server {
         function: FunctionInfo,
         is_const: bool,
     ) {
-        let enable_robyn_logs_2 = env::var(ENABLE_ROBYN_LOGS)
-            .unwrap_or(ENABLE_ROBYN_LOGS.to_string());
-        let empty_space_2 = "";
-        if enable_robyn_logs_2 == "true" {
-            debug!("Route added for {:?} {} ", route_type, route);
-        } else {
-            print!("{}", empty_space_2);
-        }
+        enable_robyn_logs(&format!("Route added for {:?} {} ", route_type, route));
         let asyncio = py.import("asyncio").unwrap();
         let event_loop = asyncio.call_method0("get_event_loop").unwrap();
 
@@ -332,22 +299,14 @@ impl Server {
             {
                 Ok(_) => (),
                 Err(e) => {
-                    if enable_robyn_logs_2 == "true" {
-                        debug!("Error adding const route {}", e);
-                    } else {
-                        print!("{}", empty_space_2);
-                    }
+                    enable_robyn_logs(&format!("Error adding const route {}", e));
                 }
             }
         } else {
             match self.router.add_route(route_type, route, function, None) {
                 Ok(_) => (),
                 Err(e) => {
-                    if enable_robyn_logs_2 == "true" {
-                        debug!("Error adding route {}", e);
-                    } else {
-                        print!("{}", empty_space_2);
-                    }
+                    enable_robyn_logs(&format!("Error adding route {}", e));
                 }
             }
         }
@@ -369,17 +328,8 @@ impl Server {
         route: &str,
         function: FunctionInfo,
     ) {
-        let enable_robyn_logs_3 = env::var(ENABLE_ROBYN_LOGS)
-            .unwrap_or(ENABLE_ROBYN_LOGS.to_string());
-        let empty_space_3 = "";
-        if enable_robyn_logs_3 == "true" {
-            debug!(
-                "MiddleWare Route added for {:?} {} ",
-                middleware_type, route
-            );
-        } else {
-            print!("{}", empty_space_3);
-        }
+        enable_robyn_logs(&format!("MiddleWare Route added for {:?} {} ",
+            middleware_type, route));
 
         self.middleware_router
             .add_route(middleware_type, route, function, None)
@@ -402,27 +352,13 @@ impl Server {
     /// Add a new startup handler
     pub fn add_startup_handler(&mut self, function: FunctionInfo) {
         self.startup_handler = Some(Arc::new(function));
-        let enable_robyn_logs_4 = env::var(ENABLE_ROBYN_LOGS)
-            .unwrap_or(ENABLE_ROBYN_LOGS.to_string());
-        let empty_space_4 = "";
-        if enable_robyn_logs_4 == "true" {
-            debug!("Added startup handler {:?}", self.startup_handler);
-        } else {
-            print!("{}", empty_space_4);
-        }
+        enable_robyn_logs(&format!("Added startup handler {:?}", self.startup_handler));
     }
 
     /// Add a new shutdown handler
     pub fn add_shutdown_handler(&mut self, function: FunctionInfo) {
         self.shutdown_handler = Some(Arc::new(function));
-        let enable_robyn_logs_5 = env::var(ENABLE_ROBYN_LOGS)
-            .unwrap_or(ENABLE_ROBYN_LOGS.to_string());
-        let empty_space_5 = "";
-        if enable_robyn_logs_5 == "true" {
-            debug!("Added shutdown handler {:?}", self.shutdown_handler);
-        } else {
-            print!("{}", empty_space_5);
-        }
+        enable_robyn_logs(&format!("Added shutdown handler {:?}", self.shutdown_handler));
     }
 }
 
@@ -464,11 +400,9 @@ async fn index(
                 return r;
             }
             Err(e) => {
-                error!(
-                    "Error while executing before middleware function for endpoint `{}`: {}",
-                    req.uri().path(),
-                    get_traceback(e.downcast_ref::<PyErr>().unwrap())
-                );
+                enable_robyn_logs(&format!("Error while executing before middleware function for endpoint `{}`: {}",
+                req.uri().path(),
+                get_traceback(e.downcast_ref::<PyErr>().unwrap())));
                 return Response::internal_server_error(&request.headers);
             }
         };
@@ -488,11 +422,11 @@ async fn index(
         execute_http_function(&request, &function)
             .await
             .unwrap_or_else(|e| {
-                error!(
+                enable_robyn_logs(&format!(
                     "Error while executing route function for endpoint `{}`: {}",
                     req.uri().path(),
                     get_traceback(&e)
-                );
+                ));
 
                 Response::internal_server_error(&request.headers)
             })
@@ -519,30 +453,22 @@ async fn index(
     for after_middleware in after_middlewares {
         response = match execute_middleware_function(&response, &after_middleware).await {
             Ok(MiddlewareReturn::Request(_)) => {
-                error!("After middleware returned a request");
+                enable_robyn_logs(&format!("After middleware returned a request"));
                 return Response::internal_server_error(&request.headers);
             }
             Ok(MiddlewareReturn::Response(r)) => r,
             Err(e) => {
-                error!(
+                enable_robyn_logs(&format!(
                     "Error while executing after middleware function for endpoint `{}`: {}",
                     req.uri().path(),
                     get_traceback(e.downcast_ref::<PyErr>().unwrap())
-                );
+                ));
                 return Response::internal_server_error(&request.headers);
             }
         };
     }
-    let enable_robyn_logs_6 = env::var(ENABLE_ROBYN_LOGS)
-        .unwrap_or(ENABLE_ROBYN_LOGS.to_string());
-    let empty_space_6 = "";
 
-    if enable_robyn_logs_6 == "true" {
-        debug!("Response: {:?}", response);
-    } else {
-        print!("{}", empty_space_6);
-    }
-//    debug!("Response: {:?}", response);
+    enable_robyn_logs(&format!("Response: {:?}", response));
 
     response
 }
