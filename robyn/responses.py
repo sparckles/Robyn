@@ -1,4 +1,3 @@
-import json
 from typing import Any, Dict
 
 
@@ -28,11 +27,3 @@ def serve_file(file_path: str) -> Dict[str, Any]:
     }
 
 
-def jsonify(input_dict: dict) -> str:
-    """
-    This function serializes input dict to a json string
-
-    :param input_dict dict: response of the function
-    """
-
-    return json.dumps(input_dict)

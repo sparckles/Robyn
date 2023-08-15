@@ -1,6 +1,6 @@
 [package]
 name = "robyn"
-version = "0.36.2"
+version = "0.37.0"
 authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 edition = "2018"
 description = "A web server that is fast!"
@@ -14,8 +14,8 @@ name = "robyn"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-pyo3 = { version = "0.18.1", features = ["extension-module"] }
-pyo3-asyncio = { version="0.18.0" , features = ["attributes", "tokio-runtime"] }
+pyo3 = { version = "0.19.0", features = ["extension-module"] }
+pyo3-asyncio = { version="0.19.0" , features = ["attributes", "tokio-runtime"] }
 pyo3-log = "0.8.1"
 tokio = { version = "1.26.0", features = ["full"] }
 dashmap = "5.4.0"
@@ -30,9 +30,11 @@ futures-util = "0.3.27"
 matchit = "0.7.0"
 socket2 = { version = "0.5.1", features = ["all"] }
 uuid = { version = "1.3.0", features = ["serde", "v4"] }
-serde = "1.0.157"
-serde_json = "1.0.94"
 log = "0.4.17"
+pythonize = "0.19.0"
+serde = "1.0.178"
+serde_json = "1.0.104"
+env_logger = "0.9"
 
 [features]
 io-uring = ["actix-web/experimental-io-uring"]
