@@ -18,10 +18,24 @@ def create_robyn_app():
             ],
             "default": None,
         },
+        {
+            "type": "list",
+            "message": "Please select project type (Mongo/Postgres/Sqlalchemy/Prisma): ",
+            "choices": [
+                Choice("no db", name="No DB"),
+                Choice("sqlite", name="Sqlite"),
+                Choice("postgres", name="Postgres"),
+                Choice("mongo", name="MongoDB"),
+                Choice("sqlalchemy", name="SqlAlchemy"),
+                Choice("prisma", name="Prisma"),
+            ],
+            "default": None,
+        },
     ]
     result = prompt(questions=questions)
     project_dir = result[0]
     docker = result[1]
+    project_type = result[2]
 
     print(f"Creating a new Robyn project '{project_dir}'...")
 
@@ -31,8 +45,23 @@ def create_robyn_app():
     # Create the main application file
     app_file_path = os.path.join(project_dir, "app.py")
     with open(app_file_path, "w") as f:
-        f.write(
-            """
+        if project_type == "sqlite":
+            f.write(open("robyn/scaffold/sqlite.py", "r").read())
+        elif project_type == "postgres":
+            f.write(open("robyn/scaffold/postgres.py", "r").read())
+        elif project_type == "mongo":
+            f.write(open("robyn/scaffold/mongo.py", "r").read())
+        elif project_type == "sqlalchemy":
+            f.write(open("robyn/scaffold/sqlalchemy.py", "r").read())
+        elif project_type == "prisma":
+            f.write(open("robyn/scaffold/prisma.py", "r").read())
+            # copy schema.prisma
+            schema_path = os.path.join(project_dir, "schema.prisma")
+            with open(schema_path, "w") as f:
+                f.write(open("robyn/scaffold/schema.prisma", "r").read())
+        else:
+            f.write(
+                """
 from robyn import Robyn
 
 app = Robyn(__file__)
@@ -44,9 +73,8 @@ def index():
 
 if __name__ == "__main__":
     app.start()
-
             """
-        )
+            )
 
     # Dockerfile configuration
     if docker == "Y":
@@ -80,7 +108,6 @@ CMD ["python3.10", "/workspace/foo/app.py", "--log-level=DEBUG"]
 def docs():
     print("Opening Robyn documentation... | Offline docs coming soon!")
     webbrowser.open("https://robyn.tech")
-
 
 if __name__ == "__main__":
     config = Config()
