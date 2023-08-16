@@ -7,9 +7,10 @@
 # it's important to understand the following classes, at least right now:
 # Route, Request, Response
 
-import asyncio
+import asyncio, json
 from typing import Callable, Optional, Union
 from urllib3 import encode_multipart_formdata
+from robyn import HttpMethod
 
 # until we figure out a better method, I will be copying the classes over
 class TestUrl:
@@ -61,11 +62,11 @@ class TestRequest:
 
 class TestClient:
     #helper function
-    def get_route(self, path):
+    def get_route(self, path, method):
         routes = self.app.router.get_routes()
         r = None
         for route in routes: 
-            if route.route == path:
+            if route.route == path and route.route_type == method:
                 r = route
                 break
         return r
@@ -74,21 +75,56 @@ class TestClient:
         self.app = app
     
     def get(self, method_path, data=None, json=None, headers=None, files=None):
-        route = self.get_route(method_path)
+        route = self.get_route(method_path, HttpMethod.GET)
         if route == None:
             return None
         req = TestRequest()
         return asyncio.run(route.function.handler(req))
     
     def post(self, method_path, data=None, json=None, headers=None, files=None):
-        route = self.get_route(method_path)
+        route = self.get_route(method_path, HttpMethod.POST)
         if route == None:
             return None
         req = TestRequest(method = "POST")
+        #default headers
+        req.headers["host"] = "localhost"
+        req.headers["connection"] = "keep-alive"
+        req.headers["user-agent"] = "robyn-testclient"
+        req.headers["accept"] = "*/*"
+        req.headers["accept-encoding"] = "gzip, deflate"
+        #input headers
+        if headers != None:
+            for header in headers:
+                req.headers[header] = headers[header]
+        #input body
         if files != None:
             body, header = encode_multipart_formdata(files)
             req.headers["content-type"] = header
             req.body = list(body)
-		return asyncio.run(route.function.handler(req))
-        
-
+            req.headers["content-length"] = len(req.body)
+        elif data != None:
+            if type(data) == bytes:
+                req.body = list(data)
+            elif type(data) == dict:
+                body = ""
+                for element in data:
+                    body = body + element + "=" + data + "&"
+                body = body[:-1]
+                req.body = list(body)
+                req.headers["content-type"] = "application/x-www-form-urlencoded"
+            elif type(data) == list:
+                body = ""
+                for element in data:
+                    body = body + element[0] + "=" + element[1] + "&"
+                body = body[:-1]
+                req.body = list(body)
+                req.headers["content-type"] = "application/x-www-form-urlencoded"
+            req.headers["content-length"] = len(req.body)
+        elif json == None:
+            req.headers["content-type"] = "application/json"
+            req.body = list(json.dumps(json))
+            req.headers["content-length"] = len(req.body)
+        #run the handler function
+        response = asyncio.run(route.function.handler(req))
+        #turn the output into a requests.Response object
+        return response
