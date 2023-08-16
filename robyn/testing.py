@@ -128,3 +128,20 @@ class TestClient:
         response = asyncio.run(route.function.handler(req))
         #turn the output into a requests.Response object
         return response
+    
+    def delete(self, method_path, data=None, json=None, headers=None, files=None):
+        route = self.get_route(method_path, HttpMethod.DELETE)
+        if route is None:
+            return None
+        
+        req = TestRequest(method="DELETE")
+        
+        # Set default headers
+        req.headers["host"] = "localhost"
+        req.headers["connection"] = "keep-alive"
+        req.headers["user-agent"] = "robyn-testclient"
+        req.headers["accept"] = "*/*"
+        req.headers["accept-encoding"] = "gzip, deflate"
+        
+        
+
