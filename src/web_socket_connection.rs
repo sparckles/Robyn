@@ -1,5 +1,5 @@
 use crate::types::function_info::FunctionInfo;
-
+use crate::logger::enable_robyn_logs;
 use actix::prelude::*;
 use actix::{Actor, AsyncContext, StreamHandler};
 use actix_web::{web, Error, HttpRequest, HttpResponse};
@@ -79,15 +79,15 @@ impl Actor for MyWs {
     fn started(&mut self, ctx: &mut Self::Context) {
         let function = self.router.get("connect").unwrap();
         execute_ws_function(function, None, &self.task_locals, ctx, self);
-
-        debug!("Actor is alive");
+        enable_robyn_logs(&format!("Actor is alive"));
+        //debug!("Actor is alive");
     }
 
     fn stopped(&mut self, ctx: &mut Self::Context) {
         let function = self.router.get("close").unwrap();
         execute_ws_function(function, None, &self.task_locals, ctx, self);
-
-        debug!("Actor is dead");
+        enable_robyn_logs(&format!("Actor is dead"));
+        //debug!("Actor is dead");
     }
 }
 
@@ -100,14 +100,17 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
     fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
         match msg {
             Ok(ws::Message::Ping(msg)) => {
-                debug!("Ping message {:?}", msg);
+                enable_robyn_logs(&format!("Ping message {:?}", msg));
+                //debug!("Ping message {:?}", msg);
                 let function = self.router.get("connect").unwrap();
-                debug!("{:?}", function.handler);
+                enable_robyn_logs(&format!("{:?}", function.handler));
+                //debug!("{:?}", function.handler);
                 execute_ws_function(function, None, &self.task_locals, ctx, self);
                 ctx.pong(&msg)
             }
             Ok(ws::Message::Pong(msg)) => {
-                debug!("Pong message {:?}", msg);
+                enable_robyn_logs(&format!("Pong message {:?}", msg));
+                //debug!("Pong message {:?}", msg);
             }
             Ok(ws::Message::Text(text)) => {
                 // need to also pass this text as a param
@@ -122,7 +125,8 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
             }
             Ok(ws::Message::Binary(bin)) => ctx.binary(bin),
             Ok(ws::Message::Close(_close_reason)) => {
-                debug!("Socket was closed");
+                enable_robyn_logs(&format!("Socket was closed"));
+                //debug!("Socket was closed");
                 let function = self.router.get("close").unwrap();
                 execute_ws_function(function, None, &self.task_locals, ctx, self);
             }

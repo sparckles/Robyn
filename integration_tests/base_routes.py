@@ -1,4 +1,5 @@
 import os
+import logging
 
 import pathlib
 from collections import defaultdict
@@ -177,7 +178,8 @@ def sync_middlewares_401():
 
 @app.get("/")
 async def hello_world():
-    return "Hello world"
+    logging.info("Insert log message here")
+    return {"results": [{"testing": "testing"}]}
 
 
 # str
