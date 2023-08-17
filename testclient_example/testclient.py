@@ -1,5 +1,5 @@
-from testing import TestClient
-from robyn_server import app
+from robyn.testing import TestClient
+from myapp import app
 
 client = TestClient(app)
 
