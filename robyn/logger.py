@@ -62,10 +62,11 @@ class Logger:
         bold: bool = False,
         underline: bool = False,
     ):
-        enable_robyn_logs = os.getenv("ENABLE_ROBYN_LOGS", "false") == "true"
-        if not enable_robyn_logs:
+        enable_robyn_logs = os.getenv("ENABLE_ROBYN_LOGS")
+        if enable_robyn_logs == "true":
+            self.logger.info(self._format_msg(msg, color, bold, underline))
+        else:
             return
-        self.logger.info(self._format_msg(msg, color, bold, underline))
 
     def debug(
         self,
@@ -77,7 +78,6 @@ class Logger:
         enable_robyn_logs = os.getenv("ENABLE_ROBYN_LOGS", "false") == "true"
         if not enable_robyn_logs:
             return
-        self.logger.debug(self._format_msg(msg, color, bold, underline))
 
 
 logger = Logger()
