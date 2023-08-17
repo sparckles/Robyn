@@ -1,16 +1,13 @@
+# known issues:
+# no support for path parameters, authentication, cookies, timeout, redirects, proxies, streams or certification
+# uses a new TestRequest class instead of robyn.Request
 
-# the "app" parameter in the constructor refers to a Robyn application
-# app.router leads to the router, and from there we can use app.router.get_routes()
-# to retrieve the routes the server supports. We can search said list for methods
-# to match test requests made by the server's developer
-
-# it's important to understand the following classes, at least right now:
-# Route, Request, Response
-
-import asyncio, json
+import asyncio
+from json import dumps
 from typing import Callable, Optional, Union
 from urllib3 import encode_multipart_formdata
 from robyn import HttpMethod
+from requests.models import Response
 
 # until we figure out a better method, I will be copying the classes over
 class TestUrl:
@@ -58,7 +55,6 @@ class TestRequest:
         self.path_params = path_params
         self.method = method
         self.ip_addr = ip_addr
-    
 
 class TestClient:
     #helper function
@@ -74,18 +70,35 @@ class TestClient:
     def __init__(self, app):
         self.app = app
     
-    def get(self, method_path, data=None, json=None, headers=None, files=None):
-        route = self.get_route(method_path, HttpMethod.GET)
-        if route == None:
-            return None
-        req = TestRequest()
-        return asyncio.run(route.function.handler(req))
+    def get(self, method_path, **kwargs):
+        return self.do_test_request(HttpMethod.GET, method_path, **kwargs)
     
-    def post(self, method_path, data=None, json=None, headers=None, files=None):
-        route = self.get_route(method_path, HttpMethod.POST)
+    def post(self, method_path, **kwargs):
+        return self.do_test_request(HttpMethod.POST, method_path, **kwargs)
+    
+    def delete(self, method_path, **kwargs):
+        return self.do_test_request(HttpMethod.DELETE, method_path, **kwargs)
+    
+    def patch(self, method_path, **kwargs):
+        return self.do_test_request(HttpMethod.PATCH, method_path, **kwargs)
+        
+    def options(self, method_path, **kwargs):
+        return self.do_test_request(HttpMethod.OPTIONS, method_path, **kwargs)
+        
+    def head(self, method_path, **kwargs):
+        return self.do_test_request(HttpMethod.HEAD, method_path, **kwargs)
+        
+    def trace(self, method_path, **kwargs):
+        return self.do_test_request(HttpMethod.TRACE, method_path, **kwargs)
+        
+    def connect(self, method_path, **kwargs):
+        return self.do_test_request(HttpMethod.CONNECT, method_path, **kwargs)
+    
+    def do_test_request(self, method, method_path, data=None, json=None, headers=None, files=None, params=None):
+        route = self.get_route(method_path, method)
         if route == None:
             return None
-        req = TestRequest(method = "POST")
+        req = TestRequest(method = method)
         #default headers
         req.headers["host"] = "localhost"
         req.headers["connection"] = "keep-alive"
@@ -96,6 +109,13 @@ class TestClient:
         if headers != None:
             for header in headers:
                 req.headers[header] = headers[header]
+        #input parameters
+        if params != None:
+            if type(params) == dict:
+                req.queries = params
+            elif type(params) == list:
+                for param in params:
+                    req.queries[param[0]] = param[1]
         #input body
         if files != None:
             body, header = encode_multipart_formdata(files)
@@ -122,26 +142,14 @@ class TestClient:
             req.headers["content-length"] = len(req.body)
         elif json == None:
             req.headers["content-type"] = "application/json"
-            req.body = list(json.dumps(json))
+            req.body = list(dumps(json))
             req.headers["content-length"] = len(req.body)
         #run the handler function
         response = asyncio.run(route.function.handler(req))
         #turn the output into a requests.Response object
-        return response
-    
-    def delete(self, method_path, data=None, json=None, headers=None, files=None):
-        route = self.get_route(method_path, HttpMethod.DELETE)
-        if route is None:
-            return None
-        
-        req = TestRequest(method="DELETE")
-        
-        # Set default headers
-        req.headers["host"] = "localhost"
-        req.headers["connection"] = "keep-alive"
-        req.headers["user-agent"] = "robyn-testclient"
-        req.headers["accept"] = "*/*"
-        req.headers["accept-encoding"] = "gzip, deflate"
-        
-        
-
+        r = Response()
+        r.status_code = response.status_code
+        r.headers = response.headers
+        if len(response.body) > 0:
+            r._content = response.body if type(response.body) == bytes else bytes(response.body)
+        return r
