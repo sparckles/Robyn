@@ -1,6 +1,0 @@
--r robyn/test-requirements.txt
-ruff==0.0.240
-black==23.1
-isort==5.12
-pre-commit==3.0.4
-commitizen==2.40

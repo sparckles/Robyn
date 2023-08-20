@@ -1,6 +1,6 @@
 from collections.abc import Callable
 import pytest
-from helpers.http_methods_helpers import get, post, put
+from integration_tests.helpers.http_methods_helpers import get, post, put
 
 
 @pytest.mark.benchmark
