@@ -114,7 +114,7 @@ Robyn accepts dictionaries to build a response for the route:
 async def dictionary(request):
     return {
         "status_code": 200,
-        "body": "This is a regular response",
+        "description": "This is a regular response",
         "type": "text",
         "headers": {"Header": "header_value"},
     }
@@ -130,7 +130,7 @@ from robyn.robyn import Response
 
 @app.get("/response")
 async def response(request):
-    return Response(status_code=200, headers={}, body="OK")
+    return Response(status_code=200, headers={}, description="OK")
 ```
 
 #### Status Codes
@@ -144,7 +144,7 @@ from robyn import status_codes
 
 @app.get("/response")
 async def response(request):
-    return Response(status_code=status_codes.HTTP_200_OK, headers={}, body="OK")
+    return Response(status_code=status_codes.HTTP_200_OK, headers={}, description="OK")
 ```
 
 #### Returning a byte response
@@ -156,7 +156,7 @@ def binary_output_response_sync(request):
     return Response(
         status_code=200,
         headers={"Content-Type": "application/octet-stream"},
-        body="OK",
+        description="OK",
     )
 
 
@@ -170,7 +170,7 @@ async def binary_output_response_async(request):
     return Response(
         status_code=200,
         headers={"Content-Type": "application/octet-stream"},
-        body="OK",
+        description="OK",
     )
 ```
 
