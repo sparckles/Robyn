@@ -46,21 +46,21 @@ def create_robyn_app():
     app_file_path = os.path.join(project_dir, "app.py")
     with open(app_file_path, "w") as f:
         if project_type == "sqlite":
-            f.write(open("robyn/scaffold/sqlite.py", "r").read())
+            f.write(open("robyn/scaffold/sqlite/app.py", "r").read())
         elif project_type == "postgres":
-            f.write(open("robyn/scaffold/postgres.py", "r").read())
+            f.write(open("robyn/scaffold/postgres/app.py", "r").read())
         elif project_type == "mongo":
-            f.write(open("robyn/scaffold/mongo.py", "r").read())
+            f.write(open("robyn/scaffold/mongo/app.py", "r").read())
         elif project_type == "sqlalchemy":
-            f.write(open("robyn/scaffold/sqlalchemy.py", "r").read())
+            f.write(open("robyn/scaffold/sqlalchemy/app.py", "r").read())
         elif project_type == "prisma":
-            f.write(open("robyn/scaffold/prisma.py", "r").read())
+            f.write(open("robyn/scaffold/prisma/app.py", "r").read())
             # copy schema.prisma
             schema_path = os.path.join(project_dir, "schema.prisma")
             with open(schema_path, "w") as f:
-                f.write(open("robyn/scaffold/schema.prisma", "r").read())
+                f.write(open("robyn/scaffold/prisma/schema.prisma", "r").read())
         else:
-            f.write(open("robyn/scaffold/no-db.py", "r").read())
+            f.write(open("robyn/scaffold/no-db/app.py", "r").read())
 
     # Dockerfile configuration
     if docker == "Y":
@@ -68,17 +68,17 @@ def create_robyn_app():
         dockerfile_path = os.path.join(project_dir, "Dockerfile")
         with open(dockerfile_path, "w") as f:
             if project_type == "sqlite":
-                f.write(open("robyn/scaffold/docker/Dockerfile-sqlite", "r").read())
+                f.write(open("robyn/scaffold/sqlite/Dockerfile", "r").read())
             elif project_type == "postgres":
-                f.write(open("robyn/scaffold/docker/Dockerfile-postgres", "r").read())
+                f.write(open("robyn/scaffold/postgres/Dockerfile", "r").read())
             elif project_type == "mongo":
-                f.write(open("robyn/scaffold/docker/Dockerfile-mongo", "r").read())
+                f.write(open("robyn/scaffold/mongo/Dockerfile", "r").read())
             elif project_type == "sqlalchemy":
-                f.write(open("robyn/scaffold/docker/Dockerfile-sqlalchemy", "r").read())
+                f.write(open("robyn/scaffold/sqlalchemy/Dockerfile", "r").read())
             elif project_type == "prisma":
-                f.write(open("robyn/scaffold/docker/Dockerfile-prisma", "r").read())
+                f.write(open("robyn/scaffold/prisma/Dockerfile", "r").read())
             else:
-                f.write(open("robyn/scaffold/docker/Dockerfile", "r").read())
+                f.write(open("robyn/scaffold/no-db/Dockerfile", "r").read())
     elif docker == "N":
         print("Docker not included")
     else:
