@@ -2,11 +2,12 @@ FROM ubuntu:22.04
 
 WORKDIR /workspace
 
-RUN apt-get update -y && apt-get install -y python 3.10 python3-pip
+RUN apt-get update -y && apt-get install -y python3.10 python3-pip
 RUN pip install --no-cache-dir --upgrade robyn
+RUN pip install sqlite3
 RUN pip install uvloop
 
-COPY . .
+COPY ../docker .
 
 EXPOSE 8080
 
