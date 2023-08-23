@@ -1,4 +1,5 @@
 import argparse
+import sys
 
 
 class Config:
@@ -51,6 +52,11 @@ class Config:
             default=False,
             help="Open the browser on successful start.",
         )
+        parser.add_argument(
+            '--version',
+            action='store_true',
+            default=False,
+            help='Display Python version')
 
         args, _ = parser.parse_known_args()
 
@@ -66,6 +72,9 @@ class Config:
 
         if self.dev and args.log_level is None:
             self.log_level = "DEBUG"
+        if args.version:
+            print(f'Python Version: {sys.version}')
+            sys.exit(0)    
         elif args.log_level is None:
             self.log_level = "INFO"
         else:
