@@ -13,6 +13,3 @@ def test_upload():
     response = client.post("/upload", files={"file": ("test_file.txt", file_data)})
     assert response.status_code == 200
     assert response.json() == {"message": "File uploaded successfully"}
-
-test_index()
-test_upload()
