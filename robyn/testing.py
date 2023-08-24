@@ -93,30 +93,15 @@ class TestClient:
         
     def connect(self, method_path, **kwargs):
         return self.do_test_request(HttpMethod.CONNECT, method_path, **kwargs)
-    
-    def do_test_request(self, method, method_path, data=None, json=None, headers=None, files=None, params=None):
-        route = self.get_route(method_path, method)
-        if route == None:
-            return None
-        req = TestRequest(method = method)
-        #default headers
+        
+    # Helper functions
+    def create_default_headers(self, req):
         req.headers["host"] = "localhost"
         req.headers["connection"] = "keep-alive"
         req.headers["user-agent"] = "robyn-testclient"
         req.headers["accept"] = "*/*"
         req.headers["accept-encoding"] = "gzip, deflate"
-        #input headers
-        if headers != None:
-            for header in headers:
-                req.headers[header] = headers[header]
-        #input parameters
-        if params != None:
-            if type(params) == dict:
-                req.queries = params
-            elif type(params) == list:
-                for param in params:
-                    req.queries[param[0]] = param[1]
-        #input body
+    def create_request_body(self, req, data, json, files):
         if files != None:
             body, header = encode_multipart_formdata(files)
             req.headers["content-type"] = header
@@ -144,12 +129,35 @@ class TestClient:
             req.headers["content-type"] = "application/json"
             req.body = list(dumps(json))
             req.headers["content-length"] = len(req.body)
-        #run the handler function
-        response = asyncio.run(route.function.handler(req))
-        #turn the output into a requests.Response object
+    def add_input_parameters(self, req, params):
+        if params != None:
+            if type(params) == dict:
+                req.queries = params
+            elif type(params) == list:
+                for param in params:
+                    req.queries[param[0]] = param[1]
+    def create_response(self, response):
         r = Response()
         r.status_code = response.status_code
         r.headers = response.headers
         if len(response.body) > 0:
             r._content = response.body if type(response.body) == bytes else bytes(response.body)
         return r
+    # Main function for calling methods through the testing client
+    def do_test_request(self, method, method_path, data=None, json=None, headers=None, files=None, params=None):
+        route = self.get_route(method_path, method)
+        if route == None:
+            return None
+        req = TestRequest(method = method)
+        self.create_default_headers(req)
+        #input headers
+        if headers != None:
+            for header in headers:
+                req.headers[header] = headers[header]
+        self.add_input_parameters(req, params)
+        self.create_request_body(req, data, json, files)
+
+        #run the handler function
+        response = asyncio.run(route.function.handler(req))
+        #turn the output into a requests.Response object
+        return create_response(response)
