@@ -49,7 +49,13 @@ class TestRequest:
     ip_addr: Optional[str]
     identity: Optional[TestIdentity]
     
-    def __init__(self, queries = {}, headers = {}, path_params = {}, method = "GET", ip_addr = None):
+    def __init__(self, queries: Optional[Dict] = None, headers: Optional[Dict] = None, path_params: Optional[Dict] = None, method: Optional[HttpMethod] = HttpMethod.GET, ip_addr: Optional[str] = None):
+        if queries == None:
+            queries = {}
+        if headers == None:
+            headers = {}
+        if path_params == None:
+            path_params = {}
         self.queries = queries
         self.headers = headers
         self.path_params = path_params
