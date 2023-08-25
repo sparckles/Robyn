@@ -23,7 +23,25 @@ from robyn.ws import WS
 
 
 __version__ = get_version()
-
+class DependencyMap:
+    def __init__(self):
+        self.dep_dict = {"ALL":{'request':Request, 'response':Response}}
+    def add_spec_dep(self,route,kwargs):
+        if route not in self.dep_dict:
+            self.dep_dict[route] = {}
+        self.dep_dict[route].update(kwargs)
+        self.dep_dict[route] |= self.dep_dict["ALL"]
+    def add_all_dep(self,kwargs):
+        for element in self.dep_dict:
+            self.dep_dict[element].update(kwargs)
+    def get_dep(self,route = None):
+        if route:
+            if route in self.dep_dict:
+                return self.dep_dict[route]
+        else:
+            return self.dep_dict["ALL"]
+    def get_dict(self):
+        return self.dep_dict
 
 class Robyn:
     """This is the python wrapper for the Robyn binaries."""
@@ -33,7 +51,7 @@ class Robyn:
         self.file_path = file_object
         self.directory_path = directory_path
         self.config = config
-        self.dependencies = {"ALL":{'request':Request, 'response':Response}}
+        self.dependencies = DependencyMap()
         load_vars(project_root=directory_path)
         logging.basicConfig(level=self.config.log_level)
 
@@ -80,25 +98,21 @@ class Robyn:
         """
         if auth_required:
             self.middleware_router.add_auth_middleware(endpoint)(handler)
-
+        print("self get dict from init to router.py", self.dependencies.get_dict())
         return self.router.add_route(
-            route_type, endpoint, handler, is_const, self.dependencies, self.exception_handler
+            route_type, endpoint, handler, is_const, self.dependencies.get_dict(), self.exception_handler
         )
 
     def inject(self, route = None, http_method=None, **kwargs:Callable[...,any]): 
         if route: 
-            if route not in self.dependencies:
-                self.dependencies[route] = {}
-            self.dependencies[route].update(kwargs)
-            self.dependencies[route] |= self.dependencies["ALL"]
+            self.dependencies.add_spec_dep(route,kwargs)
         else: 
-            for element in self.dependencies:
-                self.dependencies[element].update(kwargs)
+            self.dependencies.add_all_dep(kwargs)
 
     def get_injected_dependencies(self, route = None) -> dict:
-        if route in self.dependencies:
-            return self.dependencies[route]
-        return self.dependencies  
+        if route in self.dependencies.get_dict():
+            return self.dependencies.get_dep(route)
+        return self.dependencies.get_dict() 
 
     def before_request(self, endpoint: Optional[str] = None) -> Callable[..., None]:
         """
@@ -382,10 +396,10 @@ class Robyn:
                 new_endpoint
             ] = router.web_socket_router.routes[route]
             
-        for dep in self.dependencies["ALL"]: 
-            if dep in router.dependencies["ALL"]:
+        for dep in self.dependencies.get_dep(): 
+            if dep in router.dependencies.get_dep():
                 continue
-            router.dependencies["ALL"][dep] = self.dependencies["ALL"][dep]
+            router.dependencies.get_dep()[dep] = self.dependencies.get_dep()[dep]
 
     def configure_authentication(self, authentication_handler: AuthenticationHandler):
         """
