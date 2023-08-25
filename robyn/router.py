@@ -86,6 +86,8 @@ class Router(BaseRouter):
             deps_dict = dependencies.get(endpoint, dependencies["ALL"])
             if any(key not in deps_dict for key in param_list):
                 raise ValueError("Unknown Argument")
+            #dep_to_pass construction considers each parameter specified in the handler function
+            #'request' specified in init's dep mapping lets this construction account for a request parameter in the handler function
             deps_to_pass = [deps_dict[key] for key in param_list if key in deps_dict]
             try:
                 response = self._format_response(await handler(*deps_to_pass))
