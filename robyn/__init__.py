@@ -33,6 +33,7 @@ from robyn.ws import WS
 __version__ = get_version()
 class DependencyMap:
     def __init__(self):
+        #'request' and 'response' mappings are needed for when constructing deps_to_pass in router.py
         self.dep_dict = {"ALL":{'request':Request, 'response':Response}}
     def add_spec_dep(self,route,kwargs):
         if route not in self.dep_dict:
