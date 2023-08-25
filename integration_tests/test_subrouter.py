@@ -1,7 +1,7 @@
 from websocket import create_connection
 import pytest
 
-from helpers.http_methods_helpers import generic_http_helper, head
+from integration_tests.helpers.http_methods_helpers import generic_http_helper, head
 
 
 @pytest.mark.parametrize(
