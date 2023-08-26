@@ -49,7 +49,7 @@ class TestRequest:
     ip_addr: Optional[str]
     identity: Optional[TestIdentity]
     
-    def __init__(self, queries: Optional[Dict] = None, headers: Optional[Dict] = None, path_params: Optional[Dict] = None, method: Optional[HttpMethod] = HttpMethod.GET, ip_addr: Optional[str] = None):
+    def __init__(self, queries: Optional[dict] = None, headers: Optional[dict] = None, path_params: Optional[dict] = None, method: Optional[HttpMethod] = HttpMethod.GET, ip_addr: Optional[str] = None):
         if queries == None:
             queries = {}
         if headers == None:
@@ -150,7 +150,7 @@ class TestClient:
             r._content = response.body if type(response.body) == bytes else bytes(response.body)
         return r
     # Main function for calling methods through the testing client
-    def do_test_request(self, method, method_path, data=None, json=None, headers=None, files=None, params=None):
+    def do_test_request(self, method, method_path, data=None, json=None, headers=None, files=None, params=None, auth=None):
         route = self.get_route(method_path, method)
         if route == None:
             return None
@@ -162,8 +162,12 @@ class TestClient:
                 req.headers[header] = headers[header]
         self.add_input_parameters(req, params)
         self.create_request_body(req, data, json, files)
-
+        
+        #auth objects (requests.auth)
+        #TODO: make work with digest auth
+        if auth != None:
+            auth(req)
         #run the handler function
         response = asyncio.run(route.function.handler(req))
         #turn the output into a requests.Response object
-        return create_response(response)
+        return self.create_response(response)
