@@ -1,4 +1,4 @@
-#[cfg(not(all(target_os = "linux", target_arch = "aarch64")))]
+#[cfg(not(all(target_os = "linux", target_arch = "armv7")))]
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
