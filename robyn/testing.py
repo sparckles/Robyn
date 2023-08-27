@@ -47,7 +47,7 @@ class TestRequest:
     method: str
     url: TestUrl
     ip_addr: Optional[str]
-    identity: Optional[TestIdentity]
+    identity: Optional[TestIdentity] = None
     
     def __init__(self, queries: Optional[dict] = None, headers: Optional[dict] = None, path_params: Optional[dict] = None, method: Optional[HttpMethod] = HttpMethod.GET, ip_addr: Optional[str] = None):
         if queries == None:
@@ -142,6 +142,20 @@ class TestClient:
             elif type(params) == list:
                 for param in params:
                     req.queries[param[0]] = param[1]
+    def add_cookies(self, req, cookies):
+        if cookies != None:
+            #cookies are either a dict or a CookieJar
+            if type(cookies) != dict:
+                c = {}
+                for cookie in cookies:
+                    c[cookie.name] = cookie.values
+                cookies = c
+            if len(cookies) > 0:
+                header = ""
+                for cookie in cookies:
+                    header = header + cookie + "=" + cookies[cookie] + "; "
+                header = header[:-2]
+                req.headers["cookie"] = header
     def create_response(self, response):
         r = Response()
         r.status_code = response.status_code
@@ -150,7 +164,7 @@ class TestClient:
             r._content = response.body if type(response.body) == bytes else bytes(response.body)
         return r
     # Main function for calling methods through the testing client
-    def do_test_request(self, method, method_path, data=None, json=None, headers=None, files=None, params=None, auth=None):
+    def do_test_request(self, method, method_path, data=None, json=None, headers=None, files=None, params=None, auth=None, cookies=None):
         route = self.get_route(method_path, method)
         if route == None:
             return None
@@ -162,7 +176,7 @@ class TestClient:
                 req.headers[header] = headers[header]
         self.add_input_parameters(req, params)
         self.create_request_body(req, data, json, files)
-        
+        self.add_cookies(req, cookies)
         #auth objects (requests.auth)
         #TODO: make work with digest auth
         if auth != None:
