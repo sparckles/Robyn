@@ -83,7 +83,7 @@ You can add more routes to your API. Check out the routes in [this file](https:/
 
 Robyn is compatible with the following Python versions:
 
-> Python >= 3.7
+> Python >= 3.8
 
 It is recommended to use the latest version of Python for the best performances.
 
