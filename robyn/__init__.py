@@ -31,26 +31,8 @@ from robyn.ws import WS
 
 
 __version__ = get_version()
-class DependencyMap:
-    def __init__(self):
-        #'request' and 'response' mappings are needed for when constructing deps_to_pass in router.py
-        self.dep_dict = {"ALL":{'request':Request, 'response':Response}}
-    def add_spec_dep(self,route,kwargs):
-        if route not in self.dep_dict:
-            self.dep_dict[route] = {}
-        self.dep_dict[route].update(kwargs)
-        self.dep_dict[route] |= self.dep_dict["ALL"]
-    def add_all_dep(self,kwargs):
-        for element in self.dep_dict:
-            self.dep_dict[element].update(kwargs)
-    def get_dep(self,route = None):
-        if route:
-            if route in self.dep_dict:
-                return self.dep_dict[route]
-        else:
-            return self.dep_dict["ALL"]
-    def get_dict(self):
-        return self.dep_dict
+
+
 
 class Robyn:
     """This is the python wrapper for the Robyn binaries."""
@@ -60,6 +42,7 @@ class Robyn:
         self.file_path = file_object
         self.directory_path = directory_path
         self.config = config
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
         self.dependencies = dependencies
@@ -72,6 +55,9 @@ class Robyn:
 =======
         self.dependencies = DependencyMap()
 >>>>>>> b97011a (Created dependency mapping structure along with accessor methods)
+=======
+        self.dependencies = dependencies
+>>>>>>> 97bd6e7 (refactor: change the code organisation)
         load_vars(project_root=directory_path)
         logging.basicConfig(level=self.config.log_level)
 
@@ -119,6 +105,7 @@ class Robyn:
         if auth_required:
             self.middleware_router.add_auth_middleware(endpoint)(handler)
 <<<<<<< HEAD
+<<<<<<< HEAD
         if isinstance(route_type, str):
             http_methods = {
                 "GET": HttpMethod.GET,
@@ -152,21 +139,39 @@ class Robyn:
             return self.dependencies.get_global_dependencies()
 =======
         print("self get dict from init to router.py", self.dependencies.get_dict())
+=======
+        print("self get dict from init to router.py", self.dependencies.dependency_map)
+>>>>>>> 97bd6e7 (refactor: change the code organisation)
         return self.router.add_route(
-            route_type, endpoint, handler, is_const, self.dependencies.get_dict(), self.exception_handler
+            route_type,
+            endpoint,
+            handler,
+            is_const,
+            self.dependencies.dependency_map,
+            self.exception_handler,
         )
 
-    def inject(self, route = None, http_method=None, **kwargs:Callable[...,any]): 
-        if route: 
-            self.dependencies.add_spec_dep(route,kwargs)
-        else: 
-            self.dependencies.add_all_dep(kwargs)
+    def inject(self, route=None, http_method=None, **kwargs: dict):
+        # the http_method param is unused??
+        # @Darren
+        if route:
+            self.dependencies.add_route_dependency(route, **kwargs)
+        else:
+            self.dependencies.add_global_dependency(**kwargs)
 
+<<<<<<< HEAD
     def get_injected_dependencies(self, route = None) -> dict:
         if route in self.dependencies.get_dict():
             return self.dependencies.get_dep(route)
         return self.dependencies.get_dict() 
 >>>>>>> b97011a (Created dependency mapping structure along with accessor methods)
+=======
+    def get_injected_dependencies(self, route=None) -> dict:
+        if route in self.dependencies.dependency_map:
+            return self.dependencies.dependency_map
+
+        return self.dependencies.dependency_map
+>>>>>>> 97bd6e7 (refactor: change the code organisation)
 
     def inject(self, route=None, **kwargs):
         if route:
@@ -466,6 +471,7 @@ class Robyn:
                 new_endpoint
             ] = router.web_socket_router.routes[route]
 <<<<<<< HEAD
+<<<<<<< HEAD
         for dep in self.dependencies["all"]: 
             if dep in router.dependencies["all"]:
                 continue
@@ -479,6 +485,13 @@ class Robyn:
                 continue
             router.dependencies.get_dep()[dep] = self.dependencies.get_dep()[dep]
 >>>>>>> b97011a (Created dependency mapping structure along with accessor methods)
+=======
+
+        for dep in self.dependencies.get_dependencies():
+            if dep in router.dependencies.get_dependencies():
+                continue
+            router.dependencies.get_dependencies()[dep] = self.dependencies.get_dependencies()[dep]
+>>>>>>> 97bd6e7 (refactor: change the code organisation)
 
     def configure_authentication(self, authentication_handler: AuthenticationHandler):
         """
