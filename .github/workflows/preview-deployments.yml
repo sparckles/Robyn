@@ -102,7 +102,20 @@ jobs:
             { version: "3.10", abi: "cp310-cp310" },
             { version: "3.11", abi: "cp311-cp311" },
           ]
-        target: [aarch64, armv7]
+        manylinux: [auto]
+        include:
+          - os: ubuntu
+            platform: linux
+            target: aarch64
+            container: messense/manylinux_2_24-cross:aarch64
+          - os: ubuntu
+            platform: linux
+            target: x86_64
+            manylinux: musllinux_1_1
+          - os: ubuntu
+            platform: linux
+            target: aarch64
+            manylinux: musllinux_1_1
     steps:
       - uses: actions/checkout@v3
       - name: Build Wheels
