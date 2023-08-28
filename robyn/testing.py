@@ -107,6 +107,7 @@ class TestClient:
         req.headers["user-agent"] = "robyn-testclient"
         req.headers["accept"] = "*/*"
         req.headers["accept-encoding"] = "gzip, deflate"
+    
     def create_request_body(self, req, data, json, files):
         if files != None:
             body, header = encode_multipart_formdata(files)
@@ -135,6 +136,7 @@ class TestClient:
             req.headers["content-type"] = "application/json"
             req.body = list(dumps(json))
             req.headers["content-length"] = len(req.body)
+    
     def add_input_parameters(self, req, params):
         if params != None:
             if type(params) == dict:
@@ -142,6 +144,7 @@ class TestClient:
             elif type(params) == list:
                 for param in params:
                     req.queries[param[0]] = param[1]
+    
     def add_cookies(self, req, cookies):
         if cookies != None:
             #cookies are either a dict or a CookieJar
@@ -156,6 +159,7 @@ class TestClient:
                     header = header + cookie + "=" + cookies[cookie] + "; "
                 header = header[:-2]
                 req.headers["cookie"] = header
+    
     def create_response(self, response):
         r = Response()
         r.status_code = response.status_code
@@ -163,6 +167,7 @@ class TestClient:
         if len(response.body) > 0:
             r._content = response.body if type(response.body) == bytes else bytes(response.body)
         return r
+    
     # Main function for calling methods through the testing client
     def do_test_request(self, method, method_path, data=None, json=None, headers=None, files=None, params=None, auth=None, cookies=None):
         route = self.get_route(method_path, method)
