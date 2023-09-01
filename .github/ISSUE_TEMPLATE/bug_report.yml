@@ -31,10 +31,10 @@ body:
     attributes:
       label: Your operating system
       options:
-      - Windows
-      - MacOS
-      - Linux
-      - Other (specify below)
+        - Windows
+        - MacOS
+        - Linux
+        - Other (specify below)
     validations:
       required: false
   - type: dropdown
@@ -42,12 +42,11 @@ body:
     attributes:
       label: Your Python version (`python --version`)
       options:
-      - 3.7
-      - 3.8
-      - 3.9
-      - 3.10
-      - 3.11
-      - Other (specify below)
+        - 3.8
+        - 3.9
+        - 3.10
+        - 3.11
+        - Other (specify below)
     validations:
       required: false
   - type: dropdown
@@ -55,9 +54,9 @@ body:
     attributes:
       label: Your Robyn version
       options:
-      - main branch
-      - latest
-      - Other (specify below)
+        - main branch
+        - latest
+        - Other (specify below)
     validations:
       required: false
   - type: textarea
@@ -65,3 +64,4 @@ body:
     attributes:
       label: Additional Info
       description: Any additional info that you think might be useful or relevant to this bug
+

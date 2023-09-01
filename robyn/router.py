@@ -46,12 +46,14 @@ class Router(BaseRouter):
         if isinstance(res, dict):
             status_code = res.get("status_code", status_codes.HTTP_200_OK)
             headers = res.get("headers", {"Content-Type": "text/plain"})
-            body = res.get("body", "")
+            description = res.get("body", "")
 
             if type(status_code) != int:
                 status_code = int(status_code)  # status_code can potentially be string
 
-            response = Response(status_code=status_code, headers=headers, body=body)
+            response = Response(
+                status_code=status_code, headers=headers, description=description
+            )
             file_path = res.get("file_path")
             if file_path is not None:
                 response.file_path = file_path
@@ -61,13 +63,13 @@ class Router(BaseRouter):
             response = Response(
                 status_code=status_codes.HTTP_200_OK,
                 headers={"Content-Type": "application/octet-stream"},
-                body=res,
+                description=res,
             )
         else:
             response = Response(
                 status_code=status_codes.HTTP_200_OK,
                 headers={"Content-Type": "text/plain"},
-                body=str(res).encode("utf-8"),
+                description=str(res).encode("utf-8"),
             )
         return response
 

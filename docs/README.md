@@ -6,7 +6,7 @@
 [![Downloads](https://static.pepy.tech/personalized-badge/robyn?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Downloads)](https://pepy.tech/project/robyn)
 [![GitHub tag](https://img.shields.io/github/tag/sansyrox/robyn?include_prereleases=&sort=semver&color=black)](https://github.com/sansyrox/robyn/releases/)
 [![License](https://img.shields.io/badge/License-BSD_2.0-black)](#license)
-![Python](https://img.shields.io/badge/Support-Version%20%E2%89%A5%203.7-brightgreen)
+![Python](https://img.shields.io/badge/Support-Version%20%E2%89%A5%203.8-brightgreen)
 
 [![view - Documentation](https://img.shields.io/badge/view-Documentation-blue?style=for-the-badge)](https://sansyrox.github.io/robyn/#/)
 [![Discord](https://img.shields.io/discord/999782964143603713?label=discord&logo=discord&logoColor=white&style=for-the-badge&color=blue)](https://discord.gg/rkERZ5eNU8)
@@ -74,7 +74,7 @@ You can add more routes to your API. Check out the routes in [this file](https:/
 
 Robyn is compatible with the following Python versions:
 
-> Python >= 3.7
+> Python >= 3.8
 
 It is recommended to use the latest version of Python for the best performances.
 

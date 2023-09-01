@@ -28,7 +28,7 @@ class JinjaTemplate(TemplateInterface):
         rendered_template = self.env.get_template(template_name).render(**kwargs)
         return Response(
             status_code=status_codes.HTTP_200_OK,
-            body=rendered_template,
+            description=rendered_template,
             headers={"Content-Type": "text/html; charset=utf-8"},
         )
 

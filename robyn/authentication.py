@@ -57,7 +57,7 @@ class AuthenticationHandler(ABC):
     def unauthorized_response(self) -> Response:
         return Response(
             headers={"WWW-Authenticate": self.token_getter.scheme},
-            body="Unauthorized",
+            description="Unauthorized",
             status_code=HTTP_401_UNAUTHORIZED,
         )
 
@@ -84,7 +84,7 @@ class BearerGetter(TokenGetter):
         if not authorization_header or not authorization_header.startswith("Bearer "):
             return None
 
-        return authorization_header[7:] # Remove the "Bearer " prefix
+        return authorization_header[7:]  # Remove the "Bearer " prefix
 
     @classmethod
     def set_token(cls, request: Request, token: str):
