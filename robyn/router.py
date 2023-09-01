@@ -4,11 +4,11 @@ from asyncio import iscoroutinefunction
 from functools import wraps
 from inspect import signature
 from types import CoroutineType
-from typing import Callable, Dict, List, NamedTuple, Union, Optional
-from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
-import inspect
-from robyn.robyn import FunctionInfo, HttpMethod, MiddlewareType, Request, Response
+from typing import Any, Callable, Dict, List, NamedTuple, Optional, Union
+
 from robyn import status_codes
+from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
+from robyn.robyn import FunctionInfo, HttpMethod, MiddlewareType, Request, Response
 from robyn.ws import WS
 
 
