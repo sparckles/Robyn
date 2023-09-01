@@ -1,13 +1,14 @@
+import inspect
 from abc import ABC, abstractmethod
 from asyncio import iscoroutinefunction
 from functools import wraps
 from inspect import signature
 from types import CoroutineType
-from typing import Callable, Dict, List, NamedTuple, Union, Optional
-from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
-import inspect
-from robyn.robyn import FunctionInfo, HttpMethod, MiddlewareType, Request, Response
+from typing import Any, Callable, Dict, List, NamedTuple, Optional, Union
+
 from robyn import status_codes
+from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
+from robyn.robyn import FunctionInfo, HttpMethod, MiddlewareType, Request, Response
 from robyn.ws import WS
 
 
@@ -76,21 +77,28 @@ class Router(BaseRouter):
         endpoint: str,
         handler: Callable,
         is_const: bool,
-        dependencies: Dict[str,any],
+        dependencies: Dict[str, Any],
         exception_handler: Optional[Callable],
     ) -> Union[Callable, CoroutineType]:
         @wraps(handler)
         async def async_inner_handler(*args):
             handler_args = (inspect.signature(handler)).parameters.values()
             param_list = [a.name for a in handler_args]
-            deps_dict = dependencies.get(endpoint, dependencies["ALL"])
-            if any(key not in deps_dict for key in param_list):
-                raise ValueError("Unknown Argument")
-            #dep_to_pass construction considers each parameter specified in the handler function
+            dependency_dict = dependencies.get(endpoint, dependencies["ALL_ROUTES"])
+
+            for param in param_list:
+                if param not in dependency_dict:
+                    raise ValueError(
+                        f"Arguments of the {handler.__name__} function do not match the dependencies provided for the {endpoint} endpoint. Please check the dependencies provided for the {endpoint} endpoint and try again. {param_list} {dependency_dict}"
+                    )
+
+            # dependencies_to_pass construction considers each parameter specified in the handler function
             #'request' specified in init's dep mapping lets this construction account for a request parameter in the handler function
-            deps_to_pass = [deps_dict[key] for key in param_list if key in deps_dict]
+            dependencies_to_pass = [
+                dependency_dict[key] for key in param_list if key in dependency_dict
+            ]
             try:
-                response = self._format_response(await handler(*deps_to_pass))
+                response = self._format_response(await handler(*dependencies_to_pass))
             except Exception as err:
                 if exception_handler is None:
                     raise
@@ -101,12 +109,22 @@ class Router(BaseRouter):
         def inner_handler(*args):
             handler_args = (inspect.signature(handler)).parameters.values()
             param_list = [a.name for a in handler_args]
-            deps_dict = dependencies.get(endpoint, dependencies["ALL"])
-            if any(key not in deps_dict for key in param_list):
-                raise ValueError("Unknown Argument")
-            deps_to_pass = [deps_dict[key] for key in param_list if key in deps_dict]         
+            dependency_dict = dependencies.get(endpoint, dependencies["ALL_ROUTES"])
+
+            for param in param_list:
+                if param not in dependency_dict:
+                    raise ValueError(
+                        f"Arguments of the {handler.__name__} function do not match the dependencies provided for the {endpoint} endpoint. Please check the dependencies provided for the {endpoint} endpoint and try again. {param_list} {dependency_dict}"
+                    )
+
+            # dependencies_to_pass construction considers each parameter specified in the handler function
+            #'request' specified in init's dep mapping lets this construction account for a request parameter in the handler function
+            dependencies_to_pass = [
+                dependency_dict[key] for key in param_list if key in dependency_dict
+            ]
+
             try:
-                response = self._format_response(handler(*deps_to_pass))
+                response = self._format_response(handler(*dependencies_to_pass))
             except Exception as err:
                 if exception_handler is None:
                     raise

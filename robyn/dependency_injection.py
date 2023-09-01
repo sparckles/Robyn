@@ -9,7 +9,7 @@ from robyn.robyn import (
 class DependencyMap:
     def __init__(self):
         #'request' and 'response' mappings are needed for when constructing deps_to_pass in router.py
-        self._dependency_map = {"ALL": {"request": Request, "response": Response}}
+        self._dependency_map = {"ALL_ROUTES": {"request": Request, "response": Response}}
 
     def add_route_dependency(self, route, **kwargs):
         """ Adds a dependency to a route.
@@ -27,7 +27,7 @@ class DependencyMap:
         # we are always adding the global dependencies to the route dependencies
         # we should be able to to compose the basic data structure in a more efficient way
         # cc @Darren
-        self._dependency_map[route] |= self._dependency_map["ALL"]
+        self._dependency_map[route] |= self._dependency_map["ALL_ROUTES"]
 
     def add_global_dependency(self, **kwargs):
         """ Adds a dependency to all routes.
@@ -48,7 +48,7 @@ class DependencyMap:
             if route in self._dependency_map:
                 return self._dependency_map[route]
         else:
-            return self._dependency_map["ALL"]
+            return self._dependency_map["ALL_ROUTES"]
 
     @property
     def dependency_map(self):
