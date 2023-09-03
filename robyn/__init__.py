@@ -151,9 +151,7 @@ class Robyn:
             self.exception_handler,
         )
 
-    def inject(self, route=None, http_method=None, **kwargs: dict):
-        # the http_method param is unused??
-        # @Darren
+    def inject(self, route=None, **kwargs: dict):
         if route:
             self.dependencies.add_route_dependency(route, **kwargs)
         else:
