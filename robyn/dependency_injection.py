@@ -23,12 +23,6 @@ class DependencyMap:
 
         self._dependency_map[route].update(**kwargs)
 
-        # this is a bit inneficient
-        # we are always adding the global dependencies to the route dependencies
-        # we should be able to to compose the basic data structure in a more efficient way
-        # cc @Darren
-        self._dependency_map[route] |= self._dependency_map["ALL_ROUTES"]
-
     def add_global_dependency(self, **kwargs):
         """ Adds a dependency to all routes.
 

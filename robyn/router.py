@@ -86,7 +86,7 @@ class Router(BaseRouter):
         async def async_inner_handler(*args):
             handler_args = (inspect.signature(handler)).parameters.values()
             param_list = [a.name for a in handler_args]
-            dependency_dict = dependencies.get(endpoint, dependencies["ALL_ROUTES"])
+            dependency_dict = {**dependencies.get(endpoint, {}), **dependencies["ALL_ROUTES"]}
 
             for param in param_list:
                 if param not in dependency_dict:
@@ -111,7 +111,7 @@ class Router(BaseRouter):
         def inner_handler(*args):
             handler_args = (inspect.signature(handler)).parameters.values()
             param_list = [a.name for a in handler_args]
-            dependency_dict = dependencies.get(endpoint, dependencies["ALL_ROUTES"])
+            dependency_dict = {**dependencies.get(endpoint, {}), **dependencies["ALL_ROUTES"]}
 
             for param in param_list:
                 if param not in dependency_dict:
