@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/__VERSION__/swagger-ui.min.css">
+        <title>__HTML_TITLE__</title>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            __HTML_CUSTOM_CSS__
+        </style>
+    </head>
+    <body>
+        <div id="openapi"></div>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/__VERSION__/swagger-ui-bundle.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/__VERSION__/swagger-ui-standalone-preset.min.js"></script>
+        <script>
+            window.onload = function () {
+                const ui = SwaggerUIBundle({
+                    url: "__URL_PREFIX__/openapi.json",
+                    dom_id: "#openapi",
+                    configUrl: "__URL_PREFIX__/swagger-config",
+                    deepLinking: true,
+                    presets: [
+                        SwaggerUIBundle.presets.apis,
+                        SwaggerUIStandalonePreset
+                    ],
+                    plugins: [
+                        SwaggerUIBundle.plugins.DownloadUrl
+                    ],
+                    layout: "StandaloneLayout"
+                })
+            }
+        </script>
+    </body>
+</html>
