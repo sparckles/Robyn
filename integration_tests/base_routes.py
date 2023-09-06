@@ -5,7 +5,6 @@ from collections import defaultdict
 from typing import Optional
 
 from robyn import (
-    HttpMethod,
     Request,
     Response,
     Robyn,
@@ -731,12 +730,12 @@ async def async_without_decorator():
     return "Success!"
 
 
-app.add_route(HttpMethod.GET, "/sync/get/no_dec", sync_without_decorator)
-app.add_route(HttpMethod.PUT, "/sync/put/no_dec", sync_without_decorator)
-app.add_route(HttpMethod.POST, "/sync/post/no_dec", sync_without_decorator)
-app.add_route(HttpMethod.GET, "/async/get/no_dec", async_without_decorator)
-app.add_route(HttpMethod.PUT, "/async/put/no_dec", async_without_decorator)
-app.add_route(HttpMethod.POST, "/async/post/no_dec", async_without_decorator)
+app.add_route("GET", "/sync/get/no_dec", sync_without_decorator)
+app.add_route("PUT", "/sync/put/no_dec", sync_without_decorator)
+app.add_route("POST", "/sync/post/no_dec", sync_without_decorator)
+app.add_route("GET", "/async/get/no_dec", async_without_decorator)
+app.add_route("PUT", "/async/put/no_dec", async_without_decorator)
+app.add_route("POST", "/async/post/no_dec", async_without_decorator)
 
 # ===== Main =====
 

@@ -2,7 +2,7 @@ import asyncio
 import logging
 import multiprocess as mp
 import os
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple, Union
 from nestd import get_all_nested
 
 
@@ -67,7 +67,7 @@ class Robyn:
 
     def add_route(
         self,
-        route_type: HttpMethod,
+        route_type: Union[HttpMethod, str],
         endpoint: str,
         handler: Callable,
         is_const: bool = False,
@@ -87,6 +87,17 @@ class Robyn:
         """
         if auth_required:
             self.middleware_router.add_auth_middleware(endpoint)(handler)
+        if isinstance(route_type, str):
+            http_methods = {
+                "GET": HttpMethod.GET,
+                "POST": HttpMethod.POST,
+                "PUT": HttpMethod.PUT,
+                "DELETE": HttpMethod.DELETE,
+                "PATCH": HttpMethod.PATCH,
+                "HEAD": HttpMethod.HEAD,
+                "OPTIONS": HttpMethod.OPTIONS,
+            }
+            route_type = http_methods[route_type]
 
         return self.router.add_route(
             route_type, endpoint, handler, is_const, self.exception_handler
