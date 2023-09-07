@@ -130,7 +130,7 @@ from robyn.robyn import Response
 
 @app.get("/response")
 async def response(request):
-    return Response(status_code=200, headers={}, body="OK")
+    return Response(status_code=200, headers={}, description="OK")
 ```
 
 #### Status Codes
@@ -144,7 +144,7 @@ from robyn import status_codes
 
 @app.get("/response")
 async def response(request):
-    return Response(status_code=status_codes.HTTP_200_OK, headers={}, body="OK")
+    return Response(status_code=status_codes.HTTP_200_OK, headers={}, description="OK")
 ```
 
 #### Returning a byte response
@@ -156,7 +156,7 @@ def binary_output_response_sync(request):
     return Response(
         status_code=200,
         headers={"Content-Type": "application/octet-stream"},
-        body="OK",
+        description="OK",
     )
 
 
@@ -170,7 +170,7 @@ async def binary_output_response_async(request):
     return Response(
         status_code=200,
         headers={"Content-Type": "application/octet-stream"},
-        body="OK",
+        description="OK",
     )
 ```
 
@@ -559,6 +559,18 @@ app.add_view("/", View)
 
 ```
 
+## Route Registration
+
+Instead of using the decorators, you can also add routes with a function:
+
+```python
+async def hello(request):
+    return "Hello World"
+
+app.add_route("GET", "/hello", hello)
+```
+
+This works for all HTTP methods.
 
 ## Allow CORS
 
