@@ -2,7 +2,7 @@ import asyncio
 import logging
 import multiprocess as mp
 import os
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple, Union
 from nestd import get_all_nested
 
 
@@ -15,7 +15,14 @@ from robyn.events import Events
 from robyn.logger import logger
 from robyn.processpool import run_processes
 from robyn.responses import serve_file, serve_html
-from robyn.robyn import FunctionInfo, HttpMethod, Request, Response, get_version, jsonify
+from robyn.robyn import (
+    FunctionInfo,
+    HttpMethod,
+    Request,
+    Response,
+    get_version,
+    jsonify,
+)
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory, Header
 from robyn import status_codes
@@ -58,16 +65,16 @@ class Robyn:
         self.exception_handler: Optional[Callable] = None
         self.authentication_handler: Optional[AuthenticationHandler] = None
 
-    def _add_route(
+    def add_route(
         self,
-        route_type: HttpMethod,
+        route_type: Union[HttpMethod, str],
         endpoint: str,
         handler: Callable,
         is_const: bool = False,
         auth_required: bool = False,
     ):
         """
-        This is base handler for all the route decorators
+        Connect a URI to a handler
 
         :param route_type str: route type between GET/POST/PUT/DELETE/PATCH/HEAD/OPTIONS/TRACE
         :param endpoint str: endpoint for the route added
@@ -80,6 +87,17 @@ class Robyn:
         """
         if auth_required:
             self.middleware_router.add_auth_middleware(endpoint)(handler)
+        if isinstance(route_type, str):
+            http_methods = {
+                "GET": HttpMethod.GET,
+                "POST": HttpMethod.POST,
+                "PUT": HttpMethod.PUT,
+                "DELETE": HttpMethod.DELETE,
+                "PATCH": HttpMethod.PATCH,
+                "HEAD": HttpMethod.HEAD,
+                "OPTIONS": HttpMethod.OPTIONS,
+            }
+            route_type = http_methods[route_type]
 
         return self.router.add_route(
             route_type, endpoint, handler, is_const, self.exception_handler
@@ -205,7 +223,7 @@ class Robyn:
 
         handlers = get_functions(view)
         for route_type, handler in handlers:
-            self._add_route(route_type, endpoint, handler, const)
+            self.add_route(route_type, endpoint, handler, const)
 
     def view(self, endpoint: str, const: bool = False):
         """
@@ -227,7 +245,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route(
+            return self.add_route(
                 HttpMethod.GET, endpoint, handler, const, auth_required
             )
 
@@ -241,7 +259,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route(
+            return self.add_route(
                 HttpMethod.POST, endpoint, handler, auth_required=auth_required
             )
 
@@ -255,7 +273,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route(
+            return self.add_route(
                 HttpMethod.PUT, endpoint, handler, auth_required=auth_required
             )
 
@@ -269,7 +287,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route(
+            return self.add_route(
                 HttpMethod.DELETE, endpoint, handler, auth_required=auth_required
             )
 
@@ -283,7 +301,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route(
+            return self.add_route(
                 HttpMethod.PATCH, endpoint, handler, auth_required=auth_required
             )
 
@@ -297,7 +315,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route(
+            return self.add_route(
                 HttpMethod.HEAD, endpoint, handler, auth_required=auth_required
             )
 
@@ -311,7 +329,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route(
+            return self.add_route(
                 HttpMethod.OPTIONS, endpoint, handler, auth_required=auth_required
             )
 
@@ -325,7 +343,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route(
+            return self.add_route(
                 HttpMethod.CONNECT, endpoint, handler, auth_required=auth_required
             )
 
@@ -339,7 +357,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self._add_route(
+            return self.add_route(
                 HttpMethod.TRACE, endpoint, handler, auth_required=auth_required
             )
 

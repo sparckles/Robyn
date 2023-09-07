@@ -4,7 +4,15 @@ import pathlib
 from collections import defaultdict
 from typing import Optional
 
-from robyn import WS, Robyn, Request, Response, jsonify, serve_file, serve_html
+from robyn import (
+    Request,
+    Response,
+    Robyn,
+    WS,
+    jsonify,
+    serve_file,
+    serve_html,
+)
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.templating import JinjaTemplate
 
@@ -710,6 +718,24 @@ async def async_auth(request: Request):
     assert request.identity.claims == {"key": "value"}
     return "authenticated"
 
+
+# ===== Main =====
+
+
+def sync_without_decorator():
+    return "Success!"
+
+
+async def async_without_decorator():
+    return "Success!"
+
+
+app.add_route("GET", "/sync/get/no_dec", sync_without_decorator)
+app.add_route("PUT", "/sync/put/no_dec", sync_without_decorator)
+app.add_route("POST", "/sync/post/no_dec", sync_without_decorator)
+app.add_route("GET", "/async/get/no_dec", async_without_decorator)
+app.add_route("PUT", "/async/put/no_dec", async_without_decorator)
+app.add_route("POST", "/async/post/no_dec", async_without_decorator)
 
 # ===== Main =====
 

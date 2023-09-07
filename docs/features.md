@@ -559,6 +559,18 @@ app.add_view("/", View)
 
 ```
 
+## Route Registration
+
+Instead of using the decorators, you can also add routes with a function:
+
+```python
+async def hello(request):
+    return "Hello World"
+
+app.add_route("GET", "/hello", hello)
+```
+
+This works for all HTTP methods.
 
 ## Allow CORS
 
