@@ -30,7 +30,7 @@ dependencies = [
   'nestd == 0.3.1',
   'inquirerpy == 0.3.4',
 # conditional
-uvloop~=0.17.0; sys_platform != 'win32' and platform_python_implementation == 'CPython' and platform_machine != 'armv7l'
+  "uvloop~=0.17.0; sys_platform != 'win32' and platform_python_implementation == 'CPython' and platform_machine != 'armv7l'"
   ]
 
 [project.optional-dependencies]
