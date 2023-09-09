@@ -5,11 +5,50 @@ use pyo3::{
 };
 
 pub mod function_info;
+pub mod identity;
 pub mod request;
 pub mod response;
 
+#[allow(clippy::large_enum_variant)]
+pub enum MiddlewareReturn {
+    Request(request::Request),
+    Response(response::Response),
+}
+
 #[pyclass]
-#[derive(Default, Clone)]
+#[allow(clippy::upper_case_acronyms)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum HttpMethod {
+    GET,
+    POST,
+    PUT,
+    DELETE,
+    PATCH,
+    HEAD,
+    OPTIONS,
+    CONNECT,
+    TRACE,
+}
+
+impl HttpMethod {
+    pub fn from_actix_method(method: &actix_web::http::Method) -> Self {
+        match *method {
+            actix_web::http::Method::GET => Self::GET,
+            actix_web::http::Method::POST => Self::POST,
+            actix_web::http::Method::PUT => Self::PUT,
+            actix_web::http::Method::DELETE => Self::DELETE,
+            actix_web::http::Method::PATCH => Self::PATCH,
+            actix_web::http::Method::HEAD => Self::HEAD,
+            actix_web::http::Method::OPTIONS => Self::OPTIONS,
+            actix_web::http::Method::CONNECT => Self::CONNECT,
+            actix_web::http::Method::TRACE => Self::TRACE,
+            _ => panic!("Unsupported HTTP method"),
+        }
+    }
+}
+
+#[pyclass]
+#[derive(Default, Debug, Clone)]
 pub struct Url {
     #[pyo3(get)]
     pub scheme: String,

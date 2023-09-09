@@ -1,7 +1,7 @@
 import pytest
 from requests import Response
 
-from helpers.http_methods_helpers import get
+from integration_tests.helpers.http_methods_helpers import get
 
 
 @pytest.mark.benchmark

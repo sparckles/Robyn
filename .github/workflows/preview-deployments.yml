@@ -1,6 +1,7 @@
 # CI to release the project for Linux, Windows, and MacOS
+# The purpose of this action is to verify if the release builds are working or not.
 
-name: Upload Preview Packages
+name: Preview Release
 
 on:
   push:
@@ -13,11 +14,14 @@ on:
 jobs:
   macos:
     runs-on: macos-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: "3.7"
+          python-version: ${{ matrix.python-version }}
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-apple-darwin
@@ -26,68 +30,79 @@ jobs:
         with:
           target: x86_64
           args: -i python --release --out dist --no-sdist
+      - name: Install build wheel - x86_64
+        run: |
+          pip install --force-reinstall dist/robyn*.whl
+          cd ~ && python -c 'import robyn'
       - name: Build wheels - universal2
         uses: PyO3/maturin-action@v1
         with:
           args: -i python --release --universal2 --out dist --no-sdist
-      - name: Upload wheels
-        uses: actions/upload-artifact@v3
-        with:
-          name: wheels
-          path: dist
+      - name: Install build wheel - universal2
+        run: |
+          pip install --force-reinstall dist/robyn*_universal2.whl
+          cd ~ && python -c 'import robyn'
 
   windows:
     runs-on: windows-latest
     strategy:
       matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
         target: [x64, x86]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: "3.7"
+          python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.target }}
       - uses: dtolnay/rust-toolchain@stable
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: -i python3.7 --release --out dist --no-sdist
-      - name: Upload wheels
-        uses: actions/upload-artifact@v3
-        with:
-          name: wheels
-          path: dist
+          args: -i python --release --out dist --no-sdist
+      - name: Install build wheel
+        shell: bash
+        run: |
+          pip install --force-reinstall dist/robyn*.whl
+          cd ~ && python -c 'import robyn'
 
   linux:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
         target: [x86_64, i686]
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
       - uses: actions/setup-python@v4
         with:
-          python-version: "3.7"
+          python-version: ${{ matrix.python-version }}
       - name: Build Wheels
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
           manylinux: auto
-          args: -i python3.7 --out dist --no-sdist
-      - name: Upload wheels
-        uses: actions/upload-artifact@v3
-        with:
-          name: wheels
-          path: dist
+          args: -i python${{ matrix.python-version }} --release --out dist --no-sdist
+      - name: Install build wheel
+        if: matrix.target == 'x86_64'
+        run: |
+          pip install --force-reinstall dist/robyn*.whl
+          cd ~ && python -c 'import robyn'
 
   linux-cross:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: [{ abi: "cp37-cp37m" }]
-        target: [aarch64, armv7, s390x, ppc64le]
+        python:
+          [
+            { version: "3.8", abi: "cp38-cp38" },
+            { version: "3.9", abi: "cp39-cp39" },
+            { version: "3.10", abi: "cp310-cp310" },
+            { version: "3.11", abi: "cp311-cp311" },
+          ]
+        target: [aarch64, armv7]
     steps:
       - uses: actions/checkout@v3
       - name: Build Wheels
@@ -97,9 +112,30 @@ jobs:
         with:
           target: ${{ matrix.target }}
           manylinux: auto
-          args: -i python3.7 --release --out dist --no-sdist
-      - name: Upload wheels
-        uses: actions/upload-artifact@v3
+          args: -i python${{matrix.python.version}} --release --out dist --no-sdist
+      - uses: uraimo/run-on-arch-action@v2.2.0
+        name: Install build wheel
         with:
-          name: wheels
-          path: dist
+          arch: ${{ matrix.target }}
+          distro: ubuntu20.04
+          githubToken: ${{ github.token }}
+          # Mount the dist directory as /artifacts in the container
+          dockerRunArgs: |
+            --volume "${PWD}/dist:/artifacts"
+          install: |
+            apt update -y
+            apt install -y gcc musl-dev python3-dev # this is needed for psutil
+            apt install -y --no-install-recommends software-properties-common
+            add-apt-repository ppa:deadsnakes/ppa
+            apt update -y
+            PYTHON=python${{ matrix.python.version }}
+            apt install -y $PYTHON $PYTHON-distutils $PYTHON-venv
+          run: |
+            ls -lrth /artifacts
+            PYTHON=python${{ matrix.python.version }}
+            $PYTHON --version
+            $PYTHON -m venv venv
+            source venv/bin/activate
+            pip install --upgrade pip setuptools wheel
+            pip install --force-reinstall dist/robyn*.whl
+            cd ~ && python -c 'import robyn'

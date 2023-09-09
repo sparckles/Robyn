@@ -48,6 +48,18 @@ app.start(port=8080)
 
 ```
 
+### Keep track of a client's IP address
+
+```python
+from robyn import Robyn
+
+app = Robyn(__file__)
+
+@app.get("/")
+async def h(request):
+    return f"hello to you, {request.ip_addr}"
+```
+
 ### Interaction with a Database
 
 It should be fairly easy to make a crud app example. Here's a minimal example using Prisma (`pip install prisma-client-py`) with Robyn.

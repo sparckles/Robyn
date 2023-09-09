@@ -5,7 +5,9 @@ use std::collections::HashMap;
 
 use crate::types::{check_body_type, get_body_from_pyobject, Url};
 
-#[derive(Default, Clone, FromPyObject)]
+use super::identity::Identity;
+
+#[derive(Default, Debug, Clone, FromPyObject)]
 pub struct Request {
     pub queries: HashMap<String, String>,
     pub headers: HashMap<String, String>,
@@ -14,6 +16,8 @@ pub struct Request {
     #[pyo3(from_py_with = "get_body_from_pyobject")]
     pub body: Vec<u8>,
     pub url: Url,
+    pub ip_addr: Option<String>,
+    pub identity: Option<Identity>,
 }
 
 impl ToPyObject for Request {
@@ -33,6 +37,8 @@ impl ToPyObject for Request {
             body,
             method: self.method.clone(),
             url: self.url.clone(),
+            ip_addr: self.ip_addr.clone(),
+            identity: self.identity.clone(),
         };
         Py::new(py, request).unwrap().as_ref(py).into()
     }
@@ -68,6 +74,7 @@ impl Request {
             req.connection_info().host(),
             req.path(),
         );
+        let ip_addr = req.peer_addr().map(|val| val.ip().to_string());
 
         Self {
             queries,
@@ -76,6 +83,8 @@ impl Request {
             path_params: HashMap::new(),
             body: body.to_vec(),
             url,
+            ip_addr,
+            identity: None,
         }
     }
 }
@@ -89,12 +98,16 @@ pub struct PyRequest {
     pub headers: Py<PyDict>,
     #[pyo3(get, set)]
     pub path_params: Py<PyDict>,
+    #[pyo3(get, set)]
+    pub identity: Option<Identity>,
     #[pyo3(get)]
     pub body: Py<PyAny>,
     #[pyo3(get)]
     pub method: String,
     #[pyo3(get)]
     pub url: Url,
+    #[pyo3(get)]
+    pub ip_addr: Option<String>,
 }
 
 #[pymethods]

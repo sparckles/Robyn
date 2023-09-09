@@ -4,12 +4,13 @@ use crate::routers::const_router::ConstRouter;
 use crate::routers::Router;
 
 use crate::routers::http_router::HttpRouter;
-use crate::routers::types::MiddlewareRoute;
 use crate::routers::{middleware_router::MiddlewareRouter, web_socket_router::WebSocketRouter};
 use crate::shared_socket::SocketHeld;
-use crate::types::function_info::FunctionInfo;
+use crate::types::function_info::{FunctionInfo, MiddlewareType};
 use crate::types::request::Request;
 use crate::types::response::Response;
+use crate::types::HttpMethod;
+use crate::types::MiddlewareReturn;
 use crate::web_socket_connection::start_web_socket;
 
 use std::convert::TryInto;
@@ -281,12 +282,12 @@ impl Server {
     pub fn add_route(
         &self,
         py: Python,
-        route_type: &str,
+        route_type: &HttpMethod,
         route: &str,
         function: FunctionInfo,
         is_const: bool,
     ) {
-        debug!("Route added for {} {} ", route_type, route);
+        debug!("Route added for {:?} {} ", route_type, route);
         let asyncio = py.import("asyncio").unwrap();
         let event_loop = asyncio.call_method0("get_event_loop").unwrap();
 
@@ -310,12 +311,28 @@ impl Server {
         }
     }
 
+    /// Add a new global middleware
+    /// can be called after the server has been started
+    pub fn add_global_middleware(&self, middleware_type: &MiddlewareType, function: FunctionInfo) {
+        self.middleware_router
+            .add_global_middleware(middleware_type, function)
+            .unwrap();
+    }
+
     /// Add a new route to the routing tables
     /// can be called after the server has been started
-    pub fn add_middleware_route(&self, route_type: &str, route: &str, function: FunctionInfo) {
-        debug!("MiddleWare Route added for {} {} ", route_type, route);
+    pub fn add_middleware_route(
+        &self,
+        middleware_type: &MiddlewareType,
+        route: &str,
+        function: FunctionInfo,
+    ) {
+        debug!(
+            "MiddleWare Route added for {:?} {} ",
+            middleware_type, route
+        );
         self.middleware_router
-            .add_route(route_type, route, function, None)
+            .add_route(middleware_type, route, function, None)
             .unwrap();
     }
 
@@ -365,26 +382,46 @@ async fn index(
     let mut request = Request::from_actix_request(&req, body, &global_request_headers);
 
     // Before middleware
-    request = match middleware_router.get_route(&MiddlewareRoute::BeforeRequest, req.uri().path()) {
-        Some((function, route_params)) => {
-            request.path_params = route_params;
-            execute_middleware_function(&request, function)
-                .await
-                .unwrap_or_else(|e| {
-                    error!("Error while executing before middleware: {e}");
-                    request
-                })
-        }
-        None => request,
-    };
+    // Global
+    let mut before_middlewares =
+        middleware_router.get_global_middlewares(&MiddlewareType::BeforeRequest);
+    // Route specific
+    if let Some((function, route_params)) =
+        middleware_router.get_route(&MiddlewareType::BeforeRequest, req.uri().path())
+    {
+        before_middlewares.push(function);
+        request.path_params = route_params;
+    }
+    for before_middleware in before_middlewares {
+        request = match execute_middleware_function(&request, &before_middleware).await {
+            Ok(MiddlewareReturn::Request(r)) => r,
+            Ok(MiddlewareReturn::Response(r)) => {
+                // If a before middleware returns a response, we abort the request and return the response
+                return r;
+            }
+            Err(e) => {
+                error!(
+                    "Error while executing before middleware function for endpoint `{}`: {}",
+                    req.uri().path(),
+                    get_traceback(e.downcast_ref::<PyErr>().unwrap())
+                );
+                return Response::internal_server_error(&request.headers);
+            }
+        };
+    }
 
     // Route execution
-    let mut response = if let Some(res) = const_router.get_route(req.method(), req.uri().path()) {
+    let mut response = if let Some(res) = const_router.get_route(
+        &HttpMethod::from_actix_method(req.method()),
+        req.uri().path(),
+    ) {
         res
-    } else if let Some((function, route_params)) = router.get_route(req.method(), req.uri().path())
-    {
+    } else if let Some((function, route_params)) = router.get_route(
+        &HttpMethod::from_actix_method(req.method()),
+        req.uri().path(),
+    ) {
         request.path_params = route_params;
-        execute_http_function(&request, function)
+        execute_http_function(&request, &function)
             .await
             .unwrap_or_else(|e| {
                 error!(
@@ -406,18 +443,32 @@ async fn index(
     );
 
     // After middleware
-    response = match middleware_router.get_route(&MiddlewareRoute::AfterRequest, req.uri().path()) {
-        Some((function, route_params)) => {
-            request.path_params = route_params;
-            execute_middleware_function(&response, function)
-                .await
-                .unwrap_or_else(|e| {
-                    error!("Error while executing after middleware: {e}");
-                    response
-                })
-        }
-        None => response,
-    };
+    // Global
+    let mut after_middlewares =
+        middleware_router.get_global_middlewares(&MiddlewareType::AfterRequest);
+    // Route specific
+    if let Some((function, _)) =
+        middleware_router.get_route(&MiddlewareType::AfterRequest, req.uri().path())
+    {
+        after_middlewares.push(function);
+    }
+    for after_middleware in after_middlewares {
+        response = match execute_middleware_function(&response, &after_middleware).await {
+            Ok(MiddlewareReturn::Request(_)) => {
+                error!("After middleware returned a request");
+                return Response::internal_server_error(&request.headers);
+            }
+            Ok(MiddlewareReturn::Response(r)) => r,
+            Err(e) => {
+                error!(
+                    "Error while executing after middleware function for endpoint `{}`: {}",
+                    req.uri().path(),
+                    get_traceback(e.downcast_ref::<PyErr>().unwrap())
+                );
+                return Response::internal_server_error(&request.headers);
+            }
+        };
+    }
 
     debug!("Response: {:?}", response);
 
@@ -428,7 +479,7 @@ fn get_traceback(error: &PyErr) -> String {
     Python::with_gil(|py| -> String {
         if let Some(traceback) = error.traceback(py) {
             let msg = match traceback.format() {
-                Ok(msg) => format!("\n{} {}", msg, error),
+                Ok(msg) => format!("\n{msg} {error}"),
                 Err(e) => e.to_string(),
             };
             return msg;

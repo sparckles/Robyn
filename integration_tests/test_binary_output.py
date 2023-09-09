@@ -1,6 +1,6 @@
 import pytest
 
-from helpers.http_methods_helpers import get
+from integration_tests.helpers.http_methods_helpers import get
 
 BASE_URL = "http://127.0.0.1:8080"
 
