@@ -29,7 +29,3 @@ async def h():
 
 if __name__ == "__main__":
     app.start()
-
-# install prisma cli
-# initialize prisma with "prisma generate"
-# then "prisma migrate dev" and name migration dev
