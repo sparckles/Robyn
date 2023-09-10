@@ -49,6 +49,10 @@ def create_robyn_app():
             f.write(open("robyn/scaffold/sqlite/app.py", "r").read())
         elif project_type == "postgres":
             f.write(open("robyn/scaffold/postgres/app.py", "r").read())
+            # copy README.md
+            readme_path = os.path.join(project_dir, "README.md")
+            with open(readme_path, "w") as f_r:
+                f_r.write(open("robyn/scaffold/postgres/README.md", "r").read())
         elif project_type == "mongo":
             f.write(open("robyn/scaffold/mongo/app.py", "r").read())
         elif project_type == "sqlalchemy":
@@ -57,8 +61,12 @@ def create_robyn_app():
             f.write(open("robyn/scaffold/prisma/app.py", "r").read())
             # copy schema.prisma
             schema_path = os.path.join(project_dir, "schema.prisma")
-            with open(schema_path, "w") as f:
-                f.write(open("robyn/scaffold/prisma/schema.prisma", "r").read())
+            with open(schema_path, "w") as f_s:
+                f_s.write(open("robyn/scaffold/prisma/schema.prisma", "r").read())
+            # copy README.md
+            readme_path = os.path.join(project_dir, "README.md")
+            with open(readme_path, "w") as f_r:
+                f_r.write(open("robyn/scaffold/prisma/README.md", "r").read())
         else:
             f.write(open("robyn/scaffold/no-db/app.py", "r").read())
 
