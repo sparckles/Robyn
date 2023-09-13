@@ -206,22 +206,18 @@ app.add_response_header("content-type", "application/json")
 You can also add request and response headers for every route.
 
 ```python
-@app.get("/request_headers")
-async def request_headers():
-    return {
-        "status_code": 200,
-        "description": "",
-        "type": "text",
-        "headers": {"Header": "header_value"},
-    }
+@app.before_request("/sync/middlewares")
+def sync_before_request(request: Request):
+    request.headers["before"] = "sync_before_request"
+    return request
 ```
 
 ```python
-@app.get("/response_headers")
-async def response_headers():
-    return {
-        "headers": {"Header": "header_value"},
-    }
+@app.after_request("/sync/middlewares")
+def sync_after_request(response: Response):
+    response.headers["after"] = "sync_after_request"
+    response.body = response.description + " after"
+    return response
 ```
 
 
