@@ -9,7 +9,7 @@ use pyo3::{
 };
 
 use crate::io_helpers::{apply_hashmap_headers, read_file};
-use crate::types::{check_body_type, get_description_from_pyobject};
+use crate::types::{check_description_type, get_description_from_pyobject};
 
 #[derive(Debug, Clone, FromPyObject)]
 pub struct Response {
@@ -114,8 +114,8 @@ impl PyResponse {
     }
 
     #[setter]
-    pub fn set_body(&mut self, py: Python, description: Py<PyAny>) -> PyResult<()> {
-        check_body_type(py, description.clone())?;
+    pub fn set_description(&mut self, py: Python, description: Py<PyAny>) -> PyResult<()> {
+        check_description_type(py, description.clone())?;
         self.description = description;
         Ok(())
     }

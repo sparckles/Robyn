@@ -100,3 +100,12 @@ pub fn check_body_type(py: Python, body: Py<PyAny>) -> PyResult<()> {
     };
     Ok(())
 }
+
+pub fn check_description_type(py: Python, body: Py<PyAny>) -> PyResult<()> {
+    if body.downcast::<PyString>(py).is_err() && body.downcast::<PyBytes>(py).is_err() {
+        return Err(PyValueError::new_err(
+            "Could not convert specified response description to bytes",
+        ));
+    };
+    Ok(())
+}
