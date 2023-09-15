@@ -133,7 +133,7 @@ def sync_before_request(request: Request):
 @app.after_request("/sync/middlewares")
 def sync_after_request(response: Response):
     response.headers["after"] = "sync_after_request"
-    response.body = response.description + " after"
+    response.description = response.description + " after"
     return response
 
 
@@ -154,7 +154,7 @@ async def async_before_request(request: Request):
 @app.after_request("/async/middlewares")
 async def async_after_request(response: Response):
     response.headers["after"] = "async_after_request"
-    response.body = response.description + " after"
+    response.description = response.description + " after"
     return response
 
 
@@ -574,7 +574,7 @@ async def async_body_put(request: Request):
 def sync_dict_delete():
     return {
         "status_code": 200,
-        "body": "sync dict delete",
+        "description": "sync dict delete",
         "type": "text",
         "headers": {"sync": "dict"},
     }

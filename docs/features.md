@@ -216,7 +216,7 @@ def sync_before_request(request: Request):
 @app.after_request("/sync/middlewares")
 def sync_after_request(response: Response):
     response.headers["after"] = "sync_after_request"
-    response.body = response.description + " after"
+    response.description = response.description + " after"
     return response
 ```
 

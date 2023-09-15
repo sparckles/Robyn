@@ -9,14 +9,14 @@ use pyo3::{
 };
 
 use crate::io_helpers::{apply_hashmap_headers, read_file};
-use crate::types::{check_body_type, get_body_from_pyobject};
+use crate::types::{check_body_type, get_body_from_pyobject, get_description_from_pyobject};
 
 #[derive(Debug, Clone, FromPyObject)]
 pub struct Response {
     pub status_code: u16,
     pub response_type: String,
     pub headers: HashMap<String, String>,
-    #[pyo3(from_py_with = "get_body_from_pyobject")]
+    #[pyo3(from_py_with = "get_description_from_pyobject")]
     pub description: Vec<u8>,
     pub file_path: Option<String>,
 }

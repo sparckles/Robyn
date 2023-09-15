@@ -43,6 +43,7 @@ class Router(BaseRouter):
     def _format_response(self, res):
         response = {}
         if isinstance(res, dict):
+            print("Printing a response ", res)
             status_code = res.get("status_code", status_codes.HTTP_200_OK)
             headers = res.get("headers", {"Content-Type": "text/plain"})
             description = res.get("description", "")
