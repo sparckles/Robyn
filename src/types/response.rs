@@ -9,7 +9,7 @@ use pyo3::{
 };
 
 use crate::io_helpers::{apply_hashmap_headers, read_file};
-use crate::types::{check_body_type, get_body_from_pyobject, get_description_from_pyobject};
+use crate::types::{check_body_type, get_description_from_pyobject};
 
 #[derive(Debug, Clone, FromPyObject)]
 pub struct Response {
