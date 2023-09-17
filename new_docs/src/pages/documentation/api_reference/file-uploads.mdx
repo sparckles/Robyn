@@ -1,0 +1,151 @@
+export const description =
+  'On this page, we’ll dive into the different conversation endpoints you can use to manage conversations programmatically.'
+
+## File Uploads
+
+Batman learned how to handle file uploads using Robyn. He created an endpoint to handle file uploads using the following code:
+
+
+## Scaling the Application
+
+<Row>
+<Col>
+Batman scaled his application across multiple cores for better performance. He used the following command:
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    from robyn.robyn import File
+
+    @app.post("/upload")
+    async def upload():
+      body = request.body
+      file = bytearray(body)
+
+      # write whatever filename
+      with open('test.txt', 'wb') as f:
+          f.write(body)
+
+      return jsonify({'message': 'success'})
+    ```
+    ```python {{ title: 'typed' }}
+    from robyn.robyn import File
+
+    @app.post("/upload")
+    async def upload():
+      body = request.body
+      file = bytearray(body)
+
+      # write whatever filename
+      with open('test.txt', 'wb') as f:
+          f.write(body)
+
+      return jsonify({'message': 'success'})
+    ```
+
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+
+## File Downloads
+
+Batman now wanted to allow users to download files from his application. He created an endpoint to handle file downloads using the following code:
+
+
+### Serving Simple HTML Files
+
+<Row>
+<Col>
+Batman scaled his application across multiple cores for better performance. He used the following command:
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    from robyn import Robyn, serve_html
+
+    app = Robyn(__file__)
+
+
+    @app.get("/")
+    async def h(request):
+        return serve_html("./index.html")
+
+    app.start(port=8080)
+
+    ```
+
+    ```python {{ title: 'typed' }}
+    from robyn import Robyn, Request, serve_html
+
+    app = Robyn(__file__)
+
+
+    @app.get("/")
+    async def h(request: Request):
+        return serve_html("./index.html")
+
+    app.start(port=8080)
+
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+### Serving Other Files
+
+
+<Row>
+<Col>
+Batman scaled his application across multiple cores for better performance. He used the following command:
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    from robyn import Robyn, serve_file
+
+    app = Robyn(__file__)
+
+
+    @app.get("/")
+    async def h(request):
+        return serve_file("./index.html")
+
+    app.start(port=8080)
+
+    ```
+
+    ```python {{ title: 'typed' }}
+    from robyn import Robyn, serve_file, Request
+
+    app = Robyn(__file__)
+
+
+    @app.get("/")
+    async def h(request: Request):
+        return serve_file("./index.html")
+
+    app.start(port=8080)
+
+    ```
+
+    </CodeGroup>
+  </Col>
+</Row>
+
+
+## What's next?
+
+Now, Batman was ready to learn about the advanced features of Robyn. He wanted to find a way to get realtime updates in his dashboard.
+
+- [WebSockets](/documentation/api_reference/websockets)
+
+
+
