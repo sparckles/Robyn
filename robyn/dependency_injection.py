@@ -47,7 +47,7 @@ class DependencyMap:
 
 
 
-    def get_dependencies(self):
+    def get_global_dependencies(self):
         """ Gets the dependencies for a route.
 
         Args:
