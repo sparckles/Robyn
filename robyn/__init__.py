@@ -33,7 +33,6 @@ from robyn.ws import WS
 __version__ = get_version()
 
 
-
 class Robyn:
     """This is the python wrapper for the Robyn binaries."""
 
@@ -106,6 +105,7 @@ class Robyn:
             self.middleware_router.add_auth_middleware(endpoint)(handler)
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         if isinstance(route_type, str):
             http_methods = {
                 "GET": HttpMethod.GET,
@@ -142,13 +142,11 @@ class Robyn:
 =======
         print("self get dict from init to router.py", self.dependencies.dependency_map)
 >>>>>>> 97bd6e7 (refactor: change the code organisation)
+=======
+
+>>>>>>> 2fce949 (moved logic of subrouter dependency merging to dependency_injection, added type hints for route in dependency_injection, added logic handler validation logic function to router.py)
         return self.router.add_route(
-            route_type,
-            endpoint,
-            handler,
-            is_const,
-            self.dependencies.dependency_map,
-            self.exception_handler,
+            route_type, endpoint, handler, is_const, self.dependencies.dependency_map,self.exception_handler
         )
 
     def inject(self, route=None, **kwargs: dict):
@@ -165,11 +163,18 @@ class Robyn:
 >>>>>>> b97011a (Created dependency mapping structure along with accessor methods)
 =======
     def get_injected_dependencies(self, route=None) -> dict:
+<<<<<<< HEAD
         if route in self.dependencies.dependency_map:
             return self.dependencies.dependency_map
 
         return self.dependencies.dependency_map
 >>>>>>> 97bd6e7 (refactor: change the code organisation)
+=======
+        if route:
+            return self.dependencies.get_route_dependencies(route)
+        else:
+            return self.dependencies.get_dependencies()
+>>>>>>> 2fce949 (moved logic of subrouter dependency merging to dependency_injection, added type hints for route in dependency_injection, added logic handler validation logic function to router.py)
 
     def inject(self, route=None, **kwargs):
         if route:
@@ -485,11 +490,15 @@ class Robyn:
 >>>>>>> b97011a (Created dependency mapping structure along with accessor methods)
 =======
 
+<<<<<<< HEAD
         for dep in self.dependencies.get_dependencies():
             if dep in router.dependencies.get_dependencies():
                 continue
             router.dependencies.get_dependencies()[dep] = self.dependencies.get_dependencies()[dep]
 >>>>>>> 97bd6e7 (refactor: change the code organisation)
+=======
+        self.dependencies.merge_dependencies(router)
+>>>>>>> 2fce949 (moved logic of subrouter dependency merging to dependency_injection, added type hints for route in dependency_injection, added logic handler validation logic function to router.py)
 
     def configure_authentication(self, authentication_handler: AuthenticationHandler):
         """
