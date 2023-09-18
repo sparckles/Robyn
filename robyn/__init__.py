@@ -173,6 +173,16 @@ class Robyn:
         logger.info(f"Robyn version: {__version__}")
         logger.info(f"Starting server at {url}:{port}")
 
+        endpoint = {}
+
+        routes = self.router.get_routes()
+
+        for route in routes:
+            endpoint["method"] = route[0]
+            endpoint["route"] = route[1]
+
+            logger.info("Logging endpoint: {}".format(endpoint))
+
         mp.allow_connection_pickling()
 
         run_processes(
