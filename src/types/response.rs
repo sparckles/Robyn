@@ -16,6 +16,7 @@ pub struct Response {
     pub status_code: u16,
     pub response_type: String,
     pub headers: HashMap<String, String>,
+    // https://pyo3.rs/v0.19.2/function.html?highlight=from_py_#per-argument-options
     #[pyo3(from_py_with = "get_description_from_pyobject")]
     pub description: Vec<u8>,
     pub file_path: Option<String>,
