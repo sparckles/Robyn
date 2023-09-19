@@ -114,7 +114,7 @@ Robyn accepts dictionaries to build a response for the route:
 async def dictionary(request):
     return {
         "status_code": 200,
-        "body": "This is a regular response",
+        "description": "This is a regular response",
         "type": "text",
         "headers": {"Header": "header_value"},
     }
@@ -206,22 +206,18 @@ app.add_response_header("content-type", "application/json")
 You can also add request and response headers for every route.
 
 ```python
-@app.get("/request_headers")
-async def request_headers():
-    return {
-        "status_code": 200,
-        "body": "",
-        "type": "text",
-        "headers": {"Header": "header_value"},
-    }
+@app.before_request("/sync/middlewares")
+def sync_before_request(request: Request):
+    request.headers["before"] = "sync_before_request"
+    return request
 ```
 
 ```python
-@app.get("/response_headers")
-async def response_headers():
-    return {
-        "headers": {"Header": "header_value"},
-    }
+@app.after_request("/sync/middlewares")
+def sync_after_request(response: Response):
+    response.headers["after"] = "sync_after_request"
+    response.description = response.description + " after"
+    return response
 ```
 
 
@@ -501,7 +497,7 @@ def sample_view():
 
     def post(request):
         body = request.body
-        return {"status_code": 200, "body": body}
+        return {"status_code": 200, "description": body}
 ```
 
 The above view contains two closures for the `get` and the `post` request.
@@ -517,7 +513,7 @@ def sync_decorator_view():
 
     def post(request):
         body = request.body
-        return {"status_code": 200, "body": body}
+        return {"status_code": 200, "description": body}
 
 
 @app.view("/async/view/decorator")
@@ -527,7 +523,7 @@ def async_decorator_view():
 
     async def post(request):
         body = request.body
-        return {"status_code": 200, "body": body}
+        return {"status_code": 200, "description": body}
 ```
 
 
@@ -543,7 +539,7 @@ def View():
         body = request.body
         return {
             "status": 200,
-            "body": body,
+            "description": body,
             "headers": {"Content-Type": "text/json"},
         }
 ```
@@ -590,7 +586,7 @@ You can raise exceptions in your code and Robyn will handle them for you.
 ```python
 @app.exception
 def handle_exception(error):
-    return {"status_code": 500, "body": f"error msg: {error}"}
+    return {"status_code": 500, "description": f"error msg: {error}"}
 
 ```
 
