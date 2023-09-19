@@ -9,14 +9,15 @@ use pyo3::{
 };
 
 use crate::io_helpers::{apply_hashmap_headers, read_file};
-use crate::types::{check_body_type, get_body_from_pyobject};
+use crate::types::{check_description_type, get_description_from_pyobject};
 
 #[derive(Debug, Clone, FromPyObject)]
 pub struct Response {
     pub status_code: u16,
     pub response_type: String,
     pub headers: HashMap<String, String>,
-    #[pyo3(from_py_with = "get_body_from_pyobject")]
+    // https://pyo3.rs/v0.19.2/function.html?highlight=from_py_#per-argument-options
+    #[pyo3(from_py_with = "get_description_from_pyobject")]
     pub description: Vec<u8>,
     pub file_path: Option<String>,
 }
@@ -114,8 +115,8 @@ impl PyResponse {
     }
 
     #[setter]
-    pub fn set_body(&mut self, py: Python, description: Py<PyAny>) -> PyResult<()> {
-        check_body_type(py, description.clone())?;
+    pub fn set_description(&mut self, py: Python, description: Py<PyAny>) -> PyResult<()> {
+        check_description_type(py, description.clone())?;
         self.description = description;
         Ok(())
     }
