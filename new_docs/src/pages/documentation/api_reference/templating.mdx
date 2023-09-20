@@ -1,0 +1,143 @@
+export const description =
+  'On this page, we’ll dive into the different conversation endpoints you can use to manage conversations programmatically.'
+
+
+
+## Templating.
+
+Batman wanted to quickly render html pages on the website. He wanted to use a templating engine to render the html pages. Robyn told him that he can use the Jinja2 templating engine to render the html pages. He can use the `JinjaTemplate` class to render the html pages.
+
+
+<Row>
+<Col>
+Batman was excited to learn that he could add events as functions as well as decorators.
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{title: 'untyped'}}
+    from robyn.templating import JinjaTemplate
+
+    current_file_path = pathlib.Path(__file__).parent.resolve()
+    JINJA_TEMPLATE = JinjaTemplate(os.path.join(current_file_path, "templates"))
+
+    @app.get("/template_render")
+    def template_render():
+        context = {"framework": "Robyn", "templating_engine": "Jinja2"}
+
+        template = JINJA_TEMPLATE.render_template(template_name="test.html", **context)
+        return template
+
+    ```
+
+    ```python {{title: 'typed'}}
+    from robyn.templating import JinjaTemplate
+
+    current_file_path = pathlib.Path(__file__).parent.resolve()
+    JINJA_TEMPLATE = JinjaTemplate(os.path.join(current_file_path, "templates"))
+
+    @app.get("/template_render")
+    def template_render():
+        context = {"framework": "Robyn", "templating_engine": "Jinja2"}
+
+        template = JINJA_TEMPLATE.render_template(template_name="test.html", **context)
+        return template
+
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+<Row>
+
+  <Col>
+  test.html file
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+      ```html
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="utf-8">
+          <title>Results</title>
+        </head>
+
+        <body>
+         Hello {{ framework }}! You're using {{ templating_engine }}.
+        </body>
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+
+## Supporting Custom Templating Engines
+
+Batman was also super excited to know that Robyn allows the support of custom templating engines.
+
+<Row>
+<Col>
+To do that, you need to import the `TemplateInterface` from `robyn.templating`
+</Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+      ```python {{ title: 'untyped' }}
+      from robyn.templating import TemplateInterface
+      ```
+
+      ```python {{ title: 'typed' }}
+      from robyn.templating import TemplateInterface
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+
+<Row>
+<Col>
+Then You need to have a `render_template` method inside your implementation. So, an example would look like the following:
+</Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+      ```python {{ title: 'untyped' }}
+      class JinjaTemplate(TemplateInterface):
+        def __init__(self, directory, encoding="utf-8", followlinks=False):
+            self.env = Environment(
+                loader=FileSystemLoader(
+                    searchpath=directory, encoding=encoding, followlinks=followlinks
+                )
+            )
+
+        def render_template(self, template_name, **kwargs):
+            return self.env.get_template(template_name).render(**kwargs)
+      ```
+
+      ```python {{ title: 'typed' }}
+      class JinjaTemplate(TemplateInterface):
+        def __init__(self, directory, encoding="utf-8", followlinks=False):
+            self.env = Environment(
+                loader=FileSystemLoader(
+                    searchpath=directory, encoding=encoding, followlinks=followlinks
+                )
+            )
+
+        def render_template(self, template_name: str, **kwargs):
+            return self.env.get_template(template_name).render(**kwargs)
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+
+
+## What's next?
+
+Now, batman wanted to have an ability to upload files to the server if any new villain appeared. Robyn introduced him to the file uploads feature. 
+
+- [File Uploads](/documentation/api_reference/file-uploads)
+
+
