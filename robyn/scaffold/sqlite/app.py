@@ -13,8 +13,8 @@ def index():
     cur.execute("CREATE TABLE test(column_1, column_2)")
     res = cur.execute("SELECT name FROM sqlite_master")
     th = res.fetchone()
-    print(th)
-    return "Hello World!"
+    table_name = th[0]
+    return f"Hello World! {table_name}"
 
 
 if __name__ == "__main__":
