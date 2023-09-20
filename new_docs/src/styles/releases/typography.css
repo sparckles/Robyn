@@ -1,0 +1,285 @@
+.typography {
+  --typography-body: theme(colors.gray.600);
+  --typography-headings: theme(colors.gray.900);
+  --typography-quotes: theme(colors.gray.500);
+  --typography-quotes-border: theme(colors.gray.200);
+  --typography-links: theme(colors.sky.500);
+  --typography-link-hover: theme(colors.sky.600);
+  --typography-link-underline: theme(colors.sky.400 / 0.4);
+  --typography-link-hover-underline: theme(colors.sky.600 / 0.4);
+  --typography-pre: theme(colors.gray.300);
+  --typography-pre-shadow: theme(boxShadow.md);
+  --typography-bold: theme(colors.gray.900);
+  --typography-kbd: theme(colors.gray.600);
+  --typography-kbd-border: theme(colors.gray.200);
+  --typography-kbd-bg: theme(colors.gray.50);
+  --typography-code: theme(colors.gray.900);
+  --typography-hr: theme(colors.gray.900 / 0.05);
+  --typography-th-borders: theme(colors.gray.900 / 0.2);
+  --typography-td-borders: theme(colors.gray.900 / 0.05);
+
+  --shiki-color-text: theme(colors.white);
+  --shiki-token-constant: theme(colors.orange.300);
+  --shiki-token-string: theme(colors.orange.300);
+  --shiki-token-comment: theme(colors.gray.500);
+  --shiki-token-keyword: theme(colors.sky.300);
+  --shiki-token-parameter: theme(colors.pink.300);
+  --shiki-token-function: theme(colors.violet.300);
+  --shiki-token-string-expression: theme(colors.orange.300);
+  --shiki-token-punctuation: theme(colors.gray.200);
+
+  .dark & {
+    --typography-body: theme(colors.gray.300);
+    --typography-headings: theme(colors.white);
+    --typography-quotes: theme(colors.gray.400);
+    --typography-quotes-border: theme(colors.gray.800);
+    --typography-links: theme(colors.sky.400);
+    --typography-link-hover: theme(colors.white);
+    --typography-link-underline: theme(colors.sky.400 / 0.4);
+    --typography-link-hover-underline: theme(colors.white / 0.4);
+    --typography-pre: theme(colors.gray.400);
+    --typography-pre-shadow: inset 0 0 0 1px theme(colors.white / 0.1);
+    --typography-bold: theme(colors.white);
+    --typography-kbd: theme(colors.white);
+    --typography-kbd-border: theme(colors.gray.800);
+    --typography-kbd-bg: theme(colors.gray.900);
+    --typography-code: theme(colors.white);
+    --typography-hr: theme(colors.white / 0.1);
+    --typography-th-borders: theme(colors.white / 0.1);
+    --typography-td-borders: theme(colors.white / 0.05);
+  }
+
+  color: var(--typography-body);
+  font-size: theme(fontSize.sm);
+  line-height: theme(lineHeight.6);
+
+  h2 {
+    font-family: theme(fontFamily.display);
+    color: var(--typography-headings);
+    font-weight: theme(fontWeight.semibold);
+    font-size: theme(fontSize.xl);
+    line-height: theme(lineHeight.8);
+  }
+
+  /* Headings */
+  h3 {
+    color: var(--typography-headings);
+    font-family: theme(fontFamily.display);
+    font-weight: theme(fontWeight.semibold);
+    font-size: theme(fontSize.base);
+    line-height: theme(lineHeight.6);
+    display: flex;
+    align-items: center;
+    column-gap: theme(gap.3);
+  }
+
+  h3 > svg {
+    flex: none;
+    width: theme(width.4);
+    height: theme(height.4);
+  }
+
+  h4 {
+    color: var(--typography-headings);
+    font-family: theme(fontFamily.display);
+    font-weight: theme(fontWeight.semibold);
+    font-size: theme(fontSize.sm);
+    line-height: theme(lineHeight.6);
+  }
+
+  /* Quotes */
+  blockquote {
+    border-left: 3px solid var(--typography-quotes-border);
+    padding-left: theme(padding.6);
+    color: var(--typography-quotes);
+  }
+
+  /* Links */
+  a:not(h2 a) {
+    font-weight: theme(fontWeight.semibold);
+    color: var(--typography-links);
+    text-decoration: underline;
+    text-decoration-color: var(--typography-link-underline);
+    text-underline-offset: theme(textUnderlineOffset.2);
+    transition-property: color, text-decoration-color;
+    transition-duration: theme(transitionDuration.DEFAULT);
+    transition-timing-function: theme(transitionTimingFunction.DEFAULT);
+
+    &:hover {
+      color: var(--typography-link-hover);
+      text-decoration-color: var(--typography-link-hover-underline);
+    }
+  }
+
+  /* Inline text */
+  strong {
+    font-weight: theme(fontWeight.semibold);
+  }
+
+  strong:not(a strong) {
+    color: var(--typography-bold);
+  }
+
+  kbd {
+    display: inline-block;
+    border-radius: theme(borderRadius.DEFAULT);
+    background-color: var(--typography-kbd-bg);
+    padding: 0 theme(padding[1.5]);
+    font-family: theme(fontFamily.mono);
+    font-size: theme(fontSize.xs);
+    font-weight: 400;
+    line-height: theme(lineHeight.5);
+    color: var(--typography-kbd);
+    box-shadow: inset 0 0 0 1px var(--typography-kbd-border);
+  }
+
+  code {
+    font-family: theme(fontFamily.mono);
+  }
+
+  code:not(a code, pre code) {
+    color: var(--typography-code);
+  }
+
+  code:not(pre code) {
+    font-size: calc(12 / 14 * 1em);
+    line-height: theme(lineHeight.none);
+    font-weight: theme(fontWeight.bold);
+
+    &::before {
+      content: '`';
+    }
+
+    &::after {
+      content: '`';
+    }
+  }
+
+  /* Code blocks */
+  pre {
+    display: flex;
+    background-color: theme(colors.gray.900);
+    border-radius: theme(borderRadius.lg);
+    overflow-x: auto;
+    box-shadow: var(--typography-pre-shadow);
+  }
+
+  pre code {
+    flex: none;
+    padding: theme(padding.6);
+    font-size: 0.8125rem;
+    line-height: theme(lineHeight.6);
+    color: var(--typography-pre);
+  }
+
+  /* <hr> */
+  hr {
+    border-color: var(--typography-hr);
+  }
+
+  /* Lists */
+  ul,
+  ol {
+    padding-left: 1.375rem;
+  }
+
+  ul {
+    list-style-type: disc;
+  }
+
+  ol {
+    list-style-type: decimal;
+  }
+
+  li {
+    padding-left: 0.625rem;
+  }
+
+  li::marker {
+    color: theme(colors.gray.400);
+  }
+
+  ol > li::marker {
+    font-size: theme(fontSize.xs);
+    font-weight: theme(fontWeight.semibold);
+  }
+
+  /* Tables */
+  table {
+    width: theme(width.full);
+    text-align: left;
+  }
+
+  thead {
+    border-bottom: 1px solid var(--typography-th-borders);
+  }
+
+  thead th {
+    font-weight: theme(fontWeight.semibold);
+    padding-top: 0;
+    padding-bottom: calc(theme(padding.2) - 1px);
+    color: var(--typography-headings);
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--typography-td-borders);
+  }
+
+  tbody td {
+    padding-top: calc(theme(padding.2) - 1px);
+    padding-bottom: theme(padding.2);
+  }
+
+  :is(th, td):first-child {
+    padding-left: 0;
+    padding-right: theme(padding.2);
+  }
+
+  :is(th, td):last-child {
+    padding-left: theme(padding.2);
+    padding-right: 0;
+  }
+
+  :is(th, td):not(:first-child, :last-child) {
+    padding-left: theme(padding.2);
+    padding-right: theme(padding.2);
+  }
+
+  /* Spacing */
+  > * {
+    margin-top: theme(margin.6);
+  }
+
+  :is(h2, h3, h4, blockquote, pre, table) {
+    margin-top: theme(margin.8);
+  }
+
+  hr {
+    margin-top: calc(theme(margin.16) - 1px);
+  }
+
+  li {
+    margin-top: theme(margin.4);
+  }
+
+  li > :is(p, ol, ul) {
+    margin-top: theme(margin.4);
+  }
+
+  :is(h2, h3, h4) + * {
+    margin-top: theme(margin.4);
+  }
+
+  :is(blockquote, pre, table) + * {
+    margin-top: theme(margin.8);
+  }
+
+  hr + * {
+    margin-top: theme(margin.16);
+  }
+
+  > :first-child,
+  li > :first-child {
+    margin-top: 0;
+  }
+}
