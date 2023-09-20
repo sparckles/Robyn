@@ -99,6 +99,11 @@ class Robyn:
             }
             route_type = http_methods[route_type]
 
+        routes = self.router.get_routes()
+
+        for route in routes:
+            logger.info(f"Logging endpoint: method: {route[0]}, route: {route[1]}")
+
         return self.router.add_route(
             route_type, endpoint, handler, is_const, self.exception_handler
         )
@@ -172,16 +177,6 @@ class Robyn:
 
         logger.info(f"Robyn version: {__version__}")
         logger.info(f"Starting server at {url}:{port}")
-
-        endpoint = {}
-
-        routes = self.router.get_routes()
-
-        for route in routes:
-            endpoint["method"] = route[0]
-            endpoint["route"] = route[1]
-
-            logger.info("Logging endpoint: {}".format(endpoint))
 
         mp.allow_connection_pickling()
 
