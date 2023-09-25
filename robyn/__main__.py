@@ -4,11 +4,19 @@ from InquirerPy import prompt
 from InquirerPy.base.control import Choice
 from .argument_parser import Config
 from robyn.robyn import get_version
+from distutils.dir_util import copy_tree
+from pathlib import Path
 
+
+SCAFFOLD_DIR = Path(__file__).parent / "scaffold"
 
 def create_robyn_app():
     questions = [
-        {"type": "input", "message": "Enter the name of the project directory:"},
+        {
+            "type": "input",
+            "message": "Enter the name of the project directory:",
+            "name": "directory",
+        },
         {
             "type": "list",
             "message": "Need Docker? (Y/N)",
@@ -16,81 +24,40 @@ def create_robyn_app():
                 Choice("Y", name="Y"),
                 Choice("N", name="N"),
             ],
-            "default": None,
+            "default": Choice("N", name="N"),
+            "name": "docker",
         },
         {
             "type": "list",
             "message": "Please select project type (Mongo/Postgres/Sqlalchemy/Prisma): ",
             "choices": [
-                Choice("no db", name="No DB"),
+                Choice("no-db", name="No DB"),
                 Choice("sqlite", name="Sqlite"),
                 Choice("postgres", name="Postgres"),
                 Choice("mongo", name="MongoDB"),
                 Choice("sqlalchemy", name="SqlAlchemy"),
                 Choice("prisma", name="Prisma"),
             ],
-            "default": None,
+            "default": Choice("no-db", name="No DB"),
+            "name": "project_type",
         },
     ]
     result = prompt(questions=questions)
-    project_dir = result[0]
-    docker = result[1]
-    project_type = result[2]
+    project_dir = result["directory"]
+    docker = result["docker"]
+    project_type = result["project_type"]
 
     print(f"Creating a new Robyn project '{project_dir}'...")
 
     # Create a new directory for the project
     os.makedirs(project_dir, exist_ok=True)
 
-    # Create the main application file
-    app_file_path = os.path.join(project_dir, "app.py")
-    with open(app_file_path, "w") as f:
-        if project_type == "sqlite":
-            f.write(open("robyn/scaffold/sqlite/app.py", "r").read())
-        elif project_type == "postgres":
-            f.write(open("robyn/scaffold/postgres/app.py", "r").read())
-            # copy README.md
-            readme_path = os.path.join(project_dir, "README.md")
-            with open(readme_path, "w") as f_r:
-                f_r.write(open("robyn/scaffold/postgres/README.md", "r").read())
-        elif project_type == "mongo":
-            f.write(open("robyn/scaffold/mongo/app.py", "r").read())
-        elif project_type == "sqlalchemy":
-            f.write(open("robyn/scaffold/sqlalchemy/app.py", "r").read())
-        elif project_type == "prisma":
-            f.write(open("robyn/scaffold/prisma/app.py", "r").read())
-            # copy schema.prisma
-            schema_path = os.path.join(project_dir, "schema.prisma")
-            with open(schema_path, "w") as f_s:
-                f_s.write(open("robyn/scaffold/prisma/schema.prisma", "r").read())
-            # copy README.md
-            readme_path = os.path.join(project_dir, "README.md")
-            with open(readme_path, "w") as f_r:
-                f_r.write(open("robyn/scaffold/prisma/README.md", "r").read())
-        else:
-            f.write(open("robyn/scaffold/no-db/app.py", "r").read())
+    selected_project_template = SCAFFOLD_DIR / Path(project_type)
+    copy_tree(selected_project_template, project_dir)
 
-    # Dockerfile configuration
-    if docker == "Y":
-        print(f"Generating docker configuration for {project_dir}")
-        dockerfile_path = os.path.join(project_dir, "Dockerfile")
-        with open(dockerfile_path, "w") as f:
-            if project_type == "sqlite":
-                f.write(open("robyn/scaffold/sqlite/Dockerfile", "r").read())
-            elif project_type == "postgres":
-                f.write(open("robyn/scaffold/postgres/Dockerfile", "r").read())
-            elif project_type == "mongo":
-                f.write(open("robyn/scaffold/mongo/Dockerfile", "r").read())
-            elif project_type == "sqlalchemy":
-                f.write(open("robyn/scaffold/sqlalchemy/Dockerfile", "r").read())
-            elif project_type == "prisma":
-                f.write(open("robyn/scaffold/prisma/Dockerfile", "r").read())
-            else:
-                f.write(open("robyn/scaffold/no-db/Dockerfile", "r").read())
-    elif docker == "N":
-        print("Docker not included")
-    else:
-        print("Unknown Command")
+    # If docker is not needed, delete the docker file
+    if docker == "N":
+        os.remove(f"{project_dir}/Dockerfile")
 
     print(f"New Robyn project created in '{project_dir}' ")
 
