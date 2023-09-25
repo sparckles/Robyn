@@ -1,0 +1,184 @@
+export const description =
+  'On this page, we’ll dive into the different conversation endpoints you can use to manage conversations programmatically.'
+
+
+As the codebase grew, Batman wanted to have a way to organise the code. Robyn told him that he had the super power to organise the code in a better way. He told him about the concept of views and subrouters.
+
+## Views
+
+
+
+<Row>
+<Col>
+To organise your code in a better way - either to group by responsibility or for code splitting, you can use views.
+
+A view, simply is a function with a collection of other closures. e.g.
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    def sample_view():
+      def get():
+          return "Hello, world!"
+
+      def post(request):
+          body = request.body
+          return {"status_code": 200, "description": body}
+
+    ```
+
+    ```python {{title: 'typed'}}
+      from robyn import Request
+
+      def sample_view():
+        def get():
+            return "Hello, world!"
+
+        def post(request: Request):
+            body = request.body
+            return {"status_code": 200, "description": body}
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+The above view contains two closures for the get and the post request.
+
+You can serve views in two ways:
+<Row>
+
+  <Col>
+  Using an `@app.view` decorator.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+      ```python {{ title: 'untyped' }}
+      @app.view("/sync/view/decorator")
+      def sync_decorator_view():
+       def get():
+           return "Hello, world!"
+
+       def post(request):
+           body = request.body
+           return {"status_code": 200, "description": body}
+
+      ```
+      ```python {{ title: 'typed' }}
+      from robyn import Request
+
+      @app.view("/sync/view/decorator")
+      def sync_decorator_view():
+       def get():
+           return "Hello, world!"
+
+       def post(request: Request):
+           body = request.body
+           return {"status_code": 200, "description": body}
+
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+<Row>
+  <Col>
+  Using an `@app.view` decorator.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+      ```python {{ title: 'untyped' }}
+        from .views import sample_view
+
+        ...
+        ...
+
+        app.add_view("/", sample_view)
+      ```
+      ```python {{ title: 'typed' }}
+        from .views import sample_view
+
+        ...
+        ...
+
+        app.add_view("/", sample_view)
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+
+---
+
+## Subrouters
+
+
+
+
+<Row>
+
+  <Col>
+
+Batman can create subrouters in Robyn. This is useful when you want to group routes together.
+
+Subrouters can be used for both normal routes and web sockets. They are basically a mini version of the main router and can be used in the same way.
+
+The only thing to remember is that you need to add the subrouter to the main router.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+      ```python {{ title: 'untyped' }}
+      from robyn import Robyn, SubRouter
+
+      app = Robyn(__file__)
+
+      sub_router = SubRouter("/sub_router")
+
+      @sub_router.get("/hello")
+      def hello():
+          return "Hello, world"
+
+      web_socket = SubRouter("/web_socket")
+
+      @web_socket.message()
+      async def hello():
+          return "Hello, world"
+
+      app.include_router(sub_router)
+      ```
+
+
+      ```python {{ title: 'typed' }}
+      from robyn import Robyn, SubRouter
+
+      app = Robyn(__file__)
+
+      sub_router = SubRouter("/sub_router")
+
+      @sub_router.get("/hello")
+      def hello():
+          return "Hello, world"
+
+      web_socket = SubRouter("/web_socket")
+
+      @web_socket.message()
+      async def hello():
+          return "Hello, world"
+
+      app.include_router(sub_router)
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+## What's next?
+
+Batman, being the familiar with the dark side wanted to know about Exceptions!
+
+Robyn introduced him to the concept of exceptions and how he can use them to handle errors in his application.
+
+- [Exceptions](/documentation/api_reference/exceptions)
+

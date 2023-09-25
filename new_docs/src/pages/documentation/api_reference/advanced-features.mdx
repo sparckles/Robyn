@@ -1,0 +1,45 @@
+export const description =
+  'On this page, we’ll dive into the different conversation endpoints you can use to manage conversations programmatically.'
+
+## Keep a track of client's IP address
+
+Now that the portal was up and ready, Batman realised that the Joker was using the Gotham Police Dashboard too. So, he wanted to keep a track of the IP address of the client who was accessing his application. He used the following code to do so:
+
+
+<Row>
+<Col>
+Batman scaled his application across multiple cores for better performance. He used the following command:
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}  
+    from robyn import Robyn
+
+    app = Robyn(__file__)
+
+    @app.get("/")
+    async def h(request):
+        return f"hello to you, {request.ip_addr}"
+
+    ```
+
+    </CodeGroup>
+  </Col>
+</Row>
+---
+
+
+## What's next?
+
+
+Batman was curious to know what else he could do with Robyn. 
+
+Robyn told him to keep an eye on the GraphQl support.
+
+[GraphQl Support](/documentation/api_reference/graphql_support)
+
+
+
+

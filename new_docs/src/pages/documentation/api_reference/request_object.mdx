@@ -1,0 +1,96 @@
+export const description =
+  'On this page, we’ll dive into the different conversation endpoints you can use to manage conversations programmatically.'
+
+
+## Request Object
+
+The request object is a dataclass that contains all the information about the request. It is available in the route handler as the first argument.
+
+
+
+<Row>
+<Col>
+The request object is created in Rust side but is exposed to Python as a dataclass.
+
+<ul>
+<li>
+Attributes:
+</li>
+<li>
+queries (dict[str, str]): The query parameters of the request. `e.g. /user?id=123 -> {"id": "123"}`
+</li>
+<li>
+headers (dict[str, str]): The headers of the request. `e.g. {"Content-Type": "application/json"}`
+</li>
+<li>
+params (dict[str, str]): The parameters of the request. `e.g. /user/:id -> {"id": "123"}`
+</li>
+<li>
+body (Union[str, bytes]): The body of the request. If the request is a JSON, it will be a dict.
+</li>
+<li>
+method (str): The method of the request. `e.g. GET, POST, PUT, DELETE`
+</li>
+<li>
+ip_addr (Optional[str]): The IP Address of the client
+</li>
+<li>
+identity (Optional[Identity]): The identity of the client
+</li>
+
+
+</ul>
+
+
+
+
+
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    @dataclass
+    class Request:
+      """
+      queries: dict[str, str]
+      headers: dict[str, str]
+      path_params: dict[str, str]
+      body: Union[str, bytes]
+      method: str
+      url: Url
+      ip_addr: Optional[str]
+      identity: Optional[Identity]
+      """
+    ```
+
+    ```python {{ title: 'typed' }}
+    @dataclass
+    class Request:
+      """
+      queries: dict[str, str]
+      headers: dict[str, str]
+      path_params: dict[str, str]
+      body: Union[str, bytes]
+      method: str
+      url: Url
+      ip_addr: Optional[str]
+      identity: Optional[Identity]
+      """
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+
+
+## What's next?
+
+Batman - Thanks, Robyn. Now tell me more.
+Robyn - Let us learn about the Middlewares and events now!
+
+- [Middlewares](/documentation/api_reference/middlewares)
+
+
