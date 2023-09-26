@@ -41,22 +41,7 @@ class Robyn:
         self.file_path = file_object
         self.directory_path = directory_path
         self.config = config
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
         self.dependencies = dependencies
-        self.dependencies = {"all":{'request':Request, 'response':Response}}
-        #self.dependencies = {"all": set()}#{"all":set()} #{function name: dependency object} changed "[] to {}"
-        #find way to avoid collision, like if example defined in sub_router and main
-=======
-        self.dependencies = {"all":{'request':Request, 'response':Response}}
->>>>>>> 8b5a160 (Fixed missing authentication methods, unnecessary comments, and modified code according to Sanskar's feedback)
-=======
-        self.dependencies = DependencyMap()
->>>>>>> b97011a (Created dependency mapping structure along with accessor methods)
-=======
-        self.dependencies = dependencies
->>>>>>> 97bd6e7 (refactor: change the code organisation)
         load_vars(project_root=directory_path)
         logging.basicConfig(level=self.config.log_level)
 
@@ -103,9 +88,6 @@ class Robyn:
         """
         if auth_required:
             self.middleware_router.add_auth_middleware(endpoint)(handler)
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
         if isinstance(route_type, str):
             http_methods = {
                 "GET": HttpMethod.GET,
@@ -137,56 +119,6 @@ class Robyn:
             return self.dependencies.get_route_dependencies(route)
         else:
             return self.dependencies.get_global_dependencies()
-=======
-        print("self get dict from init to router.py", self.dependencies.get_dict())
-=======
-        print("self get dict from init to router.py", self.dependencies.dependency_map)
->>>>>>> 97bd6e7 (refactor: change the code organisation)
-=======
-
->>>>>>> 2fce949 (moved logic of subrouter dependency merging to dependency_injection, added type hints for route in dependency_injection, added logic handler validation logic function to router.py)
-        return self.router.add_route(
-            route_type, endpoint, handler, is_const, self.dependencies.dependency_map,self.exception_handler
-        )
-
-    def inject(self, route=None, **kwargs: dict):
-        if route:
-            self.dependencies.add_route_dependency(route, **kwargs)
-        else:
-            self.dependencies.add_global_dependency(**kwargs)
-
-<<<<<<< HEAD
-    def get_injected_dependencies(self, route = None) -> dict:
-        if route in self.dependencies.get_dict():
-            return self.dependencies.get_dep(route)
-        return self.dependencies.get_dict() 
->>>>>>> b97011a (Created dependency mapping structure along with accessor methods)
-=======
-    def get_injected_dependencies(self, route=None) -> dict:
-        # How will we access these from sub routes?
-        # @Darren, @Ido ?? Any ideas?
-        # Should we add a method to get the dependencies somewhere else?
-        # or maybe make it a class method/variable?
-        if route:
-            return self.dependencies.get_route_dependencies(route)
-        else:
-            return self.dependencies.get_global_dependencies()
-
-    def inject(self, route=None, **kwargs):
-        if route:
-            self.dependencies.add_route_dependency(route, **kwargs)
-        else:
-            self.dependencies.add_global_dependency(**kwargs)
-
-    def get_injected_dependencies(self, route=None) -> dict:
-        # How will we access these from sub routes?
-        # @Darren, @Ido ?? Any ideas?
-        # Should we add a method to get the dependencies somewhere else?
-        # or maybe make it a class method/variable?
-        if route:
-            return self.dependencies.get_route_dependencies(route)
-        else:
-            return self.dependencies.get_dependencies()
 
     def before_request(self, endpoint: Optional[str] = None) -> Callable[..., None]:
         """
@@ -469,32 +401,8 @@ class Robyn:
             self.web_socket_router.routes[
                 new_endpoint
             ] = router.web_socket_router.routes[route]
-<<<<<<< HEAD
-<<<<<<< HEAD
-        for dep in self.dependencies["all"]: 
-            if dep in router.dependencies["all"]:
-                continue
-            router.dependencies["all"][dep] = self.dependencies["all"][dep]
 
         self.dependencies.merge_dependencies(router)
-=======
-            
-        for dep in self.dependencies.get_dep(): 
-            if dep in router.dependencies.get_dep():
-                continue
-            router.dependencies.get_dep()[dep] = self.dependencies.get_dep()[dep]
->>>>>>> b97011a (Created dependency mapping structure along with accessor methods)
-=======
-
-<<<<<<< HEAD
-        for dep in self.dependencies.get_dependencies():
-            if dep in router.dependencies.get_dependencies():
-                continue
-            router.dependencies.get_dependencies()[dep] = self.dependencies.get_dependencies()[dep]
->>>>>>> 97bd6e7 (refactor: change the code organisation)
-=======
-        self.dependencies.merge_dependencies(router)
->>>>>>> 2fce949 (moved logic of subrouter dependency merging to dependency_injection, added type hints for route in dependency_injection, added logic handler validation logic function to router.py)
 
     def configure_authentication(self, authentication_handler: AuthenticationHandler):
         """
