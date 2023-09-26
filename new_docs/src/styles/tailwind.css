@@ -1,0 +1,8 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import './prism.css';
+@import 'tailwindcss/utilities';
+
+@import './releases/base.css';
+@import './releases/components.css';
+@import './releases/utilities.css';

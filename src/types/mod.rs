@@ -80,10 +80,31 @@ pub fn get_body_from_pyobject(body: &PyAny) -> PyResult<Vec<u8>> {
     }
 }
 
+pub fn get_description_from_pyobject(description: &PyAny) -> PyResult<Vec<u8>> {
+    if let Ok(s) = description.downcast::<PyString>() {
+        Ok(s.to_string().into_bytes())
+    } else if let Ok(b) = description.downcast::<PyBytes>() {
+        Ok(b.as_bytes().to_vec())
+    } else {
+        Err(PyValueError::new_err(
+            "Could not convert specified description to bytes",
+        ))
+    }
+}
+
 pub fn check_body_type(py: Python, body: Py<PyAny>) -> PyResult<()> {
     if body.downcast::<PyString>(py).is_err() && body.downcast::<PyBytes>(py).is_err() {
         return Err(PyValueError::new_err(
             "Could not convert specified body to bytes",
+        ));
+    };
+    Ok(())
+}
+
+pub fn check_description_type(py: Python, body: Py<PyAny>) -> PyResult<()> {
+    if body.downcast::<PyString>(py).is_err() && body.downcast::<PyBytes>(py).is_err() {
+        return Err(PyValueError::new_err(
+            "Could not convert specified response description to bytes",
         ));
     };
     Ok(())
