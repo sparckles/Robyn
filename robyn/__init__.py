@@ -163,13 +163,10 @@ class Robyn:
 >>>>>>> b97011a (Created dependency mapping structure along with accessor methods)
 =======
     def get_injected_dependencies(self, route=None) -> dict:
-<<<<<<< HEAD
-        if route in self.dependencies.dependency_map:
-            return self.dependencies.dependency_map
-
-        return self.dependencies.dependency_map
->>>>>>> 97bd6e7 (refactor: change the code organisation)
-=======
+        # How will we access these from sub routes?
+        # @Darren, @Ido ?? Any ideas?
+        # Should we add a method to get the dependencies somewhere else?
+        # or maybe make it a class method/variable?
         if route:
             return self.dependencies.get_route_dependencies(route)
         else:
