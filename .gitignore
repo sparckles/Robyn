@@ -17,3 +17,40 @@ venv
 robyn.code-workspace
 hello_robyn.py
 robyn.env
+
+
+# new docs dependencies
+# dependencies
+new_docs/node_modules
+new_docs/.pnp
+new_docs/.pnp.js
+
+# testing
+new_docs/coverage
+
+# next.js
+new_docs/.next/
+new_docs/out/
+
+# production
+new_docs/build
+
+# misc
+new_docs/.DS_Store
+new_docs/*.pem
+
+# debug
+new_docs/npm-debug.log*
+new_docs/yarn-debug.log*
+new_docs/yarn-error.log*
+new_docs/.pnpm-debug.log*
+
+# local env files
+new_docs/.env*.local
+
+# vercel
+new_docs/.vercel
+
+# generated files
+new_docs/public/rss/
+
