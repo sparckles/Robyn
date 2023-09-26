@@ -170,8 +170,7 @@ class Robyn:
         if route:
             return self.dependencies.get_route_dependencies(route)
         else:
-            return self.dependencies.get_dependencies()
->>>>>>> 2fce949 (moved logic of subrouter dependency merging to dependency_injection, added type hints for route in dependency_injection, added logic handler validation logic function to router.py)
+            return self.dependencies.get_global_dependencies()
 
     def inject(self, route=None, **kwargs):
         if route:

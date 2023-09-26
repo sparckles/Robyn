@@ -65,10 +65,10 @@ class DependencyMap:
         This method iterates through the dependencies of this DependencyMap and adds any dependencies
         that are not already present in the target router's DependencyMap. 
         """
-        for dep_key in self.get_dependencies():
-            if dep_key in target_router.dependencies.get_dependencies():
+        for dep_key in self.get_global_dependencies():
+            if dep_key in target_router.dependencies.get_global_dependencies():
                 continue
-            target_router.dependencies.get_dependencies()[dep_key] = self.get_dependencies()[dep_key] 
+            target_router.dependencies.get_global_dependencies()[dep_key] = self.get_global_dependencies()[dep_key] 
     @property
     def dependency_map(self):
         return self._dependency_map
