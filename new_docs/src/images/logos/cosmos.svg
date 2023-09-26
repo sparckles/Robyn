@@ -1,0 +1,25 @@
+<svg width="32" height="32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g clip-path="url(#a)">
+    <rect width="32" height="32" rx="16" fill="#001120"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M10 13a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1h-2Zm-3 1a3 3 0 0 1 3-3h2a3 3 0 0 1 3 3v4a3 3 0 0 1-3 3h-2a3 3 0 0 1-3-3v-4Zm10-.257A2.743 2.743 0 0 1 19.743 11H22a3 3 0 0 1 3 3 1 1 0 1 1-2 0 1 1 0 0 0-1-1h-2.257a.743.743 0 0 0-.235 1.449l3.616 1.205A2.743 2.743 0 0 1 22.257 21H20a3 3 0 0 1-3-3 1 1 0 1 1 2 0 1 1 0 0 0 1 1h2.257a.743.743 0 0 0 .235-1.449l-3.616-1.205A2.743 2.743 0 0 1 17 13.743Z" fill="url(#b)"/>
+    <path fill="#fff" fill-opacity=".1" d="M0 23h32v1H0z"/>
+    <path fill="#fff" fill-opacity=".1" d="M5 0v32H4V0z"/>
+    <path fill="#fff" fill-opacity=".1" d="M0 8h32v1H0z"/>
+    <path fill="url(#c)" d="M0 23h32v1H0z"/>
+    <path fill="#fff" fill-opacity=".1" d="M28 0v32h-1V0z"/>
+  </g>
+  <defs>
+    <linearGradient id="b" x1="11" y1="12" x2="11" y2="20" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff"/>
+      <stop offset="1" stop-color="#E3E8ED"/>
+    </linearGradient>
+    <linearGradient id="c" x1="1.5" y1="23.5" x2="30.5" y2="23.5" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff" stop-opacity="0"/>
+      <stop offset=".486" stop-color="#fff"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="a">
+      <rect width="32" height="32" rx="16" fill="#fff"/>
+    </clipPath>
+  </defs>
+</svg>

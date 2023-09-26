@@ -1,0 +1,48 @@
+export const description =
+  'On this page, we’ll dive into the different conversation endpoints you can use to manage conversations programmatically.'
+
+
+## CORS
+
+Batman was annoyed on getting a CORS error whenever he tried to access the API.
+
+
+## Scaling the Application
+
+<Row>
+<Col>
+You can allow CORS for your application by adding the following code:
+</Col>
+  <Col>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+      from robyn import Robyn, ALLOW_CORS
+
+      app = Robyn(__file__)
+      ALLOW_CORS(app)
+    ```
+
+    ```python {{ title: 'typed' }}
+      from robyn import Robyn, ALLOW_CORS
+
+      app = Robyn(__file__)
+      ALLOW_CORS(app)
+    ```
+
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+
+
+## What's next?
+
+After fixing the CORS issues. Batman was satisfied but he wanted to learn about ways to have small frontend pages in the server itself.
+
+Robyn told him about templates and how he can use them to render HTML pages.
+
+- [Templating](/documentation/api_reference/templating)
+

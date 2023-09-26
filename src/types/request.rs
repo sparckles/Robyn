@@ -13,6 +13,7 @@ pub struct Request {
     pub headers: HashMap<String, String>,
     pub method: String,
     pub path_params: HashMap<String, String>,
+    // https://pyo3.rs/v0.19.2/function.html?highlight=from_py_#per-argument-options
     #[pyo3(from_py_with = "get_body_from_pyobject")]
     pub body: Vec<u8>,
     pub url: Url,
