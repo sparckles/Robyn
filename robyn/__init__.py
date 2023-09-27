@@ -99,6 +99,8 @@ class Robyn:
             }
             route_type = http_methods[route_type]
 
+        logger.info(f"Logging endpoint: method={route_type}, route={endpoint}")
+
         return self.router.add_route(
             route_type, endpoint, handler, is_const, self.exception_handler
         )
