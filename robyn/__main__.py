@@ -3,6 +3,7 @@ import webbrowser
 from InquirerPy import prompt
 from InquirerPy.base.control import Choice
 from .argument_parser import Config
+from robyn.robyn import get_version
 
 
 def create_robyn_app():
@@ -81,11 +82,13 @@ def docs():
     webbrowser.open("https://sparckles.github.io/robyn/#/")
 
 
-
 if __name__ == "__main__":
     config = Config()
     if config.create:
         create_robyn_app()
+
+    if config.version:
+        print(get_version())
 
     if config.docs:
         docs()
