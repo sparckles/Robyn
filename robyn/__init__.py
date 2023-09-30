@@ -22,7 +22,8 @@ from robyn.robyn import (
     Response,
     get_version,
     jsonify,
-    GlobalRegistry
+    send_message_to_ws_client,
+    send_message_to_all_ws_clients,
 )
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory, Header
@@ -456,4 +457,8 @@ __all__ = [
     "serve_file",
     "serve_html",
     "ALLOW_CORS",
+    "SubRouter",
+    "AuthenticationHandler",
+    "send_message_to_ws_client",
+    "send_message_to_all_ws_clients",
 ]

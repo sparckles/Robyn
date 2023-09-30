@@ -4,7 +4,7 @@ mod routers;
 mod server;
 mod shared_socket;
 mod types;
-mod web_socket_connection;
+mod websockets;
 
 use server::Server;
 use shared_socket::SocketHeld;
@@ -22,7 +22,7 @@ use types::{
     HttpMethod,
 };
 
-use web_socket_connection::GlobalRegistry;
+use websockets::{send_message_to_all_ws, send_message_to_ws_client};
 
 #[pyfunction]
 fn get_version() -> String {
@@ -52,6 +52,9 @@ pub fn robyn(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     // the pymodule class/function to make the rustPyFunctions available
     m.add_function(wrap_pyfunction!(get_version, m)?)?;
     m.add_function(wrap_pyfunction!(jsonify, m)?)?;
+    m.add_function(wrap_pyfunction!(send_message_to_all_ws, m)?)?;
+    m.add_function(wrap_pyfunction!(send_message_to_ws_client, m)?)?;
+
     m.add_class::<Server>()?;
     m.add_class::<SocketHeld>()?;
     m.add_class::<FunctionInfo>()?;
@@ -60,7 +63,7 @@ pub fn robyn(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<PyResponse>()?;
     m.add_class::<MiddlewareType>()?;
     m.add_class::<HttpMethod>()?;
-    m.add_class::<GlobalRegistry>()?;
+
     pyo3::prepare_freethreaded_python();
     Ok(())
 }
