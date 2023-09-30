@@ -52,8 +52,9 @@ async def jsonws_message(websocket_id: str, msg: str) -> str:
 
 
 @websocket.on("message")
-async def message(websocket_id: str, msg: str, ws) -> str:
+async def message(ws, msg: str) -> str:
     global websocket_state
+    websocket_id = ws.id
     state = websocket_state[websocket_id]
     resp = ""
     if state == 0:

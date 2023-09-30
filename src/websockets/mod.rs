@@ -114,7 +114,7 @@ impl MyWs {
     }
 
     pub fn broadcast(&self, message: String) {
-        // this should spawn a new thread?
+        // TODO: this should spawn a new thread?
         let sys = System::new();
 
         sys.block_on(async {
@@ -127,6 +127,11 @@ impl MyWs {
                 Err(e) => println!("Failed to send message: {}", e),
             }
         });
+    }
+
+    #[getter]
+    pub fn get_id(&self) -> String {
+        self.id.to_string()
     }
 }
 

@@ -18,12 +18,9 @@ fn get_function_output<'a>(
     // this makes the request object accessible across every route
     match function.number_of_params {
         0 => handler.call0(),
-        1 => handler.call1((ws.id.to_string(),)),
+        1 => handler.call1((ws.clone(),)),
         // this is done to accommodate any future params
-        2 => handler.call1((ws.id.to_string(), fn_msg.unwrap_or_default())),
-        3_u8..=u8::MAX => {
-            handler.call1((ws.id.to_string(), fn_msg.unwrap_or_default(), ws.clone()))
-        }
+        2_u8..=u8::MAX => handler.call1((ws.clone(), fn_msg.unwrap_or_default())),
     }
 }
 
