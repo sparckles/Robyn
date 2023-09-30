@@ -162,7 +162,7 @@ def send_message_to_ws_client(client_id: str, message: str) -> None:
     """
     pass
 
-def send_message_to_all_ws_clients(message: str) -> None:
+def send_message_to_all_ws(message: str) -> None:
     """
     This function sends a message to all websocket clients
 

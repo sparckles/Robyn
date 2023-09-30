@@ -22,7 +22,7 @@ use types::{
     HttpMethod,
 };
 
-use websockets::{send_message_to_all_ws, send_message_to_ws_client};
+pub use websockets::{send_message_to_all_ws, send_message_to_ws_client};
 
 #[pyfunction]
 fn get_version() -> String {

@@ -5,8 +5,7 @@ use pyo3::prelude::*;
 use pyo3_asyncio::TaskLocals;
 
 use crate::types::function_info::FunctionInfo;
-
-use crate::web_socket_connection::MyWs;
+use crate::websockets::MyWs;
 
 fn get_function_output<'a>(
     function: &'a FunctionInfo,
