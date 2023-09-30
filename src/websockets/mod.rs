@@ -55,7 +55,7 @@ impl Handler<SendText> for MyWs {
     type Result = ();
 
     fn handle(&mut self, msg: SendText, ctx: &mut Self::Context) {
-        if Some(self.id) == msg.recipient_id {
+        if self.id == msg.recipient_id {
             ctx.text(msg.message);
         }
     }
@@ -106,7 +106,7 @@ impl MyWs {
         match (self.registry_addr).try_send(SendText {
             message: message.to_string(),
             sender_id: self.id,
-            recipient_id: Some(recipient_id),
+            recipient_id,
         }) {
             Ok(_) => println!("Message sent successfully"),
             Err(e) => println!("Failed to send message: {}", e),

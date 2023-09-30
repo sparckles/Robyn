@@ -2,7 +2,6 @@ use crate::executors::{execute_event_handler, execute_http_function, execute_mid
 
 use crate::routers::const_router::ConstRouter;
 use crate::routers::Router;
-use actix::System;
 
 use crate::routers::http_router::HttpRouter;
 use crate::routers::{middleware_router::MiddlewareRouter, web_socket_router::WebSocketRouter};
@@ -17,7 +16,7 @@ use crate::websockets::start_web_socket;
 use std::convert::TryInto;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::{Relaxed, SeqCst};
-use std::sync::{Arc, Barrier, RwLock};
+use std::sync::{Arc, RwLock};
 
 use std::process::abort;
 use std::{env, thread};

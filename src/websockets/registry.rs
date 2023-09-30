@@ -43,7 +43,7 @@ impl Handler<Register> for WebSocketRegistry {
 
 // New message for sending text to a specific client
 pub struct SendText {
-    pub recipient_id: Option<Uuid>,
+    pub recipient_id: Uuid,
     pub message: String,
     pub sender_id: Uuid,
 }
@@ -68,7 +68,7 @@ impl Handler<SendText> for WebSocketRegistry {
     type Result = ();
 
     fn handle(&mut self, msg: SendText, _ctx: &mut Self::Context) {
-        let recipient_id = msg.recipient_id.unwrap();
+        let recipient_id = msg.recipient_id;
 
         if let Some(client_addr) = self.clients.get(&recipient_id) {
             client_addr.do_send(msg);
@@ -89,10 +89,9 @@ impl Handler<SendMessageToAll> for WebSocketRegistry {
     type Result = ();
 
     fn handle(&mut self, msg: SendMessageToAll, _ctx: &mut Self::Context) {
-        dbg!("Sending message to client {}", self.clients.len());
         for (id, client) in &self.clients {
             client.do_send(SendText {
-                recipient_id: None,
+                recipient_id: *id,
                 message: msg.message.clone(),
                 sender_id: msg.sender_id.clone(),
             });
