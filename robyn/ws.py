@@ -4,7 +4,7 @@ import asyncio
 from inspect import signature
 from typing import TYPE_CHECKING, Callable
 
-from robyn.robyn import FunctionInfo
+from robyn.robyn import FunctionInfo, send_message_to_all_ws, send_message_to_ws_client
 
 if TYPE_CHECKING:
     from robyn import Robyn
@@ -35,3 +35,9 @@ class WS:
 
     def _is_async(self, handler):
         return asyncio.iscoroutinefunction(handler)
+
+    def broadcast(self, message: str) -> None:
+        send_message_to_all_ws(message)
+
+    def send_to(self, websocket_id: str, message: str) -> None:
+        send_message_to_ws_client(websocket_id, message)

@@ -123,23 +123,6 @@ impl Server {
                 ))
             })?;
 
-        // we need to start actix system too
-        // let barrier = Arc::new(Barrier::new(2));
-
-        // Start the Actix system in a new thread
-        // let system_barrier = barrier.clone();
-        // thread::spawn(move || {
-        //     let system = System::new();
-        //     // Wait for the main thread to be ready
-        //     system_barrier.wait();
-        //     // Start the Actix system (this will block the thread)
-        //     let _ = system.run();
-        // });
-
-        // Let's wait to ensure the Actix system is up and running
-        // barrier.wait();
-        // debug!("Actix system is up and running");
-
         thread::spawn(move || {
             actix_web::rt::System::new().block_on(async move {
                 debug!("The number of workers is {}", workers.clone());

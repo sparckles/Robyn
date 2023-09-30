@@ -12,8 +12,6 @@ from robyn import (
     jsonify,
     serve_file,
     serve_html,
-    send_message_to_all_ws,
-    send_message_to_ws_client,
 )
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.templating import JinjaTemplate
@@ -65,8 +63,8 @@ async def message(websocket_id: str, msg: str) -> str:
     elif state == 2:
         resp = "*chika* *chika* Slim Shady."
     websocket_state[websocket_id] = (state + 1) % 3
-    send_message_to_all_ws("Hello from some websocket")
-    send_message_to_ws_client(websocket_id, "Hello from some websocket")
+    websocket.broadcast("Hello from some websocket")
+    websocket.send_to(websocket_id, "Hello from some websocket")
     return resp
 
 
