@@ -22,6 +22,7 @@ from robyn.robyn import (
     Response,
     get_version,
     jsonify,
+    WSConnector
 )
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory, Header
@@ -457,4 +458,5 @@ __all__ = [
     "ALLOW_CORS",
     "SubRouter",
     "AuthenticationHandler",
+    "WSConnector",
 ]

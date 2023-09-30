@@ -12,6 +12,7 @@ from robyn import (
     jsonify,
     serve_file,
     serve_html,
+    WSConnector,
 )
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.templating import JinjaTemplate
@@ -37,7 +38,8 @@ websocket_state = defaultdict(int)
 
 
 @websocket_json.on("message")
-async def jsonws_message(websocket_id: str, msg: str) -> str:
+async def jsonws_message(ws, msg: str) -> str:
+    websocket_id = ws.id
     response: dict = {"ws_id": websocket_id, "resp": "", "msg": msg}
     global websocket_state
     state = websocket_state[websocket_id]
@@ -52,7 +54,7 @@ async def jsonws_message(websocket_id: str, msg: str) -> str:
 
 
 @websocket.on("message")
-async def message(ws, msg: str) -> str:
+async def message(ws: WSConnector, msg: str) -> str:
     global websocket_state
     websocket_id = ws.id
     state = websocket_state[websocket_id]
