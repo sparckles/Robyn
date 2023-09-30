@@ -2,6 +2,7 @@ use crate::executors::{execute_event_handler, execute_http_function, execute_mid
 
 use crate::routers::const_router::ConstRouter;
 use crate::routers::Router;
+use actix::System;
 
 use crate::routers::http_router::HttpRouter;
 use crate::routers::{middleware_router::MiddlewareRouter, web_socket_router::WebSocketRouter};
@@ -16,7 +17,7 @@ use crate::web_socket_connection::start_web_socket;
 use std::convert::TryInto;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::{Relaxed, SeqCst};
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, Barrier, RwLock};
 
 use std::process::abort;
 use std::{env, thread};
@@ -121,6 +122,23 @@ impl Server {
                     "Failed to parse environment variable {MAX_PAYLOAD_SIZE} - {e}"
                 ))
             })?;
+
+        // we need to start actix system too
+        let barrier = Arc::new(Barrier::new(2));
+
+        // Start the Actix system in a new thread
+        let system_barrier = barrier.clone();
+        thread::spawn(move || {
+            let system = System::new();
+            // Wait for the main thread to be ready
+            system_barrier.wait();
+            // Start the Actix system (this will block the thread)
+            system.run();
+        });
+
+        // Let's wait to ensure the Actix system is up and running
+        barrier.wait();
+        debug!("Actix system is up and running");
 
         thread::spawn(move || {
             actix_web::rt::System::new().block_on(async move {

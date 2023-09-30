@@ -19,6 +19,8 @@ from robyn.templating import JinjaTemplate
 from integration_tests.views import SyncView, AsyncView
 from integration_tests.subroutes import sub_router
 
+from robyn import GlobalRegistry
+
 app = Robyn(__file__)
 websocket = WS(app, "/web_socket")
 
@@ -62,6 +64,9 @@ async def message(websocket_id: str, msg: str) -> str:
     elif state == 2:
         resp = "*chika* *chika* Slim Shady."
     websocket_state[websocket_id] = (state + 1) % 3
+    print(f"Received message: dir(GlobalRegistry): {dir(GlobalRegistry)}")
+    GlobalRegistry.trigger_send_message_to_all("Hello, tmk")
+    GlobalRegistry.send_message_to_client(websocket_id, "Hello, tmk")
     return resp
 
 

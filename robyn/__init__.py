@@ -22,6 +22,7 @@ from robyn.robyn import (
     Response,
     get_version,
     jsonify,
+    GlobalRegistry
 )
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory, Header

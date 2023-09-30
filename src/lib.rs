@@ -22,6 +22,8 @@ use types::{
     HttpMethod,
 };
 
+use web_socket_connection::GlobalRegistry;
+
 #[pyfunction]
 fn get_version() -> String {
     env!("CARGO_PKG_VERSION").into()
@@ -58,6 +60,7 @@ pub fn robyn(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<PyResponse>()?;
     m.add_class::<MiddlewareType>()?;
     m.add_class::<HttpMethod>()?;
+    m.add_class::<GlobalRegistry>()?;
     pyo3::prepare_freethreaded_python();
     Ok(())
 }
