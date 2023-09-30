@@ -20,7 +20,10 @@ fn get_function_output<'a>(
         0 => handler.call0(),
         1 => handler.call1((ws.id.to_string(),)),
         // this is done to accommodate any future params
-        2_u8..=u8::MAX => handler.call1((ws.id.to_string(), fn_msg.unwrap_or_default())),
+        2 => handler.call1((ws.id.to_string(), fn_msg.unwrap_or_default())),
+        3_u8..=u8::MAX => {
+            handler.call1((ws.id.to_string(), fn_msg.unwrap_or_default(), ws.clone()))
+        }
     }
 }
 

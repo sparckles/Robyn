@@ -22,7 +22,7 @@ use types::{
     HttpMethod,
 };
 
-use websockets::{send_message_to_all_ws, send_message_to_ws_client};
+use websockets::{registry::WebSocketRegistry, send_message_to_all_ws, send_message_to_ws_client};
 
 #[pyfunction]
 fn get_version() -> String {
@@ -56,6 +56,7 @@ pub fn robyn(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(send_message_to_ws_client, m)?)?;
 
     m.add_class::<Server>()?;
+    m.add_class::<WebSocketRegistry>()?;
     m.add_class::<SocketHeld>()?;
     m.add_class::<FunctionInfo>()?;
     m.add_class::<Identity>()?;

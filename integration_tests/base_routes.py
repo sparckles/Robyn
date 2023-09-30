@@ -52,7 +52,7 @@ async def jsonws_message(websocket_id: str, msg: str) -> str:
 
 
 @websocket.on("message")
-async def message(websocket_id: str, msg: str) -> str:
+async def message(websocket_id: str, msg: str, ws) -> str:
     global websocket_state
     state = websocket_state[websocket_id]
     resp = ""
@@ -62,10 +62,11 @@ async def message(websocket_id: str, msg: str) -> str:
         resp = "Whooo??"
     elif state == 2:
         resp = "*chika* *chika* Slim Shady."
+    print(dir(ws))
     websocket_state[websocket_id] = (state + 1) % 3
-    websocket.broadcast("Hello from some websocket")
+
     websocket.send_to(websocket_id, "Hello from some websocket")
-    return resp
+    return msg
 
 
 @websocket.on("close")

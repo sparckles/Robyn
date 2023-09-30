@@ -35,6 +35,8 @@ impl Handler<Register> for WebSocketRegistry {
     type Result = ();
 
     fn handle(&mut self, msg: Register, _ctx: &mut Self::Context) {
+        dbg!("Registering client {}", msg.id);
+        dbg!("Clients: {:?}", &self.clients);
         self.clients.insert(msg.id, msg.addr);
     }
 }
@@ -58,6 +60,16 @@ impl WebSocketRegistry {
             });
         }
     }
+
+    pub fn new() -> Self {
+        Self {
+            clients: HashMap::new(),
+        }
+    }
+
+    pub fn start() -> Addr<Self> {
+        Self::from_registry()
+    }
 }
 
 impl Handler<SendText> for WebSocketRegistry {
@@ -70,7 +82,7 @@ impl Handler<SendText> for WebSocketRegistry {
     }
 }
 
-struct SendMessageToAll(String);
+pub struct SendMessageToAll(pub String);
 
 impl Message for SendMessageToAll {
     type Result = ();
@@ -80,6 +92,7 @@ impl Handler<SendMessageToAll> for WebSocketRegistry {
     type Result = ();
 
     fn handle(&mut self, msg: SendMessageToAll, _ctx: &mut Self::Context) {
+        dbg!("Sending message to client {}", self.clients.len());
         for (id, client) in &self.clients {
             client.do_send(SendText {
                 id: *id,
@@ -103,9 +116,14 @@ pub fn send_message_to_ws_client(client_id_str: &str, message: &str) -> PyResult
 #[pyfunction]
 pub fn send_message_to_all_ws(message: &str) -> PyResult<()> {
     let sys = System::new();
+    dbg!("Sending message to all clients");
 
     sys.block_on(async {
-        WebSocketRegistry::from_registry().do_send(SendMessageToAll(message.to_string()));
+        let registry = WebSocketRegistry::from_registry();
+        match (&registry).try_send(SendMessageToAll(message.to_string())) {
+            Ok(_) => println!("Message sent successfully"),
+            Err(e) => println!("Failed to send message: {}", e),
+        }
     });
 
     Ok(())
