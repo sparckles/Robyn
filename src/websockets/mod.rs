@@ -13,7 +13,6 @@ use pyo3::prelude::*;
 use pyo3_asyncio::TaskLocals;
 use uuid::Uuid;
 
-pub use registry::{send_message_to_all_ws, send_message_to_ws_client};
 use registry::{Register, WebSocketRegistry};
 use std::collections::HashMap;
 
@@ -56,7 +55,7 @@ impl Handler<SendText> for MyWs {
     type Result = ();
 
     fn handle(&mut self, msg: SendText, ctx: &mut Self::Context) {
-        if self.id == msg.id {
+        if Some(self.id) == msg.recipient_id {
             ctx.text(msg.message);
         }
     }
@@ -101,21 +100,29 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
 
 #[pymethods]
 impl MyWs {
-    pub fn send_message(&self, recipient_id: String, message: String) {
+    pub fn send_to(&self, recipient_id: String, message: String) {
         let recipient_id = Uuid::parse_str(&recipient_id).unwrap();
-        self.registry_addr.do_send(SendText {
-            id: recipient_id,
-            message,
-        })
+
+        match (self.registry_addr).try_send(SendText {
+            message: message.to_string(),
+            sender_id: self.id,
+            recipient_id: Some(recipient_id),
+        }) {
+            Ok(_) => println!("Message sent successfully"),
+            Err(e) => println!("Failed to send message: {}", e),
+        }
     }
 
-    pub fn broadcast_message(&self, message: String) {
+    pub fn broadcast(&self, message: String) {
+        // this should spawn a new thread?
         let sys = System::new();
-        dbg!("Sending message to all clients");
 
         sys.block_on(async {
             let registry = self.registry_addr.clone();
-            match (&registry).try_send(SendMessageToAll(message.to_string())) {
+            match (&registry).try_send(SendMessageToAll {
+                message: message.to_string(),
+                sender_id: self.id,
+            }) {
                 Ok(_) => println!("Message sent successfully"),
                 Err(e) => println!("Failed to send message: {}", e),
             }

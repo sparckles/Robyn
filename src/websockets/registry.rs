@@ -43,8 +43,9 @@ impl Handler<Register> for WebSocketRegistry {
 
 // New message for sending text to a specific client
 pub struct SendText {
-    pub id: Uuid,
+    pub recipient_id: Option<Uuid>,
     pub message: String,
+    pub sender_id: Uuid,
 }
 
 impl Message for SendText {
@@ -52,15 +53,6 @@ impl Message for SendText {
 }
 
 impl WebSocketRegistry {
-    pub fn send_message_to_client_(&self, client_id: Uuid, message: String) {
-        if let Some(client_addr) = self.clients.get(&client_id) {
-            client_addr.do_send(SendText {
-                id: client_id,
-                message,
-            });
-        }
-    }
-
     pub fn new() -> Self {
         Self {
             clients: HashMap::new(),
@@ -76,13 +68,18 @@ impl Handler<SendText> for WebSocketRegistry {
     type Result = ();
 
     fn handle(&mut self, msg: SendText, _ctx: &mut Self::Context) {
-        if let Some(client_addr) = self.clients.get(&msg.id) {
+        let recipient_id = msg.recipient_id.unwrap();
+
+        if let Some(client_addr) = self.clients.get(&recipient_id) {
             client_addr.do_send(msg);
         }
     }
 }
 
-pub struct SendMessageToAll(pub String);
+pub struct SendMessageToAll {
+    pub message: String,
+    pub sender_id: Uuid,
+}
 
 impl Message for SendMessageToAll {
     type Result = ();
@@ -95,36 +92,10 @@ impl Handler<SendMessageToAll> for WebSocketRegistry {
         dbg!("Sending message to client {}", self.clients.len());
         for (id, client) in &self.clients {
             client.do_send(SendText {
-                id: *id,
-                message: msg.0.clone(),
+                recipient_id: None,
+                message: msg.message.clone(),
+                sender_id: msg.sender_id.clone(),
             });
         }
     }
-}
-
-#[pyfunction]
-pub fn send_message_to_ws_client(client_id_str: &str, message: &str) -> PyResult<()> {
-    let client_id = Uuid::parse_str(client_id_str)
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("{}", e)))?;
-    WebSocketRegistry::from_registry().do_send(SendText {
-        id: client_id,
-        message: message.to_string(),
-    });
-    Ok(())
-}
-
-#[pyfunction]
-pub fn send_message_to_all_ws(message: &str) -> PyResult<()> {
-    let sys = System::new();
-    dbg!("Sending message to all clients");
-
-    sys.block_on(async {
-        let registry = WebSocketRegistry::from_registry();
-        match (&registry).try_send(SendMessageToAll(message.to_string())) {
-            Ok(_) => println!("Message sent successfully"),
-            Err(e) => println!("Failed to send message: {}", e),
-        }
-    });
-
-    Ok(())
 }

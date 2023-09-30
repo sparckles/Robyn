@@ -152,21 +152,3 @@ class Server:
     def start(self, socket: SocketHeld, workers: int) -> None:
         pass
 
-def send_message_to_ws_client(client_id: str, message: str) -> None:
-    """
-    This function sends a message to a websocket client
-
-    Attributes:
-        client_id str: The client id of the websocket client
-        message str: The message to send to the websocket client
-    """
-    pass
-
-def send_message_to_all_ws(message: str) -> None:
-    """
-    This function sends a message to all websocket clients
-
-    Attributes:
-        message str: The message to send to the websocket clients
-    """
-    pass

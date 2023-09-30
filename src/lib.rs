@@ -22,7 +22,7 @@ use types::{
     HttpMethod,
 };
 
-use websockets::{registry::WebSocketRegistry, send_message_to_all_ws, send_message_to_ws_client};
+use websockets::registry::WebSocketRegistry;
 
 #[pyfunction]
 fn get_version() -> String {
@@ -52,8 +52,6 @@ pub fn robyn(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     // the pymodule class/function to make the rustPyFunctions available
     m.add_function(wrap_pyfunction!(get_version, m)?)?;
     m.add_function(wrap_pyfunction!(jsonify, m)?)?;
-    m.add_function(wrap_pyfunction!(send_message_to_all_ws, m)?)?;
-    m.add_function(wrap_pyfunction!(send_message_to_ws_client, m)?)?;
 
     m.add_class::<Server>()?;
     m.add_class::<WebSocketRegistry>()?;
