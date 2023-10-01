@@ -22,7 +22,7 @@ use types::{
     HttpMethod,
 };
 
-use websockets::registry::WebSocketRegistry;
+use websockets::{registry::WSRegistry, WSConnector};
 
 #[pyfunction]
 fn get_version() -> String {
@@ -54,7 +54,8 @@ pub fn robyn(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(jsonify, m)?)?;
 
     m.add_class::<Server>()?;
-    m.add_class::<WebSocketRegistry>()?;
+    m.add_class::<WSRegistry>()?;
+    m.add_class::<WSConnector>()?;
     m.add_class::<SocketHeld>()?;
     m.add_class::<FunctionInfo>()?;
     m.add_class::<Identity>()?;

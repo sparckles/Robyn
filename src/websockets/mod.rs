@@ -13,21 +13,21 @@ use pyo3::prelude::*;
 use pyo3_asyncio::TaskLocals;
 use uuid::Uuid;
 
-use registry::{Register, WebSocketRegistry};
+use registry::{Register, WSRegistry};
 use std::collections::HashMap;
 
 /// Define HTTP actor
 #[derive(Clone)]
 #[pyclass]
-pub struct MyWs {
+pub struct WSConnector {
     pub id: Uuid,
     pub router: HashMap<String, FunctionInfo>,
     pub task_locals: TaskLocals,
-    pub registry_addr: Addr<WebSocketRegistry>,
+    pub registry_addr: Addr<WSRegistry>,
 }
 
 // By default mailbox capacity is 16 messages.
-impl Actor for MyWs {
+impl Actor for WSConnector {
     type Context = ws::WebsocketContext<Self>;
 
     fn started(&mut self, ctx: &mut Self::Context) {
@@ -51,7 +51,7 @@ impl Actor for MyWs {
     }
 }
 
-impl Handler<SendText> for MyWs {
+impl Handler<SendText> for WSConnector {
     type Result = ();
 
     fn handle(&mut self, msg: SendText, ctx: &mut Self::Context) {
@@ -62,7 +62,7 @@ impl Handler<SendText> for MyWs {
 }
 
 /// Handler for ws::Message message
-impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
+impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WSConnector {
     fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
         match msg {
             Ok(ws::Message::Ping(msg)) => {
@@ -99,7 +99,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
 }
 
 #[pymethods]
-impl MyWs {
+impl WSConnector {
     pub fn send_to(&self, recipient_id: String, message: String) {
         let recipient_id = Uuid::parse_str(&recipient_id).unwrap();
 
@@ -141,14 +141,14 @@ pub async fn start_web_socket(
     router: HashMap<String, FunctionInfo>,
     task_locals: TaskLocals,
 ) -> Result<HttpResponse, Error> {
-    let registry_addr = WebSocketRegistry::new().start();
+    let registry_addr = WSRegistry::new().start();
 
     let result = ws::start(
-        MyWs {
+        WSConnector {
             router,
             task_locals,
             id: Uuid::new_v4(),
-            registry_addr, // Assuming you add this field to the MyWs struct
+            registry_addr, // Assuming you add this field to the WSConnector struct
         },
         &req,
         stream,

@@ -61,15 +61,15 @@ async def message(ws: WSConnector, msg: str) -> str:
     resp = ""
     if state == 0:
         resp = "Whaaat??"
+        ws.broadcast("This is a broadcast message")
+        ws.send_to(websocket_id, "This is a message to self")
     elif state == 1:
         resp = "Whooo??"
     elif state == 2:
         resp = "*chika* *chika* Slim Shady."
     websocket_state[websocket_id] = (state + 1) % 3
 
-    ws.broadcast("Hello from some websocket")
-    ws.send_to(websocket_id, "Hello from some websocket")
-    return msg
+    return resp
 
 
 @websocket.on("close")
