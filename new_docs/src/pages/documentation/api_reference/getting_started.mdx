@@ -36,7 +36,7 @@ For a simple synchronous request, Batman wrote:
     def h(request: Request):
         return "Hello, world"
 
-    app.start()
+    app.start(port=8080, host="0.0.0.0")
 
 
 
