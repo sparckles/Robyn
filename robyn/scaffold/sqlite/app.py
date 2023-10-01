@@ -18,4 +18,4 @@ def index():
 
 
 if __name__ == "__main__":
-    app.start()
+    app.start(url="0.0.0.0", port=8080)
