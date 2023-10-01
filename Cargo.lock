@@ -1196,6 +1196,7 @@ dependencies = [
  "futures-util",
  "log",
  "matchit",
+ "once_cell",
  "pyo3",
  "pyo3-asyncio",
  "pyo3-log",

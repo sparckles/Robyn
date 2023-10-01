@@ -11,6 +11,7 @@ use actix_web_actors::ws;
 use log::debug;
 use pyo3::prelude::*;
 use pyo3_asyncio::TaskLocals;
+use std::sync::RwLock;
 use uuid::Uuid;
 
 use registry::{Register, WSRegistry};
@@ -135,13 +136,38 @@ impl WSConnector {
     }
 }
 
+use once_cell::sync::OnceCell;
+
+static REGISTRY_ADDRESSES: OnceCell<RwLock<HashMap<String, Addr<WSRegistry>>>> = OnceCell::new();
+
+fn get_or_init_registry_for_endpoint(endpoint: String) -> Addr<WSRegistry> {
+    let map_lock = REGISTRY_ADDRESSES.get_or_init(|| RwLock::new(HashMap::new()));
+
+    {
+        let map = map_lock.read().unwrap();
+        if let Some(registry_addr) = map.get(&endpoint) {
+            return registry_addr.clone();
+        }
+    }
+
+    let new_registry = WSRegistry::new().start();
+
+    {
+        let mut map = map_lock.write().unwrap();
+        map.insert(endpoint.to_string(), new_registry.clone());
+    }
+
+    new_registry
+}
+
 pub async fn start_web_socket(
     req: HttpRequest,
     stream: web::Payload,
     router: HashMap<String, FunctionInfo>,
     task_locals: TaskLocals,
+    endpoint: String,
 ) -> Result<HttpResponse, Error> {
-    let registry_addr = WSRegistry::new().start();
+    let registry_addr = get_or_init_registry_for_endpoint(endpoint);
 
     let result = ws::start(
         WSConnector {
