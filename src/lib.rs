@@ -5,6 +5,7 @@ mod server;
 mod shared_socket;
 mod types;
 mod web_socket_connection;
+mod logger;
 
 use server::Server;
 use shared_socket::SocketHeld;

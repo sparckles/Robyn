@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::RwLock;
-
+use crate::logger::enable_robyn_logs;
 use crate::executors::execute_http_function;
 use crate::types::function_info::FunctionInfo;
 use crate::types::request::Request;
@@ -46,7 +46,8 @@ impl Router<Response, HttpMethod> for ConstRouter {
             let output = execute_http_function(&Request::default(), &function)
                 .await
                 .unwrap();
-            debug!("This is the result of the output {:?}", output);
+            enable_robyn_logs(&format!("This is the result of the output {:?}", output));
+            //debug!("This is the result of the output {:?}", output);
             table.write().unwrap().insert(route, output).unwrap();
             Ok(())
         })?;

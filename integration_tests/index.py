@@ -1,11 +1,13 @@
 from robyn import Robyn
+import logging
 
 app = Robyn(__file__)
 
 
 @app.get("/")
 async def h():
-    return "Hello, world!"
+    logging.info("Insert log message here")
+    return "For testing purposes only"
 
 
 app.start()

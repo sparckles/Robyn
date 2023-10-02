@@ -1,6 +1,7 @@
 from enum import Enum
 import logging
 from typing import Optional
+import os
 
 
 class Colors(Enum):
@@ -61,7 +62,11 @@ class Logger:
         bold: bool = False,
         underline: bool = False,
     ):
-        self.logger.info(self._format_msg(msg, color, bold, underline))
+        enable_robyn_logs = os.getenv("ENABLE_ROBYN_LOGS")
+        if enable_robyn_logs == "true":
+            self.logger.info(self._format_msg(msg, color, bold, underline))
+        else:
+            return
 
     def debug(
         self,
@@ -70,7 +75,9 @@ class Logger:
         bold: bool = False,
         underline: bool = False,
     ):
-        self.logger.debug(self._format_msg(msg, color, bold, underline))
+        enable_robyn_logs = os.getenv("ENABLE_ROBYN_LOGS", "false") == "true"
+        if not enable_robyn_logs:
+            return
 
 
 logger = Logger()

@@ -8,12 +8,14 @@ dist/
 *__pycache__
 *tags
 
+
 # DS_Store
 *.DS_Store
 .vscode
 
 # python venv
 venv
+env/
 robyn.code-workspace
 hello_robyn.py
 robyn.env

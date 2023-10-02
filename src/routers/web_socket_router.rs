@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::sync::RwLock;
-
+use crate::logger::enable_robyn_logs;
 use log::debug;
 
 use crate::types::function_info::FunctionInfo;
@@ -36,7 +36,8 @@ impl WebSocketRouter {
         let table = self.get_web_socket_map();
 
         let insert_in_router = |function: FunctionInfo, socket_type: &str| {
-            debug!("socket type is {:?} {:?}", table, route);
+            enable_robyn_logs(&format!("socket type is {:?} {:?}", table, route));
+            //debug!("socket type is {:?} {:?}", table, route);
 
             table
                 .write()
