@@ -9,6 +9,7 @@ use actix::{Actor, AsyncContext, StreamHandler};
 use actix_web::{web, Error, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
 use log::debug;
+use once_cell::sync::OnceCell;
 use pyo3::prelude::*;
 use pyo3_asyncio::TaskLocals;
 use std::sync::RwLock;
@@ -136,9 +137,8 @@ impl WebSocketConnector {
     }
 }
 
-use once_cell::sync::OnceCell;
-
-static REGISTRY_ADDRESSES: OnceCell<RwLock<HashMap<String, Addr<WebSocketRegistry>>>> = OnceCell::new();
+static REGISTRY_ADDRESSES: OnceCell<RwLock<HashMap<String, Addr<WebSocketRegistry>>>> =
+    OnceCell::new();
 
 fn get_or_init_registry_for_endpoint(endpoint: String) -> Addr<WebSocketRegistry> {
     let map_lock = REGISTRY_ADDRESSES.get_or_init(|| RwLock::new(HashMap::new()));
