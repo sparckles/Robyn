@@ -159,14 +159,16 @@ class Robyn:
     def shutdown_handler(self, handler: Callable) -> None:
         self._add_event_handler(Events.SHUTDOWN, handler)
 
-    def start(self, host: str = "127.0.0.1", port: int = 8080):
+    def start(
+        self, host: str = "127.0.0.1", port: int = 8080, *, url: str = "127.0.0.1"
+    ):
         """
         Starts the server
 
         :param port int: represents the port number at which the server is listening
         """
 
-        host = os.getenv("ROBYN_URL", host)
+        host = os.getenv("ROBYN_HOST", host) or os.getenv("ROBYN_URL", url)
         port = int(os.getenv("ROBYN_PORT", port))
         open_browser = bool(os.getenv("ROBYN_BROWSER_OPEN", self.config.open_browser))
 
