@@ -33,6 +33,5 @@ jobs:
         run: |
           maturin build -i python --universal2 --out dist
           pip install --no-index --find-links=dist/ robyn
-      - name: Test with pytest
-        run: |
-          pytest
+      - name: Test with tox
+        run: tox
