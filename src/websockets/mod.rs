@@ -218,7 +218,7 @@ pub async fn start_web_socket(
             router,
             task_locals,
             id: Uuid::new_v4(),
-            registry_addr, // Assuming you add this field to the WebSocketConnector struct
+            registry_addr,
         },
         &req,
         stream,
