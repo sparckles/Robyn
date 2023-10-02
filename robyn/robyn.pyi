@@ -159,13 +159,20 @@ class WebSocketConnector:
     Attributes:
         id (str): The id of the client
 
-        broadcast (Callable): The function to broadcast a message to all clients
-        send_to (Callable): The function to send a message to the client
+        async_broadcast (Callable): The function to broadcast a message to all clients
+        async_send_to (Callable): The function to send a message to the client
+        sync_broadcast (Callable): The function to broadcast a message to all clients
+        sync_send_to (Callable): The function to send a message to the client
     """
 
     id: str
 
-    def broadcast(self, message: str) -> None:
+    async def async_broadcast(self, message: str) -> None:
         pass
-    def send_to(self, sender_id: str, message: str) -> None:
+    async def async_send_to(self, sender_id: str, message: str) -> None:
+        pass
+
+    def sync_broadcast(self, message: str) -> None:
+        pass
+    def sync_send_to(self, sender_id: str, message: str) -> None:
         pass

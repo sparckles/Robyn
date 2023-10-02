@@ -102,7 +102,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebSocketConnecto
 
 #[pymethods]
 impl WebSocketConnector {
-    pub fn send_to(&self, recipient_id: String, message: String) {
+    pub fn sync_send_to(&self, recipient_id: String, message: String) {
         let recipient_id = Uuid::parse_str(&recipient_id).unwrap();
 
         match (self.registry_addr).try_send(SendText {
@@ -115,13 +115,39 @@ impl WebSocketConnector {
         }
     }
 
-    pub fn broadcast(&self, message: String) {
+    pub fn async_send_to(
+        &self,
+        py: Python,
+        recipient_id: String,
+        message: String,
+    ) -> PyResult<Py<PyAny>> {
+        let registry = self.registry_addr.clone();
+        let recipient_id = Uuid::parse_str(&recipient_id).unwrap();
+        let sender_id = self.id.clone();
+
+        let awaitable = pyo3_asyncio::tokio::future_into_py(py, async move {
+            match (registry).try_send(SendText {
+                message: message.to_string(),
+                sender_id,
+                recipient_id,
+            }) {
+                Ok(_) => println!("Message sent successfully"),
+                Err(e) => println!("Failed to send message: {}", e),
+            }
+            Ok(())
+        })?;
+
+        Ok(awaitable.into_py(py))
+    }
+
+    pub fn sync_broadcast(&self, message: String) {
         // TODO: this should spawn a new thread?
+        // need to make a better thread pool
         let sys = System::new();
 
         sys.block_on(async {
             let registry = self.registry_addr.clone();
-            match (&registry).try_send(SendMessageToAll {
+            match registry.try_send(SendMessageToAll {
                 message: message.to_string(),
                 sender_id: self.id,
             }) {
@@ -129,6 +155,24 @@ impl WebSocketConnector {
                 Err(e) => println!("Failed to send message: {}", e),
             }
         });
+    }
+
+    pub fn async_broadcast(&self, py: Python, message: String) -> PyResult<Py<PyAny>> {
+        let registry = self.registry_addr.clone();
+        let sender_id = self.id.clone();
+
+        let awaitable = pyo3_asyncio::tokio::future_into_py(py, async move {
+            match registry.try_send(SendMessageToAll {
+                message: message.to_string(),
+                sender_id,
+            }) {
+                Ok(_) => println!("Message sent successfully"),
+                Err(e) => println!("Failed to send message: {}", e),
+            }
+            Ok(())
+        })?;
+
+        Ok(awaitable.into_py(py))
     }
 
     #[getter]
@@ -169,7 +213,7 @@ pub async fn start_web_socket(
 ) -> Result<HttpResponse, Error> {
     let registry_addr = get_or_init_registry_for_endpoint(endpoint);
 
-    let result = ws::start(
+    ws::start(
         WebSocketConnector {
             router,
             task_locals,
@@ -178,7 +222,5 @@ pub async fn start_web_socket(
         },
         &req,
         stream,
-    );
-
-    result
+    )
 }

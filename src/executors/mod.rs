@@ -13,6 +13,7 @@ use crate::types::{
     function_info::FunctionInfo, request::Request, response::Response, MiddlewareReturn,
 };
 
+#[inline]
 fn get_function_output<'a, T>(
     function: &'a FunctionInfo,
     py: Python<'a>,

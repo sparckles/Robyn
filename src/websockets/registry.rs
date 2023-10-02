@@ -93,7 +93,7 @@ impl Handler<SendMessageToAll> for WebSocketRegistry {
             client.do_send(SendText {
                 recipient_id: *id,
                 message: msg.message.clone(),
-                sender_id: msg.sender_id.clone(),
+                sender_id: msg.sender_id,
             });
         }
     }
