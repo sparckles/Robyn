@@ -14,21 +14,21 @@ use pyo3_asyncio::TaskLocals;
 use std::sync::RwLock;
 use uuid::Uuid;
 
-use registry::{Register, WSRegistry};
+use registry::{Register, WebSocketRegistry};
 use std::collections::HashMap;
 
 /// Define HTTP actor
 #[derive(Clone)]
 #[pyclass]
-pub struct WSConnector {
+pub struct WebSocketConnector {
     pub id: Uuid,
     pub router: HashMap<String, FunctionInfo>,
     pub task_locals: TaskLocals,
-    pub registry_addr: Addr<WSRegistry>,
+    pub registry_addr: Addr<WebSocketRegistry>,
 }
 
 // By default mailbox capacity is 16 messages.
-impl Actor for WSConnector {
+impl Actor for WebSocketConnector {
     type Context = ws::WebsocketContext<Self>;
 
     fn started(&mut self, ctx: &mut Self::Context) {
@@ -52,7 +52,7 @@ impl Actor for WSConnector {
     }
 }
 
-impl Handler<SendText> for WSConnector {
+impl Handler<SendText> for WebSocketConnector {
     type Result = ();
 
     fn handle(&mut self, msg: SendText, ctx: &mut Self::Context) {
@@ -63,7 +63,7 @@ impl Handler<SendText> for WSConnector {
 }
 
 /// Handler for ws::Message message
-impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WSConnector {
+impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebSocketConnector {
     fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
         match msg {
             Ok(ws::Message::Ping(msg)) => {
@@ -100,7 +100,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WSConnector {
 }
 
 #[pymethods]
-impl WSConnector {
+impl WebSocketConnector {
     pub fn send_to(&self, recipient_id: String, message: String) {
         let recipient_id = Uuid::parse_str(&recipient_id).unwrap();
 
@@ -138,9 +138,9 @@ impl WSConnector {
 
 use once_cell::sync::OnceCell;
 
-static REGISTRY_ADDRESSES: OnceCell<RwLock<HashMap<String, Addr<WSRegistry>>>> = OnceCell::new();
+static REGISTRY_ADDRESSES: OnceCell<RwLock<HashMap<String, Addr<WebSocketRegistry>>>> = OnceCell::new();
 
-fn get_or_init_registry_for_endpoint(endpoint: String) -> Addr<WSRegistry> {
+fn get_or_init_registry_for_endpoint(endpoint: String) -> Addr<WebSocketRegistry> {
     let map_lock = REGISTRY_ADDRESSES.get_or_init(|| RwLock::new(HashMap::new()));
 
     {
@@ -150,7 +150,7 @@ fn get_or_init_registry_for_endpoint(endpoint: String) -> Addr<WSRegistry> {
         }
     }
 
-    let new_registry = WSRegistry::new().start();
+    let new_registry = WebSocketRegistry::new().start();
 
     {
         let mut map = map_lock.write().unwrap();
@@ -170,11 +170,11 @@ pub async fn start_web_socket(
     let registry_addr = get_or_init_registry_for_endpoint(endpoint);
 
     let result = ws::start(
-        WSConnector {
+        WebSocketConnector {
             router,
             task_locals,
             id: Uuid::new_v4(),
-            registry_addr, // Assuming you add this field to the WSConnector struct
+            registry_addr, // Assuming you add this field to the WebSocketConnector struct
         },
         &req,
         stream,

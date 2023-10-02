@@ -8,11 +8,11 @@ from robyn import (
     Request,
     Response,
     Robyn,
-    WS,
+    WebSocket,
     jsonify,
     serve_file,
     serve_html,
-    WSConnector,
+    WebSocketConnector,
 )
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.templating import JinjaTemplate
@@ -22,11 +22,11 @@ from integration_tests.subroutes import sub_router
 
 
 app = Robyn(__file__)
-websocket = WS(app, "/web_socket")
+websocket = WebSocket(app, "/web_socket")
 
-# Creating a new WS app to test json handling + to serve an example to future users of this lib
+# Creating a new WebSocket app to test json handling + to serve an example to future users of this lib
 # while the original "raw" web_socket is used with benchmark tests
-websocket_json = WS(app, "/web_socket_json")
+websocket_json = WebSocket(app, "/web_socket_json")
 
 current_file_path = pathlib.Path(__file__).parent.resolve()
 jinja_template = JinjaTemplate(os.path.join(current_file_path, "templates"))
@@ -54,7 +54,7 @@ async def jsonws_message(ws, msg: str) -> str:
 
 
 @websocket.on("message")
-async def message(ws: WSConnector, msg: str) -> str:
+async def message(ws: WebSocketConnector, msg: str) -> str:
     global websocket_state
     websocket_id = ws.id
     state = websocket_state[websocket_id]

@@ -269,11 +269,11 @@ You can now serve websockets using Robyn.
 Firstly, you need to create a WebSocket Class and wrap it around your Robyn app.
 
 ```python
-from robyn import Robyn, jsonify, WS
+from robyn import Robyn, jsonify, WebSocket
 
 
 app = Robyn(__file__)
-websocket = WS(app, "/web_socket")
+websocket = WebSocket(app, "/web_socket")
 ```
 
 Now, you can define 3 methods for every web_socket for their life cycle, they are as follows:

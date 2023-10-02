@@ -152,9 +152,9 @@ class Server:
     def start(self, socket: SocketHeld, workers: int) -> None:
         pass
 
-class WSConnector:
+class WebSocketConnector:
     """
-    The WSConnector object passed to the route handler.
+    The WebSocketConnector object passed to the route handler.
 
     Attributes:
         id (str): The id of the client

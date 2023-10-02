@@ -5,33 +5,33 @@ use uuid::Uuid;
 
 use std::collections::HashMap;
 
-use crate::websockets::WSConnector;
+use crate::websockets::WebSocketConnector;
 
 #[derive(Default)]
 #[pyclass]
-pub struct WSRegistry {
+pub struct WebSocketRegistry {
     // A map of client IDs to their Actor addresses.
-    clients: HashMap<Uuid, Addr<WSConnector>>,
+    clients: HashMap<Uuid, Addr<WebSocketConnector>>,
 }
 
-impl actix::Supervised for WSRegistry {}
+impl actix::Supervised for WebSocketRegistry {}
 
-impl SystemService for WSRegistry {}
+impl SystemService for WebSocketRegistry {}
 
-impl Actor for WSRegistry {
+impl Actor for WebSocketRegistry {
     type Context = Context<Self>;
 }
 
 pub struct Register {
     pub id: Uuid,
-    pub addr: Addr<WSConnector>,
+    pub addr: Addr<WebSocketConnector>,
 }
 
 impl Message for Register {
     type Result = ();
 }
 
-impl Handler<Register> for WSRegistry {
+impl Handler<Register> for WebSocketRegistry {
     type Result = ();
 
     fn handle(&mut self, msg: Register, _ctx: &mut Self::Context) {
@@ -52,7 +52,7 @@ impl Message for SendText {
     type Result = ();
 }
 
-impl WSRegistry {
+impl WebSocketRegistry {
     pub fn new() -> Self {
         Self {
             clients: HashMap::new(),
@@ -64,7 +64,7 @@ impl WSRegistry {
     }
 }
 
-impl Handler<SendText> for WSRegistry {
+impl Handler<SendText> for WebSocketRegistry {
     type Result = ();
 
     fn handle(&mut self, msg: SendText, _ctx: &mut Self::Context) {
@@ -85,7 +85,7 @@ impl Message for SendMessageToAll {
     type Result = ();
 }
 
-impl Handler<SendMessageToAll> for WSRegistry {
+impl Handler<SendMessageToAll> for WebSocketRegistry {
     type Result = ();
 
     fn handle(&mut self, msg: SendMessageToAll, _ctx: &mut Self::Context) {

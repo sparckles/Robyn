@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from robyn import Robyn
 
 
-class WS:
+class WebSocket:
     # should this be websocket router?
     """This is the python wrapper for the web socket that will be used here."""
 

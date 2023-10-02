@@ -5,13 +5,13 @@ use pyo3::prelude::*;
 use pyo3_asyncio::TaskLocals;
 
 use crate::types::function_info::FunctionInfo;
-use crate::websockets::WSConnector;
+use crate::websockets::WebSocketConnector;
 
 fn get_function_output<'a>(
     function: &'a FunctionInfo,
     fn_msg: Option<String>,
     py: Python<'a>,
-    ws: &WSConnector,
+    ws: &WebSocketConnector,
 ) -> Result<&'a PyAny, PyErr> {
     let handler = function.handler.as_ref(py);
 
@@ -28,8 +28,8 @@ pub fn execute_ws_function(
     function: &FunctionInfo,
     text: Option<String>,
     task_locals: &TaskLocals,
-    ctx: &mut ws::WebsocketContext<WSConnector>,
-    ws: &WSConnector,
+    ctx: &mut ws::WebsocketContext<WebSocketConnector>,
+    ws: &WebSocketConnector,
     // add number of params here
 ) {
     if function.is_async {
