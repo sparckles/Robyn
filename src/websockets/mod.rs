@@ -123,7 +123,7 @@ impl WebSocketConnector {
     ) -> PyResult<Py<PyAny>> {
         let registry = self.registry_addr.clone();
         let recipient_id = Uuid::parse_str(&recipient_id).unwrap();
-        let sender_id = self.id.clone();
+        let sender_id = self.id;
 
         let awaitable = pyo3_asyncio::tokio::future_into_py(py, async move {
             match (registry).try_send(SendText {
@@ -159,7 +159,7 @@ impl WebSocketConnector {
 
     pub fn async_broadcast(&self, py: Python, message: String) -> PyResult<Py<PyAny>> {
         let registry = self.registry_addr.clone();
-        let sender_id = self.id.clone();
+        let sender_id = self.id;
 
         let awaitable = pyo3_asyncio::tokio::future_into_py(py, async move {
             match registry.try_send(SendMessageToAll {
