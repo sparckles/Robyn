@@ -2,13 +2,13 @@
 
 # Robyn
 
-[![Twitter](https://badgen.net/badge/icon/twitter?icon=twitter&label)](https://twitter.com/robyn_oss)
-[![Downloads](https://static.pepy.tech/personalized-badge/robyn?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Downloads)](https://pepy.tech/project/robyn)
-[![GitHub tag](https://img.shields.io/github/tag/sparckles/robyn?include_prereleases=&sort=semver&color=black)](https://github.com/sparckles/robyn/releases/)
+[![Twitter](https://badgen.net/badge/icon/twitter?icon=twitter&label)](https://twitter.com/Robyn_oss)
+[![Downloads](https://static.pepy.tech/personalized-badge/Robyn?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Downloads)](https://pepy.tech/project/Robyn)
+[![GitHub tag](https://img.shields.io/github/tag/sparckles/Robyn?include_prereleases=&sort=semver&color=black)](https://github.com/sparckles/Robyn/releases/)
 [![License](https://img.shields.io/badge/License-BSD_2.0-black)](#license)
 ![Python](https://img.shields.io/badge/Support-Version%20%E2%89%A5%203.8-brightgreen)
 
-[![view - Documentation](https://img.shields.io/badge/view-Documentation-blue?style=for-the-badge)](https://sparckles.github.io/robyn/#/)
+[![view - Documentation](https://img.shields.io/badge/view-Documentation-blue?style=for-the-badge)](https://sparckles.github.io/Robyn/#/)
 [![Discord](https://img.shields.io/discord/999782964143603713?label=discord&logo=discord&logoColor=white&style=for-the-badge&color=blue)](https://discord.gg/rkERZ5eNU8)
 
 Robyn is a High-Performance, Community-Driven, and Innovator Friendly Web Framework with a Rust runtime. You can learn more by checking our [community resources](https://beta.robyn.tech/documentation/api_reference/community-resources#talks)!
@@ -18,13 +18,13 @@ Robyn is a High-Performance, Community-Driven, and Innovator Friendly Web Framew
 You can simply use Pip for installation.
 
 ```
-pip install robyn
+pip install Robyn
 ```
 
 Or, with [conda-forge](https://conda-forge.org/)
 
 ```
-conda install -c conda-forge robyn
+conda install -c conda-forge Robyn
 ```
 
 ## 🤔 Usage
@@ -34,7 +34,7 @@ conda install -c conda-forge robyn
 To define your API, you can add the following code in an `app.py` file.
 
 ```python
-from robyn import Robyn
+from Robyn import Robyn
 
 app = Robyn(__file__)
 
@@ -77,7 +77,7 @@ $ python3 app.py --open-browser
 
 ### 💻 Add more routes
 
-You can add more routes to your API. Check out the routes in [this file](https://github.com/sparckles/robyn/blob/main/integration_tests/base_routes.py) as examples.
+You can add more routes to your API. Check out the routes in [this file](https://github.com/sparckles/Robyn/blob/main/integration_tests/base_routes.py) as examples.
 
 ## 🐍 Python Version Support
 
@@ -114,10 +114,10 @@ python --version
 
 ### 🏁 Get started
 
-Please read the [code of conduct](https://github.com/sparckles/robyn/blob/main/CODE_OF_CONDUCT.md) and go through [CONTRIBUTING.md](https://github.com/sparckles/robyn/blob/main/CONTRIBUTING.md) before contributing to Robyn.
+Please read the [code of conduct](https://github.com/sparckles/Robyn/blob/main/CODE_OF_CONDUCT.md) and go through [CONTRIBUTING.md](https://github.com/sparckles/Robyn/blob/main/CONTRIBUTING.md) before contributing to Robyn.
 Feel free to open an issue for any clarifications or suggestions.
 
-If you're feeling curious. You can take a look at a more detailed architecture [here](https://sparckles.github.io/robyn/#/architecture).
+If you're feeling curious. You can take a look at a more detailed architecture [here](https://sparckles.github.io/Robyn/#/architecture).
 
 If you still need help to get started, feel free to reach out on our [community discord](https://discord.gg/rkERZ5eNU8).
 
@@ -142,8 +142,8 @@ curl http://localhost:8080/sync/str
 
 Thanks to all the contributors of the project. Robyn will not be what it is without all your support :heart:.
 
-<a href="https://github.com/sparckles/robyn/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=sparckles/robyn" />
+<a href="https://github.com/sparckles/Robyn/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=sparckles/Robyn" />
 </a>
 
 Special thanks to the [PyO3](https://pyo3.rs/v0.13.2/) community and [Andrew from PyO3-asyncio](https://github.com/awestlake87/pyo3-asyncio) for their amazing libraries and their support for my queries. 💖
@@ -159,4 +159,4 @@ These sponsors help us make the magic happen!
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=sparckles/robyn&type=Date)](https://star-history.com/#sparckles/robyn&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=sparckles/Robyn&type=Date)](https://star-history.com/#sparckles/Robyn&Date)
