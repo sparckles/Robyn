@@ -35,8 +35,6 @@ impl Handler<Register> for WebSocketRegistry {
     type Result = ();
 
     fn handle(&mut self, msg: Register, _ctx: &mut Self::Context) {
-        dbg!("Registering client {}", msg.id);
-        dbg!("Clients: {:?}", &self.clients);
         self.clients.insert(msg.id, msg.addr);
     }
 }
