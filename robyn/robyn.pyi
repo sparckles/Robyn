@@ -84,6 +84,9 @@ class Request:
     ip_addr: Optional[str]
     identity: Optional[Identity]
 
+    def json(self) -> dict:
+        pass
+
 @dataclass
 class Response:
     """
