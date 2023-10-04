@@ -91,9 +91,8 @@ class Router(BaseRouter):
         exception_handler: Optional[Callable],
         default_response_headers: List[Header],
     ) -> Union[Callable, CoroutineType]:
-        response_headers = {
-            d[0]: d[1] for d in (h.as_list() for h in default_response_headers)
-        }
+        headers_list = (h.as_list() for h in default_response_headers)
+        response_headers = {d[0]: d[1] for d in headers_list}
 
         @wraps(handler)
         async def async_inner_handler(*args):
