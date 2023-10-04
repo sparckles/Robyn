@@ -124,20 +124,17 @@ impl PyRequest {
     pub fn json(&self, py: Python) -> PyResult<PyObject> {
         match self.body.as_ref(py).downcast::<PyString>() {
             Ok(python_string) => match serde_json::from_str(python_string.to_string().as_str()) {
-                Ok(json_value) => match json_value {
-                    Value::Object(map) => {
-                        let dict = PyDict::new(py);
+                Ok(Value::Object(map)) => {
+                    let dict = PyDict::new(py);
 
-                        for (key, value) in map.iter() {
-                            let py_key = key.to_string().into_py(py);
-                            let py_value = value.to_string().into_py(py);
-                            dict.set_item(py_key, py_value)?;
-                        }
-
-                        Ok(dict.into_py(py))
+                    for (key, value) in map.iter() {
+                        let py_key = key.to_string().into_py(py);
+                        let py_value = value.to_string().into_py(py);
+                        dict.set_item(py_key, py_value)?;
                     }
-                    _ => Err(PyValueError::new_err("Invalid JSON object")),
-                },
+
+                    Ok(dict.into_py(py))
+                }
                 _ => Err(PyValueError::new_err("Invalid JSON object")),
             },
             Err(e) => Err(e.into()),
