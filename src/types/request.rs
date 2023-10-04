@@ -123,7 +123,7 @@ impl PyRequest {
 
     pub fn json(&self, py: Python) -> PyResult<PyObject> {
         match self.body.as_ref(py).downcast::<PyString>() {
-            Ok(python_string) => match serde_json::from_str(python_string.to_string().as_str()) {
+            Ok(python_string) => match serde_json::from_str(python_string.extract()?) {
                 Ok(Value::Object(map)) => {
                     let dict = PyDict::new(py);
 
