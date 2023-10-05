@@ -7,11 +7,11 @@ First of all, we have a worker event cycle that basically does all the dirty wor
 
 Then when we type the command python3 app.py the python code is converted to rust objects and then the router is populated. The incoming requests hit the router and then the rust objects are dispatched in the thread pool and executed depending on their types
 
-<img src="https://sparckles.github.io/robyn/assets/architecture/architecture.png" />
+<img src="https://sparckles.github.io/Robyn/assets/architecture/architecture.png" />
 
 Now, we can have multiple workers as well as multiple processes in Robyn. This allows the tcp socket to share itself across multiple cores.
 
-<img src="https://sparckles.github.io/robyn/assets/architecture/multi-processing.png" />
+<img src="https://sparckles.github.io/Robyn/assets/architecture/multi-processing.png" />
 
 ## Const Requests
 
@@ -19,11 +19,11 @@ Const Requests is a feature that is unique to Robyn.
 
 What if we could execute the function only once and store the response in the rust response. This would help us save a lot of overhead of calling the router.
 
-<img src="https://sparckles.github.io/robyn/assets/architecture/const-request-optimisation-basis.png" />
+<img src="https://sparckles.github.io/Robyn/assets/architecture/const-request-optimisation-basis.png" />
 
 This is exactly what const requests tries to achieve.
 
-<img sc="https://sparckles.github.io/robyn/assets/architecture/const-request-optimisation.png" />
+<img sc="https://sparckles.github.io/Robyn/assets/architecture/const-request-optimisation.png" />
 
 ## Old architecture
 
