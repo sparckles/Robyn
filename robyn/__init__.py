@@ -36,12 +36,12 @@ __version__ = get_version()
 class Robyn:
     """This is the python wrapper for the Robyn binaries."""
 
-    def __init__(self, file_object: str, config: Config = Config(),dependencies: DependencyMap = DependencyMap()) -> None:
+    def __init__(self, file_object: str, config: Config = Config(),dependencies: DependencyMap = None) -> None:
         directory_path = os.path.dirname(os.path.abspath(file_object))
         self.file_path = file_object
         self.directory_path = directory_path
         self.config = config
-        self.dependencies = dependencies
+        self.dependencies = dependencies if dependencies is not None else DependencyMap()
         load_vars(project_root=directory_path)
         logging.basicConfig(level=self.config.log_level)
 
@@ -99,8 +99,6 @@ class Robyn:
                 "OPTIONS": HttpMethod.OPTIONS,
             }
             route_type = http_methods[route_type]
-
-        logger.info(f"Logging endpoint: method={route_type}, route={endpoint}")
 
         return self.router.add_route(
             route_type, endpoint, handler, is_const, self.dependencies.dependency_map,self.exception_handler
@@ -421,6 +419,7 @@ class SubRouter(Robyn):
         self, file_object: str, prefix: str = "", config: Config = Config()
     ) -> None:
         super().__init__(file_object, config)
+        dependencies = DependencyMap()
         self.prefix = prefix
 
     def __add_prefix(self, endpoint: str):

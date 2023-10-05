@@ -75,7 +75,10 @@ class Router(BaseRouter):
         #Ensure handler function arguments match provided dependencies for an endpoint.
         handler_args = (inspect.signature(handler)).parameters.values()
         param_list = [a.name for a in handler_args]
-        dependency_dict = {**dependencies.get(endpoint, {}), **dependencies["ALL_ROUTES"]}
+        dependency_dict = dependencies.get("ALL_ROUTES", {})
+        endpoint_dependencies = dependencies.get(endpoint, {})
+        dependency_dict.update(endpoint_dependencies)
+        #dependency_dict = {**dependencies.get(endpoint, {}), **dependencies["ALL_ROUTES"]}
         for param in param_list:
             if param not in dependency_dict:
                 raise ValueError(
