@@ -141,20 +141,14 @@ impl WebSocketConnector {
     }
 
     pub fn sync_broadcast(&self, message: String) {
-        // TODO: this should spawn a new thread?
-        // need to make a better thread pool
-        let sys = System::new();
-
-        sys.block_on(async {
-            let registry = self.registry_addr.clone();
-            match registry.try_send(SendMessageToAll {
-                message: message.to_string(),
-                sender_id: self.id,
-            }) {
-                Ok(_) => println!("Message sent successfully"),
-                Err(e) => println!("Failed to send message: {}", e),
-            }
-        });
+        let registry = self.registry_addr.clone();
+        match registry.try_send(SendMessageToAll {
+            message: message.to_string(),
+            sender_id: self.id,
+        }) {
+            Ok(_) => println!("Message sent successfully"),
+            Err(e) => println!("Failed to send message: {}", e),
+        }
     }
 
     pub fn async_broadcast(&self, py: Python, message: String) -> PyResult<Py<PyAny>> {
