@@ -87,7 +87,7 @@ class Request:
     def json(self) -> dict:
         """
         If the body is a valid JSON this will return the parsed JSON data.
-        Otherwise, will throw a ValueError.
+        Otherwise, this will throw a ValueError.
         """
         pass
 
