@@ -84,6 +84,13 @@ class Request:
     ip_addr: Optional[str]
     identity: Optional[Identity]
 
+    def json(self) -> dict:
+        """
+        If the body is a valid JSON this will return the parsed JSON data.
+        Otherwise, this will throw a ValueError.
+        """
+        pass
+
 @dataclass
 class Response:
     """
