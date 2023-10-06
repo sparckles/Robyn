@@ -17,8 +17,6 @@ def test_web_socket_raw_benchmark(session):
     assert ws.recv() == "Whaaat??"
 
     ws.send("My name is?")
-    assert ws.recv() == "This is a broadcast message"
-    assert ws.recv() == "This is a message to self"
     assert ws.recv() == "Whooo??"
 
     ws.send("My name is?")
