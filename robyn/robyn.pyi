@@ -85,6 +85,10 @@ class Request:
     identity: Optional[Identity]
 
     def json(self) -> dict:
+        """
+        If the body is a valid JSON this will return the parsed JSON data.
+        Otherwise, will throw a ValueError.
+        """
         pass
 
 @dataclass
