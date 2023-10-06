@@ -1,3 +1,4 @@
+import sys
 import nox
 
 
@@ -6,19 +7,15 @@ def tests(session):
     session.run("pip", "install", "poetry==1.3.0")
     session.run(
         "poetry",
-        "export",
-        "--with",
-        "test",
+        "install",
         "--with",
         "dev",
-        "--without-hashes",
-        "--output",
-        "requirements.txt",
+        "--with",
+        "test",
     )
-    session.run("pip", "install", "-r", "requirements.txt")
-    session.run("pip", "install", "-e", ".")
-    session.run("rustup", "target", "add", "x86_64-apple-darwin")
-    session.run("rustup", "target", "add", "aarch64-apple-darwin")
+    if sys.platform == "darwin":
+        session.run("rustup", "target", "add", "x86_64-apple-darwin")
+        session.run("rustup", "target", "add", "aarch64-apple-darwin")
     session.run(
         "maturin",
         "build",
