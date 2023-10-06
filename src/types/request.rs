@@ -113,6 +113,30 @@ pub struct PyRequest {
 
 #[pymethods]
 impl PyRequest {
+    #[new]
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        queries: Py<PyDict>,
+        headers: Py<PyDict>,
+        path_params: Py<PyDict>,
+        body: Py<PyAny>,
+        method: String,
+        url: Url,
+        identity: Option<Identity>,
+        ip_addr: Option<String>,
+    ) -> Self {
+        Self {
+            queries,
+            headers,
+            path_params,
+            identity,
+            body,
+            method,
+            url,
+            ip_addr,
+        }
+    }
+
     #[setter]
     pub fn set_body(&mut self, py: Python, body: Py<PyAny>) -> PyResult<()> {
         check_body_type(py, body.clone())?;
