@@ -13,6 +13,7 @@ def tests(session):
         "--with",
         "test",
     )
+    session.run("pip", "install", ".")
     if sys.platform == "darwin":
         session.run("rustup", "target", "add", "x86_64-apple-darwin")
         session.run("rustup", "target", "add", "aarch64-apple-darwin")
