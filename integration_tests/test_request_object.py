@@ -1,7 +1,7 @@
 from robyn.robyn import Request, Url
 
 
-def test_ido():
+def test_request_object():
     url = Url(
         scheme="https",
         host="localhost",
