@@ -7,13 +7,17 @@ def tests(session):
     session.run("pip", "install", "poetry==1.3.0")
     session.run(
         "poetry",
-        "install",
-        "--with",
-        "dev",
+        "export",
         "--with",
         "test",
+        "--with",
+        "dev",
+        "--without-hashes",
+        "--output",
+        "requirements.txt",
     )
-    session.run("pip", "install", ".")
+    session.run("pip", "install", "-r", "requirements.txt")
+    session.run("pip", "install", "-e", ".")
     if sys.platform == "darwin":
         session.run("rustup", "target", "add", "x86_64-apple-darwin")
         session.run("rustup", "target", "add", "aarch64-apple-darwin")
