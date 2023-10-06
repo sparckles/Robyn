@@ -47,7 +47,7 @@ class Router(BaseRouter):
             headers = res.get("headers", {"Content-Type": "text/plain"})
             description = res.get("description", "")
 
-            if type(status_code) != int:
+            if not isinstance(status_code, int):
                 status_code = int(status_code)  # status_code can potentially be string
 
             response = Response(

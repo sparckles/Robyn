@@ -24,4 +24,4 @@ jobs:
         with:
           python-versions: ${{ matrix.python-version }}
       - name: Test with Nox
-        run: nox --non-interactive --error-on-missing-interpreter
+        run: nox --non-interactive --error-on-missing-interpreter -p ${{ matrix.python-version }}
