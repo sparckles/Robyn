@@ -1,6 +1,7 @@
 use actix_web::{web::Bytes, HttpRequest};
 use dashmap::DashMap;
-use pyo3::{prelude::*, types::PyDict};
+use pyo3::{exceptions::PyValueError, prelude::*, types::PyDict, types::PyString};
+use serde_json::Value;
 use std::collections::HashMap;
 
 use crate::types::{check_body_type, get_body_from_pyobject, Url};
@@ -118,5 +119,25 @@ impl PyRequest {
         check_body_type(py, body.clone())?;
         self.body = body;
         Ok(())
+    }
+
+    pub fn json(&self, py: Python) -> PyResult<PyObject> {
+        match self.body.as_ref(py).downcast::<PyString>() {
+            Ok(python_string) => match serde_json::from_str(python_string.extract()?) {
+                Ok(Value::Object(map)) => {
+                    let dict = PyDict::new(py);
+
+                    for (key, value) in map.iter() {
+                        let py_key = key.to_string().into_py(py);
+                        let py_value = value.to_string().into_py(py);
+                        dict.set_item(py_key, py_value)?;
+                    }
+
+                    Ok(dict.into_py(py))
+                }
+                _ => Err(PyValueError::new_err("Invalid JSON object")),
+            },
+            Err(e) => Err(e.into()),
+        }
     }
 }
