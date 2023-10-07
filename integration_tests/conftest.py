@@ -88,6 +88,7 @@ def global_session():
     domain = get_network_host()
     port = 8080
     os.environ["ROBYN_URL"] = domain
+    os.environ["ROBYN_HOST"] = domain
     process = start_server(domain, port)
     yield
     kill_process(process)
@@ -98,6 +99,7 @@ def dev_session():
     domain = "127.0.0.1"
     port = 8081
     os.environ["ROBYN_URL"] = domain
+    os.environ["ROBYN_HOST"] = domain
     os.environ["ROBYN_PORT"] = str(port)
     # This doesn't test is_dev=True!!!!
     process = start_server(domain, port)
