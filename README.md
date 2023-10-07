@@ -18,7 +18,7 @@ Robyn is a High-Performance, Community-Driven, and Innovator Friendly Web Framew
 You can simply use Pip for installation.
 
 ```
-pip install Robyn
+pip install robyn
 ```
 
 Or, with [conda-forge](https://conda-forge.org/)
@@ -34,7 +34,7 @@ conda install -c conda-forge Robyn
 To define your API, you can add the following code in an `app.py` file.
 
 ```python
-from Robyn import Robyn
+from robyn import Robyn
 
 app = Robyn(__file__)
 
