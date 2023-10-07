@@ -25,5 +25,3 @@ def serve_file(file_path: str) -> Dict[str, Any]:
         "file_path": file_path,
         "headers": {"Content-Disposition": "attachment"},
     }
-
-
