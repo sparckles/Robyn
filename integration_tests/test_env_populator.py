@@ -12,6 +12,6 @@ def test_env_population(test_session, env_file):
     env_path = path / "robyn.env"
     load_vars(variables=parser(config_path=env_path))
     PORT = os.environ["ROBYN_PORT"]
-    HOST = os.environ["ROBYN_URL"]
+    HOST = os.environ["ROBYN_URL"] or os.environ["ROBYN_HOST"]
     assert PORT == "8080"
     assert HOST == "127.0.0.1"
