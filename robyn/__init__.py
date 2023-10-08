@@ -102,7 +102,6 @@ class Robyn:
         if self.config.verbose is True:
             logger.info(f"Logging endpoint: method={route_type}, route={endpoint}")
 
-
         return self.router.add_route(
             route_type, endpoint, handler, is_const, self.exception_handler
         )
