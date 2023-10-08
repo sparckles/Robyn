@@ -44,7 +44,7 @@ class Robyn:
         load_vars(project_root=directory_path)
         logging.basicConfig(level=self.config.log_level)
 
-        if self.config.log_level.lower() != "warn":
+        if self.config.verbose is True:
             logger.info(
                 "SERVER IS RUNNING IN VERBOSE/DEBUG MODE. Set --log-level to WARN to run in production mode.",
                 Colors.BLUE,
@@ -98,8 +98,8 @@ class Robyn:
                 "OPTIONS": HttpMethod.OPTIONS,
             }
             route_type = http_methods[route_type]
-
-        logger.info(f"Logging endpoint: method={route_type}, route={endpoint}")
+        if self.config.verbose is True:
+            logger.info(f"Logging endpoint: method={route_type}, route={endpoint}")
 
         return self.router.add_route(
             route_type, endpoint, handler, is_const, self.exception_handler
@@ -148,7 +148,8 @@ class Robyn:
         self.web_socket_router.add_route(endpoint, ws)
 
     def _add_event_handler(self, event_type: Events, handler: Callable) -> None:
-        logger.info(f"Add event {event_type} handler")
+        if self.config.verbose is True:
+            logger.info(f"Add event {event_type} handler")
         if event_type not in {Events.STARTUP, Events.SHUTDOWN}:
             return
 
