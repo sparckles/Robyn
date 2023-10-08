@@ -57,6 +57,12 @@ class Config:
             default=False,
             help="Show the Robyn version.",
         )
+        parser.add_argument(
+            "--verbose",
+            action="store_true",
+            default=False,
+            help="Add logs",
+        )
 
         args, _ = parser.parse_known_args()
 
@@ -67,6 +73,7 @@ class Config:
         self.docs = args.docs
         self.open_browser = args.open_browser
         self.version = args.version
+        self.verbose = args.verbose
 
         if self.dev and (self.processes != 1 or self.workers != 1):
             raise Exception("--processes and --workers shouldn't be used with --dev")
