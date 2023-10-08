@@ -3,10 +3,10 @@ import webbrowser
 from InquirerPy import prompt
 from InquirerPy.base.control import Choice
 from .argument_parser import Config
-from Robyn.Robyn import get_version
+from robyn.robyn import get_version
 
 
-def create_Robyn_app():
+def create_robyn_app():
     questions = [
         {"type": "input", "message": "Enter the name of the project directory:"},
         {
@@ -85,7 +85,7 @@ def docs():
 if __name__ == "__main__":
     config = Config()
     if config.create:
-        create_Robyn_app()
+        create_robyn_app()
 
     if config.version:
         print(get_version())

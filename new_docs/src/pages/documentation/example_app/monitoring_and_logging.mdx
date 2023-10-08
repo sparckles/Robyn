@@ -9,11 +9,11 @@ logger = Logger(app)
 
 @app.before_request()
 async def log_request(request: Request):
-    logger.info(f"Received request: {request}")
+    logger.info(f"Received request: %s", request)
 
 @app.after_request()
 async def log_response(response: Response):
-    logger.info(f"Sending response: {response}")
+    logger.info(f"Sending response: %s", response)
 ```
 
 With monitoring and logging in place, Batman could now easily detect issues and analyze the performance of his web application, ensuring that it was always running optimally and ready to assist him in his fight against crime.
