@@ -167,7 +167,7 @@ class Robyn:
         self._add_event_handler(Events.SHUTDOWN, handler)
 
     def start(
-        self, host: str = "127.0.0.1", port: int = 8080, *, url: str = "127.0.0.1"
+        self, host: str = "127.0.0.1", port: int = 8080
     ):
         """
         Starts the server
@@ -175,12 +175,12 @@ class Robyn:
         :param port int: represents the port number at which the server is listening
         """
 
-        host = os.getenv("ROBYN_HOST", host) or os.getenv("ROBYN_URL", url)
+        host = os.getenv("ROBYN_HOST", host)
         port = int(os.getenv("ROBYN_PORT", port))
         open_browser = bool(os.getenv("ROBYN_BROWSER_OPEN", self.config.open_browser))
 
         logger.info("Robyn version: %s", __version__)
-        logger.info("Starting server at %s:%s", url, port)
+        logger.info("Starting server at %s:%s", host, port)
 
         mp.allow_connection_pickling()
 
