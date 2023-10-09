@@ -19,7 +19,7 @@ Sample `robyn.env`
 
 ```bash
 ROBYN_PORT=8080
-ROBYN_URL=127.0.0.1
+ROBYN_HOST=127.0.0.1
 RANDOM_ENV=123
 ```
 
