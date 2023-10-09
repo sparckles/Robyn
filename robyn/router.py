@@ -57,7 +57,7 @@ class Router(BaseRouter):
             headers = res.get("headers", headers)
             description = res.get("description", "")
 
-            if type(status_code) != int:
+            if not isinstance(status_code, int):
                 status_code = int(status_code)  # status_code can potentially be string
 
             response = Response(
@@ -91,8 +91,7 @@ class Router(BaseRouter):
         exception_handler: Optional[Callable],
         default_response_headers: List[Header],
     ) -> Union[Callable, CoroutineType]:
-        headers_list = (h.as_list() for h in default_response_headers)
-        response_headers = {d[0]: d[1] for d in headers_list}
+        response_headers = {d.key: d.val for d in default_response_headers}
 
         @wraps(handler)
         async def async_inner_handler(*args):
