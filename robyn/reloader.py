@@ -16,8 +16,9 @@ def setup_reloader(directory_path: str, file_path: str):
     event_handler.reload()
 
     logger.info(
-        f"Dev server initialized with the directory_path : {directory_path}",
-        Colors.BLUE,
+        "Dev server initialized with the directory_path : %s",
+        directory_path,
+        color=Colors.BLUE,
     )
 
     def terminating_signal_handler(_sig, _frame):

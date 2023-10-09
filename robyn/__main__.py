@@ -3,6 +3,7 @@ import webbrowser
 from InquirerPy import prompt
 from InquirerPy.base.control import Choice
 from .argument_parser import Config
+from robyn.robyn import get_version
 
 
 def create_robyn_app():
@@ -32,7 +33,7 @@ def create_robyn_app():
     with open(app_file_path, "w") as f:
         f.write(
             """
-from robyn import Robyn
+from Robyn import Robyn
 
 app = Robyn(__file__)
 
@@ -59,7 +60,7 @@ FROM ubuntu:22.04
 WORKDIR /workspace
 
 RUN apt-get update -y && apt-get install -y python 3.10 python3-pip
-RUN pip install --no-cache-dir --upgrade robyn
+RUN pip install --no-cache-dir --upgrade Robyn
 
 COPY ./src/workspace/
 
@@ -78,14 +79,16 @@ CMD ["python3.10", "/workspace/foo/app.py", "--log-level=DEBUG"]
 
 def docs():
     print("Opening Robyn documentation... | Offline docs coming soon!")
-    webbrowser.open("https://sparckles.github.io/robyn/#/")
-
+    webbrowser.open("https://sparckles.github.io/Robyn/#/")
 
 
 if __name__ == "__main__":
     config = Config()
     if config.create:
         create_robyn_app()
+
+    if config.version:
+        print(get_version())
 
     if config.docs:
         docs()
