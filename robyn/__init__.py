@@ -102,7 +102,12 @@ class Robyn:
         logger.info("Logging endpoint: method=%s, route=%s", route_type, endpoint)
 
         return self.router.add_route(
-            route_type, endpoint, handler, is_const, self.exception_handler
+            route_type,
+            endpoint,
+            handler,
+            is_const,
+            self.exception_handler,
+            self.response_headers,
         )
 
     def before_request(self, endpoint: Optional[str] = None) -> Callable[..., None]:
