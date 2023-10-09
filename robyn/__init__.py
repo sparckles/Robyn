@@ -100,7 +100,7 @@ class Robyn:
             route_type = http_methods[route_type]
 
         if self.config.verbose is True:
-            logger.info(f"Logging endpoint: method={route_type}, route={endpoint}")
+            logger.info("Logging endpoint: method=%s, route=%s", route_type, endpoint)
 
         return self.router.add_route(
             route_type, endpoint, handler, is_const, self.exception_handler
@@ -150,7 +150,7 @@ class Robyn:
 
     def _add_event_handler(self, event_type: Events, handler: Callable) -> None:
         if self.config.verbose is True:
-            logger.info(f"Add event {event_type} handler")
+            logger.info("Add event %s handler", event_type)
 
         if event_type not in {Events.STARTUP, Events.SHUTDOWN}:
             return
