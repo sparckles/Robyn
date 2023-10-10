@@ -39,38 +39,42 @@ class Logger:
     def error(
         self,
         msg: str,
+        *args,
         color: Optional[Colors] = Colors.RED,
         bold: bool = False,
         underline: bool = False,
     ):
-        self.logger.error(self._format_msg(msg, color, bold, underline))
+        self.logger.error(self._format_msg(msg, color, bold, underline), *args)
 
     def warn(
         self,
         msg: str,
+        *args,
         color: Optional[Colors] = Colors.YELLOW,
         bold: bool = False,
         underline: bool = False,
     ):
-        self.logger.warn(self._format_msg(msg, color, bold, underline))
+        self.logger.warn(self._format_msg(msg, color, bold, underline), *args)
 
     def info(
         self,
         msg: str,
+        *args,
         color: Optional[Colors] = Colors.GREEN,
         bold: bool = False,
         underline: bool = False,
     ):
-        self.logger.info(self._format_msg(msg, color, bold, underline))
+        self.logger.info(self._format_msg(msg, color, bold, underline), *args)
 
     def debug(
         self,
         msg: str,
+        *args,
         color: Colors = Colors.BLUE,
         bold: bool = False,
         underline: bool = False,
     ):
-        self.logger.debug(self._format_msg(msg, color, bold, underline))
+        self.logger.debug(self._format_msg(msg, color, bold, underline), *args)
 
 
 logger = Logger()

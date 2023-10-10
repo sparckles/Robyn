@@ -48,7 +48,7 @@ class Robyn:
         if self.config.log_level.lower() != "warn":
             logger.info(
                 "SERVER IS RUNNING IN VERBOSE/DEBUG MODE. Set --log-level to WARN to run in production mode.",
-                Colors.BLUE,
+                color=Colors.BLUE,
             )
         # If we are in dev mode, we need to setup the reloader
         # This process will be used by the watchdog observer while running the actual server as children processes
@@ -100,10 +100,16 @@ class Robyn:
             }
             route_type = http_methods[route_type]
 
-        logger.info(f"Logging endpoint: method={route_type}, route={endpoint}")
-        
+        logger.info("Logging endpoint: method=%s, route=%s", route_type, endpoint)
+
         return self.router.add_route(
-            route_type, endpoint, handler, is_const, self.dependencies.dependency_map,self.exception_handler
+            route_type,
+            endpoint,
+            handler,
+            is_const,
+            self.dependencies.dependency_map,
+            self.exception_handler,
+            self.response_headers,
         )
 
     def inject(self, route=None, **kwargs):
@@ -165,7 +171,7 @@ class Robyn:
         self.web_socket_router.add_route(endpoint, ws)
 
     def _add_event_handler(self, event_type: Events, handler: Callable) -> None:
-        logger.info(f"Add event {event_type} handler")
+        logger.info("Add event %s handler", event_type)
         if event_type not in {Events.STARTUP, Events.SHUTDOWN}:
             return
 
@@ -189,8 +195,8 @@ class Robyn:
         port = int(os.getenv("ROBYN_PORT", port))
         open_browser = bool(os.getenv("ROBYN_BROWSER_OPEN", self.config.open_browser))
 
-        logger.info(f"Robyn version: {__version__}")
-        logger.info(f"Starting server at {url}:{port}")
+        logger.info("Robyn version: %s", __version__)
+        logger.info("Starting server at %s:%s", url, port)
 
         mp.allow_connection_pickling()
 

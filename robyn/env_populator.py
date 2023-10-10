@@ -28,8 +28,8 @@ def load_vars(variables=None, project_root=""):
 
     for var in variables:
         if var[0] in os.environ:
-            logger.info(f" Variable {var[0]} already set")
+            logger.info(" Variable %s already set", var[0])
             continue
         else:
             os.environ[var[0]] = var[1]
-            logger.info(f" Variable {var[0]} set to {var[1]}")
+            logger.info(" Variable %s set to %s", var[0], var[1])
