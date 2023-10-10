@@ -178,7 +178,6 @@ class WebSocketConnector:
         pass
     async def async_send_to(self, sender_id: str, message: str) -> None:
         pass
-
     def sync_broadcast(self, message: str) -> None:
         pass
     def sync_send_to(self, sender_id: str, message: str) -> None:

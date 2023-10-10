@@ -13,7 +13,6 @@ from robyn.ws import WebSocket
 from robyn.types import Header
 
 
-
 class Route(NamedTuple):
     route_type: HttpMethod
     route: str
