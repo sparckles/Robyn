@@ -166,24 +166,24 @@ class Robyn:
     def shutdown_handler(self, handler: Callable) -> None:
         self._add_event_handler(Events.SHUTDOWN, handler)
 
-    def start(self, url: str = "127.0.0.1", port: int = 8080):
+    def start(self, host: str = "127.0.0.1", port: int = 8080):
         """
         Starts the server
 
         :param port int: represents the port number at which the server is listening
         """
 
-        url = os.getenv("ROBYN_URL", url)
+        host = os.getenv("ROBYN_HOST", host)
         port = int(os.getenv("ROBYN_PORT", port))
         open_browser = bool(os.getenv("ROBYN_BROWSER_OPEN", self.config.open_browser))
 
         logger.info("Robyn version: %s", __version__)
-        logger.info("Starting server at %s:%s", url, port)
+        logger.info("Starting server at %s:%s", host, port)
 
         mp.allow_connection_pickling()
 
         run_processes(
-            url,
+            host,
             port,
             self.directories,
             self.request_headers,

@@ -40,7 +40,7 @@ app = Robyn(__file__)
 async def h(request):  # request is an optional parameter
     return "Hello, world!"
 
-app.start(port=8080, url="0.0.0.0") # url is optional, defaults to 127.0.0.1
+app.start(port=8080, host="0.0.0.0") # url is optional, defaults to 127.0.0.1
 ```
 
 Let us try to decipher the usage line by line.
