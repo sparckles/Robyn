@@ -36,12 +36,19 @@ __version__ = get_version()
 class Robyn:
     """This is the python wrapper for the Robyn binaries."""
 
-    def __init__(self, file_object: str, config: Config = Config(),dependencies: DependencyMap = None) -> None:
+    def __init__(
+        self,
+        file_object: str,
+        config: Config = Config(),
+        dependencies: DependencyMap = None,
+    ) -> None:
         directory_path = os.path.dirname(os.path.abspath(file_object))
         self.file_path = file_object
         self.directory_path = directory_path
         self.config = config
-        self.dependencies = dependencies if dependencies is not None else DependencyMap()
+        self.dependencies = (
+            dependencies if dependencies is not None else DependencyMap()
+        )
         load_vars(project_root=directory_path)
         logging.basicConfig(level=self.config.log_level)
 

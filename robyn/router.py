@@ -61,7 +61,9 @@ class Router(BaseRouter):
             if not isinstance(status_code, int):
                 status_code = int(status_code)  # status_code can potentially be string
 
-            response = Response(status_code=status_code, headers=headers, description=description)
+            response = Response(
+                status_code=status_code, headers=headers, description=description
+            )
             file_path = res.get("file_path")
             if file_path is not None:
                 response.file_path = file_path
@@ -82,20 +84,20 @@ class Router(BaseRouter):
         return response
 
     def validate_handler_args(self, handler, endpoint, dependencies):
-        #Ensure handler function arguments match provided dependencies for an endpoint.
+        # Ensure handler function arguments match provided dependencies for an endpoint.
         handler_args = (inspect.signature(handler)).parameters.values()
         param_list = [a.name for a in handler_args]
         dependency_dict = dependencies.get("ALL_ROUTES", {})
         endpoint_dependencies = dependencies.get(endpoint, {})
         dependency_dict.update(endpoint_dependencies)
-        #dependency_dict = {**dependencies.get(endpoint, {}), **dependencies["ALL_ROUTES"]}
+        # dependency_dict = {**dependencies.get(endpoint, {}), **dependencies["ALL_ROUTES"]}
         for param in param_list:
             if param not in dependency_dict:
                 raise ValueError(
                     f"Arguments of the {handler.__name__} function do not match the dependencies provided for the {endpoint} endpoint. Please check the dependencies provided for the {endpoint} endpoint and try again. {param_list} {dependency_dict}"
                 )
         return param_list, dependency_dict
-    
+
     def add_route(
         self,
         route_type: HttpMethod,
@@ -110,7 +112,9 @@ class Router(BaseRouter):
 
         @wraps(handler)
         async def async_inner_handler(*args):
-            param_list, dependency_dict = self.validate_handler_args(handler, endpoint, dependencies)
+            param_list, dependency_dict = self.validate_handler_args(
+                handler, endpoint, dependencies
+            )
             # dependencies_to_pass construction considers each parameter specified in the handler function
             #'request' specified in init's dep mapping lets this construction account for a request parameter in the handler function
             dependencies_to_pass = [
@@ -132,7 +136,9 @@ class Router(BaseRouter):
 
         @wraps(handler)
         def inner_handler(*args):
-            param_list, dependency_dict = self.validate_handler_args(handler, endpoint, dependencies)
+            param_list, dependency_dict = self.validate_handler_args(
+                handler, endpoint, dependencies
+            )
 
             for param in param_list:
                 if param not in dependency_dict:

@@ -30,7 +30,6 @@ current_file_path = pathlib.Path(__file__).parent.resolve()
 jinja_template = JinjaTemplate(os.path.join(current_file_path, "templates"))
 
 
-
 # ===== Websockets =====
 
 # Make it easier for multiple test runs
@@ -766,13 +765,13 @@ ROUTE_DEPENDENCY = "route_dependency"
 app.inject(GLOBAL_DEPENDENCY=GLOBAL_DEPENDENCY)
 app.inject("/sync/dependency", ROUTE_DEPENDENCY=ROUTE_DEPENDENCY)
 
+
 @app.get("/local_dependency_injection")
 def sync_local_dependency():
     local_dependencies = app.get_injected_dependencies("/sync/dependency")
 
-    return {
-        "body": local_dependencies["ROUTE_DEPENDENCY"]
-    }
+    return {"body": local_dependencies["ROUTE_DEPENDENCY"]}
+
 
 @app.get("/global_dependency_injection")
 def sync_global_dependency():
@@ -781,7 +780,6 @@ def sync_global_dependency():
     return {
         "description": gloabal_dependcies["GLOBAL_DEPENDENCY"],
     }
-
 
 
 def main():
