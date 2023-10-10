@@ -1,6 +1,7 @@
 use actix_web::{web::Bytes, HttpRequest};
 use dashmap::DashMap;
-use pyo3::{prelude::*, types::PyDict};
+use pyo3::{exceptions::PyValueError, prelude::*, types::PyDict, types::PyString};
+use serde_json::Value;
 use std::collections::HashMap;
 
 use crate::types::{check_body_type, get_body_from_pyobject, Url};
@@ -113,10 +114,54 @@ pub struct PyRequest {
 
 #[pymethods]
 impl PyRequest {
+    #[new]
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        queries: Py<PyDict>,
+        headers: Py<PyDict>,
+        path_params: Py<PyDict>,
+        body: Py<PyAny>,
+        method: String,
+        url: Url,
+        identity: Option<Identity>,
+        ip_addr: Option<String>,
+    ) -> Self {
+        Self {
+            queries,
+            headers,
+            path_params,
+            identity,
+            body,
+            method,
+            url,
+            ip_addr,
+        }
+    }
+
     #[setter]
     pub fn set_body(&mut self, py: Python, body: Py<PyAny>) -> PyResult<()> {
         check_body_type(py, body.clone())?;
         self.body = body;
         Ok(())
+    }
+
+    pub fn json(&self, py: Python) -> PyResult<PyObject> {
+        match self.body.as_ref(py).downcast::<PyString>() {
+            Ok(python_string) => match serde_json::from_str(python_string.extract()?) {
+                Ok(Value::Object(map)) => {
+                    let dict = PyDict::new(py);
+
+                    for (key, value) in map.iter() {
+                        let py_key = key.to_string().into_py(py);
+                        let py_value = value.to_string().into_py(py);
+                        dict.set_item(py_key, py_value)?;
+                    }
+
+                    Ok(dict.into_py(py))
+                }
+                _ => Err(PyValueError::new_err("Invalid JSON object")),
+            },
+            Err(e) => Err(e.into()),
+        }
     }
 }

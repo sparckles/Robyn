@@ -534,6 +534,25 @@ async def async_body_post(request: Request):
     return request.body
 
 
+# JSON Request
+
+
+@app.post("/sync/request_json")
+def sync_json_post(request: Request):
+    try:
+        return type(request.json())
+    except ValueError:
+        return None
+
+
+@app.post("/async/request_json")
+async def async_json_post(request: Request):
+    try:
+        return type(request.json())
+    except ValueError:
+        return None
+
+
 # --- PUT ---
 
 # dict

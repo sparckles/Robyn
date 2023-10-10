@@ -100,7 +100,6 @@ impl Server {
         let global_request_headers = self.global_request_headers.clone();
         let global_response_headers = self.global_response_headers.clone();
         let directories = self.directories.clone();
-        let workers = Arc::new(workers);
 
         let asyncio = py.import("asyncio")?;
         let event_loop = asyncio.call_method0("new_event_loop")?;
@@ -124,7 +123,7 @@ impl Server {
 
         thread::spawn(move || {
             actix_web::rt::System::new().block_on(async move {
-                debug!("The number of workers is {}", workers.clone());
+                debug!("The number of workers is {}", workers);
                 execute_event_handler(startup_handler, &task_locals_copy)
                     .await
                     .unwrap();
@@ -212,7 +211,7 @@ impl Server {
                         ))
                 })
                 .keep_alive(KeepAlive::Os)
-                .workers(*workers.clone())
+                .workers(workers)
                 .client_request_timeout(std::time::Duration::from_secs(0))
                 .listen(raw_socket.try_into().unwrap())
                 .unwrap()
