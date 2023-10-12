@@ -35,6 +35,9 @@ pythonize = "0.19.0"
 serde = "1.0.178"
 serde_json = "1.0.104"
 
+[target.'cfg(not(any(all(target_arch="armv7", target_os="linux"), all(target_arch="aarch64", target_os="linux"))))'.dependencies]
+mimalloc = { version = "0.1.38", default-features = false, features = ["local_dynamic_tls"] }
+
 [features]
 io-uring = ["actix-web/experimental-io-uring"]
 
