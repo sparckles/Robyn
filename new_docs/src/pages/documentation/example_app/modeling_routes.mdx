@@ -97,7 +97,7 @@ app = Robyn(__file__)
 @app.post("/crimes")
 async def add_crime(request):
     with SessionLocal() as db:
-        crime = json.loads(request.body)
+        crime = request.json()
         insertion = crud.create_crime(db, crime)
 
     if insertion is None:
@@ -130,7 +130,7 @@ async def get_crime(request):
 
 @app.put("/crimes/:crime_id")
 async def update_crime(request):
-    crime = json.loads(request.body)
+    crime = request.json()
     crime_id = int(request.path_params.get("crime_id"))
     with SessionLocal() as db:
         updated_crime = crud.update_crime(db, crime_id=crime_id, crime=crime)

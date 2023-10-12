@@ -73,7 +73,7 @@ async def get():
 
 @app.post("/")
 async def post(request):
-  body = json.loads(request.body)
+  body = request.json()
   query = body["query"]
   variables = body.get("variables", None)
   context_value = {"request": request}
@@ -209,7 +209,7 @@ Finally, we are getting params(body, query, variables, context_value, root_value
     ```python {{ title: 'python' }}
     @app.post("/")
     async def post(request):
-    body = json.loads(request.body)
+    body = request.json()
     query = body["query"]
     variables = body.get("variables", None)
     context_value = {"request": request}
