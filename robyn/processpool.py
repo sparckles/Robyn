@@ -10,7 +10,7 @@ from robyn.events import Events
 from robyn.robyn import FunctionInfo, Server, SocketHeld
 from robyn.router import GlobalMiddleware, RouteMiddleware, Route
 from robyn.types import Directory, Header
-from robyn.ws import WS
+from robyn.ws import WebSocket
 
 
 def run_processes(
@@ -21,7 +21,7 @@ def run_processes(
     routes: List[Route],
     global_middlewares: List[GlobalMiddleware],
     route_middlewares: List[RouteMiddleware],
-    web_sockets: Dict[str, WS],
+    web_sockets: Dict[str, WebSocket],
     event_handlers: Dict[Events, FunctionInfo],
     workers: int,
     processes: int,
@@ -69,7 +69,7 @@ def init_processpool(
     routes: List[Route],
     global_middlewares: List[GlobalMiddleware],
     route_middlewares: List[RouteMiddleware],
-    web_sockets: Dict[str, WS],
+    web_sockets: Dict[str, WebSocket],
     event_handlers: Dict[Events, FunctionInfo],
     socket: SocketHeld,
     workers: int,
@@ -138,7 +138,7 @@ def spawn_process(
     routes: List[Route],
     global_middlewares: List[GlobalMiddleware],
     route_middlewares: List[RouteMiddleware],
-    web_sockets: Dict[str, WS],
+    web_sockets: Dict[str, WebSocket],
     event_handlers: Dict[Events, FunctionInfo],
     socket: SocketHeld,
     workers: int,

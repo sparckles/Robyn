@@ -22,11 +22,12 @@ from robyn.robyn import (
     Response,
     get_version,
     jsonify,
+    WebSocketConnector,
 )
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory, Header
 from robyn import status_codes
-from robyn.ws import WS
+from robyn.ws import WebSocket
 
 
 __version__ = get_version()
@@ -149,7 +150,7 @@ class Robyn:
     def add_response_header(self, key: str, value: str) -> None:
         self.response_headers.append(Header(key, value))
 
-    def add_web_socket(self, endpoint: str, ws: WS) -> None:
+    def add_web_socket(self, endpoint: str, ws: WebSocket) -> None:
         self.web_socket_router.add_route(endpoint, ws)
 
     def _add_event_handler(self, event_type: Events, handler: Callable) -> None:
@@ -460,4 +461,7 @@ __all__ = [
     "serve_file",
     "serve_html",
     "ALLOW_CORS",
+    "SubRouter",
+    "AuthenticationHandler",
+    "WebSocketConnector",
 ]

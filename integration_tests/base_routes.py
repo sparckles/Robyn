@@ -8,10 +8,11 @@ from robyn import (
     Request,
     Response,
     Robyn,
-    WS,
+    WebSocket,
     jsonify,
     serve_file,
     serve_html,
+    WebSocketConnector,
 )
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.templating import JinjaTemplate
@@ -19,12 +20,13 @@ from robyn.templating import JinjaTemplate
 from integration_tests.views import SyncView, AsyncView
 from integration_tests.subroutes import sub_router
 
-app = Robyn(__file__)
-websocket = WS(app, "/web_socket")
 
-# Creating a new WS app to test json handling + to serve an example to future users of this lib
+app = Robyn(__file__)
+websocket = WebSocket(app, "/web_socket")
+
+# Creating a new WebSocket app to test json handling + to serve an example to future users of this lib
 # while the original "raw" web_socket is used with benchmark tests
-websocket_json = WS(app, "/web_socket_json")
+websocket_json = WebSocket(app, "/web_socket_json")
 
 current_file_path = pathlib.Path(__file__).parent.resolve()
 jinja_template = JinjaTemplate(os.path.join(current_file_path, "templates"))
@@ -36,7 +38,8 @@ websocket_state = defaultdict(int)
 
 
 @websocket_json.on("message")
-async def jsonws_message(websocket_id: str, msg: str) -> str:
+async def jsonws_message(ws, msg: str) -> str:
+    websocket_id = ws.id
     response: dict = {"ws_id": websocket_id, "resp": "", "msg": msg}
     global websocket_state
     state = websocket_state[websocket_id]
@@ -51,17 +54,21 @@ async def jsonws_message(websocket_id: str, msg: str) -> str:
 
 
 @websocket.on("message")
-async def message(websocket_id: str, msg: str) -> str:
+async def message(ws: WebSocketConnector, msg: str) -> str:
     global websocket_state
+    websocket_id = ws.id
     state = websocket_state[websocket_id]
     resp = ""
     if state == 0:
         resp = "Whaaat??"
+        await ws.async_broadcast("This is a broadcast message")
+        ws.sync_send_to(websocket_id, "This is a message to self")
     elif state == 1:
         resp = "Whooo??"
     elif state == 2:
         resp = "*chika* *chika* Slim Shady."
     websocket_state[websocket_id] = (state + 1) % 3
+
     return resp
 
 

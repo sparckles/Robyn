@@ -13,10 +13,10 @@ To handle real-time communication, Batman learned how to work with WebSockets. H
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
     ```python {{ title: 'untyped' }}
-    from robyn import Robyn, jsonify, WS
+    from robyn import Robyn, jsonify, WebSocket
 
     app = Robyn(__file__)
-    websocket = WS(app, "/web_socket")
+    websocket = WebSocket(app, "/web_socket")
 
     @websocket.on("message")
     def connect():
@@ -34,10 +34,10 @@ To handle real-time communication, Batman learned how to work with WebSockets. H
     ```
 
     ```python {{title: 'typed'}}
-    from robyn import Robyn, jsonify, WS
+    from robyn import Robyn, jsonify, WebSocket
 
     app = Robyn(__file__)
-    websocket = WS(app, "/web_socket")
+    websocket = WebSocket(app, "/web_socket")
 
     @websocket.on("message")
     def connect():
