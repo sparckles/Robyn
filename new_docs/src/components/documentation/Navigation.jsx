@@ -229,10 +229,6 @@ export const navigation = [
         title: 'Getting Started',
       },
       {
-        href: '/documentation/api_reference/comparison',
-        title: 'Comparison',
-      },
-      {
         href: '/documentation/api_reference/request_object',
         title: 'The Request Object',
       },
@@ -301,7 +297,16 @@ export const navigation = [
     links: [
       {
         href: '/documentation/architecture',
-        title: 'Talks',
+        title: 'Architecture',
+      },
+    ],
+  },
+  {
+    title: 'Framework Comparison',
+    links: [
+      {
+        href: '/documentation/framework_performance_comparison',
+        title: 'Performance Comparison',
       },
     ],
   },
