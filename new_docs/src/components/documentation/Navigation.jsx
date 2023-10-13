@@ -229,10 +229,6 @@ export const navigation = [
         title: 'Getting Started',
       },
       {
-        href: '/documentation/api_reference/architecture',
-        title: 'Architecture',
-      },
-      {
         href: '/documentation/api_reference/comparison',
         title: 'Comparison',
       },
@@ -297,6 +293,15 @@ export const navigation = [
       {
         href: '/documentation/api_reference/community-resources#blogs',
         title: 'Blogs',
+      },
+    ],
+  },
+  {
+    title: 'Architecture',
+    links: [
+      {
+        href: '/documentation/architecture',
+        title: 'Talks',
       },
     ],
   },
