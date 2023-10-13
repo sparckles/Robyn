@@ -283,11 +283,11 @@ export const navigation = [
     title: 'Community Resources',
     links: [
       {
-        href: '/documentation/api_reference/community-resources#talks',
+        href: '/documentation/community-resources#talks',
         title: 'Talks',
       },
       {
-        href: '/documentation/api_reference/community-resources#blogs',
+        href: '/documentation/community-resources#blogs',
         title: 'Blogs',
       },
     ],
@@ -314,11 +314,11 @@ export const navigation = [
     title: 'Hosting',
     links: [
       {
-        href: '/documentation/api_reference/hosting#railway',
+        href: '/documentation/hosting#railway',
         title: 'Railway',
       },
       {
-        href: '/documentation/api_reference/hosting#exposing-ports',
+        href: '/documentation/hosting#exposing-ports',
         title: 'Exposing Ports',
       },
     ],
