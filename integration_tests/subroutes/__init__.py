@@ -1,9 +1,9 @@
-from robyn import SubRouter, jsonify, WS
+from robyn import SubRouter, jsonify, WebSocket
 
 
 sub_router = SubRouter(__name__, prefix="/sub_router")
 
-websocket = WS(sub_router, "/ws")
+websocket = WebSocket(sub_router, "/ws")
 
 
 @websocket.on("connect")
