@@ -96,7 +96,7 @@ For example, Batman learned to create a POST request like this:
     from robyn import Request
 
     @app.post("/")
-    async def h(request):
+    async def h(request: Request):
         return "Hello World"
 
     ```
@@ -169,7 +169,7 @@ Batman was curious about how to access path parameters and query parameters from
 
     ```
 
-    ```python {{ title: 'sync' }}
+    ```python {{ title: 'typed' }}
     from robyn import jsonify, Request
 
     @app.post("/jsonify/:id")
@@ -205,7 +205,7 @@ Batman was curious about how to access path parameters and query parameters from
         return jsonify(query_data)
     ```
 
-    ```python {{ title: 'sync' }}
+    ```python {{ title: 'typed' }}
     from robyn import Request
 
     @app.get("/query")
