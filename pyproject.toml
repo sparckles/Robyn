@@ -75,10 +75,11 @@ commitizen = "2.40"
 optional = true
 
 [tool.poetry.group.test.dependencies]
-requests = "2.28.2"
 pytest = "7.2.1"
-websocket-client = "1.5.0"
 pytest-codspeed = "1.2.2"
+requests = "2.28.2"
+nox = "2023.4.22"
+websocket-client = "1.5.0"
 
 [tool.poetry.scripts]
 test_server = { callable = "integration_tests.base_routes:main" }
