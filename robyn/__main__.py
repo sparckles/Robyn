@@ -33,7 +33,7 @@ def create_robyn_app():
     with open(app_file_path, "w") as f:
         f.write(
             """
-from Robyn import Robyn
+from robyn import Robyn
 
 app = Robyn(__file__)
 
