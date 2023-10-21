@@ -24,7 +24,7 @@ pip install robyn
 Or, with [conda-forge](https://conda-forge.org/)
 
 ```
-conda install -c conda-forge Robyn
+conda install -c conda-forge robyn
 ```
 
 ## 🤔 Usage
@@ -52,7 +52,9 @@ Simply run the app.py file you created. You will then have access to a server on
 ```
 $ python3 app.py
 ```
+
 To see the usage
+
 ```
 usage: app.py [-h] [--processes PROCESSES] [--workers WORKERS] [--dev] [--log-level LOG_LEVEL]
 
@@ -68,9 +70,11 @@ options:
   --docs                    Open the Robyn documentation.
   --open-browser            Open the browser on successful start.
 ```
+
 Log level can be `DEBUG`, `INFO`, `WARNING`, or `ERROR`.
-    
+
 When running the app using `--open-browser` a new browser window will open at the app location, e.g:
+
 ```
 $ python3 app.py --open-browser
 ```
@@ -132,6 +136,7 @@ If you still need help to get started, feel free to reach out on our [community 
 4. Run `poetry run test_server`. This will run a server containing several examples of routes we use for testing purposes. You can see them at `integration_tests/base_routes.py`. You can modify or add some to your likings.
 
 You can then request the server you ran from an other terminal. Here is a `GET` request done using [curl](https://curl.se/) for example:
+
 ```bash
 curl http://localhost:8080/sync/str
 ```
