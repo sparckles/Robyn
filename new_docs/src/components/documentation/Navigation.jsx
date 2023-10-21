@@ -270,8 +270,8 @@ export const navigation = [
         title: 'Exceptions',
       },
       {
-        href: '/documentation/api_reference/advanced-features#keep-a-track-of-clients-ip-address',
-        title: 'Client IP Address',
+        href: '/documentation/api_reference/advanced_features#keep-a-track-of-clients-ip-address',
+        title: 'Advanced Features',
       },
       {
         href: '/documentation/api_reference/graphql-support',
@@ -320,6 +320,15 @@ export const navigation = [
       {
         href: '/documentation/hosting#exposing-ports',
         title: 'Exposing Ports',
+      },
+    ],
+  },
+  {
+    title: 'Plugins',
+    links: [
+      {
+        href: '/documentation/plugins',
+        title: 'Plugins',
       },
     ],
   },
