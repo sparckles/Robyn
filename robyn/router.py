@@ -6,7 +6,7 @@ from types import CoroutineType
 from typing import Callable, Dict, List, NamedTuple, Union, Optional
 from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
 
-from robyn.robyn import FunctionInfo, HttpMethod, MiddlewareType, Request, Response
+from robyn.robyn import FunctionInfo, HttpMethod, MiddlewareType, Request, Response, jsonify
 from robyn import status_codes
 
 from robyn.ws import WebSocket
@@ -54,19 +54,11 @@ class Router(BaseRouter):
         )
         response = {}
         if isinstance(res, dict):
-            status_code = res.get("status_code", status_codes.HTTP_200_OK)
-            headers = res.get("headers", headers)
-            description = res.get("description", "")
-
-            if not isinstance(status_code, int):
-                status_code = int(status_code)  # status_code can potentially be string
-
             response = Response(
-                status_code=status_code, headers=headers, description=description
+                status_code=status_codes.HTTP_200_OK,
+                headers=headers,
+                description=jsonify(res),
             )
-            file_path = res.get("file_path")
-            if file_path is not None:
-                response.file_path = file_path
         elif isinstance(res, Response):
             response = res
         elif isinstance(res, bytes):
@@ -74,6 +66,13 @@ class Router(BaseRouter):
                 status_code=status_codes.HTTP_200_OK,
                 headers={"Content-Type": "application/octet-stream"},
                 description=res,
+            )
+        elif isinstance(res, NamedTuple):
+            response = Response(
+                status_code=res.status_code,
+                headers=res.headers,
+                description=res.description,
+                file_path=res.file_path,
             )
         else:
             response = Response(
