@@ -127,7 +127,7 @@ def hello_after_request(request):
     print(request)
 ```
 
-### A basic web socket chat app.
+### A basic WebSocket chat app.
 
 Coming Soon....
 

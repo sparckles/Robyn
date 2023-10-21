@@ -121,14 +121,14 @@ from . import crud
 
 @app.post("/users/register")
 async def register_user(request):
-    user = json.loads(request.body)
+    user = request.json()
     with SessionLocal() as db:
         created_user = crud.create_user(db, user)
     return created_user
 
 @app.post("/users/login")
 async def login_user(request):
-    user = json.loads(request.body)
+    user = request.json()
     with SessionLocal() as db:
         token = crud.authenticate_user(db, **user)
 

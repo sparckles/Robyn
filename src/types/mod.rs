@@ -58,8 +58,10 @@ pub struct Url {
     pub path: String,
 }
 
+#[pymethods]
 impl Url {
-    fn new(scheme: &str, host: &str, path: &str) -> Self {
+    #[new]
+    pub fn new(scheme: &str, host: &str, path: &str) -> Self {
         Self {
             scheme: scheme.to_string(),
             host: host.to_string(),

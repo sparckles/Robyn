@@ -1,6 +1,6 @@
 ## Environment Variables
 
-There are some environment variables that Robyn looks out for. e.g. `ROBYN_URL` and `ROBYN_PORT`.
+There are some environment variables that Robyn looks out for. e.g. `ROBYN_HOST` and `ROBYN_PORT`.
 
 You can have a `robyn.env` file to load them automatically in your environment.
 
@@ -19,7 +19,7 @@ Sample `robyn.env`
 
 ```bash
 ROBYN_PORT=8080
-ROBYN_URL=127.0.0.1
+ROBYN_HOST=127.0.0.1
 RANDOM_ENV=123
 ```
 

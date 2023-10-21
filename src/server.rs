@@ -11,7 +11,7 @@ use crate::types::request::Request;
 use crate::types::response::Response;
 use crate::types::HttpMethod;
 use crate::types::MiddlewareReturn;
-use crate::web_socket_connection::start_web_socket;
+use crate::websockets::start_web_socket;
 
 use std::convert::TryInto;
 use std::sync::atomic::AtomicBool;
@@ -100,7 +100,6 @@ impl Server {
         let global_request_headers = self.global_request_headers.clone();
         let global_response_headers = self.global_response_headers.clone();
         let directories = self.directories.clone();
-        let workers = Arc::new(workers);
 
         let asyncio = py.import("asyncio")?;
         let event_loop = asyncio.call_method0("new_event_loop")?;
@@ -124,7 +123,7 @@ impl Server {
 
         thread::spawn(move || {
             actix_web::rt::System::new().block_on(async move {
-                debug!("The number of workers is {}", workers.clone());
+                debug!("The number of workers is {}", workers);
                 execute_event_handler(startup_handler, &task_locals_copy)
                     .await
                     .unwrap();
@@ -167,17 +166,19 @@ impl Server {
 
                     let web_socket_map = web_socket_router.get_web_socket_map();
                     for (elem, value) in (web_socket_map.read().unwrap()).iter() {
-                        let route = elem.clone();
+                        let endpoint = elem.clone();
                         let path_params = value.clone();
                         let task_locals = task_locals.clone();
                         app = app.route(
-                            &route.clone(),
+                            &endpoint.clone(),
                             web::get().to(move |stream: web::Payload, req: HttpRequest| {
+                                let endpoint_copy = endpoint.clone();
                                 start_web_socket(
                                     req,
                                     stream,
                                     path_params.clone(),
                                     task_locals.clone(),
+                                    endpoint_copy,
                                 )
                             }),
                         );
@@ -210,7 +211,7 @@ impl Server {
                         ))
                 })
                 .keep_alive(KeepAlive::Os)
-                .workers(*workers.clone())
+                .workers(workers)
                 .client_request_timeout(std::time::Duration::from_secs(0))
                 .listen(raw_socket.try_into().unwrap())
                 .unwrap()

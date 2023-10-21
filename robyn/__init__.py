@@ -22,11 +22,12 @@ from robyn.robyn import (
     Response,
     get_version,
     jsonify,
+    WebSocketConnector,
 )
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory, Header
 from robyn import status_codes
-from robyn.ws import WS
+from robyn.ws import WebSocket
 
 
 __version__ = get_version()
@@ -47,7 +48,7 @@ class Robyn:
         if self.config.log_level.lower() != "warn":
             logger.info(
                 "SERVER IS RUNNING IN VERBOSE/DEBUG MODE. Set --log-level to WARN to run in production mode.",
-                Colors.BLUE,
+                color=Colors.BLUE,
             )
         # If we are in dev mode, we need to setup the reloader
         # This process will be used by the watchdog observer while running the actual server as children processes
@@ -99,8 +100,15 @@ class Robyn:
             }
             route_type = http_methods[route_type]
 
+        logger.info("Logging endpoint: method=%s, route=%s", route_type, endpoint)
+
         return self.router.add_route(
-            route_type, endpoint, handler, is_const, self.exception_handler
+            route_type,
+            endpoint,
+            handler,
+            is_const,
+            self.exception_handler,
+            self.response_headers,
         )
 
     def before_request(self, endpoint: Optional[str] = None) -> Callable[..., None]:
@@ -142,11 +150,11 @@ class Robyn:
     def add_response_header(self, key: str, value: str) -> None:
         self.response_headers.append(Header(key, value))
 
-    def add_web_socket(self, endpoint: str, ws: WS) -> None:
+    def add_web_socket(self, endpoint: str, ws: WebSocket) -> None:
         self.web_socket_router.add_route(endpoint, ws)
 
     def _add_event_handler(self, event_type: Events, handler: Callable) -> None:
-        logger.info(f"Add event {event_type} handler")
+        logger.info("Add event %s handler", event_type)
         if event_type not in {Events.STARTUP, Events.SHUTDOWN}:
             return
 
@@ -159,24 +167,24 @@ class Robyn:
     def shutdown_handler(self, handler: Callable) -> None:
         self._add_event_handler(Events.SHUTDOWN, handler)
 
-    def start(self, url: str = "127.0.0.1", port: int = 8080):
+    def start(self, host: str = "127.0.0.1", port: int = 8080):
         """
         Starts the server
 
         :param port int: represents the port number at which the server is listening
         """
 
-        url = os.getenv("ROBYN_URL", url)
+        host = os.getenv("ROBYN_HOST", host)
         port = int(os.getenv("ROBYN_PORT", port))
         open_browser = bool(os.getenv("ROBYN_BROWSER_OPEN", self.config.open_browser))
 
-        logger.info(f"Robyn version: {__version__}")
-        logger.info(f"Starting server at {url}:{port}")
+        logger.info("Robyn version: %s", __version__)
+        logger.info("Starting server at %s:%s", host, port)
 
         mp.allow_connection_pickling()
 
         run_processes(
-            url,
+            host,
             port,
             self.directories,
             self.request_headers,
@@ -453,4 +461,7 @@ __all__ = [
     "serve_file",
     "serve_html",
     "ALLOW_CORS",
+    "SubRouter",
+    "AuthenticationHandler",
+    "WebSocketConnector",
 ]
