@@ -20,7 +20,7 @@ Sample `robyn.env`
 ```bash
 ROBYN_PORT=8080
 ROBYN_HOST=127.0.0.1
-RANDOM_ENV=123
+ROBYN_BROWSER_OPEN=False
 ```
 
 To configure the max payload size, you can set the `ROBYN_MAX_PAYLOAD_SIZE` environment variable. The default value is `1000000` bytes.
