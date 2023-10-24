@@ -12,11 +12,15 @@ const guides = [
     name: 'Getting Started',
     description: 'Start with creating basic routes in Robyn.',
   },
-
   {
     href: '/documentation/api_reference/request_object',
     name: 'The Request Object',
     description: 'Learn about the Request Object in Robyn.',
+  },
+  {
+    href: '/documentation/api_reference/robyn_env',
+    name: 'The Robyn Env file',
+    description: 'Learn about the Robyn variables',
   },
   {
     href: '/documentation/api_reference/middlewares',
