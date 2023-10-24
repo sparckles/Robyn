@@ -92,6 +92,8 @@ class Router(BaseRouter):
         exception_handler: Optional[Callable],
         default_response_headers: List[Header],
     ) -> Union[Callable, CoroutineType]:
+        # this should not be a dictionary but a multi dict
+        # this should change from the top
         response_headers = {d.key: d.val for d in default_response_headers}
 
         @wraps(handler)
