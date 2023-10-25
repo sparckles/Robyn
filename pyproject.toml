@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "robyn"
-version = "0.44.0"
+version = "0.44.1"
 description = "A High-Performance, Community-Driven, and Innovator Friendly Web Framework with a Rust runtime."
 authors = [{ name = "Sanskar Jethi", email = "sansyrox@gmail.com" }]
 repository = "https://github.com/sparckles/robyn"
@@ -43,7 +43,7 @@ Changelog = "https://github.com/sparckles/robyn/blob/main/CHANGELOG.md"
 
 [tool.poetry]
 name = "robyn"
-version = "0.44.0"
+version = "0.44.1"
 description = "A High-Performance, Community-Driven, and Innovator Friendly Web Framework with a Rust runtime."
 authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 
