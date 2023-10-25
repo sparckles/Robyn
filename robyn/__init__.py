@@ -12,7 +12,8 @@ from robyn.logger import Colors
 from robyn.reloader import setup_reloader
 from robyn.env_populator import load_vars
 from robyn.events import Events
-from robyn.logger import logger
+
+# from robyn.logger import logger
 from robyn.processpool import run_processes
 from robyn.responses import serve_file, serve_html
 from robyn.robyn import (
@@ -31,6 +32,21 @@ from robyn.ws import WS
 
 __version__ = get_version()
 
+INFO_APP = 55  # Level number, higher than CRITICAL (50)
+logging.addLevelName(INFO_APP, "INFO_APP")  # Add level name
+
+
+def info_app(self, message, *args, **kwargs):
+    self._log(INFO_APP, message, args, kwargs)
+
+
+logging.Logger.info_app = info_app  # Add method to Logger class
+
+logging.INFO_APP = INFO_APP  # Optional - for convenience
+
+logger = logging.getLogger(__name__)
+logger.setLevel(INFO_APP)
+
 
 class Robyn:
     """This is the python wrapper for the Robyn binaries."""
@@ -42,13 +58,14 @@ class Robyn:
         self.config = config
 
         load_vars(project_root=directory_path)
-        logging.basicConfig(level=self.config.log_level)
 
         if self.config.verbose is True:
-            logger.info(
-                "SERVER IS RUNNING IN VERBOSE/DEBUG MODE. Set --log-level to WARN to run in production mode.",
-                color=Colors.BLUE,
-            )
+            logging.basicConfig(level=self.config.log_level)
+
+        logger.info(
+            "SERVER IS RUNNING IN VERBOSE/DEBUG MODE. Set --log-level to WARN to run in production mode.",
+            color=Colors.BLUE,
+        )
         # If we are in dev mode, we need to setup the reloader
         # This process will be used by the watchdog observer while running the actual server as children processes
         if self.config.dev and not os.environ.get("IS_RELOADER_RUNNING", False):
@@ -175,8 +192,8 @@ class Robyn:
         port = int(os.getenv("ROBYN_PORT", port))
         open_browser = bool(os.getenv("ROBYN_BROWSER_OPEN", self.config.open_browser))
 
-        logger.info("Robyn version: %s", __version__)
-        logger.info("Starting server at %s:%s", url, port)
+        logger.info_app("Robyn version: %s", __version__)
+        logger.info_app("Starting server at %s:%s", url, port)
 
         mp.allow_connection_pickling()
 
