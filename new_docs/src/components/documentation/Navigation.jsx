@@ -229,14 +229,6 @@ export const navigation = [
         title: 'Getting Started',
       },
       {
-        href: '/documentation/api_reference/architecture',
-        title: 'Architecture',
-      },
-      {
-        href: '/documentation/api_reference/comparison',
-        title: 'Comparison',
-      },
-      {
         href: '/documentation/api_reference/request_object',
         title: 'The Request Object',
       },
@@ -278,8 +270,8 @@ export const navigation = [
         title: 'Exceptions',
       },
       {
-        href: '/documentation/api_reference/advanced-features#keep-a-track-of-clients-ip-address',
-        title: 'Client IP Address',
+        href: '/documentation/api_reference/advanced_features#keep-a-track-of-clients-ip-address',
+        title: 'Advanced Features',
       },
       {
         href: '/documentation/api_reference/graphql-support',
@@ -291,12 +283,30 @@ export const navigation = [
     title: 'Community Resources',
     links: [
       {
-        href: '/documentation/api_reference/community-resources#talks',
+        href: '/documentation/community-resources#talks',
         title: 'Talks',
       },
       {
-        href: '/documentation/api_reference/community-resources#blogs',
+        href: '/documentation/community-resources#blogs',
         title: 'Blogs',
+      },
+    ],
+  },
+  {
+    title: 'Architecture',
+    links: [
+      {
+        href: '/documentation/architecture',
+        title: 'Architecture',
+      },
+    ],
+  },
+  {
+    title: 'Framework Comparison',
+    links: [
+      {
+        href: '/documentation/framework_performance_comparison',
+        title: 'Performance Comparison',
       },
     ],
   },
@@ -304,12 +314,21 @@ export const navigation = [
     title: 'Hosting',
     links: [
       {
-        href: '/documentation/api_reference/hosting#railway',
+        href: '/documentation/hosting#railway',
         title: 'Railway',
       },
       {
-        href: '/documentation/api_reference/hosting#exposing-ports',
+        href: '/documentation/hosting#exposing-ports',
         title: 'Exposing Ports',
+      },
+    ],
+  },
+  {
+    title: 'Plugins',
+    links: [
+      {
+        href: '/documentation/plugins',
+        title: 'Plugins',
       },
     ],
   },

@@ -44,7 +44,7 @@ async def postreq(request):
 
 ```python
 @app.put("/put")
-async def postreq(request):
+async def putreq(request):
     return request.body
 ```
 
@@ -52,7 +52,7 @@ async def postreq(request):
 
 ```python
 @app.patch("/patch")
-async def postreq(request):
+async def patchreq(request):
     return request.body
 ```
 
@@ -60,7 +60,7 @@ async def postreq(request):
 
 ```python
 @app.delete("/delete")
-async def postreq(request):
+async def deletereq(request):
     return request.body
 ```
 
@@ -225,7 +225,7 @@ Additionally, you can access headers for per route.
 
 ```python
 @app.get("/test-headers")
-def sync_before_request(request: Request):
+def sync_middle_of_request(request: Request):
     request.headers["test"] = "we are modifying the request headers in the middle of the request!"
     print(request)
 ```
@@ -264,23 +264,23 @@ def shutdown_handler():
 
 ## WebSockets
 
-You can now serve websockets using Robyn.
+You can now serve WebSockets using Robyn.
 
 Firstly, you need to create a WebSocket Class and wrap it around your Robyn app.
 
 ```python
-from robyn import Robyn, jsonify, WS
+from robyn import Robyn, jsonify, WebSocket
 
 
 app = Robyn(__file__)
-websocket = WS(app, "/web_socket")
+websocket = WebSocket(app, "/web_socket")
 ```
 
-Now, you can define 3 methods for every web_socket for their life cycle, they are as follows:
+Now, you can define 3 methods for every WebSocket for their life cycle, they are as follows:
 
 ```python
 @websocket.on("message")
-def connect():
+def message():
     global i
     i += 1
     if i == 0:
@@ -300,7 +300,7 @@ def close():
 
 
 @websocket.on("connect")
-def message():
+def connect():
     return "Hello world, from ws"
 ```
 
@@ -312,11 +312,13 @@ The three methods:
 
 To see a complete service in action, you can go to the folder [../integration_tests/base_routes.py](../integration_tests/base_routes.py)
 
-#### Web Socket Usage
+#### WebSocket Usage
+
+You can also use async functions for WebSockets.
 
 ```python
 @websocket.on("message")
-async def connect():
+async def message():
     global i
     i += 1
     if i == 0:
@@ -336,7 +338,7 @@ async def close():
 
 
 @websocket.on("connect")
-async def message():
+async def connect():
     return "Hello world, from ws"
 ```
 
@@ -544,7 +546,8 @@ def View():
         }
 ```
 
-app.py
+And then in `app.py`:
+
 ```python
 from .views import View
 
@@ -594,7 +597,7 @@ def handle_exception(error):
 
 You can create subrouters in Robyn. This is useful when you want to group routes together.
 
-Subrouters can be used for both normal routes and web sockets. They are basically a mini version of the main router and can be used in the same way.
+Subrouters can be used for both normal routes and WebSockets. They are basically a mini version of the main router and can be used in the same way.
 
 The only caveat is that you need to add the subrouter to the main router.
 

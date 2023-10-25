@@ -1,5 +1,5 @@
 export const description =
-  'In this guide, we’ll look at how authentication works. Protocol offers two ways to authenticate your API requests: Basic authentication and OAuth2 with a token.'
+  'Welcome to the Robyn API documentation. You will find comprehensive guides and documentation to help you start working with Robyn as quickly as possible, as well as support if you get stuck.'
 
 ## Authentication and Authorization
 To restrict access to the crime data, Batman added authentication and authorization to the application. He decided to use JWT (JSON Web Token) for authentication. He created a new table for users and added an endpoint for user registration.
@@ -121,14 +121,14 @@ from . import crud
 
 @app.post("/users/register")
 async def register_user(request):
-    user = json.loads(request.body)
+    user = request.json()
     with SessionLocal() as db:
         created_user = crud.create_user(db, user)
     return created_user
 
 @app.post("/users/login")
 async def login_user(request):
-    user = json.loads(request.body)
+    user = request.json()
     with SessionLocal() as db:
         token = crud.authenticate_user(db, **user)
 

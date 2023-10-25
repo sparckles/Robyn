@@ -1183,7 +1183,7 @@ checksum = "e5ea92a5b6195c6ef2a0295ea818b312502c6fc94dde986c5553242e18fd4ce2"
 
 [[package]]
 name = "robyn"
-version = "0.42.2"
+version = "0.44.1"
 dependencies = [
  "actix",
  "actix-files",
@@ -1196,6 +1196,7 @@ dependencies = [
  "futures-util",
  "log",
  "matchit",
+ "once_cell",
  "pyo3",
  "pyo3-asyncio",
  "pyo3-log",

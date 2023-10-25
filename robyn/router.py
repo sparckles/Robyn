@@ -8,7 +8,9 @@ from robyn.authentication import AuthenticationHandler, AuthenticationNotConfigu
 
 from robyn.robyn import FunctionInfo, HttpMethod, MiddlewareType, Request, Response
 from robyn import status_codes
-from robyn.ws import WS
+
+from robyn.ws import WebSocket
+from robyn.types import Header
 
 
 class Route(NamedTuple):
@@ -31,7 +33,7 @@ class GlobalMiddleware(NamedTuple):
 
 class BaseRouter(ABC):
     @abstractmethod
-    def add_route(*args) -> Union[Callable, CoroutineType, WS]:
+    def add_route(*args) -> Union[Callable, CoroutineType, WebSocket]:
         ...
 
 
@@ -40,14 +42,23 @@ class Router(BaseRouter):
         super().__init__()
         self.routes: List[Route] = []
 
-    def _format_response(self, res):
+    def _format_response(
+        self,
+        res: dict,
+        default_response_header: dict,
+    ) -> Response:
+        headers = (
+            {"Content-Type": "text/plain"}
+            if not default_response_header
+            else default_response_header
+        )
         response = {}
         if isinstance(res, dict):
             status_code = res.get("status_code", status_codes.HTTP_200_OK)
-            headers = res.get("headers", {"Content-Type": "text/plain"})
+            headers = res.get("headers", headers)
             description = res.get("description", "")
 
-            if type(status_code) != int:
+            if not isinstance(status_code, int):
                 status_code = int(status_code)  # status_code can potentially be string
 
             response = Response(
@@ -67,7 +78,7 @@ class Router(BaseRouter):
         else:
             response = Response(
                 status_code=status_codes.HTTP_200_OK,
-                headers={"Content-Type": "text/plain"},
+                headers=headers,
                 description=str(res).encode("utf-8"),
             )
         return response
@@ -79,25 +90,40 @@ class Router(BaseRouter):
         handler: Callable,
         is_const: bool,
         exception_handler: Optional[Callable],
+        default_response_headers: List[Header],
     ) -> Union[Callable, CoroutineType]:
+        response_headers = {d.key: d.val for d in default_response_headers}
+
         @wraps(handler)
         async def async_inner_handler(*args):
             try:
-                response = self._format_response(await handler(*args))
+                response = self._format_response(
+                    await handler(*args),
+                    response_headers,
+                )
             except Exception as err:
                 if exception_handler is None:
                     raise
-                response = self._format_response(exception_handler(err))
+                response = self._format_response(
+                    exception_handler(err),
+                    response_headers,
+                )
             return response
 
         @wraps(handler)
         def inner_handler(*args):
             try:
-                response = self._format_response(handler(*args))
+                response = self._format_response(
+                    handler(*args),
+                    response_headers,
+                )
             except Exception as err:
                 if exception_handler is None:
                     raise
-                response = self._format_response(exception_handler(err))
+                response = self._format_response(
+                    exception_handler(err),
+                    response_headers,
+                )
             return response
 
         number_of_params = len(signature(handler).parameters)
@@ -212,8 +238,8 @@ class WebSocketRouter(BaseRouter):
         super().__init__()
         self.routes = {}
 
-    def add_route(self, endpoint: str, web_socket: WS) -> None:
+    def add_route(self, endpoint: str, web_socket: WebSocket) -> None:
         self.routes[endpoint] = web_socket
 
-    def get_routes(self) -> Dict[str, WS]:
+    def get_routes(self) -> Dict[str, WebSocket]:
         return self.routes

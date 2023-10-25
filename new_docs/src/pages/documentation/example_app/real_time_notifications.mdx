@@ -1,5 +1,5 @@
 export const description =
-  'In this guide, we’ll look at how authentication works. Protocol offers two ways to authenticate your API requests: Basic authentication and OAuth2 with a token.'
+  'Welcome to the Robyn API documentation. You will find comprehensive guides and documentation to help you start working with Robyn as quickly as possible, as well as support if you get stuck.'
 
 ## Real time notifications
 Batman decided to implement real-time notifications for police officers using WebSockets. This would allow officers to receive instant updates on criminal activities, as well as alerts when a new crime is reported.
@@ -7,9 +7,9 @@ Batman decided to implement real-time notifications for police officers using We
 
 
 ```python {{ title: 'Setting up Authentication Middlewares' }}
-from robyn import WS
+from robyn import WebSocket
 
-websocket = WS(app, "/notifications")
+websocket = WebSocket(app, "/notifications")
 
 @websocket.on("connect")
 async def notify_connect():

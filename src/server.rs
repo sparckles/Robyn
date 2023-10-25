@@ -11,7 +11,7 @@ use crate::types::request::Request;
 use crate::types::response::Response;
 use crate::types::HttpMethod;
 use crate::types::MiddlewareReturn;
-use crate::web_socket_connection::start_web_socket;
+use crate::websockets::start_web_socket;
 
 use std::convert::TryInto;
 use std::sync::atomic::AtomicBool;
@@ -166,17 +166,19 @@ impl Server {
 
                     let web_socket_map = web_socket_router.get_web_socket_map();
                     for (elem, value) in (web_socket_map.read().unwrap()).iter() {
-                        let route = elem.clone();
+                        let endpoint = elem.clone();
                         let path_params = value.clone();
                         let task_locals = task_locals.clone();
                         app = app.route(
-                            &route.clone(),
+                            &endpoint.clone(),
                             web::get().to(move |stream: web::Payload, req: HttpRequest| {
+                                let endpoint_copy = endpoint.clone();
                                 start_web_socket(
                                     req,
                                     stream,
                                     path_params.clone(),
                                     task_locals.clone(),
+                                    endpoint_copy,
                                 )
                             }),
                         );

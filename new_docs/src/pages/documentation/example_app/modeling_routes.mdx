@@ -1,5 +1,5 @@
 export const description =
-  'In this guide, we’ll look at how authentication works. Protocol offers two ways to authenticate your API requests: Basic authentication and OAuth2 with a token.'
+  'Welcome to the Robyn API documentation. You will find comprehensive guides and documentation to help you start working with Robyn as quickly as possible, as well as support if you get stuck.'
 
 
 ## Crime Data Model and Database Connection
@@ -97,7 +97,7 @@ app = Robyn(__file__)
 @app.post("/crimes")
 async def add_crime(request):
     with SessionLocal() as db:
-        crime = json.loads(request.body)
+        crime = request.json()
         insertion = crud.create_crime(db, crime)
 
     if insertion is None:
@@ -130,7 +130,7 @@ async def get_crime(request):
 
 @app.put("/crimes/:crime_id")
 async def update_crime(request):
-    crime = json.loads(request.body)
+    crime = request.json()
     crime_id = int(request.path_params.get("crime_id"))
     with SessionLocal() as db:
         updated_crime = crud.update_crime(db, crime_id=crime_id, crime=crime)

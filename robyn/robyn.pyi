@@ -158,3 +158,27 @@ class Server:
         pass
     def start(self, socket: SocketHeld, workers: int) -> None:
         pass
+
+class WebSocketConnector:
+    """
+    The WebSocketConnector object passed to the route handler.
+
+    Attributes:
+        id (str): The id of the client
+
+        async_broadcast (Callable): The function to broadcast a message to all clients
+        async_send_to (Callable): The function to send a message to the client
+        sync_broadcast (Callable): The function to broadcast a message to all clients
+        sync_send_to (Callable): The function to send a message to the client
+    """
+
+    id: str
+
+    async def async_broadcast(self, message: str) -> None:
+        pass
+    async def async_send_to(self, sender_id: str, message: str) -> None:
+        pass
+    def sync_broadcast(self, message: str) -> None:
+        pass
+    def sync_send_to(self, sender_id: str, message: str) -> None:
+        pass
