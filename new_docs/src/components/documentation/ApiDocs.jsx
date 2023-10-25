@@ -12,11 +12,15 @@ const guides = [
     name: 'Getting Started',
     description: 'Start with creating basic routes in Robyn.',
   },
-
   {
     href: '/documentation/api_reference/request_object',
     name: 'The Request Object',
     description: 'Learn about the Request Object in Robyn.',
+  },
+  {
+    href: '/documentation/api_reference/robyn_env',
+    name: 'The Robyn Env file',
+    description: 'Learn about the Robyn variables',
   },
   {
     href: '/documentation/api_reference/middlewares',
@@ -65,11 +69,10 @@ const guides = [
     name: 'Exceptions',
     description: 'Learn how to handle exceptions in Robyn.',
   },
-
   {
-    href: '/documentation/api_reference/advanced-features',
+    href: '/documentation/api_reference/advanced_features',
     name: 'Advanced Features',
-    description: 'Lear about advanced features in Robyn.',
+    description: 'Learn about advanced features in Robyn.',
   },
 ]
 
@@ -77,7 +80,7 @@ export function ApiDocs() {
   return (
     <div className="my-16 xl:max-w-none">
       <Heading level={2} id="api_docs">
-       <h3 className='text-white'>Api Docs</h3>
+        <h3 className="text-white">Api Docs</h3>
       </Heading>
       <div className="not-prose mt-4 grid grid-cols-1 gap-8 border-t border-white/5 pt-10 sm:grid-cols-2 xl:grid-cols-4">
         {guides.map((guide) => (

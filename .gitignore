@@ -18,6 +18,8 @@ robyn.code-workspace
 hello_robyn.py
 robyn.env
 
+# nox
+.nox/
 
 # new docs dependencies
 # dependencies
