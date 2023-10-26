@@ -6,7 +6,7 @@ from .argument_parser import Config
 from robyn.robyn import get_version
 
 
-def create_robyn_app(project_dir_name: str, is_docker_need: str) -> None:
+def create_robyn_app(project_dir_name: str, is_docker_needed: str) -> None:
     print(f"Creating a new Robyn project '{project_dir_name}'...")
     os.makedirs(project_dir_name, exist_ok=True)
     app_file_path = os.path.join(project_dir_name, "app.py")
@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
             """
         )
-    if is_docker_need == "Y":
+    if is_docker_needed == "Y":
         print(f"Generating docker configuration for {project_dir_name}")
         dockerfile_path = os.path.join(project_dir_name, "Dockerfile")
         with open(dockerfile_path, "w") as f:
@@ -47,7 +47,7 @@ EXPOSE 8080
 CMD ["python3.10", "/workspace/foo/app.py", "--log-level=DEBUG"]
                 """
             )
-    elif is_docker_need == "N":
+    elif is_docker_needed == "N":
         print("Docker not included")
     else:
         print("Unknown Command")
@@ -70,9 +70,11 @@ def prompt_create_robyn_app():
     ]
     result = prompt(questions=questions)
     project_dir_name = result[0]
-    is_docker_need = result[1]
+    is_docker_needed = result[1]
 
-    create_robyn_app(project_dir_name=project_dir_name, is_docker_need=is_docker_need)
+    create_robyn_app(
+        project_dir_name=project_dir_name, is_docker_needed=is_docker_needed
+    )
 
 
 def docs():
