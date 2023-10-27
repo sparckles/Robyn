@@ -341,7 +341,7 @@ export default function Home({ articles }) {
                   </a> */}
 
                   <dd className="order-first text-3xl font-semibold tracking-tight text-white">
-                    2,9k+
+                    3k+
                   </dd>
                 </div>
                 <div className="flex flex-col  bg-white/5 p-8">
