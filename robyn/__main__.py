@@ -57,7 +57,7 @@ def create_robyn_app():
     os.makedirs(final_project_dir_path, exist_ok=True)
 
     selected_project_template = (SCAFFOLD_DIR / Path(project_type)).resolve()
-    copy_tree(str( selected_project_template ), str( final_project_dir_path ))
+    copy_tree(str(selected_project_template), str(final_project_dir_path))
 
     # If docker is not needed, delete the docker file
     if docker == "N":
