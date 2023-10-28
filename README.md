@@ -8,7 +8,7 @@
 [![License](https://img.shields.io/badge/License-BSD_2.0-black)](#license)
 ![Python](https://img.shields.io/badge/Support-Version%20%E2%89%A5%203.8-brightgreen)
 
-[![view - Documentation](https://img.shields.io/badge/view-Documentation-blue?style=for-the-badge)](https://sparckles.github.io/Robyn/#/)
+[![view - Documentation](https://img.shields.io/badge/view-Documentation-blue?style=for-the-badge)](https://robyn.tech/documentation)
 [![Discord](https://img.shields.io/discord/999782964143603713?label=discord&logo=discord&logoColor=white&style=for-the-badge&color=blue)](https://discord.gg/rkERZ5eNU8)
 
 Robyn is a High-Performance, Community-Driven, and Innovator Friendly Web Framework with a Rust runtime. You can learn more by checking our [community resources](https://beta.robyn.tech/documentation/api_reference/community-resources#talks)!
@@ -121,7 +121,7 @@ python --version
 Please read the [code of conduct](https://github.com/sparckles/Robyn/blob/main/CODE_OF_CONDUCT.md) and go through [CONTRIBUTING.md](https://github.com/sparckles/Robyn/blob/main/CONTRIBUTING.md) before contributing to Robyn.
 Feel free to open an issue for any clarifications or suggestions.
 
-If you're feeling curious. You can take a look at a more detailed architecture [here](https://sparckles.github.io/Robyn/#/architecture).
+If you're feeling curious. You can take a look at a more detailed architecture [here](https://robyn.tech/documentation/architecture).
 
 If you still need help to get started, feel free to reach out on our [community discord](https://discord.gg/rkERZ5eNU8).
 
