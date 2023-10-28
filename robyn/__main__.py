@@ -9,12 +9,14 @@ from pathlib import Path
 
 
 SCAFFOLD_DIR = Path(__file__).parent / "scaffold"
+CURRENT_WORKING_DIR = Path.cwd()
+
 
 def create_robyn_app():
     questions = [
         {
             "type": "input",
-            "message": "Enter the name of the project directory:",
+            "message": "Directory Path:",
             "name": "directory",
         },
         {
@@ -43,23 +45,25 @@ def create_robyn_app():
         },
     ]
     result = prompt(questions=questions)
-    project_dir = result["directory"]
+    project_dir_path = Path(result["directory"]).resolve()
     docker = result["docker"]
     project_type = result["project_type"]
 
-    print(f"Creating a new Robyn project '{project_dir}'...")
+    final_project_dir_path = (CURRENT_WORKING_DIR / project_dir_path).resolve()
+
+    print(f"Creating a new Robyn project '{final_project_dir_path}'...")
 
     # Create a new directory for the project
-    os.makedirs(project_dir, exist_ok=True)
+    os.makedirs(final_project_dir_path, exist_ok=True)
 
-    selected_project_template = SCAFFOLD_DIR / Path(project_type)
-    copy_tree(selected_project_template, project_dir)
+    selected_project_template = (SCAFFOLD_DIR / Path(project_type)).resolve()
+    copy_tree(str( selected_project_template ), str( final_project_dir_path ))
 
     # If docker is not needed, delete the docker file
     if docker == "N":
-        os.remove(f"{project_dir}/Dockerfile")
+        os.remove(f"{final_project_dir_path}/Dockerfile")
 
-    print(f"New Robyn project created in '{project_dir}' ")
+    print(f"New Robyn project created in '{final_project_dir_path}' ")
 
 
 def docs():
