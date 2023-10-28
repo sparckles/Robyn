@@ -14,9 +14,7 @@ from integration_tests.helpers.network_helpers import get_network_host
 def spawn_process(command: List[str]) -> subprocess.Popen:
     if platform.system() == "Windows":
         command[0] = "python"
-        process = subprocess.Popen(
-            command, shell=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
-        )
+        process = subprocess.Popen(command, shell=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
         return process
     process = subprocess.Popen(command, preexec_fn=os.setsid)
     return process

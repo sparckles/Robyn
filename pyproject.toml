@@ -65,7 +65,7 @@ templating = ["jinja2"]
 optional = true
 
 [tool.poetry.group.dev.dependencies]
-ruff = "0.0.240"
+ruff = "0.1.2"
 black = "23.1"
 isort = "5.11.5"
 pre-commit = "2.21.0"
