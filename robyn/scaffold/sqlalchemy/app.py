@@ -2,9 +2,8 @@ from robyn import Robyn
 from sqlalchemy import create_engine, Column, Integer, String, Boolean
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-DATABASE_URL = "sqlite:///./example.db"
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine("sqlite+pysqlite:///:memory:", echo=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 app = Robyn(__file__)
@@ -30,4 +29,4 @@ if __name__ == "__main__":
 
     Base.metadata.create_all(bind=engine)
 
-    app.start(url="0.0.0.0", port=8080)
+    app.start(host="0.0.0.0", port=8080)

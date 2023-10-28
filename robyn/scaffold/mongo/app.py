@@ -2,9 +2,9 @@ from pymongo import MongoClient
 from robyn import Robyn
 
 app = Robyn(__file__)
-app.db = MongoClient("URL HERE")
+db = MongoClient("URL HERE")
 
-users = app.db.users  # define a collection
+users = db.users  # define a collection
 
 
 @app.get("/")
@@ -39,4 +39,4 @@ async def get_user(request):
 
 
 if __name__ == "__main__":
-    app.start(url="0.0.0.0", port=8080)
+    app.start(host="0.0.0.0", port=8080)
