@@ -1,6 +1,6 @@
 from robyn import Robyn
-from sqlalchemy import create_engine, Column, Integer, String, Boolean
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 
 engine = create_engine("sqlite+pysqlite:///:memory:", echo=True)
@@ -16,17 +16,4 @@ def index():
 
 if __name__ == "__main__":
     # create a configured "Session" class
-    Base = declarative_base()
-
-    class User(Base):
-        __tablename__ = "users"
-
-        id = Column(Integer, primary_key=True, index=True)
-        username = Column(String, unique=True, index=True)
-        hashed_password = Column(String)
-        is_active = Column(Boolean, default=True)
-        is_superuser = Column(Boolean, default=False)
-
-    Base.metadata.create_all(bind=engine)
-
     app.start(host="0.0.0.0", port=8080)
