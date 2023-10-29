@@ -54,6 +54,16 @@ let testimonials = [
       title: 'The Accessibility First DevRel ',
     },
   },
+  {
+    body: 'Having used both, Flask and Django for writing web applications in Python in the past, Robyn looks like their combined successor in terms of ergonomics and features available. Its reliance on a Rust runtime for performance and security is the cherry on the cake!',
+    author: {
+      name: 'Daniel Bodky',
+      handle: 'd_bodky',
+      imageUrl:
+        'https://pbs.twimg.com/profile_images/1665625007299391489/tsPgVWW2_400x400.jpg',
+      title: 'Consultant, Trainer, Speaker @NETWAYS',
+    },
+  },
   // More testimonials...
   {
     body: 'Robyn has made a big difference in my projects. Its flexible structure allows my work to adapt smoothly to my needs, even when I face complex challenges. The community-driven and open-source nature of Robyn makes it a welcoming place for developers like me. Plus, its simple yet powerful API has greatly streamlined my development process, reducing my wor oad. I highly recommend it!',
@@ -83,7 +93,7 @@ let testimonials = [
       name: 'Jyoti Bisht',
       handle: 'joeyousss',
       imageUrl:
-        'https://pbs.twimg.com/profile_images/1595447618707984385/XF3PQqTu_400x400.jpg',
+        'https://pbs.twimg.com/profile_images/1712848642271264768/1X_ygyTq_400x400.jpg',
       title: 'Open Source Developer',
     },
   },
@@ -113,12 +123,15 @@ const chunk = (arr, size) =>
   )
 
 export default function Testimonials() {
-  let chunkedTestimonials = []
-  chunkedTestimonials = chunk(
-    testimonials.sort(() => 0.5 - Math.random()),
-    3
-  )
-
+  let chunkedTestimonials = [];
+  
+  // Separate testimonials into groups of 3, 4, and 3
+  const firstGroup = chunk(testimonials.slice(0, 3), 3);
+  const secondGroup = chunk(testimonials.slice(3, 7), 4);
+  const thirdGroup = chunk(testimonials.slice(7), 3);
+  
+  // Concatenate the groups in the desired order
+  chunkedTestimonials = firstGroup.concat(secondGroup, thirdGroup);
   return (
     <div className="relative isolate  pb-32 pt-24 sm:pt-32">
       <div
