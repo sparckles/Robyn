@@ -1,10 +1,6 @@
 from robyn import Robyn
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from .models import User
 
-
-engine = create_engine("sqlite+pysqlite:///:memory:", echo=True)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 app = Robyn(__file__)
 

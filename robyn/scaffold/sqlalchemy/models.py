@@ -1,7 +1,12 @@
+from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base
 from sqlalchem.orm import Column, Integer, String, Boolean
+from sqlalchemy.orm import sessionmaker
 
 Base = declarative_base()
+
+engine = create_engine("sqlite+pysqlite:///:memory:", echo=True)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 class User(Base):
