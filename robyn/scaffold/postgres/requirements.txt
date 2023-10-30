@@ -1,0 +1,3 @@
+robyn
+psycopg2; platform_system=="Windows"
+psycopg2-binary; platform_system!="Windows"
