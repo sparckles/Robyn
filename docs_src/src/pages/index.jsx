@@ -77,20 +77,22 @@ export default function Home({ articles }) {
           Robyn - A Fast, Innovator Friendly, and Community Driven Python Web
           Framework.
         </title>
-        <meta
-          name="description"
-          content="Robyn - A Fast, Innovator Friendly, and Community Driven Python Web Framework.
-"
-        />
+          <meta name="description" content="Robyn - A Fast, Innovator Friendly, and Community Driven Python Web Framework." />
+          <meta property="og:title" content="Robyn - A Fast, Innovator Friendly, and Community Driven Python Web Framework." />
+          <meta property="og:image" content="https://robyn.tech/robynog.png" />
+          <meta property="og:description" content="Robyn is a fast, innovator-friendly, and community-driven Python web framework." />
+          <meta property="og:url" content="https://robyn.tech" />
 
-        <meta
-          property="og:title"
-          content="Robyn - A Fast, Innovator Friendly, and Community Driven Python Web Framework."
-        />
-        <meta
-          property="og:image"
-          content="https://beta.robyn.tech/robynog.png"
-        />
+          { /*Twitter specific meta tags*/ }
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:site" content="@yourTwitterHandle" />
+          <meta name="twitter:title" content="Robyn - A Fast, Innovator Friendly, and Community Driven Python Web Framework." />
+          <meta name="twitter:description" content="Robyn is a fast, innovator-friendly, and community-driven Python web framework." />
+          <meta name="twitter:image" content="https://robyn.tech/robynog.png" />
+
+          { /*LinkedIn specific meta tags*/ }
+          <meta property="og:type" content="website" />
+          <meta property="og:site_name" content="Robyn Framework" />
       </Head>
 
       <Container className="mt-10 md:mt-14">
