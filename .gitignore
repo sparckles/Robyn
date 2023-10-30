@@ -24,36 +24,35 @@ robyn.env
 
 # new docs dependencies
 # dependencies
-new_docs/node_modules
-new_docs/.pnp
-new_docs/.pnp.js
+docs_src/node_modules
+docs_src/.pnp
+docs_src/.pnp.js
 
 # testing
-new_docs/coverage
+docs_src/coverage
 
 # next.js
-new_docs/.next/
-new_docs/out/
+docs_src/.next/
+docs_src/out/
 
 # production
-new_docs/build
+docs_src/build
 
 # misc
-new_docs/.DS_Store
-new_docs/*.pem
+docs_src/.DS_Store
+docs_src/*.pem
 
 # debug
-new_docs/npm-debug.log*
-new_docs/yarn-debug.log*
-new_docs/yarn-error.log*
-new_docs/.pnpm-debug.log*
+docs_src/npm-debug.log*
+docs_src/yarn-debug.log*
+docs_src/yarn-error.log*
+docs_src/.pnpm-debug.log*
 
 # local env files
-new_docs/.env*.local
+docs_src/.env*.local
 
 # vercel
-new_docs/.vercel
+docs_src/.vercel
 
 # generated files
-new_docs/public/rss/
-
+docs_src/public/rss/
