@@ -72,9 +72,7 @@ def prompt_create_robyn_app():
     project_dir_name = result[0]
     is_docker_needed = result[1]
 
-    create_robyn_app(
-        project_dir_name=project_dir_name, is_docker_needed=is_docker_needed
-    )
+    create_robyn_app(project_dir_name=project_dir_name, is_docker_needed=is_docker_needed)
 
 
 def docs():
