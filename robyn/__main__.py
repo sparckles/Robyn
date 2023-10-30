@@ -70,6 +70,7 @@ def docs():
     print("Opening Robyn documentation... | Offline docs coming soon!")
     webbrowser.open("https://robyn.tech")
 
+
 if __name__ == "__main__":
     config = Config()
     if config.create:

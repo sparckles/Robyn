@@ -1,5 +1,4 @@
 from robyn import Robyn
-from .models import User
 
 
 app = Robyn(__file__)
