@@ -40,15 +40,14 @@ class Robyn:
         self,
         file_object: str,
         config: Config = Config(),
-        dependencies: DependencyMap = None,
+        dependencies: DependencyMap = DependencyMap(),
     ) -> None:
         directory_path = os.path.dirname(os.path.abspath(file_object))
         self.file_path = file_object
         self.directory_path = directory_path
         self.config = config
-        self.dependencies = (
-            dependencies if dependencies is not None else DependencyMap()
-        )
+        self.dependencies = dependencies
+
         load_vars(project_root=directory_path)
         logging.basicConfig(level=self.config.log_level)
 
@@ -119,17 +118,24 @@ class Robyn:
             self.response_headers,
         )
 
-    def inject(self, route=None, **kwargs):
-        if route:
-            self.dependencies.add_route_dependency(route, **kwargs)
-        else:
+    def inject(self, route="*", **kwargs):
+        """
+        Injects the dependencies for the route
+
+        :param route str: route for which the dependencies are to be injected. Defaults to global routes.
+        :param kwargs dict: the dependencies to be injected
+        """
+        if route == "*":
             self.dependencies.add_global_dependency(**kwargs)
+        else:
+            self.dependencies.add_route_dependency(route, **kwargs)
 
     def get_injected_dependencies(self, route=None) -> dict:
         # How will we access these from sub routes?
         # @Darren, @Ido ?? Any ideas?
         # Should we add a method to get the dependencies somewhere else?
         # or maybe make it a class method/variable?
+        # This should not be the primary way to access the dependencies
         if route:
             return self.dependencies.get_route_dependencies(route)
         else:

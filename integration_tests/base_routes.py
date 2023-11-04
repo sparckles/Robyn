@@ -773,6 +773,8 @@ app.inject(GLOBAL_DEP_COLLISION=GLOBAL_DEP_COLLISION)
 app.inject(GLOBAL_DEP_INHERIT=GLOBAL_DEP_INHERIT)
 app.inject("/sync/dependency", ROUTE_DEPENDENCY=ROUTE_DEPENDENCY)
 
+# dependencies should be accessible through the app handler
+# app.get_injected_dependencies is not the best api
 
 @app.get("/local_dep_inject")
 def sync_local_dependency():
