@@ -8,7 +8,7 @@
 [![License](https://img.shields.io/badge/License-BSD_2.0-black)](#license)
 ![Python](https://img.shields.io/badge/Support-Version%20%E2%89%A5%203.8-brightgreen)
 
-[![view - Documentation](https://img.shields.io/badge/view-Documentation-blue?style=for-the-badge)](https://sparckles.github.io/Robyn/#/)
+[![view - Documentation](https://img.shields.io/badge/view-Documentation-blue?style=for-the-badge)](https://robyn.tech/documentation)
 [![Discord](https://img.shields.io/discord/999782964143603713?label=discord&logo=discord&logoColor=white&style=for-the-badge&color=blue)](https://discord.gg/rkERZ5eNU8)
 
 Robyn is a High-Performance, Community-Driven, and Innovator Friendly Web Framework with a Rust runtime. You can learn more by checking our [community resources](https://beta.robyn.tech/documentation/api_reference/community-resources#talks)!
@@ -24,7 +24,7 @@ pip install robyn
 Or, with [conda-forge](https://conda-forge.org/)
 
 ```
-conda install -c conda-forge Robyn
+conda install -c conda-forge robyn
 ```
 
 ## 🤔 Usage
@@ -52,7 +52,9 @@ Simply run the app.py file you created. You will then have access to a server on
 ```
 $ python3 app.py
 ```
+
 To see the usage
+
 ```
 usage: app.py [-h] [--processes PROCESSES] [--workers WORKERS] [--dev] [--log-level LOG_LEVEL]
 
@@ -68,9 +70,11 @@ options:
   --docs                    Open the Robyn documentation.
   --open-browser            Open the browser on successful start.
 ```
+
 Log level can be `DEBUG`, `INFO`, `WARNING`, or `ERROR`.
-    
+
 When running the app using `--open-browser` a new browser window will open at the app location, e.g:
+
 ```
 $ python3 app.py --open-browser
 ```
@@ -117,7 +121,7 @@ python --version
 Please read the [code of conduct](https://github.com/sparckles/Robyn/blob/main/CODE_OF_CONDUCT.md) and go through [CONTRIBUTING.md](https://github.com/sparckles/Robyn/blob/main/CONTRIBUTING.md) before contributing to Robyn.
 Feel free to open an issue for any clarifications or suggestions.
 
-If you're feeling curious. You can take a look at a more detailed architecture [here](https://sparckles.github.io/Robyn/#/architecture).
+If you're feeling curious. You can take a look at a more detailed architecture [here](https://robyn.tech/documentation/architecture).
 
 If you still need help to get started, feel free to reach out on our [community discord](https://discord.gg/rkERZ5eNU8).
 
@@ -132,6 +136,7 @@ If you still need help to get started, feel free to reach out on our [community 
 4. Run `poetry run test_server`. This will run a server containing several examples of routes we use for testing purposes. You can see them at `integration_tests/base_routes.py`. You can modify or add some to your likings.
 
 You can then request the server you ran from an other terminal. Here is a `GET` request done using [curl](https://curl.se/) for example:
+
 ```bash
 curl http://localhost:8080/sync/str
 ```

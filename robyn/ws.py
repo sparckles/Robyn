@@ -10,7 +10,8 @@ if TYPE_CHECKING:
     from robyn import Robyn
 
 
-class WS:
+class WebSocket:
+    # should this be websocket router?
     """This is the python wrapper for the web socket that will be used here."""
 
     def __init__(self, robyn_object: "Robyn", endpoint: str) -> None:
@@ -23,9 +24,7 @@ class WS:
             if type not in ["connect", "close", "message"]:
                 raise Exception(f"Socket method {type} does not exist")
             else:
-                self.methods[type] = FunctionInfo(
-                    handler, self._is_async(handler), self._num_params(handler)
-                )
+                self.methods[type] = FunctionInfo(handler, self._is_async(handler), self._num_params(handler))
                 self.robyn_object.add_web_socket(self.endpoint, self)
 
         return inner

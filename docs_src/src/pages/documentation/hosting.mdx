@@ -1,0 +1,108 @@
+export const description =
+  'On this page, we`ll understand how Robyn can be deployed on various cloud providers .'
+
+The process of hosting a Robyn app on various cloud providers.
+
+
+## Railway
+
+We will be deploying the app on `Railway`.
+
+A GitHub account is needed as a mandatory prerequisite.
+
+We will deploy a sample "Hello World," demonstrating a simple GET route and serving an HTML file.
+
+Directory structure:
+
+  <CodeGroup>
+
+```bash 
+app folder/
+  main.py
+  requirements.txt
+  index.html
+```
+
+  </CodeGroup>
+
+  Note - Railway looks for a main.py as an entry point instead of app.py. The build process will fail if there is no main.py file.
+
+
+
+  <CodeGroup title="main.py">
+
+```python {{ title: 'python' }}
+from robyn import Robyn, serve_html
+
+
+app = Robyn(__file__)
+
+
+@app.get("/hello")
+async def h(request):
+    print(request)
+    return "Hello, world!"
+
+
+@app.get("/")
+async def get_page(request):
+    return serve_html("./index.html")
+
+
+if __name__ == "__main__":
+    app.start(url="0.0.0.0", port=PORT)
+```
+
+  </CodeGroup>
+
+
+
+  <CodeGroup title="index.html">
+
+    ```python {{ title: 'python' }}
+    <h1> Hello World, this is Robyn framework! <h1>
+    ```
+
+  </CodeGroup>
+
+## Exposing Ports
+
+The Railway documentation says the following about the listening to ports:
+
+> The easiest way to get up and running is to have your application listen on 0.0.0.0:$PORT, where PORT is a Railway-provided environment variable.
+
+So, passing the host as `0.0.0.0` to `app.start()` as an argument is necessary.
+
+We need to create a Railway account to deploy this app on Railway. We can do so by going on the `Railway HomePage`.
+
+Press the "Login" button and select "login with a GitHub account."
+
+<img src="https://user-images.githubusercontent.com/70811425/202867604-10a09f87-ecb9-4a42-ae90-1359223049bc.png" />
+
+Then, we press the "New Project" button and select "Deploy from GitHub repo".
+
+<img src="https://user-images.githubusercontent.com/70811425/202870632-4d3f46dc-1aa9-4603-9b0f-344ed87ec9d0.png" />
+
+Then we select the repo we want to deploy. And click "Deploy Now".
+
+<img src="https://user-images.githubusercontent.com/70811425/202870837-16884fef-8900-4ab3-9794-0fb53c3ffd2e.png" />
+<img src="https://user-images.githubusercontent.com/70811425/202871003-f79a1cef-9a5f-4166-be4f-527c60ec6c79.png" />
+
+Now, we click on our project's card.
+
+Select "Variables" and press the "New Variable" button to set the environments variables.
+
+<img src="https://user-images.githubusercontent.com/70811425/202870681-5c069475-a5d1-4069-8582-c5b549d27aad.png" />
+
+Then, we go to the "Settings" tab and click on "Generate Domain."
+
+We can generate a temporary domain under the "Domains" tab.
+
+<img src="https://user-images.githubusercontent.com/70811425/202870735-6b955752-c5a6-48d5-acbc-1a4ea6fd7574.png" />
+
+We can go to our domain `<domain>/hello` and confirm that the message "Hello World" is displayed.
+
+
+## Next Steps
+
+- [Future Roadmap](/documentation/api_reference/future-roadmap)

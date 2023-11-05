@@ -1,0 +1,99 @@
+export const description =
+  'On this page, we’ll dive into the different conversation endpoints you can use to manage conversations programmatically.'
+
+
+## WebSockets {{ tag: 'GET', label: '/hello_world' }}
+
+<Row>
+<Col>
+To handle real-time communication, Batman learned how to work with WebSockets. He created a WebSocket class and wrapped it around his Robyn app:
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    from robyn import Robyn, jsonify, WebSocket
+
+    app = Robyn(__file__)
+    websocket = WebSocket(app, "/web_socket")
+
+    @websocket.on("message")
+    def connect():
+        return "Hello world, from ws"
+
+    @websocket.on("close")
+    def close():
+        return "Goodbye world, from ws"
+
+    @websocket.on("connect")
+    def message():
+        return "Connected to ws"
+
+
+    ```
+
+    ```python {{title: 'typed'}}
+    from robyn import Robyn, jsonify, WebSocket
+
+    app = Robyn(__file__)
+    websocket = WebSocket(app, "/web_socket")
+
+    @websocket.on("message")
+    def connect():
+        return "Hello world, from ws"
+
+    @websocket.on("close")
+    def close():
+        return "Goodbye world, from ws"
+
+    @websocket.on("connect")
+    def message():
+        return "Connected to ws"
+
+
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+<Row>
+
+  <Col>
+    For an asynchronous request, Batman used:
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+      ```python {{ title: 'untyped' }}
+      @app.get("/")
+      async def h(request):
+          return "Hello, world"
+
+      ```
+
+      ```python {{title: 'typed'}}
+      from robyn import Request
+
+      @app.get("/")
+      async def h(request: Request) -> str:
+          return "Hello, world"
+
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+
+## What's next?
+
+As the codebase grew, Batman wanted to onboard the justice league to help him manage the application. 
+
+Robyn told him about the different ways he could scale his application, and how to use views and subrouters to make his code more readable. 
+
+
+- [Views and SubRouters](/documentation/api_reference/views)
+
+
+
+

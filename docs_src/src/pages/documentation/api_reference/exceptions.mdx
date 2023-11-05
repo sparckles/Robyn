@@ -1,0 +1,38 @@
+## Custom Exception Handler
+
+Batman learned how to create custom error handlers for different exception types in his application. He wrote the following code to handle exceptions and return a custom error response:
+
+
+## Scaling the Application
+
+<Row>
+<Col>
+Batman scaled his application across multiple cores for better performance. He used the following command:
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    @app.exception
+    def handle_exception(error):
+        return {"status_code": 500, "body": f"error msg: {error}"}
+    ```
+
+    ```python {{ title: 'typed' }}
+    @app.exception
+    def handle_exception(error: Exception):
+        return {"status_code": 500, "body": f"error msg: {error}"}
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+
+## What's next?
+
+Now, Batman wanted to extend Robyn. Robyn told him about the plugins.
+
+- [Plugins](/documentation/plugins)
+

@@ -4,11 +4,21 @@ from InquirerPy import prompt
 from InquirerPy.base.control import Choice
 from .argument_parser import Config
 from robyn.robyn import get_version
+from pathlib import Path
+import shutil
+
+
+SCAFFOLD_DIR = Path(__file__).parent / "scaffold"
+CURRENT_WORKING_DIR = Path.cwd()
 
 
 def create_robyn_app():
     questions = [
-        {"type": "input", "message": "Enter the name of the project directory:"},
+        {
+            "type": "input",
+            "message": "Directory Path:",
+            "name": "directory",
+        },
         {
             "type": "list",
             "message": "Need Docker? (Y/N)",
@@ -16,70 +26,49 @@ def create_robyn_app():
                 Choice("Y", name="Y"),
                 Choice("N", name="N"),
             ],
-            "default": None,
+            "default": Choice("N", name="N"),
+            "name": "docker",
+        },
+        {
+            "type": "list",
+            "message": "Please select project type (Mongo/Postgres/Sqlalchemy/Prisma): ",
+            "choices": [
+                Choice("no-db", name="No DB"),
+                Choice("sqlite", name="Sqlite"),
+                Choice("postgres", name="Postgres"),
+                Choice("mongo", name="MongoDB"),
+                Choice("sqlalchemy", name="SqlAlchemy"),
+                Choice("prisma", name="Prisma"),
+            ],
+            "default": Choice("no-db", name="No DB"),
+            "name": "project_type",
         },
     ]
     result = prompt(questions=questions)
-    project_dir = result[0]
-    docker = result[1]
+    project_dir_path = Path(result["directory"]).resolve()
+    docker = result["docker"]
+    project_type = result["project_type"]
 
-    print(f"Creating a new Robyn project '{project_dir}'...")
+    final_project_dir_path = (CURRENT_WORKING_DIR / project_dir_path).resolve()
+
+    print(f"Creating a new Robyn project '{final_project_dir_path}'...")
 
     # Create a new directory for the project
-    os.makedirs(project_dir, exist_ok=True)
+    os.makedirs(final_project_dir_path, exist_ok=True)
 
-    # Create the main application file
-    app_file_path = os.path.join(project_dir, "app.py")
-    with open(app_file_path, "w") as f:
-        f.write(
-            """
-from Robyn import Robyn
+    selected_project_template = (SCAFFOLD_DIR / Path(project_type)).resolve()
+    shutil.copytree(str(selected_project_template), str(final_project_dir_path), dirs_exist_ok=True)
 
-app = Robyn(__file__)
+    # If docker is not needed, delete the docker file
+    if docker == "N":
+        os.remove(f"{final_project_dir_path}/Dockerfile")
 
-@app.get("/")
-def index():
-    return "Hello World!"
-
-
-if __name__ == "__main__":
-    app.start()
-
-            """
-        )
-
-    # Dockerfile configuration
-    if docker == "Y":
-        print(f"Generating docker configuration for {project_dir}")
-        dockerfile_path = os.path.join(project_dir, "Dockerfile")
-        with open(dockerfile_path, "w") as f:
-            f.write(
-                """
-FROM ubuntu:22.04
-
-WORKDIR /workspace
-
-RUN apt-get update -y && apt-get install -y python 3.10 python3-pip
-RUN pip install --no-cache-dir --upgrade Robyn
-
-COPY ./src/workspace/
-
-EXPOSE 8080
-
-CMD ["python3.10", "/workspace/foo/app.py", "--log-level=DEBUG"]
-                """
-            )
-    elif docker == "N":
-        print("Docker not included")
-    else:
-        print("Unknown Command")
-
-    print(f"New Robyn project created in '{project_dir}' ")
+    print(f"New Robyn project created in '{final_project_dir_path}' ")
 
 
 def docs():
     print("Opening Robyn documentation... | Offline docs coming soon!")
-    webbrowser.open("https://sparckles.github.io/Robyn/#/")
+    webbrowser.open("https://robyn.tech")
 
 
 if __name__ == "__main__":

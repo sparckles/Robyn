@@ -1,0 +1,130 @@
+export const description =
+  'On this page, we’ll dive into the different conversation endpoints you can use to manage conversations programmatically.'
+
+## Working with Middlewares and Events
+
+As Batman's application grew more complex, Robyn taught him about middlewares, startup and shutdown events, and even working with WebSockets. Batman learned how to create functions that could execute before or after a request, manage the application's life cycle, and handle real-time communication with clients using WebSockets.
+
+
+## Handling Events
+
+Batman discovered that he could add startup and shutdown events to manage his application's life cycle. He added the following code to define these events:
+
+<Row>
+<Col>
+Batman was excited to learn that he could add events as functions as well as decorators.
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    async def startup_handler():
+      print("Starting up")
+
+    app.startup_handler(startup_handler)
+
+
+    ```
+
+    ```python {{title: 'typed'}}
+    @app.shutdown_handler
+    def shutdown_handler():
+        print("Shutting down")
+
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+<Row>
+
+  <Col>
+    For an asynchronous request, Batman used:
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+      ```python {{ title: 'untyped' }}
+      @app.get("/")
+      async def h(request):
+          return "Hello, world"
+
+      ```
+
+      ```python {{title: 'typed'}}
+      from robyn import Request 
+
+      @app.get("/")
+      async def h(request: Request) -> str:
+          return "Hello, world"
+
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+
+
+
+## Handling Middlewares {{ tag: 'POST', label: '/http_requests' }}
+
+<Row>
+  <Col>
+
+  Batman learned to use both sync and async functions for middlewares. He wrote the following code to add a middleware that would execute before and after each request:
+
+  
+
+  </Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="POST" label="/http_requests">
+
+    ```python {{ title: 'untyped' }}
+    @app.before_request("/")
+    async def hello_before_request(request: Request):
+        request.headers["before"] = "sync_before_request"
+        print(request)
+
+    @app.after_request("/")
+    def hello_after_request(response: Response):
+        response.headers["after"] = "sync_after_request"
+        print(response)
+    ```
+
+    ```python {{ title: 'typed' }}
+    from request import Request, Response
+
+    @app.before_request("/")
+    async def hello_before_request(request):
+        request.headers["before"] = "sync_before_request"
+        print(request)
+
+    @app.after_request("/")
+    def hello_after_request(response):
+        response.headers["after"] = "sync_after_request"
+        print(response)
+    ```
+
+
+    </CodeGroup>
+
+
+  </Col>
+</Row>
+
+---
+
+
+## What's next?
+
+Robyn - Great, you're now familiar with the certain advanced concepts of Robyn. Middlewares serve the base of 
+
+Batman - "Authentication! I want to learn about authentication. I want to make sure that only the right people can access my application."
+
+Robyn - Yes, Authentication!
+
+
+- [Authentication](/documentation/api_reference/authentication)
+

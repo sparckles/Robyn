@@ -1,0 +1,38 @@
+export const description = 'Robyn is a Python web server that employs the tokio runtime and leverages a blend of Python and Rust, enabling efficient request handling through a worker event cycle, multi-core scaling, and introducing "Const Requests" for optimized, cached responses in a multi-threaded environment.'
+
+<img src="/architecture/architecture.png" />
+
+## Robyn Web Server: Architecture Overview
+
+Robyn is a unique Python web server, leveraging the efficiency and concurrency model of the tokio runtime.
+
+### Worker Event Cycle:
+At the heart of Robyn is the worker event cycle that oversees the runtime and directs all instructions to the underlying Rust code. This cycle is instrumental in initializing the thread pool, ensuring smooth execution.
+
+
+### Python-to-Rust Interplay:
+When the server is initiated with the python3 app.py command, Python code is dynamically transformed into Rust objects. Subsequently, the router gets populated. The architecture allows incoming requests to be matched against this router, and relevant Rust objects are queued for execution in the thread pool based on their types.
+
+
+### Scalability with Multi-Core Support:
+<img src="/architecture/multi-processing.png" />
+
+Robyn is designed to scale efficiently. It has the capability to employ multiple workers and span across multiple processes. This architecture facet ensures that the TCP socket can distribute its load across various cores, optimizing performance.
+
+### Const Requests: The Robyn Speciality:
+<img src="/architecture/const-request-optimisation.png" />
+
+Const Requests is a feature that sets Robyn apart. Instead of executing a function every time it's called, what if we could run it once and cache the response? This would substantially reduce overhead, negating the need to frequently call the router.
+
+Const Request Optimisation: This feature aims to store function responses in the Rust layer after their initial execution. Thus, when the same function is called again, the cached result from Rust is returned, bypassing the router.
+
+<div className="not-prose">
+  <Button
+    href="/documentation/example_app/authentication-middlewares"
+    variant="text"
+    arrow="right"
+    children="Next: Authentication Middlewares"
+  />
+</div>
+
+

@@ -1,0 +1,37 @@
+import { Guides } from '@/components/documentation/Guides'
+import { ApiDocs } from '@/components/documentation/ApiDocs'
+import { HeroPattern } from '@/components/documentation/HeroPattern'
+
+export const description =
+  'Welcome to the Robyn API documentation. You will find comprehensive guides and documentation to help you start working with Robyn as quickly as possible, as well as support if you get stuck.'
+
+export const sections = [
+  { title: 'Example Application', id: 'guides' },
+  { title: 'Api Reference', id: 'api_docs' },
+]
+
+<HeroPattern />
+
+<div className="text-white">
+# API Documentation
+Welcome to the Robyn API documentation. You'll find comprehensive guides and documentation to help you start working with Robyn as quickly as possible, as well as support if you get stuck. 
+
+We have divided the documentation into two parts: the [Example Application](#guides) and the [API Reference](#resources).
+
+<div className="not-prose mb-16 mt-6 flex gap-3">
+  <Button href="/documentation/example_app" arrow="right" children="Real World App" />
+  <Button href="/documentation/api_reference" variant="outline" children="Api Docs" />
+</div>
+
+## Getting started {{ anchor: false }}
+
+The Example Application is a simple web application that demonstrates how to use the Robyn API. It is a great place to start if you are new to Robyn.
+
+The API Reference contains detailed information about the Robyn API. It is a great place to start if you are already familiar with Robyn and want to learn more about the API.
+
+
+</div>
+<Guides />
+
+<ApiDocs />
+

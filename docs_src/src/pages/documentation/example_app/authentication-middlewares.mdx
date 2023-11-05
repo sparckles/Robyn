@@ -1,0 +1,53 @@
+export const description =
+  'Welcome to the Robyn API documentation. You will find comprehensive guides and documentation to help you start working with Robyn as quickly as possible, as well as support if you get stuck.'
+
+## Authentication and Authorization Middleware
+Batman added middleware to the Robyn application to verify the JWT tokens and to restrict access to certain endpoints based on the user's role.
+
+
+```python {{ title: 'Setting up Authentication Middlewares' }}
+from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
+
+
+class BasicAuthHandler(AuthenticationHandler):
+    def authenticate(self, request: Request):
+        token = self.token_getter.get_token(request)
+
+        try:
+            payload = crud.decode_access_token(token)
+            username = payload["sub"]
+        except Exception:
+            return
+
+        with SessionLocal() as db:
+            user = crud.get_user_by_username(db, username=username)
+
+        return Identity(claims={"user": f"{ user }"})
+
+
+app.configure_authentication(BasicAuthHandler(token_getter=BearerGetter()))
+
+
+@app.get("/users/me", auth_required=True)
+async def get_current_user(request):
+    user = request.identity.claims["user"]
+    return user
+
+
+```
+
+With the web application in place, the Gotham City Police Department could now efficiently manage crime data and track criminal activities in real-time. Batman had successfully used the Robyn web framework to build a real-world application to help fight crime in Gotham City.
+
+
+
+
+<div className="not-prose">
+  <Button
+    href="/documentation/example_app/real_time_notifications"
+    variant="text"
+    arrow="right"
+    children="Checkout the real time notifications"
+  />
+</div>
+
+

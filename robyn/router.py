@@ -9,8 +9,9 @@ from robyn.authentication import AuthenticationHandler, AuthenticationNotConfigu
 
 from robyn.robyn import FunctionInfo, HttpMethod, MiddlewareType, Request, Response
 from robyn import status_codes
+
+from robyn.ws import WebSocket
 from robyn.types import Header
-from robyn.ws import WS
 
 
 class Route(NamedTuple):
@@ -33,7 +34,7 @@ class GlobalMiddleware(NamedTuple):
 
 class BaseRouter(ABC):
     @abstractmethod
-    def add_route(*args) -> Union[Callable, CoroutineType, WS]:
+    def add_route(*args) -> Union[Callable, CoroutineType, WebSocket]:
         ...
 
 
@@ -271,8 +272,8 @@ class WebSocketRouter(BaseRouter):
         super().__init__()
         self.routes = {}
 
-    def add_route(self, endpoint: str, web_socket: WS) -> None:
+    def add_route(self, endpoint: str, web_socket: WebSocket) -> None:
         self.routes[endpoint] = web_socket
 
-    def get_routes(self) -> Dict[str, WS]:
+    def get_routes(self) -> Dict[str, WebSocket]:
         return self.routes

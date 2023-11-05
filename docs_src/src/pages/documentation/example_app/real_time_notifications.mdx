@@ -1,0 +1,63 @@
+export const description =
+  'Welcome to the Robyn API documentation. You will find comprehensive guides and documentation to help you start working with Robyn as quickly as possible, as well as support if you get stuck.'
+
+## Real time notifications
+Batman decided to implement real-time notifications for police officers using WebSockets. This would allow officers to receive instant updates on criminal activities, as well as alerts when a new crime is reported.
+
+
+
+```python {{ title: 'Setting up Authentication Middlewares' }}
+from robyn import WebSocket
+
+websocket = WebSocket(app, "/notifications")
+
+@websocket.on("connect")
+async def notify_connect():
+    return "Connected to notifications"
+
+@websocket.on("message")
+async def notify_message(message):
+    return f"Received: {message}"
+
+@websocket.on("close")
+async def notify_close():
+    return "Disconnected from notifications"
+
+```
+
+## Advanced Search and Filtering 
+
+To make it easier for the police officers to search for specific crimes or criminals, Batman added advanced search and filtering options to the application. He implemented a new endpoint that allows users to search based on various criteria like crime type, date, location, and status.
+
+
+```python {{ title: 'Advanced Search and Filtering' }}
+@app.get("/crimes/search")
+async def search_crimes(request):
+    crime_type = request.query_params.get("crime_type")
+    date = request.query_params.get("date")
+    location = request.query_params.get("location")
+    status = request.query_params.get("status")
+
+    crimes = crud.search_crimes(db, crime_type=crime_type, date=date, location=location, status=status)
+    return crimes
+
+```
+
+
+With the new features in place, the Gotham City Police Department was able to use the web application more effectively to track criminal activities and deploy resources efficiently. Batman's work on the Robyn web framework had a significant impact on Gotham City's crime-fighting efforts, making it a safer place for its citizens.
+
+Although Batman had achieved great success with the current implementation, he knew that there would always be room for improvement and new features to add. But for now, he could take a moment to appreciate his work and focus on his primary duty - protecting Gotham City as the Dark Knight.
+
+
+
+
+
+<div className="not-prose">
+  <Button
+    href="/documentation/example_app/monitoring_and_logging"
+    variant="text"
+    arrow="right"
+    children="Checkout the monitoring and logging"
+  />
+</div>
+

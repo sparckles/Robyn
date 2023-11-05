@@ -1,0 +1,41 @@
+## Plugins
+
+Robyn is a versatile and extensible web framework that allows anyone to make plugins over the top of Robyn.
+Plugins in Robyn allow you to enhance and customize the framework's functionality to suit your specific needs. Here are some noteworthy plugins that can supercharge your Robyn-based projects:
+
+### Rate Limit Plugin
+
+- Description: This plugin enables you to implement rate limiting for your Robyn application's routes. It helps prevent abuse, and brute-force attacks and ensures fair usage of your resources.
+- GitHub repository: [robyn-rate-limits](https://github.com/IdoKendo/robyn_rate_limits)
+- Installation:
+  `python -m pip install robyn-rate-limits`
+- Usage:
+
+```py
+from robyn import Robyn, Request
+from robyn_rate_limits import InMemoryStore
+from robyn_rate_limits import RateLimiter
+
+app = Robyn(__file__)
+limiter = RateLimiter(store=InMemoryStore, calls_limit=3, limit_ttl=100)
+
+@app.before_request()
+def middleware(request: Request):
+    return limiter.handle_request(app, request)
+
+@app.get("/")
+def h():
+    return "Hello, World!"
+
+app.start(port=8080)
+```
+
+In this example, robyn-rate-limits is used to enforce a rate limit of 3 requests per 100-seconds window for specific routes. If a client exceeds this limit, they will receive a "Too many requests" message.
+
+The plugin integrates seamlessly with the Robyn web framework, enhancing the security and stability of your application by preventing excessive requests from a single client.
+
+## What's next?
+
+After exploring the plugins, Batman wanted to explore the community.So, Robyn pointed him to
+
+- [Future Roadmap](/documentation/api_reference/future-roadmap)

@@ -1,0 +1,101 @@
+export const description =
+  'Welcome to the Robyn API documentation. You will find comprehensive guides and documentation to help you start working with Robyn as quickly as possible, as well as support if you get stuck.'
+
+
+## SubRouter and Views
+
+After implementing the application application, Batman wanted to split the codebase into multiple files.
+
+This is when Robyn introduced him to the concept of routers and views.
+
+### Routers
+
+Routers are a way to split your application into multiple files. They allow you to group related endpoints together and make it easier to maintain your codebase.
+
+For example, if you wanted to create a router for the frontend, you would create a file called `frontend.py`. This file would contain all the endpoints related to the frontend.
+
+So the folder structure would look like this:
+
+```bash
+├── app.py
+├── frontend.py
+├── Dockerfile
+└── requirements.txt
+```
+
+And the code would look like this:
+
+```python {{ title: 'Creating a Router' }}
+# frontend.py
+
+from robyn.templating import JinjaTemplate
+from robyn import SubRouter
+import os
+import pathlib
+
+
+current_file_path = pathlib.Path(__file__).parent.resolve()
+jinja_template = JinjaTemplate(os.path.join(current_file_path, "templates"))
+
+
+frontend = SubRouter(__name__, prefix="/frontend")
+
+@frontend.get("/")
+async def get_frontend(request):
+    context = {"framework": "Robyn", "templating_engine": "Jinja2"}
+    return jinja_template.render_template("index.html", **context)
+```
+
+```python {{ title: 'Including a Router' }}
+# app.py
+
+from .frontend import frontend
+
+
+app.include_router(frontend)
+```
+
+
+### Views
+
+Views are a way to split your application into multiple files. They allow you to group related endpoints together and make it easier to maintain your codebase.
+
+For example, if you wanted to create a view for the frontend, you would create a file called `frontend.py`. This file would contain all the endpoints related to the frontend.
+
+
+The code would look like this:
+
+<CodeGroup>
+    ```python {{ title: 'Creating a decorator View' }}
+    from robyn import SyncView
+
+    @app.view("/sync/view/decorator")
+    def sync_decorator_view():
+        def get():
+            return "Hello, world!"
+
+        def post(request: Request):
+            body = request.body
+            return {"status_code": 200, "description": body}
+    ```
+
+
+    ```python {{ title: 'Creating a View' }}
+    def sync_decorator_view():
+        def get():
+            return "Hello, world!"
+
+        def post(request: Request):
+            body = request.body
+            return {"status_code": 200, "description": body}
+
+    app.add_view("/sync/view/decorator", sync_decorator_view)
+    ```
+</CodeGroup>
+
+
+
+
+
+
+

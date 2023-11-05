@@ -1,5 +1,7 @@
 /// This is the module that has all the executor functions
 /// i.e. the functions that have the responsibility of parsing and executing functions.
+pub mod web_socket_executors;
+
 use std::sync::Arc;
 
 use anyhow::Result;
@@ -11,6 +13,7 @@ use crate::types::{
     function_info::FunctionInfo, request::Request, response::Response, MiddlewareReturn,
 };
 
+#[inline]
 fn get_function_output<'a, T>(
     function: &'a FunctionInfo,
     py: Python<'a>,

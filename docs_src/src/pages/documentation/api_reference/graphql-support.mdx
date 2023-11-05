@@ -1,0 +1,247 @@
+export const description =
+  'On this page, we`ll understand how GraphQL support is provided in the existing Robyn codebase to ensure faster data fetching in modern webapps .'
+
+## GraphQL Support [(With Strawberry 🍓)](https://strawberry.rocks/)
+
+This is in a very early stage right now. We will have a much more stable version when we have a stable API for Views and View Controllers.
+
+## Step 1: Creating a virtualenv
+
+To ensure that there are isolated dependencies, we will use virtual environments.
+
+  <CodeGroup title="Virtual Environment">
+
+```bash {{ title: 'pip' }}
+python3 -m venv venv
+```
+
+  </CodeGroup>
+
+## Step 2: Activate the virtualenv and install Robyn
+
+  <CodeGroup title="Activating the virtualenv">
+
+```bash {{ title: 'pip' }}
+source venv/bin/activate
+```
+
+  </CodeGroup>
+
+  <CodeGroup title="Installing Robyn and Strawberry">
+
+```bash {{ title: 'pip' }}
+pip install robyn strawberry-graphql
+```
+
+  </CodeGroup>
+
+## Step 3: Coding the App
+
+  <CodeGroup title="Code">
+
+```python {{ title: 'python' }}
+from typing import List, Optional
+from robyn import Robyn, jsonify
+import json
+
+import dataclasses
+import strawberry
+import strawberry.utils.graphiql
+
+
+@strawberry.type
+class User:
+  name: str
+
+
+@strawberry.type
+class Query:
+  @strawberry.field
+  def user(self) -> Optional[User]:
+      return User(name="Hello")
+
+
+schema = strawberry.Schema(Query)
+
+app = Robyn(__file__)
+
+
+@app.get("/", const=True)
+async def get():
+  return strawberry.utils.graphiql.get_graphiql_html()
+
+
+@app.post("/")
+async def post(request):
+  body = request.json()
+  query = body["query"]
+  variables = body.get("variables", None)
+  context_value = {"request": request}
+  root_value = body.get("root_value", None)
+  operation_name = body.get("operation_name", None)
+
+  data = await schema.execute(
+      query,
+      variables,
+      context_value,
+      root_value,
+      operation_name,
+  )
+
+  return jsonify(
+      {
+          "data": (data.data),
+          **({"errors": data.errors} if data.errors else {}),
+          **({"extensions": data.extensions} if data.extensions else {}),
+      }
+  )
+
+
+if __name__ == "__main__":
+  app.start(port=8080, host="0.0.0.0")
+```
+
+  </CodeGroup>
+
+Let us try to decipher the usage line by line.
+
+<Row>
+<Col>
+These statements just import the dependencies.
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Section 1">
+
+    ```python {{ title: 'python' }}
+    from typing import List, Optional
+
+    from robyn import Robyn, jsonify
+    import json
+
+    import dataclasses
+    import strawberry
+    import strawberry.utils.graphiql
+
+    ```
+    </CodeGroup>
+
+  </Col>
+</Row>
+
+
+<Row>
+<Col>
+Here, we are creating a base `User` type with a `name` property.
+
+We are then creating a GraphQl `Query` that returns the `User`.
+
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Section 2">
+
+    ```python {{ title: 'python' }}
+    @strawberry.type
+    class User:
+        name: str
+
+
+    @strawberry.type
+    class Query:
+        @strawberry.field
+        def user(self) -> Optional[User]:
+            return User(name="Hello")
+
+
+    schema = strawberry.Schema(Query)
+    ```
+    </CodeGroup>
+
+  </Col>
+</Row>
+
+
+<Row>
+<Col>
+Now, we are initializing a Robyn app. For us, to serve a GraphQl app, we need to have a `get` route to return the `GraphiQL(ide)` and then a post route to process the `GraphQl` request.
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Section 3">
+
+    ```python {{ title: 'python' }}
+    app = Robyn(__file__)
+    ```
+    </CodeGroup>
+
+  </Col>
+</Row>
+
+
+<Row>
+<Col>
+We are populating the html page with the GraphiQL IDE using `strawberry`. We are using `const=True` to precompute this population. Essentially, making it very fast and bypassing the execution overhead in this get request.
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Section 4">
+
+    ```python {{ title: 'python' }}
+      @app.get("/", const=True)
+      async def get():
+      return strawberry.utils.graphiql.get_graphiql_html()
+    ```
+    </CodeGroup>
+
+  </Col>
+</Row>
+
+
+<Row>
+<Col>
+Finally, we are getting params(body, query, variables, context_value, root_value, operation_name) from the `request` object.
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Section 5">
+
+    ```python {{ title: 'python' }}
+    @app.post("/")
+    async def post(request):
+    body = request.json()
+    query = body["query"]
+    variables = body.get("variables", None)
+    context_value = {"request": request}
+    root_value = body.get("root_value", None)
+    operation_name = body.get("operation_name", None)
+
+    data = await schema.execute(
+        query,
+        variables,
+        context_value,
+        root_value,
+        operation_name,
+    )
+
+    return jsonify(
+        {
+            "data": (data.data),
+            **({"errors": data.errors} if data.errors else {}),
+            **({"extensions": data.extensions} if data.extensions else {}),
+        }
+    )
+    ```
+    </CodeGroup>
+
+  </Col>
+</Row>
+
+The above is the example for just one route. You can do the same for as many as you like. :)
+
+
+## What's next?
+
+That's all folks. :D Keep an eye out for more updates on this page. We will be adding more examples and documentation as we go along.
+
+
