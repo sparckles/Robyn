@@ -43,10 +43,7 @@ class DependencyMap:
         Returns:
             dict: The dependencies for the specified route.
         """
-        if route in self.router_dependency_map:
-            return self.router_dependency_map[route]
-        else:
-            raise KeyError(f"Route '{route}' not found in dependencies.")
+        return self.router_dependency_map.get(router, {})
 
     def get_global_dependencies(self):
         """Gets the dependencies for a route.
