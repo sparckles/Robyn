@@ -37,6 +37,7 @@ jinja_template = JinjaTemplate(os.path.join(current_file_path, "templates"))
 # Make it easier for multiple test runs
 websocket_state = defaultdict(int)
 
+app.inject(injected_argument="injected_argument")
 
 @websocket_json.on("message")
 async def jsonws_message(ws, msg: str) -> str:
@@ -192,8 +193,8 @@ def sync_middlewares_401():
 
 
 @app.get("/")
-async def hello_world():
-    return "Hello world"
+async def hello_world(request, GLOBALS, ROUTER):
+    return f"Hello {ROUTER}"
 
 
 # str
@@ -503,7 +504,7 @@ async def async_raise():
 
 
 @app.post("/sync/dict")
-def sync_dict_post():
+def sync_dict_post(request):
     return {
         "status_code": 200,
         "description": "sync dict post",
@@ -778,13 +779,13 @@ GLOBAL_DEP_INHERIT = "global dependency to be inherited from main to subrouter"
 app.inject(GLOBAL_DEPENDENCY=GLOBAL_DEPENDENCY)
 app.inject(GLOBAL_DEP_COLLISION=GLOBAL_DEP_COLLISION)
 app.inject(GLOBAL_DEP_INHERIT=GLOBAL_DEP_INHERIT)
-app.inject("/sync/dependency", ROUTE_DEPENDENCY=ROUTE_DEPENDENCY)
+app.inject(ROUTE_DEPENDENCY=ROUTE_DEPENDENCY)
 
 # dependencies should be accessible through the app handler
 # app.get_injected_dependencies is not the best api
 
 @app.get("/local_dep_inject")
-def sync_local_dependency():
+def sync_local_dependency(injected_argument):
     local_dependencies = app.get_injected_dependencies("/sync/dependency")
     return {"description": local_dependencies["ROUTE_DEPENDENCY"]}
 
@@ -808,12 +809,13 @@ GLOBAL_DEP_COLLISION = (
     "GLOBAL_DEP_COLLISION as defined in subrouter dependency dictionary"
 )
 ROUTE_DEPENDENCY = "subrouter_route_dependency"
-subrouter.inject(GLOBAL_DEP_COLLISION=GLOBAL_DEP_COLLISION)
-subrouter.inject("/subrouter/dep", ROUTE_DEPENDENCY=ROUTE_DEPENDENCY)
+subrouter.inject(injected_argument='Override')
+subrouter.inject(ROUTE_DEPENDENCY=ROUTE_DEPENDENCY)
 
 
 @subrouter.get("/subrouter_route_dep_inject")
-def sync_subrouter_route_dependency():
+def sync_subrouter_route_dependency(request, GLOBALS, ROUTER):
+    return f"ROUTER DEPENDENCY: {ROUTER}"
     local_dependencies = subrouter.get_injected_dependencies("/subrouter/dep")
     return {"description": local_dependencies["ROUTE_DEPENDENCY"]}
 

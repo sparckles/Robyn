@@ -108,24 +108,23 @@ class Robyn:
             route_type = http_methods[route_type]
 
         logger.info("Logging endpoint: method=%s, route=%s", route_type, endpoint)
-        global_dependencies = self.dependencies.get_global_dependencies()
-        router_dependencies = self.dependencies.get_router_dependencies(self)
+
+        injected_dependencies = self.dependencies.get_dependency_map(self)
 
         return self.router.add_route(
-            route_type,
-            endpoint,
-            handler,
-            is_const,
-            self.dependencies.dependency_map,
-            self.exception_handler,
-            self.response_headers,
+            route_type=route_type,
+            endpoint=endpoint,
+            handler=handler,
+            is_const=is_const,
+            exception_handler=self.exception_handler,
+            injected_dependencies=injected_dependencies,
+            default_response_headers=self.response_headers,
         )
 
-    def inject(self, route="*", **kwargs):
+    def inject(self, **kwargs):
         """
         Injects the dependencies for the route
 
-        :param route str: route for which the dependencies are to be injected. Defaults to global routes.
         :param kwargs dict: the dependencies to be injected
         """
         self.dependencies.add_router_dependency(self, **kwargs)
@@ -133,6 +132,7 @@ class Robyn:
     def inject_global(self, **kwargs):
         """
         Injects the dependencies for the global routes
+        Ideally, this function should be a global function
 
         :param kwargs dict: the dependencies to be injected
         """
@@ -145,7 +145,7 @@ class Robyn:
         # or maybe make it a class method/variable?
         # This should not be the primary way to access the dependencies
         if route:
-            return self.dependencies.get_route_dependencies(route)
+            return self.dependencies.get_router_dependencies(route)
         else:
             return self.dependencies.get_global_dependencies()
 
@@ -191,7 +191,7 @@ class Robyn:
             return
 
         is_async = asyncio.iscoroutinefunction(handler)
-        self.event_handlers[event_type] = FunctionInfo(handler, is_async, 0)
+        self.event_handlers[event_type] = FunctionInfo(handler, is_async, 0, {})
 
     def startup_handler(self, handler: Callable) -> None:
         self._add_event_handler(Events.STARTUP, handler)

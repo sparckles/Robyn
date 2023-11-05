@@ -1,17 +1,12 @@
 """ This is Robyn's dependency injection file.
 """
-from robyn.robyn import (
-    Response,
-    Request,
-)
-
 
 class DependencyMap:
     def __init__(self):
         #'request' and 'response' mappings are needed for when constructing deps_to_pass in router.py
-        self.global_dependency_map = {"request": Request, "response": Response}
+        self.global_dependency_map = {}
         # {'router': {'dependency_name': dependency_class}
-        self.router_dependency_map = {"request": Request, "response": Response}
+        self.router_dependency_map = {}
 
     def add_router_dependency(self, router, **kwargs):
         """Adds a dependency to a route.
@@ -68,6 +63,8 @@ class DependencyMap:
                 continue
             target_router.dependencies.get_global_dependencies()[dep_key] = self.get_global_dependencies()[dep_key]
 
-    @property
-    def dependency_map(self):
-        return self.router_dependency_map
+    def get_dependency_map(self, router) -> dict:
+           return {
+               "global_dependencies": self.get_global_dependencies(),
+               "router_dependencies": self.get_router_dependencies(router),
+           }

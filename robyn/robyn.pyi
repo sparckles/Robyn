@@ -41,6 +41,7 @@ class FunctionInfo:
     handler: Callable
     is_async: bool
     number_of_params: int
+    kwargs: dict
 
 @dataclass
 class Url:

@@ -17,25 +17,29 @@ use crate::types::{
 fn get_function_output<'a, T>(
     function: &'a FunctionInfo,
     py: Python<'a>,
-    input: &T,
+    function_args: &T,
 ) -> Result<&'a PyAny, PyErr>
 where
     T: ToPyObject,
 {
     let handler = function.handler.as_ref(py);
+    let kwargs = function.kwargs.as_ref(py);
+
+    // TODO: we need to find a way to insert only global or local dependening on the parameter
 
     // this makes the request object accessible across every route
     match function.number_of_params {
-        0 => handler.call0(),
-        1 => handler.call1((input.to_object(py),)),
+        0 => handler.call((), Some(kwargs)),
+        1 => handler.call((function_args.to_object(py),), Some(kwargs)),
         // this is done to accommodate any future params
-        2_u8..=u8::MAX => handler.call1((input.to_object(py),)),
+        2_u8..=u8::MAX => handler.call((function_args.to_object(py),), Some(kwargs)),
     }
 }
 
 // Execute the middleware function
 // type T can be either Request (before middleware) or Response (after middleware)
 // Return type can either be a Request or a Response, we wrap it inside an enum for easier handling
+#[inline]
 pub async fn execute_middleware_function<T>(
     input: &T,
     function: &FunctionInfo,
