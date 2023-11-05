@@ -100,9 +100,7 @@ class Robyn:
             }
             route_type = http_methods[route_type]
 
-        logger.info("Logging endpoint: method=%s, route=%s", route_type, endpoint)
-
-        return self.router.add_route(
+        add_route_response = self.router.add_route(
             route_type,
             endpoint,
             handler,
@@ -110,6 +108,10 @@ class Robyn:
             self.exception_handler,
             self.response_headers,
         )
+
+        logger.info("Added route %s %s", route_type, endpoint)
+
+        return add_route_response
 
     def before_request(self, endpoint: Optional[str] = None) -> Callable[..., None]:
         """
