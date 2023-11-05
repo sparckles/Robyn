@@ -9,11 +9,9 @@ from robyn.robyn import (
 class DependencyMap:
     def __init__(self):
         #'request' and 'response' mappings are needed for when constructing deps_to_pass in router.py
-        self._dependency_map = {
-            "ALL_ROUTES": {"request": Request, "response": Response}
-        }
+        self._dependency_map = {"GLOBAL_DEPENDENCIES": {"request": Request, "response": Response}}
 
-    def add_route_dependency(self, route: str, **kwargs: any):
+    def add_route_dependency(self, route: str, **kwargs):
         """Adds a dependency to a route.
 
         Args:
@@ -24,14 +22,14 @@ class DependencyMap:
             self._dependency_map[route] = {}
         self._dependency_map[route].update(**kwargs)
 
-    def add_global_dependency(self, **kwargs: any):
+    def add_global_dependency(self, **kwargs):
         """Adds a dependency to all routes.
 
         Args:
             kwargs (dict): The dependencies to add to all routes.
         """
         for name, element in kwargs.items():
-            self._dependency_map["ALL_ROUTES"].update({name: element})
+            self._dependency_map["GLOBAL_DEPENDENCIES"].update({name: element})
 
     def get_route_dependencies(self, route: str):
         """Gets the dependencies for a specific route.
@@ -53,7 +51,7 @@ class DependencyMap:
         Args:
             route (str): The route to get the dependencies for.
         """
-        return self._dependency_map["ALL_ROUTES"]
+        return self._dependency_map["GLOBAL_DEPENDENCIES"]
 
     def merge_dependencies(self, target_router):
         """
@@ -68,9 +66,7 @@ class DependencyMap:
         for dep_key in self.get_global_dependencies():
             if dep_key in target_router.dependencies.get_global_dependencies():
                 continue
-            target_router.dependencies.get_global_dependencies()[
-                dep_key
-            ] = self.get_global_dependencies()[dep_key]
+            target_router.dependencies.get_global_dependencies()[dep_key] = self.get_global_dependencies()[dep_key]
 
     @property
     def dependency_map(self):

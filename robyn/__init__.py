@@ -440,7 +440,6 @@ class SubRouter(Robyn):
         self, file_object: str, prefix: str = "", config: Config = Config()
     ) -> None:
         super().__init__(file_object, config)
-        dependencies = DependencyMap()
         self.prefix = prefix
 
     def __add_prefix(self, endpoint: str):
