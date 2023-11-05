@@ -9,18 +9,21 @@ from robyn.robyn import (
 class DependencyMap:
     def __init__(self):
         #'request' and 'response' mappings are needed for when constructing deps_to_pass in router.py
-        self._dependency_map = {"GLOBAL_DEPENDENCIES": {"request": Request, "response": Response}}
+        self.global_dependency_map = {"request": Request, "response": Response}
+        # {'router': {'dependency_name': dependency_class}
+        self.router_dependency_map = {"request": Request, "response": Response}
 
-    def add_route_dependency(self, route: str, **kwargs):
+    def add_router_dependency(self, router, **kwargs):
         """Adds a dependency to a route.
 
         Args:
-            route (str): The route to add the dependency to.
+            router App Object: The route to add the dependency to.
             kwargs (dict): The dependencies to add to the route.
         """
-        if route not in self._dependency_map:
-            self._dependency_map[route] = {}
-        self._dependency_map[route].update(**kwargs)
+        if router not in self.router_dependency_map:
+            self.router_dependency_map[router] = {}
+
+        self.router_dependency_map[router].update(**kwargs)
 
     def add_global_dependency(self, **kwargs):
         """Adds a dependency to all routes.
@@ -29,19 +32,19 @@ class DependencyMap:
             kwargs (dict): The dependencies to add to all routes.
         """
         for name, element in kwargs.items():
-            self._dependency_map["GLOBAL_DEPENDENCIES"].update({name: element})
+            self.global_dependency_map.update({name: element})
 
-    def get_route_dependencies(self, route: str):
+    def get_router_dependencies(self, router):
         """Gets the dependencies for a specific route.
 
         Args:
-            route (str): The route to get the dependencies for.
+            router
 
         Returns:
             dict: The dependencies for the specified route.
         """
-        if route in self._dependency_map:
-            return self._dependency_map[route]
+        if route in self.router_dependency_map:
+            return self.router_dependency_map[route]
         else:
             raise KeyError(f"Route '{route}' not found in dependencies.")
 
@@ -51,7 +54,7 @@ class DependencyMap:
         Args:
             route (str): The route to get the dependencies for.
         """
-        return self._dependency_map["GLOBAL_DEPENDENCIES"]
+        return self.global_dependency_map
 
     def merge_dependencies(self, target_router):
         """
@@ -70,4 +73,4 @@ class DependencyMap:
 
     @property
     def dependency_map(self):
-        return self._dependency_map
+        return self.router_dependency_map

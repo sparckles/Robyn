@@ -117,7 +117,9 @@ class Router(BaseRouter):
 
         @wraps(handler)
         async def async_inner_handler(*args):
+            print("These are the args", args)
             param_list, dependency_dict = self.validate_handler_args(handler_params, handler, endpoint, dependencies)
+            print("These are the param_list", param_list)
             # dependencies_to_pass construction considers each parameter specified in the handler function
             #'request' specified in init's dep mapping lets this construction account for a request parameter in the handler function
             dependencies_to_pass = [dependency_dict[key] for key in param_list if key in dependency_dict]

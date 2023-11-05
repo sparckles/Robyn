@@ -78,7 +78,7 @@ class Robyn:
         endpoint: str,
         handler: Callable,
         is_const: bool = False,
-        auth_required: bool = False,
+        auth_required: bool = False
     ):
         """
         Connect a URI to a handler
@@ -107,6 +107,8 @@ class Robyn:
             route_type = http_methods[route_type]
 
         logger.info("Logging endpoint: method=%s, route=%s", route_type, endpoint)
+        global_dependencies = self.dependencies.get_global_dependencies()
+        router_dependencies = self.dependencies.get_router_dependencies(self)
 
         return self.router.add_route(
             route_type,
@@ -125,10 +127,15 @@ class Robyn:
         :param route str: route for which the dependencies are to be injected. Defaults to global routes.
         :param kwargs dict: the dependencies to be injected
         """
-        if route == "*":
-            self.dependencies.add_global_dependency(**kwargs)
-        else:
-            self.dependencies.add_route_dependency(route, **kwargs)
+        self.dependencies.add_router_dependency(self, **kwargs)
+
+    def inject_global(self, **kwargs):
+        """
+        Injects the dependencies for the global routes
+
+        :param kwargs dict: the dependencies to be injected
+        """
+        self.dependencies.add_global_dependency(**kwargs)
 
     def get_injected_dependencies(self, route=None) -> dict:
         # How will we access these from sub routes?
