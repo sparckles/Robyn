@@ -14,6 +14,10 @@ from robyn import status_codes
 from robyn.ws import WebSocket
 from robyn.types import Header
 
+import logging
+
+_logger = logging.getLogger(__name__)
+
 
 class Route(NamedTuple):
     route_type: HttpMethod
@@ -96,7 +100,7 @@ class Router(BaseRouter):
         async def async_inner_handler(*args, **kwargs):
             try:
                 response = self._format_response(
-                    await handler(*args, **injected_dependencies),
+                    await handler(*args, **kwargs),
                     response_headers,
                 )
             except Exception as err:
@@ -111,8 +115,9 @@ class Router(BaseRouter):
         @wraps(handler)
         def inner_handler(*args, **kwargs):
             try:
+                # do we even need this?
                 response = self._format_response(
-                    handler(*args, **injected_dependencies),
+                    handler(*args, **kwargs),
                     response_headers,
                 )
             except Exception as err:
@@ -125,12 +130,25 @@ class Router(BaseRouter):
             return response
 
         number_of_params = len(signature(handler).parameters)
+        params = inspect.signature(handler).parameters
+        print("This is the params", params)
+        print("This is the injected dependencies", injected_dependencies)
+
+        
+        new_injected_dependencies = {}
+        for dependency in injected_dependencies:
+            if dependency in params:
+                new_injected_dependencies[dependency] = injected_dependencies[dependency]
+            else:
+                _logger.warning(f"Dependency {dependency} is not used in the handler {handler.__name__}")
+
+
         if iscoroutinefunction(handler):
-            function = FunctionInfo(async_inner_handler, True, number_of_params, injected_dependencies)
+            function = FunctionInfo(async_inner_handler, True, number_of_params, new_injected_dependencies)
             self.routes.append(Route(route_type, endpoint, function, is_const))
             return async_inner_handler
         else:
-            function = FunctionInfo(inner_handler, False, number_of_params, injected_dependencies)
+            function = FunctionInfo(inner_handler, False, number_of_params, new_injected_dependencies)
             self.routes.append(Route(route_type, endpoint, function, is_const))
             return inner_handler
 
@@ -148,10 +166,15 @@ class MiddlewareRouter(BaseRouter):
     def set_authentication_handler(self, authentication_handler: AuthenticationHandler):
         self.authentication_handler = authentication_handler
 
-    def add_route(self, middleware_type: MiddlewareType, endpoint: str, handler: Callable, injected_dependencies: dict) -> Callable:
+    def add_route(self, middleware_type: MiddlewareType, endpoint: str, handler: Callable, injected_dependencies: Optional[dict]) -> Callable:
+
         # add a docstring here
         number_of_params = len(signature(handler).parameters)
+
+        # need to do something here
         dependency_map = injected_dependencies if injected_dependencies is not None else {}
+
+
 
 
         function = FunctionInfo(handler, iscoroutinefunction(handler), number_of_params, dependency_map)

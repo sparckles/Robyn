@@ -193,8 +193,8 @@ def sync_middlewares_401():
 
 
 @app.get("/")
-async def hello_world(request, GLOBALS, ROUTER):
-    return f"Hello {ROUTER}"
+async def hello_world(request, router_dependencies):
+    return f"Hello {router_dependencies}"
 
 
 # str
