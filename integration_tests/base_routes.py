@@ -18,7 +18,7 @@ from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.templating import JinjaTemplate
 
 from integration_tests.views import SyncView, AsyncView
-from integration_tests.subroutes import SubRouter
+from integration_tests.subroutes import sub_router
 
 
 app = Robyn(__file__)
@@ -193,8 +193,8 @@ def sync_middlewares_401():
 
 
 @app.get("/")
-async def hello_world(request, router_dependencies):
-    return f"Hello {router_dependencies}"
+async def hello_world(request):
+    return f"Hello World"
 
 
 # str
@@ -785,14 +785,12 @@ app.inject(ROUTE_DEPENDENCY=ROUTE_DEPENDENCY)
 # app.get_injected_dependencies is not the best api
 
 @app.get("/local_dep_inject")
-def sync_local_dependency(injected_argument):
-    local_dependencies = app.get_injected_dependencies("/sync/dependency")
-    return {"description": local_dependencies["ROUTE_DEPENDENCY"]}
+def sync_local_dependency(request, router_dependencies):
+    return {"description": router_dependencies["ROUTE_DEPENDENCY"]}
 
 
 @app.get("/global_dep_inject")
-def sync_global_dependency():
-    global_dependencies = app.get_injected_dependencies()
+def sync_global_dependency(request, global_dependencies):
     description = "\n".join(
         [
             f"GLOBAL_DEPENDENCY: {global_dependencies['GLOBAL_DEPENDENCY']}",
@@ -803,34 +801,6 @@ def sync_global_dependency():
     return {"description": description}
 
 
-subrouter = SubRouter(__file__, "/subrouter")
-# in case of collision, sub router dependency will be given priority
-GLOBAL_DEP_COLLISION = (
-    "GLOBAL_DEP_COLLISION as defined in subrouter dependency dictionary"
-)
-ROUTE_DEPENDENCY = "subrouter_route_dependency"
-subrouter.inject(injected_argument='Override')
-subrouter.inject(ROUTE_DEPENDENCY=ROUTE_DEPENDENCY)
-
-
-@subrouter.get("/subrouter_route_dep_inject")
-def sync_subrouter_route_dependency(request, GLOBALS, ROUTER):
-    return f"ROUTER DEPENDENCY: {ROUTER}"
-    local_dependencies = subrouter.get_injected_dependencies("/subrouter/dep")
-    return {"description": local_dependencies["ROUTE_DEPENDENCY"]}
-
-
-@subrouter.get("/subrouter_global_dep_inject")
-def sync_subrouter_global_dependency():
-    global_dependencies = subrouter.get_injected_dependencies()
-    description = "\n".join(
-        [
-            f"GLOBAL_DEPENDENCY: {global_dependencies['GLOBAL_DEPENDENCY']}",
-            f"GLOBAL_DEP_COLLISION: {global_dependencies['GLOBAL_DEP_COLLISION']}",
-            f"GLOBAL_DEP_INHERIT: {global_dependencies['GLOBAL_DEP_INHERIT']}",
-        ]
-    )
-    return {"description": description}
 
 
 def main():

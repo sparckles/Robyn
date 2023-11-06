@@ -138,17 +138,6 @@ class Robyn:
         """
         self.dependencies.add_global_dependency(**kwargs)
 
-    def get_injected_dependencies(self, route=None) -> dict:
-        # How will we access these from sub routes?
-        # @Darren, @Ido ?? Any ideas?
-        # Should we add a method to get the dependencies somewhere else?
-        # or maybe make it a class method/variable?
-        # This should not be the primary way to access the dependencies
-        if route:
-            return self.dependencies.get_router_dependencies(route)
-        else:
-            return self.dependencies.get_global_dependencies()
-
     def before_request(self, endpoint: Optional[str] = None) -> Callable[..., None]:
         """
         You can use the @app.before_request decorator to call a method before routing to the specified endpoint
