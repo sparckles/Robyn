@@ -107,11 +107,9 @@ class Robyn:
             }
             route_type = http_methods[route_type]
 
-        logger.info("Logging endpoint: method=%s, route=%s", route_type, endpoint)
-
         injected_dependencies = self.dependencies.get_dependency_map(self)
 
-        return self.router.add_route(
+        add_route_response = self.router.add_route(
             route_type=route_type,
             endpoint=endpoint,
             handler=handler,
@@ -120,6 +118,10 @@ class Robyn:
             injected_dependencies=injected_dependencies,
             default_response_headers=self.response_headers,
         )
+
+        logger.info("Added route %s %s", route_type, endpoint)
+
+        return add_route_response
 
     def inject(self, **kwargs):
         """
