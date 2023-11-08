@@ -194,7 +194,7 @@ def sync_middlewares_401():
 
 @app.get("/")
 async def hello_world(request):
-    return f"Hello World"
+    return f"Hello uorld"
 
 
 # str
