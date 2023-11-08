@@ -18,7 +18,7 @@ from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.templating import JinjaTemplate
 
 from integration_tests.views import SyncView, AsyncView
-from integration_tests.subroutes import sub_router
+from integration_tests.subroutes import sub_router, di_subrouter
 
 
 app = Robyn(__file__)
@@ -37,7 +37,6 @@ jinja_template = JinjaTemplate(os.path.join(current_file_path, "templates"))
 # Make it easier for multiple test runs
 websocket_state = defaultdict(int)
 
-app.inject(injected_argument="injected_argument")
 
 @websocket_json.on("message")
 async def jsonws_message(ws, msg: str) -> str:
@@ -771,15 +770,15 @@ app.add_route("POST", "/async/post/no_dec", async_without_decorator)
 GLOBAL_DEPENDENCY = "GLOBAL DEPENDENCY"
 ROUTER_DEPENDENCY = "ROUTER DEPENDENCY"
 
-app.inject(GLOBAL_DEPENDENCY=GLOBAL_DEPENDENCY)
+app.inject_global(GLOBAL_DEPENDENCY=GLOBAL_DEPENDENCY)
 app.inject(ROUTER_DEPENDENCY=ROUTER_DEPENDENCY)
 
 @app.get("/sync/global_di")
-def sync_global_di(request, global_dependencies):
+def sync_global_di(request, router_dependencies, global_dependencies):
     return global_dependencies["GLOBAL_DEPENDENCY"]
 
-@app.get("/async/router_di")
-async def async_router_di(request, router_dependencies):
+@app.get("/sync/router_di")
+def sync_router_di(request, router_dependencies):
     return router_dependencies["ROUTER_DEPENDENCY"]
 
 
@@ -794,6 +793,7 @@ def main():
     app.add_view("/sync/view", SyncView)
     app.add_view("/async/view", AsyncView)
     app.include_router(sub_router)
+    app.include_router(di_subrouter)
 
     class BasicAuthHandler(AuthenticationHandler):
         def authenticate(self, request: Request) -> Optional[Identity]:

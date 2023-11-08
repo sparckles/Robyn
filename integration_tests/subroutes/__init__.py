@@ -1,5 +1,6 @@
 from robyn import SubRouter, jsonify, WebSocket
 
+from subroutes.di_subrouter import di_subrouter
 
 sub_router = SubRouter(__name__, prefix="/sub_router")
 
