@@ -5,7 +5,7 @@ export const description =
 After Creating a basic version of the app, Batman wanted to restrict the access to the Gotham Police Department. So, he enquired about the Authentication functionalities in Robyn.
 
 
-## Authenticaion
+## Authentication
 
 
 As Batman found out, Robyn provides an easy way to add an authentication middleware to your application. You can then specify `auth_required=True` in your routes to make them accessible only to authenticated users.
@@ -77,7 +77,7 @@ As Batman found out, Robyn provides an easy way to add an authentication middlew
 The authenticate method should return an `Identity` object if the user is authenticated, or `None` otherwise. The Identity object can contain any data you want, and will be accessible in the route methods using the `request.identity` attribute.
 
 <b>
-  Note: that this authentication system is basically only using a `before request` middleware under the hood. This means you can overlook it and create your own authentication system using middlewares if you want to. However, Robyn still provide this easy to implement solution that should suit most use cases.
+  Note: that this authentication system is basically only using a `before request` middleware under the hood. This means you can overlook it and create your own authentication system using middlewares if you want to. However, Robyn still provides this easy to implement solution that should suit most use cases.
 </b>
 
 
