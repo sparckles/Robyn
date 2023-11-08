@@ -768,39 +768,19 @@ app.add_route("POST", "/async/post/no_dec", async_without_decorator)
 
 # ===== Dependency Injection =====
 
-GLOBAL_DEPENDENCY = "global_dependency"
-ROUTE_DEPENDENCY = "route_dependency, exclusive to main Router"
-# to demonstrate how dependencies are handled in case of collision between main and sub router
-GLOBAL_DEP_COLLISION = (
-    "GLOBAL_DEP_COLLISION as defined in the main router dep dictionary"
-)
-# to demonstrate how sub router inherits dependencies of the greater router
-GLOBAL_DEP_INHERIT = "global dependency to be inherited from main to subrouter"
+GLOBAL_DEPENDENCY = "GLOBAL DEPENDENCY"
+ROUTER_DEPENDENCY = "ROUTER DEPENDENCY"
+
 app.inject(GLOBAL_DEPENDENCY=GLOBAL_DEPENDENCY)
-app.inject(GLOBAL_DEP_COLLISION=GLOBAL_DEP_COLLISION)
-app.inject(GLOBAL_DEP_INHERIT=GLOBAL_DEP_INHERIT)
-app.inject(ROUTE_DEPENDENCY=ROUTE_DEPENDENCY)
+app.inject(ROUTER_DEPENDENCY=ROUTER_DEPENDENCY)
 
-# dependencies should be accessible through the app handler
-# app.get_injected_dependencies is not the best api
+@app.get("/sync/global_di")
+def sync_global_di(request, global_dependencies):
+    return global_dependencies["GLOBAL_DEPENDENCY"]
 
-@app.get("/local_dep_inject")
-def sync_local_dependency(request, router_dependencies):
-    return {"description": router_dependencies["ROUTE_DEPENDENCY"]}
-
-
-@app.get("/global_dep_inject")
-def sync_global_dependency(request, global_dependencies):
-    description = "\n".join(
-        [
-            f"GLOBAL_DEPENDENCY: {global_dependencies['GLOBAL_DEPENDENCY']}",
-            f"GLOBAL_DEP_COLLISION: {global_dependencies['GLOBAL_DEP_COLLISION']}",
-            f"GLOBAL_DEP_INHERIT: {global_dependencies['GLOBAL_DEP_INHERIT']}",
-        ]
-    )
-    return {"description": description}
-
-
+@app.get("/async/router_di")
+async def async_router_di(request, router_dependencies):
+    return router_dependencies["ROUTER_DEPENDENCY"]
 
 
 def main():
@@ -813,7 +793,7 @@ def main():
     app.startup_handler(startup_handler)
     app.add_view("/sync/view", SyncView)
     app.add_view("/async/view", AsyncView)
-    app.include_router(subrouter)
+    app.include_router(sub_router)
 
     class BasicAuthHandler(AuthenticationHandler):
         def authenticate(self, request: Request) -> Optional[Identity]:
