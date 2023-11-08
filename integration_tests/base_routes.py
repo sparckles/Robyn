@@ -193,7 +193,7 @@ def sync_middlewares_401():
 
 @app.get("/")
 async def hello_world(request):
-    return f"Hello uorld"
+    return f"Hello world"
 
 
 # str
@@ -503,7 +503,7 @@ async def async_raise():
 
 
 @app.post("/sync/dict")
-def sync_dict_post(request):
+def sync_dict_post():
     return {
         "status_code": 200,
         "description": "sync dict post",
