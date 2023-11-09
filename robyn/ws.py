@@ -51,3 +51,19 @@ class WebSocket:
 
         return inner
 
+    def inject(self, **kwargs):
+        """
+        Injects the dependencies for the route
+
+        :param kwargs dict: the dependencies to be injected
+        """
+        self.dependencies.add_router_dependency(self, **kwargs)
+
+    def inject_global(self, **kwargs):
+        """
+        Injects the dependencies for the global routes
+        Ideally, this function should be a global function
+
+        :param kwargs dict: the dependencies to be injected
+        """
+        self.dependencies.add_global_dependency(**kwargs)

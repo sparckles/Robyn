@@ -24,9 +24,15 @@ from integration_tests.subroutes import sub_router, di_subrouter
 app = Robyn(__file__)
 websocket = WebSocket(app, "/web_socket")
 
+
 # Creating a new WebSocket app to test json handling + to serve an example to future users of this lib
 # while the original "raw" web_socket is used with benchmark tests
 websocket_json = WebSocket(app, "/web_socket_json")
+
+websocket_di = WebSocket(app, "/web_socket_di")
+
+websocket_di.inject_global(GLOBAL_DEPENDENCY="GLOBAL DEPENDENCY")
+websocket_di.inject(ROUTER_DEPENDENCY="ROUTER DEPENDENCY")
 
 current_file_path = pathlib.Path(__file__).parent.resolve()
 jinja_template = JinjaTemplate(os.path.join(current_file_path, "templates"))
@@ -55,7 +61,7 @@ async def jsonws_message(ws, msg: str) -> str:
 
 
 @websocket.on("message")
-async def message(ws: WebSocketConnector, msg: str) -> str:
+async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
     global websocket_state
     websocket_id = ws.id
     state = websocket_state[websocket_id]
@@ -69,7 +75,6 @@ async def message(ws: WebSocketConnector, msg: str) -> str:
     elif state == 2:
         resp = "*chika* *chika* Slim Shady."
     websocket_state[websocket_id] = (state + 1) % 3
-
     return resp
 
 
@@ -93,6 +98,12 @@ def jsonws_connect():
     return "Hello world, from ws"
 
 
+@websocket_di.on("connect")
+async def di_message(global_dependencies, router_dependencies):
+    return global_dependencies["GLOBAL_DEPENDENCY"] + " "+ router_dependencies["ROUTER_DEPENDENCY"]
+
+
+
 # ===== Lifecycle handlers =====
 
 
@@ -112,8 +123,8 @@ def shutdown_handler():
 
 @app.before_request()
 def global_before_request(request: Request):
-    # request.headers["global_before"] = "global_before_request"
-    # return request
+    request.headers["global_before"] = "global_before_request"
+    return request
 
 
 @app.after_request()
@@ -190,11 +201,11 @@ def sync_middlewares_401():
 
 # Hello world
 
+app.inject(RouterDependency="Router Dependency")
+
 @app.get("/")
-async def hello_world(router_dependencies):
-    return f"Hello, world! {router_dependencies['ROUTER_DEPENDENCY']}"
-
-
+async def hello_world(request):
+    return f"Hello, world!"
 
 @app.get("/sync/str")
 def sync_str_get():

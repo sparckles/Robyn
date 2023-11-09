@@ -43,7 +43,16 @@ where
                 handler.call((), Some(kwargs))
             }
         }
-        2..=u8::MAX => handler.call((function_args,), Some(kwargs)),
+        2 => {
+            if function.args.as_ref(py).get_item("request").is_some()
+                || function.args.as_ref(py).get_item("response").is_some()
+            {
+                handler.call((function_args,), Some(kwargs))
+            } else {
+                handler.call((), Some(kwargs))
+            }
+        }
+        3..=u8::MAX => handler.call((function_args,), Some(kwargs)),
     }
 }
 

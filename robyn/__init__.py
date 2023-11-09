@@ -93,8 +93,11 @@ class Robyn:
 
         """ We will add the status code here only
         """
+        injected_dependencies = self.dependencies.get_dependency_map(self)
+
         if auth_required:
             self.middleware_router.add_auth_middleware(endpoint)(handler)
+
         if isinstance(route_type, str):
             http_methods = {
                 "GET": HttpMethod.GET,
@@ -107,7 +110,6 @@ class Robyn:
             }
             route_type = http_methods[route_type]
 
-        injected_dependencies = self.dependencies.get_dependency_map(self)
 
         add_route_response = self.router.add_route(
             route_type=route_type,
@@ -155,7 +157,7 @@ class Robyn:
 
         :param endpoint str|None: endpoint to server the route. If None, the middleware will be applied to all the routes.
         """
-
+        dependency_map = self.dependencies.get_dependency_map(self)
         return self.middleware_router.add_middleware(MiddlewareType.AFTER_REQUEST, endpoint)
 
     def add_directory(
