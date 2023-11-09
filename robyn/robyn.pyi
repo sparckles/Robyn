@@ -22,10 +22,31 @@ class SocketHeld:
         pass
 
 class MiddlewareType(Enum):
+    """
+    The middleware types supported by Robyn.
+
+    Attributes:
+        BEFORE_REQUEST: str
+        AFTER_REQUEST: str
+    """
     BEFORE_REQUEST: str
     AFTER_REQUEST: str
 
 class HttpMethod(Enum):
+    """
+    The HTTP methods supported by Robyn.
+
+    Attributes:
+        GET: str
+        POST: str
+        PUT: str
+        DELETE: str
+        PATCH: str
+        OPTIONS: str
+        HEAD: str
+        TRACE: str
+        CONNECT: str
+    """
     GET: str
     POST: str
     PUT: str
@@ -38,9 +59,20 @@ class HttpMethod(Enum):
 
 @dataclass
 class FunctionInfo:
+    """
+    The function info object passed to the route handler.
+
+    Attributes:
+        handler (Callable): The function to be called
+        is_async (bool): Whether the function is async or not
+        number_of_params (int): The number of parameters the function has
+        args (dict): The arguments of the function
+        kwargs (dict): The keyword arguments of the function
+    """
     handler: Callable
     is_async: bool
     number_of_params: int
+    args: dict
     kwargs: dict
 
 @dataclass

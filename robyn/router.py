@@ -130,7 +130,8 @@ class Router(BaseRouter):
             return response
 
         number_of_params = len(signature(handler).parameters)
-        params = inspect.signature(handler).parameters
+        # these are the arguments
+        params = dict(inspect.signature(handler).parameters)
         print("This is the params", params)
         print("This is the injected dependencies", injected_dependencies)
 
@@ -144,11 +145,11 @@ class Router(BaseRouter):
 
 
         if iscoroutinefunction(handler):
-            function = FunctionInfo(async_inner_handler, True, number_of_params, new_injected_dependencies)
+            function = FunctionInfo(async_inner_handler, True, number_of_params, params, new_injected_dependencies)
             self.routes.append(Route(route_type, endpoint, function, is_const))
             return async_inner_handler
         else:
-            function = FunctionInfo(inner_handler, False, number_of_params, new_injected_dependencies)
+            function = FunctionInfo(inner_handler, False, number_of_params, params, new_injected_dependencies)
             self.routes.append(Route(route_type, endpoint, function, is_const))
             return inner_handler
 
@@ -169,15 +170,16 @@ class MiddlewareRouter(BaseRouter):
     def add_route(self, middleware_type: MiddlewareType, endpoint: str, handler: Callable, injected_dependencies: Optional[dict]) -> Callable:
 
         # add a docstring here
-        number_of_params = len(signature(handler).parameters)
+        params = dict(inspect.signature(handler).parameters)
+        number_of_params = len(params)
 
         # need to do something here
-        dependency_map = injected_dependencies if injected_dependencies is not None else {}
+        dependency_map = {}
 
 
 
 
-        function = FunctionInfo(handler, iscoroutinefunction(handler), number_of_params, dependency_map)
+        function = FunctionInfo(handler, iscoroutinefunction(handler), number_of_params, {}, {})
         self.route_middlewares.append(RouteMiddleware(middleware_type, endpoint, function))
         return handler
 
@@ -205,18 +207,16 @@ class MiddlewareRouter(BaseRouter):
     # They take a handler, convert it into a closure and return the arguments.
     # Arguments are returned as they could be modified by the middlewares.
     def add_middleware(self, middleware_type: MiddlewareType, endpoint: Optional[str]) -> Callable[..., None]:
-        global_dependency_map = {}
-        router_dependency_map = {}
-        dependency_map = {**global_dependency_map, **router_dependency_map}
+        # no dependency injection here
 
         def inner(handler):
             @wraps(handler)
-            async def async_inner_handler(*args):
-                return await handler(*args)
+            async def async_inner_handler(*args, **kwargs):
+                return await handler(*args, **kwargs)
 
             @wraps(handler)
-            def inner_handler(*args):
-                return handler(*args)
+            def inner_handler(*args, **kwargs):
+                return handler(*args, **kwargs)
 
             if endpoint is not None:
                 if iscoroutinefunction(handler):
@@ -224,6 +224,8 @@ class MiddlewareRouter(BaseRouter):
                 else:
                     self.add_route(middleware_type, endpoint, inner_handler, None)
             else:
+                params = dict(inspect.signature(handler).parameters)
+
                 if iscoroutinefunction(handler):
                     self.global_middlewares.append(
                         GlobalMiddleware(
@@ -231,8 +233,9 @@ class MiddlewareRouter(BaseRouter):
                             FunctionInfo(
                                 async_inner_handler,
                                 True,
-                                len(signature(async_inner_handler).parameters),
-                                dependency_map,
+                                len(params),
+                                {},
+                                {},
                             ),
                         )
                     )
@@ -243,8 +246,9 @@ class MiddlewareRouter(BaseRouter):
                             FunctionInfo(
                                 inner_handler,
                                 False,
-                                len(signature(inner_handler).parameters),
-                                dependency_map,
+                                len(params),
+                                {},
+                                {},
                             ),
                         )
                     )

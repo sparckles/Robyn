@@ -112,8 +112,8 @@ def shutdown_handler():
 
 @app.before_request()
 def global_before_request(request: Request):
-    request.headers["global_before"] = "global_before_request"
-    return request
+    # request.headers["global_before"] = "global_before_request"
+    # return request
 
 
 @app.after_request()
@@ -190,13 +190,10 @@ def sync_middlewares_401():
 
 # Hello world
 
-
 @app.get("/")
-async def hello_world(request):
-    return f"Hello world"
+async def hello_world(router_dependencies):
+    return f"Hello, world! {router_dependencies['ROUTER_DEPENDENCY']}"
 
-
-# str
 
 
 @app.get("/sync/str")

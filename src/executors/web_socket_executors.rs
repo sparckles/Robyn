@@ -16,11 +16,34 @@ fn get_function_output<'a>(
     let handler = function.handler.as_ref(py);
 
     // this makes the request object accessible across every route
+
+    let args = function.args.as_ref(py);
+    let kwargs = function.kwargs.as_ref(py);
+
     match function.number_of_params {
         0 => handler.call0(),
-        1 => handler.call1((ws.clone(),)),
+        1 => {
+            if args.get_item("ws").is_some() {
+                handler.call1((ws.clone(),))
+            } else if args.get_item("msg").is_some() {
+                handler.call1((fn_msg.unwrap_or_default(),))
+            } else {
+                handler.call((), Some(kwargs))
+            }
+        }
         // this is done to accommodate any future params
-        2_u8..=u8::MAX => handler.call1((ws.clone(), fn_msg.unwrap_or_default())),
+        2 => {
+            if args.get_item("ws").is_some() && args.get_item("msg").is_some() {
+                handler.call1((ws.clone(), fn_msg.unwrap_or_default()))
+            } else if args.get_item("ws").is_some() {
+                handler.call((ws.clone(),), Some(kwargs))
+            } else if args.get_item("msg").is_some() {
+                handler.call((fn_msg.unwrap_or_default(),), Some(kwargs))
+            } else {
+                handler.call((), Some(kwargs))
+            }
+        }
+        3_u8..=u8::MAX => handler.call((ws.clone(), fn_msg.unwrap_or_default()), Some(kwargs)),
     }
 }
 

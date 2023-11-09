@@ -23,16 +23,27 @@ where
     T: ToPyObject,
 {
     let handler = function.handler.as_ref(py);
+    // kwargs are handled
     let kwargs = function.kwargs.as_ref(py);
+
+    let function_args = function_args.to_object(py);
 
     // TODO: we need to find a way to insert only global or local dependening on the parameter
 
     // this makes the request object accessible across every route
     match function.number_of_params {
-        0 => handler.call((), Some(kwargs)),
-        1 => handler.call((function_args.to_object(py),), Some(kwargs)),
-        // this is done to accommodate any future params
-        2_u8..=u8::MAX => handler.call((function_args.to_object(py),), Some(kwargs)),
+        0 => handler.call0(),
+        1 => {
+            if function.args.as_ref(py).get_item("request").is_some() {
+                handler.call1((function_args,))
+            } else if function.args.as_ref(py).get_item("response").is_some() {
+                // this is for middlewares
+                handler.call1((function_args,))
+            } else {
+                handler.call((), Some(kwargs))
+            }
+        }
+        2..=u8::MAX => handler.call((function_args,), Some(kwargs)),
     }
 }
 

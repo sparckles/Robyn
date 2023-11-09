@@ -177,12 +177,12 @@ class Robyn:
         self.web_socket_router.add_route(endpoint, ws)
 
     def _add_event_handler(self, event_type: Events, handler: Callable) -> None:
-        logger.info("Add event %s handler", event_type)
+        logger.info("Added event %s handler", event_type)
         if event_type not in {Events.STARTUP, Events.SHUTDOWN}:
             return
 
         is_async = asyncio.iscoroutinefunction(handler)
-        self.event_handlers[event_type] = FunctionInfo(handler, is_async, 0, {})
+        self.event_handlers[event_type] = FunctionInfo(handler, is_async, 0, {}, {})
 
     def startup_handler(self, handler: Callable) -> None:
         self._add_event_handler(Events.STARTUP, handler)

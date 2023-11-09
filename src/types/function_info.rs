@@ -34,6 +34,8 @@ pub struct FunctionInfo {
     #[pyo3(get, set)]
     pub number_of_params: u8,
     #[pyo3(get, set)]
+    pub args: Py<PyDict>,
+    #[pyo3(get, set)]
     pub kwargs: Py<PyDict>,
 }
 
@@ -44,12 +46,14 @@ impl FunctionInfo {
         handler: Py<PyAny>,
         is_async: bool,
         number_of_params: u8,
+        args: Py<PyDict>,
         kwargs: Py<PyDict>,
     ) -> Self {
         Self {
             handler,
             is_async,
             number_of_params,
+            args,
             kwargs,
         }
     }
