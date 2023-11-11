@@ -47,11 +47,7 @@ class Router(BaseRouter):
         res: dict,
         default_response_header: dict,
     ) -> Response:
-        headers = (
-            {"Content-Type": "text/plain"}
-            if not default_response_header
-            else default_response_header
-        )
+        headers = {"Content-Type": "text/plain"} if not default_response_header else default_response_header
         response = {}
         if isinstance(res, dict):
             status_code = res.get("status_code", status_codes.HTTP_200_OK)
@@ -61,9 +57,7 @@ class Router(BaseRouter):
             if not isinstance(status_code, int):
                 status_code = int(status_code)  # status_code can potentially be string
 
-            response = Response(
-                status_code=status_code, headers=headers, description=description
-            )
+            response = Response(status_code=status_code, headers=headers, description=description)
             file_path = res.get("file_path")
             if file_path is not None:
                 response.file_path = file_path
@@ -150,14 +144,10 @@ class MiddlewareRouter(BaseRouter):
     def set_authentication_handler(self, authentication_handler: AuthenticationHandler):
         self.authentication_handler = authentication_handler
 
-    def add_route(
-        self, middleware_type: MiddlewareType, endpoint: str, handler: Callable
-    ) -> Callable:
+    def add_route(self, middleware_type: MiddlewareType, endpoint: str, handler: Callable) -> Callable:
         number_of_params = len(signature(handler).parameters)
         function = FunctionInfo(handler, iscoroutinefunction(handler), number_of_params)
-        self.route_middlewares.append(
-            RouteMiddleware(middleware_type, endpoint, function)
-        )
+        self.route_middlewares.append(RouteMiddleware(middleware_type, endpoint, function))
         return handler
 
     def add_auth_middleware(self, endpoint: str):
@@ -183,9 +173,7 @@ class MiddlewareRouter(BaseRouter):
     # These inner functions are basically a wrapper around the closure(decorator) being returned.
     # They take a handler, convert it into a closure and return the arguments.
     # Arguments are returned as they could be modified by the middlewares.
-    def add_middleware(
-        self, middleware_type: MiddlewareType, endpoint: Optional[str]
-    ) -> Callable[..., None]:
+    def add_middleware(self, middleware_type: MiddlewareType, endpoint: Optional[str]) -> Callable[..., None]:
         def inner(handler):
             @wraps(handler)
             async def async_inner_handler(*args):

@@ -1,0 +1,95 @@
+
+export const description =
+  'On this page, we’ll dive into the different conversation endpoints you can use to manage conversations programmatically.'
+
+After Creating a basic version of the app, Batman wanted to restrict the access to the Gotham Police Department. So, he enquired about the Authentication functionalities in Robyn.
+
+
+## Authentication
+
+
+As Batman found out, Robyn provides an easy way to add an authentication middleware to your application. You can then specify `auth_required=True` in your routes to make them accessible only to authenticated users.
+
+
+
+<Row>
+<Col>
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    @app.get("/auth", auth_required=True)
+    async def auth(request: Request):
+        # This route method will only be executed if the user is authenticated
+        # Otherwise, a 401 response will be returned
+        return "Hello, world"
+    ```
+
+    ```python {{title: 'typed'}}
+    @app.get("/auth", auth_required=True)
+    async def auth(request: Request):
+        # This route method will only be executed if the user is authenticated
+        # Otherwise, a 401 response will be returned
+        return "Hello, world"
+
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+<Row>
+
+  <Col>
+  To add an authentication middleware, you can use the `configure_authentication` method. This method requires an `AuthenticationHandler` object as an argument. This object specifies how to authenticate a user, and uses a `TokenGetter` object to retrieve the token from the request. Robyn does currently provide a `BearerGetter` class that gets the token from the `Authorization` header, using the `Bearer` scheme. Here is an example of a basic authentication handler:
+
+
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+      ```python {{ title: 'untyped' }}
+      class BasicAuthHandler(AuthenticationHandler):
+        def authenticate(self, request: Request) -> Optional[Identity]:
+            token = self.token_getter.get_token(request)
+            if token == "valid":
+                return Identity(claims={})
+            return None
+
+      app.configure_authentication(BasicAuthHandler(token_getter=BearerGetter()))
+
+      ```
+
+      ```python {{title: 'typed'}}
+      class BasicAuthHandler(AuthenticationHandler):
+        def authenticate(self, request: Request) -> Optional[Identity]:
+            token = self.token_getter.get_token(request)
+            if token == "valid":
+                return Identity(claims={})
+            return None
+
+      app.configure_authentication(BasicAuthHandler(token_getter=BearerGetter()))
+
+      ```
+    </CodeGroup>
+  </Col>
+
+The authenticate method should return an `Identity` object if the user is authenticated, or `None` otherwise. The Identity object can contain any data you want, and will be accessible in the route methods using the `request.identity` attribute.
+
+<b>
+  Note: that this authentication system is basically only using a `before request` middleware under the hood. This means you can overlook it and create your own authentication system using middlewares if you want to. However, Robyn still provides this easy to implement solution that should suit most use cases.
+</b>
+
+
+</Row>
+
+--- 
+
+## What's next?
+
+Now, that Batman has learned about authentication, he wanted to know about certain optimization techniques that he could use to make his application faster. He found out about the following features
+
+- [Const Requests and Multi Core Scaling](/documentation/api_reference/const_requests)
+
+
+

@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "robyn"
-version = "0.44.1"
+version = "0.45.0"
 description = "A High-Performance, Community-Driven, and Innovator Friendly Web Framework with a Rust runtime."
 authors = [{ name = "Sanskar Jethi", email = "sansyrox@gmail.com" }]
 repository = "https://github.com/sparckles/robyn"
@@ -30,7 +30,7 @@ dependencies = [
   'nestd == 0.3.1',
   'inquirerpy == 0.3.4',
 # conditional
-  "uvloop~=0.17.0; sys_platform != 'win32' and platform_python_implementation == 'CPython' and platform_machine != 'armv7l'"
+  "uvloop~=0.19.0; sys_platform != 'win32' and platform_python_implementation == 'CPython' and platform_machine != 'armv7l'"
   ]
 
 [project.optional-dependencies]
@@ -43,7 +43,7 @@ Changelog = "https://github.com/sparckles/robyn/blob/main/CHANGELOG.md"
 
 [tool.poetry]
 name = "robyn"
-version = "0.44.1"
+version = "0.45.0"
 description = "A High-Performance, Community-Driven, and Innovator Friendly Web Framework with a Rust runtime."
 authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 
@@ -55,7 +55,7 @@ maturin = "0.14.12"
 watchdog = "2.2.1"
 multiprocess = "0.70.14"
 nestd = "0.3.1"
-uvloop = { version = "0.17.0", markers = "sys_platform != 'win32' and (sys_platform != 'cygwin' and platform_python_implementation != 'PyPy')" }
+uvloop = { version = "0.19.0", markers = "sys_platform != 'win32' and (sys_platform != 'cygwin' and platform_python_implementation != 'PyPy')" }
 jinja2 = { version = "3.0.1", optional = true }
 
 [tool.poetry.extras]
@@ -65,7 +65,7 @@ templating = ["jinja2"]
 optional = true
 
 [tool.poetry.group.dev.dependencies]
-ruff = "0.0.240"
+ruff = "0.1.3"
 black = "23.1"
 isort = "5.11.5"
 pre-commit = "2.21.0"

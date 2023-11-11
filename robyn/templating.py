@@ -18,11 +18,7 @@ class TemplateInterface(ABC):
 
 class JinjaTemplate(TemplateInterface):
     def __init__(self, directory, encoding="utf-8", followlinks=False):
-        self.env = Environment(
-            loader=FileSystemLoader(
-                searchpath=directory, encoding=encoding, followlinks=followlinks
-            )
-        )
+        self.env = Environment(loader=FileSystemLoader(searchpath=directory, encoding=encoding, followlinks=followlinks))
 
     def render_template(self, template_name, **kwargs) -> Response:
         rendered_template = self.env.get_template(template_name).render(**kwargs)
