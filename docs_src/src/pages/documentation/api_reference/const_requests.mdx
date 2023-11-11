@@ -1,0 +1,78 @@
+
+export const description =
+  'On this page, we’ll dive into the different conversation endpoints you can use to manage conversations programmatically.'
+
+After authentication, Batman was worried about the website traffic during the rush hours. He was worried about the server crashing when Joker would try to break all the criminals from the Arkham asylum one more time. So, Robyn told him about the `Const Requests` feature and the multi-core scaling potential.
+
+
+## Const Requests
+
+
+Robyn told Batman that you can pre-compute the response for each route. This will compute the response even before execution. This will improve the response time bypassing the need to access the router.
+
+
+<Row>
+<Col>
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+      ```python {{ title: 'untyped' }}
+      @app.get("/", const=True)
+      async def h():
+          return "Hello, world"
+      ```
+
+      ```python {{title: 'typed'}}
+      @app.get("/", const=True)
+      async def h():
+          return "Hello, world"
+
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+## Muli-core scaling
+
+Robyn told Batman that he can use the `--workers` flag to scale the application to multiple cores. This will create multiple instances of the application and will distribute the load among them. This will improve the performance of the application.
+
+
+<Row>
+
+  <Col>
+
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request">
+
+      ```python {{ title: 'untyped' }}
+      python3 app.py --workers=N --process=M
+      ```
+
+      ```python {{title: 'typed'}}
+      python3 app.py --workers=N --process=M
+      ```
+    </CodeGroup>
+  </Col>
+
+The authenticate method should return an `Identity` object if the user is authenticated, or `None` otherwise. The Identity object can contain any data you want, and will be accessible in the route methods using the `request.identity` attribute.
+
+<b>
+  Note: that this authentication system is basically only using a `before request` middleware under the hood. This means you can overlook it and create your own authentication system using middlewares if you want to. However, Robyn still provides this easy to implement solution that should suit most use cases.
+</b>
+
+
+</Row>
+
+--- 
+
+## What's next?
+
+After making the application faster, Batman was happy and wanted to make a request from his Frontend Dashboard.
+
+But he was faced with CORS issues! He asked Robyn about how to solve this issue. Robyn told him about the following features
+
+- [CORS](/documentation/api_reference/cors)
+

@@ -1,0 +1,70 @@
+export const description =
+  'Welcome to the Robyn API documentation. You will find comprehensive guides and documentation to help you start working with Robyn as quickly as possible, as well as support if you get stuck.'
+
+
+## Templates
+
+After implementing the backend, Batman decided to add a frontend to his application. He wanted to create a simple web page that would allow him to view the data he had collected. He also wanted to be able to add new data to the database and edit existing data.
+
+This is when he was introduced to templates!
+
+Templates are a powerful feature of the Robyn framework that allow you to create dynamic web pages using HTML and Python. They are a great way to add a frontend to your application without having to learn a new language or framework.
+
+Robyn supports Jinja2 templates by default but provides an easy way to add other templating engines as well.
+
+### Creating a Template
+
+To create a template, you need to create a file with the `.html` extension in the a directory, usually it is convention to use the `templates` directory. For example, if you wanted to create a template called `index.html`, you would create a file called `index.html` in the `templates` directory.
+
+So the folder structure would look like this:
+
+```bash
+├── app.py
+├── templates
+│   └── index.html
+├── Dockerfile
+└── requirements.txt
+
+```
+
+### Rendering a Template
+
+Once you have created a template, you can render it by using the `render_template` function. This function takes the name of the template as its first argument and a dictionary of variables as its second argument.
+
+For example, if you wanted to render the `index.html` template, you would use the following code:
+
+```python {{ title: 'Rendering a Template' }}
+
+import os
+import pathlib
+from robyn.templating import JinjaTemplate
+
+
+current_file_path = pathlib.Path(__file__).parent.resolve()
+jinja_template = JinjaTemplate(os.path.join(current_file_path, "templates"))
+
+@app.get("/frontend")
+async def get_frontend(request):
+    context = {"framework": "Robyn", "templating_engine": "Jinja2"}
+    return jinja_template.render_template("index.html", **context)
+
+app.include_router(frontend)
+```
+
+
+Now Batman very happy that the application had come to completion. However, he was not satisfied with the current state of the application. He felt the code was all crammed in a single file and asked Robyn if there was a way to split the codebase in other parts.
+
+This is Robyn introduced him to the concept of routers and views.
+
+<div className="not-prose">
+  <Button
+    href="/documentation/example_app/subrouters_and_views"
+    variant="text"
+    arrow="right"
+    children="SubRouters and Views"
+  />
+</div>
+
+
+
+

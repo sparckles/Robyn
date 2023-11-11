@@ -1,0 +1,49 @@
+export const description = 'In this section, we will learn how to configure the server through a configuration file.'
+
+
+## Configuring the server through an environment file
+
+Batman wanted to configure the server through an environment file. Changing code continuously induced the risk of error.
+
+
+There are some environment variables that Robyn looks out for. e.g. `ROBYN_HOST` and `ROBYN_PORT`.
+
+You can have a `robyn.env` file to load them automatically in your environment.
+
+The server will check for the `robyn.env` file in the root of the project. If it is able to find one, it will parse the environment variables and the set your environment.
+
+e.g. structure
+
+```bash {{title: 'Sample project directory'}}
+--project/
+  --robyn.env
+  --index.py
+  ...
+```
+
+
+Sample `robyn.env`
+
+```bash {{ title: 'Sample Robyn.env' }}
+ROBYN_PORT=8080
+ROBYN_HOST=127.0.0.1
+RANDOM_ENV=123
+```
+
+To configure the max payload size, you can set the `ROBYN_MAX_PAYLOAD_SIZE` environment variable. The default value is `1000000` bytes.
+
+```bash
+#robyn.env
+ROBYN_MAX_PAYLOAD_SIZE=1000000
+```
+
+With the web application deployed and running smoothly, Batman had a powerful new tool at his disposal. The Robyn framework had provided him with the flexibility, scalability, and performance needed to create an effective crime-fighting application, giving him a technological edge in his ongoing battle to protect Gotham City.
+
+
+## What's next?
+
+Batman - Thanks, Robyn. Now tell me more.
+Robyn - Let us learn about the Middlewares and events now!
+
+- [Middlewares](/documentation/api_reference/middlewares)
+

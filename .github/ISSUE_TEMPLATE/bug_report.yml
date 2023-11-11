@@ -46,6 +46,7 @@ body:
         - 3.9
         - 3.10
         - 3.11
+        - 3.12
         - Other (specify below)
     validations:
       required: false
@@ -64,4 +65,3 @@ body:
     attributes:
       label: Additional Info
       description: Any additional info that you think might be useful or relevant to this bug
-
