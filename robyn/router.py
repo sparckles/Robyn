@@ -207,7 +207,8 @@ class MiddlewareRouter(BaseRouter):
                 if identity is None:
                     return self.authentication_handler.unauthorized_response
                 request.identity = identity
-                return handler(request, *args)
+                
+                return request
 
             self.add_route(MiddlewareType.BEFORE_REQUEST, endpoint, inner_handler, injected_dependencies)
             return inner_handler
