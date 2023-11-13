@@ -99,9 +99,16 @@ def jsonws_connect():
 
 
 @websocket_di.on("connect")
-async def di_message(global_dependencies, router_dependencies):
+async def di_message_connect(global_dependencies, router_dependencies):
     return global_dependencies["GLOBAL_DEPENDENCY"] + " "+ router_dependencies["ROUTER_DEPENDENCY"]
 
+@websocket_di.on("message")
+async def di_message():
+    return ""
+
+@websocket_di.on("close")
+async def di_message_close():
+    return ""
 
 
 # ===== Lifecycle handlers =====
@@ -718,22 +725,22 @@ async def async_exception_get():
 
 
 @app.put("/sync/exception/put")
-def sync_exception_put(_: Request):
+def sync_exception_put(request: Request):
     raise ValueError("value error")
 
 
 @app.put("/async/exception/put")
-async def async_exception_put(_: Request):
+async def async_exception_put(request: Request):
     raise ValueError("value error")
 
 
 @app.post("/sync/exception/post")
-def sync_exception_post(_: Request):
+def sync_exception_post(request: Request):
     raise ValueError("value error")
 
 
 @app.post("/async/exception/post")
-async def async_exception_post(_: Request):
+async def async_exception_post(request: Request):
     raise ValueError("value error")
 
 

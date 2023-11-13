@@ -54,7 +54,7 @@ def test_websocket_di(session):
 
     """
 
-    msg = "GLOBAL_DEPENDENCY ROUTER DEPENDENCY"
+    msg = "GLOBAL DEPENDENCY ROUTER DEPENDENCY"
 
     ws = create_connection(f"{BASE_URL}/web_socket_di")
     assert ws.recv() == msg
