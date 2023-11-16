@@ -347,10 +347,20 @@ def sync_param(request: Request):
     return id
 
 
+@app.get("/sync/param")
+def sync_param_query_string(request: Request):
+    return request.query_string
+
+
 @app.get("/async/param/:id")
 async def async_param(request: Request):
     id = request.path_params["id"]
     return id
+
+
+@app.get("/async/param")
+async def async_param_query_string(request: Request):
+    return request.query_string
 
 
 @app.get("/sync/extra/*extra")

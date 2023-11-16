@@ -20,6 +20,7 @@ pub struct Request {
     pub url: Url,
     pub ip_addr: Option<String>,
     pub identity: Option<Identity>,
+    pub query_string: Option<String>,
 }
 
 impl ToPyObject for Request {
@@ -41,6 +42,7 @@ impl ToPyObject for Request {
             url: self.url.clone(),
             ip_addr: self.ip_addr.clone(),
             identity: self.identity.clone(),
+            query_string: self.query_string.clone(),
         };
         Py::new(py, request).unwrap().as_ref(py).into()
     }
@@ -53,7 +55,9 @@ impl Request {
         global_headers: &DashMap<String, String>,
     ) -> Self {
         let mut queries = HashMap::new();
+        let mut query_string: Option<String> = None;
         if !req.query_string().is_empty() {
+            query_string = Some(req.query_string().to_string());
             let split = req.query_string().split('&');
             for s in split {
                 let path_params = s.split_once('=').unwrap_or((s, ""));
@@ -87,6 +91,7 @@ impl Request {
             url,
             ip_addr,
             identity: None,
+            query_string,
         }
     }
 }
@@ -110,6 +115,8 @@ pub struct PyRequest {
     pub url: Url,
     #[pyo3(get)]
     pub ip_addr: Option<String>,
+    #[pyo3(get)]
+    pub query_string: Option<String>,
 }
 
 #[pymethods]
@@ -125,6 +132,7 @@ impl PyRequest {
         url: Url,
         identity: Option<Identity>,
         ip_addr: Option<String>,
+        query_string: Option<String>,
     ) -> Self {
         Self {
             queries,
@@ -135,6 +143,7 @@ impl PyRequest {
             method,
             url,
             ip_addr,
+            query_string,
         }
     }
 

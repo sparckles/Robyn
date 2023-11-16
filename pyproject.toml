@@ -93,3 +93,8 @@ max-complexity = 10
 
 [tool.maturin]
 module-name = "robyn"
+
+[[tool.poetry.source]]
+priority = "default"
+name = "tsinghua-source"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple/"

@@ -73,6 +73,7 @@ class Request:
         body (Union[str, bytes]): The body of the request. If the request is a JSON, it will be a dict.
         method (str): The method of the request. e.g. GET, POST, PUT, DELETE
         ip_addr (Optional[str]): The IP Address of the client
+        query_string (Optional[str]): The raw query string of the request.
     """
 
     queries: dict[str, str]
@@ -83,6 +84,7 @@ class Request:
     url: Url
     ip_addr: Optional[str]
     identity: Optional[Identity]
+    query_string: Optional[str]
 
     def json(self) -> dict:
         """
