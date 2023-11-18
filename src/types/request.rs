@@ -10,8 +10,8 @@ use super::identity::Identity;
 
 #[derive(Default, Debug, Clone, FromPyObject)]
 pub struct Request {
-    pub queries: HashMap<String, String>,
-    pub headers: HashMap<String, String>,
+    pub queries: HashMap<String, Vec<String>>,
+    pub headers: HashMap<String, Vec<String>>,
     pub method: String,
     pub path_params: HashMap<String, String>,
     // https://pyo3.rs/v0.19.2/function.html?highlight=from_py_#per-argument-options
@@ -50,26 +50,60 @@ impl Request {
     pub fn from_actix_request(
         req: &HttpRequest,
         body: Bytes,
-        global_headers: &DashMap<String, String>,
+        global_headers: &DashMap<String, Vec<String>>,
     ) -> Self {
-        let mut queries = HashMap::new();
+        let mut queries: HashMap<String, Vec<String>> = HashMap::new();
         if !req.query_string().is_empty() {
             let split = req.query_string().split('&');
             for s in split {
                 let path_params = s.split_once('=').unwrap_or((s, ""));
-                queries.insert(path_params.0.to_string(), path_params.1.to_string());
+                let key = path_params.0.to_string();
+                let value = path_params.1.to_string();
+
+                if queries.contains_key(&key) {
+                    queries.get_mut(&key).unwrap().push(value);
+                } else {
+                    queries.insert(key, vec![value]);
+                }
             }
         }
-        let headers = req
-            .headers()
-            .iter()
-            .map(|(k, v)| (k.to_string(), v.to_str().unwrap().to_string()))
-            .chain(
-                global_headers
-                    .iter()
-                    .map(|h| (h.key().clone(), h.value().clone())),
-            )
-            .collect();
+
+        let mut headers: HashMap<String, Vec<String>> = HashMap::new();
+
+        for (key, value) in req.headers().iter() {
+            let key = key.to_string();
+            let value = value.to_str().unwrap().to_string();
+
+            if headers.contains_key(&key) {
+                headers.get_mut(&key).unwrap().push(value);
+            } else {
+                headers.insert(key, vec![value]);
+            }
+        }
+
+        for item in global_headers.iter() {
+            let key = item.key().to_string();
+            let value = item.value();
+
+            for value in value.iter() {
+                if headers.contains_key(&key) {
+                    headers.get_mut(&key).unwrap().push(value.clone());
+                } else {
+                    headers.insert(key.clone(), vec![value.clone()]);
+                }
+            }
+        }
+
+        // let headers = req
+        // .headers()
+        // .iter()
+        // .map(|(k, v)| (k.to_string(), v.to_str().unwrap().to_string()))
+        // .chain(
+        // global_headers
+        // .iter()
+        // .map(|h| (h.key().clone(), h.value().clone())),
+        // )
+        // .collect();
 
         let url = Url::new(
             req.connection_info().scheme(),
