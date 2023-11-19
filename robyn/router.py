@@ -45,9 +45,9 @@ class Router(BaseRouter):
     def _format_response(
         self,
         res: dict,
-        default_response_header: dict,
+        default_response_header: dict[str, list[str]],
     ) -> Response:
-        headers = {"Content-Type": "text/plain"} if not default_response_header else default_response_header
+        headers = {"Content-Type": ["text/plain"]} if not default_response_header else default_response_header
         response = {}
         if isinstance(res, dict):
             status_code = res.get("status_code", status_codes.HTTP_200_OK)
@@ -66,7 +66,7 @@ class Router(BaseRouter):
         elif isinstance(res, bytes):
             response = Response(
                 status_code=status_codes.HTTP_200_OK,
-                headers={"Content-Type": "application/octet-stream"},
+                headers={"Content-Type": ["application/octet-stream"]},
                 description=res,
             )
         else:
@@ -86,7 +86,13 @@ class Router(BaseRouter):
         exception_handler: Optional[Callable],
         default_response_headers: List[Header],
     ) -> Union[Callable, CoroutineType]:
-        response_headers = {d.key: d.val for d in default_response_headers}
+        response_headers = {}
+
+        for header in default_response_headers:
+            if header.key not in response_headers:
+                response_headers[header.key] = [header.val]
+            else:
+                response_headers[header.key].append(header.val)
 
         @wraps(handler)
         async def async_inner_handler(*args):

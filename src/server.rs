@@ -51,8 +51,8 @@ pub struct Server {
     const_router: Arc<ConstRouter>,
     websocket_router: Arc<WebSocketRouter>,
     middleware_router: Arc<MiddlewareRouter>,
-    global_request_headers: Arc<DashMap<String, String>>,
-    global_response_headers: Arc<DashMap<String, String>>,
+    global_request_headers: Arc<DashMap<String, Vec<String>>>,
+    global_response_headers: Arc<DashMap<String, Vec<String>>>,
     directories: Arc<RwLock<Vec<Directory>>>,
     startup_handler: Option<Arc<FunctionInfo>>,
     shutdown_handler: Option<Arc<FunctionInfo>>,
@@ -255,15 +255,29 @@ impl Server {
     /// Adds a new request header to our concurrent hashmap
     /// this can be called after the server has started.
     pub fn add_request_header(&self, key: &str, value: &str) {
-        self.global_request_headers
-            .insert(key.to_string(), value.to_string());
+        if self.global_request_headers.contains_key(key) {
+            self.global_request_headers
+                .get_mut(key)
+                .unwrap()
+                .push(value.to_string());
+        } else {
+            self.global_request_headers
+                .insert(key.to_string(), vec![value.to_string()]);
+        }
     }
 
     /// Adds a new response header to our concurrent hashmap
     /// this can be called after the server has started.
     pub fn add_response_header(&self, key: &str, value: &str) {
-        self.global_response_headers
-            .insert(key.to_string(), value.to_string());
+        if self.global_request_headers.contains_key(key) {
+            self.global_request_headers
+                .get_mut(key)
+                .unwrap()
+                .push(value.to_string());
+        } else {
+            self.global_request_headers
+                .insert(key.to_string(), vec![value.to_string()]);
+        }
     }
 
     /// Removes a new request header to our concurrent hashmap
@@ -375,8 +389,8 @@ async fn index(
     router: web::Data<Arc<HttpRouter>>,
     const_router: web::Data<Arc<ConstRouter>>,
     middleware_router: web::Data<Arc<MiddlewareRouter>>,
-    global_request_headers: web::Data<Arc<DashMap<String, String>>>,
-    global_response_headers: web::Data<Arc<DashMap<String, String>>>,
+    global_request_headers: web::Data<Arc<DashMap<String, Vec<String>>>>,
+    global_response_headers: web::Data<Arc<DashMap<String, Vec<String>>>>,
     body: Bytes,
     req: HttpRequest,
 ) -> impl Responder {

@@ -1,6 +1,11 @@
 use actix_web::{web::Bytes, HttpRequest};
 use dashmap::DashMap;
-use pyo3::{exceptions::PyValueError, prelude::*, types::PyDict, types::PyString};
+use pyo3::{
+    exceptions::PyValueError,
+    prelude::*,
+    types::PyString,
+    types::{IntoPyDict, PyDict},
+};
 use serde_json::Value;
 use std::collections::HashMap;
 
@@ -22,11 +27,31 @@ pub struct Request {
     pub identity: Option<Identity>,
 }
 
+fn hashmap_to_pydict(py: Python, map: HashMap<String, Vec<String>>) -> PyResult<Py<PyDict>> {
+    let dict = PyDict::new(py);
+
+    for (key, value) in map.iter() {
+        let py_key = key.to_string().into_py(py);
+        // convert py_value as a list
+        let py_value = value
+            .clone()
+            .into_iter()
+            .map(|v| v.into_py(py))
+            .collect::<Vec<_>>()
+            .into_py(py);
+
+        dict.set_item(py_key, py_value)?;
+    }
+
+    Ok(dict.into_py(py))
+}
+
 impl ToPyObject for Request {
     fn to_object(&self, py: Python) -> PyObject {
-        let queries = self.queries.clone().into_py(py).extract(py).unwrap();
-        let headers = self.headers.clone().into_py(py).extract(py).unwrap();
-        let path_params = self.path_params.clone().into_py(py).extract(py).unwrap();
+        let queries = hashmap_to_pydict(py, self.queries.clone()).unwrap();
+        let headers = hashmap_to_pydict(py, self.headers.clone()).unwrap();
+
+        let path_params = self.path_params.clone().into_py_dict(py).into_py(py);
         let body = match String::from_utf8(self.body.clone()) {
             Ok(s) => s.into_py(py),
             Err(_) => self.body.clone().into_py(py),
@@ -93,17 +118,6 @@ impl Request {
                 }
             }
         }
-
-        // let headers = req
-        // .headers()
-        // .iter()
-        // .map(|(k, v)| (k.to_string(), v.to_str().unwrap().to_string()))
-        // .chain(
-        // global_headers
-        // .iter()
-        // .map(|h| (h.key().clone(), h.value().clone())),
-        // )
-        // .collect();
 
         let url = Url::new(
             req.connection_info().scheme(),

@@ -67,16 +67,16 @@ class Request:
     The request object passed to the route handler.
 
     Attributes:
-        queries (dict[str, str]): The query parameters of the request. e.g. /user?id=123 -> {"id": "123"}
-        headers (dict[str, str]): The headers of the request. e.g. {"Content-Type": "application/json"}
+        queries (dict[str, list[str]]): The query parameters of the request. e.g. /user?id=123 -> {"id": "123"}
+        headers (dict[str, list[str]]): The headers of the request. e.g. {"Content-Type": "application/json"}
         params (dict[str, str]): The parameters of the request. e.g. /user/:id -> {"id": "123"}
         body (Union[str, bytes]): The body of the request. If the request is a JSON, it will be a dict.
         method (str): The method of the request. e.g. GET, POST, PUT, DELETE
         ip_addr (Optional[str]): The IP Address of the client
     """
 
-    queries: dict[str, str]
-    headers: dict[str, str]
+    queries: dict[str, list[str]]
+    headers: dict[str, list[str]]
     path_params: dict[str, str]
     body: Union[str, bytes]
     method: str
@@ -105,7 +105,7 @@ class Response:
     """
 
     status_code: int
-    headers: dict[str, str]
+    headers: dict[str, list[str]]
     description: Union[str, bytes]
     response_type: Optional[str] = None
     file_path: Optional[str] = None

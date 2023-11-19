@@ -10,10 +10,12 @@ use anyhow::Result;
 #[inline]
 pub fn apply_hashmap_headers(
     response: &mut HttpResponseBuilder,
-    headers: &HashMap<String, String>,
+    headers: &HashMap<String, Vec<String>>,
 ) {
     for (key, val) in headers.iter() {
-        response.insert_header((key.clone(), val.clone()));
+        for val in val.iter() {
+            response.append_header((key.clone(), val.clone()));
+        }
     }
 }
 

@@ -111,20 +111,20 @@ def shutdown_handler():
 
 @app.before_request()
 def global_before_request(request: Request):
-    request.headers["global_before"] = "global_before_request"
+    request.headers["global_before"] = ["global_before_request"]
     return request
 
 
 @app.after_request()
 def global_after_request(response: Response):
-    response.headers["global_after"] = "global_after_request"
+    response.headers["global_after"] = [ "global_after_request" ]
     return response
 
 
 @app.get("/sync/global/middlewares")
 def sync_global_middlewares(request: Request):
     assert "global_before" in request.headers
-    assert request.headers["global_before"] == "global_before_request"
+    assert request.headers["global_before"] == [ "global_before_request" ]
     return "sync global middlewares"
 
 
@@ -133,13 +133,13 @@ def sync_global_middlewares(request: Request):
 
 @app.before_request("/sync/middlewares")
 def sync_before_request(request: Request):
-    request.headers["before"] = "sync_before_request"
+    request.headers["before"] = ["sync_before_request"]
     return request
 
 
 @app.after_request("/sync/middlewares")
 def sync_after_request(response: Response):
-    response.headers["after"] = "sync_after_request"
+    response.headers["after"] = ["sync_after_request"]
     response.description = response.description + " after"
     return response
 
@@ -154,13 +154,13 @@ def sync_middlewares(request: Request):
 
 @app.before_request("/async/middlewares")
 async def async_before_request(request: Request):
-    request.headers["before"] = "async_before_request"
+    request.headers["before"] = ["async_before_request"]
     return request
 
 
 @app.after_request("/async/middlewares")
 async def async_after_request(response: Response):
-    response.headers["after"] = "async_after_request"
+    response.headers["after"] = [ "async_after_request" ]
     response.description = response.description + " after"
     return response
 
@@ -266,22 +266,22 @@ async def async_dict_const_get():
 
 @app.get("/sync/response")
 def sync_response_get():
-    return Response(200, {"sync": "response"}, "sync response get")
+    return Response(200, {"sync": ["response"]}, "sync response get")
 
 
 @app.get("/async/response")
 async def async_response_get():
-    return Response(200, {"async": "response"}, "async response get")
+    return Response(200, {"async": [ "response" ]}, "async response get")
 
 
 @app.get("/sync/response/const", const=True)
 def sync_response_const_get():
-    return Response(200, {"sync_const": "response"}, "sync response const get")
+    return Response(200, {"sync_const": ["response"]}, "sync response const get")
 
 
 @app.get("/async/response/const", const=True)
 async def async_response_const_get():
-    return Response(200, {"async_const": "response"}, "async response const get")
+    return Response(200, {"async_const": ["response"]}, "async response const get")
 
 
 # Binary
@@ -301,7 +301,7 @@ async def async_octet_get():
 def sync_octet_response_get():
     return Response(
         status_code=200,
-        headers={"Content-Type": "application/octet-stream"},
+        headers={"Content-Type": ["application/octet-stream"]},
         description="sync octet response",
     )
 
@@ -310,7 +310,7 @@ def sync_octet_response_get():
 async def async_octet_response_get():
     return Response(
         status_code=200,
-        headers={"Content-Type": "application/octet-stream"},
+        headers={"Content-Type": ["application/octet-stream"]},
         description="async octet response",
     )
 
@@ -477,7 +477,7 @@ async def redirect():
         "status_code": 307,
         "description": "",
         "type": "text",
-        "headers": {"Location": "redirect_route"},
+        "headers": {"Location": [ "redirect_route" ]},
     }
 
 
@@ -507,7 +507,7 @@ def sync_dict_post():
         "status_code": 200,
         "description": "sync dict post",
         "type": "text",
-        "headers": {"sync": "dict"},
+        "headers": {"sync": [ "dict" ]},
     }
 
 
@@ -517,7 +517,7 @@ async def async_dict_post():
         "status_code": 200,
         "description": "async dict post",
         "type": "text",
-        "headers": {"async": "dict"},
+        "headers": {"async": [ "dict" ]},
     }
 
 
@@ -564,7 +564,7 @@ def sync_dict_put():
         "status_code": 200,
         "description": "sync dict put",
         "type": "text",
-        "headers": {"sync": "dict"},
+        "headers": {"sync": [ "dict" ]},
     }
 
 
@@ -574,7 +574,7 @@ async def async_dict_put():
         "status_code": 200,
         "description": "async dict put",
         "type": "text",
-        "headers": {"async": "dict"},
+        "headers": {"async": [ "dict" ]},
     }
 
 
@@ -602,7 +602,7 @@ def sync_dict_delete():
         "status_code": 200,
         "description": "sync dict delete",
         "type": "text",
-        "headers": {"sync": "dict"},
+        "headers": {"sync": ["dict"]},
     }
 
 
@@ -612,7 +612,7 @@ async def async_dict_delete():
         "status_code": 200,
         "description": "async dict delete",
         "type": "text",
-        "headers": {"async": "dict"},
+        "headers": {"async": ["dict"]},
     }
 
 
@@ -640,7 +640,7 @@ def sync_dict_patch():
         "status_code": 200,
         "description": "sync dict patch",
         "type": "text",
-        "headers": {"sync": "dict"},
+        "headers": {"sync": [ "dict" ]},
     }
 
 
@@ -650,7 +650,7 @@ async def async_dict_patch():
         "status_code": 200,
         "description": "async dict patch",
         "type": "text",
-        "headers": {"async": "dict"},
+        "headers": {"async": ["dict"]},
     }
 
 
