@@ -1,4 +1,3 @@
-import inspect
 from robyn import Robyn, Request, serve_html
 import re
 import json
@@ -29,9 +28,7 @@ def openapi_route(path: str, method: str, summary: str, tags: list):
                     "name": param,
                     "in": "path",
                     "required": True,
-                    "schema": {
-                        "type": "string"
-                    },  # You might need to adjust the type based on your API design.
+                    "schema": {"type": "string"},  # You might need to adjust the type based on your API design.
                 }
             )
 
@@ -55,7 +52,7 @@ async def get_user(
     body: robyn.Body = {
         "name": str,
         "age": int,
-    }
+    },
     # for validators
 ):
     # Your route implementation here
