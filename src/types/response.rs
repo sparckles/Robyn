@@ -11,11 +11,16 @@ use pyo3::{
 use crate::io_helpers::{apply_hashmap_headers, read_file};
 use crate::types::{check_description_type, get_description_from_pyobject};
 
+// Define a new struct that wraps the HashMap
+
+type Headers = HashMap<String, Vec<String>>;
+
 #[derive(Debug, Clone, FromPyObject)]
 pub struct Response {
     pub status_code: u16,
     pub response_type: String,
-    pub headers: HashMap<String, Vec<String>>,
+
+    pub headers: Headers,
     // https://pyo3.rs/v0.19.2/function.html?highlight=from_py_#per-argument-options
     #[pyo3(from_py_with = "get_description_from_pyobject")]
     pub description: Vec<u8>,
@@ -55,9 +60,28 @@ impl Response {
     }
 }
 
+fn hashmap_to_pydict(py: Python, map: HashMap<String, Vec<String>>) -> PyResult<Py<PyDict>> {
+    let dict = PyDict::new(py);
+
+    for (key, value) in map.iter() {
+        let py_key = key.to_string().into_py(py);
+        // convert py_value as a list
+        let py_value = value
+            .clone()
+            .into_iter()
+            .map(|v| v.into_py(py))
+            .collect::<Vec<_>>()
+            .into_py(py);
+
+        dict.set_item(py_key, py_value)?;
+    }
+
+    Ok(dict.into_py(py))
+}
+
 impl ToPyObject for Response {
     fn to_object(&self, py: Python) -> PyObject {
-        let headers = self.headers.clone().into_py(py).extract(py).unwrap();
+        let headers = hashmap_to_pydict(py, self.headers.clone()).unwrap();
         let description = String::from_utf8(self.description.to_vec())
             .unwrap()
             .to_object(py);

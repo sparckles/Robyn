@@ -227,7 +227,7 @@ def sync_dict_get():
         "status_code": 200,
         "description": "sync dict get",
         "type": "text",
-        "headers": {"sync": "dict"},
+        "headers": {"sync": ["dict"]},
     }
 
 
@@ -237,7 +237,7 @@ async def async_dict_get():
         "status_code": 200,
         "description": "async dict get",
         "type": "text",
-        "headers": {"async": "dict"},
+        "headers": {"async": ["dict"]},
     }
 
 
@@ -247,7 +247,7 @@ def sync_dict_const_get():
         "status_code": 200,
         "description": "sync dict const get",
         "type": "text",
-        "headers": {"sync_const": "dict"},
+        "headers": {"sync_const": ["dict"]},
     }
 
 
@@ -257,7 +257,7 @@ async def async_dict_const_get():
         "status_code": 200,
         "description": "async dict const get",
         "type": "text",
-        "headers": {"async_const": "dict"},
+        "headers": {"async_const": ["dict"]},
     }
 
 

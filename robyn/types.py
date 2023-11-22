@@ -17,7 +17,6 @@ class Directory:
             self.index_file,
         ]
 
-
 @dataclass
 class Header:
     key: str

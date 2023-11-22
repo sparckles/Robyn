@@ -36,6 +36,7 @@ where
 // Execute the middleware function
 // type T can be either Request (before middleware) or Response (after middleware)
 // Return type can either be a Request or a Response, we wrap it inside an enum for easier handling
+#[inline]
 pub async fn execute_middleware_function<T>(
     input: &T,
     function: &FunctionInfo,
@@ -81,7 +82,6 @@ pub async fn execute_http_function(
 
         return Python::with_gil(|py| -> PyResult<Response> { output.extract(py) });
     };
-
     Python::with_gil(|py| -> PyResult<Response> {
         get_function_output(function, py, request)?.extract()
     })
