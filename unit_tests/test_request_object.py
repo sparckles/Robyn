@@ -9,7 +9,7 @@ def test_request_object():
     )
     request = Request(
         queries={},
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": ["application/json"]},
         path_params={},
         body="",
         method="GET",

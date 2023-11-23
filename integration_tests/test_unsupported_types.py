@@ -1,6 +1,6 @@
 import pytest
 
-from robyn.robyn import Response
+from robyn import Headers, Response
 
 
 class A:
@@ -16,7 +16,7 @@ bad_bodies = [
     ["OK", b"OK"],
     Response(
         status_code=200,
-        headers={},
+        headers=Headers(),
         description=b"OK",
     ),
 ]

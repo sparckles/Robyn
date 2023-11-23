@@ -105,7 +105,7 @@ class Response:
     """
 
     status_code: int
-    headers: dict[str, list[str]]
+    headers: Union[dict[str, str], Headers]
     description: Union[str, bytes]
     response_type: Optional[str] = None
     file_path: Optional[str] = None
@@ -180,3 +180,6 @@ class WebSocketConnector:
         pass
     def sync_send_to(self, sender_id: str, message: str) -> None:
         pass
+
+class Headers:
+    ...

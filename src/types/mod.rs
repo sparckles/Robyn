@@ -6,6 +6,7 @@ use pyo3::{
 
 pub mod function_info;
 pub mod identity;
+pub mod multimap;
 pub mod request;
 pub mod response;
 

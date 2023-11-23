@@ -6,7 +6,7 @@ from types import CoroutineType
 from typing import Callable, Dict, List, NamedTuple, Union, Optional
 from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
 
-from robyn.robyn import FunctionInfo, HttpMethod, MiddlewareType, Request, Response
+from robyn.robyn import FunctionInfo, HttpMethod, MiddlewareType, Request, Response, MultiMap
 from robyn import status_codes
 
 from robyn.ws import WebSocket
@@ -45,13 +45,27 @@ class Router(BaseRouter):
     def _format_response(
         self,
         res: dict,
-        default_response_header: dict[str, list[str]],
+        default_response_header: MultiMap,
     ) -> Response:
-        headers = {"Content-Type": ["text/plain"]} if not default_response_header else default_response_header
+        if default_response_header.empty():
+            headers = MultiMap()
+            headers.set("Content-Type", "text/plain")
+        else:
+            headers = default_response_header
+
         response = {}
         if isinstance(res, dict):
             status_code = res.get("status_code", status_codes.HTTP_200_OK)
-            headers = res.get("headers", headers)
+            response_headers = res.get("headers", headers)
+            if isinstance(response_headers, MultiMap):
+                headers = response_headers
+            elif isinstance(response_headers, dict):
+                for key, value in response_headers.items():
+                    headers.set(key, value)
+            else:
+                raise TypeError("headers must be of type MultiMap or dict")
+
+
             description = res.get("description", "")
 
             if not isinstance(status_code, int):
@@ -64,9 +78,12 @@ class Router(BaseRouter):
         elif isinstance(res, Response):
             response = res
         elif isinstance(res, bytes):
+            headers = MultiMap()
+            headers.set("Content-Type", "application/octet-stream")
+            
             response = Response(
                 status_code=status_codes.HTTP_200_OK,
-                headers={"Content-Type": ["application/octet-stream"]},
+                headers=headers,
                 description=res,
             )
         else:
@@ -75,6 +92,8 @@ class Router(BaseRouter):
                 headers=headers,
                 description=str(res).encode("utf-8"),
             )
+
+        print("This is the response", response.headers)
         return response
 
     def add_route(
@@ -86,13 +105,11 @@ class Router(BaseRouter):
         exception_handler: Optional[Callable],
         default_response_headers: List[Header],
     ) -> Union[Callable, CoroutineType]:
-        response_headers = {}
+        # this should not be a dict
+        response_headers = MultiMap()
 
         for header in default_response_headers:
-            if header.key not in response_headers:
-                response_headers[header.key] = [header.val]
-            else:
-                response_headers[header.key].append(header.val)
+            response_headers.set(header.key, header.val)
 
         @wraps(handler)
         async def async_inner_handler(*args):

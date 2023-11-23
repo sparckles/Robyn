@@ -3,8 +3,8 @@ use dashmap::DashMap;
 use pyo3::{
     exceptions::PyValueError,
     prelude::*,
-    types::PyString,
     types::{IntoPyDict, PyDict},
+    types::{PyList, PyString},
 };
 use serde_json::Value;
 use std::collections::HashMap;
@@ -12,11 +12,12 @@ use std::collections::HashMap;
 use crate::types::{check_body_type, get_body_from_pyobject, Url};
 
 use super::identity::Identity;
+use super::multimap::{Headers, Queries};
 
 #[derive(Default, Debug, Clone, FromPyObject)]
 pub struct Request {
-    pub queries: HashMap<String, Vec<String>>,
-    pub headers: HashMap<String, Vec<String>>,
+    pub queries: Queries,
+    pub headers: Headers,
     pub method: String,
     pub path_params: HashMap<String, String>,
     // https://pyo3.rs/v0.19.2/function.html?highlight=from_py_#per-argument-options
@@ -27,29 +28,10 @@ pub struct Request {
     pub identity: Option<Identity>,
 }
 
-fn hashmap_to_pydict(py: Python, map: HashMap<String, Vec<String>>) -> PyResult<Py<PyDict>> {
-    let dict = PyDict::new(py);
-
-    for (key, value) in map.iter() {
-        let py_key = key.to_string().into_py(py);
-        // convert py_value as a list
-        let py_value = value
-            .clone()
-            .into_iter()
-            .map(|v| v.into_py(py))
-            .collect::<Vec<_>>()
-            .into_py(py);
-
-        dict.set_item(py_key, py_value)?;
-    }
-
-    Ok(dict.into_py(py))
-}
-
 impl ToPyObject for Request {
     fn to_object(&self, py: Python) -> PyObject {
-        let queries = hashmap_to_pydict(py, self.queries.clone()).unwrap();
-        let headers = hashmap_to_pydict(py, self.headers.clone()).unwrap();
+        let queries = self.queries.clone();
+        let headers = self.headers.clone();
 
         let path_params = self.path_params.clone().into_py_dict(py).into_py(py);
         let body = match String::from_utf8(self.body.clone()) {
@@ -77,7 +59,8 @@ impl Request {
         body: Bytes,
         global_headers: &DashMap<String, Vec<String>>,
     ) -> Self {
-        let mut queries: HashMap<String, Vec<String>> = HashMap::new();
+        let mut queries: Queries = Queries::new();
+
         if !req.query_string().is_empty() {
             let split = req.query_string().split('&');
             for s in split {
@@ -85,38 +68,25 @@ impl Request {
                 let key = path_params.0.to_string();
                 let value = path_params.1.to_string();
 
-                if queries.contains_key(&key) {
-                    queries.get_mut(&key).unwrap().push(value);
-                } else {
-                    queries.insert(key, vec![value]);
-                }
+                queries.set(key, value);
             }
         }
 
-        let mut headers: HashMap<String, Vec<String>> = HashMap::new();
+        let mut headers: Headers = Headers::new();
 
         for (key, value) in req.headers().iter() {
             let key = key.to_string();
             let value = value.to_str().unwrap().to_string();
 
-            if headers.contains_key(&key) {
-                headers.get_mut(&key).unwrap().push(value);
-            } else {
-                headers.insert(key, vec![value]);
-            }
+            headers.set(key, value);
         }
 
         for item in global_headers.iter() {
             let key = item.key().to_string();
             let value = item.value();
-
-            for value in value.iter() {
-                if headers.contains_key(&key) {
-                    headers.get_mut(&key).unwrap().push(value.clone());
-                } else {
-                    headers.insert(key.clone(), vec![value.clone()]);
-                }
-            }
+            value
+                .iter()
+                .for_each(|v| headers.set(key.clone(), v.clone()));
         }
 
         let url = Url::new(
@@ -143,9 +113,9 @@ impl Request {
 #[derive(Clone)]
 pub struct PyRequest {
     #[pyo3(get, set)]
-    pub queries: Py<PyDict>,
+    pub queries: Queries,
     #[pyo3(get, set)]
-    pub headers: Py<PyDict>,
+    pub headers: Headers,
     #[pyo3(get, set)]
     pub path_params: Py<PyDict>,
     #[pyo3(get, set)]
@@ -165,8 +135,8 @@ impl PyRequest {
     #[new]
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        queries: Py<PyDict>,
-        headers: Py<PyDict>,
+        queries: Queries,
+        headers: Headers,
         path_params: Py<PyDict>,
         body: Py<PyAny>,
         method: String,

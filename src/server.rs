@@ -451,7 +451,7 @@ async fn index(
         Response::not_found(&request.headers)
     };
 
-    response.headers.extend(
+    response.headers.inner.extend(
         global_response_headers
             .iter()
             .map(|elt| (elt.key().clone(), elt.value().clone())),

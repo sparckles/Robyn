@@ -5,14 +5,13 @@ use std::io::Read;
 use actix_web::HttpResponseBuilder;
 use anyhow::Result;
 
+use crate::types::multimap::Headers;
+
 // this should be something else
 // probably inside the submodule of the http router
 #[inline]
-pub fn apply_hashmap_headers(
-    response: &mut HttpResponseBuilder,
-    headers: &HashMap<String, Vec<String>>,
-) {
-    for (key, val) in headers.iter() {
+pub fn apply_hashmap_headers(response: &mut HttpResponseBuilder, headers: &Headers) {
+    for (key, val) in headers.inner.iter() {
         for val in val.iter() {
             response.append_header((key.clone(), val.clone()));
         }

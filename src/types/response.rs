@@ -11,9 +11,11 @@ use pyo3::{
 use crate::io_helpers::{apply_hashmap_headers, read_file};
 use crate::types::{check_description_type, get_description_from_pyobject};
 
+use super::multimap::Headers;
+
 // Define a new struct that wraps the HashMap
 
-type Headers = HashMap<String, Vec<String>>;
+// type Headers = HashMap<String, Vec<String>>;
 
 #[derive(Debug, Clone, FromPyObject)]
 pub struct Response {
@@ -39,7 +41,7 @@ impl Responder for Response {
 }
 
 impl Response {
-    pub fn not_found(headers: &HashMap<String, Vec<String>>) -> Self {
+    pub fn not_found(headers: &Headers) -> Self {
         Self {
             status_code: 404,
             response_type: "text".to_string(),
@@ -49,7 +51,7 @@ impl Response {
         }
     }
 
-    pub fn internal_server_error(headers: &HashMap<String, Vec<String>>) -> Self {
+    pub fn internal_server_error(headers: &Headers) -> Self {
         Self {
             status_code: 500,
             response_type: "text".to_string(),
@@ -81,7 +83,7 @@ fn hashmap_to_pydict(py: Python, map: HashMap<String, Vec<String>>) -> PyResult<
 
 impl ToPyObject for Response {
     fn to_object(&self, py: Python) -> PyObject {
-        let headers = hashmap_to_pydict(py, self.headers.clone()).unwrap();
+        let headers = self.headers.clone();
         let description = String::from_utf8(self.description.to_vec())
             .unwrap()
             .to_object(py);
@@ -104,7 +106,7 @@ pub struct PyResponse {
     #[pyo3(get)]
     pub response_type: String,
     #[pyo3(get, set)]
-    pub headers: Py<PyDict>,
+    pub headers: Headers,
     #[pyo3(get)]
     pub description: Py<PyAny>,
     #[pyo3(get)]
@@ -118,7 +120,7 @@ impl PyResponse {
     pub fn new(
         py: Python,
         status_code: u16,
-        headers: Py<PyDict>,
+        headers: Headers,
         description: Py<PyAny>,
     ) -> PyResult<Self> {
         if description.downcast::<PyString>(py).is_err()

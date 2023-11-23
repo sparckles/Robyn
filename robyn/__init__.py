@@ -23,12 +23,17 @@ from robyn.robyn import (
     get_version,
     jsonify,
     WebSocketConnector,
+    MultiMap,
 )
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory, Header
+
 from robyn import status_codes
 from robyn.ws import WebSocket
 
+
+Headers = MultiMap
+Queries = MultiMap
 
 __version__ = get_version()
 
