@@ -61,6 +61,55 @@ class Url:
 class Identity:
     claims: dict[str, str]
 
+
+@dataclass
+class QueryParams:
+    """
+    The query params object passed to the route handler.
+
+    Attributes:
+        queries (dict[str, list[str]]): The query parameters of the request. e.g. /user?id=123 -> {"id": "123"}
+    """
+
+    queries: dict[str, list[str]]
+
+
+    def set(self, key: str, value: str) -> None:
+        pass
+
+
+    def get(self, key: str) -> Optional[str]:
+        pass
+
+
+    def empty(self) -> bool:
+        pass
+
+
+    def contains(self, key: str) -> bool:
+        pass
+
+    def get_first(self, key: str) -> Optional[str]:
+        pass
+
+    def get_all(self, key: str) -> Optional[list[str]]:
+        pass
+
+
+    def extend(self, other: QueryParams) -> None:
+        pass
+
+
+    def to_dict(self) -> dict[str, list[str]]:
+        pass
+
+
+    def __contains__(self, key: str) -> bool:
+        pass
+
+    def __repr__(self) -> str:
+        pass
+
 @dataclass
 class Request:
     """
@@ -75,7 +124,7 @@ class Request:
         ip_addr (Optional[str]): The IP Address of the client
     """
 
-    queries: dict[str, str]
+    query_params: QueryParams
     headers: dict[str, str]
     path_params: dict[str, str]
     body: Union[str, bytes]

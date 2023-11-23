@@ -6,11 +6,11 @@ use std::collections::HashMap;
 
 use crate::types::{check_body_type, get_body_from_pyobject, Url};
 
-use super::identity::Identity;
+use super::{identity::Identity, multimap::QueryParams};
 
 #[derive(Default, Debug, Clone, FromPyObject)]
 pub struct Request {
-    pub queries: HashMap<String, String>,
+    pub query_params: QueryParams,
     pub headers: HashMap<String, String>,
     pub method: String,
     pub path_params: HashMap<String, String>,
@@ -24,7 +24,7 @@ pub struct Request {
 
 impl ToPyObject for Request {
     fn to_object(&self, py: Python) -> PyObject {
-        let queries = self.queries.clone().into_py(py).extract(py).unwrap();
+        let query_params = self.query_params.clone();
         let headers = self.headers.clone().into_py(py).extract(py).unwrap();
         let path_params = self.path_params.clone().into_py(py).extract(py).unwrap();
         let body = match String::from_utf8(self.body.clone()) {
@@ -33,7 +33,7 @@ impl ToPyObject for Request {
         };
 
         let request = PyRequest {
-            queries,
+            query_params,
             path_params,
             headers,
             body,
@@ -52,12 +52,15 @@ impl Request {
         body: Bytes,
         global_headers: &DashMap<String, String>,
     ) -> Self {
-        let mut queries = HashMap::new();
+        let mut query_params: QueryParams = QueryParams::new();
         if !req.query_string().is_empty() {
             let split = req.query_string().split('&');
             for s in split {
                 let path_params = s.split_once('=').unwrap_or((s, ""));
-                queries.insert(path_params.0.to_string(), path_params.1.to_string());
+                let key = path_params.0.to_string();
+                let value = path_params.1.to_string();
+
+                query_params.set(key, value);
             }
         }
         let headers = req
@@ -79,7 +82,7 @@ impl Request {
         let ip_addr = req.peer_addr().map(|val| val.ip().to_string());
 
         Self {
-            queries,
+            query_params,
             headers,
             method: req.method().as_str().to_owned(),
             path_params: HashMap::new(),
@@ -95,7 +98,7 @@ impl Request {
 #[derive(Clone)]
 pub struct PyRequest {
     #[pyo3(get, set)]
-    pub queries: Py<PyDict>,
+    pub query_params: QueryParams,
     #[pyo3(get, set)]
     pub headers: Py<PyDict>,
     #[pyo3(get, set)]
@@ -117,7 +120,7 @@ impl PyRequest {
     #[new]
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        queries: Py<PyDict>,
+        query_params: &PyDict,
         headers: Py<PyDict>,
         path_params: Py<PyDict>,
         body: Py<PyAny>,
@@ -126,8 +129,10 @@ impl PyRequest {
         identity: Option<Identity>,
         ip_addr: Option<String>,
     ) -> Self {
+        let query_params = QueryParams::from_dict(query_params);
+
         Self {
-            queries,
+            query_params,
             headers,
             path_params,
             identity,

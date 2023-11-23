@@ -8,7 +8,7 @@ def test_request_object():
         path="/user",
     )
     request = Request(
-        queries={},
+        query_params={},
         headers={"Content-Type": "application/json"},
         path_params={},
         body="",

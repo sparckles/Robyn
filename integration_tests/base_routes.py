@@ -448,13 +448,13 @@ async def file_download_async():
 
 @app.get("/sync/queries")
 def sync_queries(request: Request):
-    query_data = request.queries
+    query_data = request.query_params.to_dict()
     return jsonify(query_data)
 
 
 @app.get("/async/queries")
 async def async_query(request: Request):
-    query_data = request.queries
+    query_data = request.query_params.to_dict()
     return jsonify(query_data)
 
 

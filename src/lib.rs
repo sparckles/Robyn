@@ -17,6 +17,7 @@ use pyo3::{exceptions::PyValueError, prelude::*};
 use types::{
     function_info::{FunctionInfo, MiddlewareType},
     identity::Identity,
+    multimap::QueryParams,
     request::PyRequest,
     response::PyResponse,
     HttpMethod, Url,
@@ -62,6 +63,7 @@ pub fn robyn(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<PyRequest>()?;
     m.add_class::<PyResponse>()?;
     m.add_class::<Url>()?;
+    m.add_class::<QueryParams>()?;
     m.add_class::<MiddlewareType>()?;
     m.add_class::<HttpMethod>()?;
 
