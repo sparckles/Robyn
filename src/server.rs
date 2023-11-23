@@ -451,6 +451,10 @@ async fn index(
         Response::not_found(&request.headers)
     };
 
+    debug!("Response: {:?}", response);
+    debug!("Response headers: {:?}", response.headers);
+    debug!("Global Response headers: {:?}", global_response_headers);
+
     response.headers.inner.extend(
         global_response_headers
             .iter()

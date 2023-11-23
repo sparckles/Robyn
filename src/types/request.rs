@@ -135,8 +135,9 @@ impl PyRequest {
     #[new]
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        queries: Queries,
-        headers: Headers,
+        py: Python,
+        queries: PyObject,
+        headers: PyObject,
         path_params: Py<PyDict>,
         body: Py<PyAny>,
         method: String,
@@ -144,6 +145,18 @@ impl PyRequest {
         identity: Option<Identity>,
         ip_addr: Option<String>,
     ) -> Self {
+        let queries = if let Ok(queries_dict) = queries.extract::<&PyDict>(py) {
+            Queries::from_dict(queries_dict)
+        } else {
+            queries.extract::<Queries>(py).unwrap()
+        };
+
+        let headers = if let Ok(headers_dict) = headers.extract::<&PyDict>(py) {
+            Headers::from_dict(headers_dict)
+        } else {
+            headers.extract::<Headers>(py).unwrap()
+        };
+
         Self {
             queries,
             headers,

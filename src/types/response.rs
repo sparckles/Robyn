@@ -120,9 +120,15 @@ impl PyResponse {
     pub fn new(
         py: Python,
         status_code: u16,
-        headers: Headers,
+        headers: PyObject,
         description: Py<PyAny>,
     ) -> PyResult<Self> {
+        let headers = if let Ok(headers_dict) = headers.extract::<&PyDict>(py) {
+            Headers::from_dict(headers_dict)
+        } else {
+            headers.extract::<Headers>(py).unwrap()
+        };
+
         if description.downcast::<PyString>(py).is_err()
             && description.downcast::<PyBytes>(py).is_err()
         {

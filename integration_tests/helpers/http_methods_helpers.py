@@ -10,6 +10,7 @@ def check_response(response: requests.Response, expected_status_code: int):
     Raises if the response status code is not the expected one or if one of the global
     headers is not present in the response.
     """
+    print("Thes are are the headers", response.headers)
     assert response.status_code == expected_status_code
     assert "global_after" in response.headers
     assert response.headers["global_after"] == "global_after_request"

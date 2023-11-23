@@ -111,20 +111,21 @@ def shutdown_handler():
 
 @app.before_request()
 def global_before_request(request: Request):
-    request.headers.set("global_before_set", "global_before_request_set")
+    request.headers.set("global_before", "global_before_request_set")
     return request
 
 
 @app.after_request()
 def global_after_request(response: Response):
-    request.headers.set("global_after_set", "global_after_request_set")
+    response.headers.set("global_after", "global_after_request_set")
     return response
 
 
 @app.get("/sync/global/middlewares")
 def sync_global_middlewares(request: Request):
     assert "global_before" in request.headers
-    assert request.headers["global_before"] == [ "global_before_request" ]
+    assert request.headers.get("global_before") == "global_before_request_set"
+    assert request.headers.get("global_before") == "global_before_request_set"
     return "sync global middlewares"
 
 
@@ -133,7 +134,7 @@ def sync_global_middlewares(request: Request):
 
 @app.before_request("/sync/middlewares")
 def sync_before_request(request: Request):
-    request.headers["before"] = ["sync_before_request"]
+    request.headers.set("before", "sync_before_request_set")
     return request
 
 
@@ -147,14 +148,14 @@ def sync_after_request(response: Response):
 @app.get("/sync/middlewares")
 def sync_middlewares(request: Request):
     assert "before" in request.headers
-    assert request.headers.set("before", "sync_before_request")
+    assert request.headers.get("before") == "sync_before_request_set"
     assert request.ip_addr == "127.0.0.1"
     return "sync middlewares"
 
 
 @app.before_request("/async/middlewares")
 async def async_before_request(request: Request):
-    request.headers.set("before_set", "async_before_request_set")
+    request.headers.set("before", "async_before_request_set")
     return request
 
 
@@ -168,7 +169,7 @@ async def async_after_request(response: Response):
 @app.get("/async/middlewares")
 async def async_middlewares(request: Request):
     assert "before" in request.headers
-    assert request.headers.set("before", "async_before_request")
+    assert request.headers.get("before") == "async_before_request_set"
     assert request.ip_addr == "127.0.0.1"
     return "async middlewares"
 

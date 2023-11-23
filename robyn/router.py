@@ -106,6 +106,7 @@ class Router(BaseRouter):
         default_response_headers: List[Header],
     ) -> Union[Callable, CoroutineType]:
         # this should not be a dict
+        print("This is the default response headers", default_response_headers)
         response_headers = MultiMap()
 
         for header in default_response_headers:

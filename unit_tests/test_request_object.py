@@ -9,7 +9,7 @@ def test_request_object():
     )
     request = Request(
         queries={},
-        headers={"Content-Type": ["application/json"]},
+        headers={"Content-Type": "application/json"},
         path_params={},
         body="",
         method="GET",
@@ -20,5 +20,5 @@ def test_request_object():
 
     assert request.url.scheme == "https"
     assert request.url.host == "localhost"
-    assert request.headers["Content-Type"] == "application/json"
+    assert request.headers.get("Content-Type") == "application/json"
     assert request.method == "GET"

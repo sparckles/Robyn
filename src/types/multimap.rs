@@ -1,3 +1,4 @@
+use log::debug;
 use pyo3::prelude::*;
 use pyo3::types::{IntoPyDict, PyDict, PyList};
 use std::collections::HashMap;
@@ -19,19 +20,15 @@ impl MultiMap {
     }
 
     pub fn set(&mut self, key: String, value: String) {
+        debug!("Setting key: {} to value: {}", key, value);
         self.inner.entry(key).or_insert_with(Vec::new).push(value);
+        debug!("Multimap: {:?}", self.inner);
     }
 
-    pub fn get(&self, py: Python, key: String) -> PyObject {
+    pub fn get(&self, key: String) -> Option<String> {
         match self.inner.get(&key) {
-            Some(values) => {
-                let py_list = PyList::empty(py);
-                for value in values {
-                    py_list.append(value).unwrap();
-                }
-                py_list.into()
-            }
-            None => py.None(),
+            Some(values) => values.last().cloned(),
+            None => None,
         }
     }
 
@@ -41,13 +38,6 @@ impl MultiMap {
 
     pub fn contains(&self, key: String) -> bool {
         self.inner.contains_key(&key)
-    }
-
-    pub fn get_one(&self, key: String) -> Option<String> {
-        match self.inner.get(&key) {
-            Some(values) => values.first().cloned(),
-            None => None,
-        }
     }
 
     pub fn get_all(&self, key: String) -> Option<Vec<String>> {
@@ -60,6 +50,10 @@ impl MultiMap {
                 self.set(key.clone(), value.clone());
             }
         }
+    }
+
+    pub fn __contains__(&self, key: String) -> bool {
+        self.inner.contains_key(&key)
     }
 
     pub fn __repr__(&self) -> String {
@@ -76,6 +70,16 @@ impl MultiMap {
             for value in values {
                 multimap.set(key.clone(), value);
             }
+        }
+        multimap
+    }
+
+    pub fn from_dict(dict: &PyDict) -> Self {
+        let mut multimap = MultiMap::new();
+        for (key, value) in dict.iter() {
+            let key = key.extract::<String>().unwrap();
+            let value = value.extract::<String>().unwrap();
+            multimap.set(key, value);
         }
         multimap
     }
