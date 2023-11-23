@@ -65,7 +65,6 @@ class Router(BaseRouter):
             else:
                 raise TypeError("headers must be of type MultiMap or dict")
 
-
             description = res.get("description", "")
 
             if not isinstance(status_code, int):
@@ -80,7 +79,7 @@ class Router(BaseRouter):
         elif isinstance(res, bytes):
             headers = MultiMap()
             headers.set("Content-Type", "application/octet-stream")
-            
+
             response = Response(
                 status_code=status_codes.HTTP_200_OK,
                 headers=headers,

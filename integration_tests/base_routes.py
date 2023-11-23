@@ -478,7 +478,7 @@ async def redirect():
         "status_code": 307,
         "description": "",
         "type": "text",
-        "headers": {"Location": "redirect_route" },
+        "headers": {"Location": "redirect_route"},
     }
 
 
@@ -508,7 +508,7 @@ def sync_dict_post():
         "status_code": 200,
         "description": "sync dict post",
         "type": "text",
-        "headers": {"sync":  "dict" },
+        "headers": {"sync": "dict"},
     }
 
 
@@ -565,7 +565,7 @@ def sync_dict_put():
         "status_code": 200,
         "description": "sync dict put",
         "type": "text",
-        "headers": {"sync": "dict" },
+        "headers": {"sync": "dict"},
     }
 
 

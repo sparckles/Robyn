@@ -181,5 +181,4 @@ class WebSocketConnector:
     def sync_send_to(self, sender_id: str, message: str) -> None:
         pass
 
-class Headers:
-    ...
+class Headers: ...
