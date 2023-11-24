@@ -17,7 +17,7 @@ The request object is created in Rust side but is exposed to Python as a datacla
 Attributes:
 </li>
 <li>
-queries (dict[str, str]): The query parameters of the request. `e.g. /user?id=123 -> {"id": "123"}`
+query_params (QueryParams): The query parameters of the request. `e.g. /user?id=123 -> {"id": [ "123" ]}`
 </li>
 <li>
 headers (dict[str, str]): The headers of the request. `e.g. {"Content-Type": "application/json"}`
@@ -54,7 +54,7 @@ identity (Optional[Identity]): The identity of the client
     @dataclass
     class Request:
       """
-      queries: dict[str, str]
+      query_params: QueryParams
       headers: dict[str, str]
       path_params: dict[str, str]
       body: Union[str, bytes]
@@ -69,7 +69,7 @@ identity (Optional[Identity]): The identity of the client
     @dataclass
     class Request:
       """
-      queries: dict[str, str]
+      query_params: QueryParams
       headers: dict[str, str]
       path_params: dict[str, str]
       body: Union[str, bytes]

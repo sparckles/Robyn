@@ -164,7 +164,7 @@ class Request:
     The request object passed to the route handler.
 
     Attributes:
-        queries (dict[str, str]): The query parameters of the request. e.g. /user?id=123 -> {"id": "123"}
+        query_params (QueryParams): The query parameters of the request. e.g. /user?id=123 -> {"id": "123"}
         headers (dict[str, str]): The headers of the request. e.g. {"Content-Type": "application/json"}
         params (dict[str, str]): The parameters of the request. e.g. /user/:id -> {"id": "123"}
         body (Union[str, bytes]): The body of the request. If the request is a JSON, it will be a dict.
