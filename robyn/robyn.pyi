@@ -61,7 +61,6 @@ class Url:
 class Identity:
     claims: dict[str, str]
 
-
 @dataclass
 class QueryParams:
     """
@@ -72,7 +71,6 @@ class QueryParams:
     """
 
     queries: dict[str, list[str]]
-
 
     def set(self, key: str, value: str) -> None:
         """
@@ -85,7 +83,6 @@ class QueryParams:
         """
         pass
 
-
     def get(self, key: str, default: Optional[str]) -> Optional[str]:
         """
         Gets the last value of the query parameter with the given key.
@@ -96,14 +93,12 @@ class QueryParams:
         """
         pass
 
-
     def empty(self) -> bool:
         """
         Returns:
             True if the query params are empty, False otherwise
         """
         pass
-
 
     def contains(self, key: str) -> bool:
         """
@@ -134,7 +129,6 @@ class QueryParams:
         """
         pass
 
-
     def extend(self, other: QueryParams) -> None:
         """
         Extends the query params with the other query params.
@@ -144,14 +138,12 @@ class QueryParams:
         """
         pass
 
-
     def to_dict(self) -> dict[str, list[str]]:
         """
         Returns:
             The query params as a dictionary
         """
         pass
-
 
     def __contains__(self, key: str) -> bool:
         pass
