@@ -262,8 +262,16 @@ impl Server {
     /// Adds a new response header to our concurrent hashmap
     /// this can be called after the server has started.
     pub fn add_response_header(&self, key: &str, value: &str) {
-        self.global_response_headers
-            .insert(key.to_string(), value.to_string());
+        match key.to_lowercase().as_str() {
+            "content-type" => {
+                self.global_response_headers
+                    .insert("Content-Type".to_str ing(), value.to_string());
+            }
+            _ => {
+                self.global_response_headers
+                    .insert(key.to_string(), value.to_string());
+            }
+        }
     }
 
     /// Removes a new request header to our concurrent hashmap
