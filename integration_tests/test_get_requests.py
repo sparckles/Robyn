@@ -47,7 +47,7 @@ def test_template(function_type: str, session):
 @pytest.mark.parametrize("function_type", ["sync", "async"])
 def test_queries(function_type: str, session):
     r = get(f"/{function_type}/queries?hello=robyn")
-    assert r.json() == {"hello": "robyn"}
+    assert r.json() == {"hello": ["robyn"]}
 
     r = get(f"/{function_type}/queries")
     assert r.json() == {}
