@@ -265,7 +265,7 @@ impl Server {
         match key.to_lowercase().as_str() {
             "content-type" => {
                 self.global_response_headers
-                    .insert("Content-Type".to_str ing(), value.to_string());
+                    .insert("Content-Type".to_string(), value.to_string());
             }
             _ => {
                 self.global_response_headers
