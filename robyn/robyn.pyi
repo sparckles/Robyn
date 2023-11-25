@@ -86,12 +86,13 @@ class QueryParams:
         pass
 
 
-    def get(self, key: str) -> Optional[str]:
+    def get(self, key: str, default: Optional[str]) -> Optional[str]:
         """
         Gets the last value of the query parameter with the given key.
 
         Args:
             key (str): The key of the query parameter
+            default (Optional[str]): The default value if the key does not exist
         """
         pass
 
