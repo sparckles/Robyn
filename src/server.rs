@@ -262,16 +262,8 @@ impl Server {
     /// Adds a new response header to our concurrent hashmap
     /// this can be called after the server has started.
     pub fn add_response_header(&self, key: &str, value: &str) {
-        match key.to_lowercase().as_str() {
-            "content-type" => {
-                self.global_response_headers
-                    .insert("Content-Type".to_string(), value.to_string());
-            }
-            _ => {
-                self.global_response_headers
-                    .insert(key.to_string(), value.to_string());
-            }
-        }
+        self.global_response_headers
+            .insert(key.to_lowercase(), value.to_string());
     }
 
     /// Removes a new request header to our concurrent hashmap
@@ -444,6 +436,16 @@ async fn index(
     } else {
         Response::not_found(&request.headers)
     };
+
+    // turn all keys in response.headers into lowercase, even it's uppercase from Python code
+    for (k, v) in response.headers.clone().into_iter() {
+        let kl = k.to_lowercase();
+        if kl == k {
+            continue;
+        }
+        response.headers.insert(kl, v);
+        response.headers.remove(&k);
+    }
 
     response.headers.extend(
         global_response_headers
