@@ -48,6 +48,7 @@ class Router(BaseRouter):
         default_response_header: dict,
     ) -> Response:
         headers = {"Content-Type": "text/plain"} if not default_response_header else default_response_header
+        # we should create a header object here
         response = {}
         if isinstance(res, dict):
             status_code = res.get("status_code", status_codes.HTTP_200_OK)
@@ -86,7 +87,7 @@ class Router(BaseRouter):
         exception_handler: Optional[Callable],
         default_response_headers: List[Header],
     ) -> Union[Callable, CoroutineType]:
-        response_headers = {d.key: d.val for d in default_response_headers}
+        response_headers = [( d.key: d.val ) for d in default_response_headers]
 
         @wraps(handler)
         async def async_inner_handler(*args):

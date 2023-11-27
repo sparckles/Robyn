@@ -62,6 +62,18 @@ class Identity:
     claims: dict[str, str]
 
 @dataclass
+class Headers:
+    headers: dict[str, list[str]]
+
+    def set(self, key: str, value: str) -> None:
+        pass
+
+    def get(self, key: str, default: Optional[str]) -> Optional[str]:
+        pass
+
+
+
+@dataclass
 class QueryParams:
     """
     The query params object passed to the route handler.

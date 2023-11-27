@@ -23,6 +23,7 @@ from robyn.robyn import (
     get_version,
     jsonify,
     WebSocketConnector,
+    Headers
 )
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory, Header
@@ -59,8 +60,8 @@ class Robyn:
         self.router = Router()
         self.middleware_router = MiddlewareRouter()
         self.web_socket_router = WebSocketRouter()
-        self.request_headers: List[Header] = []  # This needs a better type
-        self.response_headers: List[Header] = []  # This needs a better type
+        self.request_headers: Headers = Headers()
+        self.response_headers: Headers = Headers()
         self.directories: List[Directory] = []
         self.event_handlers = {}
         self.exception_handler: Optional[Callable] = None
