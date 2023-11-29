@@ -142,10 +142,10 @@ class Robyn:
         self.directories.append(Directory(route, directory_path, show_files_listing, index_file))
 
     def add_request_header(self, key: str, value: str) -> None:
-        self.request_headers.append(Header(key, value))
+        self.request_headers.set(key, value)
 
     def add_response_header(self, key: str, value: str) -> None:
-        self.response_headers.append(Header(key, value))
+        self.response_headers.set(key, value)
 
     def add_web_socket(self, endpoint: str, ws: WebSocket) -> None:
         self.web_socket_router.add_route(endpoint, ws)

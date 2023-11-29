@@ -61,15 +61,7 @@ class Url:
 class Identity:
     claims: dict[str, str]
 
-@dataclass
-class Headers:
-    headers: dict[str, list[str]]
 
-    def set(self, key: str, value: str) -> None:
-        pass
-
-    def get(self, key: str, default: Optional[str]) -> Optional[str]:
-        pass
 
 
 
@@ -163,6 +155,47 @@ class QueryParams:
     def __repr__(self) -> str:
         pass
 
+class Headers:
+
+    def __init__(self, default_headers: Optional[dict]) -> None:
+        pass
+
+
+    def set(self, key: str, value: str) -> None:
+        """
+        Sets the value of the header with the given key.
+        If the key already exists, the value will be appended to the list of values.
+
+        Args:
+            key (str): The key of the header
+            value (str): The value of the header
+        """
+        pass
+
+    def get(self, key: str, default: Optional[str]) -> Optional[str]:
+        """
+        Gets the last value of the header with the given key.
+
+        Args:
+            key (str): The key of the header
+            default (Optional[str]): The default value if the key does not exist
+        """
+        pass
+
+    def populate_from_dict(self, headers: dict[str, str]) -> None:
+        """
+        Populates the headers from a dictionary.
+
+        Args:
+            headers (dict[str, str]): The dictionary of headers
+        """
+        pass
+
+
+    def is_empty(self) -> bool:
+        pass
+
+
 @dataclass
 class Request:
     """
@@ -207,7 +240,7 @@ class Response:
     """
 
     status_code: int
-    headers: dict[str, str]
+    headers: Headers
     description: Union[str, bytes]
     response_type: Optional[str] = None
     file_path: Optional[str] = None
