@@ -36,21 +36,31 @@ impl Responder for Response {
 }
 
 impl Response {
-    pub fn not_found(headers: &Headers) -> Self {
+    pub fn not_found(headers: Option<&Headers>) -> Self {
+        let headers = match headers {
+            Some(headers) => headers.clone(),
+            None => Headers::new(None),
+        };
+
         Self {
             status_code: 404,
             response_type: "text".to_string(),
-            headers: headers.clone(),
+            headers,
             description: "Not found".to_owned().into_bytes(),
             file_path: None,
         }
     }
 
-    pub fn internal_server_error(headers: &Headers) -> Self {
+    pub fn internal_server_error(headers: Option<&Headers>) -> Self {
+        let headers = match headers {
+            Some(headers) => headers.clone(),
+            None => Headers::new(None),
+        };
+
         Self {
             status_code: 500,
             response_type: "text".to_string(),
-            headers: headers.clone(),
+            headers,
             description: "Internal server error".to_owned().into_bytes(),
             file_path: None,
         }

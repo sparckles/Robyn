@@ -19,7 +19,7 @@ impl Headers {
     pub fn new(default_headers: Option<&PyDict>) -> Self {
         match default_headers {
             Some(default_headers) => {
-                let mut headers = DashMap::new();
+                let headers = DashMap::new();
                 for (key, value) in default_headers {
                     let key = key.to_string().to_lowercase();
 
@@ -28,8 +28,6 @@ impl Headers {
                     if new_value.is_err() {
                         let value = value.to_string();
                         headers.entry(key).or_insert_with(Vec::new).push(value);
-
-                        // headers.entry(key).or_insert_with(Vec::new).push(value);
                     } else {
                         let value: Vec<String> =
                             new_value.unwrap().iter().map(|x| x.to_string()).collect();
@@ -46,9 +44,7 @@ impl Headers {
 
     pub fn set(&mut self, key: String, value: String) {
         debug!("Setting header {} to {}", key, value);
-        self.headers
-            .insert(key.to_lowercase(), vec![value.to_lowercase()]);
-        debug!("This is new self: {:?}", self);
+        self.headers.insert(key.to_lowercase(), vec![value]);
     }
 
     pub fn append(&mut self, key: String, value: String) {
@@ -56,8 +52,7 @@ impl Headers {
         self.headers
             .entry(key.to_lowercase())
             .or_insert_with(Vec::new)
-            .push(value.to_lowercase());
-        debug!("This is new self: {:?}", self);
+            .push(value);
     }
 
     pub fn get_all(&self, py: Python, key: String) -> Py<PyList> {
@@ -173,7 +168,7 @@ impl Headers {
 
         for (key, value) in req_headers {
             let key = key.to_string().to_lowercase();
-            let value = value.to_str().unwrap().to_lowercase();
+            let value = value.to_str().unwrap().to_string();
             headers
                 .headers
                 .entry(key)

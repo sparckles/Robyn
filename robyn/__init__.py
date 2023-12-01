@@ -107,7 +107,6 @@ class Robyn:
             handler,
             is_const,
             self.exception_handler,
-            self.response_headers,
         )
 
         logger.info("Added route %s %s", route_type, endpoint)

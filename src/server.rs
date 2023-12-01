@@ -375,9 +375,6 @@ async fn index(
     body: Bytes,
     req: HttpRequest,
 ) -> impl Responder {
-    debug!("Global Request Headers: {:?}", global_request_headers);
-    debug!("Global Response Headers: {:?}", global_response_headers);
-
     let mut request = Request::from_actix_request(&req, body, &global_request_headers);
 
     // Before middleware
@@ -404,7 +401,7 @@ async fn index(
                     req.uri().path(),
                     get_traceback(e.downcast_ref::<PyErr>().unwrap())
                 );
-                return Response::internal_server_error(&request.headers);
+                return Response::internal_server_error(None);
             }
         };
     }
@@ -420,19 +417,20 @@ async fn index(
         req.uri().path(),
     ) {
         request.path_params = route_params;
-        execute_http_function(&request, &function)
-            .await
-            .unwrap_or_else(|e| {
+        match execute_http_function(&request, &function).await {
+            Ok(r) => r,
+            Err(e) => {
                 error!(
                     "Error while executing route function for endpoint `{}`: {}",
                     req.uri().path(),
                     get_traceback(&e)
                 );
 
-                Response::internal_server_error(&request.headers)
-            })
+                Response::internal_server_error(None)
+            }
+        }
     } else {
-        Response::not_found(&request.headers)
+        Response::not_found(None)
     };
 
     debug!("OG Response : {:?}", response);
@@ -455,7 +453,7 @@ async fn index(
         response = match execute_middleware_function(&mut response, &after_middleware).await {
             Ok(MiddlewareReturn::Request(_)) => {
                 error!("After middleware returned a request");
-                return Response::internal_server_error(&request.headers);
+                return Response::internal_server_error(Some(&response.headers));
             }
             Ok(MiddlewareReturn::Response(r)) => {
                 let response = r;
@@ -469,7 +467,7 @@ async fn index(
                     req.uri().path(),
                     get_traceback(e.downcast_ref::<PyErr>().unwrap())
                 );
-                return Response::internal_server_error(&request.headers);
+                return Response::internal_server_error(Some(&response.headers));
             }
         };
     }

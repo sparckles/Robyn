@@ -45,23 +45,20 @@ class Router(BaseRouter):
     def _format_response(
         self,
         res: dict,
-        default_response_header: Headers,
     ) -> Response:
         # TODO: Add support for custom headers
-        assert isinstance(default_response_header, Headers)
+        headers = Headers({"Content-Type": "text/plain"})
 
-        headers = default_response_header
-
-        if headers.is_empty():
-            headers.set("Content-Type", "text/plain")
         # we should create a header object here
         response = {}
         if isinstance(res, dict):
             # this should change
             status_code = res.get("status_code", status_codes.HTTP_200_OK)
-            response_headers = res.get("headers", {})
-            if headers is not None:
-                headers.populate_from_dict(response_headers)
+            headers = res.get("headers", {})
+            headers = Headers(headers)
+            if not headers.contains("Content-Type"):
+                headers.set("Content-Type", "text/plain")
+
 
             description = res.get("description", "")
 
@@ -76,10 +73,9 @@ class Router(BaseRouter):
             response = res
         elif isinstance(res, bytes):
             headers = Headers({"Content-Type": "application/octet-stream"})
-
             response = Response(
                 status_code=status_codes.HTTP_200_OK,
-                headers=Headers( {"Content-Type": "application/octet-stream"}),
+                headers=headers,
                 description=res,
             )
         else:
@@ -97,7 +93,6 @@ class Router(BaseRouter):
         handler: Callable,
         is_const: bool,
         exception_handler: Optional[Callable],
-        response_headers: Headers,
     ) -> Union[Callable, CoroutineType]:
 
         @wraps(handler)
@@ -105,14 +100,14 @@ class Router(BaseRouter):
             try:
                 response = self._format_response(
                     await handler(*args),
-                    response_headers,
+                    # response_headers,
                 )
             except Exception as err:
                 if exception_handler is None:
                     raise
                 response = self._format_response(
                     exception_handler(err),
-                    response_headers,
+                    # response_headers,
                 )
             return response
 
@@ -121,14 +116,14 @@ class Router(BaseRouter):
             try:
                 response = self._format_response(
                     handler(*args),
-                    response_headers,
+                    # response_headers,
                 )
             except Exception as err:
                 if exception_handler is None:
                     raise
                 response = self._format_response(
                     exception_handler(err),
-                    response_headers,
+                    # response_headers,
                 )
             return response
 

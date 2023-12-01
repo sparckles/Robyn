@@ -9,7 +9,6 @@ def test_middlewares(function_type: str, session):
     r = get(f"/{function_type}/middlewares")
     headers = r.headers
     # We do not want the request headers to be in the response
-    assert headers.get("global_before")
     assert headers.get("global_after")
 
     assert r.headers.get("after") == f"{function_type}_after_request"
@@ -20,7 +19,6 @@ def test_middlewares(function_type: str, session):
 def test_global_middleware(session):
     r = get("/sync/global/middlewares")
     headers = r.headers
-    assert headers.get("global_before")
     assert headers.get("global_after")
     assert r.headers.get("global_after") == "global_after_request"
     assert r.text == "sync global middlewares"

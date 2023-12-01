@@ -4,6 +4,7 @@ use std::io::Read;
 
 use actix_web::HttpResponseBuilder;
 use anyhow::Result;
+use log::debug;
 
 use crate::types::headers::Headers;
 
@@ -11,7 +12,7 @@ use crate::types::headers::Headers;
 // probably inside the submodule of the http router
 #[inline]
 pub fn apply_hashmap_headers(response: &mut HttpResponseBuilder, headers: &Headers) {
-    for mut iter in headers.headers.iter() {
+    for iter in headers.headers.iter() {
         let (key, values) = iter.pair();
         for value in values {
             response.append_header((key.clone(), value.clone()));
