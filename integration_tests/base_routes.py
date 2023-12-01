@@ -15,6 +15,7 @@ from robyn import (
     WebSocketConnector,
 )
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
+from robyn.robyn import Headers
 from robyn.templating import JinjaTemplate
 
 from integration_tests.views import SyncView, AsyncView
@@ -111,20 +112,21 @@ def shutdown_handler():
 
 @app.before_request()
 def global_before_request(request: Request):
-    request.headers["global_before"] = "global_before_request"
+    # request.headers["global_before"] = "global_before_request"
+    request.headers.set("global_before", "global_before_request")
     return request
 
 
 @app.after_request()
 def global_after_request(response: Response):
-    response.headers["global_after"] = "global_after_request"
+    response.headers.set("global_after", "global_after_request")
     return response
 
 
 @app.get("/sync/global/middlewares")
 def sync_global_middlewares(request: Request):
     assert "global_before" in request.headers
-    assert request.headers["global_before"] == "global_before_request"
+    assert request.headers.get("global_before") == "global_before_request"
     return "sync global middlewares"
 
 
@@ -133,13 +135,13 @@ def sync_global_middlewares(request: Request):
 
 @app.before_request("/sync/middlewares")
 def sync_before_request(request: Request):
-    request.headers["before"] = "sync_before_request"
+    request.headers.set("before", "sync_before_request")
     return request
 
 
 @app.after_request("/sync/middlewares")
 def sync_after_request(response: Response):
-    response.headers["after"] = "sync_after_request"
+    response.headers.set("after", "sync_after_request")
     response.description = response.description + " after"
     return response
 
@@ -147,20 +149,21 @@ def sync_after_request(response: Response):
 @app.get("/sync/middlewares")
 def sync_middlewares(request: Request):
     assert "before" in request.headers
-    assert request.headers["before"] == "sync_before_request"
+    assert request.headers.get("before") == "sync_before_request"
     assert request.ip_addr == "127.0.0.1"
     return "sync middlewares"
 
 
 @app.before_request("/async/middlewares")
 async def async_before_request(request: Request):
-    request.headers["before"] = "async_before_request"
+    request.headers.set("before", "async_before_request")
     return request
 
 
 @app.after_request("/async/middlewares")
 async def async_after_request(response: Response):
-    response.headers["after"] = "async_after_request"
+    # response.headers["after"] = "async_after_request"
+    response.headers.set("after", "async_after_request")
     response.description = response.description + " after"
     return response
 
@@ -168,14 +171,15 @@ async def async_after_request(response: Response):
 @app.get("/async/middlewares")
 async def async_middlewares(request: Request):
     assert "before" in request.headers
-    assert request.headers["before"] == "async_before_request"
+    # assert request.headers["before"] == "async_before_request"
+    assert request.headers.get("before") == "async_before_request"
     assert request.ip_addr == "127.0.0.1"
     return "async middlewares"
 
 
 @app.before_request("/sync/middlewares/401")
 def sync_before_request_401():
-    return Response(401, {}, "sync before request 401")
+    return Response(401, Headers({}), "sync before request 401")
 
 
 @app.get("/sync/middlewares/401")
@@ -266,22 +270,22 @@ async def async_dict_const_get():
 
 @app.get("/sync/response")
 def sync_response_get():
-    return Response(200, {"sync": "response"}, "sync response get")
+    return Response(200, Headers({"sync": "response"}), "sync response get")
 
 
 @app.get("/async/response")
 async def async_response_get():
-    return Response(200, {"async": "response"}, "async response get")
+    return Response(200, Headers({"async": "response"}), "async response get")
 
 
 @app.get("/sync/response/const", const=True)
 def sync_response_const_get():
-    return Response(200, {"sync_const": "response"}, "sync response const get")
+    return Response(200, Headers({"sync_const": "response"}), "sync response const get")
 
 
 @app.get("/async/response/const", const=True)
 async def async_response_const_get():
-    return Response(200, {"async_const": "response"}, "async response const get")
+    return Response(200, Headers({"async_const": "response"}), "async response const get")
 
 
 # Binary
@@ -301,7 +305,7 @@ async def async_octet_get():
 def sync_octet_response_get():
     return Response(
         status_code=200,
-        headers={"Content-Type": "application/octet-stream"},
+        headers=Headers({"Content-Type": "application/octet-stream"}),
         description="sync octet response",
     )
 
@@ -310,7 +314,7 @@ def sync_octet_response_get():
 async def async_octet_response_get():
     return Response(
         status_code=200,
-        headers={"Content-Type": "application/octet-stream"},
+        headers=Headers({"Content-Type": "application/octet-stream"}),
         description="async octet response",
     )
 

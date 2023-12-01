@@ -16,7 +16,7 @@ bad_bodies = [
     ["OK", b"OK"],
     Response(
         status_code=200,
-        headers={},
+        headers=None,
         description=b"OK",
     ),
 ]
@@ -29,7 +29,7 @@ def test_bad_body_types(description):
     with pytest.raises(ValueError):
         _ = Response(
             status_code=200,
-            headers={},
+            headers=None,
             description=description,
         )
 
@@ -38,6 +38,7 @@ def test_bad_body_types(description):
 def test_good_body_types(description):
     _ = Response(
         status_code=200,
-        headers={},
+        headers=None,
+
         description=description,
     )

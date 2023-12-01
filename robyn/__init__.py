@@ -60,8 +60,8 @@ class Robyn:
         self.router = Router()
         self.middleware_router = MiddlewareRouter()
         self.web_socket_router = WebSocketRouter()
-        self.request_headers: Headers = Headers()
-        self.response_headers: Headers = Headers()
+        self.request_headers: Headers = Headers({})
+        self.response_headers: Headers = Headers({})
         self.directories: List[Directory] = []
         self.event_handlers = {}
         self.exception_handler: Optional[Callable] = None
@@ -412,13 +412,13 @@ class SubRouter(Robyn):
 def ALLOW_CORS(app: Robyn, origins: List[str]):
     """Allows CORS for the given origins for the entire router."""
     for origin in origins:
-        app.add_request_header("Access-Control-Allow-Origin", origin)
-        app.add_request_header(
+        app.add_response_header("Access-Control-Allow-Origin", origin)
+        app.add_response_header(
             "Access-Control-Allow-Methods",
             "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS",
         )
-        app.add_request_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
-        app.add_request_header("Access-Control-Allow-Credentials", "true")
+        app.add_response_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        app.add_response_header("Access-Control-Allow-Credentials", "true")
 
 
 __all__ = [

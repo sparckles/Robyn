@@ -1,4 +1,4 @@
-from robyn.robyn import Request, Url
+from robyn.robyn import Headers, Request, Url
 
 
 def test_request_object():
@@ -9,7 +9,8 @@ def test_request_object():
     )
     request = Request(
         query_params={},
-        headers={"Content-Type": "application/json"},
+        # headers={"Content-Type": "application/json"},
+        headers=Headers({"Content-Type": "application/json"}),
         path_params={},
         body="",
         method="GET",
@@ -20,5 +21,6 @@ def test_request_object():
 
     assert request.url.scheme == "https"
     assert request.url.host == "localhost"
-    assert request.headers["Content-Type"] == "application/json"
+    print(request.headers.get("Content-Type"))
+    assert request.headers.get("Content-Type") == "application/json"
     assert request.method == "GET"

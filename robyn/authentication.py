@@ -1,7 +1,7 @@
 from abc import ABC, abstractclassmethod, abstractmethod
 from typing import Optional
 
-from robyn.robyn import Identity, Request, Response
+from robyn.robyn import Headers, Identity, Request, Response
 from robyn.status_codes import HTTP_401_UNAUTHORIZED
 
 
@@ -56,7 +56,7 @@ class AuthenticationHandler(ABC):
     @property
     def unauthorized_response(self) -> Response:
         return Response(
-            headers={"WWW-Authenticate": self.token_getter.scheme},
+            headers=Headers({"WWW-Authenticate": self.token_getter.scheme}),
             description="Unauthorized",
             status_code=HTTP_401_UNAUTHORIZED,
         )

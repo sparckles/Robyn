@@ -7,6 +7,7 @@ use crate::routers::http_router::HttpRouter;
 use crate::routers::{middleware_router::MiddlewareRouter, web_socket_router::WebSocketRouter};
 use crate::shared_socket::SocketHeld;
 use crate::types::function_info::{FunctionInfo, MiddlewareType};
+use crate::types::headers::Headers;
 use crate::types::request::Request;
 use crate::types::response::Response;
 use crate::types::HttpMethod;
@@ -51,8 +52,8 @@ pub struct Server {
     const_router: Arc<ConstRouter>,
     websocket_router: Arc<WebSocketRouter>,
     middleware_router: Arc<MiddlewareRouter>,
-    global_request_headers: Arc<DashMap<String, String>>,
-    global_response_headers: Arc<DashMap<String, String>>,
+    global_request_headers: Arc<Headers>,
+    global_response_headers: Arc<Headers>,
     directories: Arc<RwLock<Vec<Directory>>>,
     startup_handler: Option<Arc<FunctionInfo>>,
     shutdown_handler: Option<Arc<FunctionInfo>>,
@@ -67,8 +68,8 @@ impl Server {
             const_router: Arc::new(ConstRouter::new()),
             websocket_router: Arc::new(WebSocketRouter::new()),
             middleware_router: Arc::new(MiddlewareRouter::new()),
-            global_request_headers: Arc::new(DashMap::new()),
-            global_response_headers: Arc::new(DashMap::new()),
+            global_request_headers: Arc::new(Headers::new(None)),
+            global_response_headers: Arc::new(Headers::new(None)),
             directories: Arc::new(RwLock::new(Vec::new())),
             startup_handler: None,
             shutdown_handler: None,
@@ -255,27 +256,41 @@ impl Server {
     /// Adds a new request header to our concurrent hashmap
     /// this can be called after the server has started.
     pub fn add_request_header(&self, key: &str, value: &str) {
-        self.global_request_headers
-            .insert(key.to_string(), value.to_string());
+        self.global_response_headers
+            .headers
+            .entry(key.to_string())
+            .or_insert_with(Vec::new)
+            .push(value.to_string());
     }
 
     /// Adds a new response header to our concurrent hashmap
     /// this can be called after the server has started.
     pub fn add_response_header(&self, key: &str, value: &str) {
         self.global_response_headers
-            .insert(key.to_string(), value.to_string());
+            .headers
+            .entry(key.to_string())
+            .or_insert_with(Vec::new)
+            .push(value.to_string());
     }
 
     /// Removes a new request header to our concurrent hashmap
     /// this can be called after the server has started.
     pub fn remove_header(&self, key: &str) {
-        self.global_request_headers.remove(key);
+        self.global_request_headers.headers.remove(key);
     }
 
     /// Removes a new response header to our concurrent hashmap
     /// this can be called after the server has started.
     pub fn remove_response_header(&self, key: &str) {
-        self.global_response_headers.remove(key);
+        self.global_response_headers.headers.remove(key);
+    }
+
+    pub fn set_request_headers(&mut self, headers: &Headers) {
+        self.global_request_headers = Arc::new(headers.clone());
+    }
+
+    pub fn set_response_headers(&mut self, headers: &Headers) {
+        self.global_response_headers = Arc::new(headers.clone());
     }
 
     /// Add a new route to the routing tables
@@ -375,8 +390,8 @@ async fn index(
     router: web::Data<Arc<HttpRouter>>,
     const_router: web::Data<Arc<ConstRouter>>,
     middleware_router: web::Data<Arc<MiddlewareRouter>>,
-    global_request_headers: web::Data<Arc<DashMap<String, String>>>,
-    global_response_headers: web::Data<Arc<DashMap<String, String>>>,
+    global_request_headers: web::Data<Arc<Headers>>,
+    global_response_headers: web::Data<Arc<Headers>>,
     body: Bytes,
     req: HttpRequest,
 ) -> impl Responder {
@@ -437,11 +452,7 @@ async fn index(
         Response::not_found(&request.headers)
     };
 
-    response.headers.extend(
-        global_response_headers
-            .iter()
-            .map(|elt| (elt.key().clone(), elt.value().clone())),
-    );
+    response.headers.extend(&global_response_headers);
 
     // After middleware
     // Global

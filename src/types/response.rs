@@ -17,7 +17,7 @@ use crate::types::{check_description_type, get_description_from_pyobject};
 pub struct Response {
     pub status_code: u16,
     pub response_type: String,
-    pub headers: HashMap<String, String>,
+    pub headers: Headers,
     // https://pyo3.rs/v0.19.2/function.html?highlight=from_py_#per-argument-options
     #[pyo3(from_py_with = "get_description_from_pyobject")]
     pub description: Vec<u8>,
@@ -36,7 +36,7 @@ impl Responder for Response {
 }
 
 impl Response {
-    pub fn not_found(headers: &HashMap<String, String>) -> Self {
+    pub fn not_found(headers: &Headers) -> Self {
         Self {
             status_code: 404,
             response_type: "text".to_string(),
@@ -46,7 +46,7 @@ impl Response {
         }
     }
 
-    pub fn internal_server_error(headers: &HashMap<String, String>) -> Self {
+    pub fn internal_server_error(headers: &Headers) -> Self {
         Self {
             status_code: 500,
             response_type: "text".to_string(),
@@ -96,7 +96,7 @@ impl PyResponse {
     pub fn new(
         py: Python,
         status_code: u16,
-        headers: Headers,
+        headers: Option<Headers>,
         description: Py<PyAny>,
     ) -> PyResult<Self> {
         if description.downcast::<PyString>(py).is_err()
@@ -106,6 +106,9 @@ impl PyResponse {
                 "Could not convert specified body to bytes",
             ));
         };
+
+        let headers = headers.unwrap_or_default();
+
         Ok(Self {
             status_code,
             // we should be handling based on headers but works for now

@@ -11,10 +11,9 @@ def check_response(response: requests.Response, expected_status_code: int):
     headers is not present in the response.
     """
     assert response.status_code == expected_status_code
-    assert "global_after" in response.headers
-    assert response.headers["global_after"] == "global_after_request"
+    assert response.headers.get("global_after") == "global_after_request"
     assert "server" in response.headers
-    assert response.headers["server"] == "robyn"
+    assert response.headers.get("server") == "robyn"
 
 
 def get(

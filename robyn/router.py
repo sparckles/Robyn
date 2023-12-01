@@ -48,6 +48,8 @@ class Router(BaseRouter):
         default_response_header: Headers,
     ) -> Response:
         # TODO: Add support for custom headers
+        assert isinstance(default_response_header, Headers)
+
         headers = default_response_header
 
         if headers.is_empty():
@@ -57,9 +59,9 @@ class Router(BaseRouter):
         if isinstance(res, dict):
             # this should change
             status_code = res.get("status_code", status_codes.HTTP_200_OK)
-            headers = res.get("headers", None)
+            response_headers = res.get("headers", {})
             if headers is not None:
-                headers.populate_from_dict(headers)
+                headers.populate_from_dict(response_headers)
 
             description = res.get("description", "")
 
@@ -77,7 +79,7 @@ class Router(BaseRouter):
 
             response = Response(
                 status_code=status_codes.HTTP_200_OK,
-                headers={"Content-Type": "application/octet-stream"},
+                headers=Headers( {"Content-Type": "application/octet-stream"}),
                 description=res,
             )
         else:
