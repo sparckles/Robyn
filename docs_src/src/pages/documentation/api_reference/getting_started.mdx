@@ -457,6 +457,27 @@ Or setting the Headers globally *per* router.
   </Col>
 </Row>
 
+<Row>
+<Col>
+`add_response_header` appends the header to the list of headers, while `set_response_header` replaces the header if it exists.
+</Col>
+<Col>
+
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    app.set_response_header("content-type", "application/json")
+    ```
+
+    ```python {{title: 'typed'}}
+    app.set_response_header("content-type", "application/json")
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+
 
 ## Request Headers
 
@@ -480,7 +501,7 @@ Either, by using the `headers` field in the `Request` object:
 
       print("These are the request headers: ", headers)
 
-      headers["modified"] = ["modified_value"]
+      headers.set("modified", "modified_value")
 
       print("These are the modified request headers: ", headers)
       
@@ -496,7 +517,7 @@ Either, by using the `headers` field in the `Request` object:
 
       print("These are the request headers: ", headers)
 
-      headers["modified"] = ["modified_value"]
+      headers.set("modified", "modified_value")
 
       print("These are the modified request headers: ", headers)
       
@@ -522,6 +543,26 @@ Or by using the global Request Headers:
 
     ```python {{title: 'typed'}}
     app.add_request_header("server", "robyn")
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+<Row>
+<Col>
+`add_request_header` appends the header to the list of headers, while `set_request_header` replaces the header if it exists.
+</Col>
+<Col sticky>
+
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    app.set_request_header("server", "robyn")
+    ```
+
+    ```python {{title: 'typed'}}
+    app.set_request_header("server", "robyn")
     ```
     </CodeGroup>
   </Col>
