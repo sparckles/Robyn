@@ -253,26 +253,6 @@ impl Server {
         });
     }
 
-    /// Adds a new request header to our concurrent hashmap
-    /// this can be called after the server has started.
-    pub fn add_request_header(&self, key: &str, value: &str) {
-        self.global_response_headers
-            .headers
-            .entry(key.to_string())
-            .or_insert_with(Vec::new)
-            .push(value.to_string());
-    }
-
-    /// Adds a new response header to our concurrent hashmap
-    /// this can be called after the server has started.
-    pub fn add_response_header(&self, key: &str, value: &str) {
-        self.global_response_headers
-            .headers
-            .entry(key.to_string())
-            .or_insert_with(Vec::new)
-            .push(value.to_string());
-    }
-
     /// Removes a new request header to our concurrent hashmap
     /// this can be called after the server has started.
     pub fn remove_header(&self, key: &str) {
@@ -285,11 +265,11 @@ impl Server {
         self.global_response_headers.headers.remove(key);
     }
 
-    pub fn set_request_headers(&mut self, headers: &Headers) {
+    pub fn apply_request_headers(&mut self, headers: &Headers) {
         self.global_request_headers = Arc::new(headers.clone());
     }
 
-    pub fn set_response_headers(&mut self, headers: &Headers) {
+    pub fn apply_response_headers(&mut self, headers: &Headers) {
         self.global_response_headers = Arc::new(headers.clone());
     }
 
@@ -395,6 +375,9 @@ async fn index(
     body: Bytes,
     req: HttpRequest,
 ) -> impl Responder {
+    debug!("Global Request Headers: {:?}", global_request_headers);
+    debug!("Global Response Headers: {:?}", global_response_headers);
+
     let mut request = Request::from_actix_request(&req, body, &global_request_headers);
 
     // Before middleware
@@ -409,7 +392,7 @@ async fn index(
         request.path_params = route_params;
     }
     for before_middleware in before_middlewares {
-        request = match execute_middleware_function(&request, &before_middleware).await {
+        request = match execute_middleware_function(&mut request, &before_middleware).await {
             Ok(MiddlewareReturn::Request(r)) => r,
             Ok(MiddlewareReturn::Response(r)) => {
                 // If a before middleware returns a response, we abort the request and return the response
@@ -452,7 +435,11 @@ async fn index(
         Response::not_found(&request.headers)
     };
 
+    debug!("OG Response : {:?}", response);
+
     response.headers.extend(&global_response_headers);
+
+    debug!("Extended Response : {:?}", response);
 
     // After middleware
     // Global
@@ -465,12 +452,17 @@ async fn index(
         after_middlewares.push(function);
     }
     for after_middleware in after_middlewares {
-        response = match execute_middleware_function(&response, &after_middleware).await {
+        response = match execute_middleware_function(&mut response, &after_middleware).await {
             Ok(MiddlewareReturn::Request(_)) => {
                 error!("After middleware returned a request");
                 return Response::internal_server_error(&request.headers);
             }
-            Ok(MiddlewareReturn::Response(r)) => r,
+            Ok(MiddlewareReturn::Response(r)) => {
+                let response = r;
+
+                debug!("Response returned: {:?}", response);
+                response
+            }
             Err(e) => {
                 error!(
                     "Error while executing after middleware function for endpoint `{}`: {}",
@@ -482,7 +474,7 @@ async fn index(
         };
     }
 
-    debug!("Response: {:?}", response);
+    debug!("Response returned: {:?}", response);
 
     response
 }

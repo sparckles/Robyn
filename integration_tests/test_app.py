@@ -8,7 +8,7 @@ import pytest
 @pytest.mark.benchmark
 def test_add_request_header():
     app = Robyn(__file__)
-    app.add_request_header("server", "robyn")
+    app.set_request_header("server", "robyn")
     assert app.request_headers.get_headers() == Headers({"server": "robyn"}).get_headers()
 
 

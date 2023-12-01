@@ -240,7 +240,7 @@ class Response:
     """
 
     status_code: int
-    headers: Optional[Headers]
+    headers: Headers
     description: Union[str, bytes]
     response_type: Optional[str] = None
     file_path: Optional[str] = None
@@ -256,10 +256,11 @@ class Server:
         index_file: Optional[str],
     ) -> None:
         pass
-    def add_request_header(self, key: str, value: str) -> None:
+    def apply_request_header(self, key: str, value: str) -> None:
         pass
-    def add_response_header(self, key: str, value: str) -> None:
+    def apply_response_header(self, key: str, value: str) -> None:
         pass
+
     def add_route(
         self,
         route_type: HttpMethod,

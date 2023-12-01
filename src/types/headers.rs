@@ -45,10 +45,19 @@ impl Headers {
     }
 
     pub fn set(&mut self, key: String, value: String) {
+        debug!("Setting header {} to {}", key, value);
+        self.headers
+            .insert(key.to_lowercase(), vec![value.to_lowercase()]);
+        debug!("This is new self: {:?}", self);
+    }
+
+    pub fn append(&mut self, key: String, value: String) {
+        debug!("Setting header {} to {}", key, value);
         self.headers
             .entry(key.to_lowercase())
             .or_insert_with(Vec::new)
             .push(value.to_lowercase());
+        debug!("This is new self: {:?}", self);
     }
 
     pub fn get_all(&self, py: Python, key: String) -> Py<PyList> {
@@ -64,7 +73,11 @@ impl Headers {
     pub fn get(&self, key: String) -> PyResult<String> {
         // return the last value
         match self.headers.get(&key.to_lowercase()) {
-            Some(values) => Ok(values.last().unwrap().to_string()),
+            Some(iter) => {
+                let (_, values) = iter.pair();
+                let last_value = values.last().unwrap();
+                Ok(last_value.to_string())
+            }
             None => Err(pyo3::exceptions::PyKeyError::new_err(format!(
                 "KeyError: {}",
                 key
@@ -84,6 +97,8 @@ impl Headers {
     }
 
     pub fn contains(&self, key: String) -> bool {
+        debug!("Checking if header {} exists", key);
+        debug!("Headers: {:?}", self.headers);
         self.headers.contains_key(&key.to_lowercase())
     }
 
@@ -154,7 +169,7 @@ impl Headers {
     }
 
     pub fn from_actix_headers(req_headers: &HeaderMap) -> Self {
-        let mut headers = Headers::default();
+        let headers = Headers::default();
 
         for (key, value) in req_headers {
             let key = key.to_string().to_lowercase();

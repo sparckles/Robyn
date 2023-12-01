@@ -168,9 +168,9 @@ def spawn_process(
     for directory in directories:
         server.add_directory(*directory.as_list())
 
-    server.set_request_headers(request_headers)
+    server.apply_request_headers(request_headers)
 
-    server.set_response_headers(response_headers)
+    server.apply_response_headers(response_headers)
 
     for route in routes:
         route_type, endpoint, function, is_const = route

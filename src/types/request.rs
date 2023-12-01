@@ -25,7 +25,7 @@ pub struct Request {
 impl ToPyObject for Request {
     fn to_object(&self, py: Python) -> PyObject {
         let query_params = self.query_params.clone();
-        let headers = self.headers.clone();
+        let headers: Py<Headers> = self.headers.clone().into_py(py).extract(py).unwrap();
         let path_params = self.path_params.clone().into_py(py).extract(py).unwrap();
         let body = match String::from_utf8(self.body.clone()) {
             Ok(s) => s.into_py(py),
@@ -89,7 +89,7 @@ pub struct PyRequest {
     #[pyo3(get, set)]
     pub query_params: QueryParams,
     #[pyo3(get, set)]
-    pub headers: Headers,
+    pub headers: Py<Headers>,
     #[pyo3(get, set)]
     pub path_params: Py<PyDict>,
     #[pyo3(get, set)]
@@ -110,7 +110,7 @@ impl PyRequest {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         query_params: &PyDict,
-        headers: Headers,
+        headers: Py<Headers>,
         path_params: Py<PyDict>,
         body: Py<PyAny>,
         method: String,

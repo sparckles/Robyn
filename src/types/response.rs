@@ -82,7 +82,7 @@ pub struct PyResponse {
     #[pyo3(get)]
     pub response_type: String,
     #[pyo3(get, set)]
-    pub headers: Headers,
+    pub headers: Py<Headers>,
     #[pyo3(get)]
     pub description: Py<PyAny>,
     #[pyo3(get)]
@@ -96,7 +96,7 @@ impl PyResponse {
     pub fn new(
         py: Python,
         status_code: u16,
-        headers: Option<Headers>,
+        headers: Py<Headers>,
         description: Py<PyAny>,
     ) -> PyResult<Self> {
         if description.downcast::<PyString>(py).is_err()
@@ -106,8 +106,6 @@ impl PyResponse {
                 "Could not convert specified body to bytes",
             ));
         };
-
-        let headers = headers.unwrap_or_default();
 
         Ok(Self {
             status_code,
