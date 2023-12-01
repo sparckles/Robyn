@@ -109,7 +109,7 @@ impl PyRequest {
     #[new]
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        query_params: &PyDict,
+        query_params: QueryParams,
         headers: Py<Headers>,
         path_params: Py<PyDict>,
         body: Py<PyAny>,
@@ -118,8 +118,6 @@ impl PyRequest {
         identity: Option<Identity>,
         ip_addr: Option<String>,
     ) -> Self {
-        let query_params = QueryParams::from_py_dict(query_params);
-
         Self {
             query_params,
             headers,

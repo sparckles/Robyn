@@ -161,7 +161,6 @@ async def async_before_request(request: Request):
 
 @app.after_request("/async/middlewares")
 async def async_after_request(response: Response):
-    # response.headers["after"] = "async_after_request"
     response.headers.set("after", "async_after_request")
     response.description = response.description + " after"
     return response
@@ -170,7 +169,6 @@ async def async_after_request(response: Response):
 @app.get("/async/middlewares")
 async def async_middlewares(request: Request):
     assert request.headers.contains("before")
-    # assert request.headers["before"] == "async_before_request"
     assert request.headers.get("before") == "async_before_request"
     assert request.ip_addr == "127.0.0.1"
     return "async middlewares"

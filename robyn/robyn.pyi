@@ -65,7 +65,6 @@ class Identity:
 
 
 
-@dataclass
 class QueryParams:
     """
     The query params object passed to the route handler.
@@ -73,8 +72,6 @@ class QueryParams:
     Attributes:
         queries (dict[str, list[str]]): The query parameters of the request. e.g. /user?id=123 -> {"id": "123"}
     """
-
-    queries: dict[str, list[str]]
 
     def set(self, key: str, value: str) -> None:
         """
@@ -172,13 +169,12 @@ class Headers:
         """
         pass
 
-    def get(self, key: str, default: Optional[str]) -> Optional[str]:
+    def get(self, key: str) -> Optional[str]:
         """
         Gets the last value of the header with the given key.
 
         Args:
             key (str): The key of the header
-            default (Optional[str]): The default value if the key does not exist
         """
         pass
 
@@ -188,6 +184,16 @@ class Headers:
 
         Args:
             headers (dict[str, str]): The dictionary of headers
+        """
+        pass
+
+    def contains(self, key: str) -> bool:
+        """
+        Returns:
+            True if the headers contain the key, False otherwise
+
+        Args:
+            key (str): The key of the header
         """
         pass
 
@@ -203,7 +209,7 @@ class Request:
 
     Attributes:
         query_params (QueryParams): The query parameters of the request. e.g. /user?id=123 -> {"id": "123"}
-        headers (dict[str, str]): The headers of the request. e.g. {"Content-Type": "application/json"}
+        headers Headers: The headers of the request. e.g. Headers({"Content-Type": "application/json"})
         params (dict[str, str]): The parameters of the request. e.g. /user/:id -> {"id": "123"}
         body (Union[str, bytes]): The body of the request. If the request is a JSON, it will be a dict.
         method (str): The method of the request. e.g. GET, POST, PUT, DELETE
@@ -211,7 +217,7 @@ class Request:
     """
 
     query_params: QueryParams
-    headers: dict[str, str]
+    headers: Headers
     path_params: dict[str, str]
     body: Union[str, bytes]
     method: str

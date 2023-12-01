@@ -46,10 +46,8 @@ class Router(BaseRouter):
         self,
         res: dict,
     ) -> Response:
-        # TODO: Add support for custom headers
         headers = Headers({"Content-Type": "text/plain"})
 
-        # we should create a header object here
         response = {}
         if isinstance(res, dict):
             # this should change
@@ -58,7 +56,6 @@ class Router(BaseRouter):
             headers = Headers(headers)
             if not headers.contains("Content-Type"):
                 headers.set("Content-Type", "text/plain")
-
 
             description = res.get("description", "")
 
@@ -100,14 +97,12 @@ class Router(BaseRouter):
             try:
                 response = self._format_response(
                     await handler(*args),
-                    # response_headers,
                 )
             except Exception as err:
                 if exception_handler is None:
                     raise
                 response = self._format_response(
                     exception_handler(err),
-                    # response_headers,
                 )
             return response
 
@@ -116,14 +111,12 @@ class Router(BaseRouter):
             try:
                 response = self._format_response(
                     handler(*args),
-                    # response_headers,
                 )
             except Exception as err:
                 if exception_handler is None:
                     raise
                 response = self._format_response(
                     exception_handler(err),
-                    # response_headers,
                 )
             return response
 
