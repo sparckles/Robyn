@@ -1,10 +1,8 @@
 use actix_http::header::HeaderMap;
-use actix_web::{web::Bytes, HttpRequest};
 use dashmap::DashMap;
 use log::debug;
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyIterator, PyList};
-use std::collections::HashMap;
+use pyo3::types::{PyDict, PyList};
 
 // Custom Multimap class
 #[pyclass(name = "Headers")]

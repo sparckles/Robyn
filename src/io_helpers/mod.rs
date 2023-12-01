@@ -1,10 +1,8 @@
-use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
 
 use actix_web::HttpResponseBuilder;
 use anyhow::Result;
-use log::debug;
 
 use crate::types::headers::Headers;
 

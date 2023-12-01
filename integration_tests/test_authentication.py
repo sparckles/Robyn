@@ -22,7 +22,6 @@ def test_invalid_authentication_token(session, function_type: str):
     assert r.headers.get("WWW-Authenticate") == "BearerGetter"
 
 
-
 @pytest.mark.benchmark
 @pytest.mark.parametrize("function_type", ["sync", "async"])
 def test_invalid_authentication_header(session, function_type: str):

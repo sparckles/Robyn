@@ -79,8 +79,8 @@ class BearerGetter(TokenGetter):
 
     @classmethod
     def get_token(cls, request: Request) -> Optional[str]:
-        if request.headers.contains("authorization") :
-            authorization_header =  request.headers.get("authorization")
+        if request.headers.contains("authorization"):
+            authorization_header = request.headers.get("authorization")
         else:
             authorization_header = None
 

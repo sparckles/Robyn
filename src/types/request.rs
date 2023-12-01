@@ -1,5 +1,4 @@
 use actix_web::{web::Bytes, HttpRequest};
-use dashmap::DashMap;
 use pyo3::{exceptions::PyValueError, prelude::*, types::PyDict, types::PyString};
 use serde_json::Value;
 use std::collections::HashMap;

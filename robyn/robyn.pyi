@@ -61,10 +61,6 @@ class Url:
 class Identity:
     claims: dict[str, str]
 
-
-
-
-
 class QueryParams:
     """
     The query params object passed to the route handler.
@@ -153,10 +149,8 @@ class QueryParams:
         pass
 
 class Headers:
-
     def __init__(self, default_headers: Optional[dict]) -> None:
         pass
-
 
     def set(self, key: str, value: str) -> None:
         """
@@ -197,10 +191,8 @@ class Headers:
         """
         pass
 
-
     def is_empty(self) -> bool:
         pass
-
 
 @dataclass
 class Request:

@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use actix_http::{body::BoxBody, StatusCode};
 use actix_web::{HttpRequest, HttpResponse, HttpResponseBuilder, Responder};
 use pyo3::{

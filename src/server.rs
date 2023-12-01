@@ -26,7 +26,6 @@ use actix_files::Files;
 use actix_http::KeepAlive;
 use actix_web::web::Bytes;
 use actix_web::*;
-use dashmap::DashMap;
 
 // pyO3 module
 use log::{debug, error};

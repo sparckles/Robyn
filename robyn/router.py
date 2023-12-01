@@ -91,7 +91,6 @@ class Router(BaseRouter):
         is_const: bool,
         exception_handler: Optional[Callable],
     ) -> Union[Callable, CoroutineType]:
-
         @wraps(handler)
         async def async_inner_handler(*args):
             try:
