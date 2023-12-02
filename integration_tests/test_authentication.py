@@ -19,7 +19,7 @@ def test_invalid_authentication_token(session, function_type: str):
         should_check_response=False,
     )
     assert r.status_code == 401
-    assert r.headers["WWW-Authenticate"] == "BearerGetter"
+    assert r.headers.get("WWW-Authenticate") == "BearerGetter"
 
 
 @pytest.mark.benchmark
@@ -31,7 +31,7 @@ def test_invalid_authentication_header(session, function_type: str):
         should_check_response=False,
     )
     assert r.status_code == 401
-    assert r.headers["WWW-Authenticate"] == "BearerGetter"
+    assert r.headers.get("WWW-Authenticate") == "BearerGetter"
 
 
 @pytest.mark.benchmark
@@ -39,4 +39,4 @@ def test_invalid_authentication_header(session, function_type: str):
 def test_invalid_authentication_no_token(session, function_type: str):
     r = get(f"/{function_type}/auth", should_check_response=False)
     assert r.status_code == 401
-    assert r.headers["WWW-Authenticate"] == "BearerGetter"
+    assert r.headers.get("WWW-Authenticate") == "BearerGetter"

@@ -8,11 +8,10 @@ from typing import Any, Callable, Dict, List, NamedTuple, Union, Optional
 from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
 from robyn.dependency_injection import DependencyMap
 
-from robyn.robyn import FunctionInfo, HttpMethod, MiddlewareType, Request, Response
+from robyn.robyn import FunctionInfo, Headers, HttpMethod, MiddlewareType, Request, Response
 from robyn import status_codes
 
 from robyn.ws import WebSocket
-from robyn.types import Header
 
 import logging
 
@@ -51,13 +50,18 @@ class Router(BaseRouter):
     def _format_response(
         self,
         res: dict,
-        default_response_header: dict,
     ) -> Response:
-        headers = {"Content-Type": "text/plain"} if not default_response_header else default_response_header
+        headers = Headers({"Content-Type": "text/plain"})
+
         response = {}
         if isinstance(res, dict):
+            # this should change
             status_code = res.get("status_code", status_codes.HTTP_200_OK)
-            headers = res.get("headers", headers)
+            headers = res.get("headers", {})
+            headers = Headers(headers)
+            if not headers.contains("Content-Type"):
+                headers.set("Content-Type", "text/plain")
+
             description = res.get("description", "")
 
             if not isinstance(status_code, int):
@@ -70,9 +74,10 @@ class Router(BaseRouter):
         elif isinstance(res, Response):
             response = res
         elif isinstance(res, bytes):
+            headers = Headers({"Content-Type": "application/octet-stream"})
             response = Response(
                 status_code=status_codes.HTTP_200_OK,
-                headers={"Content-Type": "application/octet-stream"},
+                headers=headers,
                 description=res,
             )
         else:
@@ -91,11 +96,8 @@ class Router(BaseRouter):
         is_const: bool,
         exception_handler: Optional[Callable],
         injected_dependencies: dict,
-        default_response_headers: List[Header],
     ) -> Union[Callable, CoroutineType]:
         # this should not be an unordered map. should be a list only
-        response_headers = {d.key: d.val for d in default_response_headers}
-
         @wraps(handler)
         async def async_inner_handler(*args, **kwargs):
             print("This is the args", args)
@@ -103,14 +105,12 @@ class Router(BaseRouter):
             try:
                 response = self._format_response(
                     await handler(*args, **kwargs),
-                    response_headers,
                 )
             except Exception as err:
                 if exception_handler is None:
                     raise
                 response = self._format_response(
                     exception_handler(err),
-                    response_headers,
                 )
             return response
 
@@ -120,14 +120,12 @@ class Router(BaseRouter):
                 # do we even need this?
                 response = self._format_response(
                     handler(*args, **kwargs),
-                    response_headers,
                 )
             except Exception as err:
                 if exception_handler is None:
                     raise
                 response = self._format_response(
                     exception_handler(err),
-                    response_headers,
                 )
             return response
 

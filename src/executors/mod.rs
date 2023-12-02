@@ -103,6 +103,8 @@ pub async fn execute_http_function(
         })?
         .await?;
 
+        debug!("Function output: {:?}", output);
+
         return Python::with_gil(|py| -> PyResult<Response> { output.extract(py) });
     };
 

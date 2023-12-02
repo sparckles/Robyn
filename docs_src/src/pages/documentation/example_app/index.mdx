@@ -25,6 +25,24 @@ Batman wanted to create a Robyn app and was about to create an `src/app.py` befo
 $ python -m robyn --create
 ```
 
+This, would result in the following output.
+
+```bash
+$ python3 -m robyn --create
+? Directory Path: .
+? Need Docker? (Y/N) Y
+? Please select project type (Mongo/Postgres/Sqlalchemy/Prisma):
+❯ No DB
+  Sqlite
+  Postgres
+  MongoDB
+  SqlAlchemy
+  Prisma
+```
+
+and the following directory structure.
+
+
 Batman was asked a set of questions to configure the application. He chose to use the default values for most of the questions.
 
 And he was done! The Robyn CLI created a new application with the following structure.

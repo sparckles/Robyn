@@ -94,22 +94,155 @@ class Url:
 class Identity:
     claims: dict[str, str]
 
+class QueryParams:
+    """
+    The query params object passed to the route handler.
+
+    Attributes:
+        queries (dict[str, list[str]]): The query parameters of the request. e.g. /user?id=123 -> {"id": "123"}
+    """
+
+    def set(self, key: str, value: str) -> None:
+        """
+        Sets the value of the query parameter with the given key.
+        If the key already exists, the value will be appended to the list of values.
+
+        Args:
+            key (str): The key of the query parameter
+            value (str): The value of the query parameter
+        """
+        pass
+
+    def get(self, key: str, default: Optional[str]) -> Optional[str]:
+        """
+        Gets the last value of the query parameter with the given key.
+
+        Args:
+            key (str): The key of the query parameter
+            default (Optional[str]): The default value if the key does not exist
+        """
+        pass
+
+    def empty(self) -> bool:
+        """
+        Returns:
+            True if the query params are empty, False otherwise
+        """
+        pass
+
+    def contains(self, key: str) -> bool:
+        """
+        Returns:
+            True if the query params contain the key, False otherwise
+
+        Args:
+            key (str): The key of the query parameter
+        """
+        pass
+
+    def get_first(self, key: str) -> Optional[str]:
+        """
+        Gets the first value of the query parameter with the given key.
+
+        Args:
+            key (str): The key of the query parameter
+
+        """
+        pass
+
+    def get_all(self, key: str) -> Optional[list[str]]:
+        """
+        Gets all the values of the query parameter with the given key.
+
+        Args:
+            key (str): The key of the query parameter
+        """
+        pass
+
+    def extend(self, other: QueryParams) -> None:
+        """
+        Extends the query params with the other query params.
+
+        Args:
+            other (QueryParams): The other QueryParams object
+        """
+        pass
+
+    def to_dict(self) -> dict[str, list[str]]:
+        """
+        Returns:
+            The query params as a dictionary
+        """
+        pass
+
+    def __contains__(self, key: str) -> bool:
+        pass
+
+    def __repr__(self) -> str:
+        pass
+
+class Headers:
+    def __init__(self, default_headers: Optional[dict]) -> None:
+        pass
+
+    def set(self, key: str, value: str) -> None:
+        """
+        Sets the value of the header with the given key.
+        If the key already exists, the value will be appended to the list of values.
+
+        Args:
+            key (str): The key of the header
+            value (str): The value of the header
+        """
+        pass
+
+    def get(self, key: str) -> Optional[str]:
+        """
+        Gets the last value of the header with the given key.
+
+        Args:
+            key (str): The key of the header
+        """
+        pass
+
+    def populate_from_dict(self, headers: dict[str, str]) -> None:
+        """
+        Populates the headers from a dictionary.
+
+        Args:
+            headers (dict[str, str]): The dictionary of headers
+        """
+        pass
+
+    def contains(self, key: str) -> bool:
+        """
+        Returns:
+            True if the headers contain the key, False otherwise
+
+        Args:
+            key (str): The key of the header
+        """
+        pass
+
+    def is_empty(self) -> bool:
+        pass
+
 @dataclass
 class Request:
     """
     The request object passed to the route handler.
 
     Attributes:
-        queries (dict[str, str]): The query parameters of the request. e.g. /user?id=123 -> {"id": "123"}
-        headers (dict[str, str]): The headers of the request. e.g. {"Content-Type": "application/json"}
+        query_params (QueryParams): The query parameters of the request. e.g. /user?id=123 -> {"id": "123"}
+        headers Headers: The headers of the request. e.g. Headers({"Content-Type": "application/json"})
         params (dict[str, str]): The parameters of the request. e.g. /user/:id -> {"id": "123"}
         body (Union[str, bytes]): The body of the request. If the request is a JSON, it will be a dict.
         method (str): The method of the request. e.g. GET, POST, PUT, DELETE
         ip_addr (Optional[str]): The IP Address of the client
     """
 
-    queries: dict[str, str]
-    headers: dict[str, str]
+    query_params: QueryParams
+    headers: Headers
     path_params: dict[str, str]
     body: Union[str, bytes]
     method: str
@@ -138,7 +271,7 @@ class Response:
     """
 
     status_code: int
-    headers: dict[str, str]
+    headers: Headers
     description: Union[str, bytes]
     response_type: Optional[str] = None
     file_path: Optional[str] = None
@@ -154,10 +287,11 @@ class Server:
         index_file: Optional[str],
     ) -> None:
         pass
-    def add_request_header(self, key: str, value: str) -> None:
+    def apply_request_header(self, key: str, value: str) -> None:
         pass
-    def add_response_header(self, key: str, value: str) -> None:
+    def apply_response_header(self, key: str, value: str) -> None:
         pass
+
     def add_route(
         self,
         route_type: HttpMethod,
