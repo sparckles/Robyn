@@ -88,7 +88,7 @@ impl QueryParams {
         multimap
     }
 
-    pub fn from_dict(dict: &PyDict) -> Self {
+    pub fn from_py_dict(dict: &PyDict) -> Self {
         let mut multimap = QueryParams::new();
         for (key, value) in dict.iter() {
             let key = key.extract::<String>().unwrap();

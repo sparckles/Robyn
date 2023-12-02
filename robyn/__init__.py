@@ -15,17 +15,9 @@ from robyn.events import Events
 from robyn.logger import logger
 from robyn.processpool import run_processes
 from robyn.responses import serve_file, serve_html
-from robyn.robyn import (
-    FunctionInfo,
-    HttpMethod,
-    Request,
-    Response,
-    get_version,
-    jsonify,
-    WebSocketConnector,
-)
+from robyn.robyn import FunctionInfo, HttpMethod, Request, Response, get_version, jsonify, WebSocketConnector, Headers
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
-from robyn.types import Directory, Header
+from robyn.types import Directory
 from robyn import status_codes
 from robyn.ws import WebSocket
 
@@ -59,8 +51,8 @@ class Robyn:
         self.router = Router()
         self.middleware_router = MiddlewareRouter()
         self.web_socket_router = WebSocketRouter()
-        self.request_headers: List[Header] = []  # This needs a better type
-        self.response_headers: List[Header] = []  # This needs a better type
+        self.request_headers: Headers = Headers({})
+        self.response_headers: Headers = Headers({})
         self.directories: List[Directory] = []
         self.event_handlers = {}
         self.exception_handler: Optional[Callable] = None
@@ -106,7 +98,6 @@ class Robyn:
             handler,
             is_const,
             self.exception_handler,
-            self.response_headers,
         )
 
         logger.info("Added route %s %s", route_type, endpoint)
@@ -141,10 +132,16 @@ class Robyn:
         self.directories.append(Directory(route, directory_path, show_files_listing, index_file))
 
     def add_request_header(self, key: str, value: str) -> None:
-        self.request_headers.append(Header(key, value))
+        self.request_headers.append(key, value)
 
     def add_response_header(self, key: str, value: str) -> None:
-        self.response_headers.append(Header(key, value))
+        self.response_headers.append(key, value)
+
+    def set_request_header(self, key: str, value: str) -> None:
+        self.request_headers.set(key, value)
+
+    def set_response_header(self, key: str, value: str) -> None:
+        self.response_headers.set(key, value)
 
     def add_web_socket(self, endpoint: str, ws: WebSocket) -> None:
         self.web_socket_router.add_route(endpoint, ws)
@@ -411,13 +408,13 @@ class SubRouter(Robyn):
 def ALLOW_CORS(app: Robyn, origins: List[str]):
     """Allows CORS for the given origins for the entire router."""
     for origin in origins:
-        app.add_request_header("Access-Control-Allow-Origin", origin)
-        app.add_request_header(
+        app.add_response_header("Access-Control-Allow-Origin", origin)
+        app.add_response_header(
             "Access-Control-Allow-Methods",
             "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS",
         )
-        app.add_request_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
-        app.add_request_header("Access-Control-Allow-Credentials", "true")
+        app.add_response_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        app.add_response_header("Access-Control-Allow-Credentials", "true")
 
 
 __all__ = [
