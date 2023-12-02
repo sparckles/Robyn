@@ -10,7 +10,6 @@ from robyn.robyn import FunctionInfo, Headers, HttpMethod, MiddlewareType, Reque
 from robyn import status_codes
 
 from robyn.ws import WebSocket
-from robyn.types import Header
 
 
 class Route(NamedTuple):

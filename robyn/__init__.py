@@ -17,7 +17,7 @@ from robyn.processpool import run_processes
 from robyn.responses import serve_file, serve_html
 from robyn.robyn import FunctionInfo, HttpMethod, Request, Response, get_version, jsonify, WebSocketConnector, Headers
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
-from robyn.types import Directory, Header
+from robyn.types import Directory
 from robyn import status_codes
 from robyn.ws import WebSocket
 

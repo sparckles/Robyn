@@ -9,7 +9,7 @@ from robyn.logger import logger
 from robyn.events import Events
 from robyn.robyn import FunctionInfo, Headers, Server, SocketHeld
 from robyn.router import GlobalMiddleware, RouteMiddleware, Route
-from robyn.types import Directory, Header
+from robyn.types import Directory
 from robyn.ws import WebSocket
 
 
