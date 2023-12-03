@@ -8,6 +8,7 @@ websocket = WebSocket(sub_router, "/ws")
 
 __all__ = ["sub_router", "websocket", "di_subrouter"]
 
+
 @websocket.on("connect")
 async def connect(ws):
     return "Hello world, from ws"

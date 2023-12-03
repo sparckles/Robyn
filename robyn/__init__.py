@@ -65,14 +65,7 @@ class Robyn:
         self.exception_handler: Optional[Callable] = None
         self.authentication_handler: Optional[AuthenticationHandler] = None
 
-    def add_route(
-        self,
-        route_type: Union[HttpMethod, str],
-        endpoint: str,
-        handler: Callable,
-        is_const: bool = False,
-        auth_required: bool = False
-    ):
+    def add_route(self, route_type: Union[HttpMethod, str], endpoint: str, handler: Callable, is_const: bool = False, auth_required: bool = False):
         """
         Connect a URI to a handler
 
@@ -101,7 +94,6 @@ class Robyn:
                 "OPTIONS": HttpMethod.OPTIONS,
             }
             route_type = http_methods[route_type]
-
 
         add_route_response = self.router.add_route(
             route_type=route_type,

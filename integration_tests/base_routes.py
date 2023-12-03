@@ -101,11 +101,13 @@ def jsonws_connect():
 
 @websocket_di.on("connect")
 async def di_message_connect(global_dependencies, router_dependencies):
-    return global_dependencies["GLOBAL_DEPENDENCY"] + " "+ router_dependencies["ROUTER_DEPENDENCY"]
+    return global_dependencies["GLOBAL_DEPENDENCY"] + " " + router_dependencies["ROUTER_DEPENDENCY"]
+
 
 @websocket_di.on("message")
 async def di_message():
     return ""
+
 
 @websocket_di.on("close")
 async def di_message_close():
@@ -211,9 +213,11 @@ def sync_middlewares_401():
 
 app.inject(RouterDependency="Router Dependency")
 
+
 @app.get("/")
 async def hello_world(request):
-    return f"Hello, world!"
+    return "Hello, world!"
+
 
 @app.get("/sync/str")
 def sync_str_get():
@@ -789,9 +793,11 @@ ROUTER_DEPENDENCY = "ROUTER DEPENDENCY"
 app.inject_global(GLOBAL_DEPENDENCY=GLOBAL_DEPENDENCY)
 app.inject(ROUTER_DEPENDENCY=ROUTER_DEPENDENCY)
 
+
 @app.get("/sync/global_di")
 def sync_global_di(request, router_dependencies, global_dependencies):
     return global_dependencies["GLOBAL_DEPENDENCY"]
+
 
 @app.get("/sync/router_di")
 def sync_router_di(request, router_dependencies):

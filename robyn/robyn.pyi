@@ -29,6 +29,7 @@ class MiddlewareType(Enum):
         BEFORE_REQUEST: str
         AFTER_REQUEST: str
     """
+
     BEFORE_REQUEST: str
     AFTER_REQUEST: str
 
@@ -47,6 +48,7 @@ class HttpMethod(Enum):
         TRACE: str
         CONNECT: str
     """
+
     GET: str
     POST: str
     PUT: str
@@ -69,6 +71,7 @@ class FunctionInfo:
         args (dict): The arguments of the function
         kwargs (dict): The keyword arguments of the function
     """
+
     handler: Callable
     is_async: bool
     number_of_params: int

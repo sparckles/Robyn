@@ -16,6 +16,7 @@ def test_router_dependency_injection(benchmark):
     assert r.status_code == 200
     assert r.text == "ROUTER DEPENDENCY"
 
+
 @pytest.mark.benchmark
 def test_subrouter_global_dependency_injection(benchmark):
     r = get("/di_subrouter/subrouter_global_di")

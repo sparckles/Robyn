@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-from inspect import signature
 import inspect
 from typing import TYPE_CHECKING, Callable
 from robyn.argument_parser import Config
@@ -15,6 +14,7 @@ if TYPE_CHECKING:
 import logging
 
 _logger = logging.getLogger(__name__)
+
 
 class WebSocket:
     # should this be websocket router?
@@ -35,7 +35,6 @@ class WebSocket:
                 params = dict(inspect.signature(handler).parameters)
                 num_params = len(params)
                 is_async = asyncio.iscoroutinefunction(handler)
-                
 
                 injected_dependencies = self.dependencies.get_dependency_map(self)
 

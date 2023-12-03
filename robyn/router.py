@@ -4,7 +4,7 @@ from asyncio import iscoroutinefunction
 from functools import wraps
 from inspect import signature
 from types import CoroutineType
-from typing import Any, Callable, Dict, List, NamedTuple, Union, Optional
+from typing import Callable, Dict, List, NamedTuple, Union, Optional
 from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
 from robyn.dependency_injection import DependencyMap
 
@@ -129,15 +129,12 @@ class Router(BaseRouter):
         # these are the arguments
         params = dict(inspect.signature(handler).parameters)
 
-
-        
         new_injected_dependencies = {}
         for dependency in injected_dependencies:
             if dependency in params:
                 new_injected_dependencies[dependency] = injected_dependencies[dependency]
             else:
                 _logger.debug(f"Dependency {dependency} is not used in the handler {handler.__name__}")
-
 
         if iscoroutinefunction(handler):
             function = FunctionInfo(async_inner_handler, True, number_of_params, params, new_injected_dependencies)
@@ -167,15 +164,12 @@ class MiddlewareRouter(BaseRouter):
         params = dict(inspect.signature(handler).parameters)
         number_of_params = len(params)
 
-
         new_injected_dependencies = {}
         for dependency in injected_dependencies:
             if dependency in params:
                 new_injected_dependencies[dependency] = injected_dependencies[dependency]
             else:
                 _logger.debug(f"Dependency {dependency} is not used in the middleware handler {handler.__name__}")
-
-
 
         function = FunctionInfo(handler, iscoroutinefunction(handler), number_of_params, params, new_injected_dependencies)
         self.route_middlewares.append(RouteMiddleware(middleware_type, endpoint, function))
@@ -197,14 +191,13 @@ class MiddlewareRouter(BaseRouter):
                 if identity is None:
                     return self.authentication_handler.unauthorized_response
                 request.identity = identity
-                
+
                 return request
 
             self.add_route(MiddlewareType.BEFORE_REQUEST, endpoint, inner_handler, injected_dependencies)
             return inner_handler
 
         return decorator
-
 
     # These inner functions are basically a wrapper around the closure(decorator) being returned.
     # They take a handler, convert it into a closure and return the arguments.

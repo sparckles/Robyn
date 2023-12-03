@@ -2,6 +2,7 @@
 """
 from typing import Any
 
+
 class DependencyMap:
     def __init__(self):
         self.global_dependency_map: dict[str, Any] = {}
@@ -64,7 +65,7 @@ class DependencyMap:
             target_router.dependencies.get_global_dependencies()[dep_key] = self.get_global_dependencies()[dep_key]
 
     def get_dependency_map(self, router) -> dict:
-           return {
-               "global_dependencies": self.get_global_dependencies(),
-               "router_dependencies": self.get_router_dependencies(router),
-           }
+        return {
+            "global_dependencies": self.get_global_dependencies(),
+            "router_dependencies": self.get_router_dependencies(router),
+        }
