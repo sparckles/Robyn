@@ -269,7 +269,7 @@ export const navigation = [
         title: 'Code Organisation',
       },
       {
-        href: '/documentation/api_reference/dependency-injection',
+        href: '/documentation/api_reference/dependency_injection',
         title: 'Dependency Injection',
       },
 
