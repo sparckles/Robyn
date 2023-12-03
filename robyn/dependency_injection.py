@@ -1,12 +1,12 @@
 """ This is Robyn's dependency injection file.
 """
+from typing import Any
 
 class DependencyMap:
     def __init__(self):
-        #'request' and 'response' mappings are needed for when constructing deps_to_pass in router.py
-        self.global_dependency_map = {}
+        self.global_dependency_map: dict[str, Any] = {}
         # {'router': {'dependency_name': dependency_class}
-        self.router_dependency_map = {}
+        self.router_dependency_map: dict[str, dict[str, Any]] = {}
 
     def add_router_dependency(self, router, **kwargs):
         """Adds a dependency to a route.

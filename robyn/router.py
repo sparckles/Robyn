@@ -97,11 +97,8 @@ class Router(BaseRouter):
         exception_handler: Optional[Callable],
         injected_dependencies: dict,
     ) -> Union[Callable, CoroutineType]:
-        # this should not be an unordered map. should be a list only
         @wraps(handler)
         async def async_inner_handler(*args, **kwargs):
-            print("This is the args", args)
-            print("This is the kwargs", kwargs)
             try:
                 response = self._format_response(
                     await handler(*args, **kwargs),
@@ -117,7 +114,6 @@ class Router(BaseRouter):
         @wraps(handler)
         def inner_handler(*args, **kwargs):
             try:
-                # do we even need this?
                 response = self._format_response(
                     handler(*args, **kwargs),
                 )
@@ -140,7 +136,7 @@ class Router(BaseRouter):
             if dependency in params:
                 new_injected_dependencies[dependency] = injected_dependencies[dependency]
             else:
-                _logger.warning(f"Dependency {dependency} is not used in the handler {handler.__name__}")
+                _logger.debug(f"Dependency {dependency} is not used in the handler {handler.__name__}")
 
 
         if iscoroutinefunction(handler):
@@ -179,9 +175,7 @@ class MiddlewareRouter(BaseRouter):
             if dependency in params:
                 new_injected_dependencies[dependency] = injected_dependencies[dependency]
             else:
-                logging.warning(f"Dependency {dependency} is not used in the middleware handler {handler.__name__}")
-
-        print("This is new injected dependencies", new_injected_dependencies)
+                _logger.debug(f"Dependency {dependency} is not used in the middleware handler {handler.__name__}")
 
 
 

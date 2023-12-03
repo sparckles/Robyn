@@ -8,9 +8,9 @@ di_subrouter.inject(ROUTER_DEPENDENCY=ROUTER_DEPENDENCY)
 
 
 @di_subrouter.get("/subrouter_router_di")
-def sync_subrouter_route_dependency(request, router_dependencies):
+def sync_subrouter_route_dependency(router_dependencies):
     return router_dependencies["ROUTER_DEPENDENCY"]
 
 @di_subrouter.get("/subrouter_global_di")
-def sync_subrouter_global_dependency(request, global_dependencies):
+def sync_subrouter_global_dependency(global_dependencies):
     return global_dependencies["GLOBAL_DEPENDENCY"]
