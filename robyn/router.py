@@ -164,8 +164,6 @@ class MiddlewareRouter(BaseRouter):
         self.authentication_handler = authentication_handler
 
     def add_route(self, middleware_type: MiddlewareType, endpoint: str, handler: Callable, injected_dependencies: dict) -> Callable:
-
-        # add a docstring here
         params = dict(inspect.signature(handler).parameters)
         number_of_params = len(params)
 

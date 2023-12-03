@@ -234,8 +234,7 @@ export const navigation = [
       },
       {
         href: '/documentation/api_reference/robyn_env',
-        name: 'The Robyn Env file',
-        description: 'Learn about the Robyn variables',
+        title: 'The Robyn Env file',
       },
       {
         href: '/documentation/api_reference/middlewares',

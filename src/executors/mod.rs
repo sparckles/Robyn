@@ -28,9 +28,6 @@ where
 
     let function_args = function_args.to_object(py);
 
-    // TODO: we need to find a way to insert only global or local dependening on the parameter
-
-    // this makes the request object accessible across every route
     match function.number_of_params {
         0 => handler.call0(),
         1 => {
@@ -102,8 +99,6 @@ pub async fn execute_http_function(
             pyo3_asyncio::tokio::into_future(function_output)
         })?
         .await?;
-
-        debug!("Function output: {:?}", output);
 
         return Python::with_gil(|py| -> PyResult<Response> { output.extract(py) });
     };
