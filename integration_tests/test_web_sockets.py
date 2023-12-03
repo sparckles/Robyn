@@ -47,3 +47,15 @@ def test_web_socket_json(session):
     resp = json.loads(ws.recv())
     assert resp["resp"] == "*chika* *chika* Slim Shady."
     assert resp["msg"] == msg
+
+
+def test_websocket_di(session):
+    """
+    Not using this as the benchmark test since this involves JSON marshalling/unmarshalling
+
+    """
+
+    msg = "GLOBAL DEPENDENCY ROUTER DEPENDENCY"
+
+    ws = create_connection(f"{BASE_URL}/web_socket_di")
+    assert ws.recv() == msg

@@ -233,6 +233,10 @@ export const navigation = [
         title: 'The Request Object',
       },
       {
+        href: '/documentation/api_reference/robyn_env',
+        title: 'The Robyn Env file',
+      },
+      {
         href: '/documentation/api_reference/middlewares',
         title: 'Middlewares, Events and Websockets',
       },
@@ -263,6 +267,10 @@ export const navigation = [
       {
         href: '/documentation/api_reference/views',
         title: 'Code Organisation',
+      },
+      {
+        href: '/documentation/api_reference/dependency-injection',
+        title: 'Dependency Injection',
       },
 
       {

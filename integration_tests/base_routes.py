@@ -19,18 +19,25 @@ from robyn.robyn import Headers
 from robyn.templating import JinjaTemplate
 
 from integration_tests.views import SyncView, AsyncView
-from integration_tests.subroutes import sub_router
+from integration_tests.subroutes import sub_router, di_subrouter
 
 
 app = Robyn(__file__)
 websocket = WebSocket(app, "/web_socket")
 
+
 # Creating a new WebSocket app to test json handling + to serve an example to future users of this lib
 # while the original "raw" web_socket is used with benchmark tests
 websocket_json = WebSocket(app, "/web_socket_json")
 
+websocket_di = WebSocket(app, "/web_socket_di")
+
+websocket_di.inject_global(GLOBAL_DEPENDENCY="GLOBAL DEPENDENCY")
+websocket_di.inject(ROUTER_DEPENDENCY="ROUTER DEPENDENCY")
+
 current_file_path = pathlib.Path(__file__).parent.resolve()
 jinja_template = JinjaTemplate(os.path.join(current_file_path, "templates"))
+
 
 # ===== Websockets =====
 
@@ -55,7 +62,7 @@ async def jsonws_message(ws, msg: str) -> str:
 
 
 @websocket.on("message")
-async def message(ws: WebSocketConnector, msg: str) -> str:
+async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
     global websocket_state
     websocket_id = ws.id
     state = websocket_state[websocket_id]
@@ -69,7 +76,6 @@ async def message(ws: WebSocketConnector, msg: str) -> str:
     elif state == 2:
         resp = "*chika* *chika* Slim Shady."
     websocket_state[websocket_id] = (state + 1) % 3
-
     return resp
 
 
@@ -91,6 +97,21 @@ def connect():
 @websocket_json.on("connect")
 def jsonws_connect():
     return "Hello world, from ws"
+
+
+@websocket_di.on("connect")
+async def di_message_connect(global_dependencies, router_dependencies):
+    return global_dependencies["GLOBAL_DEPENDENCY"] + " " + router_dependencies["ROUTER_DEPENDENCY"]
+
+
+@websocket_di.on("message")
+async def di_message():
+    return ""
+
+
+@websocket_di.on("close")
+async def di_message_close():
+    return ""
 
 
 # ===== Lifecycle handlers =====
@@ -190,13 +211,12 @@ def sync_middlewares_401():
 
 # Hello world
 
+app.inject(RouterDependency="Router Dependency")
+
 
 @app.get("/")
-async def hello_world():
-    return "Hello world"
-
-
-# str
+async def hello_world(request):
+    return "Hello, world!"
 
 
 @app.get("/sync/str")
@@ -710,22 +730,22 @@ async def async_exception_get():
 
 
 @app.put("/sync/exception/put")
-def sync_exception_put(_: Request):
+def sync_exception_put(request: Request):
     raise ValueError("value error")
 
 
 @app.put("/async/exception/put")
-async def async_exception_put(_: Request):
+async def async_exception_put(request: Request):
     raise ValueError("value error")
 
 
 @app.post("/sync/exception/post")
-def sync_exception_post(_: Request):
+def sync_exception_post(request: Request):
     raise ValueError("value error")
 
 
 @app.post("/async/exception/post")
-async def async_exception_post(_: Request):
+async def async_exception_post(request: Request):
     raise ValueError("value error")
 
 
@@ -764,7 +784,24 @@ app.add_route("GET", "/async/get/no_dec", async_without_decorator)
 app.add_route("PUT", "/async/put/no_dec", async_without_decorator)
 app.add_route("POST", "/async/post/no_dec", async_without_decorator)
 
-# ===== Main =====
+
+# ===== Dependency Injection =====
+
+GLOBAL_DEPENDENCY = "GLOBAL DEPENDENCY"
+ROUTER_DEPENDENCY = "ROUTER DEPENDENCY"
+
+app.inject_global(GLOBAL_DEPENDENCY=GLOBAL_DEPENDENCY)
+app.inject(ROUTER_DEPENDENCY=ROUTER_DEPENDENCY)
+
+
+@app.get("/sync/global_di")
+def sync_global_di(request, router_dependencies, global_dependencies):
+    return global_dependencies["GLOBAL_DEPENDENCY"]
+
+
+@app.get("/sync/router_di")
+def sync_router_di(request, router_dependencies):
+    return router_dependencies["ROUTER_DEPENDENCY"]
 
 
 def main():
@@ -778,6 +815,7 @@ def main():
     app.add_view("/sync/view", SyncView)
     app.add_view("/async/view", AsyncView)
     app.include_router(sub_router)
+    app.include_router(di_subrouter)
 
     class BasicAuthHandler(AuthenticationHandler):
         def authenticate(self, request: Request) -> Optional[Identity]:
