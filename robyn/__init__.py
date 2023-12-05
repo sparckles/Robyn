@@ -8,6 +8,7 @@ from nestd import get_all_nested
 
 from robyn.argument_parser import Config
 from robyn.authentication import AuthenticationHandler
+from robyn.dependency_injection import DependencyMap
 from robyn.logger import Colors
 from robyn.reloader import setup_reloader
 from robyn.env_populator import load_vars
@@ -15,17 +16,9 @@ from robyn.events import Events
 from robyn.logger import logger
 from robyn.processpool import run_processes
 from robyn.responses import serve_file, serve_html
-from robyn.robyn import (
-    FunctionInfo,
-    HttpMethod,
-    Request,
-    Response,
-    get_version,
-    jsonify,
-    WebSocketConnector,
-)
+from robyn.robyn import FunctionInfo, HttpMethod, Request, Response, get_version, jsonify, WebSocketConnector, Headers
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
-from robyn.types import Directory, Header
+from robyn.types import Directory
 from robyn import status_codes
 from robyn.ws import WebSocket
 
@@ -36,11 +29,17 @@ __version__ = get_version()
 class Robyn:
     """This is the python wrapper for the Robyn binaries."""
 
-    def __init__(self, file_object: str, config: Config = Config()) -> None:
+    def __init__(
+        self,
+        file_object: str,
+        config: Config = Config(),
+        dependencies: DependencyMap = DependencyMap(),
+    ) -> None:
         directory_path = os.path.dirname(os.path.abspath(file_object))
         self.file_path = file_object
         self.directory_path = directory_path
         self.config = config
+        self.dependencies = dependencies
 
         load_vars(project_root=directory_path)
         logging.basicConfig(level=self.config.log_level)
@@ -59,21 +58,14 @@ class Robyn:
         self.router = Router()
         self.middleware_router = MiddlewareRouter()
         self.web_socket_router = WebSocketRouter()
-        self.request_headers: List[Header] = []  # This needs a better type
-        self.response_headers: List[Header] = []  # This needs a better type
+        self.request_headers: Headers = Headers({})
+        self.response_headers: Headers = Headers({})
         self.directories: List[Directory] = []
         self.event_handlers = {}
         self.exception_handler: Optional[Callable] = None
         self.authentication_handler: Optional[AuthenticationHandler] = None
 
-    def add_route(
-        self,
-        route_type: Union[HttpMethod, str],
-        endpoint: str,
-        handler: Callable,
-        is_const: bool = False,
-        auth_required: bool = False,
-    ):
+    def add_route(self, route_type: Union[HttpMethod, str], endpoint: str, handler: Callable, is_const: bool = False, auth_required: bool = False):
         """
         Connect a URI to a handler
 
@@ -86,8 +78,11 @@ class Robyn:
 
         """ We will add the status code here only
         """
+        injected_dependencies = self.dependencies.get_dependency_map(self)
+
         if auth_required:
             self.middleware_router.add_auth_middleware(endpoint)(handler)
+
         if isinstance(route_type, str):
             http_methods = {
                 "GET": HttpMethod.GET,
@@ -101,17 +96,34 @@ class Robyn:
             route_type = http_methods[route_type]
 
         add_route_response = self.router.add_route(
-            route_type,
-            endpoint,
-            handler,
-            is_const,
-            self.exception_handler,
-            self.response_headers,
+            route_type=route_type,
+            endpoint=endpoint,
+            handler=handler,
+            is_const=is_const,
+            exception_handler=self.exception_handler,
+            injected_dependencies=injected_dependencies,
         )
 
         logger.info("Added route %s %s", route_type, endpoint)
 
         return add_route_response
+
+    def inject(self, **kwargs):
+        """
+        Injects the dependencies for the route
+
+        :param kwargs dict: the dependencies to be injected
+        """
+        self.dependencies.add_router_dependency(self, **kwargs)
+
+    def inject_global(self, **kwargs):
+        """
+        Injects the dependencies for the global routes
+        Ideally, this function should be a global function
+
+        :param kwargs dict: the dependencies to be injected
+        """
+        self.dependencies.add_global_dependency(**kwargs)
 
     def before_request(self, endpoint: Optional[str] = None) -> Callable[..., None]:
         """
@@ -128,7 +140,7 @@ class Robyn:
 
         :param endpoint str|None: endpoint to server the route. If None, the middleware will be applied to all the routes.
         """
-
+        dependency_map = self.dependencies.get_dependency_map(self)
         return self.middleware_router.add_middleware(MiddlewareType.AFTER_REQUEST, endpoint)
 
     def add_directory(
@@ -141,21 +153,27 @@ class Robyn:
         self.directories.append(Directory(route, directory_path, show_files_listing, index_file))
 
     def add_request_header(self, key: str, value: str) -> None:
-        self.request_headers.append(Header(key, value))
+        self.request_headers.append(key, value)
 
     def add_response_header(self, key: str, value: str) -> None:
-        self.response_headers.append(Header(key, value))
+        self.response_headers.append(key, value)
+
+    def set_request_header(self, key: str, value: str) -> None:
+        self.request_headers.set(key, value)
+
+    def set_response_header(self, key: str, value: str) -> None:
+        self.response_headers.set(key, value)
 
     def add_web_socket(self, endpoint: str, ws: WebSocket) -> None:
         self.web_socket_router.add_route(endpoint, ws)
 
     def _add_event_handler(self, event_type: Events, handler: Callable) -> None:
-        logger.info("Add event %s handler", event_type)
+        logger.info("Added event %s handler", event_type)
         if event_type not in {Events.STARTUP, Events.SHUTDOWN}:
             return
 
         is_async = asyncio.iscoroutinefunction(handler)
-        self.event_handlers[event_type] = FunctionInfo(handler, is_async, 0)
+        self.event_handlers[event_type] = FunctionInfo(handler, is_async, 0, {}, {})
 
     def startup_handler(self, handler: Callable) -> None:
         self._add_event_handler(Events.STARTUP, handler)
@@ -365,6 +383,8 @@ class Robyn:
             new_endpoint = f"{prefix}{route}"
             self.web_socket_router.routes[new_endpoint] = router.web_socket_router.routes[route]
 
+        self.dependencies.merge_dependencies(router)
+
     def configure_authentication(self, authentication_handler: AuthenticationHandler):
         """
         Configures the authentication handler for the application.
@@ -411,13 +431,13 @@ class SubRouter(Robyn):
 def ALLOW_CORS(app: Robyn, origins: List[str]):
     """Allows CORS for the given origins for the entire router."""
     for origin in origins:
-        app.add_request_header("Access-Control-Allow-Origin", origin)
-        app.add_request_header(
+        app.add_response_header("Access-Control-Allow-Origin", origin)
+        app.add_response_header(
             "Access-Control-Allow-Methods",
             "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS",
         )
-        app.add_request_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
-        app.add_request_header("Access-Control-Allow-Credentials", "true")
+        app.add_response_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        app.add_response_header("Access-Control-Allow-Credentials", "true")
 
 
 __all__ = [

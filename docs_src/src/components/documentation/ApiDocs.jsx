@@ -74,6 +74,11 @@ const guides = [
     name: 'Advanced Features',
     description: 'Learn about advanced features in Robyn.',
   },
+  {
+    href: '/documentation/api_reference/dependency_injection',
+    name: 'Dependency Injection',
+    description: 'Learn about Dependency Injection in Robyn.',
+  },
 ]
 
 export function ApiDocs() {

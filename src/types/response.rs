@@ -1,12 +1,12 @@
-use std::collections::HashMap;
-
 use actix_http::{body::BoxBody, StatusCode};
 use actix_web::{HttpRequest, HttpResponse, HttpResponseBuilder, Responder};
 use pyo3::{
     exceptions::{PyIOError, PyValueError},
     prelude::*,
-    types::{PyBytes, PyDict, PyString},
+    types::{PyBytes, PyString},
 };
+
+use super::headers::Headers;
 
 use crate::io_helpers::{apply_hashmap_headers, read_file};
 use crate::types::{check_description_type, get_description_from_pyobject};
@@ -15,7 +15,7 @@ use crate::types::{check_description_type, get_description_from_pyobject};
 pub struct Response {
     pub status_code: u16,
     pub response_type: String,
-    pub headers: HashMap<String, String>,
+    pub headers: Headers,
     // https://pyo3.rs/v0.19.2/function.html?highlight=from_py_#per-argument-options
     #[pyo3(from_py_with = "get_description_from_pyobject")]
     pub description: Vec<u8>,
@@ -34,21 +34,31 @@ impl Responder for Response {
 }
 
 impl Response {
-    pub fn not_found(headers: &HashMap<String, String>) -> Self {
+    pub fn not_found(headers: Option<&Headers>) -> Self {
+        let headers = match headers {
+            Some(headers) => headers.clone(),
+            None => Headers::new(None),
+        };
+
         Self {
             status_code: 404,
             response_type: "text".to_string(),
-            headers: headers.clone(),
+            headers,
             description: "Not found".to_owned().into_bytes(),
             file_path: None,
         }
     }
 
-    pub fn internal_server_error(headers: &HashMap<String, String>) -> Self {
+    pub fn internal_server_error(headers: Option<&Headers>) -> Self {
+        let headers = match headers {
+            Some(headers) => headers.clone(),
+            None => Headers::new(None),
+        };
+
         Self {
             status_code: 500,
             response_type: "text".to_string(),
-            headers: headers.clone(),
+            headers,
             description: "Internal server error".to_owned().into_bytes(),
             file_path: None,
         }
@@ -80,7 +90,7 @@ pub struct PyResponse {
     #[pyo3(get)]
     pub response_type: String,
     #[pyo3(get, set)]
-    pub headers: Py<PyDict>,
+    pub headers: Py<Headers>,
     #[pyo3(get)]
     pub description: Py<PyAny>,
     #[pyo3(get)]
@@ -94,7 +104,7 @@ impl PyResponse {
     pub fn new(
         py: Python,
         status_code: u16,
-        headers: Py<PyDict>,
+        headers: Py<Headers>,
         description: Py<PyAny>,
     ) -> PyResult<Self> {
         if description.downcast::<PyString>(py).is_err()
@@ -104,6 +114,7 @@ impl PyResponse {
                 "Could not convert specified body to bytes",
             ));
         };
+
         Ok(Self {
             status_code,
             // we should be handling based on headers but works for now

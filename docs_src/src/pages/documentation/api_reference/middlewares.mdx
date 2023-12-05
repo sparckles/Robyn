@@ -89,7 +89,7 @@ Batman was excited to learn that he could add events as functions as well as dec
 
     @app.after_request("/")
     def hello_after_request(response: Response):
-        response.headers["after"] = "sync_after_request"
+        response.headers.set("after", "sync_after_request"")
         print(response)
     ```
 
@@ -98,12 +98,12 @@ Batman was excited to learn that he could add events as functions as well as dec
 
     @app.before_request("/")
     async def hello_before_request(request):
-        request.headers["before"] = "sync_before_request"
+        request.headers.set("before", "sync_before_request")
         print(request)
 
     @app.after_request("/")
     def hello_after_request(response):
-        response.headers["after"] = "sync_after_request"
+        response.headers.set("after", "sync_after_request"")
         print(response)
     ```
 

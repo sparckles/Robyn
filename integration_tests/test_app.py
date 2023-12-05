@@ -1,6 +1,6 @@
 from robyn import Robyn, ALLOW_CORS
 from robyn.events import Events
-from robyn.types import Header
+from robyn.robyn import Headers
 
 import pytest
 
@@ -8,15 +8,15 @@ import pytest
 @pytest.mark.benchmark
 def test_add_request_header():
     app = Robyn(__file__)
-    app.add_request_header("server", "robyn")
-    assert app.request_headers == [Header(key="server", val="robyn")]
+    app.set_request_header("server", "robyn")
+    assert app.request_headers.get_headers() == Headers({"server": "robyn"}).get_headers()
 
 
 @pytest.mark.benchmark
 def test_add_response_header():
     app = Robyn(__file__)
     app.add_response_header("content-type", "application/json")
-    assert app.response_headers == [Header(key="content-type", val="application/json")]
+    assert app.response_headers.get_headers() == Headers({"content-type": "application/json"}).get_headers()
 
 
 @pytest.mark.benchmark
@@ -48,12 +48,13 @@ def test_lifecycle_handlers():
 def test_allow_cors():
     app = Robyn(__file__)
     ALLOW_CORS(app, ["*"])
-    assert app.request_headers == [
-        Header(key="Access-Control-Allow-Origin", val="*"),
-        Header(
-            key="Access-Control-Allow-Methods",
-            val="GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS",
-        ),
-        Header(key="Access-Control-Allow-Headers", val="Content-Type, Authorization"),
-        Header(key="Access-Control-Allow-Credentials", val="true"),
-    ]
+
+    headers = Headers({})
+    headers.set("Access-Control-Allow-Origin", "*")
+    headers.set(
+        "Access-Control-Allow-Methods",
+        "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS",
+    )
+    headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+    headers.set("Access-Control-Allow-Credentials", "true")
+    assert app.response_headers.get_headers() == headers.get_headers()

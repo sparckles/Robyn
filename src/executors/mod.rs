@@ -17,25 +17,46 @@ use crate::types::{
 fn get_function_output<'a, T>(
     function: &'a FunctionInfo,
     py: Python<'a>,
-    input: &T,
+    function_args: &T,
 ) -> Result<&'a PyAny, PyErr>
 where
     T: ToPyObject,
 {
     let handler = function.handler.as_ref(py);
+    // kwargs are handled
+    let kwargs = function.kwargs.as_ref(py);
 
-    // this makes the request object accessible across every route
+    let function_args = function_args.to_object(py);
+
     match function.number_of_params {
         0 => handler.call0(),
-        1 => handler.call1((input.to_object(py),)),
-        // this is done to accommodate any future params
-        2_u8..=u8::MAX => handler.call1((input.to_object(py),)),
+        1 => {
+            if function.args.as_ref(py).get_item("request").is_some() {
+                handler.call1((function_args,))
+            } else if function.args.as_ref(py).get_item("response").is_some() {
+                // this is for middlewares
+                handler.call1((function_args,))
+            } else {
+                handler.call((), Some(kwargs))
+            }
+        }
+        2 => {
+            if function.args.as_ref(py).get_item("request").is_some()
+                || function.args.as_ref(py).get_item("response").is_some()
+            {
+                handler.call((function_args,), Some(kwargs))
+            } else {
+                handler.call((), Some(kwargs))
+            }
+        }
+        3..=u8::MAX => handler.call((function_args,), Some(kwargs)),
     }
 }
 
 // Execute the middleware function
 // type T can be either Request (before middleware) or Response (after middleware)
 // Return type can either be a Request or a Response, we wrap it inside an enum for easier handling
+#[inline]
 pub async fn execute_middleware_function<T>(
     input: &T,
     function: &FunctionInfo,

@@ -7,9 +7,9 @@ from typing import Dict, List
 from robyn.logger import logger
 
 from robyn.events import Events
-from robyn.robyn import FunctionInfo, Server, SocketHeld
+from robyn.robyn import FunctionInfo, Headers, Server, SocketHeld
 from robyn.router import GlobalMiddleware, RouteMiddleware, Route
-from robyn.types import Directory, Header
+from robyn.types import Directory
 from robyn.ws import WebSocket
 
 
@@ -17,7 +17,7 @@ def run_processes(
     url: str,
     port: int,
     directories: List[Directory],
-    request_headers: List[Header],
+    request_headers: Headers,
     routes: List[Route],
     global_middlewares: List[GlobalMiddleware],
     route_middlewares: List[RouteMiddleware],
@@ -25,7 +25,7 @@ def run_processes(
     event_handlers: Dict[Events, FunctionInfo],
     workers: int,
     processes: int,
-    response_headers: List[Header],
+    response_headers: Headers,
     open_browser: bool,
 ) -> List[Process]:
     socket = SocketHeld(url, port)
@@ -65,7 +65,7 @@ def run_processes(
 
 def init_processpool(
     directories: List[Directory],
-    request_headers: List[Header],
+    request_headers: Headers,
     routes: List[Route],
     global_middlewares: List[GlobalMiddleware],
     route_middlewares: List[RouteMiddleware],
@@ -74,7 +74,7 @@ def init_processpool(
     socket: SocketHeld,
     workers: int,
     processes: int,
-    response_headers: List[Header],
+    response_headers: Headers,
 ) -> List[Process]:
     process_pool = []
     if sys.platform.startswith("win32"):
@@ -134,7 +134,7 @@ def initialize_event_loop():
 
 def spawn_process(
     directories: List[Directory],
-    request_headers: List[Header],
+    request_headers: Headers,
     routes: List[Route],
     global_middlewares: List[GlobalMiddleware],
     route_middlewares: List[RouteMiddleware],
@@ -142,7 +142,7 @@ def spawn_process(
     event_handlers: Dict[Events, FunctionInfo],
     socket: SocketHeld,
     workers: int,
-    response_headers: List[Header],
+    response_headers: Headers,
 ):
     """
     This function is called by the main process handler to create a server runtime.
@@ -168,11 +168,9 @@ def spawn_process(
     for directory in directories:
         server.add_directory(*directory.as_list())
 
-    for header in request_headers:
-        server.add_request_header(*header.as_list())
+    server.apply_request_headers(request_headers)
 
-    for header in response_headers:
-        server.add_response_header(*header.as_list())
+    server.apply_response_headers(response_headers)
 
     for route in routes:
         route_type, endpoint, function, is_const = route
