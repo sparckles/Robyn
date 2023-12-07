@@ -56,7 +56,7 @@ class Config:
             help="Show the Robyn version.",
         )
 
-        args, _ = parser.parse_known_args()
+        args, unknown_args = parser.parse_known_args()
 
         self.processes = args.processes
         self.workers = args.workers
@@ -66,11 +66,18 @@ class Config:
         self.open_browser = args.open_browser
         self.version = args.version
 
+        # find something that ends with .py in unknown_args
+        for arg in unknown_args:
+            if arg.endswith(".py"):
+                self.file_path = arg
+                break
+
         if self.dev and (self.processes != 1 or self.workers != 1):
             raise Exception("--processes and --workers shouldn't be used with --dev")
 
         if self.dev and args.log_level is None:
             self.log_level = "DEBUG"
+
         elif args.log_level is None:
             self.log_level = "INFO"
         else:
