@@ -59,8 +59,10 @@ class EventHandler(FileSystemEventHandler):
         new_env = os.environ.copy()
         new_env["IS_RELOADER_RUNNING"] = "True"  # This is used to check if a reloader is already running
 
+        print(f"Reloading {self.file_path}...")
+        arguments = [*sys.argv[1:-1]]
         self.process = subprocess.Popen(
-            [sys.executable, *sys.argv],
+            [sys.executable, *arguments],
             env=new_env,
             start_new_session=False,
         )

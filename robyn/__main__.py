@@ -1,8 +1,10 @@
 import os
+from typing import Optional
 import webbrowser
 from InquirerPy import prompt
 from InquirerPy.base.control import Choice
 from .argument_parser import Config
+from .reloader import setup_reloader
 from robyn.robyn import get_version
 from pathlib import Path
 import shutil
@@ -71,6 +73,18 @@ def docs():
     webbrowser.open("https://robyn.tech")
 
 
+def start_dev_server(file_path: Optional[str] = None):
+    if file_path is None:
+        return
+
+    directory_path = Path.cwd()
+    absolute_file_path = (directory_path / file_path).resolve()
+
+    if config.dev and not os.environ.get("IS_RELOADER_RUNNING", False):
+        setup_reloader(str(directory_path), str(absolute_file_path))
+        return
+
+
 if __name__ == "__main__":
     config = Config()
     if config.create:
@@ -81,3 +95,7 @@ if __name__ == "__main__":
 
     if config.docs:
         docs()
+
+    if config.dev:
+        print("Starting dev server...")
+        start_dev_server(config.file_path)
