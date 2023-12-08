@@ -14,8 +14,6 @@ SCAFFOLD_DIR = Path(__file__).parent / "scaffold"
 CURRENT_WORKING_DIR = Path.cwd()
 
 
-
-
 def create_robyn_app():
     questions = [
         {
@@ -74,6 +72,7 @@ def docs():
     print("Opening Robyn documentation... | Offline docs coming soon!")
     webbrowser.open("https://robyn.tech")
 
+
 def start_dev_server(file_path: Optional[str] = None):
     if file_path is None:
         return
@@ -82,8 +81,9 @@ def start_dev_server(file_path: Optional[str] = None):
     absolute_file_path = (directory_path / file_path).resolve()
 
     if config.dev and not os.environ.get("IS_RELOADER_RUNNING", False):
-        setup_reloader(str( directory_path ) , str( absolute_file_path ))
+        setup_reloader(str(directory_path), str(absolute_file_path))
         return
+
 
 if __name__ == "__main__":
     config = Config()

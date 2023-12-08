@@ -10,7 +10,6 @@ from robyn.argument_parser import Config
 from robyn.authentication import AuthenticationHandler
 from robyn.dependency_injection import DependencyMap
 from robyn.logger import Colors
-from robyn.reloader import setup_reloader
 from robyn.env_populator import load_vars
 from robyn.events import Events
 from robyn.logger import logger
@@ -52,7 +51,6 @@ class Robyn:
 
         if self.config.dev:
             exit("Dev mode is not supported in the python wrapper. Please use the CLI. e.g. python3 -m robyn app.py --dev ")
-
 
         self.router = Router()
         self.middleware_router = MiddlewareRouter()
