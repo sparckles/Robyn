@@ -86,6 +86,7 @@ def start_dev_server(file_path: Optional[str] = None):
         setup_reloader(str(directory_path), str(absolute_file_path))
         return
 
+
 def start_app_normally(config: Config):
     # Parsing the known and unknown arguments
     known_arguments, unknown_args = config.parser.parse_known_args()
@@ -97,12 +98,7 @@ def start_app_normally(config: Config):
     command = [sys.executable, *unknown_args, *known_args_list]
 
     # Run the subprocess
-    subprocess.run(
-        command,
-        start_new_session=False
-    )
-    
-
+    subprocess.run(command, start_new_session=False)
 
 
 if __name__ == "__main__":
@@ -121,5 +117,3 @@ if __name__ == "__main__":
         start_dev_server(config.file_path)
     else:
         start_app_normally(config)
-
-
