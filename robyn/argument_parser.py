@@ -65,6 +65,13 @@ class Config:
 
         )
 
+        parser.add_argument(
+            "--create-rust-file",
+            dest="create_rust_file",
+            default=None,
+            help="Create a rust file with the given name.",
+        )
+
         args, unknown_args = parser.parse_known_args()
 
         self.processes = args.processes
@@ -75,9 +82,7 @@ class Config:
         self.open_browser = args.open_browser
         self.version = args.version
         self.compile_rust_path = args.compile_rust_path
-
-        # if self.compile_rust_path:
-            # os.environ["RUSTIMPORT_FORCE_REBUILD"] = "true"
+        self.create_rust_file = args.create_rust_file
 
         # find something that ends with .py in unknown_args
         for arg in unknown_args:
