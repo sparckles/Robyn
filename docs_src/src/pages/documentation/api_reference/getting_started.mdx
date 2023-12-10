@@ -80,7 +80,7 @@ Batman was curious about how to run the application. Robyn explained that he cou
 A robyn application exposes certain commands to the user. These commands can be used to run the application, or to generate a new project.
 
 ```bash
-usage: app.py [-h] [--processes PROCESSES] [--workers WORKERS] [--dev] [--log-level LOG_LEVEL] [--create] [--docs] [--open-browser] [--version]
+usage: app.py [-h] [--processes PROCESSES] [--workers WORKERS] [--log-level LOG_LEVEL] [--create] [--docs] [--open-browser] [--version]
 
 Robyn, a fast async web framework with a rust runtime.
 
@@ -89,7 +89,6 @@ options:
   --processes PROCESSES
                         Choose the number of processes. [Default: 1]
   --workers WORKERS     Choose the number of workers. [Default: 1]
-  --dev                 Development mode. It restarts the server based on file changes.
   --log-level LOG_LEVEL
                         Set the log level name
   --open-browser        Open the browser on successful start.
@@ -98,7 +97,33 @@ options:
   --create              Create a new project template.
   --docs                Open the Robyn documentation.
   --version             Show the Robyn version.
+  --dev                 Development mode. It restarts the server based on file changes.
 
+```
+
+Or the application can be run using Robyn's CLI, i.e. using `python -m robyn app.py`
+
+```bash
+
+usage: python -m robyn app.py [-h] [--processes PROCESSES] [--workers WORKERS] [--dev] [--log-level LOG_LEVEL] [--create] [--docs] [--open-browser] [--version]
+
+
+Robyn, a fast async web framework with a rust runtime.
+
+options:
+  -h, --help            show this help message and exit
+  --processes PROCESSES
+                        Choose the number of processes. [Default: 1]
+  --workers WORKERS     Choose the number of workers. [Default: 1]
+  --log-level LOG_LEVEL
+                        Set the log level name
+  --open-browser        Open the browser on successful start.
+
+  Module flags
+  --create              Create a new project template.
+  --docs                Open the Robyn documentation.
+  --version             Show the Robyn version.
+  --dev                 Development mode. It restarts the server based on file changes.
 ```
 
 ---
