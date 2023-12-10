@@ -9,7 +9,6 @@ from robyn import (
     Response,
     Robyn,
     WebSocket,
-
     jsonify,
     serve_file,
     serve_html,
