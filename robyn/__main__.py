@@ -1,4 +1,5 @@
 import os
+import sys
 from typing import Optional
 import webbrowser
 from InquirerPy import prompt
@@ -8,6 +9,7 @@ from .reloader import setup_reloader
 from robyn.robyn import get_version
 from pathlib import Path
 import shutil
+import subprocess
 
 
 SCAFFOLD_DIR = Path(__file__).parent / "scaffold"
@@ -85,17 +87,33 @@ def start_dev_server(file_path: Optional[str] = None):
         return
 
 
+def start_app_normally(config: Config):
+    # Parsing the known and unknown arguments
+    known_arguments, unknown_args = config.parser.parse_known_args()
+
+    # Convert known arguments to a list of strings suitable for subprocess.run
+    known_args_list = [f"{key}={value}" for key, value in vars(known_arguments).items() if value is not None]
+
+    # Combine the python executable, unknown arguments, and known arguments
+    command = [sys.executable, *unknown_args, *known_args_list]
+
+    # Run the subprocess
+    subprocess.run(command, start_new_session=False)
+
+
 if __name__ == "__main__":
     config = Config()
     if config.create:
         create_robyn_app()
 
-    if config.version:
+    elif config.version:
         print(get_version())
 
-    if config.docs:
+    elif config.docs:
         docs()
 
-    if config.dev:
+    elif config.dev:
         print("Starting dev server...")
         start_dev_server(config.file_path)
+    else:
+        start_app_normally(config)
