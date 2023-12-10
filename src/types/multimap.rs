@@ -21,7 +21,7 @@ impl QueryParams {
 
     pub fn set(&mut self, key: String, value: String) {
         debug!("Setting key: {} to value: {}", key, value);
-        self.queries.entry(key).or_insert_with(Vec::new).push(value);
+        self.queries.entry(key).or_default().push(value);
         debug!("Multimap: {:?}", self.queries);
     }
 

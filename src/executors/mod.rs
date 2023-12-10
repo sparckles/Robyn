@@ -1,3 +1,4 @@
+#[deny(clippy::if_same_then_else)]
 /// This is the module that has all the executor functions
 /// i.e. the functions that have the responsibility of parsing and executing functions.
 pub mod web_socket_executors;
@@ -31,12 +32,13 @@ where
     match function.number_of_params {
         0 => handler.call0(),
         1 => {
-            if function.args.as_ref(py).get_item("request").is_some() {
-                handler.call1((function_args,))
-            } else if function.args.as_ref(py).get_item("response").is_some() {
-                // this is for middlewares
+            if function.args.as_ref(py).get_item("request").is_some()
+                || function.args.as_ref(py).get_item("response").is_some()
+            {
+                // If 'request' is present, call handler with 'function_args'
                 handler.call1((function_args,))
             } else {
+                // If neither 'request' nor 'response' is present
                 handler.call((), Some(kwargs))
             }
         }
@@ -44,8 +46,10 @@ where
             if function.args.as_ref(py).get_item("request").is_some()
                 || function.args.as_ref(py).get_item("response").is_some()
             {
+                // If either 'request' or 'response' is present, call handler with 'function_args' and 'kwargs'
                 handler.call((function_args,), Some(kwargs))
             } else {
+                // If neither 'request' nor 'response' is present
                 handler.call((), Some(kwargs))
             }
         }

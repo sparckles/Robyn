@@ -388,7 +388,7 @@ async fn index(
         request.path_params = route_params;
     }
     for before_middleware in before_middlewares {
-        request = match execute_middleware_function(&mut request, &before_middleware).await {
+        request = match execute_middleware_function(&request, &before_middleware).await {
             Ok(MiddlewareReturn::Request(r)) => r,
             Ok(MiddlewareReturn::Response(r)) => {
                 // If a before middleware returns a response, we abort the request and return the response
@@ -449,7 +449,7 @@ async fn index(
         after_middlewares.push(function);
     }
     for after_middleware in after_middlewares {
-        response = match execute_middleware_function(&mut response, &after_middleware).await {
+        response = match execute_middleware_function(&response, &after_middleware).await {
             Ok(MiddlewareReturn::Request(_)) => {
                 error!("After middleware returned a request");
                 return Response::internal_server_error(Some(&response.headers));

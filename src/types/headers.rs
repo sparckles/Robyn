@@ -49,7 +49,7 @@ impl Headers {
         debug!("Setting header {} to {}", key, value);
         self.headers
             .entry(key.to_lowercase())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(value);
     }
 
@@ -105,10 +105,7 @@ impl Headers {
                 self.headers.entry(key).or_insert_with(Vec::new).push(value);
             } else {
                 let value: Vec<String> = new_value.unwrap().iter().map(|x| x.to_string()).collect();
-                self.headers
-                    .entry(key)
-                    .or_insert_with(Vec::new)
-                    .extend(value);
+                self.headers.entry(key).or_default().extend(value);
             }
         }
     }
@@ -167,11 +164,7 @@ impl Headers {
         for (key, value) in req_headers {
             let key = key.to_string().to_lowercase();
             let value = value.to_str().unwrap().to_string();
-            headers
-                .headers
-                .entry(key)
-                .or_insert_with(Vec::new)
-                .push(value);
+            headers.headers.entry(key).or_default().push(value);
         }
 
         headers
