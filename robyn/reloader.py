@@ -13,10 +13,10 @@ from robyn.logger import Colors, logger
 
 dir_path = None
 
-def compile_rust_files(directory_path: str, file_path: str):
+def compile_rust_files(directory_path: str):
     rust_files = glob.glob(os.path.join(directory_path, "**/*.rs"), recursive=True)
     for rust_file in rust_files:
-        logger.info("Compiling rust file : %s", rust_file)
+        print("Compiling rust file : %s", rust_file)
 
         result = subprocess.run(
             [sys.executable, "-m", "rustimport", "build", rust_file],
@@ -24,6 +24,7 @@ def compile_rust_files(directory_path: str, file_path: str):
             stderr=subprocess.PIPE,
             start_new_session=False,
         )
+        print(result.stdout.decode("utf-8"))
 
     return True
 
@@ -41,15 +42,15 @@ def create_rust_file(file_name: str):
     )
     
     if result.returncode != 0:
-        logger.error("Error creating rust file : %s", result.stderr.decode("utf-8"))
+        print("Error creating rust file : %s", result.stderr.decode("utf-8"))
     else:
-        logger.info("Created rust file : %s", rust_file)
+        print("Created rust file : %s", rust_file)
 
 def clean_rust_build(directory_path: str, file_path: str):
     rust_binaries = glob.glob(os.path.join(directory_path, "**/*.so"), recursive=True)
 
     for file in rust_binaries:
-        logger.info("Cleaning rust file : %s", file)
+        print("Cleaning rust file : %s", file)
 
         os.remove(file)
 
@@ -107,7 +108,7 @@ class EventHandler(FileSystemEventHandler):
         arguments = [arg for arg in sys.argv[1:] if not arg.startswith("--dev")]
 
         clean_rust_build(self.directory_path, self.file_path)
-        compile_rust_files(self.directory_path, self.file_path)
+        compile_rust_files(self.directory_path)
 
         self.process = subprocess.Popen(
             [sys.executable, *arguments],
