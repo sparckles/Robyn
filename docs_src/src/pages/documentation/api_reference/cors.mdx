@@ -21,14 +21,14 @@ You can allow CORS for your application by adding the following code:
       from robyn import Robyn, ALLOW_CORS
 
       app = Robyn(__file__)
-      ALLOW_CORS(app)
+      ALLOW_CORS(app, origins = ["http://localhost:<PORT>/"])
     ```
 
     ```python {{ title: 'typed' }}
       from robyn import Robyn, ALLOW_CORS
 
       app = Robyn(__file__)
-      ALLOW_CORS(app)
+      ALLOW_CORS(app, origins = ["http://localhost:<PORT>/"])
     ```
 
     </CodeGroup>
