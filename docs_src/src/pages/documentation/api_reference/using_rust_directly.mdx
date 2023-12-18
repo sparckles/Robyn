@@ -52,7 +52,42 @@ The first thing you need to is to create a Rust file. Let's call it `hello_world
 
     </CodeGroup>
   </Col>
+</Row>
 
+<Row>
+
+  <Col>
+  Every Rust file that you create using the cli will have a special comment at the top of the file. This comment is used by Robyn to know which dependencies to import. In this case, we are importing the `pyo3` crate. You can import as many crates as you want. You can also import crates from crates.io. For example, if you want to use the `rusqlite` crate, you can do it like this:
+
+
+
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+      ```rust
+      // rustimport:pyo3
+
+    //:
+    //: [dependencies]
+    //: rusqlite = "0.19.0"
+
+      use pyo3::prelude::*;
+
+      #[pyfunction]
+      fn square(n: i32) -> i32 {
+          n * n * n
+          // this is another comment
+      }
+
+      ```
+
+    </CodeGroup>
+  </Col>
+</Row>
+
+
+<Row>
   Then you can import the function in your Python code and use it.
 
   <Col sticky>
