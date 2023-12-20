@@ -13,6 +13,11 @@
 
 Robyn is a High-Performance, Community-Driven, and Innovator Friendly Web Framework with a Rust runtime. You can learn more by checking our [community resources](https://robyn.tech/documentation/community-resources)!
 
+<img width="652" alt="image" src="https://github.com/sparckles/Robyn/assets/29942790/4a2bba61-24e7-4ee2-8884-19b40204bfcd">
+
+
+Source: [TechEmpower Round 22](https://www.techempower.com/benchmarks/#section=data-r22&test=plaintext)
+
 ## 📦 Installation
 
 You can simply use Pip for installation.
