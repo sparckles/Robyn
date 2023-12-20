@@ -278,8 +278,12 @@ export const navigation = [
         title: 'Exceptions',
       },
       {
-        href: '/documentation/api_reference/advanced_features#keep-a-track-of-clients-ip-address',
+        href: '/documentation/api_reference/advanced_features',
         title: 'Advanced Features',
+      },
+      {
+        href: '/documentation/api_reference/using_rust_directly',
+        title: 'Using Rust Directly',
       },
       {
         href: '/documentation/api_reference/graphql-support',

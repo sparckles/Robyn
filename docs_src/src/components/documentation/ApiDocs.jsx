@@ -74,6 +74,17 @@ const guides = [
     name: 'Advanced Features',
     description: 'Learn about advanced features in Robyn.',
   },
+
+  {
+    href: '/documentation/api_reference/using_rust_directly',
+    name: 'Direct Rust Usage',
+    description: 'Learn about directly using Rust in Robyn.',
+  },
+  {
+    href: '/documentation/api_reference/graphql-support',
+    name: 'Advanced Features',
+    description: 'Learn about GraphQL Support in Robyn.',
+  },
   {
     href: '/documentation/api_reference/dependency_injection',
     name: 'Dependency Injection',
