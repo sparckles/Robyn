@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion'
 
 import { Footer } from '@/components/Footer'
-import { Header } from '@/components/Header'
 import { BottomNavbar } from '@/components/documentation/BottomNavbar'
 import { Navigation } from '@/components/documentation/Navigation'
 import { Prose } from '@/components/documentation/Prose'
@@ -23,7 +22,7 @@ export function Layout({ children, sections = [] }) {
         </motion.header>
         <div className="relative px-4 sm:px-6 lg:px-8">
           <main className="py-16">
-            <Prose as="article">{children}</Prose>
+            <Prose>{children}</Prose>
           </main>
           <Footer />
         </div>
