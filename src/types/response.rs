@@ -1,9 +1,10 @@
 use actix_http::{body::BoxBody, StatusCode};
 use actix_web::{HttpRequest, HttpResponse, HttpResponseBuilder, Responder};
+use log::debug;
 use pyo3::{
     exceptions::{PyIOError, PyValueError},
     prelude::*,
-    types::{PyBytes, PyString},
+    types::{PyBytes, PyDict, PyString},
 };
 
 use super::headers::Headers;
@@ -90,7 +91,7 @@ pub struct PyResponse {
     #[pyo3(get)]
     pub response_type: String,
     #[pyo3(get, set)]
-    pub headers: Py<Headers>,
+    pub headers: Headers,
     #[pyo3(get)]
     pub description: Py<PyAny>,
     #[pyo3(get)]
@@ -104,7 +105,7 @@ impl PyResponse {
     pub fn new(
         py: Python,
         status_code: u16,
-        headers: Py<Headers>,
+        headers: Py<PyAny>,
         description: Py<PyAny>,
     ) -> PyResult<Self> {
         if description.downcast::<PyString>(py).is_err()
@@ -115,11 +116,33 @@ impl PyResponse {
             ));
         };
 
+        // check if headers is a dict
+        // or if headers is Py<Headers>
+
+        // let new_headers: Py<Headers> = if headers.as_ref(py).extract::<Headers>(py).is_err() {
+        //     Some(headers.into_py(py).extract(py)?)
+        // } else if headers.downcast::<PyDict>(py).is_ok() {
+        //     Some(Headers::new(Some(headers))?)
+        // } else {
+        //     None
+        // };
+
+        let new_headers: Headers = if headers.downcast::<PyDict>(py).is_ok() {
+            Headers::new(Some(headers.into_py(py).extract(py).unwrap()))
+        } else if headers.as_ref(py).extract::<Headers>().is_ok() {
+            headers.extract::<Headers>(py).unwrap()
+        } else {
+            debug!("Could not convert headers to Headers or PyDict");
+            panic!("Could not convert headers to Headers or PyDict")
+        };
+
+        debug!("New headers: {:?}", new_headers);
+
         Ok(Self {
             status_code,
             // we should be handling based on headers but works for now
             response_type: "text".to_string(),
-            headers,
+            headers: new_headers,
             description,
             file_path: None,
         })
