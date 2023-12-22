@@ -77,54 +77,75 @@ For a simple synchronous request, Batman wrote:
 
 Batman was curious about how to run the application. Robyn explained that he could run the application through a simple command `python3 app.py`
 
-A robyn application exposes certain commands to the user. These commands can be used to run the application, or to generate a new project.
 
-```bash
-usage: app.py [-h] [--processes PROCESSES] [--workers WORKERS] [--log-level LOG_LEVEL] [--create] [--docs] [--open-browser] [--version]
+<Row>
+  <Col>
+    A robyn application exposes certain commands to the user. These commands can be used to run the application, or to generate a new project.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+      ```bash
+      usage: app.py [-h] [--processes PROCESSES] [--workers WORKERS] [--log-level LOG_LEVEL] [--create] [--docs] [--open-browser] [--version]
 
-Robyn, a fast async web framework with a rust runtime.
+      Robyn, a fast async web framework with a rust runtime.
 
-options:
-  -h, --help            show this help message and exit
-  --processes PROCESSES
-                        Choose the number of processes. [Default: 1]
-  --workers WORKERS     Choose the number of workers. [Default: 1]
-  --log-level LOG_LEVEL
-                        Set the log level name
-  --open-browser        Open the browser on successful start.
+      options:
+        -h, --help            show this help message and exit
+        --processes PROCESSES
+                              Choose the number of processes. [Default: 1]
+        --workers WORKERS     Choose the number of workers. [Default: 1]
+        --log-level LOG_LEVEL
+                              Set the log level name
+        --open-browser        Open the browser on successful start.
 
-  Module flags
-  --create              Create a new project template.
-  --docs                Open the Robyn documentation.
-  --version             Show the Robyn version.
-  --dev                 Development mode. It restarts the server based on file changes.
+        Module flags
+        --create              Create a new project template.
+        --docs                Open the Robyn documentation.
+        --version             Show the Robyn version.
+        --dev                 Development mode. It restarts the server based on file changes.
 
-```
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
 
-Or the application can be run using Robyn's CLI, i.e. using `python -m robyn app.py`
+<Row />
 
-```bash
+<Row>
+  <Col>
+    Or the application can be run using Robyn's CLI, i.e. using `python -m robyn app.py`
+  </Col>
 
-usage: python -m robyn app.py [-h] [--processes PROCESSES] [--workers WORKERS] [--dev] [--log-level LOG_LEVEL] [--create] [--docs] [--open-browser] [--version]
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+      ```bash
+
+      usage: python -m robyn app.py [-h] [--processes PROCESSES] [--workers WORKERS] [--dev] [--log-level LOG_LEVEL] [--create] [--docs] [--open-browser] [--version]
 
 
-Robyn, a fast async web framework with a rust runtime.
+      Robyn, a fast async web framework with a rust runtime.
 
-options:
-  -h, --help            show this help message and exit
-  --processes PROCESSES
-                        Choose the number of processes. [Default: 1]
-  --workers WORKERS     Choose the number of workers. [Default: 1]
-  --log-level LOG_LEVEL
-                        Set the log level name
-  --open-browser        Open the browser on successful start.
+      options:
+        -h, --help            show this help message and exit
+        --processes PROCESSES
+                              Choose the number of processes. [Default: 1]
+        --workers WORKERS     Choose the number of workers. [Default: 1]
+        --log-level LOG_LEVEL
+                              Set the log level name
+        --open-browser        Open the browser on successful start.
 
-  Module flags
-  --create              Create a new project template.
-  --docs                Open the Robyn documentation.
-  --version             Show the Robyn version.
-  --dev                 Development mode. It restarts the server based on file changes.
-```
+        Module flags
+        --create              Create a new project template.
+        --docs                Open the Robyn documentation.
+        --version             Show the Robyn version.
+        --dev                 Development mode. It restarts the server based on file changes.
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+
+
 
 ---
 

@@ -18,7 +18,7 @@ import * as mdxComponents from '@/components/documentation/mdx'
 import * as releaseMdxComponents from '@/components/releases/mdx'
 import { useMobileNavigationStore } from '@/components/documentation/MobileNavigation'
 
-import { Analytics } from '@vercel/analytics/react';
+import { Analytics } from '@vercel/analytics/react'
 
 function usePrevious(value) {
   let ref = useRef()
@@ -49,7 +49,7 @@ export default function App({ Component, pageProps, router }) {
             <Component {...pageProps} />
           </Layout>
         </MDXProvider>
-      <Analytics />
+        <Analytics />
       </>
     )
   } else if (router_.pathname.includes('release')) {
@@ -60,7 +60,7 @@ export default function App({ Component, pageProps, router }) {
           <Component {...pageProps} />
         </ReleaseLayout>
         <Footer />
-      <Analytics />
+        <Analytics />
       </>
     )
   }
