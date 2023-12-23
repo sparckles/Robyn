@@ -189,7 +189,7 @@ class Robyn:
         open_browser = bool(os.getenv("ROBYN_BROWSER_OPEN", self.config.open_browser))
 
         logger.info("Robyn version: %s", __version__)
-        logger.info("Starting server at %s:%s", host, port)
+        logger.info("Starting server at http://%s:%s", host, port)
 
         mp.allow_connection_pickling()
 
