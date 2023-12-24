@@ -100,6 +100,7 @@ def start_app_normally(config: Config):
     # Run the subprocess
     subprocess.run(command, start_new_session=False)
 
+
 def run():
     config = Config()
     if config.create:
