@@ -102,7 +102,7 @@ impl Headers {
 
             if new_value.is_err() {
                 let value = value.to_string();
-                self.headers.entry(key).or_insert_with(Vec::new).push(value);
+                self.headers.entry(key).or_default().push(value);
             } else {
                 let value: Vec<String> = new_value.unwrap().iter().map(|x| x.to_string()).collect();
                 self.headers.entry(key).or_default().extend(value);
