@@ -116,6 +116,7 @@ python --version
 - Multi Core Scaling
 - WebSockets!
 - Middlewares
+- Dependency Injection
 - Hot Reloading
 - Community First and truly FOSS!
 
