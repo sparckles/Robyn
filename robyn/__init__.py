@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from pathlib import Path
 import multiprocess as mp
 import os
 from typing import Callable, List, Optional, Tuple, Union
@@ -11,7 +10,7 @@ from robyn.argument_parser import Config
 from robyn.authentication import AuthenticationHandler
 from robyn.dependency_injection import DependencyMap
 from robyn.logger import Colors
-from robyn.reloader import compile_rust_files, setup_reloader
+from robyn.reloader import compile_rust_files
 from robyn.env_populator import load_vars
 from robyn.events import Events
 from robyn.logger import logger
@@ -28,9 +27,10 @@ __version__ = get_version()
 
 config = Config()
 
-if (compile_path:=config.compile_rust_path) is not None:
+if (compile_path := config.compile_rust_path) is not None:
     compile_rust_files(compile_path)
     print("Compiled rust files")
+
 
 class Robyn:
     """This is the python wrapper for the Robyn binaries."""

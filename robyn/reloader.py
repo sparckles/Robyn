@@ -4,7 +4,6 @@ import signal
 import subprocess
 import sys
 import time
-from typing import Optional
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
@@ -12,6 +11,7 @@ from watchdog.observers import Observer
 from robyn.logger import Colors, logger
 
 dir_path = None
+
 
 def compile_rust_files(directory_path: str):
     rust_files = glob.glob(os.path.join(directory_path, "**/*.rs"), recursive=True)
@@ -31,6 +31,7 @@ def compile_rust_files(directory_path: str):
 
     return True
 
+
 def create_rust_file(file_name: str):
     if file_name.endswith(".rs"):
         file_name = file_name.strip(".rs")
@@ -43,11 +44,12 @@ def create_rust_file(file_name: str):
         stderr=subprocess.PIPE,
         start_new_session=False,
     )
-    
+
     if result.returncode != 0:
         print("Error creating rust file : %s %s", result.stderr.decode("utf-8"), result.stdout.decode("utf-8"))
     else:
         print("Created rust file : %s", rust_file)
+
 
 def clean_rust_build(directory_path: str, file_path: str):
     rust_binaries = glob.glob(os.path.join(directory_path, "**/*.so"), recursive=True)
@@ -56,6 +58,7 @@ def clean_rust_build(directory_path: str, file_path: str):
         print("Cleaning rust file : %s", file)
 
         os.remove(file)
+
 
 def setup_reloader(directory_path: str, file_path: str):
     event_handler = EventHandler(file_path, directory_path)

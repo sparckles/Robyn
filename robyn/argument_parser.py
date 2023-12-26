@@ -1,5 +1,4 @@
 import argparse
-import os
 
 
 class Config:
@@ -62,7 +61,6 @@ class Config:
             dest="compile_rust_path",
             default=None,
             help="Compile rust files in the given path.",
-
         )
 
         parser.add_argument(
