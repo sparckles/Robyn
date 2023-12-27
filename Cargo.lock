@@ -1183,7 +1183,7 @@ checksum = "e5ea92a5b6195c6ef2a0295ea818b312502c6fc94dde986c5553242e18fd4ce2"
 
 [[package]]
 name = "robyn"
-version = "0.49.1"
+version = "0.49.2"
 dependencies = [
  "actix",
  "actix-files",
