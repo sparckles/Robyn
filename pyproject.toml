@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "robyn"
-version = "0.49.2"
+version = "0.49.3"
 description = "A High-Performance, Community-Driven, and Innovator Friendly Web Framework with a Rust runtime."
 authors = [{ name = "Sanskar Jethi", email = "sansyrox@gmail.com" }]
 repository = "https://github.com/sparckles/robyn"
@@ -33,6 +33,9 @@ dependencies = [
   "uvloop~=0.19.0; sys_platform != 'win32' and platform_python_implementation == 'CPython' and platform_machine != 'armv7l'"
   ]
 
+[project.scripts]
+robyn = "robyn.cli:run"
+
 [project.optional-dependencies]
 "templating" = ["jinja2 == 3.0.1"]
 
@@ -43,7 +46,7 @@ Changelog = "https://github.com/sparckles/robyn/blob/main/CHANGELOG.md"
 
 [tool.poetry]
 name = "robyn"
-version = "0.49.2"
+version = "0.49.3"
 description = "A High-Performance, Community-Driven, and Innovator Friendly Web Framework with a Rust runtime."
 authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 
@@ -82,7 +85,6 @@ nox = "2023.4.22"
 websocket-client = "1.5.0"
 
 [tool.poetry.scripts]
-robyn = "robyn.cli:run"
 test_server = { callable = "integration_tests.base_routes:main" }
 
 [tool.ruff]
