@@ -869,6 +869,20 @@ files = [
 ]
 
 [[package]]
+name = "rustimport"
+version = "1.3.4"
+description = "Import Rust files directly from Python!"
+optional = false
+python-versions = "*"
+files = [
+    {file = "rustimport-1.3.4-py3-none-any.whl", hash = "sha256:f2b931ff4e0fa931028066a7dacaae449b1a4601fe7a553c35f3dd63aba97ce0"},
+    {file = "rustimport-1.3.4.tar.gz", hash = "sha256:ba80e3c28af07ba3910ad395613d01f9e421bfb59fbb1ac050e2b5d9b78b4980"},
+]
+
+[package.dependencies]
+toml = ">=0.10.2"
+
+[[package]]
 name = "setuptools"
 version = "69.0.3"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
@@ -897,6 +911,17 @@ files = [
 
 [package.extras]
 tests = ["pytest", "pytest-cov"]
+
+[[package]]
+name = "toml"
+version = "0.10.2"
+description = "Python Library for Tom's Obvious, Minimal Language"
+optional = false
+python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
+files = [
+    {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},
+    {file = "toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"},
+]
 
 [[package]]
 name = "tomli"
@@ -1084,4 +1109,4 @@ templating = ["jinja2"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "c84362286c593a5d229bea59808e574e650c4680ab768bfe2c975a154b85dbe0"
+content-hash = "e4ed952151181e1d2c509e63fde795ce13996730c7c8a825885035881fbbccd2"

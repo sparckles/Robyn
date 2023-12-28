@@ -56,6 +56,19 @@ class Config:
             default=False,
             help="Show the Robyn version.",
         )
+        parser.add_argument(
+            "--compile-rust-path",
+            dest="compile_rust_path",
+            default=None,
+            help="Compile rust files in the given path.",
+        )
+
+        parser.add_argument(
+            "--create-rust-file",
+            dest="create_rust_file",
+            default=None,
+            help="Create a rust file with the given name.",
+        )
 
         args, unknown_args = parser.parse_known_args()
 
@@ -66,6 +79,8 @@ class Config:
         self.docs = args.docs
         self.open_browser = args.open_browser
         self.version = args.version
+        self.compile_rust_path = args.compile_rust_path
+        self.create_rust_file = args.create_rust_file
 
         # find something that ends with .py in unknown_args
         for arg in unknown_args:

@@ -118,6 +118,7 @@ python --version
 - Middlewares
 - Dependency Injection
 - Hot Reloading
+- Direct Rust Integration
 - Community First and truly FOSS!
 
 ## 🗒️ How to contribute
