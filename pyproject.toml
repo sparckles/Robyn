@@ -33,9 +33,6 @@ dependencies = [
   "uvloop~=0.19.0; sys_platform != 'win32' and platform_python_implementation == 'CPython' and platform_machine != 'armv7l'"
   ]
 
-[project.scripts]
-robyn = "robyn.cli:run"
-
 [project.optional-dependencies]
 "templating" = ["jinja2 == 3.0.1"]
 
@@ -87,6 +84,7 @@ websocket-client = "1.5.0"
 
 [tool.poetry.scripts]
 test_server = { callable = "integration_tests.base_routes:main" }
+robyn = "robyn.cli:run"
 
 [tool.ruff]
 line-length = 160
