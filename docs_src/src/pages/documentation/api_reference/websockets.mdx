@@ -68,46 +68,58 @@ To handle real-time communication, Batman learned how to work with WebSockets. H
 
         @websocket.on("message")
         async def message(ws, msg, global_dependencies) -> str:
-            global websocket_state
             websocket_id = ws.id
-            state = websocket_state[websocket_id]
-            resp = ""
-            if state == 0:
-                resp = "Whaaat??"
-                await ws.async_broadcast("This is a broadcast message")
-                ws.sync_send_to(websocket_id, "This is a message to self")
-            elif state == 1:
-                resp = "Whooo??"
-            elif state == 2:
-                resp = "*chika* *chika* Slim Shady."
-            websocket_state[websocket_id] = (state + 1) % 3
-            return resp
+            ws.sync_send_to(websocket_id, "This is a message to self")
+            return ""
 
       ```
 
       ```python {{title: 'typed'}}
 
-    @websocket.on("message")
-    async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
-        global websocket_state
-        websocket_id = ws.id
-        state = websocket_state[websocket_id]
-        resp = ""
-        if state == 0:
-            resp = "Whaaat??"
-            await ws.async_broadcast("This is a broadcast message")
+        @websocket.on("message")
+        async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
+            websocket_id = ws.id
+            state = websocket_state[websocket_id]
             ws.sync_send_to(websocket_id, "This is a message to self")
-        elif state == 1:
-            resp = "Whooo??"
-        elif state == 2:
-            resp = "*chika* *chika* Slim Shady."
-        websocket_state[websocket_id] = (state + 1) % 3
-        return resp
+            return ""
 
       ```
     </CodeGroup>
   </Col>
 </Row>
+
+
+<Row>
+
+  <Col>
+    For sending broadcast messages, Batman used the `broadcast` method.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+      ```python {{ title: 'untyped' }}
+
+        @websocket.on("message")
+        async def message(ws, msg, global_dependencies) -> str:
+            websocket_id = ws.id
+            ws.sync_broadcast("This is a message to self")
+            return ""
+
+      ```
+
+      ```python {{title: 'typed'}}
+
+        @websocket.on("message")
+        async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
+            websocket_id = ws.id
+            ws.sync_broadcast("This is a message to self")
+            return ""
+
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
 
 ---
 
