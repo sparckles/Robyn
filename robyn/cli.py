@@ -106,7 +106,7 @@ def run():
     if config.create:
         create_robyn_app()
 
-    elif file_name:=config.create_rust_file:
+    elif file_name := config.create_rust_file:
         create_rust_file(file_name)
 
     elif config.version:
