@@ -34,7 +34,7 @@ def compile_rust_files(directory_path: str):
 
 def create_rust_file(file_name: str):
     if file_name.endswith(".rs"):
-        file_name = file_name.strip(".rs")
+        file_name = file_name.removesuffix(".rs")
 
     rust_file = f"{file_name}.rs"
 
