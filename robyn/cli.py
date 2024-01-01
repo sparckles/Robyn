@@ -5,7 +5,7 @@ import webbrowser
 from InquirerPy import prompt
 from InquirerPy.base.control import Choice
 from .argument_parser import Config
-from .reloader import setup_reloader
+from .reloader import create_rust_file, setup_reloader
 from robyn.robyn import get_version
 from pathlib import Path
 import shutil
@@ -105,6 +105,9 @@ def run():
     config = Config()
     if config.create:
         create_robyn_app()
+
+    elif file_name:=config.create_rust_file:
+        create_rust_file(file_name)
 
     elif config.version:
         print(get_version())
