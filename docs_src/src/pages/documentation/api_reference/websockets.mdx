@@ -59,7 +59,7 @@ To handle real-time communication, Batman learned how to work with WebSockets. H
 <Row>
 
   <Col>
-    For sending a message to the client, Batman used the `send` method. 
+    For sending a message to the client, Batman used the `sync_send_to` method. 
   </Col>
   <Col sticky>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
@@ -67,7 +67,7 @@ To handle real-time communication, Batman learned how to work with WebSockets. H
       ```python {{ title: 'untyped' }}
 
         @websocket.on("message")
-        async def message(ws, msg, global_dependencies) -> str:
+        def message(ws, msg, global_dependencies) -> str:
             websocket_id = ws.id
             ws.sync_send_to(websocket_id, "This is a message to self")
             return ""
@@ -77,7 +77,7 @@ To handle real-time communication, Batman learned how to work with WebSockets. H
       ```python {{title: 'typed'}}
 
         @websocket.on("message")
-        async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
+        def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
             websocket_id = ws.id
             state = websocket_state[websocket_id]
             ws.sync_send_to(websocket_id, "This is a message to self")
@@ -92,7 +92,7 @@ To handle real-time communication, Batman learned how to work with WebSockets. H
 <Row>
 
   <Col>
-    For sending broadcast messages, Batman used the `broadcast` method.
+    For sending a message to the client in async manner, Batman used the `async_send_to` method. 
   </Col>
   <Col sticky>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
@@ -102,7 +102,7 @@ To handle real-time communication, Batman learned how to work with WebSockets. H
         @websocket.on("message")
         async def message(ws, msg, global_dependencies) -> str:
             websocket_id = ws.id
-            ws.sync_broadcast("This is a message to self")
+            await ws.async_send_to(websocket_id, "This is a message to self")
             return ""
 
       ```
@@ -112,7 +112,69 @@ To handle real-time communication, Batman learned how to work with WebSockets. H
         @websocket.on("message")
         async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
             websocket_id = ws.id
+            state = websocket_state[websocket_id]
+            await ws.async_send_to(websocket_id, "This is a message to self")
+            return ""
+
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+
+<Row>
+  <Col>
+    For sending broadcast messages, Batman used the `sync_broadcast` method.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+      ```python {{ title: 'untyped' }}
+
+        @websocket.on("message")
+        def message(ws, msg, global_dependencies) -> str:
+            websocket_id = ws.id
             ws.sync_broadcast("This is a message to self")
+            return ""
+
+      ```
+
+      ```python {{title: 'typed'}}
+
+        @websocket.on("message")
+        def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
+            websocket_id = ws.id
+            ws.sync_broadcast("This is a message to self")
+            return ""
+
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+<Row>
+  <Col>
+    For sending broadcast messages in async style, Batman used the `async_broadcast` method.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+      ```python {{ title: 'untyped' }}
+
+        @websocket.on("message")
+        async def message(ws, msg, global_dependencies) -> str:
+            websocket_id = ws.id
+            await ws.async_broadcast("This is a message to self")
+            return ""
+
+      ```
+
+      ```python {{title: 'typed'}}
+
+        @websocket.on("message")
+        async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
+            websocket_id = ws.id
+            await ws.async_broadcast("This is a message to self")
             return ""
 
       ```
