@@ -14,7 +14,6 @@ use crate::types::HttpMethod;
 use crate::types::MiddlewareReturn;
 use crate::websockets::start_web_socket;
 
-use std::convert::TryInto;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::{Relaxed, SeqCst};
 use std::sync::{Arc, RwLock};
@@ -213,7 +212,7 @@ impl Server {
                 .keep_alive(KeepAlive::Os)
                 .workers(workers)
                 .client_request_timeout(std::time::Duration::from_secs(0))
-                .listen(raw_socket.try_into().unwrap())
+                .listen(raw_socket.into())
                 .unwrap()
                 .run()
                 .await
