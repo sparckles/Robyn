@@ -97,6 +97,49 @@ Batman scaled his application across multiple cores for better performance. He u
   </Col>
 </Row>
 
+
+### Serving simple HTML strings
+
+<Row>
+<Col>
+Speaking of HTML files, Batman wanted to serve simple HTML strings. He was suggested to use the following code:
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    from robyn import Robyn, serve_html
+
+    app = Robyn(__file__)
+
+
+    @app.get("/")
+    async def h(request):
+        return serve_html("./index.html")
+
+    app.start(port=8080)
+
+    ```
+
+    ```python {{ title: 'typed' }}
+    from robyn import Robyn, Request, serve_html
+
+    app = Robyn(__file__)
+
+
+    @app.get("/")
+    async def h(request: Request):
+        return serve_html("./index.html")
+
+    app.start(port=8080)
+
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+
 ### Serving Other Files
 
 

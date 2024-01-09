@@ -15,7 +15,7 @@ from robyn.env_populator import load_vars
 from robyn.events import Events
 from robyn.logger import logger
 from robyn.processpool import run_processes
-from robyn.responses import serve_file, serve_html
+from robyn.responses import serve_file, serve_html, html
 from robyn.robyn import FunctionInfo, HttpMethod, Request, Response, get_version, jsonify, WebSocketConnector, Headers
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory
@@ -450,6 +450,7 @@ __all__ = [
     "jsonify",
     "serve_file",
     "serve_html",
+    "html",
     "ALLOW_CORS",
     "SubRouter",
     "AuthenticationHandler",
