@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Callable
 
 from robyn import status_codes
 
@@ -27,6 +28,11 @@ class JinjaTemplate(TemplateInterface):
             description=rendered_template,
             headers=Headers({"Content-Type": "text/html; charset=utf-8"}),
         )
+
+    def add_template_global(self, func: Callable, name: str | None = None):
+        if not callable(func):
+            raise TypeError(f"Must be callable.")
+        self.env.globals[name or func.__name__] = func
 
 
 __all__ = ["TemplateInterface", "JinjaTemplate"]
