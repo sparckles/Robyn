@@ -31,7 +31,7 @@ class JinjaTemplate(TemplateInterface):
 
     def add_template_global(self, func: Callable, name: str | None = None):
         if not callable(func):
-            raise TypeError(f"Must be callable.")
+            raise TypeError("Must be callable.")
         self.env.globals[name or func.__name__] = func
 
 
