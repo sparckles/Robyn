@@ -4,6 +4,7 @@ import signal
 import subprocess
 import sys
 import time
+from typing import List
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
@@ -29,7 +30,7 @@ def compile_rust_files(directory_path: str):
         else:
             print("Compiled rust file : %s", rust_file)
 
-    return True
+    return rust_files
 
 
 def create_rust_file(file_name: str):
@@ -51,12 +52,9 @@ def create_rust_file(file_name: str):
         print("Created rust file : %s", rust_file)
 
 
-def clean_rust_build(directory_path: str, file_path: str):
-    rust_binaries = glob.glob(os.path.join(directory_path, "**/*.so"), recursive=True)
-
+def clean_rust_binaries(rust_binaries: List[str]):
     for file in rust_binaries:
         print("Cleaning rust file : %s", file)
-
         os.remove(file)
 
 
@@ -97,6 +95,7 @@ class EventHandler(FileSystemEventHandler):
         self.file_path = file_path
         self.directory_path = directory_path
         self.process = None  # Keep track of the subprocess
+        self.built_rust_binaries = []  # Keep track of the built rust binaries
 
         self.last_reload = time.time()  # Keep track of the last reload. EventHandler is initialized with the process.
 
@@ -113,8 +112,8 @@ class EventHandler(FileSystemEventHandler):
         print(f"Reloading {self.file_path}...")
         arguments = [arg for arg in sys.argv[1:] if not arg.startswith("--dev")]
 
-        clean_rust_build(self.directory_path, self.file_path)
-        compile_rust_files(self.directory_path)
+        clean_rust_binaries(self.built_rust_binaries)
+        self.built_rust_binaries = compile_rust_files(self.directory_path)
 
         self.process = subprocess.Popen(
             [sys.executable, *arguments],
