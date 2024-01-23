@@ -1,7 +1,9 @@
 from robyn.responses import html
 
+
 def return_swagger_docs():
-    return html( """
+    return html(
+        """
 <!DOCTYPE html>
 <html>
 <head>
@@ -29,4 +31,5 @@ window.onload = function () {
 </script>
 </body>
 </html>
-            """ )
+            """
+    )
