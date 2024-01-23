@@ -16,6 +16,7 @@ from robyn.events import Events
 from robyn.logger import logger
 from robyn.processpool import run_processes
 from robyn.responses import serve_file, serve_html, html
+from robyn.openapi_docs import return_swagger_docs
 from robyn.robyn import FunctionInfo, HttpMethod, Request, Response, get_version, jsonify, WebSocketConnector, Headers
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory
@@ -183,6 +184,14 @@ class Robyn:
     def shutdown_handler(self, handler: Callable) -> None:
         self._add_event_handler(Events.SHUTDOWN, handler)
 
+    def add_documentation_route(self, endpoint: str = "/docs"):
+        """
+        Adds the documentation route to the application
+
+        :param endpoint str: endpoint to server the route
+        """
+        self.add_route(HttpMethod.GET, endpoint, return_swagger_docs, False)
+
     def start(self, host: str = "127.0.0.1", port: int = 8080):
         """
         Starts the server
@@ -196,6 +205,15 @@ class Robyn:
 
         logger.info("Robyn version: %s", __version__)
         logger.info("Starting server at http://%s:%s", host, port)
+
+        if self.config.dev:
+            # maybe allow us to set a documentation endpoint in the config
+            # we shall see
+            print("Adding documentation route")
+            # we need a function that will probably generate the openapi.json
+            # here or maybe in the rust code
+            # the json file will be present in docs/openapi.json in application
+            self.add_documentation_route()
 
         mp.allow_connection_pickling()
 
