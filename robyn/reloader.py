@@ -4,6 +4,7 @@ import signal
 import subprocess
 import sys
 import time
+from typing import List
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
@@ -51,10 +52,9 @@ def create_rust_file(file_name: str):
         print("Created rust file : %s", rust_file)
 
 
-def clean_rust_build(rust_binaries: list[str]):
+def clean_rust_binaries(rust_binaries: List[str]):
     for file in rust_binaries:
         print("Cleaning rust file : %s", file)
-
         os.remove(file)
 
 
@@ -113,7 +113,7 @@ class EventHandler(FileSystemEventHandler):
         arguments = [arg for arg in sys.argv[1:] if not arg.startswith("--dev")]
 
 
-        clean_rust_build(self.built_rust_binaries)
+        clean_rust_binaries(self.built_rust_binaries)
         self.built_rust_binaries = compile_rust_files(self.directory_path)
 
         self.process = subprocess.Popen(
