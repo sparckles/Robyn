@@ -112,7 +112,6 @@ class EventHandler(FileSystemEventHandler):
         print(f"Reloading {self.file_path}...")
         arguments = [arg for arg in sys.argv[1:] if not arg.startswith("--dev")]
 
-
         clean_rust_binaries(self.built_rust_binaries)
         self.built_rust_binaries = compile_rust_files(self.directory_path)
 
