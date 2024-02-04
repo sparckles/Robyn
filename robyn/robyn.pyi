@@ -188,6 +188,9 @@ class Headers:
     def __init__(self, default_headers: Optional[dict]) -> None:
         pass
 
+    def __getitem__(self, key: str) -> Optional[str]:
+        pass
+
     def __setitem__(self, key: str, value: str) -> None:
         pass
 

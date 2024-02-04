@@ -147,6 +147,10 @@ impl Headers {
     pub fn __setitem__(&mut self, key: String, value: String) {
         self.set(key, value);
     }
+
+    pub fn __getitem__(&self, key: String) -> PyResult<String> {
+        self.get(key)
+    }
 }
 
 impl Headers {
