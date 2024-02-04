@@ -2,7 +2,7 @@ import os
 import sys
 from typing import Optional
 import webbrowser
-from InquirerPy import prompt
+from InquirerPy.resolver import prompt
 from InquirerPy.base.control import Choice
 from .argument_parser import Config
 from .reloader import create_rust_file, setup_reloader
@@ -49,9 +49,9 @@ def create_robyn_app():
         },
     ]
     result = prompt(questions=questions)
-    project_dir_path = Path(result["directory"]).resolve()
+    project_dir_path = Path(str(result["directory"])).resolve()
     docker = result["docker"]
-    project_type = result["project_type"]
+    project_type = str(result["project_type"])
 
     final_project_dir_path = (CURRENT_WORKING_DIR / project_dir_path).resolve()
 

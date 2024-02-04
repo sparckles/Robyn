@@ -143,6 +143,10 @@ impl Headers {
     pub fn __repr__(&self) -> String {
         format!("{:?}", self.headers)
     }
+
+    pub fn __setitem__(&mut self, key: String, value: String) {
+        self.set(key, value);
+    }
 }
 
 impl Headers {
