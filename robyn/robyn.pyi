@@ -188,6 +188,12 @@ class Headers:
     def __init__(self, default_headers: Optional[dict]) -> None:
         pass
 
+    def __getitem__(self, key: str) -> Optional[str]:
+        pass
+
+    def __setitem__(self, key: str, value: str) -> None:
+        pass
+
     def set(self, key: str, value: str) -> None:
         """
         Sets the value of the header with the given key.
@@ -224,6 +230,16 @@ class Headers:
 
         Args:
             key (str): The key of the header
+        """
+        pass
+
+    def append(self, key: str, value: str) -> None:
+        """
+        Appends the value to the header with the given key.
+
+        Args:
+            key (str): The key of the header
+            value (str): The value of the header
         """
         pass
 
@@ -290,9 +306,9 @@ class Server:
         index_file: Optional[str],
     ) -> None:
         pass
-    def apply_request_header(self, key: str, value: str) -> None:
+    def apply_request_headers(self, headers: Headers) -> None:
         pass
-    def apply_response_header(self, key: str, value: str) -> None:
+    def apply_response_headers(self, headers: Headers) -> None:
         pass
 
     def add_route(

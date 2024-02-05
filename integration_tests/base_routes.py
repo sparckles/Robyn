@@ -820,6 +820,9 @@ def main():
     class BasicAuthHandler(AuthenticationHandler):
         def authenticate(self, request: Request) -> Optional[Identity]:
             token = self.token_getter.get_token(request)
+            if token is not None:
+                # Useless but we call the set_token method for testing purposes
+                self.token_getter.set_token(request, token)
             if token == "valid":
                 return Identity(claims={"key": "value"})
             return None
