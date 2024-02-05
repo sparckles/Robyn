@@ -548,7 +548,7 @@ Either, by using the `headers` field in the `Request` object:
       print("These are the request headers: ", headers)
 
       headers.set("modified", "modified_value")
-      # We can also write headers["modified"] = "modified_value"
+      headers["new_header"] = "new_value" # This syntax is also valid
 
       print("These are the modified request headers: ", headers)
       
