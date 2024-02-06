@@ -1,6 +1,6 @@
 [package]
 name = "robyn"
-version = "0.51.1"
+version = "0.51.2"
 authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 edition = "2021"
 description = "A web server that is fast!"
