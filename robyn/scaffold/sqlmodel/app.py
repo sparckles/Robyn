@@ -42,7 +42,6 @@ def get_data():
         return hero
 
 
-
 if __name__ == "__main__":
     # create a configured "Session" class
     app.start(host="0.0.0.0", port=8080)
