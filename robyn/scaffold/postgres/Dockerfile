@@ -13,10 +13,10 @@ RUN apt-get update && apt-get install -y supervisor
 
 WORKDIR /workspace
 
-COPY requirements.txt requirements.txt
+COPY . .
+
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
-COPY . .
 
 # Copy PostgreSQL binaries from the first stage
 COPY --from=postgres-base /usr/local/bin /usr/local/bin
