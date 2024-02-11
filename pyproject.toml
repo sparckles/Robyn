@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "robyn"
-version = "0.51.2"
+version = "0.51.3"
 description = "A High-Performance, Community-Driven, and Innovator Friendly Web Framework with a Rust runtime."
 authors = [{ name = "Sanskar Jethi", email = "sansyrox@gmail.com" }]
 classifiers = [
