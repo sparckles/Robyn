@@ -43,6 +43,7 @@ def create_robyn_app():
                 Choice("mongo", name="MongoDB"),
                 Choice("sqlalchemy", name="SqlAlchemy"),
                 Choice("prisma", name="Prisma"),
+                Choice("sqlmodel", name="SQLModel"),
             ],
             "default": Choice("no-db", name="No DB"),
             "name": "project_type",
