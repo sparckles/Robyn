@@ -148,6 +148,23 @@ You can then request the server you ran from an other terminal. Here is a `GET` 
 curl http://localhost:8080/sync/str
 ```
 
+### Testing
+
+To run the tests, you can use the following command:
+
+```bash
+poetry run pytest
+```
+or to test for all the python version
+```bash
+nox
+```
+for just a specific version
+```bash
+nox --error-on-missing-interpreter -p PYTHON_VERSION
+```
+
+
 ## ✨ Special thanks
 
 ### ✨ Contributors/Supporters
