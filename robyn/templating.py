@@ -56,5 +56,25 @@ class JinjaTemplate(TemplateInterface):
             raise TypeError("Must be callable.")
         self.env.globals[name or func.__name__] = func
 
+    def url_for_static(self, endpoint: str, **kwargs) -> str:
+        """
+        Generate a URL for a static resource.
+
+        Args:
+            endpoint (str): The endpoint to generate the URL for.
+            **kwargs: Additional parameters such as filename or path.
+
+        Returns:
+            str: The URL for the static resource.
+        """
+        if endpoint == 'static':
+            if 'filename' in kwargs:
+                return f"/static/{kwargs['filename']}"
+            elif 'path' in kwargs:
+                return f"/static/{kwargs['path']}"
+        elif endpoint == '/':
+            return "/"  # Adjust this according to your routing logic
+        raise ValueError("Invalid endpoint")
+
 
 __all__ = ["TemplateInterface", "JinjaTemplate"]
