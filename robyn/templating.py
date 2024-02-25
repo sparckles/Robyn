@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Callable
 
 from robyn import status_codes
 
@@ -27,6 +28,33 @@ class JinjaTemplate(TemplateInterface):
             description=rendered_template,
             headers=Headers({"Content-Type": "text/html; charset=utf-8"}),
         )
+    
+    def add_template_global(self, func: Callable, name: str | None = None):
+        """
+        Add a global function to the Jinja environment.
+
+        This method allows adding a global function to the Jinja environment,
+        which can be accessed from any template rendered by that environment.
+
+        Args:
+            func (callable): The function to be added as a global.
+            name (str, optional): The name under which the function will be
+                accessible in the Jinja environment. If not provided, the name
+                of the function will be used. Defaults to None.
+
+        Raises:
+            TypeError: If `func` is not callable.
+
+        Example:
+            Assuming `your_class_instance` is an instance of YourClassName:
+            >>> def custom_function():
+            >>>     return "Hello, world!"
+            >>> your_class_instance.add_template_global(custom_function, 'hello')
+            >>> # Now 'custom_function' can be accessed in Jinja templates as '{{ hello() }}'
+        """
+        if not callable(func):
+            raise TypeError("Must be callable.")
+        self.env.globals[name or func.__name__] = func
 
 
 __all__ = ["TemplateInterface", "JinjaTemplate"]
