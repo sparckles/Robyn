@@ -29,7 +29,7 @@ class JinjaTemplate(TemplateInterface):
             headers=Headers({"Content-Type": "text/html; charset=utf-8"}),
         )
 
-    def add_template_global(self, func: Callable, name: str | None = None):
+    def add_template_global(self, func: Callable, name: Optional[str]=None):
         """
         Add a global function to the Jinja environment.
 
