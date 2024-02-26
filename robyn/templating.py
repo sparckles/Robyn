@@ -56,7 +56,7 @@ class JinjaTemplate(TemplateInterface):
             raise TypeError("Must be callable.")
         self.env.globals[name or func.__name__] = func
 
-    def url_for_static(self, endpoint: str, **kwargs) -> str:
+    def url_for(self, endpoint: str, **kwargs) -> str:
         """
         Generate a URL for a static resource.
 
