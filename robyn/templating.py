@@ -73,7 +73,7 @@ class JinjaTemplate(TemplateInterface):
             elif "path" in kwargs:
                 return f"/static/{kwargs['path']}"
         elif endpoint == "/":
-            return "/"  
+            return "/"
         raise ValueError("Invalid endpoint")
 
 
