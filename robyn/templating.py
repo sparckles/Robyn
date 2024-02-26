@@ -28,8 +28,8 @@ class JinjaTemplate(TemplateInterface):
             description=rendered_template,
             headers=Headers({"Content-Type": "text/html; charset=utf-8"}),
         )
-    
-    def add_template_global(self, func: Callable, name: str | None = None):
+
+    def add_template_global(self, func: Callable, name: Optional[str] = None):
         """
         Add a global function to the Jinja environment.
 
@@ -67,12 +67,12 @@ class JinjaTemplate(TemplateInterface):
         Returns:
             str: The URL for the static resource.
         """
-        if endpoint == 'static':
-            if 'filename' in kwargs:
+        if endpoint == "static":
+            if "filename" in kwargs:
                 return f"/static/{kwargs['filename']}"
-            elif 'path' in kwargs:
+            elif "path" in kwargs:
                 return f"/static/{kwargs['path']}"
-        elif endpoint == '/':
+        elif endpoint == "/":
             return "/"  # Adjust this according to your routing logic
         raise ValueError("Invalid endpoint")
 
