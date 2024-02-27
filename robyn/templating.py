@@ -3,9 +3,10 @@ from typing import Callable
 
 from robyn import status_codes
 
-from .robyn import Headers, Response
+from robyn import Headers, Response
 
 from jinja2 import Environment, FileSystemLoader
+from typing import Optional
 
 
 class TemplateInterface(ABC):
