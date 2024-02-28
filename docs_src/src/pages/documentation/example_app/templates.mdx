@@ -65,6 +65,63 @@ This is Robyn introduced him to the concept of routers and views.
   />
 </div>
 
+# Jinja Integration Instructions
+
+To integrate resource loading functionality into Jinja templates similar to Flask's `url_for`, follow these steps:
+
+1. **Create a JinjaTemplate class**: Define a class that encapsulates the Jinja environment and provides a method to add global functions.
+
+    ```python
+    from jinja2 import Environment, FileSystemLoader
+
+    class JinjaTemplate:
+        def __init__(self, templates_dir):
+            self.env = Environment(loader=FileSystemLoader(templates_dir))
+            self.add_template_global(self.url_for_static, 'url_for')
+
+        def add_template_global(self, func, name):
+            if not callable(func):
+                raise TypeError("Must be callable.")
+            self.env.globals[name] = func
+
+        def url_for_static(self, endpoint: str, **kwargs) -> str:
+            if endpoint == 'static':
+                if 'filename' in kwargs:
+                    return f"/static/{kwargs['filename']}"
+                elif 'path' in kwargs:
+                    return f"/static/{kwargs['path']}"
+            elif endpoint == '/':
+                return "/"  # Adjust this according to your routing logic
+            raise ValueError("Invalid endpoint")
+    ```
+
+2. **Instantiate JinjaTemplate**: Create an instance of the `JinjaTemplate` class, passing the path to your templates directory.
+
+    ```python
+    current_file_path = pathlib.Path(__file__).parent.resolve()
+    jinja_template = JinjaTemplate(os.path.join(current_file_path, "templates"))
+    ```
+
+3. **Usage in Routes**: Use the `render_template` method of `JinjaTemplate` to render templates in your routes.
+
+    ```python
+    @app.get("/frontend")
+    async def get_frontend(request):
+        context = {"framework": "Robyn", "templating_engine": "Jinja2"}
+        return jinja_template.render_template("index.html", **context)
+    ```
+
+4. **Loading Resources in Templates**: In your Jinja templates, use the `url_for` function to generate URLs for static resources.
+
+    ```html
+    <img src="{{ url_for('static', filename='images/planets.jpeg') }}" alt="Planets">
+    ```
+
+    Adjust the path and filename according to your project's directory structure.
+
+With these steps, you can integrate resource loading functionality into Jinja templates and use `url_for` to generate URLs for static resources.
+
+
 
 
 
