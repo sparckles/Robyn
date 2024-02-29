@@ -21,7 +21,6 @@ from robyn.templating import JinjaTemplate
 from integration_tests.views import SyncView, AsyncView
 from integration_tests.subroutes import sub_router, di_subrouter
 
-
 app = Robyn(__file__)
 websocket = WebSocket(app, "/web_socket")
 
