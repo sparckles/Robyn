@@ -20,9 +20,6 @@ from robyn.templating import JinjaTemplate
 
 from integration_tests.views import SyncView, AsyncView
 from integration_tests.subroutes import sub_router, di_subrouter
-from fastapi import Request
-from fastapi.responses import FileResponse, JSONResponse
-import os
 
 app = Robyn(__file__)
 websocket = WebSocket(app, "/web_socket")
@@ -450,6 +447,7 @@ async def async_template_render():
     template = jinja_template.render_template(template_name="test.html", **context)
     return template
 
+
 # add route and it's function for url_for for template for integration testing
 @app.get("/sync/url_for")
 def sync_url_for():
@@ -457,11 +455,13 @@ def sync_url_for():
     template = jinja_template.render_template(template_name="test.html", **context)
     return "/sync/url_for"
 
+
 @app.get("/async/url_for")
 async def async_url_for():
     context = {"framework": "Robyn", "templating_engine": "Jinja2"}
     template = jinja_template.render_template(template_name="test.html", **context)
     return "/async/url_for"
+
 
 # File download
 

@@ -41,6 +41,7 @@ def test_template(function_type: str, session):
 
     check_response(get(f"/{function_type}/template"))
 
+
 @pytest.mark.benchmark
 @pytest.mark.parametrize("function_type", ["sync", "async"])
 def test_url_for(function_type: str, session):
