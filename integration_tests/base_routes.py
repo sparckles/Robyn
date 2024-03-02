@@ -100,11 +100,7 @@ def jsonws_connect():
 
 @websocket_di.on("connect")
 async def di_message_connect(global_dependencies, router_dependencies):
-    return (
-        global_dependencies["GLOBAL_DEPENDENCY"]
-        + " "
-        + router_dependencies["ROUTER_DEPENDENCY"]
-    )
+    return global_dependencies["GLOBAL_DEPENDENCY"] + " " + router_dependencies["ROUTER_DEPENDENCY"]
 
 
 @websocket_di.on("message")
@@ -305,9 +301,7 @@ def sync_response_const_get():
 
 @app.get("/async/response/const", const=True)
 async def async_response_const_get():
-    return Response(
-        200, Headers({"async_const": "response"}), "async response const get"
-    )
+    return Response(200, Headers({"async_const": "response"}), "async response const get")
 
 
 # Binary
@@ -458,14 +452,14 @@ async def async_template_render():
 @app.get("/sync/url_for")
 def sync_url_for():
     context = {"framework": "Robyn", "templating_engine": "Jinja2"}
-    template = jinja_template.render_template(template_name="test.html", **context)
+    template = jinja_template.render_template(template_name="url_for.html", **context)
     return template
 
 
 @app.get("/async/url_for")
 async def async_url_for():
     context = {"framework": "Robyn", "templating_engine": "Jinja2"}
-    template = jinja_template.render_template(template_name="test.html", **context)
+    template = jinja_template.render_template(template_name="url_for.html", **context)
     return template
 
 

@@ -48,6 +48,9 @@ def test_url_for(function_type: str, session):
     def check_response(r: Response):
         assert r.status_code == 200
         assert r.text == f"/{function_type}/url_for"
+        assert "<!DOCTYPE html>" in r.text
+        assert "Jinja2" in r.text
+        assert "Robyn" in r.text
 
     check_response(get(f"/{function_type}/url_for"))
 
