@@ -100,7 +100,11 @@ def jsonws_connect():
 
 @websocket_di.on("connect")
 async def di_message_connect(global_dependencies, router_dependencies):
-    return global_dependencies["GLOBAL_DEPENDENCY"] + " " + router_dependencies["ROUTER_DEPENDENCY"]
+    return (
+        global_dependencies["GLOBAL_DEPENDENCY"]
+        + " "
+        + router_dependencies["ROUTER_DEPENDENCY"]
+    )
 
 
 @websocket_di.on("message")
@@ -301,7 +305,9 @@ def sync_response_const_get():
 
 @app.get("/async/response/const", const=True)
 async def async_response_const_get():
-    return Response(200, Headers({"async_const": "response"}), "async response const get")
+    return Response(
+        200, Headers({"async_const": "response"}), "async response const get"
+    )
 
 
 # Binary
