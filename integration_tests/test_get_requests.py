@@ -1,6 +1,5 @@
 import pytest
 from requests import Response
-
 from integration_tests.helpers.http_methods_helpers import get
 
 
@@ -41,6 +40,15 @@ def test_template(function_type: str, session):
         assert "Robyn" in r.text
 
     check_response(get(f"/{function_type}/template"))
+
+@pytest.mark.benchmark
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_url_for(function_type: str, session):
+    def check_response(r: Response):
+        assert r.status_code == 200
+        assert r.text == f"/{function_type}/url_for"
+
+    check_response(get(f"/{function_type}/url_for"))
 
 
 @pytest.mark.benchmark
