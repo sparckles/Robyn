@@ -47,7 +47,7 @@ def test_template(function_type: str, session):
 def test_url_for(function_type: str, session):
     def check_response(r: Response):
         assert r.status_code == 200
-        assert r.text == f"/{function_type}/url_for"
+        assert r.text == f"<a href='/{function_type}/url_for'>/{function_type}/url_for</a>"
         assert "<!DOCTYPE html>" in r.text
         assert "Jinja2" in r.text
         assert "Robyn" in r.text
