@@ -21,6 +21,7 @@ from robyn.templating import JinjaTemplate
 from integration_tests.views import SyncView, AsyncView
 from integration_tests.subroutes import sub_router, di_subrouter
 from robyn import url_for
+
 app = Robyn(__file__)
 websocket = WebSocket(app, "/web_socket")
 
@@ -453,28 +454,28 @@ async def async_template_render():
 def sync_url_for():
     # Generate URL for the "/about" route
     about_url = url_for("/about")
-    
+
     # Generate URL for the "/contact" route with query parameters
     contact_url = url_for("/contact", name="John", email="john@example.com")
-    
+
     # Generate URL for the static resource "styles.css"
     static_url = url_for("static", filename="styles.css")
-    
+
     return f"About URL: {about_url}, Contact URL: {contact_url}, Static URL: {static_url}"
+
 
 @app.get("/async/url_for")
 async def async_url_for():
     # Generate URL for the "/about" route
     about_url = url_for("/about")
-    
+
     # Generate URL for the "/contact" route with query parameters
     contact_url = url_for("/contact", name="John", email="john@example.com")
-    
+
     # Generate URL for the static resource "styles.css"
     static_url = url_for("static", filename="styles.css")
-    
-    return f"About URL: {about_url}, Contact URL: {contact_url}, Static URL: {static_url}"
 
+    return f"About URL: {about_url}, Contact URL: {contact_url}, Static URL: {static_url}"
 
 
 # File download
