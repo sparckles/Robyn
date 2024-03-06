@@ -16,7 +16,7 @@ from robyn import (
 )
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.robyn import Headers
-from robyn.templating import JinjaTemplate
+from robyn.templating import JinjaTempl
 
 from integration_tests.views import SyncView, AsyncView
 from integration_tests.subroutes import sub_router, di_subrouter
@@ -450,33 +450,14 @@ async def async_template_render():
 
 
 # add route and it's function for url_for for template for integration testing
+
 @app.get("/sync/url_for")
 def sync_url_for():
-    # Generate URL for the "/about" route
-    about_url = url_for("/about")
-
-    # Generate URL for the "/contact" route with query parameters
-    contact_url = url_for("/contact", name="John", email="john@example.com")
-
-    # Generate URL for the static resource "styles.css"
-    static_url = url_for("static", filename="styles.css")
-
-    return f"About URL: {about_url}, Contact URL: {contact_url}, Static URL: {static_url}"
-
+    return jinja_template.url_for("/sync/url_for")
 
 @app.get("/async/url_for")
 async def async_url_for():
-    # Generate URL for the "/about" route
-    about_url = url_for("/about")
-
-    # Generate URL for the "/contact" route with query parameters
-    contact_url = url_for("/contact", name="John", email="john@example.com")
-
-    # Generate URL for the static resource "styles.css"
-    static_url = url_for("static", filename="styles.css")
-
-    return f"About URL: {about_url}, Contact URL: {contact_url}, Static URL: {static_url}"
-
+    return jinja_template.url_for("/async/url_for")
 
 # File download
 
