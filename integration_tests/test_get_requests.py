@@ -45,12 +45,9 @@ def test_template(function_type: str, session):
 @pytest.mark.benchmark
 @pytest.mark.parametrize("function_type", ["sync", "async"])
 def test_url_for(function_type: str):
-
     r = get(f"/{function_type}/url_for")
     assert r.status_code == 200
     assert r.text == f"/{function_type}/url_for"
-
-
 
 
 @pytest.mark.benchmark
