@@ -453,11 +453,13 @@ async def async_template_render():
 
 @app.get("/sync/url_for")
 def sync_url_for():
-    return jinja_template.url_for("/sync/url_for")
+    context = {"framework": "Robyn", "templating_engine": "Jinja2"}
+    return jinja_template.render_template("url_for.html", **context)
 
 @app.get("/async/url_for")
 async def async_url_for():
-    return jinja_template.url_for("/async/url_for")
+    context = {"framework": "Robyn", "templating_engine": "Jinja2"}
+    return jinja_template.render_template("url_for.html", **context)
 
 # File download
 
