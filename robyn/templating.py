@@ -79,6 +79,7 @@ class JinjaTemplate(TemplateInterface):
 
     def __init__(self, directory, encoding="utf-8", followlinks=False):
         self.env = Environment(loader=FileSystemLoader(searchpath=directory, encoding=encoding, followlinks=followlinks))
-        self.add_template_global(self.url_for, 'url_for')
+        self.add_template_global(self.url_for, "url_for")
+
 
 __all__ = ["TemplateInterface", "JinjaTemplate"]
