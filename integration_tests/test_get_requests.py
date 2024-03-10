@@ -46,7 +46,7 @@ def test_template(function_type: str, session):
 @pytest.mark.benchmark
 @pytest.mark.parametrize("function_type", ["sync", "async"])
 def test_url_for():
-    url = url_for('static', filename='templates/images/robyn.png')
+    url = url_for("static", filename="templates/images/robyn.png")
     r = get(url)
     assert r.status_code == 200
 
