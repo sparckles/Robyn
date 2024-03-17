@@ -1,12 +1,9 @@
 # CI to release the project for Linux, Windows, and MacOS
-
 name: Release CI
-
 on:
   push:
     tags:
       - v*
-
 jobs:
   macos:
     runs-on: macos-latest
@@ -14,8 +11,8 @@ jobs:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - uses: dtolnay/rust-toolchain@stable
@@ -39,11 +36,10 @@ jobs:
           pip install --force-reinstall dist/robyn*_universal2.whl
           cd ~ && python -c 'import robyn'
       - name: Upload wheels
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: wheels
           path: dist
-
   windows:
     runs-on: windows-latest
     strategy:
@@ -51,8 +47,8 @@ jobs:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         target: [x64, x86]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.target }}
@@ -68,11 +64,10 @@ jobs:
           pip install --force-reinstall dist/robyn*.whl
           cd ~ && python -c 'import robyn'
       - name: Upload wheels
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: wheels
           path: dist
-
   linux:
     runs-on: ubuntu-latest
     strategy:
@@ -80,9 +75,9 @@ jobs:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         target: [x86_64, i686]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Build Wheels
@@ -97,11 +92,10 @@ jobs:
           pip install --force-reinstall dist/robyn*.whl
           cd ~ && python -c 'import robyn'
       - name: Upload wheels
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: wheels
           path: dist
-
   linux-cross:
     runs-on: ubuntu-latest
     strategy:
@@ -116,7 +110,7 @@ jobs:
           ]
         target: [aarch64, armv7]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
       - name: Build Wheels
         uses: PyO3/maturin-action@v1
         env:
@@ -125,7 +119,7 @@ jobs:
           target: ${{ matrix.target }}
           manylinux: auto
           args: -i python${{matrix.python.version}} --release --out dist
-      - uses: uraimo/run-on-arch-action@v2.7.1
+      - uses: uraimo/run-on-arch-action@v2.2.0
         name: Install build wheel
         with:
           arch: ${{ matrix.target }}
@@ -152,20 +146,19 @@ jobs:
             pip install --force-reinstall dist/robyn*.whl
             cd ~ && python -c 'import robyn'
       - name: Upload wheels
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: wheels
           path: dist
-
   release:
     name: Release
     runs-on: ubuntu-latest
     needs: [macos, windows, linux, linux-cross]
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v3
         with:
           name: wheels
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.x
       - name: Publish to PyPi
