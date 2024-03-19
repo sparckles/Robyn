@@ -1,4 +1,5 @@
 import inspect
+import json
 from abc import ABC, abstractmethod
 from asyncio import iscoroutinefunction
 from functools import wraps
@@ -48,7 +49,7 @@ class Router(BaseRouter):
 
     def _format_response(
         self,
-        res: dict,
+        res: Union[Dict, Response, bytes, tuple, str],
     ) -> Response:
         headers = Headers({"Content-Type": "text/plain"})
 
@@ -59,14 +60,14 @@ class Router(BaseRouter):
             headers = res.get("headers", {})
             headers = Headers(headers)
             if not headers.contains("Content-Type"):
-                headers.set("Content-Type", "text/plain")
+                headers.set("Content-Type", "text/json")
 
-            description = res.get("description", "")
+            description = json.dumps(res)
 
             if not isinstance(status_code, int):
                 status_code = int(status_code)  # status_code can potentially be string
 
-            response = Response(status_code=status_code, headers=headers, description=description)
+            response = Response(status_code=status_codes.HTTP_200_OK, headers=headers, description=description)
             file_path = res.get("file_path")
             if file_path is not None:
                 response.file_path = file_path
@@ -79,6 +80,22 @@ class Router(BaseRouter):
                 headers=headers,
                 description=res,
             )
+        elif isinstance(res, tuple):
+            if len(res) != 3:
+                raise ValueError("Tuple should have 3 elements")
+            else:
+                description, headers, status_code = res
+                description = self._format_response(description).description
+                new_headers = Headers(headers)
+                if new_headers.contains("Content-Type"):
+                    headers.set("Content-Type", new_headers.get("Content-Type"))
+
+                response = Response(
+                    status_code=status_code,
+                    headers=headers,
+                    description=description,
+                )
+
         else:
             response = Response(
                 status_code=status_codes.HTTP_200_OK,
