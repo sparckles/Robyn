@@ -455,4 +455,5 @@ __all__ = [
     "SubRouter",
     "AuthenticationHandler",
     "WebSocketConnector",
+    "WebSocket",
 ]
