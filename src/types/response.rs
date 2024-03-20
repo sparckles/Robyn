@@ -1,9 +1,11 @@
+use std::sync::Arc;
+
 use actix_http::{body::BoxBody, StatusCode};
 use actix_web::{HttpRequest, HttpResponse, HttpResponseBuilder, Responder};
 use pyo3::{
     exceptions::{PyIOError, PyValueError},
     prelude::*,
-    types::{PyBytes, PyString},
+    types::{PyBytes, PyDict, PyString},
 };
 
 use super::headers::Headers;
@@ -97,6 +99,18 @@ pub struct PyResponse {
     pub file_path: Option<String>,
 }
 
+// Helper function to either directly use Py<Headers> or convert Py<PyDict> to Headers
+fn ensure_headers(py: Python, headers: &PyAny) -> PyResult<Headers> {
+    if let Ok(headers_dict) = headers.downcast::<PyDict>() {
+        let headers = Headers::new(Some(headers_dict));
+        Ok(headers)
+    } else if let Ok(headers) = headers.extract::<Headers>() {
+        Ok(headers)
+    } else {
+        Err(PyValueError::new_err("headers must be Headers or dict"))
+    }
+}
+
 #[pymethods]
 impl PyResponse {
     // To do: Add check for content-type in header and change response_type accordingly
@@ -104,7 +118,7 @@ impl PyResponse {
     pub fn new(
         py: Python,
         status_code: u16,
-        headers: Py<Headers>,
+        headers: &PyAny,
         description: Py<PyAny>,
     ) -> PyResult<Self> {
         if description.downcast::<PyString>(py).is_err()
@@ -115,11 +129,25 @@ impl PyResponse {
             ));
         };
 
+        let headers_output: Py<Headers> = if let Ok(headers_dict) = headers.downcast::<PyDict>() {
+            // Here you'd have logic to create a Headers instance from a PyDict
+            // For simplicity, let's assume you have a method `from_dict` on Headers for this
+            let headers = Headers::new(Some(headers_dict)); // Hypothetical method
+            Py::new(py, headers)?
+        } else if let Ok(headers) = headers.extract::<Py<Headers>>() {
+            // If it's already a Py<Headers>, use it directly
+            headers
+        } else {
+            return Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+                "headers must be a Headers instance or a dict",
+            ));
+        };
+
         Ok(Self {
             status_code,
             // we should be handling based on headers but works for now
             response_type: "text".to_string(),
-            headers,
+            headers: headers_output,
             description,
             file_path: None,
         })

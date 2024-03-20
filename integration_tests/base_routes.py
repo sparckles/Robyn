@@ -101,7 +101,11 @@ def jsonws_connect():
 
 @websocket_di.on("connect")
 async def di_message_connect(global_dependencies, router_dependencies):
-    return global_dependencies["GLOBAL_DEPENDENCY"] + " " + router_dependencies["ROUTER_DEPENDENCY"]
+    return (
+        global_dependencies["GLOBAL_DEPENDENCY"]
+        + " "
+        + router_dependencies["ROUTER_DEPENDENCY"]
+    )
 
 
 @websocket_di.on("message")
@@ -244,42 +248,38 @@ async def async_str_const_get():
 
 @app.get("/sync/dict")
 def sync_dict_get():
-    return {
-        "status_code": 200,
-        "description": "sync dict get",
-        "type": "text",
-        "headers": {"sync": "dict"},
-    }
+    return Response(
+        status_code=200,
+        description="sync dict get",
+        headers={"sync": "dict"},
+    )
 
 
 @app.get("/async/dict")
 async def async_dict_get():
-    return {
-        "status_code": 200,
-        "description": "async dict get",
-        "type": "text",
-        "headers": {"async": "dict"},
-    }
+    return Response(
+        status_code= 200,
+        description="async dict get",
+        headers= {"async": "dict"},
+    )
 
 
 @app.get("/sync/dict/const", const=True)
 def sync_dict_const_get():
-    return {
-        "status_code": 200,
-        "description": "sync dict const get",
-        "type": "text",
-        "headers": {"sync_const": "dict"},
-    }
+    return Response(
+        status_code= 200,
+        description= "sync dict const get",
+        headers= {"sync_const": "dict"},
+    )
 
 
 @app.get("/async/dict/const", const=True)
 async def async_dict_const_get():
-    return {
-        "status_code": 200,
-        "description": "async dict const get",
-        "type": "text",
-        "headers": {"async_const": "dict"},
-    }
+    return Response(
+        status_code=200,
+        description="async dict const get",
+        headers={"async_const": "dict"},
+    )
 
 
 # Response
@@ -302,7 +302,9 @@ def sync_response_const_get():
 
 @app.get("/async/response/const", const=True)
 async def async_response_const_get():
-    return Response(200, Headers({"async_const": "response"}), "async response const get")
+    return Response(
+        200, Headers({"async_const": "response"}), "async response const get"
+    )
 
 
 # Binary
@@ -484,22 +486,25 @@ async def async_query(request: Request):
 
 @app.get("/404")
 def return_404():
-    return {"status_code": 404, "description": "not found", "type": "text"}
+    return Response(
+        status_code=404, description="not found", headers={"Content-Type": "text"}
+    )
 
 
 @app.get("/202")
 def return_202():
-    return {"status_code": 202, "description": "hello", "type": "text"}
+    return Response(
+        status_code=202, description="hello", headers={"Content-Type": "text"}
+    )
 
 
 @app.get("/307")
 async def redirect():
-    return {
-        "status_code": 307,
-        "description": "",
-        "type": "text",
-        "headers": {"Location": "redirect_route"},
-    }
+    return Response(
+        status_code=307,
+        description="",
+        headers={"Location": "redirect_route"},
+    )
 
 
 @app.get("/redirect_route")
@@ -524,22 +529,20 @@ async def async_raise():
 
 @app.post("/sync/dict")
 def sync_dict_post():
-    return {
-        "status_code": 200,
-        "description": "sync dict post",
-        "type": "text",
-        "headers": {"sync": "dict"},
-    }
+    return Response(
+        status_code=200,
+        description="sync dict post",
+        headers={"sync": "dict"},
+    )
 
 
 @app.post("/async/dict")
 async def async_dict_post():
-    return {
-        "status_code": 200,
-        "description": "async dict post",
-        "type": "text",
-        "headers": {"async": "dict"},
-    }
+    return Response(
+        status_code=200,
+        description="async dict post",
+        headers={"async": "dict"},
+    )
 
 
 # Body
@@ -581,22 +584,20 @@ async def async_json_post(request: Request):
 
 @app.put("/sync/dict")
 def sync_dict_put():
-    return {
-        "status_code": 200,
-        "description": "sync dict put",
-        "type": "text",
-        "headers": {"sync": "dict"},
-    }
+    return Response(
+        status_code=200,
+        description="sync dict put",
+        headers={"sync": "dict"},
+    )
 
 
 @app.put("/async/dict")
 async def async_dict_put():
-    return {
-        "status_code": 200,
-        "description": "async dict put",
-        "type": "text",
-        "headers": {"async": "dict"},
-    }
+    return Response(
+        status_code=200,
+        description="async dict put",
+        headers={"async": "dict"},
+    )
 
 
 # Body
@@ -619,22 +620,20 @@ async def async_body_put(request: Request):
 
 @app.delete("/sync/dict")
 def sync_dict_delete():
-    return {
-        "status_code": 200,
-        "description": "sync dict delete",
-        "type": "text",
-        "headers": {"sync": "dict"},
-    }
+    return Response(
+        status_code=200,
+        description="sync dict delete",
+        headers={"sync": "dict"},
+    )
 
 
 @app.delete("/async/dict")
 async def async_dict_delete():
-    return {
-        "status_code": 200,
-        "description": "async dict delete",
-        "type": "text",
-        "headers": {"async": "dict"},
-    }
+    return Response(
+        status_code=200,
+        description="async dict delete",
+        headers={"async": "dict"},
+    )
 
 
 # Body
@@ -657,22 +656,21 @@ async def async_body_delete(request: Request):
 
 @app.patch("/sync/dict")
 def sync_dict_patch():
-    return {
-        "status_code": 200,
-        "description": "sync dict patch",
-        "type": "text",
-        "headers": {"sync": "dict"},
-    }
+    return Response(
+        status_code=200,
+        description="sync dict patch",
+        headers={"sync": "dict"},
+    )
 
 
 @app.patch("/async/dict")
 async def async_dict_patch():
-    return {
-        "status_code": 200,
-        "description": "async dict patch",
-        "type": "text",
-        "headers": {"async": "dict"},
-    }
+    return Response(
+        status_code=200,
+        description="async dict patch",
+        # need to fix this
+        headers={"async": "dict"},
+    )
 
 
 # Body
@@ -698,7 +696,7 @@ def sync_decorator_view():
 
     def post(request: Request):
         body = request.body
-        return {"status_code": 200, "description": body}
+        return body
 
 
 @app.view("/async/view/decorator")
@@ -708,15 +706,14 @@ def async_decorator_view():
 
     async def post(request: Request):
         body = request.body
-        return {"status_code": 200, "description": body}
-
+        return body
 
 # ==== Exception Handling ====
 
 
 @app.exception
 def handle_exception(error):
-    return {"status_code": 500, "description": f"error msg: {error}"}
+    return Response(status_code=500, description=f"error msg: {error}", headers={})
 
 
 @app.get("/sync/exception/get")

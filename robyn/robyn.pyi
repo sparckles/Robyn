@@ -290,7 +290,7 @@ class Response:
     """
 
     status_code: int
-    headers: Headers
+    headers: Headers | dict
     description: Union[str, bytes]
     response_type: Optional[str] = None
     file_path: Optional[str] = None
