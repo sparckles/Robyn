@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use actix_http::{body::BoxBody, StatusCode};
 use actix_web::{HttpRequest, HttpResponse, HttpResponseBuilder, Responder};
 use pyo3::{
@@ -97,18 +95,6 @@ pub struct PyResponse {
     pub description: Py<PyAny>,
     #[pyo3(get)]
     pub file_path: Option<String>,
-}
-
-// Helper function to either directly use Py<Headers> or convert Py<PyDict> to Headers
-fn ensure_headers(py: Python, headers: &PyAny) -> PyResult<Headers> {
-    if let Ok(headers_dict) = headers.downcast::<PyDict>() {
-        let headers = Headers::new(Some(headers_dict));
-        Ok(headers)
-    } else if let Ok(headers) = headers.extract::<Headers>() {
-        Ok(headers)
-    } else {
-        Err(PyValueError::new_err("headers must be Headers or dict"))
-    }
 }
 
 #[pymethods]
