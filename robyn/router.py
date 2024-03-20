@@ -1,5 +1,4 @@
 import inspect
-import json
 from abc import ABC, abstractmethod
 from asyncio import iscoroutinefunction
 from functools import wraps
@@ -8,8 +7,17 @@ from types import CoroutineType
 from typing import Callable, Dict, List, NamedTuple, Union, Optional
 from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
 from robyn.dependency_injection import DependencyMap
+from robyn.responses import FileResponse
 
-from robyn.robyn import FunctionInfo, Headers, HttpMethod, MiddlewareType, Request, Response
+from robyn.robyn import (
+    FunctionInfo,
+    Headers,
+    HttpMethod,
+    MiddlewareType,
+    Request,
+    Response,
+    jsonify,
+)
 from robyn import status_codes
 
 from robyn.ws import WebSocket
@@ -39,7 +47,8 @@ class GlobalMiddleware(NamedTuple):
 
 class BaseRouter(ABC):
     @abstractmethod
-    def add_route(*args) -> Union[Callable, CoroutineType, WebSocket]: ...
+    def add_route(*args) -> Union[Callable, CoroutineType, WebSocket]:
+        ...
 
 
 class Router(BaseRouter):
@@ -56,23 +65,27 @@ class Router(BaseRouter):
         response = {}
         if isinstance(res, dict):
             # this should change
-            status_code = res.get("status_code", status_codes.HTTP_200_OK)
-            headers = res.get("headers", {})
-            headers = Headers(headers)
+            headers = Headers({})
             if not headers.contains("Content-Type"):
                 headers.set("Content-Type", "text/json")
 
-            description = json.dumps(res)
+            description = jsonify(res)
 
-            if not isinstance(status_code, int):
-                status_code = int(status_code)  # status_code can potentially be string
-
-            response = Response(status_code=status_codes.HTTP_200_OK, headers=headers, description=description)
-            file_path = res.get("file_path")
-            if file_path is not None:
-                response.file_path = file_path
+            response = Response(
+                status_code=status_codes.HTTP_200_OK,
+                headers=headers,
+                description=description,
+            )
         elif isinstance(res, Response):
             response = res
+        elif isinstance(res, FileResponse):
+            response = Response(
+                status_code=res.status_code,
+                headers=res.headers,
+                description=res.file_path,
+            )
+            response.file_path = res.file_path
+
         elif isinstance(res, bytes):
             headers = Headers({"Content-Type": "application/octet-stream"})
             response = Response(
@@ -95,7 +108,6 @@ class Router(BaseRouter):
                     headers=headers,
                     description=description,
                 )
-
         else:
             response = Response(
                 status_code=status_codes.HTTP_200_OK,
@@ -148,16 +160,32 @@ class Router(BaseRouter):
         new_injected_dependencies = {}
         for dependency in injected_dependencies:
             if dependency in params:
-                new_injected_dependencies[dependency] = injected_dependencies[dependency]
+                new_injected_dependencies[dependency] = injected_dependencies[
+                    dependency
+                ]
             else:
-                _logger.debug(f"Dependency {dependency} is not used in the handler {handler.__name__}")
+                _logger.debug(
+                    f"Dependency {dependency} is not used in the handler {handler.__name__}"
+                )
 
         if iscoroutinefunction(handler):
-            function = FunctionInfo(async_inner_handler, True, number_of_params, params, new_injected_dependencies)
+            function = FunctionInfo(
+                async_inner_handler,
+                True,
+                number_of_params,
+                params,
+                new_injected_dependencies,
+            )
             self.routes.append(Route(route_type, endpoint, function, is_const))
             return async_inner_handler
         else:
-            function = FunctionInfo(inner_handler, False, number_of_params, params, new_injected_dependencies)
+            function = FunctionInfo(
+                inner_handler,
+                False,
+                number_of_params,
+                params,
+                new_injected_dependencies,
+            )
             self.routes.append(Route(route_type, endpoint, function, is_const))
             return inner_handler
 
@@ -176,19 +204,37 @@ class MiddlewareRouter(BaseRouter):
     def set_authentication_handler(self, authentication_handler: AuthenticationHandler):
         self.authentication_handler = authentication_handler
 
-    def add_route(self, middleware_type: MiddlewareType, endpoint: str, handler: Callable, injected_dependencies: dict) -> Callable:
+    def add_route(
+        self,
+        middleware_type: MiddlewareType,
+        endpoint: str,
+        handler: Callable,
+        injected_dependencies: dict,
+    ) -> Callable:
         params = dict(inspect.signature(handler).parameters)
         number_of_params = len(params)
 
         new_injected_dependencies = {}
         for dependency in injected_dependencies:
             if dependency in params:
-                new_injected_dependencies[dependency] = injected_dependencies[dependency]
+                new_injected_dependencies[dependency] = injected_dependencies[
+                    dependency
+                ]
             else:
-                _logger.debug(f"Dependency {dependency} is not used in the middleware handler {handler.__name__}")
+                _logger.debug(
+                    f"Dependency {dependency} is not used in the middleware handler {handler.__name__}"
+                )
 
-        function = FunctionInfo(handler, iscoroutinefunction(handler), number_of_params, params, new_injected_dependencies)
-        self.route_middlewares.append(RouteMiddleware(middleware_type, endpoint, function))
+        function = FunctionInfo(
+            handler,
+            iscoroutinefunction(handler),
+            number_of_params,
+            params,
+            new_injected_dependencies,
+        )
+        self.route_middlewares.append(
+            RouteMiddleware(middleware_type, endpoint, function)
+        )
         return handler
 
     def add_auth_middleware(self, endpoint: str):
@@ -210,7 +256,12 @@ class MiddlewareRouter(BaseRouter):
 
                 return request
 
-            self.add_route(MiddlewareType.BEFORE_REQUEST, endpoint, inner_handler, injected_dependencies)
+            self.add_route(
+                MiddlewareType.BEFORE_REQUEST,
+                endpoint,
+                inner_handler,
+                injected_dependencies,
+            )
             return inner_handler
 
         return decorator
@@ -218,7 +269,9 @@ class MiddlewareRouter(BaseRouter):
     # These inner functions are basically a wrapper around the closure(decorator) being returned.
     # They take a handler, convert it into a closure and return the arguments.
     # Arguments are returned as they could be modified by the middlewares.
-    def add_middleware(self, middleware_type: MiddlewareType, endpoint: Optional[str]) -> Callable[..., None]:
+    def add_middleware(
+        self, middleware_type: MiddlewareType, endpoint: Optional[str]
+    ) -> Callable[..., None]:
         # no dependency injection here
         injected_dependencies = {}
 
@@ -233,9 +286,16 @@ class MiddlewareRouter(BaseRouter):
 
             if endpoint is not None:
                 if iscoroutinefunction(handler):
-                    self.add_route(middleware_type, endpoint, async_inner_handler, injected_dependencies)
+                    self.add_route(
+                        middleware_type,
+                        endpoint,
+                        async_inner_handler,
+                        injected_dependencies,
+                    )
                 else:
-                    self.add_route(middleware_type, endpoint, inner_handler, injected_dependencies)
+                    self.add_route(
+                        middleware_type, endpoint, inner_handler, injected_dependencies
+                    )
             else:
                 params = dict(inspect.signature(handler).parameters)
 
