@@ -16,13 +16,13 @@ Batman scaled his application across multiple cores for better performance. He u
     ```python {{ title: 'untyped' }}
     @app.exception
     def handle_exception(error):
-        return {"status_code": 500, "body": f"error msg: {error}"}
+        return Response({status_code=500, body=f"error msg: {error}", headers={}})
     ```
 
     ```python {{ title: 'typed' }}
     @app.exception
     def handle_exception(error: Exception):
-        return {"status_code": 500, "body": f"error msg: {error}"}
+        return Response({status_code=500, body=f"error msg: {error}", headers={}})
     ```
     </CodeGroup>
   </Col>

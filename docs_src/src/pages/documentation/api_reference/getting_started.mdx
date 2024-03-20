@@ -198,7 +198,7 @@ Batman was curios about the ability to return JSON responses from the applicatio
 
     @app.post("/jsonify")
     async def json(request):
-        return jsonify({"hello": "world"})
+        return {"hello": "world"}
 
     ```
 
@@ -208,7 +208,7 @@ Batman was curios about the ability to return JSON responses from the applicatio
 
     @app.post("/jsonify")
     async def json(request: Request):
-        return jsonify({"hello": "world"})
+        return {"hello": "world"}
 
     ```
     </CodeGroup>
@@ -239,7 +239,7 @@ Batman was curious about how to access path parameters and query parameters from
     @app.post("/jsonify/:id")
     async def json(request):
         print(request["path_params"]["id"])
-        return jsonify({"hello": "world"})
+        return {"hello": "world"}
 
 
     ```
@@ -250,7 +250,7 @@ Batman was curious about how to access path parameters and query parameters from
     @app.post("/jsonify/:id")
     async def json(request: Request):
         print(request["path_params"]["id"])
-        return jsonify({"hello": "world"})
+        return {"hello": "world"}
 
     ```
 
