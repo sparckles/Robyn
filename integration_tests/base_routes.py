@@ -101,11 +101,7 @@ def jsonws_connect():
 
 @websocket_di.on("connect")
 async def di_message_connect(global_dependencies, router_dependencies):
-    return (
-        global_dependencies["GLOBAL_DEPENDENCY"]
-        + " "
-        + router_dependencies["ROUTER_DEPENDENCY"]
-    )
+    return global_dependencies["GLOBAL_DEPENDENCY"] + " " + router_dependencies["ROUTER_DEPENDENCY"]
 
 
 @websocket_di.on("message")
@@ -258,18 +254,18 @@ def sync_dict_get():
 @app.get("/async/dict")
 async def async_dict_get():
     return Response(
-        status_code= 200,
+        status_code=200,
         description="async dict get",
-        headers= {"async": "dict"},
+        headers={"async": "dict"},
     )
 
 
 @app.get("/sync/dict/const", const=True)
 def sync_dict_const_get():
     return Response(
-        status_code= 200,
-        description= "sync dict const get",
-        headers= {"sync_const": "dict"},
+        status_code=200,
+        description="sync dict const get",
+        headers={"sync_const": "dict"},
     )
 
 
@@ -302,9 +298,7 @@ def sync_response_const_get():
 
 @app.get("/async/response/const", const=True)
 async def async_response_const_get():
-    return Response(
-        200, Headers({"async_const": "response"}), "async response const get"
-    )
+    return Response(200, Headers({"async_const": "response"}), "async response const get")
 
 
 # Binary
@@ -486,16 +480,12 @@ async def async_query(request: Request):
 
 @app.get("/404")
 def return_404():
-    return Response(
-        status_code=404, description="not found", headers={"Content-Type": "text"}
-    )
+    return Response(status_code=404, description="not found", headers={"Content-Type": "text"})
 
 
 @app.get("/202")
 def return_202():
-    return Response(
-        status_code=202, description="hello", headers={"Content-Type": "text"}
-    )
+    return Response(status_code=202, description="hello", headers={"Content-Type": "text"})
 
 
 @app.get("/307")
@@ -707,6 +697,7 @@ def async_decorator_view():
     async def post(request: Request):
         body = request.body
         return body
+
 
 # ==== Exception Handling ====
 
