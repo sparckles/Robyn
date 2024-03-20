@@ -284,13 +284,13 @@ class Response:
     Attributes:
         status_code (int): The status code of the response. e.g. 200, 404, 500 etc.
         response_type (Optional[str]): The response type of the response. e.g. text, json, html, file etc.
-        headers (dict[str, str]): The headers of the response. e.g. {"Content-Type": "application/json"}
+        headers (Union[Headers, dict]): The headers of the response or Headers directly. e.g. {"Content-Type": "application/json"}
         description (Union[str, bytes]): The body of the response. If the response is a JSON, it will be a dict.
         file_path (Optional[str]): The file path of the response. e.g. /home/user/file.txt
     """
 
     status_code: int
-    headers: Headers | dict
+    headers: Union[Headers, dict]
     description: Union[str, bytes]
     response_type: Optional[str] = None
     file_path: Optional[str] = None
