@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from robyn.robyn import Response, Headers
 
@@ -46,6 +46,4 @@ def serve_file(file_path: str) -> FileResponse:
     :param file_path str: file path to serve as a response
     """
 
-    return FileResponse(
-        file_path, headers=Headers({"Content-Disposition": "attachment"})
-    )
+    return FileResponse(file_path, headers=Headers({"Content-Disposition": "attachment"}))
