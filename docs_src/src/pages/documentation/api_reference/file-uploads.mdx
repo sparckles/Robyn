@@ -109,28 +109,28 @@ Speaking of HTML files, Batman wanted to serve simple HTML strings. He was sugge
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
     ```python {{ title: 'untyped' }}
-    from robyn import Robyn, serve_html
+    from robyn import Robyn, html
 
     app = Robyn(__file__)
 
 
     @app.get("/")
     async def h(request):
-        return serve_html("./index.html")
+        return html("./index.html")
 
     app.start(port=8080)
 
     ```
 
     ```python {{ title: 'typed' }}
-    from robyn import Robyn, Request, serve_html
+    from robyn import Robyn, Request, html
 
     app = Robyn(__file__)
 
 
     @app.get("/")
     async def h(request: Request):
-        return serve_html("./index.html")
+        return html("./index.html")
 
     app.start(port=8080)
 
