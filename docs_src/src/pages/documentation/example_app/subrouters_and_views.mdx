@@ -76,7 +76,7 @@ The code would look like this:
 
         def post(request: Request):
             body = request.body
-            return {"status_code": 200, "description": body}
+            return body
     ```
 
 
@@ -87,7 +87,7 @@ The code would look like this:
 
         def post(request: Request):
             body = request.body
-            return {"status_code": 200, "description": body}
+            return body
 
     app.add_view("/sync/view/decorator", sync_decorator_view)
     ```

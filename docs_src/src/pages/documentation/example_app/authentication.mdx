@@ -136,7 +136,7 @@ async def login_user(request):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
 
-    return jsonify({"access_token": token})
+    return {"access_token": token}
 
 ```
 

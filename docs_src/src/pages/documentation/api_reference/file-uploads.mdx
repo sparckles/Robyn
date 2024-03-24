@@ -28,7 +28,7 @@ Batman scaled his application across multiple cores for better performance. He u
       with open('test.txt', 'wb') as f:
           f.write(body)
 
-      return jsonify({'message': 'success'})
+      return {'message': 'success'}
     ```
     ```python {{ title: 'typed' }}
     from robyn.robyn import File
@@ -42,7 +42,7 @@ Batman scaled his application across multiple cores for better performance. He u
       with open('test.txt', 'wb') as f:
           f.write(file)
 
-      return jsonify({'message': 'success'})
+      return {'message': 'success'}
     ```
 
     </CodeGroup>
