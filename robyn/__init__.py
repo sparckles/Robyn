@@ -66,9 +66,7 @@ class Robyn:
                 color=Colors.BLUE,
             )
         if self.config.dev:
-            exit(
-                "Dev mode is not supported in the python wrapper. Please use the CLI. e.g. python3 -m robyn app.py --dev "
-            )
+            exit("Dev mode is not supported in the python wrapper. Please use the CLI. e.g. python3 -m robyn app.py --dev ")
 
         self.router = Router()
         self.middleware_router = MiddlewareRouter()
@@ -154,9 +152,7 @@ class Robyn:
         :param endpoint str|None: endpoint to server the route. If None, the middleware will be applied to all the routes.
         """
 
-        return self.middleware_router.add_middleware(
-            MiddlewareType.BEFORE_REQUEST, endpoint
-        )
+        return self.middleware_router.add_middleware(MiddlewareType.BEFORE_REQUEST, endpoint)
 
     def after_request(self, endpoint: Optional[str] = None) -> Callable[..., None]:
         """
@@ -164,9 +160,7 @@ class Robyn:
 
         :param endpoint str|None: endpoint to server the route. If None, the middleware will be applied to all the routes.
         """
-        return self.middleware_router.add_middleware(
-            MiddlewareType.AFTER_REQUEST, endpoint
-        )
+        return self.middleware_router.add_middleware(MiddlewareType.AFTER_REQUEST, endpoint)
 
     def add_directory(
         self,
@@ -175,9 +169,7 @@ class Robyn:
         index_file: Optional[str] = None,
         show_files_listing: bool = False,
     ):
-        self.directories.append(
-            Directory(route, directory_path, show_files_listing, index_file)
-        )
+        self.directories.append(Directory(route, directory_path, show_files_listing, index_file))
 
     def add_request_header(self, key: str, value: str) -> None:
         self.request_headers.append(key, value)
@@ -294,9 +286,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self.add_route(
-                HttpMethod.GET, endpoint, handler, const, auth_required
-            )
+            return self.add_route(HttpMethod.GET, endpoint, handler, const, auth_required)
 
         return inner
 
@@ -308,9 +298,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self.add_route(
-                HttpMethod.POST, endpoint, handler, auth_required=auth_required
-            )
+            return self.add_route(HttpMethod.POST, endpoint, handler, auth_required=auth_required)
 
         return inner
 
@@ -322,9 +310,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self.add_route(
-                HttpMethod.PUT, endpoint, handler, auth_required=auth_required
-            )
+            return self.add_route(HttpMethod.PUT, endpoint, handler, auth_required=auth_required)
 
         return inner
 
@@ -336,9 +322,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self.add_route(
-                HttpMethod.DELETE, endpoint, handler, auth_required=auth_required
-            )
+            return self.add_route(HttpMethod.DELETE, endpoint, handler, auth_required=auth_required)
 
         return inner
 
@@ -350,9 +334,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self.add_route(
-                HttpMethod.PATCH, endpoint, handler, auth_required=auth_required
-            )
+            return self.add_route(HttpMethod.PATCH, endpoint, handler, auth_required=auth_required)
 
         return inner
 
@@ -364,9 +346,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self.add_route(
-                HttpMethod.HEAD, endpoint, handler, auth_required=auth_required
-            )
+            return self.add_route(HttpMethod.HEAD, endpoint, handler, auth_required=auth_required)
 
         return inner
 
@@ -378,9 +358,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self.add_route(
-                HttpMethod.OPTIONS, endpoint, handler, auth_required=auth_required
-            )
+            return self.add_route(HttpMethod.OPTIONS, endpoint, handler, auth_required=auth_required)
 
         return inner
 
@@ -392,9 +370,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self.add_route(
-                HttpMethod.CONNECT, endpoint, handler, auth_required=auth_required
-            )
+            return self.add_route(HttpMethod.CONNECT, endpoint, handler, auth_required=auth_required)
 
         return inner
 
@@ -406,9 +382,7 @@ class Robyn:
         """
 
         def inner(handler):
-            return self.add_route(
-                HttpMethod.TRACE, endpoint, handler, auth_required=auth_required
-            )
+            return self.add_route(HttpMethod.TRACE, endpoint, handler, auth_required=auth_required)
 
         return inner
 
@@ -419,20 +393,14 @@ class Robyn:
         :param router Robyn: the router object to include the routes from
         """
         self.router.routes.extend(router.router.routes)
-        self.middleware_router.global_middlewares.extend(
-            router.middleware_router.global_middlewares
-        )
-        self.middleware_router.route_middlewares.extend(
-            router.middleware_router.route_middlewares
-        )
+        self.middleware_router.global_middlewares.extend(router.middleware_router.global_middlewares)
+        self.middleware_router.route_middlewares.extend(router.middleware_router.route_middlewares)
 
         # extend the websocket routes
         prefix = router.prefix
         for route in router.web_socket_router.routes:
             new_endpoint = f"{prefix}{route}"
-            self.web_socket_router.routes[
-                new_endpoint
-            ] = router.web_socket_router.routes[route]
+            self.web_socket_router.routes[new_endpoint] = router.web_socket_router.routes[route]
 
         self.dependencies.merge_dependencies(router)
 
@@ -447,9 +415,7 @@ class Robyn:
 
 
 class SubRouter(Robyn):
-    def __init__(
-        self, file_object: str, prefix: str = "", config: Config = Config()
-    ) -> None:
+    def __init__(self, file_object: str, prefix: str = "", config: Config = Config()) -> None:
         super().__init__(file_object, config)
         self.prefix = prefix
 
@@ -489,9 +455,7 @@ def ALLOW_CORS(app: Robyn, origins: List[str]):
             "Access-Control-Allow-Methods",
             "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS",
         )
-        app.add_response_header(
-            "Access-Control-Allow-Headers", "Content-Type, Authorization"
-        )
+        app.add_response_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
         app.add_response_header("Access-Control-Allow-Credentials", "true")
 
 
