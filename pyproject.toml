@@ -27,6 +27,8 @@ dependencies = [
   'multiprocess == 0.70.14',
   'nestd == 0.3.1',
   'inquirerpy == 0.3.4',
+  'rustimport == 1.3.4',
+  'orjson == 3.9.15',
 # conditional
   "uvloop~=0.19.0; sys_platform != 'win32' and platform_python_implementation == 'CPython' and platform_machine != 'armv7l'"
   ]
@@ -46,7 +48,7 @@ Changelog = "https://github.com/sparckles/robyn/blob/main/CHANGELOG.md"
 
 [tool.poetry]
 name = "robyn"
-version = "0.52.2"
+version = "0.53.0"
 description = "A High-Performance, Community-Driven, and Innovator Friendly Web Framework with a Rust runtime."
 authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 
@@ -61,6 +63,7 @@ nestd = "0.3.1"
 uvloop = { version = "0.19.0", markers = "sys_platform != 'win32' and (sys_platform != 'cygwin' and platform_python_implementation != 'PyPy')" }
 jinja2 = { version = "3.0.1", optional = true }
 rustimport = "^1.3.4"
+orjson = "^3.9.15"
 
 [tool.poetry.extras]
 templating = ["jinja2"]

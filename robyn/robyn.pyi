@@ -7,14 +7,6 @@ from typing import Callable, Optional, Union
 def get_version() -> str:
     pass
 
-def jsonify(input_dict: dict) -> str:
-    """
-    This function serializes input dict to a json string
-
-    Attributes:
-        input_dict dict: response of the function
-    """
-
 class SocketHeld:
     def __init__(self, url: str, port: int):
         pass
