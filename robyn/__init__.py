@@ -16,7 +16,7 @@ from robyn.events import Events
 from robyn.logger import logger
 from robyn.processpool import run_processes
 from robyn.responses import serve_file, serve_html, html
-from robyn.robyn import FunctionInfo, HttpMethod, Request, Response, get_version
+from robyn.robyn import FunctionInfo, HttpMethod, Request, Response, get_version, WebSocketConnector, Headers
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory
 from robyn import status_codes
@@ -468,6 +468,7 @@ __all__ = [
     "ALLOW_CORS",
     "SubRouter",
     "AuthenticationHandler",
+    "Headers",
     "WebSocketConnector",
     "WebSocket",
 ]
