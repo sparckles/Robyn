@@ -16,9 +16,9 @@ from robyn.robyn import (
     MiddlewareType,
     Request,
     Response,
-    jsonify,
 )
 from robyn import status_codes
+from robyn.jsonify import jsonify
 
 from robyn.ws import WebSocket
 

@@ -16,27 +16,23 @@ from robyn.events import Events
 from robyn.logger import logger
 from robyn.processpool import run_processes
 from robyn.responses import serve_file, serve_html, html
-from robyn.robyn import FunctionInfo, HttpMethod, Request, Response, get_version, WebSocketConnector, Headers
+from robyn.robyn import (
+    FunctionInfo,
+    HttpMethod,
+    Request,
+    Response,
+    get_version,
+    WebSocketConnector,
+    Headers,
+)
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory
 from robyn import status_codes
 from robyn.ws import WebSocket
-
-import orjson
+from robyn.jsonify import jsonify
 
 
 __version__ = get_version()
-
-def jsonify(input_dict: dict) -> str:
-    """
-    This function serializes input dict to a json string
-
-    Attributes:
-        input_dict dict: response of the function
-    """
-    output_binary = orjson.dumps(input_dict)
-    output_str = output_binary.decode("utf-8")
-    return output_str
 
 
 config = Config()
@@ -70,7 +66,9 @@ class Robyn:
                 color=Colors.BLUE,
             )
         if self.config.dev:
-            exit("Dev mode is not supported in the python wrapper. Please use the CLI. e.g. python3 -m robyn app.py --dev ")
+            exit(
+                "Dev mode is not supported in the python wrapper. Please use the CLI. e.g. python3 -m robyn app.py --dev "
+            )
 
         self.router = Router()
         self.middleware_router = MiddlewareRouter()
@@ -82,7 +80,14 @@ class Robyn:
         self.exception_handler: Optional[Callable] = None
         self.authentication_handler: Optional[AuthenticationHandler] = None
 
-    def add_route(self, route_type: Union[HttpMethod, str], endpoint: str, handler: Callable, is_const: bool = False, auth_required: bool = False):
+    def add_route(
+        self,
+        route_type: Union[HttpMethod, str],
+        endpoint: str,
+        handler: Callable,
+        is_const: bool = False,
+        auth_required: bool = False,
+    ):
         """
         Connect a URI to a handler
 
@@ -149,7 +154,9 @@ class Robyn:
         :param endpoint str|None: endpoint to server the route. If None, the middleware will be applied to all the routes.
         """
 
-        return self.middleware_router.add_middleware(MiddlewareType.BEFORE_REQUEST, endpoint)
+        return self.middleware_router.add_middleware(
+            MiddlewareType.BEFORE_REQUEST, endpoint
+        )
 
     def after_request(self, endpoint: Optional[str] = None) -> Callable[..., None]:
         """
@@ -157,7 +164,9 @@ class Robyn:
 
         :param endpoint str|None: endpoint to server the route. If None, the middleware will be applied to all the routes.
         """
-        return self.middleware_router.add_middleware(MiddlewareType.AFTER_REQUEST, endpoint)
+        return self.middleware_router.add_middleware(
+            MiddlewareType.AFTER_REQUEST, endpoint
+        )
 
     def add_directory(
         self,
@@ -166,7 +175,9 @@ class Robyn:
         index_file: Optional[str] = None,
         show_files_listing: bool = False,
     ):
-        self.directories.append(Directory(route, directory_path, show_files_listing, index_file))
+        self.directories.append(
+            Directory(route, directory_path, show_files_listing, index_file)
+        )
 
     def add_request_header(self, key: str, value: str) -> None:
         self.request_headers.append(key, value)
@@ -283,7 +294,9 @@ class Robyn:
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.GET, endpoint, handler, const, auth_required)
+            return self.add_route(
+                HttpMethod.GET, endpoint, handler, const, auth_required
+            )
 
         return inner
 
@@ -295,7 +308,9 @@ class Robyn:
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.POST, endpoint, handler, auth_required=auth_required)
+            return self.add_route(
+                HttpMethod.POST, endpoint, handler, auth_required=auth_required
+            )
 
         return inner
 
@@ -307,7 +322,9 @@ class Robyn:
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.PUT, endpoint, handler, auth_required=auth_required)
+            return self.add_route(
+                HttpMethod.PUT, endpoint, handler, auth_required=auth_required
+            )
 
         return inner
 
@@ -319,7 +336,9 @@ class Robyn:
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.DELETE, endpoint, handler, auth_required=auth_required)
+            return self.add_route(
+                HttpMethod.DELETE, endpoint, handler, auth_required=auth_required
+            )
 
         return inner
 
@@ -331,7 +350,9 @@ class Robyn:
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.PATCH, endpoint, handler, auth_required=auth_required)
+            return self.add_route(
+                HttpMethod.PATCH, endpoint, handler, auth_required=auth_required
+            )
 
         return inner
 
@@ -343,7 +364,9 @@ class Robyn:
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.HEAD, endpoint, handler, auth_required=auth_required)
+            return self.add_route(
+                HttpMethod.HEAD, endpoint, handler, auth_required=auth_required
+            )
 
         return inner
 
@@ -355,7 +378,9 @@ class Robyn:
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.OPTIONS, endpoint, handler, auth_required=auth_required)
+            return self.add_route(
+                HttpMethod.OPTIONS, endpoint, handler, auth_required=auth_required
+            )
 
         return inner
 
@@ -367,7 +392,9 @@ class Robyn:
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.CONNECT, endpoint, handler, auth_required=auth_required)
+            return self.add_route(
+                HttpMethod.CONNECT, endpoint, handler, auth_required=auth_required
+            )
 
         return inner
 
@@ -379,7 +406,9 @@ class Robyn:
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.TRACE, endpoint, handler, auth_required=auth_required)
+            return self.add_route(
+                HttpMethod.TRACE, endpoint, handler, auth_required=auth_required
+            )
 
         return inner
 
@@ -390,14 +419,20 @@ class Robyn:
         :param router Robyn: the router object to include the routes from
         """
         self.router.routes.extend(router.router.routes)
-        self.middleware_router.global_middlewares.extend(router.middleware_router.global_middlewares)
-        self.middleware_router.route_middlewares.extend(router.middleware_router.route_middlewares)
+        self.middleware_router.global_middlewares.extend(
+            router.middleware_router.global_middlewares
+        )
+        self.middleware_router.route_middlewares.extend(
+            router.middleware_router.route_middlewares
+        )
 
         # extend the websocket routes
         prefix = router.prefix
         for route in router.web_socket_router.routes:
             new_endpoint = f"{prefix}{route}"
-            self.web_socket_router.routes[new_endpoint] = router.web_socket_router.routes[route]
+            self.web_socket_router.routes[
+                new_endpoint
+            ] = router.web_socket_router.routes[route]
 
         self.dependencies.merge_dependencies(router)
 
@@ -412,7 +447,9 @@ class Robyn:
 
 
 class SubRouter(Robyn):
-    def __init__(self, file_object: str, prefix: str = "", config: Config = Config()) -> None:
+    def __init__(
+        self, file_object: str, prefix: str = "", config: Config = Config()
+    ) -> None:
         super().__init__(file_object, config)
         self.prefix = prefix
 
@@ -452,7 +489,9 @@ def ALLOW_CORS(app: Robyn, origins: List[str]):
             "Access-Control-Allow-Methods",
             "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS",
         )
-        app.add_response_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        app.add_response_header(
+            "Access-Control-Allow-Headers", "Content-Type, Authorization"
+        )
         app.add_response_header("Access-Control-Allow-Credentials", "true")
 
 
