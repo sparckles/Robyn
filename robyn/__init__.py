@@ -16,14 +16,28 @@ from robyn.events import Events
 from robyn.logger import logger
 from robyn.processpool import run_processes
 from robyn.responses import serve_file, serve_html, html
-from robyn.robyn import FunctionInfo, HttpMethod, Request, Response, get_version, jsonify, WebSocketConnector, Headers
+from robyn.robyn import FunctionInfo, HttpMethod, Request, Response, get_version
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory
 from robyn import status_codes
 from robyn.ws import WebSocket
 
+import orjson
+
 
 __version__ = get_version()
+
+def jsonify(input_dict: dict) -> str:
+    """
+    This function serializes input dict to a json string
+
+    Attributes:
+        input_dict dict: response of the function
+    """
+    output_binary = orjson.dumps(input_dict)
+    output_str = output_binary.decode("utf-8")
+    return output_str
+
 
 config = Config()
 
