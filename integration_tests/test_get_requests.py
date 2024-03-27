@@ -1,7 +1,7 @@
 import pytest
 from requests import Response
-
 from integration_tests.helpers.http_methods_helpers import get
+from robyn.templating import url_for
 
 
 @pytest.mark.benchmark
@@ -41,6 +41,14 @@ def test_template(function_type: str, session):
         assert "Robyn" in r.text
 
     check_response(get(f"/{function_type}/template"))
+
+
+@pytest.mark.benchmark
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_url_for():
+    url = url_for("static", filename="templates/images/robyn.png")
+    r = get(url)
+    assert r.status_code == 200
 
 
 @pytest.mark.benchmark
