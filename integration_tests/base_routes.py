@@ -145,7 +145,7 @@ def global_after_request(response: Response):
 
 @app.get("/sync/global/middlewares")
 def sync_global_middlewares(request: Request):
-    assert request.headers.contains("global_before")
+    assert "global_before" in request.headers
     assert request.headers.get("global_before") == "global_before_request"
     return "sync global middlewares"
 
@@ -168,7 +168,7 @@ def sync_after_request(response: Response):
 
 @app.get("/sync/middlewares")
 def sync_middlewares(request: Request):
-    assert request.headers.contains("before")
+    assert "before" in request.headers
     assert request.headers.get("before") == "sync_before_request"
     assert request.ip_addr == "127.0.0.1"
     return "sync middlewares"
@@ -189,7 +189,7 @@ async def async_after_request(response: Response):
 
 @app.get("/async/middlewares")
 async def async_middlewares(request: Request):
-    assert request.headers.contains("before")
+    assert "before" in request.headers
     assert request.headers.get("before") == "async_before_request"
     assert request.ip_addr == "127.0.0.1"
     return "async middlewares"

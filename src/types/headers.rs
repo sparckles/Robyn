@@ -140,6 +140,10 @@ impl Headers {
         true
     }
 
+    pub fn __contains__(&self, key: String) -> bool {
+        self.contains(key)
+    }
+
     pub fn __repr__(&self) -> String {
         format!("{:?}", self.headers)
     }
