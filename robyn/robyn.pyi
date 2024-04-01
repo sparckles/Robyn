@@ -258,6 +258,8 @@ class Request:
     body: Union[str, bytes]
     method: str
     url: Url
+    form_data: dict[str, str]
+    files: dict[str, bytes]
     ip_addr: Optional[str]
     identity: Optional[Identity]
 

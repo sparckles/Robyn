@@ -5,7 +5,8 @@ use actix_web::{
 };
 use futures_util::StreamExt as _;
 use log::debug;
-use pyo3::{exceptions::PyValueError, prelude::*, types::PyDict, types::PyString};
+use pyo3::types::{PyBytes, PyDict, PyString};
+use pyo3::{exceptions::PyValueError, prelude::*};
 use serde_json::Value;
 use std::collections::HashMap;
 
@@ -53,7 +54,8 @@ impl ToPyObject for Request {
             Some(data) => {
                 let dict = PyDict::new(py);
                 for (key, value) in data.iter() {
-                    dict.set_item(key, value).unwrap();
+                    let bytes = PyBytes::new(py, value);
+                    dict.set_item(key, bytes).unwrap();
                 }
                 dict.into_py(py)
             }
@@ -185,9 +187,9 @@ pub struct PyRequest {
     pub url: Url,
     #[pyo3(get)]
     pub ip_addr: Option<String>,
-    #[pyo3(get)]
+    #[pyo3(get, set)]
     pub form_data: Py<PyDict>,
-    #[pyo3(get)]
+    #[pyo3(get, set)]
     pub files: Py<PyDict>,
 }
 
@@ -202,10 +204,10 @@ impl PyRequest {
         body: Py<PyAny>,
         method: String,
         url: Url,
-        identity: Option<Identity>,
-        ip_addr: Option<String>,
         form_data: Py<PyDict>,
         files: Py<PyDict>,
+        identity: Option<Identity>,
+        ip_addr: Option<String>,
     ) -> Self {
         Self {
             query_params,
@@ -215,9 +217,9 @@ impl PyRequest {
             body,
             method,
             url,
-            ip_addr,
             form_data,
             files,
+            ip_addr,
         }
     }
 

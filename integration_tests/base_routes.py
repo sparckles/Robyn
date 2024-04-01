@@ -459,6 +459,14 @@ async def file_download_async():
     file_path = os.path.join(current_file_path, "downloads", "test.txt")
     return serve_file(file_path)
 
+# Multipart file
+
+@app.post("/sync/multipart-file")
+def sync_multipart_file(request: Request):
+    file = request.files["test.png"]
+    with open("test.png", "wb") as f:
+        f.write(file)
+    return "File uploaded"
 
 # Queries
 
@@ -546,6 +554,11 @@ def sync_body_post(request: Request):
 @app.post("/async/body")
 async def async_body_post(request: Request):
     return request.body
+
+@app.post("/sync/form_data")
+def sync_form_data(request: Request):
+    return request.form_data
+
 
 
 # JSON Request
