@@ -65,7 +65,7 @@ class Router(BaseRouter):
         if isinstance(res, dict):
             # this should change
             headers = Headers({})
-            if not headers.contains("Content-Type"):
+            if "Content-Type" not in headers:
                 headers.set("Content-Type", "text/json")
 
             description = jsonify(res)
@@ -99,7 +99,7 @@ class Router(BaseRouter):
                 description, headers, status_code = res
                 description = self._format_response(description).description
                 new_headers = Headers(headers)
-                if new_headers.contains("Content-Type"):
+                if "Content-Type" in new_headers:
                     headers.set("Content-Type", new_headers.get("Content-Type"))
 
                 response = Response(
