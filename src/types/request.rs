@@ -1,4 +1,10 @@
-use actix_web::{web::Bytes, HttpRequest};
+use actix_multipart::Multipart;
+use actix_web::{
+    web::{self, Bytes},
+    Error, HttpRequest,
+};
+use futures_util::StreamExt as _;
+use log::debug;
 use pyo3::{exceptions::PyValueError, prelude::*, types::PyDict, types::PyString};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -19,6 +25,8 @@ pub struct Request {
     pub url: Url,
     pub ip_addr: Option<String>,
     pub identity: Option<Identity>,
+    pub form_data: Option<HashMap<String, String>>,
+    pub files: Option<HashMap<String, Vec<u8>>>,
 }
 
 impl ToPyObject for Request {
@@ -30,6 +38,27 @@ impl ToPyObject for Request {
             Ok(s) => s.into_py(py),
             Err(_) => self.body.clone().into_py(py),
         };
+        let form_data: Py<PyDict> = match &self.form_data {
+            Some(data) => {
+                let dict = PyDict::new(py);
+                for (key, value) in data.iter() {
+                    dict.set_item(key, value).unwrap();
+                }
+                dict.into_py(py)
+            }
+            None => PyDict::new(py).into_py(py),
+        };
+
+        let files: Py<PyDict> = match &self.files {
+            Some(data) => {
+                let dict = PyDict::new(py);
+                for (key, value) in data.iter() {
+                    dict.set_item(key, value).unwrap();
+                }
+                dict.into_py(py)
+            }
+            None => PyDict::new(py).into_py(py),
+        };
 
         let request = PyRequest {
             query_params,
@@ -40,14 +69,67 @@ impl ToPyObject for Request {
             url: self.url.clone(),
             ip_addr: self.ip_addr.clone(),
             identity: self.identity.clone(),
+            form_data: form_data.clone(),
+            files: files.clone(),
         };
         Py::new(py, request).unwrap().as_ref(py).into()
     }
 }
 
+async fn handle_multipart(
+    mut payload: Multipart,
+    files: &mut HashMap<String, Vec<u8>>,
+    form_data: &mut HashMap<String, String>,
+) -> Result<(), Error> {
+    // Iterate over multipart stream
+
+    while let Some(item) = payload.next().await {
+        let mut field = item?;
+
+        let mut data = Vec::new();
+        // Read the field data
+        while let Some(chunk) = field.next().await {
+            let data_chunk = chunk?;
+            data.extend_from_slice(&data_chunk);
+        }
+
+        let content_disposition = field.content_disposition();
+        let field_name = content_disposition.get_name().unwrap_or_default().clone();
+        let file_name = content_disposition.get_filename().map(|s| s.to_string());
+
+        if let Some(name) = file_name {
+            files.insert(name, data);
+        } else {
+            // Handle text field
+            // let field_name = field_name.clone().to_string();
+            if let Ok(text) = String::from_utf8(data) {
+                form_data.insert(field_name.to_string(), text); // Save form data
+            }
+        }
+    }
+
+    Ok(())
+}
+
 impl Request {
-    pub fn from_actix_request(req: &HttpRequest, body: Bytes, global_headers: &Headers) -> Self {
+    pub async fn from_actix_request(
+        req: &HttpRequest,
+        payload: web::Payload,
+        body: Bytes,
+        global_headers: &Headers,
+    ) -> Self {
         let mut query_params: QueryParams = QueryParams::new();
+        let mut form_data: HashMap<String, String> = HashMap::new();
+        let mut files = HashMap::new();
+
+        let multipart = Multipart::new(req.headers(), payload);
+
+        let a = handle_multipart(multipart, &mut files, &mut form_data).await;
+
+        if let Err(e) = a {
+            debug!("Error handling multipart data: {:?}", e);
+        }
+
         if !req.query_string().is_empty() {
             let split = req.query_string().split('&');
             for s in split {
@@ -78,6 +160,8 @@ impl Request {
             url,
             ip_addr,
             identity: None,
+            form_data: Some(form_data),
+            files: Some(files),
         }
     }
 }
@@ -101,6 +185,10 @@ pub struct PyRequest {
     pub url: Url,
     #[pyo3(get)]
     pub ip_addr: Option<String>,
+    #[pyo3(get)]
+    pub form_data: Py<PyDict>,
+    #[pyo3(get)]
+    pub files: Py<PyDict>,
 }
 
 #[pymethods]
@@ -116,6 +204,8 @@ impl PyRequest {
         url: Url,
         identity: Option<Identity>,
         ip_addr: Option<String>,
+        form_data: Py<PyDict>,
+        files: Py<PyDict>,
     ) -> Self {
         Self {
             query_params,
@@ -126,6 +216,8 @@ impl PyRequest {
             method,
             url,
             ip_addr,
+            form_data,
+            files,
         }
     }
 

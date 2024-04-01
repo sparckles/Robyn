@@ -190,6 +190,7 @@ impl Server {
                             move |router: web::Data<Arc<HttpRouter>>,
                                   const_router: web::Data<Arc<ConstRouter>>,
                                   middleware_router: web::Data<Arc<MiddlewareRouter>>,
+                                  payload: web::Payload,
                                   global_request_headers,
                                   global_response_headers,
                                   body,
@@ -197,6 +198,7 @@ impl Server {
                                 pyo3_asyncio::tokio::scope_local(task_locals.clone(), async move {
                                     index(
                                         router,
+                                        payload,
                                         const_router,
                                         middleware_router,
                                         global_request_headers,
@@ -366,6 +368,7 @@ impl Default for Server {
 /// path, and returns a Future of a Response.
 async fn index(
     router: web::Data<Arc<HttpRouter>>,
+    payload: web::Payload,
     const_router: web::Data<Arc<ConstRouter>>,
     middleware_router: web::Data<Arc<MiddlewareRouter>>,
     global_request_headers: web::Data<Arc<Headers>>,
@@ -373,7 +376,8 @@ async fn index(
     body: Bytes,
     req: HttpRequest,
 ) -> impl Responder {
-    let mut request = Request::from_actix_request(&req, body, &global_request_headers);
+    let mut request =
+        Request::from_actix_request(&req, payload, body, &global_request_headers).await;
 
     // Before middleware
     // Global
