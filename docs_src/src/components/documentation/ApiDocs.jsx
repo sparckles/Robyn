@@ -54,6 +54,11 @@ const guides = [
       'Learn how to upload and download files to your server using Robyn.',
   },
   {
+    href: '/documentation/api_reference/form_data',
+    name: 'Form Data',
+    description: 'Learn how to handle form data.',
+  },
+  {
     href: '/documentation/api_reference/websockets',
     name: 'Websockets',
     description: 'Learn how to use Websockets in Robyn.',

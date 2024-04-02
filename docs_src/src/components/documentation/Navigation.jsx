@@ -261,6 +261,10 @@ export const navigation = [
         title: 'File Uploads',
       },
       {
+        href: '/documentation/api_reference/form_data',
+        title: 'Form Data',
+      },
+      {
         href: '/documentation/api_reference/websockets',
         title: 'Websockets',
       },

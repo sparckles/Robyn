@@ -460,6 +460,17 @@ async def file_download_async():
     return serve_file(file_path)
 
 
+# Multipart file
+
+
+@app.post("/sync/multipart-file")
+def sync_multipart_file(request: Request):
+    file = request.files["test.png"]
+    with open("test.png", "wb") as f:
+        f.write(file)
+    return "File uploaded"
+
+
 # Queries
 
 
@@ -548,6 +559,11 @@ async def async_body_post(request: Request):
     return request.body
 
 
+@app.post("/sync/form_data")
+def sync_form_data(request: Request):
+    return request.form_data
+
+
 # JSON Request
 
 
@@ -631,6 +647,7 @@ async def async_dict_delete():
 
 @app.delete("/sync/body")
 def sync_body_delete(request: Request):
+    print(request.body)
     return request.body
 
 

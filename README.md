@@ -116,6 +116,7 @@ python --version
 - Multi Core Scaling
 - WebSockets!
 - Middlewares
+- Built in form data handling
 - Dependency Injection
 - Hot Reloading
 - Direct Rust Integration
