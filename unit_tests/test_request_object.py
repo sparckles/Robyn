@@ -16,6 +16,8 @@ def test_request_object():
         url=url,
         ip_addr=None,
         identity=None,
+        form_data={},
+        files={},
     )
 
     assert request.url.scheme == "https"

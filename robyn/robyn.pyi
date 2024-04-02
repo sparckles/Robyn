@@ -246,10 +246,13 @@ class Request:
     Attributes:
         query_params (QueryParams): The query parameters of the request. e.g. /user?id=123 -> {"id": "123"}
         headers Headers: The headers of the request. e.g. Headers({"Content-Type": "application/json"})
-        params (dict[str, str]): The parameters of the request. e.g. /user/:id -> {"id": "123"}
+        path_params (dict[str, str]): The parameters of the request. e.g. /user/:id -> {"id": "123"}
         body (Union[str, bytes]): The body of the request. If the request is a JSON, it will be a dict.
-        method (str): The method of the request. e.g. GET, POST, PUT, DELETE
+        url (Url): The url of the request. e.g. https://localhost/user
+        form_data (dict[str, str]): The form data of the request. e.g. {"name": "John"}
+        files (dict[str, bytes]): The files of the request. e.g. {"file": b"file"}
         ip_addr (Optional[str]): The IP Address of the client
+        identity (Optional[Identity]): The identity of the client
     """
 
     query_params: QueryParams
