@@ -97,7 +97,7 @@ async fn handle_multipart(
         }
 
         let content_disposition = field.content_disposition();
-        let field_name = content_disposition.get_name().unwrap_or_default().clone();
+        let field_name = content_disposition.get_name().unwrap_or_default();
         let file_name = content_disposition.get_filename().map(|s| s.to_string());
 
         body.extend_from_slice(&data.clone());
