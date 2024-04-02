@@ -159,6 +159,12 @@ impl Request {
             body_local.freeze().to_vec()
         };
 
+        debug!("Request body: {:?}", body);
+        debug!("Request headers: {:?}", headers);
+        debug!("Request query params: {:?}", query_params);
+        debug!("Request form data: {:?}", form_data);
+        debug!("Request files: {:?}", files);
+
         let url = Url::new(
             req.connection_info().scheme(),
             req.connection_info().host(),
