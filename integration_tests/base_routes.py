@@ -647,6 +647,7 @@ async def async_dict_delete():
 
 @app.delete("/sync/body")
 def sync_body_delete(request: Request):
+    print(request.body)
     return request.body
 
 

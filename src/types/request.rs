@@ -92,6 +92,7 @@ async fn handle_multipart(
         let mut data = Vec::new();
         // Read the field data
         while let Some(chunk) = field.next().await {
+            debug!("Chunk: {:?}", chunk);
             let data_chunk = chunk?;
             data.extend_from_slice(&data_chunk);
         }
@@ -134,12 +135,16 @@ impl Request {
         }
 
         let mut headers = Headers::from_actix_headers(req.headers());
+        debug!("Global headers: {:?}", global_headers);
         headers.extend(global_headers);
 
-        let body: Vec<u8> = if headers
-            .get(String::from("content-type"))
-            .is_ok_and(|val| val == "application/x-www-form-urlencoded")
+        let body: Vec<u8> = if headers.contains(String::from("content-type"))
+            && headers
+                .get(String::from("content-type"))
+                .is_ok_and(|val| val == "multipart/form-data")
         {
+            let h = headers.get(String::from("content-type")).unwrap();
+            debug!("Content-Type: {:?}", h);
             let multipart = Multipart::new(req.headers(), payload);
             let mut body_local: Vec<u8> = Vec::new();
 
