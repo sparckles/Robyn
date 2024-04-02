@@ -28,7 +28,10 @@ impl QueryParams {
     pub fn get(&self, key: String, default: Option<String>) -> Option<String> {
         match self.queries.get(&key) {
             Some(values) => values.last().cloned(),
-            None => default,
+            None => match default {
+                Some(val) => Some(val),
+                None => None,
+            },
         }
     }
 
