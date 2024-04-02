@@ -23,7 +23,6 @@ use std::{env, thread};
 
 use actix_files::Files;
 use actix_http::KeepAlive;
-use actix_web::web::Bytes;
 use actix_web::*;
 
 // pyO3 module

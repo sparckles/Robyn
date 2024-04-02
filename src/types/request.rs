@@ -1,6 +1,6 @@
 use actix_multipart::Multipart;
 use actix_web::{
-    web::{self, Bytes, BytesMut},
+    web::{self, BytesMut},
     Error, HttpRequest,
 };
 use futures_util::StreamExt as _;
@@ -104,10 +104,8 @@ async fn handle_multipart(
 
         if let Some(name) = file_name {
             files.insert(name, data);
-        } else {
-            if let Ok(text) = String::from_utf8(data) {
-                form_data.insert(field_name.to_string(), text);
-            }
+        } else if let Ok(text) = String::from_utf8(data) {
+            form_data.insert(field_name.to_string(), text);
         }
     }
 
@@ -158,9 +156,7 @@ impl Request {
                 let chunk = chunk.expect("Failed to read chunk from payload");
                 body_local.extend_from_slice(&chunk);
             }
-            let body_bytes = body_local.freeze().to_vec();
-
-            body_bytes
+            body_local.freeze().to_vec()
         };
 
         let url = Url::new(
