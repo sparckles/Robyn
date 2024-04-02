@@ -82,6 +82,7 @@ async fn handle_multipart(
     mut payload: Multipart,
     files: &mut HashMap<String, Vec<u8>>,
     form_data: &mut HashMap<String, String>,
+    body: &mut Vec<u8>,
 ) -> Result<(), Error> {
     // Iterate over multipart stream
 
@@ -98,6 +99,8 @@ async fn handle_multipart(
         let content_disposition = field.content_disposition();
         let field_name = content_disposition.get_name().unwrap_or_default().clone();
         let file_name = content_disposition.get_filename().map(|s| s.to_string());
+
+        body.extend_from_slice(&data.clone());
 
         if let Some(name) = file_name {
             files.insert(name, data);
@@ -122,7 +125,6 @@ impl Request {
         let mut query_params: QueryParams = QueryParams::new();
         let mut form_data: HashMap<String, String> = HashMap::new();
         let mut files = HashMap::new();
-        let mut body = Vec::new();
 
         if !req.query_string().is_empty() {
             let split = req.query_string().split('&');
@@ -138,17 +140,20 @@ impl Request {
         let mut headers = Headers::from_actix_headers(req.headers());
         headers.extend(global_headers);
 
-        if headers
+        let body: Vec<u8> = if headers
             .get(String::from("content-type"))
             .is_ok_and(|val| val == "application/x-www-form-urlencoded")
         {
             let multipart = Multipart::new(req.headers(), payload);
+            let mut body_local: Vec<u8> = Vec::new();
 
-            let a = handle_multipart(multipart, &mut files, &mut form_data).await;
+            let a = handle_multipart(multipart, &mut files, &mut form_data, &mut body_local).await;
 
             if let Err(e) = a {
                 debug!("Error handling multipart data: {:?}", e);
             }
+
+            body_local
         } else {
             let mut body_local = BytesMut::new();
             while let Some(chunk) = payload.next().await {
@@ -157,8 +162,8 @@ impl Request {
             }
             let body_bytes = body_local.freeze().to_vec();
 
-            body = body_bytes;
-        }
+            body_bytes
+        };
 
         let url = Url::new(
             req.connection_info().scheme(),
