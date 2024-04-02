@@ -105,10 +105,8 @@ async fn handle_multipart(
         if let Some(name) = file_name {
             files.insert(name, data);
         } else {
-            // Handle text field
-            // let field_name = field_name.clone().to_string();
             if let Ok(text) = String::from_utf8(data) {
-                form_data.insert(field_name.to_string(), text); // Save form data
+                form_data.insert(field_name.to_string(), text);
             }
         }
     }
