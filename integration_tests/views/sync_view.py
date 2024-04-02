@@ -6,5 +6,4 @@ def SyncView():
         return "Hello, world!"
 
     def post(request: Request):
-
         return request.body
