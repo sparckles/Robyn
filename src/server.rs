@@ -193,7 +193,6 @@ impl Server {
                                   payload: web::Payload,
                                   global_request_headers,
                                   global_response_headers,
-                                  body,
                                   req| {
                                 pyo3_asyncio::tokio::scope_local(task_locals.clone(), async move {
                                     index(
@@ -203,7 +202,6 @@ impl Server {
                                         middleware_router,
                                         global_request_headers,
                                         global_response_headers,
-                                        body,
                                         req,
                                     )
                                     .await
@@ -373,11 +371,9 @@ async fn index(
     middleware_router: web::Data<Arc<MiddlewareRouter>>,
     global_request_headers: web::Data<Arc<Headers>>,
     global_response_headers: web::Data<Arc<Headers>>,
-    body: Bytes,
     req: HttpRequest,
 ) -> impl Responder {
-    let mut request =
-        Request::from_actix_request(&req, payload, body, &global_request_headers).await;
+    let mut request = Request::from_actix_request(&req, payload, &global_request_headers).await;
 
     // Before middleware
     // Global

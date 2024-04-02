@@ -1,6 +1,6 @@
 use actix_multipart::Multipart;
 use actix_web::{
-    web::{self, Bytes},
+    web::{self, Bytes, BytesMut},
     Error, HttpRequest,
 };
 use futures_util::StreamExt as _;
@@ -116,21 +116,13 @@ async fn handle_multipart(
 impl Request {
     pub async fn from_actix_request(
         req: &HttpRequest,
-        payload: web::Payload,
-        body: Bytes,
+        mut payload: web::Payload,
         global_headers: &Headers,
     ) -> Self {
         let mut query_params: QueryParams = QueryParams::new();
         let mut form_data: HashMap<String, String> = HashMap::new();
         let mut files = HashMap::new();
-
-        let multipart = Multipart::new(req.headers(), payload);
-
-        let a = handle_multipart(multipart, &mut files, &mut form_data).await;
-
-        if let Err(e) = a {
-            debug!("Error handling multipart data: {:?}", e);
-        }
+        let mut body = Vec::new();
 
         if !req.query_string().is_empty() {
             let split = req.query_string().split('&');
@@ -146,6 +138,28 @@ impl Request {
         let mut headers = Headers::from_actix_headers(req.headers());
         headers.extend(global_headers);
 
+        if headers
+            .get(String::from("content-type"))
+            .is_ok_and(|val| val == "application/x-www-form-urlencoded")
+        {
+            let multipart = Multipart::new(req.headers(), payload);
+
+            let a = handle_multipart(multipart, &mut files, &mut form_data).await;
+
+            if let Err(e) = a {
+                debug!("Error handling multipart data: {:?}", e);
+            }
+        } else {
+            let mut body_local = BytesMut::new();
+            while let Some(chunk) = payload.next().await {
+                let chunk = chunk.expect("Failed to read chunk from payload");
+                body_local.extend_from_slice(&chunk);
+            }
+            let body_bytes = body_local.freeze().to_vec();
+
+            body = body_bytes;
+        }
+
         let url = Url::new(
             req.connection_info().scheme(),
             req.connection_info().host(),
@@ -158,7 +172,7 @@ impl Request {
             headers,
             method: req.method().as_str().to_owned(),
             path_params: HashMap::new(),
-            body: body.to_vec(),
+            body,
             url,
             ip_addr,
             identity: None,
