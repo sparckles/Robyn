@@ -467,8 +467,7 @@ async def file_download_async():
 def sync_multipart_file(request: Request):
     files = request.files
     file_names = files.keys()
-    return {"file_names": list( file_names )}
-
+    return {"file_names": list(file_names)}
 
 
 # Queries

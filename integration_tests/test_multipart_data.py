@@ -14,4 +14,3 @@ def test_form_data(function_type: str, session):
 def test_multipart_file(function_type: str, session):
     res = multipart_post(f"/{function_type}/multipart-file", files={"hello": "world"})
     assert "hello" in res.text
-

@@ -61,7 +61,6 @@ def post(
     return response
 
 
-
 def multipart_post(
     endpoint: str,
     files: Optional[dict] = None,
@@ -82,6 +81,7 @@ def multipart_post(
     if should_check_response:
         check_response(response, expected_status_code)
     return response
+
 
 def put(
     endpoint: str,
