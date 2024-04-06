@@ -1,3 +1,4 @@
+use log::debug;
 use pyo3::{
     exceptions::PyValueError,
     prelude::*,
@@ -78,6 +79,7 @@ pub fn get_body_from_pyobject(body: &PyAny) -> PyResult<Vec<u8>> {
     } else if let Ok(b) = body.downcast::<PyBytes>() {
         Ok(b.as_bytes().to_vec())
     } else {
+        debug!("Could not convert specified body to bytes");
         Ok(vec![])
     }
 }
@@ -88,9 +90,8 @@ pub fn get_description_from_pyobject(description: &PyAny) -> PyResult<Vec<u8>> {
     } else if let Ok(b) = description.downcast::<PyBytes>() {
         Ok(b.as_bytes().to_vec())
     } else {
-        Err(PyValueError::new_err(
-            "Could not convert specified description to bytes",
-        ))
+        debug!("Could not convert specified response description to bytes");
+        Ok(vec![])
     }
 }
 

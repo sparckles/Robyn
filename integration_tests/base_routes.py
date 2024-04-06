@@ -560,8 +560,7 @@ async def async_body_post(request: Request):
 
 @app.post("/sync/form_data")
 def sync_form_data(request: Request):
-    print(request.form_data.keys())
-    return "Broh"
+    return request.headers["Content-Type"]
 
 
 # JSON Request
