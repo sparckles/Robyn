@@ -78,9 +78,7 @@ pub fn get_body_from_pyobject(body: &PyAny) -> PyResult<Vec<u8>> {
     } else if let Ok(b) = body.downcast::<PyBytes>() {
         Ok(b.as_bytes().to_vec())
     } else {
-        Err(PyValueError::new_err(
-            "Could not convert specified body to bytes",
-        ))
+        Ok(vec![])
     }
 }
 

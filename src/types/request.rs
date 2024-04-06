@@ -35,10 +35,7 @@ impl ToPyObject for Request {
         let query_params = self.query_params.clone();
         let headers: Py<Headers> = self.headers.clone().into_py(py).extract(py).unwrap();
         let path_params = self.path_params.clone().into_py(py).extract(py).unwrap();
-        let body = match String::from_utf8(self.body.clone()) {
-            Ok(s) => s.into_py(py),
-            Err(_) => self.body.clone().into_py(py),
-        };
+        let body = self.body.clone().into_py(py);
         let form_data: Py<PyDict> = match &self.form_data {
             Some(data) => {
                 let dict = PyDict::new(py);

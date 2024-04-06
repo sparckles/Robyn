@@ -28,6 +28,7 @@ where
     let kwargs = function.kwargs.as_ref(py);
 
     let function_args = function_args.to_object(py);
+    debug!("Function args: {:?}", function_args);
 
     match function.number_of_params {
         0 => handler.call0(),
@@ -84,6 +85,7 @@ where
     } else {
         Python::with_gil(|py| -> Result<MiddlewareReturn> {
             let output = get_function_output(function, py, input)?;
+            debug!("Middleware output: {:?}", output);
             match output.extract::<Response>() {
                 Ok(o) => Ok(MiddlewareReturn::Response(o)),
                 Err(_) => Ok(MiddlewareReturn::Request(output.extract::<Request>()?)),
