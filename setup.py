@@ -21,4 +21,3 @@ sys.exit(1)
 # To be removed once GitHub catches up.
 
 setup(name="robyn", install_requires=[])
- 
