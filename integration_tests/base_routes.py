@@ -152,6 +152,20 @@ def sync_global_middlewares(request: Request):
 
 # --- Route specific ---
 
+vals = [1,2,3]
+def yeidler():
+    while True:
+        for val in vals:
+            yield val
+            yield val
+yieldster = yeidler()
+glob = 0
+@app.get("/yield")
+def gen_yield():
+    global yieldster
+    global glob
+    glob += 1
+    return f"{next(yieldster)}+{glob}  "
 
 @app.before_request("/sync/middlewares")
 def sync_before_request(request: Request):
