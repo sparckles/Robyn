@@ -11,7 +11,7 @@ use pyo3::prelude::*;
 use pyo3_asyncio::TaskLocals;
 
 use crate::types::{
-    function_info::FunctionInfo, request::Request, response::Response, MiddlewareReturn,
+    function_info::{FunctionType, FunctionInfo}, request::Request, response::Response, MiddlewareReturn,
 };
 
 #[inline]
@@ -68,27 +68,32 @@ pub async fn execute_middleware_function<T>(
 where
     T: for<'a> FromPyObject<'a> + ToPyObject,
 {
-    if function.is_async {
-        let output: Py<PyAny> = Python::with_gil(|py| {
-            pyo3_asyncio::tokio::into_future(get_function_output(function, py, input)?)
-        })?
-        .await?;
-
-        Python::with_gil(|py| -> Result<MiddlewareReturn> {
-            let output_response = output.extract::<Response>(py);
-            match output_response {
-                Ok(o) => Ok(MiddlewareReturn::Response(o)),
-                Err(_) => Ok(MiddlewareReturn::Request(output.extract::<Request>(py)?)),
-            }
-        })
-    } else {
-        Python::with_gil(|py| -> Result<MiddlewareReturn> {
-            let output = get_function_output(function, py, input)?;
-            match output.extract::<Response>() {
-                Ok(o) => Ok(MiddlewareReturn::Response(o)),
-                Err(_) => Ok(MiddlewareReturn::Request(output.extract::<Request>()?)),
-            }
-        })
+    match function.ftype {
+        FunctionType::Sync => {
+            Python::with_gil(|py| -> Result<MiddlewareReturn> {
+                let output = get_function_output(function, py, input)?;
+                match output.extract::<Response>() {
+                    Ok(o) => Ok(MiddlewareReturn::Response(o)),
+                    Err(_) => Ok(MiddlewareReturn::Request(output.extract::<Request>()?)),
+                }
+            })
+        },
+        FunctionType::Async => {
+            let output: Py<PyAny> = Python::with_gil(|py| {
+                pyo3_asyncio::tokio::into_future(get_function_output(function, py, input)?)
+            })?
+            .await?;
+    
+            Python::with_gil(|py| -> Result<MiddlewareReturn> {
+                let output_response = output.extract::<Response>(py);
+                match output_response {
+                    Ok(o) => Ok(MiddlewareReturn::Response(o)),
+                    Err(_) => Ok(MiddlewareReturn::Request(output.extract::<Request>(py)?)),
+                }
+            })
+        },
+        FunctionType::SyncGenerator => todo!(),
+        FunctionType::AsyncGenerator => todo!(),
     }
 }
 
@@ -97,19 +102,22 @@ pub async fn execute_http_function(
     request: &Request,
     function: &FunctionInfo,
 ) -> PyResult<Response> {
-    if function.is_async {
-        let output = Python::with_gil(|py| {
-            let function_output = get_function_output(function, py, request)?;
-            pyo3_asyncio::tokio::into_future(function_output)
-        })?
-        .await?;
-
-        return Python::with_gil(|py| -> PyResult<Response> { output.extract(py) });
-    };
-
-    Python::with_gil(|py| -> PyResult<Response> {
-        get_function_output(function, py, request)?.extract()
-    })
+    match function.ftype {
+        FunctionType::Sync => Python::with_gil(|py| -> PyResult<Response> {
+            get_function_output(function, py, request)?.extract()
+        }),
+        FunctionType::Async => {
+            let output = Python::with_gil(|py| {
+                let function_output = get_function_output(function, py, request)?;
+                pyo3_asyncio::tokio::into_future(function_output)
+            })?
+            .await?;
+    
+            return Python::with_gil(|py| -> PyResult<Response> { output.extract(py) });
+        },
+        FunctionType::SyncGenerator => todo!(),
+        FunctionType::AsyncGenerator => todo!(),
+    }
 }
 
 pub async fn execute_event_handler(
@@ -117,18 +125,23 @@ pub async fn execute_event_handler(
     task_locals: &TaskLocals,
 ) -> Result<()> {
     if let Some(function) = event_handler {
-        if function.is_async {
-            debug!("Startup event handler async");
-            Python::with_gil(|py| {
-                pyo3_asyncio::into_future_with_locals(
-                    task_locals,
-                    function.handler.as_ref(py).call0()?,
-                )
-            })?
-            .await?;
-        } else {
-            debug!("Startup event handler");
-            Python::with_gil(|py| function.handler.call0(py))?;
+        match function.ftype {
+            FunctionType::Sync => {
+                debug!("Startup event handler");
+                Python::with_gil(|py| function.handler.call0(py))?;
+            },
+            FunctionType::Async => {
+                debug!("Startup event handler async");
+                Python::with_gil(|py| {
+                    pyo3_asyncio::into_future_with_locals(
+                        task_locals,
+                        function.handler.as_ref(py).call0()?,
+                    )
+                })?
+                .await?;
+            },
+            FunctionType::SyncGenerator => todo!(),
+            FunctionType::AsyncGenerator => todo!(),
         }
     }
     Ok(())

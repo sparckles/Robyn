@@ -51,6 +51,22 @@ class HttpMethod(Enum):
     TRACE: str
     CONNECT: str
 
+class FunctionType(Enum):
+    """
+    The function types supported by Python.
+
+    Attributes:
+        SYNC: str
+        ASYNC: str
+        SYNCGENERATOR: str
+        ASYNCGENERATOR: str
+    """
+
+    SYNC: str
+    ASYNC: str
+    SYNCGENERATOR: str
+    ASYNCGENERATOR: str
+
 @dataclass
 class FunctionInfo:
     """

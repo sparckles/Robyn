@@ -24,8 +24,8 @@ from integration_tests.subroutes import sub_router, di_subrouter
 
 app = Robyn(__file__)
 websocket = WebSocket(app, "/web_socket")
-
-
+wsy = WebSocket(app, "/wsy")
+wsya = WebSocket(app, "/wsya")
 # Creating a new WebSocket app to test json handling + to serve an example to future users of this lib
 # while the original "raw" web_socket is used with benchmark tests
 websocket_json = WebSocket(app, "/web_socket_json")
@@ -43,6 +43,18 @@ jinja_template = JinjaTemplate(os.path.join(current_file_path, "templates"))
 
 # Make it easier for multiple test runs
 websocket_state = defaultdict(int)
+
+
+@wsy.on("message")
+async def echo():
+    yield "hello"
+    yield "world"
+
+
+@wsya.on("message")
+async def echo():
+    yield "hello"
+    yield "world"
 
 
 @websocket_json.on("message")
@@ -152,20 +164,27 @@ def sync_global_middlewares(request: Request):
 
 # --- Route specific ---
 
-vals = [1,2,3]
+vals = [1, 2, 3]
+
+
 def yeidler():
     while True:
         for val in vals:
             yield val
             yield val
+
+
 yieldster = yeidler()
 glob = 0
+
+
 @app.get("/yield")
 def gen_yield():
     global yieldster
     global glob
     glob += 1
     return f"{next(yieldster)}+{glob}  "
+
 
 @app.before_request("/sync/middlewares")
 def sync_before_request(request: Request):

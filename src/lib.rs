@@ -12,7 +12,7 @@ use shared_socket::SocketHeld;
 // pyO3 module
 use pyo3::prelude::*;
 use types::{
-    function_info::{FunctionInfo, MiddlewareType},
+    function_info::{FunctionInfo, FunctionType, MiddlewareType},
     headers::Headers,
     identity::Identity,
     multimap::QueryParams,
@@ -39,6 +39,7 @@ pub fn robyn(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<WebSocketConnector>()?;
     m.add_class::<SocketHeld>()?;
     m.add_class::<FunctionInfo>()?;
+    m.add_class::<FunctionType>()?;
     m.add_class::<Identity>()?;
     m.add_class::<PyRequest>()?;
     m.add_class::<PyResponse>()?;

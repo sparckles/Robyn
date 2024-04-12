@@ -11,6 +11,7 @@ from robyn.responses import FileResponse
 
 from robyn.robyn import (
     FunctionInfo,
+    FunctionType,
     Headers,
     HttpMethod,
     MiddlewareType,
@@ -163,26 +164,26 @@ class Router(BaseRouter):
             else:
                 _logger.debug(f"Dependency {dependency} is not used in the handler {handler.__name__}")
 
-        if iscoroutinefunction(handler):
+        if inspect.isasyncgenfunction(handler):
             function = FunctionInfo(
                 async_inner_handler,
-                True,
+                FunctionType.ASYNCGENERATOR,
                 number_of_params,
                 params,
                 new_injected_dependencies,
             )
             self.routes.append(Route(route_type, endpoint, function, is_const))
             return async_inner_handler
-        else:
+        if iscoroutinefunction(handler):
             function = FunctionInfo(
-                inner_handler,
-                False,
+                async_inner_handler,
+                FunctionType.ASYNC,
                 number_of_params,
                 params,
                 new_injected_dependencies,
             )
             self.routes.append(Route(route_type, endpoint, function, is_const))
-            return inner_handler
+            return async_inner_handler
 
     def get_routes(self) -> List[Route]:
         return self.routes

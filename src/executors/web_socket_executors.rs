@@ -65,23 +65,8 @@ pub fn execute_ws_function(
     ws: &WebSocketConnector,
     // add number of params here
 ) {
-    if function.is_async {
-        let fut = Python::with_gil(|py| {
-            pyo3_asyncio::into_future_with_locals(
-                task_locals,
-                get_function_output(function, text, py, ws).unwrap(),
-            )
-            .unwrap()
-        });
-        let f = async {
-            let output = fut.await.unwrap();
-            Python::with_gil(|py| output.extract::<&str>(py).unwrap().to_string())
-        }
-        .into_actor(ws)
-        .map(|res, _, ctx| ctx.text(res));
-        ctx.spawn(f);
-    } else {
-        Python::with_gil(|py| {
+    match function.ftype {
+        crate::types::function_info::FunctionType::Sync => Python::with_gil(|py| {
             if let Some(op) = get_function_output(function, text, py, ws)
                 .unwrap()
                 .extract::<Option<&str>>()
@@ -89,6 +74,24 @@ pub fn execute_ws_function(
             {
                 ctx.text(op);
             }
-        });
+        }),
+        crate::types::function_info::FunctionType::Async => {
+            let fut = Python::with_gil(|py| {
+                pyo3_asyncio::into_future_with_locals(
+                    task_locals,
+                    get_function_output(function, text, py, ws).unwrap(),
+                )
+                .unwrap()
+            });
+            let f = async {
+                let output = fut.await.unwrap();
+                Python::with_gil(|py| output.extract::<&str>(py).unwrap().to_string())
+            }
+            .into_actor(ws)
+            .map(|res, _, ctx| ctx.text(res));
+            ctx.spawn(f);
+        },
+        crate::types::function_info::FunctionType::SyncGenerator => todo!(),
+        crate::types::function_info::FunctionType::AsyncGenerator => todo!(),
     }
 }
