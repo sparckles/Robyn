@@ -238,7 +238,7 @@ Batman was curious about how to access path parameters and query parameters from
 
     @app.post("/jsonify/:id")
     async def json(request):
-        print(request["path_params"]["id"])
+        print(request.path_params["id"])
         return {"hello": "world"}
 
 
@@ -249,7 +249,7 @@ Batman was curious about how to access path parameters and query parameters from
 
     @app.post("/jsonify/:id")
     async def json(request: Request):
-        print(request["path_params"]["id"])
+        print(request.path_params["id"])
         return {"hello": "world"}
 
     ```
