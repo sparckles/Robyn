@@ -1,7 +1,14 @@
 import pytest
 from unittest.mock import patch
 from robyn.argument_parser import Config
-from robyn.cli import create_robyn_app, SCAFFOLD_DIR, CURRENT_WORKING_DIR, docs, start_dev_server, start_app_normally
+from robyn.cli import (
+    create_robyn_app,
+    SCAFFOLD_DIR,
+    CURRENT_WORKING_DIR,
+    docs,
+    start_dev_server,
+    start_app_normally,
+)
 
 
 @pytest.mark.parametrize(
@@ -11,6 +18,9 @@ from robyn.cli import create_robyn_app, SCAFFOLD_DIR, CURRENT_WORKING_DIR, docs,
         ({"directory": "test_dir", "docker": "Y", "project_type": "postgres"}, False),
         ({"directory": "test_dir", "docker": "N", "project_type": "mongo"}, True),
         ({"directory": "test_dir", "docker": "Y", "project_type": "sqlalchemy"}, False),
+        ({"directory": "test_dir", "docker": "N", "project_type": "prisma"}, True),
+        ({"directory": "test_dir", "docker": "Y", "project_type": "sqlmodel"}, False),
+        ({"directory": "test_dir", "docker": "N", "project_type": "sqlite"}, True),
     ],
 )
 @patch("os.makedirs")
