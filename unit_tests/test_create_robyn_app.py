@@ -1,4 +1,5 @@
 import pytest
+from pathlib import Path
 from unittest.mock import patch
 from robyn.cli import create_robyn_app, SCAFFOLD_DIR, CURRENT_WORKING_DIR
 
@@ -44,8 +45,8 @@ def test_create_robyn_app(
     mock_makedirs.assert_called_with(expected_project_dir, exist_ok=True)
     expected_template_path = (SCAFFOLD_DIR / project_type).resolve()
     mock_copytree.assert_called_with(str(expected_template_path), str(expected_project_dir), dirs_exist_ok=True)
-    dockerfile_path = expected_project_dir / "Dockerfile"
     if should_remove_dockerfile:
-        mock_remove.assert_called_once_with(str(dockerfile_path))
+        expected_dockerfile_path = str(Path(expected_project_dir / "Dockerfile"))
+        mock_remove.assert_called_once_with(expected_dockerfile_path)
     else:
         mock_remove.assert_not_called()
