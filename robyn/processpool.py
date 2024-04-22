@@ -1,6 +1,7 @@
 import asyncio
 import webbrowser
 from multiprocess import Process
+import multiprocessing as mp
 import signal
 import sys
 from typing import Dict, List
@@ -77,6 +78,8 @@ def init_processpool(
     response_headers: Headers,
 ) -> List[Process]:
     process_pool = []
+    ctx = mp.get_context('spawn')
+
     if sys.platform.startswith("win32"):
         spawn_process(
             directories,
