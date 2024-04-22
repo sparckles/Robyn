@@ -78,8 +78,7 @@ def init_processpool(
     response_headers: Headers,
 ) -> List[Process]:
     process_pool = []
-    ctx = mp.get_context('fork')
-
+    ctx = mp.get_context("fork")
 
     if sys.platform.startswith("win32"):
         spawn_process(
