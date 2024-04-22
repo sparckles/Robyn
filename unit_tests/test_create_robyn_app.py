@@ -46,11 +46,7 @@ def test_create_robyn_app(
     expected_template_path = pathlib.Path(SCAFFOLD_DIR, project_type).resolve()
     mock_copytree.assert_called_with(str(expected_template_path), str(expected_project_dir), dirs_exist_ok=True)
     if should_remove_dockerfile:
-        expected_dockerfile_path = str(expected_project_dir / "Dockerfile")
-        mock_remove.assert_called_once_with(expected_dockerfile_path)
+        expected_dockerfile_path = pathlib.Path(expected_project_dir, "Dockerfile").resolve()
+        mock_remove.assert_called_once_with(str(expected_dockerfile_path))
     else:
         mock_remove.assert_not_called()
-    mock_prompt.reset_mock()
-    mock_remove.reset_mock()
-    mock_copytree.reset_mock()
-    mock_makedirs.reset_mock()
