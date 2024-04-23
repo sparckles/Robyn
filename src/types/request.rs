@@ -141,7 +141,7 @@ impl Request {
         let body: Vec<u8> = if headers.contains(String::from("content-type"))
             && headers
                 .get(String::from("content-type"))
-                .is_ok_and(|val| val.contains("multipart/form-data"))
+                .is_some_and(|val| val.contains("multipart/form-data"))
         {
             let h = headers.get(String::from("content-type")).unwrap();
             debug!("Content-Type: {:?}", h);
