@@ -262,7 +262,11 @@ impl PyRequest {
 
                     for (key, value) in map.iter() {
                         let py_key = key.to_string().into_py(py);
-                        let py_value = value.to_string().into_py(py);
+                        let py_value = match value {
+                            Value::String(s) => s.as_str().into_py(py),
+                            _ => value.to_string().into_py(py),
+                        };
+
                         dict.set_item(py_key, py_value)?;
                     }
 
