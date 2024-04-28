@@ -581,6 +581,7 @@ async def async_json_post(request: Request):
     except ValueError:
         return None
 
+
 @app.post("/sync/request_json/key")
 async def request_json(request: Request):
     json = request.json()

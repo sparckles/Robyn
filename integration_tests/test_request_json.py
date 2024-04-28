@@ -16,4 +16,3 @@ from integration_tests.helpers.http_methods_helpers import post
 def test_request(route, body, expected_result):
     res = post(route, body)
     assert res.text == expected_result
-
