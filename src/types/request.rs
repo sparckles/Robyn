@@ -267,7 +267,6 @@ impl PyRequest {
                             _ => value.to_string().into_py(py),
                         };
 
-                        debug!("Key: {:?}, Value: {:?}", py_key, py_value);
                         dict.set_item(py_key, py_value)?;
                     }
 
