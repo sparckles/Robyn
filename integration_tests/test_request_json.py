@@ -7,6 +7,7 @@ from integration_tests.helpers.http_methods_helpers import post
     "route, body, expected_result",
     [
         ("/sync/request_json", '{"hello": "world"}', "<class 'dict'>"),
+        ("/sync/request_json/key", '{"hello": "world"}', "hello"),
         ("/sync/request_json", '{"hello": "world"', "None"),
         ("/async/request_json", '{"hello": "world"}', "<class 'dict'>"),
         ("/async/request_json", '{"hello": "world"', "None"),
@@ -15,3 +16,4 @@ from integration_tests.helpers.http_methods_helpers import post
 def test_request(route, body, expected_result):
     res = post(route, body)
     assert res.text == expected_result
+
