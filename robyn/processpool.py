@@ -1,6 +1,7 @@
 import asyncio
 import webbrowser
 from multiprocess import Process
+import multiprocess as mp
 import signal
 import sys
 from typing import Dict, List
@@ -77,6 +78,8 @@ def init_processpool(
     response_headers: Headers,
 ) -> List[Process]:
     process_pool = []
+    ctx = mp.get_context("fork")
+
     if sys.platform.startswith("win32"):
         spawn_process(
             directories,
@@ -95,7 +98,7 @@ def init_processpool(
 
     for _ in range(processes):
         copied_socket = socket.try_clone()
-        process = Process(
+        process = ctx.Process(
             target=spawn_process,
             args=(
                 directories,
