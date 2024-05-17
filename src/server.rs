@@ -289,8 +289,8 @@ impl Server {
              second_route = format!("{}/", route);
         };
 
-        self._add_route(py, route_type, route, &function, is_const);
-        self._add_route(py, route_type, &second_route, &function, is_const);
+        self._add_route(py, route_type, route, function.clone(), is_const);
+        self._add_route(py, route_type, &second_route, function, is_const);
     }
 
     fn _add_route(
@@ -298,7 +298,7 @@ impl Server {
         py: Python,
         route_type: &HttpMethod,
         route: &str,
-        function: &FunctionInfo,
+        function: FunctionInfo,
         is_const: bool,
     ) {
         debug!("Route added for {:?} {} ", route_type, route);
@@ -308,7 +308,7 @@ impl Server {
         if is_const {
             match self
                 .const_router
-                .add_route(route_type, route, function.clone(), Some(event_loop))
+                .add_route(route_type, route, function, Some(event_loop))
             {
                 Ok(_) => (),
                 Err(e) => {
@@ -316,7 +316,7 @@ impl Server {
                 }
             }
         } else {
-            match self.router.add_route(route_type, route, function.clone(), None) {
+            match self.router.add_route(route_type, route, function, None) {
                 Ok(_) => (),
                 Err(e) => {
                     debug!("Error adding route {}", e);
