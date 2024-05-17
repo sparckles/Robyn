@@ -281,14 +281,16 @@ impl Server {
         is_const: bool,
     ) {
 
-        let second_route =  if route.ends_with("/") {
-             &route[0..route.len() - 1]
+        let second_route: String;
+        
+        if route.ends_with("/") {
+             second_route = route[0..route.len() - 1].to_string();
         } else {
-             &format!("{}/", route)
+             second_route = format!("{}/", route);
         };
 
         self._add_route(py, route_type, route, &function, is_const);
-        self._add_route(py, route_type, second_route, &function, is_const);
+        self._add_route(py, route_type, &second_route, &function, is_const);
     }
 
     fn _add_route(
