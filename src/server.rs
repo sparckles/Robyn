@@ -281,14 +281,24 @@ impl Server {
         is_const: bool,
     ) {
 
-        self.save_route(py, route_type, route, &function, is_const);
-
-        let route = if route.ends_with("/") {
-            route
+        let second_route =  if route.ends_with("/") {
+             &route[0..route.len() - 1]
         } else {
-          &format!("{}/", route)
-        }
-  
+             &format!("{}/", route)
+        };
+
+        self._add_route(py, route_type, route, &function, is_const);
+        self._add_route(py, route_type, second_route, &function, is_const);
+    }
+
+    fn _add_route(
+        &self,
+        py: Python,
+        route_type: &HttpMethod,
+        route: &str,
+        function: &FunctionInfo,
+        is_const: bool,
+    ) {
         debug!("Route added for {:?} {} ", route_type, route);
         let asyncio = py.import("asyncio").unwrap();
         let event_loop = asyncio.call_method0("get_event_loop").unwrap();
