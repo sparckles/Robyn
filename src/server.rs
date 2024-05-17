@@ -281,16 +281,17 @@ impl Server {
         is_const: bool,
     ) {
 
-        self.save_route(py, route_type, route, &function, is_const);
-
-        if route.ends_with("/") {
-            self.save_route(py, route_type, &route[0..route.len() - 1], &function, is_const);
+        let second_route =  if route.ends_with("/") {
+             &route[0..route.len() - 1]
         } else {
-            self.save_route(py, route_type, &format!("{}/", route), &function, is_const);
-        }
+             &format!("{}/", route)
+        };
+
+        self._add_route(py, route_type, route, &function, is_const);
+        self._add_route(py, route_type, second_route, &function, is_const);
     }
 
-    pub fn save_route(
+    fn _add_route(
         &self,
         py: Python,
         route_type: &HttpMethod,
