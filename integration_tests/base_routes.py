@@ -219,6 +219,11 @@ async def hello_world(request):
     return "Hello, world!"
 
 
+@app.get("/trailing")
+def trailing_slash(request):
+    return "Trailing slash test successful!"
+
+
 @app.get("/sync/str")
 def sync_str_get():
     return "sync str get"

@@ -1,4 +1,5 @@
 import pytest
+import requests
 from requests import Response
 
 from integration_tests.helpers.http_methods_helpers import get
@@ -51,3 +52,12 @@ def test_queries(function_type: str, session):
 
     r = get(f"/{function_type}/queries")
     assert r.json() == {}
+
+
+@pytest.mark.benchmark
+def test_trailing_slash(session):
+    r = requests.get("http://localhost:8080/trailing")
+    assert r.text == "Trailing slash test successful!"
+
+    r = requests.get("http://localhost:8080/trailing/")
+    assert r.text == "Trailing slash test successful!"
