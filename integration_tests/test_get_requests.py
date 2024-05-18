@@ -56,7 +56,7 @@ def test_queries(function_type: str, session):
 
 @pytest.mark.benchmark
 def test_trailing_slash(session):
-    r = requests.get("http://localhost:8080/trailing")
+    r = requests.get("http://localhost:8080/trailing")  # `integration_tests#get` strips the trailing slash, tests always pass!`
     assert r.text == "Trailing slash test successful!"
 
     r = requests.get("http://localhost:8080/trailing/")
