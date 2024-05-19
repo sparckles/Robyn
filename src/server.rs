@@ -280,11 +280,10 @@ impl Server {
         function: FunctionInfo,
         is_const: bool,
     ) {
-
         let second_route: String = if route.ends_with('/') {
-             route[0..route.len() - 1].to_string()
+            route[0..route.len() - 1].to_string()
         } else {
-             format!("{}/", route)
+            format!("{}/", route)
         };
 
         self._add_route(py, route_type, route, function.clone(), is_const);
