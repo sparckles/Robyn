@@ -281,7 +281,7 @@ impl Server {
         is_const: bool,
     ) {
 
-        let second_route: String = if route.ends_with("/") {
+        let second_route: String = if route.ends_with('/') {
              route[0..route.len() - 1].to_string()
         } else {
              format!("{}/", route)
