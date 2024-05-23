@@ -145,6 +145,9 @@ def global_after_request(response: Response):
 
 @app.get("/sync/global/middlewares")
 def sync_global_middlewares(request: Request):
+    print(request.headers)
+    print(request.headers.get("txt"))
+    print(request.headers["txt"])
     assert "global_before" in request.headers
     assert request.headers.get("global_before") == "global_before_request"
     return "sync global middlewares"
