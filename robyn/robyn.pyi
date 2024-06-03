@@ -248,6 +248,7 @@ class Request:
         headers Headers: The headers of the request. e.g. Headers({"Content-Type": "application/json"})
         path_params (dict[str, str]): The parameters of the request. e.g. /user/:id -> {"id": "123"}
         body (Union[str, bytes]): The body of the request. If the request is a JSON, it will be a dict.
+        method (str): The method of the request. e.g. GET, POST, PUT etc.
         url (Url): The url of the request. e.g. https://localhost/user
         form_data (dict[str, str]): The form data of the request. e.g. {"name": "John"}
         files (dict[str, bytes]): The files of the request. e.g. {"file": b"file"}
