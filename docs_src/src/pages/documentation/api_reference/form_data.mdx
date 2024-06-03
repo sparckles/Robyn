@@ -1,9 +1,9 @@
 export const description =
   'On this page, we’ll dive into using the form data.'
 
-## Fom Data
+## Form Data
 
-Batman learned how to handle file uploads using Robyn. Now, he wanted to handle the form data
+Batman learned how to handle file uploads using Robyn. Now, he wanted to handle the form data.
 
 
 ## Handling Form Data
@@ -19,14 +19,14 @@ Batman uploaded some multipart form data and wanted to handle it using the follo
     ```python {{ title: 'untyped' }}
     @app.post("/upload")
     async def upload(request):
-      form_data = request.from_data
+      form_data = request.form_data
 
       return form_data
     ```
     ```python {{ title: 'typed' }}
     @app.post("/upload")
-    async def upload(request):
-      form_data = request.from_data
+    async def upload(request: Request):
+      form_data = request.form_data
 
       return form_data
     ```
