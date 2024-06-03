@@ -55,11 +55,13 @@ identity (Optional[Identity]): The identity of the client
     class Request:
       """
       query_params: QueryParams
-      headers: dict[str, str]
+      headers: Headers
       path_params: dict[str, str]
       body: Union[str, bytes]
       method: str
       url: Url
+      form_data: dict[str, str]
+      files: dict[str, bytes]
       ip_addr: Optional[str]
       identity: Optional[Identity]
       """
@@ -70,11 +72,13 @@ identity (Optional[Identity]): The identity of the client
     class Request:
       """
       query_params: QueryParams
-      headers: dict[str, str]
+      headers: Headers
       path_params: dict[str, str]
       body: Union[str, bytes]
       method: str
       url: Url
+      form_data: dict[str, str]
+      files: dict[str, bytes]
       ip_addr: Optional[str]
       identity: Optional[Identity]
       """
