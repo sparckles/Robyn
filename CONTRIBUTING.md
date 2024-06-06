@@ -17,6 +17,45 @@ These are, in general, rules that you should be following while contributing to 
 - Issues would be assigned on a "First Come, First Served" basis.
 - Do mention (@maintainer) the project maintainer if your PR isn't reviewed within a few days.
 
+## Build Instructions
+
+- Fork & clone the project (please see below for instructions on how to do this).
+- Setup a virtual environment:
+```
+python3 -m venv .venv
+source .venv/bin/activate
+```
+- Install required packages
+
+```
+pip install pre-commit poetry maturin patchelf
+```
+- Install development dependencies
+```
+python3 -m poetry install --with dev --with test
+```
+- Install pre-commit git hooks
+```
+pre-commit install
+```
+- Build & install Robyn Rust package
+```
+python3 -m maturin develop
+# python3 -m maturin develop --cargo-extra-args="--features=io-uring" # to use experimental actix-web version
+```
+- Run!
+```
+python -m poetry run test_server
+```
+- Test (refer to `integration_tests/base_routes.py` for more endpoints)
+```
+curl http://localhost:8080/sync/str
+```
+
+- **tip:** One liner for testing changes
+```
+python3 -m maturin develop && python -m poetry run test_server
+```
 ## First time contributors:
 
 Pushing files in your own repository is easy, but how to contribute to someone else's project? If you have the same question, then below are the steps that you can follow
