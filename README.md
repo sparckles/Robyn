@@ -135,7 +135,51 @@ If you still need help to get started, feel free to reach out on our [community 
 
 ### ⚙️ To Develop Locally
 
-Build instructions have moved to [contribution guidelines](https://github.com/sparckles/Robyn/blob/main/CONTRIBUTING.md)
+- Setup a virtual environment:
+```
+python3 -m venv .venv
+source .venv/bin/activate
+```
+- Install required packages
+
+```
+pip install pre-commit poetry maturin patchelf
+```
+- Install development dependencies
+```
+python3 -m poetry install --with dev --with test
+```
+- Install pre-commit git hooks
+```
+pre-commit install
+```
+- Build & install Robyn Rust package
+```
+python3 -m maturin develop
+# python3 -m maturin develop --cargo-extra-args="--features=io-uring" # to use experimental actix-web version
+```
+- Build & install Robyn Rust package (**experimental**)
+```
+python3 -m maturin develop --cargo-extra-args="--features=io-uring"
+```
+- Run!
+```
+python3 -m poetry run test_server
+```
+- Run tests
+```
+python3 -m pytest integration_tests
+```
+- Test (refer to `integration_tests/base_routes.py` for more endpoints)
+```
+curl http://localhost:8080/sync/str
+```
+
+- **tip:** One liners for testing changes!
+```
+python3 -m maturin develop && python3 -m poetry run test_server
+python3 -m maturin develop && python3 -m pytest integration_tests
+```
 
 ## ✨ Special thanks
 
