@@ -143,7 +143,7 @@ source .venv/bin/activate
 - Install required packages
 
 ```
-pip install pre-commit poetry maturin patchelf
+pip install pre-commit poetry maturin
 ```
 - Install development dependencies
 ```
@@ -179,6 +179,9 @@ curl http://localhost:8080/sync/str
 maturin develop && poetry run test_server
 maturin develop && pytest integration_tests
 ```
+
+- Potential errors
+  - install `patchelf` with `pip install patchelf` if you face `patchelf` not found issue during `maturin develop` (esp. on Arch Linux)
 
 ## ✨ Special thanks
 
