@@ -15,7 +15,7 @@ These are, in general, rules that you should be following while contributing to 
 - Always create a Pull Request from a Branch; Never from the Main.
 - Follow proper code conventions because writing clean code is important.
 - Issues would be assigned on a "First Come, First Served" basis.
-- Do mention (@maintainer) the project maintainer if your PR isn't reviewed within a few days.
+- Do mention (@sansyrox) the project maintainer if your PR isn't reviewed within a few days.
 
 ## Build Instructions
 
