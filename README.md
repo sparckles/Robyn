@@ -147,7 +147,7 @@ pip install pre-commit poetry maturin patchelf
 ```
 - Install development dependencies
 ```
-python3 -m poetry install --with dev --with test
+poetry install --with dev --with test
 ```
 - Install pre-commit git hooks
 ```
@@ -155,20 +155,19 @@ pre-commit install
 ```
 - Build & install Robyn Rust package
 ```
-python3 -m maturin develop
-# python3 -m maturin develop --cargo-extra-args="--features=io-uring" # to use experimental actix-web version
+maturin develop
 ```
 - Build & install Robyn Rust package (**experimental**)
 ```
-python3 -m maturin develop --cargo-extra-args="--features=io-uring"
+maturin develop --cargo-extra-args="--features=io-uring"
 ```
 - Run!
 ```
-python3 -m poetry run test_server
+poetry run test_server
 ```
 - Run tests
 ```
-python3 -m pytest integration_tests
+pytest integration_tests
 ```
 - Test (refer to `integration_tests/base_routes.py` for more endpoints)
 ```
@@ -177,8 +176,8 @@ curl http://localhost:8080/sync/str
 
 - **tip:** One liners for testing changes!
 ```
-python3 -m maturin develop && python3 -m poetry run test_server
-python3 -m maturin develop && python3 -m pytest integration_tests
+maturin develop && poetry run test_server
+maturin develop && pytest integration_tests
 ```
 
 ## ✨ Special thanks
