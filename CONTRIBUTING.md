@@ -19,7 +19,6 @@ These are, in general, rules that you should be following while contributing to 
 
 ## Build Instructions
 
-- Fork & clone the project (please see below for instructions on how to do this).
 - Setup a virtual environment:
 ```
 python3 -m venv .venv
@@ -43,18 +42,27 @@ pre-commit install
 python3 -m maturin develop
 # python3 -m maturin develop --cargo-extra-args="--features=io-uring" # to use experimental actix-web version
 ```
+- Build & install Robyn Rust package (**experimental**)
+```
+python3 -m maturin develop --cargo-extra-args="--features=io-uring"
+```
 - Run!
 ```
-python -m poetry run test_server
+python3 -m poetry run test_server
+```
+- Run tests
+```
+python3 -m pytest integration_tests
 ```
 - Test (refer to `integration_tests/base_routes.py` for more endpoints)
 ```
 curl http://localhost:8080/sync/str
 ```
 
-- **tip:** One liner for testing changes
+- **tip:** One liners for testing changes!
 ```
-python3 -m maturin develop && python -m poetry run test_server
+python3 -m maturin develop && python3 -m poetry run test_server
+python3 -m maturin develop && python3 -m pytest integration_tests
 ```
 ## First time contributors:
 
