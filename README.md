@@ -135,19 +135,53 @@ If you still need help to get started, feel free to reach out on our [community 
 
 ### ⚙️ To Develop Locally
 
-1. Install the development dependencies: `poetry install --with dev --with test`
+- Setup a virtual environment:
+```
+python3 -m venv .venv
+source .venv/bin/activate
+```
+- Install required packages
 
-2. Install the pre-commit git hooks: `pre-commit install`
-
-3. Run `maturin develop` or `maturin develop --cargo-extra-args="--features=io-uring"` for using the experimental version of actix-web. This command will build the Robyn Rust package and install it in your virtual environment.
-
-4. Run `poetry run test_server`. This will run a server containing several examples of routes we use for testing purposes. You can see them at `integration_tests/base_routes.py`. You can modify or add some to your likings.
-
-You can then request the server you ran from an other terminal. Here is a `GET` request done using [curl](https://curl.se/) for example:
-
-```bash
+```
+pip install pre-commit poetry maturin
+```
+- Install development dependencies
+```
+poetry install --with dev --with test
+```
+- Install pre-commit git hooks
+```
+pre-commit install
+```
+- Build & install Robyn Rust package
+```
+maturin develop
+```
+- Build & install Robyn Rust package (**experimental**)
+```
+maturin develop --cargo-extra-args="--features=io-uring"
+```
+- Run!
+```
+poetry run test_server
+```
+- Run tests
+```
+pytest integration_tests
+```
+- Test (refer to `integration_tests/base_routes.py` for more endpoints)
+```
 curl http://localhost:8080/sync/str
 ```
+
+- **tip:** One liners for testing changes!
+```
+maturin develop && poetry run test_server
+maturin develop && pytest integration_tests
+```
+
+- Potential errors
+  - install `patchelf` with `pip install patchelf` if you face `patchelf` not found issue during `maturin develop` (esp. on Arch Linux)
 
 ## ✨ Special thanks
 
