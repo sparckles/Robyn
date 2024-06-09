@@ -494,7 +494,7 @@ async def async_query(request: Request):
 
 @app.get("/async/getqueries")
 async def async_query(request: Request):
-    query_data = request.query_params.get("skip", cast_to=int, default="0")
+    query_data = request.query_params.get("skip", default=0)
     return jsonify(query_data)
 
 # Status code

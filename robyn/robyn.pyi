@@ -108,7 +108,7 @@ class QueryParams:
         """
         pass
 
-    def get(self, key: str, cast_to: Optional[type] = None, default: Optional[str] = None ) -> Optional[str]:
+    def get(self, key: str, default: Optional[str] = None ) -> Optional[str]:
         """
         Gets the last value of the query parameter with the given key.
 
@@ -116,13 +116,7 @@ class QueryParams:
             key (str): The key of the query parameter
             default (Optional[str]): The default value if the key does not exist
         """
-        value = self.params.get(key, default)
-        if cast_to is not None and value is not None:
-            try:
-                return cast_to(value)
-            except ValueError:
-                return default
-        return value
+        pass
 
     def empty(self) -> bool:
         """

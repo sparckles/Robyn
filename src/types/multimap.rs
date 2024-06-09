@@ -25,10 +25,10 @@ impl QueryParams {
         debug!("Multimap: {:?}", self.queries);
     }
 
-    pub fn get(&self, key: String, default: Option<String>) -> Option<String> {
+    pub fn get(&self, key: String, default: Option<i32>) -> Option<String> {
         match self.queries.get(&key) {
             Some(values) => values.last().cloned(),
-            None => default,
+            None => default.map(|d| d.to_string()),
         }
     }
 
