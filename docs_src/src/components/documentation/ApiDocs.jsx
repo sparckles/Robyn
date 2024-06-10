@@ -75,6 +75,11 @@ const guides = [
     description: 'Learn how to handle exceptions in Robyn.',
   },
   {
+    href: '/documentation/api_reference/scaling',
+    name: 'Scaling the Application',
+    description: 'Learn how to scaled Robyn across multiple cores.',
+  },
+  {
     href: '/documentation/api_reference/advanced_features',
     name: 'Advanced Features',
     description: 'Learn about advanced features in Robyn.',

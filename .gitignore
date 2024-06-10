@@ -13,7 +13,11 @@ dist/
 *.DS_Store
 .vscode
 
+# pycharm
+.idea
+
 # python venv
+.venv
 venv
 robyn.code-workspace
 hello_robyn.py
