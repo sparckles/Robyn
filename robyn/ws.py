@@ -47,13 +47,9 @@ class WebSocket:
             new_injected_dependencies = {}
             for dependency in injected_dependencies:
                 if dependency in params:
-                    new_injected_dependencies[dependency] = injected_dependencies[
-                        dependency
-                    ]
+                    new_injected_dependencies[dependency] = injected_dependencies[dependency]
                 else:
-                    _logger.debug(
-                        f"Dependency {dependency} is not used in the handler {handler.__name__}"
-                    )
+                    _logger.debug(f"Dependency {dependency} is not used in the handler {handler.__name__}")
 
                 self.methods[type] = FunctionInfo(
                     handler,

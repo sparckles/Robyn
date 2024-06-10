@@ -299,9 +299,7 @@ class Server:
         is_const: bool,
     ) -> None:
         pass
-    def add_global_middleware(
-        self, middleware_type: MiddlewareType, function: FunctionInfo
-    ) -> None:
+    def add_global_middleware(self, middleware_type: MiddlewareType, function: FunctionInfo) -> None:
         pass
     def add_middleware_route(
         self,

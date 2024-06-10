@@ -105,23 +105,17 @@ class EventHandler(FileSystemEventHandler):
         self.process = None  # Keep track of the subprocess
         self.built_rust_binaries = []  # Keep track of the built rust binaries
 
-        self.last_reload = (
-            time.time()
-        )  # Keep track of the last reload. EventHandler is initialized with the process.
+        self.last_reload = time.time()  # Keep track of the last reload. EventHandler is initialized with the process.
 
     def stop_server(self):
         if self.process:
-            os.kill(
-                self.process.pid, signal.SIGTERM
-            )  # Stop the subprocess using os.kill()
+            os.kill(self.process.pid, signal.SIGTERM)  # Stop the subprocess using os.kill()
 
     def reload(self):
         self.stop_server()
 
         new_env = os.environ.copy()
-        new_env[
-            "IS_RELOADER_RUNNING"
-        ] = "True"  # This is used to check if a reloader is already running
+        new_env["IS_RELOADER_RUNNING"] = "True"  # This is used to check if a reloader is already running
 
         print(f"Reloading {self.file_path}...")
         arguments = [arg for arg in sys.argv[1:] if not arg.startswith("--dev")]
