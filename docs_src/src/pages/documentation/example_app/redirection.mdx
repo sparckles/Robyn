@@ -1,0 +1,31 @@
+export const description =
+  "Welcome to the Robyn API documentation. You will find comprehensive guides and documentation to help you start working with Robyn as quickly as possible, as well as support if you get stuck.";
+
+## Redirection
+
+Batman wanted to redirect some endpoints to others. Robyn helped him do so by the following.
+
+```python {{ title: 'Redirection' }}
+from robyn import Robyn
+
+app = Robyn(__file__)
+
+@app.get("/")
+def index():
+    return landing()
+
+@app.get("/landing")
+def landing():
+    return "hii!"
+```
+
+With increased flexibility achieved by redirection, Batman had a powerful new tool at his disposal. The Robyn framework had provided him with the flexibility, scalability, and performance needed to create an effective crime-fighting application, giving him a technological edge in his ongoing battle to protect Gotham City.
+
+<div className="not-prose">
+  <Button
+    href="/documentation/example_app/templates"
+    variant="text"
+    arrow="right"
+    children="Adding a Frontend"
+  />
+</div>

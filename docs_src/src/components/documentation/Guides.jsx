@@ -34,6 +34,12 @@ const guides = [
     description:
       'Learn how to deploy your app to production and manage your deployments.',
   },
+  {
+    href: '/documentation/example_app/redirection',
+    name: 'Redirection',
+    description:
+      'Learn how to redirect requests to different endpoints.',
+  },
 ]
 
 export function Guides() {
