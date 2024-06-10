@@ -26,7 +26,11 @@ def compile_rust_files(directory_path: str):
             start_new_session=False,
         )
         if result.returncode != 0:
-            print("Error compiling rust file : %s %s", result.stderr.decode("utf-8"), result.stdout.decode("utf-8"))
+            print(
+                "Error compiling rust file : %s %s",
+                result.stderr.decode("utf-8"),
+                result.stdout.decode("utf-8"),
+            )
         else:
             print("Compiled rust file : %s", rust_file)
 
@@ -47,7 +51,11 @@ def create_rust_file(file_name: str):
     )
 
     if result.returncode != 0:
-        print("Error creating rust file : %s %s", result.stderr.decode("utf-8"), result.stdout.decode("utf-8"))
+        print(
+            "Error creating rust file : %s %s",
+            result.stderr.decode("utf-8"),
+            result.stdout.decode("utf-8"),
+        )
     else:
         print("Created rust file : %s", rust_file)
 
@@ -97,17 +105,23 @@ class EventHandler(FileSystemEventHandler):
         self.process = None  # Keep track of the subprocess
         self.built_rust_binaries = []  # Keep track of the built rust binaries
 
-        self.last_reload = time.time()  # Keep track of the last reload. EventHandler is initialized with the process.
+        self.last_reload = (
+            time.time()
+        )  # Keep track of the last reload. EventHandler is initialized with the process.
 
     def stop_server(self):
         if self.process:
-            os.kill(self.process.pid, signal.SIGTERM)  # Stop the subprocess using os.kill()
+            os.kill(
+                self.process.pid, signal.SIGTERM
+            )  # Stop the subprocess using os.kill()
 
     def reload(self):
         self.stop_server()
 
         new_env = os.environ.copy()
-        new_env["IS_RELOADER_RUNNING"] = "True"  # This is used to check if a reloader is already running
+        new_env[
+            "IS_RELOADER_RUNNING"
+        ] = "True"  # This is used to check if a reloader is already running
 
         print(f"Reloading {self.file_path}...")
         arguments = [arg for arg in sys.argv[1:] if not arg.startswith("--dev")]

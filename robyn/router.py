@@ -47,7 +47,8 @@ class GlobalMiddleware(NamedTuple):
 
 class BaseRouter(ABC):
     @abstractmethod
-    def add_route(*args) -> Union[Callable, CoroutineType, WebSocket]: ...
+    def add_route(*args) -> Union[Callable, CoroutineType, WebSocket]:
+        ...
 
 
 class Router(BaseRouter):
@@ -159,9 +160,13 @@ class Router(BaseRouter):
         new_injected_dependencies = {}
         for dependency in injected_dependencies:
             if dependency in params:
-                new_injected_dependencies[dependency] = injected_dependencies[dependency]
+                new_injected_dependencies[dependency] = injected_dependencies[
+                    dependency
+                ]
             else:
-                _logger.debug(f"Dependency {dependency} is not used in the handler {handler.__name__}")
+                _logger.debug(
+                    f"Dependency {dependency} is not used in the handler {handler.__name__}"
+                )
 
         if iscoroutinefunction(handler):
             function = FunctionInfo(
@@ -212,9 +217,13 @@ class MiddlewareRouter(BaseRouter):
         new_injected_dependencies = {}
         for dependency in injected_dependencies:
             if dependency in params:
-                new_injected_dependencies[dependency] = injected_dependencies[dependency]
+                new_injected_dependencies[dependency] = injected_dependencies[
+                    dependency
+                ]
             else:
-                _logger.debug(f"Dependency {dependency} is not used in the middleware handler {handler.__name__}")
+                _logger.debug(
+                    f"Dependency {dependency} is not used in the middleware handler {handler.__name__}"
+                )
 
         function = FunctionInfo(
             handler,
@@ -223,7 +232,9 @@ class MiddlewareRouter(BaseRouter):
             params,
             new_injected_dependencies,
         )
-        self.route_middlewares.append(RouteMiddleware(middleware_type, endpoint, function))
+        self.route_middlewares.append(
+            RouteMiddleware(middleware_type, endpoint, function)
+        )
         return handler
 
     def add_auth_middleware(self, endpoint: str):
@@ -258,7 +269,9 @@ class MiddlewareRouter(BaseRouter):
     # These inner functions are basically a wrapper around the closure(decorator) being returned.
     # They take a handler, convert it into a closure and return the arguments.
     # Arguments are returned as they could be modified by the middlewares.
-    def add_middleware(self, middleware_type: MiddlewareType, endpoint: Optional[str]) -> Callable[..., None]:
+    def add_middleware(
+        self, middleware_type: MiddlewareType, endpoint: Optional[str]
+    ) -> Callable[..., None]:
         # no dependency injection here
         injected_dependencies = {}
 
@@ -280,7 +293,9 @@ class MiddlewareRouter(BaseRouter):
                         injected_dependencies,
                     )
                 else:
-                    self.add_route(middleware_type, endpoint, inner_handler, injected_dependencies)
+                    self.add_route(
+                        middleware_type, endpoint, inner_handler, injected_dependencies
+                    )
             else:
                 params = dict(inspect.signature(handler).parameters)
 

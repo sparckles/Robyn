@@ -46,4 +46,6 @@ def serve_file(file_path: str) -> FileResponse:
     :param file_path str: file path to serve as a response
     """
 
-    return FileResponse(file_path, headers=Headers({"Content-Disposition": "attachment"}))
+    return FileResponse(
+        file_path, headers=Headers({"Content-Disposition": "attachment"})
+    )

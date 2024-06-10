@@ -20,7 +20,13 @@ class WebSocket:
     # should this be websocket router?
     """This is the python wrapper for the web socket that will be used here."""
 
-    def __init__(self, robyn_object: "Robyn", endpoint: str, config: Config = Config(), dependencies: DependencyMap = DependencyMap()) -> None:
+    def __init__(
+        self,
+        robyn_object: "Robyn",
+        endpoint: str,
+        config: Config = Config(),
+        dependencies: DependencyMap = DependencyMap(),
+    ) -> None:
         self.robyn_object = robyn_object
         self.endpoint = endpoint
         self.methods = {}
@@ -41,11 +47,21 @@ class WebSocket:
             new_injected_dependencies = {}
             for dependency in injected_dependencies:
                 if dependency in params:
-                    new_injected_dependencies[dependency] = injected_dependencies[dependency]
+                    new_injected_dependencies[dependency] = injected_dependencies[
+                        dependency
+                    ]
                 else:
-                    _logger.debug(f"Dependency {dependency} is not used in the handler {handler.__name__}")
+                    _logger.debug(
+                        f"Dependency {dependency} is not used in the handler {handler.__name__}"
+                    )
 
-                self.methods[type] = FunctionInfo(handler, is_async, num_params, params, kwargs=new_injected_dependencies)
+                self.methods[type] = FunctionInfo(
+                    handler,
+                    is_async,
+                    num_params,
+                    params,
+                    kwargs=new_injected_dependencies,
+                )
                 self.robyn_object.add_web_socket(self.endpoint, self)
 
         return inner

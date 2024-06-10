@@ -62,7 +62,9 @@ def create_robyn_app():
     os.makedirs(final_project_dir_path, exist_ok=True)
 
     selected_project_template = (SCAFFOLD_DIR / Path(project_type)).resolve()
-    shutil.copytree(str(selected_project_template), str(final_project_dir_path), dirs_exist_ok=True)
+    shutil.copytree(
+        str(selected_project_template), str(final_project_dir_path), dirs_exist_ok=True
+    )
 
     # If docker is not needed, delete the docker file
     if docker == "N":
@@ -93,7 +95,11 @@ def start_app_normally(config: Config):
     known_arguments, unknown_args = config.parser.parse_known_args()
 
     # Convert known arguments to a list of strings suitable for subprocess.run
-    known_args_list = [f"{key}={value}" for key, value in vars(known_arguments).items() if value is not None]
+    known_args_list = [
+        f"{key}={value}"
+        for key, value in vars(known_arguments).items()
+        if value is not None
+    ]
 
     # Combine the python executable, unknown arguments, and known arguments
     command = [sys.executable, *unknown_args, *known_args_list]

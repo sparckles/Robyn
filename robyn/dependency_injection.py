@@ -62,7 +62,9 @@ class DependencyMap:
         for dep_key in self.get_global_dependencies():
             if dep_key in target_router.dependencies.get_global_dependencies():
                 continue
-            target_router.dependencies.get_global_dependencies()[dep_key] = self.get_global_dependencies()[dep_key]
+            target_router.dependencies.get_global_dependencies()[
+                dep_key
+            ] = self.get_global_dependencies()[dep_key]
 
     def get_dependency_map(self, router) -> dict:
         return {
