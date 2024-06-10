@@ -26,11 +26,7 @@ def compile_rust_files(directory_path: str):
             start_new_session=False,
         )
         if result.returncode != 0:
-            print(
-                "Error compiling rust file : %s %s",
-                result.stderr.decode("utf-8"),
-                result.stdout.decode("utf-8"),
-            )
+            print("Error compiling rust file : %s %s", result.stderr.decode("utf-8"), result.stdout.decode("utf-8"))
         else:
             print("Compiled rust file : %s", rust_file)
 
@@ -51,11 +47,7 @@ def create_rust_file(file_name: str):
     )
 
     if result.returncode != 0:
-        print(
-            "Error creating rust file : %s %s",
-            result.stderr.decode("utf-8"),
-            result.stdout.decode("utf-8"),
-        )
+        print("Error creating rust file : %s %s", result.stderr.decode("utf-8"), result.stdout.decode("utf-8"))
     else:
         print("Created rust file : %s", rust_file)
 

@@ -107,6 +107,7 @@ class QueryParams:
             value (str): The value of the query parameter
         """
         pass
+
     def get(self, key: str, default: Optional[str] = None) -> Optional[str]:
         """
         Gets the last value of the query parameter with the given key.
@@ -116,12 +117,14 @@ class QueryParams:
             default (Optional[str]): The default value if the key does not exist
         """
         pass
+
     def empty(self) -> bool:
         """
         Returns:
             True if the query params are empty, False otherwise
         """
         pass
+
     def contains(self, key: str) -> bool:
         """
         Returns:
@@ -131,6 +134,7 @@ class QueryParams:
             key (str): The key of the query parameter
         """
         pass
+
     def get_first(self, key: str) -> Optional[str]:
         """
         Gets the first value of the query parameter with the given key.
@@ -140,6 +144,7 @@ class QueryParams:
 
         """
         pass
+
     def get_all(self, key: str) -> Optional[list[str]]:
         """
         Gets all the values of the query parameter with the given key.
@@ -148,6 +153,7 @@ class QueryParams:
             key (str): The key of the query parameter
         """
         pass
+
     def extend(self, other: QueryParams) -> None:
         """
         Extends the query params with the other query params.
@@ -156,24 +162,30 @@ class QueryParams:
             other (QueryParams): The other QueryParams object
         """
         pass
+
     def to_dict(self) -> dict[str, list[str]]:
         """
         Returns:
             The query params as a dictionary
         """
         pass
+
     def __contains__(self, key: str) -> bool:
         pass
+
     def __repr__(self) -> str:
         pass
 
 class Headers:
     def __init__(self, default_headers: Optional[dict]) -> None:
         pass
+
     def __getitem__(self, key: str) -> Optional[str]:
         pass
+
     def __setitem__(self, key: str, value: str) -> None:
         pass
+
     def set(self, key: str, value: str) -> None:
         """
         Sets the value of the header with the given key.
@@ -184,6 +196,7 @@ class Headers:
             value (str): The value of the header
         """
         pass
+
     def get(self, key: str) -> Optional[str]:
         """
         Gets the last value of the header with the given key.
@@ -192,6 +205,7 @@ class Headers:
             key (str): The key of the header
         """
         pass
+
     def populate_from_dict(self, headers: dict[str, str]) -> None:
         """
         Populates the headers from a dictionary.
@@ -200,6 +214,7 @@ class Headers:
             headers (dict[str, str]): The dictionary of headers
         """
         pass
+
     def contains(self, key: str) -> bool:
         """
         Returns:
@@ -209,6 +224,7 @@ class Headers:
             key (str): The key of the header
         """
         pass
+
     def append(self, key: str, value: str) -> None:
         """
         Appends the value to the header with the given key.
@@ -218,6 +234,7 @@ class Headers:
             value (str): The value of the header
         """
         pass
+
     def is_empty(self) -> bool:
         pass
 
@@ -291,6 +308,7 @@ class Server:
         pass
     def apply_response_headers(self, headers: Headers) -> None:
         pass
+
     def add_route(
         self,
         route_type: HttpMethod,
