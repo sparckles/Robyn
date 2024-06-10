@@ -7,7 +7,7 @@ Batman learned how to handle the error for different exception in his applicatio
 </Col>
   <Col sticky>
 
-    <CodeGroup title="Request" tag="GET" label="/items/{item_id}">
+    <CodeGroup title="Request" tag="GET" label="/hello_world/{item_id}">
 
     ```python {{ title: 'untyped' }}
     from robyn import Robyn, HTTPException, status_codes
@@ -16,7 +16,7 @@ Batman learned how to handle the error for different exception in his applicatio
 
     items = {"foo": "The Foo Wrestlers"}
 
-    @app.get("/items/{item_id}")
+    @app.get("/hello_world/{item_id}")
     async def read_item(request, item_id):
         if item_id not in items:
             raise HTTPException(status_code=status_codes.HTTP_404_NOT_FOUND, detail="Item not found")
@@ -32,7 +32,7 @@ Batman learned how to handle the error for different exception in his applicatio
     items: Dict[str, str] = {"foo": "The Foo Wrestlers"}
 
 
-    @app.get("/items/{item_id}")
+    @app.get("/hello_world/{item_id}")
     async def read_item(request: Request, item_id: str) -> Dict[str, str]:
         if item_id not in items:
             raise HTTPException(status_code=status_codes.HTTP_404_NOT_FOUND, detail="Item not found")
