@@ -28,6 +28,7 @@ from robyn.robyn import (
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory
 from robyn import status_codes
+from robyn.exceptions import HTTPException, WebSocketException
 from robyn.ws import WebSocket
 from robyn.jsonify import jsonify
 
@@ -472,6 +473,8 @@ __all__ = [
     "SubRouter",
     "AuthenticationHandler",
     "Headers",
+    "HTTPException",
+    "WebSocketException",
     "WebSocketConnector",
     "WebSocket",
 ]

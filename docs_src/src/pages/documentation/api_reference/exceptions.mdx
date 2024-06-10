@@ -1,3 +1,48 @@
+## Handling Errors
+
+Batman learned how to handle the error for different exception in his application. He wrote the following code to handle exceptions :
+
+<Row>
+<Col>
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world/{item_id}">
+
+    ```python {{ title: 'untyped' }}
+    from robyn import Robyn, HTTPException, status_codes
+
+    app = Robyn(__file__)
+
+    items = {"foo": "The Foo Wrestlers"}
+
+    @app.get("/hello_world/{item_id}")
+    async def read_item(request, item_id):
+        if item_id not in items:
+            raise HTTPException(status_code=status_codes.HTTP_404_NOT_FOUND, detail="Item not found")
+        return {"item": items[item_id]}
+    ```
+
+    ```python {{ title: 'typed' }}
+    from robyn import Robyn, HTTPException, Request, status_codes
+    from typing import Dict
+
+    app = Robyn(__file__)
+
+    items: Dict[str, str] = {"foo": "The Foo Wrestlers"}
+
+
+    @app.get("/hello_world/{item_id}")
+    async def read_item(request: Request, item_id: str) -> Dict[str, str]:
+        if item_id not in items:
+            raise HTTPException(status_code=status_codes.HTTP_404_NOT_FOUND, detail="Item not found")
+        return {"item": items[item_id]}
+
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
 ## Custom Exception Handler
 
 Batman learned how to create custom error handlers for different exception types in his application. He wrote the following code to handle exceptions and return a custom error response:
