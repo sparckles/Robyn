@@ -194,11 +194,11 @@ class Robyn:
         self._add_event_handler(Events.SHUTDOWN, handler)
 
     def is_port_in_use(self, port: int) -> bool:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            try:
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 return s.connect_ex(("localhost", port)) == 0
-            except Exception:
-                raise Exception(f"Invalid port number: {port}")
+        except Exception:
+            raise Exception(f"Invalid port number: {port}")
 
     def start(self, host: str = "127.0.0.1", port: int = 8080):
         """
