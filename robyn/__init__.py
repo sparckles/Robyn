@@ -210,8 +210,14 @@ class Robyn:
         host = os.getenv("ROBYN_HOST", host)
         port = int(os.getenv("ROBYN_PORT", port))
         open_browser = bool(os.getenv("ROBYN_BROWSER_OPEN", self.config.open_browser))
+        count = 0
 
         while self.is_port_in_use(port):
+            count += 1
+            if count == 3:
+                logger.error("Port %s is already in use. Exiting...", port)
+                exit(1)
+
             logger.error("Port %s is already in use. Please use a different port.", port)
             try:
                 port = int(input("Enter a different port: "))
