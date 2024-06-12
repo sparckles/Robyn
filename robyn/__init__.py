@@ -116,9 +116,8 @@ class Robyn:
             }
             route_type = http_methods[route_type]
 
-        def wrapped_handler(*args, **kwargs):
+        def wrapped_handler(request, *args, **kwargs):
             handler_params = signature(handler).parameters
-            request = args[0]
             request_components = {
                 'request': request,
                 'query_params': request.query_params,
@@ -131,9 +130,13 @@ class Robyn:
                 'identity': request.identity,
                 'form_data': request.form_data,
                 'files': request.files,
+                'router_dependencies': injected_dependencies["router_dependencies"],
+                'global_dependencies': injected_dependencies["global_dependencies"],
                 **kwargs
             }
             filtered_params = {k: v for k, v in request_components.items() if k in handler_params}
+            print(kwargs)
+            
 
             return handler(*args, **filtered_params)
 

@@ -261,6 +261,7 @@ class MiddlewareRouter(BaseRouter):
     # Arguments are returned as they could be modified by the middlewares.
     def add_middleware(self, middleware_type: MiddlewareType, endpoint: Optional[str]) -> Callable[..., None]:
         # no dependency injection here
+        # we should deal with the handler here
         injected_dependencies = {}
 
         def inner(handler):
