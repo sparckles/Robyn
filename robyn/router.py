@@ -124,28 +124,12 @@ class Router(BaseRouter):
         exception_handler: Optional[Callable],
         injected_dependencies: dict,
     ) -> Union[Callable, CoroutineType]:
-        @wraps(handler)
-        def wrapped_handler(request, *args, **kwargs):
-            return handler(
-                query_params=request.query_params,
-                headers=request.headers,
-                path_params=request.path_params,
-                body=request.body,
-                method=request.method,
-                url=request.url,
-                ip_addr=request.ip_addr,
-                identity=request.identity,
-                form_data=request.form_data,
-                files=request.files,
-                *args, **kwargs
-            )
-
 
         @wraps(handler)
         async def async_inner_handler(*args, **kwargs):
             try:
                 response = self._format_response(
-                    await wrapped_handler(*args, **kwargs),
+                    await handler(*args, **kwargs),
                 )
             except Exception as err:
                 if exception_handler is None:
@@ -159,7 +143,7 @@ class Router(BaseRouter):
         def inner_handler(*args, **kwargs):
             try:
                 response = self._format_response(
-                    wrapped_handler(*args, **kwargs),
+                    handler(*args, **kwargs),
                 )
             except Exception as err:
                 if exception_handler is None:

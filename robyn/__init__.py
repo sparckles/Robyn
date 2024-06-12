@@ -4,6 +4,7 @@ import multiprocess as mp
 import os
 from typing import Callable, List, Optional, Tuple, Union
 from nestd import get_all_nested
+from inspect import signature
 
 
 from robyn.argument_parser import Config
@@ -115,21 +116,26 @@ class Robyn:
             }
             route_type = http_methods[route_type]
 
-        def wrapped_handler(request, *args, **kwargs):
-            # Destructure the request object here
-            return handler(
-                query_params=request.query_params,
-                headers=request.headers,
-                path_params=request.path_params,
-                body=request.body,
-                method=request.method,
-                url=request.url,
-                ip_addr=request.ip_addr,
-                identity=request.identity,
-                form_data=request.form_data,
-                files=request.files,
-                *args, **kwargs
-            )
+        def wrapped_handler(*args, **kwargs):
+            handler_params = signature(handler).parameters
+            request = args[0]
+            request_components = {
+                'request': request,
+                'query_params': request.query_params,
+                'headers': request.headers,
+                'path_params': request.path_params,
+                'body': request.body,
+                'method': request.method,
+                'url': request.url,
+                'ip_addr': request.ip_addr,
+                'identity': request.identity,
+                'form_data': request.form_data,
+                'files': request.files,
+                **kwargs
+            }
+            filtered_params = {k: v for k, v in request_components.items() if k in handler_params}
+
+            return handler(*args, **filtered_params)
 
         add_route_response = self.router.add_route(
             route_type=route_type,
