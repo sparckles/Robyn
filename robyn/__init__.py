@@ -115,10 +115,26 @@ class Robyn:
             }
             route_type = http_methods[route_type]
 
+        def wrapped_handler(request, *args, **kwargs):
+            # Destructure the request object here
+            return handler(
+                query_params=request.query_params,
+                headers=request.headers,
+                path_params=request.path_params,
+                body=request.body,
+                method=request.method,
+                url=request.url,
+                ip_addr=request.ip_addr,
+                identity=request.identity,
+                form_data=request.form_data,
+                files=request.files,
+                *args, **kwargs
+            )
+
         add_route_response = self.router.add_route(
             route_type=route_type,
             endpoint=endpoint,
-            handler=handler,
+            handler=wrapped_handler,
             is_const=is_const,
             exception_handler=self.exception_handler,
             injected_dependencies=injected_dependencies,
