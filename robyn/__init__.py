@@ -200,30 +200,27 @@ class Robyn:
         except Exception:
             raise Exception(f"Invalid port number: {port}")
 
-    def start(self, host: str = "127.0.0.1", port: int = 8080):
+    def start(self, host: str = "127.0.0.1", port: int = 8080, _check_port: bool = True):
         """
         Starts the server
 
+        :param host str: represents the host at which the server is listening
         :param port int: represents the port number at which the server is listening
+        :param _check_port bool: represents if the port should be checked if it is already in use
         """
 
         host = os.getenv("ROBYN_HOST", host)
         port = int(os.getenv("ROBYN_PORT", port))
         open_browser = bool(os.getenv("ROBYN_BROWSER_OPEN", self.config.open_browser))
-        count = 0
 
-        while self.is_port_in_use(port):
-            count += 1
-            if count == 3:
-                logger.error("Port %s is already in use. Exiting...", port)
-                exit(1)
-
-            logger.error("Port %s is already in use. Please use a different port.", port)
-            try:
-                port = int(input("Enter a different port: "))
-            except Exception:
-                logger.error("Invalid port number. Please enter a valid port number.")
-                continue
+        if _check_port:
+            while self.is_port_in_use(port):
+                logger.error("Port %s is already in use. Please use a different port.", port)
+                try:
+                    port = int(input("Enter a different port: "))
+                except Exception:
+                    logger.error("Invalid port number. Please enter a valid port number.")
+                    continue
 
 
         logger.info("Robyn version: %s", __version__)
