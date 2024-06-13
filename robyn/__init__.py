@@ -18,10 +18,8 @@ from robyn.logger import Colors, logger
 from robyn.processpool import run_processes
 from robyn.reloader import compile_rust_files
 from robyn.responses import html, serve_file, serve_html
-from robyn.robyn import (FunctionInfo, Headers, HttpMethod, Request, Response,
-                         WebSocketConnector, get_version)
-from robyn.router import (MiddlewareRouter, MiddlewareType, Router,
-                          WebSocketRouter)
+from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, WebSocketConnector, get_version
+from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory
 from robyn.ws import WebSocket
 
@@ -221,7 +219,6 @@ class Robyn:
                 except Exception:
                     logger.error("Invalid port number. Please enter a valid port number.")
                     continue
-
 
         logger.info("Robyn version: %s", __version__)
         logger.info("Starting server at http://%s:%s", host, port)
