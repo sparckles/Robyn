@@ -845,7 +845,7 @@ def main():
             return None
 
     app.configure_authentication(BasicAuthHandler(token_getter=BearerGetter()))
-    app.start(port=8080)
+    app.start(port=8080, _check_port=False)
 
 
 if __name__ == "__main__":

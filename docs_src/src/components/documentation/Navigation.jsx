@@ -282,6 +282,10 @@ export const navigation = [
         title: 'Exceptions',
       },
       {
+        href: '/documentation/api_reference/scaling',
+        title: 'Scaling the Application',
+      },
+      {
         href: '/documentation/api_reference/advanced_features',
         title: 'Advanced Features',
       },
