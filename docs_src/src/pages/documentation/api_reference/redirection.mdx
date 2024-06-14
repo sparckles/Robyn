@@ -1,31 +1,37 @@
-export const description =
-  "Welcome to the Robyn API documentation. You will find comprehensive guides and documentation to help you start working with Robyn as quickly as possible, as well as support if you get stuck.";
-
 ## Redirection
 
-Batman wanted to redirect some endpoints to others. Robyn helped him do so by the following.
+Batman wanted to redirect some endpoints to others. Robyn helped him do so by the following:
 
-```python {{ title: 'Redirection' }}
-from robyn import Robyn
+<Row>
+  <Col>
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request">
 
-app = Robyn(__file__)
+      ```python {{title: 'untyped'}}
+      from robyn import Robyn, Response
+      app = Robyn(__file__)
 
-@app.get("/")
-def index():
-    return landing()
+      @app.get("/")
+      async def index():
+        return Response(
+          status_code=307,
+          description="",
+          headers={"Location": "landing"},
+        )
 
-@app.get("/landing")
-def landing():
-    return "hii!"
-```
+      @app.get("/landing")
+      def landing():
+        return "hii!"
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
 
-With increased flexibility achieved by redirection, Batman had a powerful new tool at his disposal. The Robyn framework had provided him with the flexibility, scalability, and performance needed to create an effective crime-fighting application, giving him a technological edge in his ongoing battle to protect Gotham City.
+---
 
-<div className="not-prose">
-  <Button
-    href="/documentation/example_app/templates"
-    variant="text"
-    arrow="right"
-    children="Adding a Frontend"
-  />
-</div>
+## What's next?
+
+Now, batman wanted to have an ability to upload files to the server if any new villain appeared. Robyn introduced him to the file uploads feature. 
+
+- [File Uploads](/documentation/api_reference/file-uploads)
