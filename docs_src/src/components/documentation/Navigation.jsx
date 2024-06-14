@@ -210,7 +210,6 @@ export const navigation = [
         href: '/documentation/example_app/monitoring_and_logging',
       },
       { title: 'Deployment', href: '/documentation/example_app/deployment' },
-      { title: 'Redirection', href: '/documentation/example_app/redirection' },
       { title: 'Templates', href: '/documentation/example_app/templates' },
       {
         title: 'SubRouters and Views',
@@ -257,6 +256,7 @@ export const navigation = [
         href: '/documentation/api_reference/templating',
         title: 'Templating',
       },
+      { title: 'Redirection', href: '/documentation/api_reference/redirection' },
       {
         href: '/documentation/api_reference/file-uploads',
         title: 'File Uploads',

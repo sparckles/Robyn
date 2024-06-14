@@ -6,17 +6,13 @@ export const description =
 Batman wanted to redirect some endpoints to others. Robyn helped him do so by the following.
 
 ```python {{ title: 'Redirection' }}
-from robyn import Robyn, Response
+from robyn import Robyn
 
 app = Robyn(__file__)
 
 @app.get("/")
-async def index():
-    return Response(
-        status_code=307,
-        description="",
-        headers={"Location": "landing"},
-    )
+def index():
+    return landing()
 
 @app.get("/landing")
 def landing():
