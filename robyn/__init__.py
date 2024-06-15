@@ -38,7 +38,7 @@ class Robyn:
 
     def __init__(
         self,
-        file_object: str,
+        file_object: Optional[str] = None,
         config: Config = Config(),
         dependencies: DependencyMap = DependencyMap(),
     ) -> None:
