@@ -44,7 +44,7 @@ class Robyn:
     ) -> None:
         self.config = config
         self.dependencies = dependencies
-        
+
         if file_object is not None:
             directory_path = os.path.dirname(os.path.abspath(file_object))
             self.file_path = file_object
