@@ -2,7 +2,7 @@ from robyn import SubRouter, jsonify, WebSocket
 
 from .di_subrouter import di_subrouter
 
-sub_router = SubRouter(prefix="/sub_router")
+sub_router = SubRouter(__name__, prefix="/sub_router")
 
 websocket = WebSocket(sub_router, "/ws")
 
