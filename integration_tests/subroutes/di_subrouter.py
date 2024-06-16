@@ -1,6 +1,6 @@
 from robyn import SubRouter
 
-di_subrouter = SubRouter(__file__, "/di_subrouter")
+di_subrouter = SubRouter("/di_subrouter")
 GLOBAL_DEPENDENCY = "GLOBAL DEPENDENCY OVERRIDE"
 ROUTER_DEPENDENCY = "ROUTER DEPENDENCY"
 di_subrouter.inject_global(GLOBAL_DEPENDENCY=GLOBAL_DEPENDENCY)
