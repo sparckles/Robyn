@@ -422,10 +422,11 @@ class Robyn:
         self.authentication_handler = authentication_handler
         self.middleware_router.set_authentication_handler(authentication_handler)
 
+
 class SubRouter(Robyn):
     def __init__(self, prefix: str = "", config: Config = Config()) -> None:
-        file_object = "/dev/null" if os.name != 'nt' else "NUL"
-        super().__init__(file_object, config = config)
+        file_object = "/dev/null" if os.name != "nt" else "NUL"
+        super().__init__(file_object, config=config)
         self.prefix = prefix
 
     def __add_prefix(self, endpoint: str):
