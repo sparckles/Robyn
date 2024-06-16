@@ -48,6 +48,12 @@ const guides = [
     description: 'Learn about Templating in Robyn.',
   },
   {
+    href: '/documentation/api_reference/redirection',
+    name: 'Redirection',
+    description:
+      'Learn how to redirect requests to different endpoints.',
+  },
+  {
     href: '/documentation/api_reference/file-uploads',
     name: 'File Uploads',
     description:
