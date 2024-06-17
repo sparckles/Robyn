@@ -171,8 +171,9 @@ impl Headers {
 
         for (key, value) in req_headers {
             let key = key.to_string().to_lowercase();
-            let value = value.to_str().unwrap().to_string();
-            headers.headers.entry(key).or_default().push(value);
+            if let Ok(value) = value.to_str() {
+                headers.headers.entry(key).or_default().push(value.to_string());
+            }
         }
 
         headers
