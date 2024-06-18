@@ -256,7 +256,10 @@ export const navigation = [
         href: '/documentation/api_reference/templating',
         title: 'Templating',
       },
-      { title: 'Redirection', href: '/documentation/api_reference/redirection' },
+      {
+        title: 'Redirection',
+        href: '/documentation/api_reference/redirection',
+      },
       {
         href: '/documentation/api_reference/file-uploads',
         title: 'File Uploads',
