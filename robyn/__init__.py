@@ -18,7 +18,7 @@ from robyn.logger import Colors, logger
 from robyn.processpool import run_processes
 from robyn.reloader import compile_rust_files
 from robyn.responses import html, serve_file, serve_html
-from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, WebSocketConnector, get_version
+from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, WebSocketConnector, get_version, SocketHeld
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory
 from robyn.ws import WebSocket
@@ -191,12 +191,13 @@ class Robyn:
     def shutdown_handler(self, handler: Callable) -> None:
         self._add_event_handler(Events.SHUTDOWN, handler)
 
-    def is_port_in_use(self, port: int) -> bool:
+    def get_socket(self, url: str, port: int) -> (bool, SocketHeld):
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                return s.connect_ex(("localhost", port)) == 0
+                return s.connect_ex(("localhost", port)) != 0, SocketHeld(url, port)
         except Exception:
-            raise Exception(f"Invalid port number: {port}")
+            logger.error(f"Invalid port number: {port}")
+            return False, None
 
     def start(self, host: str = "127.0.0.1", port: int = 8080, _check_port: bool = True):
         """
@@ -211,11 +212,14 @@ class Robyn:
         port = int(os.getenv("ROBYN_PORT", port))
         open_browser = bool(os.getenv("ROBYN_BROWSER_OPEN", self.config.open_browser))
 
+        valid_socket, _socket = self.get_socket(host, port)
+
         if _check_port:
-            while self.is_port_in_use(port):
-                logger.error("Port %s is already in use. Please use a different port.", port)
+            while not valid_socket:
                 try:
                     port = int(input("Enter a different port: "))
+
+                    valid_socket, _socket = self.get_socket(host, port)
                 except Exception:
                     logger.error("Invalid port number. Please enter a valid port number.")
                     continue
@@ -228,6 +232,7 @@ class Robyn:
         run_processes(
             host,
             port,
+            _socket,
             self.directories,
             self.request_headers,
             self.router.get_routes(),
