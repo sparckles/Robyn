@@ -8,7 +8,7 @@ di_subrouter.inject(ROUTER_DEPENDENCY=ROUTER_DEPENDENCY)
 
 
 @di_subrouter.get("/subrouter_router_di")
-def sync_subrouter_route_dependency(router_dependencies):
+def sync_subrouter_route_dependency(r, router_dependencies, global_dependencies):
     return router_dependencies["ROUTER_DEPENDENCY"]
 
 

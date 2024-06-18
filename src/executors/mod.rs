@@ -28,17 +28,17 @@ where
     let function_args = function_args.to_object(py);
     debug!("Function args: {:?}", function_args);
 
-    let has_request_or_response = function.args.as_ref(py).get_item("request").is_some()
-        || function.args.as_ref(py).get_item("response").is_some();
-
     match function.number_of_params {
         0 => handler.call0(),
         1 => {
-            // if has_request_or_response {
-            //     handler.call1((function_args,))
-            // } else {
-            handler.call((function_args,), Some(kwargs))
-            // }
+            if kwargs.get_item("global_dependencies").is_some()
+                || kwargs.get_item("router_dependencies").is_some()
+            // these are reserved keywords
+            {
+                handler.call((), Some(kwargs))
+            } else {
+                handler.call1((function_args,))
+            }
         }
         _ => handler.call((function_args,), Some(kwargs)),
     }
