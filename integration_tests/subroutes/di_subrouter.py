@@ -1,4 +1,4 @@
-from robyn import SubRouter
+from robyn import SubRouter, Request
 
 di_subrouter = SubRouter(__file__, "/di_subrouter")
 GLOBAL_DEPENDENCY = "GLOBAL DEPENDENCY OVERRIDE"
@@ -8,7 +8,7 @@ di_subrouter.inject(ROUTER_DEPENDENCY=ROUTER_DEPENDENCY)
 
 
 @di_subrouter.get("/subrouter_router_di")
-def sync_subrouter_route_dependency(r, router_dependencies, global_dependencies):
+def sync_subrouter_route_dependency(r: Request, router_dependencies, global_dependencies):
     return router_dependencies["ROUTER_DEPENDENCY"]
 
 
