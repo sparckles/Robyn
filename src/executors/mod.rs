@@ -24,37 +24,23 @@ where
     T: ToPyObject,
 {
     let handler = function.handler.as_ref(py);
-    // kwargs are handled
     let kwargs = function.kwargs.as_ref(py);
-
     let function_args = function_args.to_object(py);
     debug!("Function args: {:?}", function_args);
+
+    let has_request_or_response = function.args.as_ref(py).get_item("request").is_some()
+        || function.args.as_ref(py).get_item("response").is_some();
 
     match function.number_of_params {
         0 => handler.call0(),
         1 => {
-            if function.args.as_ref(py).get_item("request").is_some()
-                || function.args.as_ref(py).get_item("response").is_some()
-            {
-                // If 'request' is present, call handler with 'function_args'
-                handler.call1((function_args,))
-            } else {
-                // If neither 'request' nor 'response' is present
-                handler.call((), Some(kwargs))
-            }
+            // if has_request_or_response {
+            //     handler.call1((function_args,))
+            // } else {
+            handler.call((function_args,), Some(kwargs))
+            // }
         }
-        2 => {
-            if function.args.as_ref(py).get_item("request").is_some()
-                || function.args.as_ref(py).get_item("response").is_some()
-            {
-                // If either 'request' or 'response' is present, call handler with 'function_args' and 'kwargs'
-                handler.call((function_args,), Some(kwargs))
-            } else {
-                // If neither 'request' nor 'response' is present
-                handler.call((), Some(kwargs))
-            }
-        }
-        3..=u8::MAX => handler.call((function_args,), Some(kwargs)),
+        _ => handler.call((function_args,), Some(kwargs)),
     }
 }
 
