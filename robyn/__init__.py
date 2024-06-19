@@ -10,6 +10,7 @@ from nestd import get_all_nested
 from robyn import status_codes
 from robyn.argument_parser import Config
 from robyn.authentication import AuthenticationHandler
+from robyn.cli import start_dev_server
 from robyn.dependency_injection import DependencyMap
 from robyn.env_populator import load_vars
 from robyn.events import Events
@@ -56,8 +57,6 @@ class Robyn:
                 "SERVER IS RUNNING IN VERBOSE/DEBUG MODE. Set --log-level to WARN to run in production mode.",
                 color=Colors.BLUE,
             )
-        if self.config.dev:
-            exit("Dev mode is not supported in the python wrapper. Please use the CLI. e.g. python3 -m robyn app.py --dev ")
 
         self.router = Router()
         self.middleware_router = MiddlewareRouter()
@@ -225,21 +224,24 @@ class Robyn:
 
         mp.allow_connection_pickling()
 
-        run_processes(
-            host,
-            port,
-            self.directories,
-            self.request_headers,
-            self.router.get_routes(),
-            self.middleware_router.get_global_middlewares(),
-            self.middleware_router.get_route_middlewares(),
-            self.web_socket_router.get_routes(),
-            self.event_handlers,
-            self.config.workers,
-            self.config.processes,
-            self.response_headers,
-            open_browser,
-        )
+        if self.config.dev:
+            start_dev_server(self.config, self.config.file_path)
+        else:
+            run_processes(
+                host,
+                port,
+                self.directories,
+                self.request_headers,
+                self.router.get_routes(),
+                self.middleware_router.get_global_middlewares(),
+                self.middleware_router.get_route_middlewares(),
+                self.web_socket_router.get_routes(),
+                self.event_handlers,
+                self.config.workers,
+                self.config.processes,
+                self.response_headers,
+                open_browser,
+            )
 
     def exception(self, exception_handler: Callable):
         self.exception_handler = exception_handler

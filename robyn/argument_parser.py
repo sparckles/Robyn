@@ -1,4 +1,5 @@
 import argparse
+import sys
 
 
 class Config:
@@ -87,6 +88,8 @@ class Config:
             if arg.endswith(".py"):
                 self.file_path = arg
                 break
+        else:
+            self.file_path = sys.argv[0]
 
         if self.dev and (self.processes != 1 or self.workers != 1):
             raise Exception("--processes and --workers shouldn't be used with --dev")

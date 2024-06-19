@@ -84,7 +84,7 @@ def start_dev_server(config: Config, file_path: Optional[str] = None):
     directory_path = absolute_file_path.parent
 
     if config.dev and not os.environ.get("IS_RELOADER_RUNNING", False):
-        setup_reloader(str(directory_path), str(absolute_file_path))
+        setup_reloader(config, str(directory_path), str(absolute_file_path))
         return
 
 

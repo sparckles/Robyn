@@ -9,6 +9,7 @@ from typing import List
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
+from robyn import Config
 from robyn.logger import Colors, logger
 
 dir_path = None
@@ -58,8 +59,8 @@ def clean_rust_binaries(rust_binaries: List[str]):
         os.remove(file)
 
 
-def setup_reloader(directory_path: str, file_path: str):
-    event_handler = EventHandler(file_path, directory_path)
+def setup_reloader(config: Config, directory_path: str, file_path: str):
+    event_handler = EventHandler(config, file_path, directory_path)
 
     event_handler.reload()
 
@@ -91,7 +92,8 @@ def setup_reloader(directory_path: str, file_path: str):
 
 
 class EventHandler(FileSystemEventHandler):
-    def __init__(self, file_path: str, directory_path: str) -> None:
+    def __init__(self, config: Config, file_path: str, directory_path: str) -> None:
+        self.config = config
         self.file_path = file_path
         self.directory_path = directory_path
         self.process = None  # Keep track of the subprocess
@@ -115,11 +117,19 @@ class EventHandler(FileSystemEventHandler):
         clean_rust_binaries(self.built_rust_binaries)
         self.built_rust_binaries = compile_rust_files(self.directory_path)
 
-        self.process = subprocess.Popen(
-            [sys.executable, *arguments],
-            env=new_env,
-            start_new_session=False,
-        )
+        if self.config.dev and self.config.file_path is not None:
+            subprocess.call(f'cd {"/".join(self.config.file_path.split("/")[-2:-1])}', shell=True)
+            self.process = subprocess.Popen(
+                [sys.executable, "-m", self.config.file_path.split("/")[-2], *arguments],
+                env=new_env,
+                start_new_session=False,
+            )
+        else:
+            self.process = subprocess.Popen(
+                [sys.executable, *arguments],
+                env=new_env,
+                start_new_session=False,
+            )
 
         self.last_reload = time.time()
 
