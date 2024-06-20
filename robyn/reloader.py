@@ -118,9 +118,14 @@ class EventHandler(FileSystemEventHandler):
         self.built_rust_binaries = compile_rust_files(self.directory_path)
 
         if self.config.dev and self.config.file_path is not None:
-            subprocess.call(f'cd {"/".join(self.config.file_path.split("/")[-2:-1])}', shell=True)
+            split = self.config.file_path.split("/")
+
+            working_directory = "/".join(split[-2:-1])
+
+            subprocess.call(f"cd {working_directory}", shell=True)
+
             self.process = subprocess.Popen(
-                [sys.executable, "-m", self.config.file_path.split("/")[-2], *arguments],
+                [sys.executable, "-m", split[-2], *arguments],
                 env=new_env,
                 start_new_session=False,
             )
