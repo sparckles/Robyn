@@ -7,6 +7,12 @@ from robyn.argument_parser import Config
 
 
 def start_dev_server(config: Config, file_path: Optional[str] = None):
+    """
+    Start the dev server. Initialize the reloader to monitor file changes
+
+    @param config: the config object
+    @param file_path: the path to the file
+    """
     if file_path is None:
         return
 

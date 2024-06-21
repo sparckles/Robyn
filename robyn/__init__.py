@@ -7,10 +7,11 @@ from typing import Callable, List, Optional, Tuple, Union
 import multiprocess as mp
 from nestd import get_all_nested
 
-from robyn import status_codes, dev_server
+from robyn import status_codes
 from robyn.argument_parser import Config
 from robyn.authentication import AuthenticationHandler
 from robyn.dependency_injection import DependencyMap
+from robyn.dev_server import start_dev_server
 from robyn.env_populator import load_vars
 from robyn.events import Events
 from robyn.jsonify import jsonify
@@ -224,7 +225,7 @@ class Robyn:
         mp.allow_connection_pickling()
 
         if self.config.dev:
-            dev_server.start_dev_server(self.config, self.config.file_path)
+            start_dev_server(self.config, self.config.file_path)
         else:
             run_processes(
                 host,

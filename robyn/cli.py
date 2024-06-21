@@ -4,7 +4,7 @@ import webbrowser
 from InquirerPy.resolver import prompt
 from InquirerPy.base.control import Choice
 
-from . import dev_server
+from robyn.dev_server import start_dev_server
 from .argument_parser import Config
 from .reloader import create_rust_file
 from robyn.robyn import get_version
@@ -107,6 +107,6 @@ def run():
 
     elif config.dev:
         print("Starting dev server...")
-        dev_server.start_dev_server(config, config.file_path)
+        start_dev_server(config, config.file_path)
     else:
         start_app_normally(config)
