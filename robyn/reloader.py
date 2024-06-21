@@ -9,7 +9,7 @@ from typing import List
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-from robyn import Config
+from robyn.argument_parser import Config
 from robyn.logger import Colors, logger
 
 dir_path = None
@@ -118,14 +118,10 @@ class EventHandler(FileSystemEventHandler):
         self.built_rust_binaries = compile_rust_files(self.directory_path)
 
         if self.config.dev and self.config.file_path is not None:
-            split = self.config.file_path.split("/")
-
-            working_directory = "/".join(split[-2:-1])
-
-            subprocess.call(f"cd {working_directory}", shell=True)
+            module_name = self.config.file_path.split("/")[-2]
 
             self.process = subprocess.Popen(
-                [sys.executable, "-m", split[-2], *arguments],
+                [sys.executable, "-m", module_name, *arguments],
                 env=new_env,
                 start_new_session=False,
             )

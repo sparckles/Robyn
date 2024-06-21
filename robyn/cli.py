@@ -1,11 +1,12 @@
 import os
 import sys
-from typing import Optional
 import webbrowser
 from InquirerPy.resolver import prompt
 from InquirerPy.base.control import Choice
+
+from . import dev_server
 from .argument_parser import Config
-from .reloader import create_rust_file, setup_reloader
+from .reloader import create_rust_file
 from robyn.robyn import get_version
 from pathlib import Path
 import shutil
@@ -76,18 +77,6 @@ def docs():
     webbrowser.open("https://robyn.tech")
 
 
-def start_dev_server(config: Config, file_path: Optional[str] = None):
-    if file_path is None:
-        return
-
-    absolute_file_path = (Path.cwd() / file_path).resolve()
-    directory_path = absolute_file_path.parent
-
-    if config.dev and not os.environ.get("IS_RELOADER_RUNNING", False):
-        setup_reloader(config, str(directory_path), str(absolute_file_path))
-        return
-
-
 def start_app_normally(config: Config):
     # Parsing the known and unknown arguments
     known_arguments, unknown_args = config.parser.parse_known_args()
@@ -118,6 +107,6 @@ def run():
 
     elif config.dev:
         print("Starting dev server...")
-        start_dev_server(config, config.file_path)
+        dev_server.start_dev_server(config, config.file_path)
     else:
         start_app_normally(config)
