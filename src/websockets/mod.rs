@@ -26,6 +26,7 @@ pub struct WebSocketConnector {
     pub router: HashMap<String, FunctionInfo>,
     pub task_locals: TaskLocals,
     pub registry_addr: Addr<WebSocketRegistry>,
+    pub query_params: HashMap<String, String>,
 }
 
 // By default mailbox capacity is 16 messages.
@@ -173,6 +174,11 @@ impl WebSocketConnector {
     pub fn get_id(&self) -> String {
         self.id.to_string()
     }
+
+    #[getter]
+    pub fn get_query_params(&self) -> HashMap<String, String> {
+        self.query_params.clone()
+    }
 }
 
 static REGISTRY_ADDRESSES: OnceCell<RwLock<HashMap<String, Addr<WebSocketRegistry>>>> =
@@ -206,6 +212,7 @@ pub async fn start_web_socket(
     endpoint: String,
 ) -> Result<HttpResponse, Error> {
     let registry_addr = get_or_init_registry_for_endpoint(endpoint);
+    let query_params = req.query_string();
 
     ws::start(
         WebSocketConnector {
@@ -213,6 +220,9 @@ pub async fn start_web_socket(
             task_locals,
             id: Uuid::new_v4(),
             registry_addr,
+            query_params: web::Query::<HashMap<String, String>>::from_query(query_params)
+                .unwrap()
+                .into_inner(),
         },
         &req,
         stream,
