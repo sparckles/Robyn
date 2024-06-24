@@ -3,6 +3,8 @@ import requests
 from requests import Response
 
 from integration_tests.helpers.http_methods_helpers import get
+from robyn import Headers
+from robyn import Response as RobynResponse
 
 
 @pytest.mark.benchmark
@@ -61,3 +63,12 @@ def test_trailing_slash(session):
 
     r = requests.get("http://localhost:8080/trailing/")
     assert r.text == "Trailing slash test successful!"
+
+
+@pytest.mark.benchmark
+@pytest.mark.parametrize("key, value", [("fakesession", "fake-cookie-session-value")])
+def test_cookies(session, key, value):
+    response = RobynResponse(status_code=200, headers=Headers({}), description="test cookies")
+    response.set_cookie(key=key, value=value)
+
+    assert response.headers[key] == value
