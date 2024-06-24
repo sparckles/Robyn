@@ -160,9 +160,8 @@ impl PyResponse {
     pub fn set_cookie(&mut self, py: Python, key: &str, value: &str) -> PyResult<()> {
         let kwargs = vec![("key", key), ("value", value)].into_py_dict(py);
 
-        match self.headers.call_method(py, "append", (), Some(kwargs)) {
-            Err(e) => println!("{:?}", e),
-            _ => (),
+        if let Err(e) = self.headers.call_method(py, "append", (), Some(kwargs)) {
+            println!("{:?}", e)
         }
 
         Ok(())
