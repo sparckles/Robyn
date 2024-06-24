@@ -3,7 +3,7 @@ use actix_web::{HttpRequest, HttpResponse, HttpResponseBuilder, Responder};
 use pyo3::{
     exceptions::{PyIOError, PyValueError},
     prelude::*,
-    types::{PyBytes, PyDict, PyString},
+    types::{IntoPyDict, PyBytes, PyDict, PyString},
 };
 
 use super::headers::Headers;
@@ -154,6 +154,17 @@ impl PyResponse {
         self.description = read_file(file_path)
             .map_err(|e| PyErr::new::<PyIOError, _>(e.to_string()))?
             .into_py(py);
+        Ok(())
+    }
+
+    pub fn set_cookie(&mut self, py: Python, key: &str, value: &str) -> PyResult<()> {
+        let kwargs = vec![("key", key), ("value", value)].into_py_dict(py);
+
+        match self.headers.call_method(py, "append", (), Some(kwargs)) {
+            Err(e) => println!("{:?}", e),
+            _ => (),
+        }
+
         Ok(())
     }
 }
