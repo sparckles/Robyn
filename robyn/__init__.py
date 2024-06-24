@@ -192,6 +192,12 @@ class Robyn:
         self._add_event_handler(Events.SHUTDOWN, handler)
 
     def get_socket(self, url: str, port: int) -> (bool, SocketHeld):
+        """
+        @param url: the host URL
+        @param port: the port number
+        @return: a tuple containing a bool that denotes whether
+        the socket was acquired or not followed by the actual socket, if successful
+        """
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 return s.connect_ex(("localhost", port)) != 0, SocketHeld(url, port)
