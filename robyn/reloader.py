@@ -117,7 +117,7 @@ class EventHandler(FileSystemEventHandler):
         clean_rust_binaries(self.built_rust_binaries)
         self.built_rust_binaries = compile_rust_files(self.directory_path)
 
-        if self.config.dev and self.config.file_path is not None:
+        if self.config.dev and self.config.running_as_module:
             module_name = self.config.file_path.split("/")[-2]
 
             self.process = subprocess.Popen(
