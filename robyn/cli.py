@@ -5,8 +5,8 @@ from InquirerPy.resolver import prompt
 from InquirerPy.base.control import Choice
 
 from robyn.dev_server import start_dev_server
-from .argument_parser import Config
-from .reloader import create_rust_file
+from robyn.argument_parser import Config
+from robyn.reloader import create_rust_file
 from robyn.robyn import get_version
 from pathlib import Path
 import shutil
