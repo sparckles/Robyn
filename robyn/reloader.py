@@ -16,8 +16,10 @@ dir_path = None
 
 def compile_rust_files(directory_path: str):
     rust_files = glob.glob(os.path.join(directory_path, "**/*.rs"), recursive=True)
+    rust_binaries: list[str] = []
+
     for rust_file in rust_files:
-        print("Compiling rust file : %s", rust_file)
+        print(f"Compiling rust file: {rust_file}")
 
         result = subprocess.run(
             [sys.executable, "-m", "rustimport", "build", rust_file],
@@ -26,11 +28,29 @@ def compile_rust_files(directory_path: str):
             start_new_session=False,
         )
         if result.returncode != 0:
-            print("Error compiling rust file : %s %s", result.stderr.decode("utf-8"), result.stdout.decode("utf-8"))
+            print(
+                f"Error compiling rust file: {rust_file} \n {result.stderr.decode('utf-8')} \n {result.stdout.decode('utf-8')}"
+            )
         else:
-            print("Compiled rust file : %s", rust_file)
+            print(f"Compiled rust file: {rust_file}")
+            rust_file_base = rust_file.removesuffix(".rs")
 
-    return rust_files
+            # Define the search pattern for the binary file
+            if sys.platform == "win32":
+                binary_extension = ".dll"
+            elif sys.platform == "darwin":
+                binary_extension = ".so"
+            elif sys.platform == "linux":
+                binary_extension = ".so"
+            else:
+                raise ValueError(f"Unsupported platform: {sys.platform}")
+
+            search_pattern = f"{rust_file_base}.*{binary_extension}"
+            # Use glob to find matching binary files
+            matching_binaries = glob.glob(search_pattern)
+            rust_binaries.extend(matching_binaries)
+
+    return rust_binaries
 
 
 def create_rust_file(file_name: str):
@@ -47,7 +67,11 @@ def create_rust_file(file_name: str):
     )
 
     if result.returncode != 0:
-        print("Error creating rust file : %s %s", result.stderr.decode("utf-8"), result.stdout.decode("utf-8"))
+        print(
+            "Error creating rust file : %s %s",
+            result.stderr.decode("utf-8"),
+            result.stdout.decode("utf-8"),
+        )
     else:
         print("Created rust file : %s", rust_file)
 
@@ -98,11 +122,15 @@ class EventHandler(FileSystemEventHandler):
         self.process = None  # Keep track of the subprocess
         self.built_rust_binaries = []  # Keep track of the built rust binaries
 
-        self.last_reload = time.time()  # Keep track of the last reload. EventHandler is initialized with the process.
+        self.last_reload = (
+            time.time()
+        )  # Keep track of the last reload. EventHandler is initialized with the process.
 
     def stop_server(self):
         if self.process:
-            os.kill(self.process.pid, signal.SIGTERM)  # Stop the subprocess using os.kill()
+            os.kill(
+                self.process.pid, signal.SIGTERM
+            )  # Stop the subprocess using os.kill()
 
     def reload(self):
         self.stop_server()
