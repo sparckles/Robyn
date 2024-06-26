@@ -28,9 +28,7 @@ def compile_rust_files(directory_path: str):
             start_new_session=False,
         )
         if result.returncode != 0:
-            print(
-                f"Error compiling rust file: {rust_file} \n {result.stderr.decode('utf-8')} \n {result.stdout.decode('utf-8')}"
-            )
+            print(f"Error compiling rust file: {rust_file} \n {result.stderr.decode('utf-8')} \n {result.stdout.decode('utf-8')}")
         else:
             print(f"Compiled rust file: {rust_file}")
             rust_file_base = rust_file.removesuffix(".rs")
@@ -122,15 +120,11 @@ class EventHandler(FileSystemEventHandler):
         self.process = None  # Keep track of the subprocess
         self.built_rust_binaries = []  # Keep track of the built rust binaries
 
-        self.last_reload = (
-            time.time()
-        )  # Keep track of the last reload. EventHandler is initialized with the process.
+        self.last_reload = time.time()  # Keep track of the last reload. EventHandler is initialized with the process.
 
     def stop_server(self):
         if self.process:
-            os.kill(
-                self.process.pid, signal.SIGTERM
-            )  # Stop the subprocess using os.kill()
+            os.kill(self.process.pid, signal.SIGTERM)  # Stop the subprocess using os.kill()
 
     def reload(self):
         self.stop_server()
