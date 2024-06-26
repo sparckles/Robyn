@@ -191,16 +191,18 @@ class Robyn:
     def shutdown_handler(self, handler: Callable) -> None:
         self._add_event_handler(Events.SHUTDOWN, handler)
 
-    def get_socket(self, url: str, port: int) -> (bool, SocketHeld):
+    def get_socket(self, host: str, port: int) -> (bool, SocketHeld):
         """
-        @param url: the host URL
+        @param host: the host URL
         @param port: the port number
-        @return: a tuple containing a bool that denotes whether
-        the socket was acquired or not followed by the actual socket, if successful
+        @return: this function returns a tuple of whether the socket generation was successful and the actual
+        socket, if successful. the result can have the following 2 possibilities: <br>
+            - true, SocketHeld (if successful) <br>
+            - false, None (if unsuccesssful)
         """
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                return s.connect_ex(("localhost", port)) != 0, SocketHeld(url, port)
+                return s.connect_ex((host, port)) != 0, SocketHeld(host, port)
         except Exception:
             logger.error(f"Invalid port number: {port}")
             return False, None
