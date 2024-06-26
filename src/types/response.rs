@@ -3,7 +3,7 @@ use actix_web::{HttpRequest, HttpResponse, HttpResponseBuilder, Responder};
 use pyo3::{
     exceptions::{PyIOError, PyValueError},
     prelude::*,
-    types::{IntoPyDict, PyBytes, PyDict, PyString},
+    types::{PyBytes, PyDict, PyString},
 };
 
 use super::headers::Headers;
