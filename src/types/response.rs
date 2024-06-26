@@ -158,12 +158,10 @@ impl PyResponse {
     }
 
     pub fn set_cookie(&mut self, py: Python, key: &str, value: &str) -> PyResult<()> {
-        let kwargs = vec![("key", key), ("value", value)].into_py_dict(py);
-
-        if let Err(e) = self.headers.call_method(py, "append", (), Some(kwargs)) {
-            println!("{:?}", e)
-        }
-
+        self.headers
+            .try_borrow_mut(py)
+            .expect("value already borrowed")
+            .append(key.to_string(), value.to_string());
         Ok(())
     }
 }
