@@ -1,4 +1,5 @@
 import argparse
+import sys
 
 
 class Config:
@@ -81,12 +82,16 @@ class Config:
         self.version = args.version
         self.compile_rust_path = args.compile_rust_path
         self.create_rust_file = args.create_rust_file
+        self.running_as_module = False
 
         # find something that ends with .py in unknown_args
         for arg in unknown_args:
             if arg.endswith(".py"):
                 self.file_path = arg
                 break
+        else:
+            self.file_path = sys.argv[0]
+            self.running_as_module = True
 
         if self.dev and (self.processes != 1 or self.workers != 1):
             raise Exception("--processes and --workers shouldn't be used with --dev")
