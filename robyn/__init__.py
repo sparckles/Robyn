@@ -202,7 +202,7 @@ class Robyn:
         """
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                is_valid = s.connect_ex((host, port))
+                is_connection_valid = s.connect_ex((host, port))
                 acquired_socket = SocketHeld(host, port)
                 return is_valid, acquired_socket
         except Exception:
