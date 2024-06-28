@@ -191,7 +191,7 @@ class Robyn:
     def shutdown_handler(self, handler: Callable) -> None:
         self._add_event_handler(Events.SHUTDOWN, handler)
 
-    def check_socket_connection(self, host: str, port: int) -> (bool, SocketHeld):
+    def check_socket_connection(self, host: str, port: int) -> (bool, Optional[SocketHeld]):
         """
         @param host: the host URL
         @param port: the port number
@@ -204,7 +204,7 @@ class Robyn:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 is_connection_valid = s.connect_ex((host, port))
                 acquired_socket = SocketHeld(host, port)
-                return is_valid, acquired_socket
+                return is_connection_valid, acquired_socket
         except Exception:
             logger.error(f"Invalid port number: {port}")
             return False, None
@@ -222,14 +222,14 @@ class Robyn:
         port = int(os.getenv("ROBYN_PORT", port))
         open_browser = bool(os.getenv("ROBYN_BROWSER_OPEN", self.config.open_browser))
 
-        valid_socket, _socket = self.get_socket(host, port)
+        is_connection_valid, socket = self.check_socket_connection(host, port)
 
         if _check_port:
-            while not valid_socket:
+            while not is_connection_valid:
                 try:
                     port = int(input("Enter a different port: "))
 
-                    valid_socket, _socket = self.get_socket(host, port)
+                    is_connection_valid, socket = self.check_socket_connection(host, port)
                 except Exception:
                     logger.error("Invalid port number. Please enter a valid port number.")
                     continue
@@ -242,7 +242,7 @@ class Robyn:
         run_processes(
             host,
             port,
-            _socket,
+            socket,
             self.directories,
             self.request_headers,
             self.router.get_routes(),
