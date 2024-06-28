@@ -196,7 +196,7 @@ class Robyn:
         @param host: the host URL
         @param port: the port number
         @return: this function returns a tuple of whether the socket generation was successful and the actual
-        socket, if successful. the result can have the following 2 possibilities: <br>
+        socket, if successful. the result can have the following 2 possibilities: 
             - true, SocketHeld (if successful) <br>
             - false, None (if unsuccesssful)
         """
