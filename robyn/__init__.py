@@ -191,7 +191,7 @@ class Robyn:
     def shutdown_handler(self, handler: Callable) -> None:
         self._add_event_handler(Events.SHUTDOWN, handler)
 
-    def get_socket(self, host: str, port: int) -> (bool, SocketHeld):
+    def check_socket_connection(self, host: str, port: int) -> (bool, SocketHeld):
         """
         @param host: the host URL
         @param port: the port number
