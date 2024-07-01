@@ -6,6 +6,7 @@ from InquirerPy.resolver import prompt
 from InquirerPy.base.control import Choice
 from .argument_parser import Config
 from .reloader import create_rust_file, setup_reloader
+from robyn.env_populator import load_vars
 from robyn.robyn import get_version
 from pathlib import Path
 import shutil
@@ -104,6 +105,12 @@ def start_app_normally(config: Config):
 
 def run():
     config = Config()
+
+    load_vars(project_root=os.path.dirname(os.path.abspath(config.file_path)))
+
+    if not config.dev:
+        config.dev = bool(os.getenv("ROBYN_DEV_MODE", False))
+
     if config.create:
         create_robyn_app()
 
