@@ -113,19 +113,17 @@ class EventHandler(FileSystemEventHandler):
         print(f"Reloading {self.file_path}...")
         arguments = [arg for arg in sys.argv[1:] if not arg.startswith("--dev")]
 
-
         clean_rust_binaries(self.built_rust_binaries)
         self.built_rust_binaries = compile_rust_files(self.directory_path)
 
         prev_process = self.process
         if prev_process:
             prev_process.kill()
-            
+
         self.process = subprocess.Popen(
             [sys.executable, *arguments],
             env=new_env,
         )
-
 
         self.last_reload = time.time()
 
