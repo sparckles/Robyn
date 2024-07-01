@@ -144,7 +144,8 @@ Speaking of HTML files, Batman wanted to serve simple HTML strings. He was sugge
 
     @app.get("/")
     async def h(request):
-        return html("./index.html")
+        html_string = "<h1>Hello World</h1>"
+        return html(html_string)
 
     app.start(port=8080)
 
@@ -158,7 +159,8 @@ Speaking of HTML files, Batman wanted to serve simple HTML strings. He was sugge
 
     @app.get("/")
     async def h(request: Request):
-        return html("./index.html")
+        html_string = "<h1>Hello World</h1>"
+        return html(html_string)
 
     app.start(port=8080)
 
