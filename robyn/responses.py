@@ -1,4 +1,5 @@
 from typing import Optional
+import os
 
 from robyn.robyn import Response, Headers
 
@@ -39,11 +40,15 @@ def serve_html(file_path: str) -> FileResponse:
     return FileResponse(file_path, headers=Headers({"Content-Type": "text/html"}))
 
 
-def serve_file(file_path: str) -> FileResponse:
+def serve_file(file_path: str, file_name: Optional[str] = None) -> FileResponse:
     """
     This function will help in serving a file
 
     :param file_path str: file path to serve as a response
+    :param file_name [str | None]: file name to serve as a response, defaults to None
     """
-
-    return FileResponse(file_path, headers=Headers({"Content-Disposition": "attachment"}))
+    file_name = file_name or os.path.basename(file_path)
+    return FileResponse(
+        file_path,
+        headers=Headers({"Content-Disposition": f"attachment; filename={file_name}"}),
+    )
