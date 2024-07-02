@@ -189,7 +189,7 @@ Batman scaled his application across multiple cores for better performance. He u
 
     @app.get("/")
     async def h(request):
-        return serve_file("./index.html")
+        return serve_file("./index.html", file_name="index.html") # file_name is optional
 
     app.start(port=8080)
 
@@ -203,7 +203,7 @@ Batman scaled his application across multiple cores for better performance. He u
 
     @app.get("/")
     async def h(request: Request):
-        return serve_file("./index.html")
+        return serve_file("./index.html", file_name="index.html") # file_name is optional
 
     app.start(port=8080)
 
