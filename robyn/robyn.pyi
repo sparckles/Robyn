@@ -355,6 +355,7 @@ class WebSocketConnector:
     """
 
     id: str
+    query_params: QueryParams
 
     async def async_broadcast(self, message: str) -> None:
         pass
