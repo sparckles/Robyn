@@ -285,8 +285,6 @@ class Response:
         headers (Union[Headers, dict]): The headers of the response or Headers directly. e.g. {"Content-Type": "application/json"}
         description (Union[str, bytes]): The body of the response. If the response is a JSON, it will be a dict.
         file_path (Optional[str]): The file path of the response. e.g. /home/user/file.txt
-
-        set_cookie (Callable): The function to set a cookie (onto headers).
     """
 
     status_code: int
