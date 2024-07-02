@@ -16,6 +16,7 @@ from robyn.ws import WebSocket
 def run_processes(
     url: str,
     port: int,
+    socket: SocketHeld,
     directories: List[Directory],
     request_headers: Headers,
     routes: List[Route],
@@ -28,8 +29,6 @@ def run_processes(
     response_headers: Headers,
     open_browser: bool,
 ) -> List[Process]:
-    socket = SocketHeld(url, port)
-
     process_pool = init_processpool(
         directories,
         request_headers,
