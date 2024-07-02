@@ -71,12 +71,12 @@ Router level dependency injection is used to inject dependencies into the router
       app.inject(ROUTER_DEPENDENCY=ROUTER_DEPENDENCY)
 
       @app.get("/sync/global_di")
-      def sync_global_di(request, router_dependencies):
+      def sync_global_di(r, router_dependencies): # r is the request object
         return router_dependencies["ROUTER_DEPENDENCY"]
     ```
 
     ```python {{ title: 'typed' }}
-      from robyn import Robyn, ALLOW_CORS
+      from robyn import Robyn, ALLOW_CORS, Request
 
       app = Robyn(__file__)
       ROUTER_DEPENDENCY = "ROUTER DEPENDENCY"
@@ -84,7 +84,7 @@ Router level dependency injection is used to inject dependencies into the router
       app.inject(ROUTER_DEPENDENCY=ROUTER_DEPENDENCY)
 
       @app.get("/sync/global_di")
-      def sync_global_di(request, router_dependencies):
+      def sync_global_di(r: Request, router_dependencies):
         return router_dependencies["ROUTER_DEPENDENCY"]
     ```
     </CodeGroup>
@@ -93,7 +93,7 @@ Router level dependency injection is used to inject dependencies into the router
 
 <Row>
 <Col>
-Note: `router_dependencies`, `global_dependencies` , `request` are named parameters and **must** be named as such. The order of the parameters does not matter.
+Note: `router_dependencies`, `global_dependencies` are reserved parameters and **must** be named as such. The order of the parameters does not matter among them. However, the `router_dependencies` and `global_dependencies` must only come after the `request` parameter. 
 </Col>
 </Row>
 

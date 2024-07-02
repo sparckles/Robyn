@@ -50,8 +50,7 @@ const guides = [
   {
     href: '/documentation/api_reference/redirection',
     name: 'Redirection',
-    description:
-      'Learn how to redirect requests to different endpoints.',
+    description: 'Learn how to redirect requests to different endpoints.',
   },
   {
     href: '/documentation/api_reference/file-uploads',
@@ -61,7 +60,7 @@ const guides = [
   },
   {
     href: '/documentation/api_reference/form_data',
-    name: 'Form Data',
+    name: 'Form Data and Multi Part Form Data',
     description: 'Learn how to handle form data.',
   },
   {

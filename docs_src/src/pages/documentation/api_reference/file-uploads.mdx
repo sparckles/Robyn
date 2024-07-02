@@ -57,26 +57,20 @@ Batman scaled his application across multiple cores for better performance. He u
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
     ```python {{ title: 'untyped' }}
-    @app.post("/upload")
-    async def upload(request):
-      file = request.files['filename']
 
-      # write whatever filename
-      with open('filename', 'wb') as f:
-          f.write(file)
-
-      return {'message': 'success'}
+    @app.post("/sync/multipart-file")
+    def sync_multipart_file(request: Request):
+        files = request.files
+        file_names = files.keys()
+        return {"file_names": list(file_names)}
     ```
     ```python {{ title: 'typed' }}
-    @app.post("/upload")
-    async def upload(request: Request):
-      file = request.files['filename']
 
-      # write whatever filename
-      with open('filename', 'wb') as f:
-          f.write(file)
-
-      return {'message': 'success'}
+    @app.post("/sync/multipart-file")
+    def sync_multipart_file(request: Request):
+        files = request.files
+        file_names = files.keys()
+        return {"file_names": list(file_names)}
     ```
 
     </CodeGroup>
@@ -150,7 +144,8 @@ Speaking of HTML files, Batman wanted to serve simple HTML strings. He was sugge
 
     @app.get("/")
     async def h(request):
-        return html("./index.html")
+        html_string = "<h1>Hello World</h1>"
+        return html(html_string)
 
     app.start(port=8080)
 
@@ -164,7 +159,8 @@ Speaking of HTML files, Batman wanted to serve simple HTML strings. He was sugge
 
     @app.get("/")
     async def h(request: Request):
-        return html("./index.html")
+        html_string = "<h1>Hello World</h1>"
+        return html(html_string)
 
     app.start(port=8080)
 

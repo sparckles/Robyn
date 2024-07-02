@@ -62,6 +62,7 @@ def clean_rust_binaries(rust_binaries: List[str]):
 def setup_reloader(config: Config, directory_path: str, file_path: str):
     event_handler = EventHandler(config, file_path, directory_path)
 
+    # sets the IS_RELOADER_RUNNING environment variable to True
     event_handler.reload()
 
     logger.info(
@@ -131,6 +132,14 @@ class EventHandler(FileSystemEventHandler):
                 env=new_env,
                 start_new_session=False,
             )
+        prev_process = self.process
+        if prev_process:
+            prev_process.kill()
+
+        self.process = subprocess.Popen(
+            [sys.executable, *arguments],
+            env=new_env,
+        )
 
         self.last_reload = time.time()
 
