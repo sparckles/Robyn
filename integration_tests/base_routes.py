@@ -218,7 +218,7 @@ app.inject(RouterDependency="Router Dependency")
 
 
 @app.get("/")
-async def hello_world(request):
+async def hello_world(r):
     return "Hello, world!"
 
 
