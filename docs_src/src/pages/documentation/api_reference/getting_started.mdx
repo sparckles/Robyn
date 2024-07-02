@@ -523,6 +523,37 @@ Or setting the Headers globally *per* router.
   </Col>
 </Row>
 
+### Cookies
+
+<Row>
+<Col>
+Set cookies using the `set_cookies` function.
+</Col>
+<Col sticky>
+
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    @app.get("/")
+    def binary_output_response_sync(request):
+        response = Response(200, {'type': 'int'}, "desc")
+        response.set_cookie(key="fakesession", value="fake-cookie-session-value")
+        return response
+    ```
+
+    ```python {{title: 'typed'}}
+    from robyn import Request
+
+    @app.get("/")
+    def binary_output_response_sync(request: Request):
+        response = Response(200, {'type': 'int'}, "desc")
+        response.set_cookie(key="fakesession", value="fake-cookie-session-value")
+        return response
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
 
 
 ## Request Headers

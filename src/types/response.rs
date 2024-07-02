@@ -156,4 +156,12 @@ impl PyResponse {
             .into_py(py);
         Ok(())
     }
+
+    pub fn set_cookie(&mut self, py: Python, key: &str, value: &str) -> PyResult<()> {
+        self.headers
+            .try_borrow_mut(py)
+            .expect("value already borrowed")
+            .append(key.to_string(), value.to_string());
+        Ok(())
+    }
 }

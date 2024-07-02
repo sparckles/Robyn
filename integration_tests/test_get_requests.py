@@ -61,3 +61,11 @@ def test_trailing_slash(session):
 
     r = requests.get("http://localhost:8080/trailing/")
     assert r.text == "Trailing slash test successful!"
+
+
+@pytest.mark.benchmark
+@pytest.mark.parametrize("key, value", [("fakesession", "fake-cookie-session-value")])
+def test_cookies(session, key, value):
+    response = get("/cookie", 200)
+
+    assert response.headers[key] == value
