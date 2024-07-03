@@ -148,13 +148,15 @@ impl PyResponse {
 
     #[setter]
     pub fn set_file_path(&mut self, py: Python, file_path: &str) -> PyResult<()> {
-        // we should be handling based on headers but works for now
         self.response_type = "static_file".to_string();
         self.file_path = Some(file_path.to_string());
-        self.description = read_file(file_path)
-            .map_err(|e| PyErr::new::<PyIOError, _>(e.to_string()))?
-            .into_py(py);
 
-        Ok(())
+        match read_file(file_path) {
+            Ok(content) => {
+                self.description = PyBytes::new(py, &content).into();
+                Ok(())
+            }
+            Err(e) => Err(PyIOError::new_err(format!("Failed to read file: {}", e))),
+        }
     }
 }
