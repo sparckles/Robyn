@@ -25,9 +25,9 @@ pub fn apply_hashmap_headers(response: &mut HttpResponseBuilder, headers: &Heade
 /// * `file_path` - The file path that we want the function to read
 ///
 // ideally this should be async
-pub fn read_file(file_path: &str) -> Result<String> {
+pub fn read_file(file_path: &str) -> Result<Vec<u8>> {
     let mut file = File::open(file_path)?;
     let mut buf = vec![];
     file.read_to_end(&mut buf)?;
-    Ok(String::from_utf8_lossy(&buf).to_string())
+    Ok(buf)
 }

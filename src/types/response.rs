@@ -154,6 +154,7 @@ impl PyResponse {
         self.description = read_file(file_path)
             .map_err(|e| PyErr::new::<PyIOError, _>(e.to_string()))?
             .into_py(py);
+
         Ok(())
     }
 }
