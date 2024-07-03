@@ -1,5 +1,5 @@
-import os
 import glob
+import os
 import signal
 import subprocess
 import sys
@@ -118,6 +118,10 @@ class EventHandler(FileSystemEventHandler):
         clean_rust_binaries(self.built_rust_binaries)
         self.built_rust_binaries = compile_rust_files(self.directory_path)
 
+        prev_process = self.process
+        if prev_process:
+            prev_process.kill()
+
         if self.config.dev and self.config.running_as_module:
             module_name = self.config.file_path.split("/")[-2]
 
@@ -132,14 +136,6 @@ class EventHandler(FileSystemEventHandler):
                 env=new_env,
                 start_new_session=False,
             )
-        prev_process = self.process
-        if prev_process:
-            prev_process.kill()
-
-        self.process = subprocess.Popen(
-            [sys.executable, *arguments],
-            env=new_env,
-        )
 
         self.last_reload = time.time()
 
