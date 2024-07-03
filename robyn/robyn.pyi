@@ -293,6 +293,16 @@ class Response:
     response_type: Optional[str] = None
     file_path: Optional[str] = None
 
+    def set_cookie(self, key: str, value: str) -> None:
+        """
+
+        The function to set a cookie (onto headers).
+
+        @param key: the cookie name
+        @param value: the actual cookie value
+        """
+        pass
+
 class Server:
     def __init__(self) -> None:
         pass

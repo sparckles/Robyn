@@ -1,5 +1,4 @@
 import os
-
 import pathlib
 from collections import defaultdict
 from typing import Optional
@@ -528,6 +527,15 @@ def sync_raise():
 @app.get("/async/raise")
 async def async_raise():
     raise Exception()
+
+
+# cookie
+@app.get("/cookie")
+def cookie():
+    response = Response(status_code=200, headers=Headers({}), description="test cookies")
+    response.set_cookie(key="fakesession", value="fake-cookie-session-value")
+
+    return response
 
 
 # --- POST ---

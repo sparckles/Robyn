@@ -159,4 +159,12 @@ impl PyResponse {
             Err(e) => Err(PyIOError::new_err(format!("Failed to read file: {}", e))),
         }
     }
+
+    pub fn set_cookie(&mut self, py: Python, key: &str, value: &str) -> PyResult<()> {
+        self.headers
+            .try_borrow_mut(py)
+            .expect("value already borrowed")
+            .append(key.to_string(), value.to_string());
+        Ok(())
+    }
 }
