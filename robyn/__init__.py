@@ -11,6 +11,7 @@ from robyn import status_codes
 from robyn.argument_parser import Config
 from robyn.authentication import AuthenticationHandler
 from robyn.dependency_injection import DependencyMap
+from robyn.env_populator import load_vars
 from robyn.events import Events
 from robyn.jsonify import jsonify
 from robyn.logger import Colors, logger
@@ -47,6 +48,7 @@ class Robyn:
         self.config = config
         self.dependencies = dependencies
 
+        load_vars(project_root=directory_path)
         logging.basicConfig(level=self.config.log_level)
 
         if self.config.log_level.lower() != "warn":
