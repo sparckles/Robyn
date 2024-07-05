@@ -23,7 +23,7 @@ class Config:
             "--dev",
             dest="dev",
             action="store_true",
-            default=False,
+            default=None,
             help="Development mode. It restarts the server based on file changes.",
         )
         parser.add_argument(
