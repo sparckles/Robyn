@@ -249,7 +249,7 @@ impl PyRequest {
 
     #[setter]
     pub fn set_body(&mut self, py: Python, body: Py<PyAny>) -> PyResult<()> {
-        check_body_type(py, body.clone())?;
+        check_body_type(py, &body)?;
         self.body = body;
         Ok(())
     }
