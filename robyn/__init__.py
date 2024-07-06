@@ -48,6 +48,8 @@ class Robyn:
         self.config = config
         self.dependencies = dependencies
 
+        dev_mode_env_var = os.getenv("ROBYN_DEV_MODE", False) == "True"
+
         load_vars(project_root=directory_path)
         logging.basicConfig(level=self.config.log_level)
 
@@ -58,6 +60,10 @@ class Robyn:
             )
         if self.config.dev:
             exit("Dev mode is not supported in the python wrapper. Please use the CLI. e.g. python3 -m robyn app.py --dev ")
+
+        if not dev_mode_env_var and os.getenv("ROBYN_DEV_MODE", False) == "True":
+            logger.error("Ignoring ROBYN_DEV_MODE environment variable. Dev mode is not supported in the python wrapper.")
+            logger.warn("Starting app normally...")
 
         self.router = Router()
         self.middleware_router = MiddlewareRouter()

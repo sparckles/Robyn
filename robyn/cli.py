@@ -112,7 +112,7 @@ def run():
     load_vars(project_root=os.path.dirname(os.path.abspath(config.file_path)))
 
     if config.dev is None:
-        config.dev = bool(os.getenv("ROBYN_DEV_MODE", False))
+        config.dev = os.getenv("ROBYN_DEV_MODE", False) == "True"
 
     if config.create:
         create_robyn_app()
