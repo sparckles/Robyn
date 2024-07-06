@@ -81,6 +81,7 @@ class Config:
         self.version = args.version
         self.compile_rust_path = args.compile_rust_path
         self.create_rust_file = args.create_rust_file
+        self.file_path = None
 
         # find something that ends with .py in unknown_args
         for arg in unknown_args:

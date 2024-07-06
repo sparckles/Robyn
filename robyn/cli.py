@@ -106,6 +106,9 @@ def start_app_normally(config: Config):
 def run():
     config = Config()
 
+    if not config.file_path:
+        config.file_path = f"{os.getcwd()}/{__name__}"
+
     load_vars(project_root=os.path.dirname(os.path.abspath(config.file_path)))
 
     if config.dev is None:
