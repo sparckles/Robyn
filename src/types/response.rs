@@ -141,7 +141,7 @@ impl PyResponse {
 
     #[setter]
     pub fn set_description(&mut self, py: Python, description: Py<PyAny>) -> PyResult<()> {
-        check_description_type(py, description.clone())?;
+        check_description_type(py, &description)?;
         self.description = description;
         Ok(())
     }
