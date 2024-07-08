@@ -5,14 +5,26 @@ export const description = 'In this section, we will learn how to configure the 
 
 Batman wanted to configure the server through an environment file. Changing code continuously induced the risk of error.
 
+## Environment Variables
 
-There are some environment variables that Robyn looks out for. e.g. `ROBYN_HOST` and `ROBYN_PORT`.
+ - `ROBYN_PORT`: Specifies the port on which the Robyn server will listen.
+    - Default: `8080`
+    - Example: `ROBYN_PORT=3000`
+ - `ROBYN_HOST`: Specifies the host address for the Robyn server.
+    - Default: `127.0.0.1`
+    - Example: `ROBYN_HOST=0.0.0.0`
+ - `ROBYN_BROWSER_OPEN`: Open the browser on successful start.
+    - Default: `False`
+    - Example: `ROBYN_BROWSER_OPEN=True`
+ - `ROBYN_MAX_PAYLOAD_SIZE`: Sets the maximum payload size for requests in bytes.
+    - Default: `1000000` bytes
+    - Example: `ROBYN_MAX_PAYLOAD_SIZE=1000000`
 
 You can have a `robyn.env` file to load them automatically in your environment.
 
-The server will check for the `robyn.env` file in the root of the project. If it is able to find one, it will parse the environment variables and the set your environment.
+These environment variables are typically set in a `robyn.env` file located at the root of the project. The server parses this file at startup to configure itself accordingly.
 
-e.g. structure
+For more details on the structure and usage of the `robyn.env` file, refer to the documentation snippet:
 
 ```bash {{title: 'Sample project directory'}}
 --project/
@@ -21,19 +33,13 @@ e.g. structure
   ...
 ```
 
-
-Sample `robyn.env`
+Sample `robyn.env` file:
 
 ```bash {{ title: 'Sample Robyn.env' }}
 ROBYN_PORT=8080
 ROBYN_HOST=127.0.0.1
 RANDOM_ENV=123
-```
-
-To configure the max payload size, you can set the `ROBYN_MAX_PAYLOAD_SIZE` environment variable. The default value is `1000000` bytes.
-
-```bash
-#robyn.env
+ROBYN_BROWSER_OPEN=True
 ROBYN_MAX_PAYLOAD_SIZE=1000000
 ```
 

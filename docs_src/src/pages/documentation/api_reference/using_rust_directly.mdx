@@ -1,0 +1,144 @@
+
+## Using Rust to extend Robyn
+
+
+There may be occassions where Batman may be working with a high computation task, or a task that requires a lot of memory. In such cases, he may want to use Rust to implement that task. Robyn introduces a special way to do this. Not only you can use Rust to extend Python code, you can do it while maintaining the hot reloading nature of your codebase. Making it *feel* like an interpreted version in many situations.
+
+
+
+<Row>
+<Col>
+The first thing you need to is to create a Rust file. Let's call it `hello_world.rs`. You can do it using the cli:
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    python -m robyn --create-rust-file hello_world
+    ```
+
+    ```python {{title: 'typed'}}
+    python -m robyn --create-rust-file hello_world
+    ```
+
+    </CodeGroup>
+  </Col>
+</Row>
+<Row>
+
+  <Col>
+  Then you can open the file and write your Rust code. For example, let's write a function that returns a string.
+
+
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+      ```rust
+      // hello_world.rs
+
+      // rustimport:pyo3
+
+      use pyo3::prelude::*;
+
+      #[pyfunction]
+      fn square(n: i32) -> i32 {
+          n * n * n
+          // this is another comment
+      }
+
+      ```
+
+    </CodeGroup>
+  </Col>
+</Row>
+
+<Row>
+
+  <Col>
+  Every Rust file that you create using the cli will have a special comment at the top of the file. This comment is used by Robyn to know which dependencies to import. In this case, we are importing the `pyo3` crate. You can import as many crates as you want. You can also import crates from crates.io. For example, if you want to use the `rusqlite` crate, you can do it like this:
+
+
+
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+      ```rust
+      // rustimport:pyo3
+
+    //:
+    //: [dependencies]
+    //: rusqlite = "0.19.0"
+
+      use pyo3::prelude::*;
+
+      #[pyfunction]
+      fn square(n: i32) -> i32 {
+          n * n * n
+          // this is another comment
+      }
+
+      ```
+
+    </CodeGroup>
+  </Col>
+</Row>
+
+
+<Row>
+  Then you can import the function in your Python code and use it.
+
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+      ```python {{ title: 'untyped' }}
+      from hello_world import square
+
+      print(square(5))
+      ```
+
+      ```python {{title: 'typed'}}
+      from hello_world import square
+
+      print(square(5))
+      ```
+    </CodeGroup>
+  </Col>
+
+  To run the code, you need to use the `--compile-rust-path` flag. This will compile the Rust code and run it. You can also use the `--dev` flag to watch for changes in the Rust code and recompile it on the fly.
+
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+      ```python {{ title: 'untyped' }}
+      python -m robyn --compile-rust-path "." --dev
+      ```
+
+      ```python {{title: 'typed'}}
+      python -m robyn --compile-rust-path "." --dev
+      ```
+    </CodeGroup>
+
+  </Col>
+</Row>
+
+An example of a Robyn app with a Rust file that using the `rusqlite` crate to connect to a database and return the number of rows in a table: https://github.com/sansyrox/rusty-sql
+
+
+## What's next?
+
+
+Batman was curious to know what else he could do with Robyn. 
+
+Robyn told him to keep an eye on the GraphQl support.
+
+[GraphQl Support](/documentation/api_reference/graphql_support)
+
+
+
+
+
+
+

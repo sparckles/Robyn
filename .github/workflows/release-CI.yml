@@ -1,15 +1,12 @@
 # CI to release the project for Linux, Windows, and MacOS
-
 name: Release CI
-
 on:
   push:
     tags:
       - v*
-
 jobs:
   macos:
-    runs-on: macos-latest
+    runs-on: macos-12
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
@@ -43,7 +40,6 @@ jobs:
         with:
           name: wheels
           path: dist
-
   windows:
     runs-on: windows-latest
     strategy:
@@ -72,7 +68,6 @@ jobs:
         with:
           name: wheels
           path: dist
-
   linux:
     runs-on: ubuntu-latest
     strategy:
@@ -101,7 +96,6 @@ jobs:
         with:
           name: wheels
           path: dist
-
   linux-cross:
     runs-on: ubuntu-latest
     strategy:
@@ -156,7 +150,6 @@ jobs:
         with:
           name: wheels
           path: dist
-
   release:
     name: Release
     runs-on: ubuntu-latest

@@ -1,5 +1,12 @@
-use actix_web::{web::Bytes, HttpRequest};
-use pyo3::{exceptions::PyValueError, prelude::*, types::PyDict, types::PyString};
+use actix_multipart::Multipart;
+use actix_web::{
+    web::{self, BytesMut},
+    Error, HttpRequest,
+};
+use futures_util::StreamExt as _;
+use log::debug;
+use pyo3::types::{PyBytes, PyDict, PyString};
+use pyo3::{exceptions::PyValueError, prelude::*};
 use serde_json::Value;
 use std::collections::HashMap;
 
@@ -19,6 +26,8 @@ pub struct Request {
     pub url: Url,
     pub ip_addr: Option<String>,
     pub identity: Option<Identity>,
+    pub form_data: Option<HashMap<String, String>>,
+    pub files: Option<HashMap<String, Vec<u8>>>,
 }
 
 impl ToPyObject for Request {
@@ -30,6 +39,28 @@ impl ToPyObject for Request {
             Ok(s) => s.into_py(py),
             Err(_) => self.body.clone().into_py(py),
         };
+        let form_data: Py<PyDict> = match &self.form_data {
+            Some(data) => {
+                let dict = PyDict::new(py);
+                for (key, value) in data.iter() {
+                    dict.set_item(key, value).unwrap();
+                }
+                dict.into_py(py)
+            }
+            None => PyDict::new(py).into_py(py),
+        };
+
+        let files: Py<PyDict> = match &self.files {
+            Some(data) => {
+                let dict = PyDict::new(py);
+                for (key, value) in data.iter() {
+                    let bytes = PyBytes::new(py, value);
+                    dict.set_item(key, bytes).unwrap();
+                }
+                dict.into_py(py)
+            }
+            None => PyDict::new(py).into_py(py),
+        };
 
         let request = PyRequest {
             query_params,
@@ -40,14 +71,58 @@ impl ToPyObject for Request {
             url: self.url.clone(),
             ip_addr: self.ip_addr.clone(),
             identity: self.identity.clone(),
+            form_data: form_data.clone(),
+            files: files.clone(),
         };
         Py::new(py, request).unwrap().as_ref(py).into()
     }
 }
 
+async fn handle_multipart(
+    mut payload: Multipart,
+    files: &mut HashMap<String, Vec<u8>>,
+    form_data: &mut HashMap<String, String>,
+    body: &mut Vec<u8>,
+) -> Result<(), Error> {
+    // Iterate over multipart stream
+
+    while let Some(item) = payload.next().await {
+        let mut field = item?;
+
+        let mut data = Vec::new();
+        // Read the field data
+        while let Some(chunk) = field.next().await {
+            debug!("Chunk: {:?}", chunk);
+            let data_chunk = chunk?;
+            data.extend_from_slice(&data_chunk);
+        }
+
+        let content_disposition = field.content_disposition();
+        let field_name = content_disposition.get_name().unwrap_or_default();
+        let file_name = content_disposition.get_filename().map(|s| s.to_string());
+
+        body.extend_from_slice(&data.clone());
+
+        if let Some(name) = file_name {
+            files.insert(name, data);
+        } else if let Ok(text) = String::from_utf8(data) {
+            form_data.insert(field_name.to_string(), text);
+        }
+    }
+
+    Ok(())
+}
+
 impl Request {
-    pub fn from_actix_request(req: &HttpRequest, body: Bytes, global_headers: &Headers) -> Self {
+    pub async fn from_actix_request(
+        req: &HttpRequest,
+        mut payload: web::Payload,
+        global_headers: &Headers,
+    ) -> Self {
         let mut query_params: QueryParams = QueryParams::new();
+        let mut form_data: HashMap<String, String> = HashMap::new();
+        let mut files = HashMap::new();
+
         if !req.query_string().is_empty() {
             let split = req.query_string().split('&');
             for s in split {
@@ -60,7 +135,40 @@ impl Request {
         }
 
         let mut headers = Headers::from_actix_headers(req.headers());
+        debug!("Global headers: {:?}", global_headers);
         headers.extend(global_headers);
+
+        let body: Vec<u8> = if headers.contains(String::from("content-type"))
+            && headers
+                .get(String::from("content-type"))
+                .is_some_and(|val| val.contains("multipart/form-data"))
+        {
+            let h = headers.get(String::from("content-type")).unwrap();
+            debug!("Content-Type: {:?}", h);
+            let multipart = Multipart::new(req.headers(), payload);
+            let mut body_local: Vec<u8> = Vec::new();
+
+            let a = handle_multipart(multipart, &mut files, &mut form_data, &mut body_local).await;
+
+            if let Err(e) = a {
+                debug!("Error handling multipart data: {:?}", e);
+            }
+
+            body_local
+        } else {
+            let mut body_local = BytesMut::new();
+            while let Some(chunk) = payload.next().await {
+                let chunk = chunk.expect("Failed to read chunk from payload");
+                body_local.extend_from_slice(&chunk);
+            }
+            body_local.freeze().to_vec()
+        };
+
+        debug!("Request body: {:?}", body);
+        debug!("Request headers: {:?}", headers);
+        debug!("Request query params: {:?}", query_params);
+        debug!("Request form data: {:?}", form_data);
+        debug!("Request files: {:?}", files);
 
         let url = Url::new(
             req.connection_info().scheme(),
@@ -74,10 +182,12 @@ impl Request {
             headers,
             method: req.method().as_str().to_owned(),
             path_params: HashMap::new(),
-            body: body.to_vec(),
+            body,
             url,
             ip_addr,
             identity: None,
+            form_data: Some(form_data),
+            files: Some(files),
         }
     }
 }
@@ -101,6 +211,10 @@ pub struct PyRequest {
     pub url: Url,
     #[pyo3(get)]
     pub ip_addr: Option<String>,
+    #[pyo3(get, set)]
+    pub form_data: Py<PyDict>,
+    #[pyo3(get, set)]
+    pub files: Py<PyDict>,
 }
 
 #[pymethods]
@@ -114,6 +228,8 @@ impl PyRequest {
         body: Py<PyAny>,
         method: String,
         url: Url,
+        form_data: Py<PyDict>,
+        files: Py<PyDict>,
         identity: Option<Identity>,
         ip_addr: Option<String>,
     ) -> Self {
@@ -125,6 +241,8 @@ impl PyRequest {
             body,
             method,
             url,
+            form_data,
+            files,
             ip_addr,
         }
     }
@@ -144,7 +262,11 @@ impl PyRequest {
 
                     for (key, value) in map.iter() {
                         let py_key = key.to_string().into_py(py);
-                        let py_value = value.to_string().into_py(py);
+                        let py_value = match value {
+                            Value::String(s) => s.as_str().into_py(py),
+                            _ => value.to_string().into_py(py),
+                        };
+
                         dict.set_item(py_key, py_value)?;
                     }
 

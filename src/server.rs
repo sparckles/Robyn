@@ -14,7 +14,6 @@ use crate::types::HttpMethod;
 use crate::types::MiddlewareReturn;
 use crate::websockets::start_web_socket;
 
-use std::convert::TryInto;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::{Relaxed, SeqCst};
 use std::sync::{Arc, RwLock};
@@ -24,7 +23,6 @@ use std::{env, thread};
 
 use actix_files::Files;
 use actix_http::KeepAlive;
-use actix_web::web::Bytes;
 use actix_web::*;
 
 // pyO3 module
@@ -191,18 +189,18 @@ impl Server {
                             move |router: web::Data<Arc<HttpRouter>>,
                                   const_router: web::Data<Arc<ConstRouter>>,
                                   middleware_router: web::Data<Arc<MiddlewareRouter>>,
+                                  payload: web::Payload,
                                   global_request_headers,
                                   global_response_headers,
-                                  body,
                                   req| {
                                 pyo3_asyncio::tokio::scope_local(task_locals.clone(), async move {
                                     index(
                                         router,
+                                        payload,
                                         const_router,
                                         middleware_router,
                                         global_request_headers,
                                         global_response_headers,
-                                        body,
                                         req,
                                     )
                                     .await
@@ -213,7 +211,7 @@ impl Server {
                 .keep_alive(KeepAlive::Os)
                 .workers(workers)
                 .client_request_timeout(std::time::Duration::from_secs(0))
-                .listen(raw_socket.try_into().unwrap())
+                .listen(raw_socket.into())
                 .unwrap()
                 .run()
                 .await
@@ -275,6 +273,24 @@ impl Server {
     /// Add a new route to the routing tables
     /// can be called after the server has been started
     pub fn add_route(
+        &self,
+        py: Python,
+        route_type: &HttpMethod,
+        route: &str,
+        function: FunctionInfo,
+        is_const: bool,
+    ) {
+        let second_route: String = if route.ends_with('/') {
+            route[0..route.len() - 1].to_string()
+        } else {
+            format!("{}/", route)
+        };
+
+        self._add_route(py, route_type, route, function.clone(), is_const);
+        self._add_route(py, route_type, &second_route, function, is_const);
+    }
+
+    fn _add_route(
         &self,
         py: Python,
         route_type: &HttpMethod,
@@ -367,14 +383,14 @@ impl Default for Server {
 /// path, and returns a Future of a Response.
 async fn index(
     router: web::Data<Arc<HttpRouter>>,
+    payload: web::Payload,
     const_router: web::Data<Arc<ConstRouter>>,
     middleware_router: web::Data<Arc<MiddlewareRouter>>,
     global_request_headers: web::Data<Arc<Headers>>,
     global_response_headers: web::Data<Arc<Headers>>,
-    body: Bytes,
     req: HttpRequest,
 ) -> impl Responder {
-    let mut request = Request::from_actix_request(&req, body, &global_request_headers);
+    let mut request = Request::from_actix_request(&req, payload, &global_request_headers).await;
 
     // Before middleware
     // Global
@@ -388,7 +404,7 @@ async fn index(
         request.path_params = route_params;
     }
     for before_middleware in before_middlewares {
-        request = match execute_middleware_function(&mut request, &before_middleware).await {
+        request = match execute_middleware_function(&request, &before_middleware).await {
             Ok(MiddlewareReturn::Request(r)) => r,
             Ok(MiddlewareReturn::Response(r)) => {
                 // If a before middleware returns a response, we abort the request and return the response
@@ -449,7 +465,7 @@ async fn index(
         after_middlewares.push(function);
     }
     for after_middleware in after_middlewares {
-        response = match execute_middleware_function(&mut response, &after_middleware).await {
+        response = match execute_middleware_function(&response, &after_middleware).await {
             Ok(MiddlewareReturn::Request(_)) => {
                 error!("After middleware returned a request");
                 return Response::internal_server_error(Some(&response.headers));

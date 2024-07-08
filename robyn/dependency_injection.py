@@ -1,5 +1,5 @@
-""" This is Robyn's dependency injection file.
-"""
+"""This is Robyn's dependency injection file."""
+
 from typing import Any
 
 

@@ -280,10 +280,20 @@ export function Code({ children, ...props }) {
   let isGrouped = useContext(CodeGroupContext)
 
   if (isGrouped) {
-    return <code {...props} dangerouslySetInnerHTML={{ __html: children }} />
+    return (
+      <code
+        className="text-white"
+        {...props}
+        dangerouslySetInnerHTML={{ __html: children }}
+      />
+    )
   }
 
-  return <code {...props}>{children}</code>
+  return (
+    <code className="text-white" {...props}>
+      {children}
+    </code>
+  )
 }
 
 export function Pre({ children, ...props }) {

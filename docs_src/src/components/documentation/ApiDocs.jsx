@@ -48,10 +48,20 @@ const guides = [
     description: 'Learn about Templating in Robyn.',
   },
   {
+    href: '/documentation/api_reference/redirection',
+    name: 'Redirection',
+    description: 'Learn how to redirect requests to different endpoints.',
+  },
+  {
     href: '/documentation/api_reference/file-uploads',
     name: 'File Uploads',
     description:
       'Learn how to upload and download files to your server using Robyn.',
+  },
+  {
+    href: '/documentation/api_reference/form_data',
+    name: 'Form Data and Multi Part Form Data',
+    description: 'Learn how to handle form data.',
   },
   {
     href: '/documentation/api_reference/websockets',
@@ -70,9 +80,25 @@ const guides = [
     description: 'Learn how to handle exceptions in Robyn.',
   },
   {
+    href: '/documentation/api_reference/scaling',
+    name: 'Scaling the Application',
+    description: 'Learn how to scaled Robyn across multiple cores.',
+  },
+  {
     href: '/documentation/api_reference/advanced_features',
     name: 'Advanced Features',
     description: 'Learn about advanced features in Robyn.',
+  },
+
+  {
+    href: '/documentation/api_reference/using_rust_directly',
+    name: 'Direct Rust Usage',
+    description: 'Learn about directly using Rust in Robyn.',
+  },
+  {
+    href: '/documentation/api_reference/graphql-support',
+    name: 'Advanced Features',
+    description: 'Learn about GraphQL Support in Robyn.',
   },
   {
     href: '/documentation/api_reference/dependency_injection',

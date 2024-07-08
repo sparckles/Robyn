@@ -77,7 +77,7 @@ def init_processpool(
     response_headers: Headers,
 ) -> List[Process]:
     process_pool = []
-    if sys.platform.startswith("win32"):
+    if sys.platform.startswith("win32") or processes == 1:
         spawn_process(
             directories,
             request_headers,

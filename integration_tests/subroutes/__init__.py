@@ -1,6 +1,6 @@
 from robyn import SubRouter, jsonify, WebSocket
 
-from subroutes.di_subrouter import di_subrouter
+from .di_subrouter import di_subrouter
 
 sub_router = SubRouter(__name__, prefix="/sub_router")
 
@@ -26,39 +26,39 @@ async def close(ws):
 
 @sub_router.get("/foo")
 def get_foo():
-    return jsonify({"message": "foo"})
+    return {"message": "foo"}
 
 
 @sub_router.post("/foo")
 def post_foo():
-    return jsonify({"message": "foo"})
+    return {"message": "foo"}
 
 
 @sub_router.put("/foo")
 def put_foo():
-    return jsonify({"message": "foo"})
+    return {"message": "foo"}
 
 
 @sub_router.delete("/foo")
 def delete_foo():
-    return jsonify({"message": "foo"})
+    return {"message": "foo"}
 
 
 @sub_router.patch("/foo")
 def patch_foo():
-    return jsonify({"message": "foo"})
+    return {"message": "foo"}
 
 
 @sub_router.options("/foo")
 def option_foo():
-    return jsonify({"message": "foo"})
+    return {"message": "foo"}
 
 
 @sub_router.trace("/foo")
 def trace_foo():
-    return jsonify({"message": "foo"})
+    return {"message": "foo"}
 
 
 @sub_router.head("/foo")
 def head_foo():
-    return jsonify({"message": "foo"})
+    return {"message": "foo"}

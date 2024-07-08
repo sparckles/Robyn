@@ -23,13 +23,12 @@ impl Headers {
 
                     let new_value = value.downcast::<PyList>();
 
-                    if new_value.is_err() {
+                    if let Ok(new_value) = new_value {
+                        let value: Vec<String> = new_value.iter().map(|x| x.to_string()).collect();
+                        headers.entry(key).or_insert_with(Vec::new).extend(value);
+                    } else {
                         let value = value.to_string();
                         headers.entry(key).or_insert_with(Vec::new).push(value);
-                    } else {
-                        let value: Vec<String> =
-                            new_value.unwrap().iter().map(|x| x.to_string()).collect();
-                        headers.entry(key).or_insert_with(Vec::new).extend(value);
                     }
                 }
                 Headers { headers }
@@ -49,7 +48,7 @@ impl Headers {
         debug!("Setting header {} to {}", key, value);
         self.headers
             .entry(key.to_lowercase())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(value);
     }
 
@@ -63,18 +62,15 @@ impl Headers {
         }
     }
 
-    pub fn get(&self, key: String) -> PyResult<String> {
+    pub fn get(&self, key: String) -> Option<String> {
         // return the last value
         match self.headers.get(&key.to_lowercase()) {
             Some(iter) => {
                 let (_, values) = iter.pair();
                 let last_value = values.last().unwrap();
-                Ok(last_value.to_string())
+                Some(last_value.to_string())
             }
-            None => Err(pyo3::exceptions::PyKeyError::new_err(format!(
-                "KeyError: {}",
-                key
-            ))),
+            None => None,
         }
     }
 
@@ -100,15 +96,12 @@ impl Headers {
             let key = key.to_string().to_lowercase();
             let new_value = value.downcast::<PyList>();
 
-            if new_value.is_err() {
-                let value = value.to_string();
-                self.headers.entry(key).or_insert_with(Vec::new).push(value);
+            if let Ok(new_value) = new_value {
+                let value: Vec<String> = new_value.iter().map(|x| x.to_string()).collect();
+                self.headers.entry(key).or_default().extend(value);
             } else {
-                let value: Vec<String> = new_value.unwrap().iter().map(|x| x.to_string()).collect();
-                self.headers
-                    .entry(key)
-                    .or_insert_with(Vec::new)
-                    .extend(value);
+                let value = value.to_string();
+                self.headers.entry(key).or_default().push(value);
             }
         }
     }
@@ -143,8 +136,20 @@ impl Headers {
         true
     }
 
+    pub fn __contains__(&self, key: String) -> bool {
+        self.contains(key)
+    }
+
     pub fn __repr__(&self) -> String {
         format!("{:?}", self.headers)
+    }
+
+    pub fn __setitem__(&mut self, key: String, value: String) {
+        self.set(key, value);
+    }
+
+    pub fn __getitem__(&self, key: String) -> Option<String> {
+        self.get(key)
     }
 }
 
@@ -167,11 +172,7 @@ impl Headers {
         for (key, value) in req_headers {
             let key = key.to_string().to_lowercase();
             let value = value.to_str().unwrap().to_string();
-            headers
-                .headers
-                .entry(key)
-                .or_insert_with(Vec::new)
-                .push(value);
+            headers.headers.entry(key).or_default().push(value);
         }
 
         headers

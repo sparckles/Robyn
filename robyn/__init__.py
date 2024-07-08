@@ -1,29 +1,36 @@
 import asyncio
 import logging
-import multiprocess as mp
 import os
+import socket
 from typing import Callable, List, Optional, Tuple, Union
+
+import multiprocess as mp
 from nestd import get_all_nested
 
-
+from robyn import status_codes
 from robyn.argument_parser import Config
 from robyn.authentication import AuthenticationHandler
 from robyn.dependency_injection import DependencyMap
-from robyn.logger import Colors
-from robyn.reloader import setup_reloader
 from robyn.env_populator import load_vars
 from robyn.events import Events
-from robyn.logger import logger
+from robyn.jsonify import jsonify
+from robyn.logger import Colors, logger
 from robyn.processpool import run_processes
-from robyn.responses import serve_file, serve_html
-from robyn.robyn import FunctionInfo, HttpMethod, Request, Response, get_version, jsonify, WebSocketConnector, Headers
+from robyn.reloader import compile_rust_files
+from robyn.responses import html, serve_file, serve_html
+from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, WebSocketConnector, get_version
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory
-from robyn import status_codes
 from robyn.ws import WebSocket
 
-
 __version__ = get_version()
+
+
+config = Config()
+
+if (compile_path := config.compile_rust_path) is not None:
+    compile_rust_files(compile_path)
+    print("Compiled rust files")
 
 
 class Robyn:
@@ -49,11 +56,8 @@ class Robyn:
                 "SERVER IS RUNNING IN VERBOSE/DEBUG MODE. Set --log-level to WARN to run in production mode.",
                 color=Colors.BLUE,
             )
-        # If we are in dev mode, we need to setup the reloader
-        # This process will be used by the watchdog observer while running the actual server as children processes
-        if self.config.dev and not os.environ.get("IS_RELOADER_RUNNING", False):
-            setup_reloader(self.directory_path, self.file_path)
-            exit(0)
+        if self.config.dev:
+            exit("Dev mode is not supported in the python wrapper. Please use the CLI. e.g. python3 -m robyn app.py --dev ")
 
         self.router = Router()
         self.middleware_router = MiddlewareRouter()
@@ -65,7 +69,14 @@ class Robyn:
         self.exception_handler: Optional[Callable] = None
         self.authentication_handler: Optional[AuthenticationHandler] = None
 
-    def add_route(self, route_type: Union[HttpMethod, str], endpoint: str, handler: Callable, is_const: bool = False, auth_required: bool = False):
+    def add_route(
+        self,
+        route_type: Union[HttpMethod, str],
+        endpoint: str,
+        handler: Callable,
+        is_const: bool = False,
+        auth_required: bool = False,
+    ):
         """
         Connect a URI to a handler
 
@@ -140,7 +151,6 @@ class Robyn:
 
         :param endpoint str|None: endpoint to server the route. If None, the middleware will be applied to all the routes.
         """
-        dependency_map = self.dependencies.get_dependency_map(self)
         return self.middleware_router.add_middleware(MiddlewareType.AFTER_REQUEST, endpoint)
 
     def add_directory(
@@ -181,19 +191,37 @@ class Robyn:
     def shutdown_handler(self, handler: Callable) -> None:
         self._add_event_handler(Events.SHUTDOWN, handler)
 
-    def start(self, host: str = "127.0.0.1", port: int = 8080):
+    def is_port_in_use(self, port: int) -> bool:
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                return s.connect_ex(("localhost", port)) == 0
+        except Exception:
+            raise Exception(f"Invalid port number: {port}")
+
+    def start(self, host: str = "127.0.0.1", port: int = 8080, _check_port: bool = True):
         """
         Starts the server
 
+        :param host str: represents the host at which the server is listening
         :param port int: represents the port number at which the server is listening
+        :param _check_port bool: represents if the port should be checked if it is already in use
         """
 
         host = os.getenv("ROBYN_HOST", host)
         port = int(os.getenv("ROBYN_PORT", port))
         open_browser = bool(os.getenv("ROBYN_BROWSER_OPEN", self.config.open_browser))
 
+        if _check_port:
+            while self.is_port_in_use(port):
+                logger.error("Port %s is already in use. Please use a different port.", port)
+                try:
+                    port = int(input("Enter a different port: "))
+                except Exception:
+                    logger.error("Invalid port number. Please enter a valid port number.")
+                    continue
+
         logger.info("Robyn version: %s", __version__)
-        logger.info("Starting server at %s:%s", host, port)
+        logger.info("Starting server at http://%s:%s", host, port)
 
         mp.allow_connection_pickling()
 
@@ -448,8 +476,11 @@ __all__ = [
     "jsonify",
     "serve_file",
     "serve_html",
+    "html",
     "ALLOW_CORS",
     "SubRouter",
     "AuthenticationHandler",
+    "Headers",
     "WebSocketConnector",
+    "WebSocket",
 ]

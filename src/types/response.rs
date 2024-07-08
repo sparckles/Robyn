@@ -3,7 +3,7 @@ use actix_web::{HttpRequest, HttpResponse, HttpResponseBuilder, Responder};
 use pyo3::{
     exceptions::{PyIOError, PyValueError},
     prelude::*,
-    types::{PyBytes, PyString},
+    types::{PyBytes, PyDict, PyString},
 };
 
 use super::headers::Headers;
@@ -104,7 +104,7 @@ impl PyResponse {
     pub fn new(
         py: Python,
         status_code: u16,
-        headers: Py<Headers>,
+        headers: &PyAny,
         description: Py<PyAny>,
     ) -> PyResult<Self> {
         if description.downcast::<PyString>(py).is_err()
@@ -115,11 +115,25 @@ impl PyResponse {
             ));
         };
 
+        let headers_output: Py<Headers> = if let Ok(headers_dict) = headers.downcast::<PyDict>() {
+            // Here you'd have logic to create a Headers instance from a PyDict
+            // For simplicity, let's assume you have a method `from_dict` on Headers for this
+            let headers = Headers::new(Some(headers_dict)); // Hypothetical method
+            Py::new(py, headers)?
+        } else if let Ok(headers) = headers.extract::<Py<Headers>>() {
+            // If it's already a Py<Headers>, use it directly
+            headers
+        } else {
+            return Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+                "headers must be a Headers instance or a dict",
+            ));
+        };
+
         Ok(Self {
             status_code,
             // we should be handling based on headers but works for now
             response_type: "text".to_string(),
-            headers,
+            headers: headers_output,
             description,
             file_path: None,
         })
@@ -134,12 +148,23 @@ impl PyResponse {
 
     #[setter]
     pub fn set_file_path(&mut self, py: Python, file_path: &str) -> PyResult<()> {
-        // we should be handling based on headers but works for now
         self.response_type = "static_file".to_string();
         self.file_path = Some(file_path.to_string());
-        self.description = read_file(file_path)
-            .map_err(|e| PyErr::new::<PyIOError, _>(e.to_string()))?
-            .into_py(py);
+
+        match read_file(file_path) {
+            Ok(content) => {
+                self.description = PyBytes::new(py, &content).into();
+                Ok(())
+            }
+            Err(e) => Err(PyIOError::new_err(format!("Failed to read file: {}", e))),
+        }
+    }
+
+    pub fn set_cookie(&mut self, py: Python, key: &str, value: &str) -> PyResult<()> {
+        self.headers
+            .try_borrow_mut(py)
+            .expect("value already borrowed")
+            .append(key.to_string(), value.to_string());
         Ok(())
     }
 }

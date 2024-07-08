@@ -1,3 +1,4 @@
+#[deny(clippy::if_same_then_else)]
 /// This is the module that has all the executor functions
 /// i.e. the functions that have the responsibility of parsing and executing functions.
 pub mod web_socket_executors;
@@ -23,33 +24,23 @@ where
     T: ToPyObject,
 {
     let handler = function.handler.as_ref(py);
-    // kwargs are handled
     let kwargs = function.kwargs.as_ref(py);
-
     let function_args = function_args.to_object(py);
+    debug!("Function args: {:?}", function_args);
 
     match function.number_of_params {
         0 => handler.call0(),
         1 => {
-            if function.args.as_ref(py).get_item("request").is_some() {
-                handler.call1((function_args,))
-            } else if function.args.as_ref(py).get_item("response").is_some() {
-                // this is for middlewares
-                handler.call1((function_args,))
-            } else {
-                handler.call((), Some(kwargs))
-            }
-        }
-        2 => {
-            if function.args.as_ref(py).get_item("request").is_some()
-                || function.args.as_ref(py).get_item("response").is_some()
+            if kwargs.get_item("global_dependencies").is_some()
+                || kwargs.get_item("router_dependencies").is_some()
+            // these are reserved keywords
             {
-                handler.call((function_args,), Some(kwargs))
-            } else {
                 handler.call((), Some(kwargs))
+            } else {
+                handler.call1((function_args,))
             }
         }
-        3..=u8::MAX => handler.call((function_args,), Some(kwargs)),
+        _ => handler.call((function_args,), Some(kwargs)),
     }
 }
 
@@ -80,6 +71,7 @@ where
     } else {
         Python::with_gil(|py| -> Result<MiddlewareReturn> {
             let output = get_function_output(function, py, input)?;
+            debug!("Middleware output: {:?}", output);
             match output.extract::<Response>() {
                 Ok(o) => Ok(MiddlewareReturn::Response(o)),
                 Err(_) => Ok(MiddlewareReturn::Request(output.extract::<Request>()?)),

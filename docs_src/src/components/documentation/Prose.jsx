@@ -1,9 +1,12 @@
 import clsx from 'clsx'
 
-export function Prose({ as: Component = 'div', className, ...props }) {
+export function Prose({ className, ...props }) {
   return (
-    <Component
-      className={clsx(className, 'prose dark:prose-invert')}
+    <article
+      className={clsx(
+        className,
+        'prose text-white dark:prose-invert prose-headings:font-extrabold'
+      )}
       {...props}
     />
   )

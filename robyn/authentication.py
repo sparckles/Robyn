@@ -1,4 +1,4 @@
-from abc import ABC, abstractclassmethod, abstractmethod
+from abc import ABC, abstractmethod
 from typing import Optional
 
 from robyn.robyn import Headers, Identity, Request, Response
@@ -23,7 +23,8 @@ class TokenGetter(ABC):
         """
         return self.__class__.__name__
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def get_token(cls, request: Request) -> Optional[str]:
         """
         Gets the token from the request.
@@ -33,7 +34,8 @@ class TokenGetter(ABC):
         """
         raise NotImplementedError()
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def set_token(cls, request: Request, token: str):
         """
         Sets the token in the request.
@@ -79,7 +81,7 @@ class BearerGetter(TokenGetter):
 
     @classmethod
     def get_token(cls, request: Request) -> Optional[str]:
-        if request.headers.contains("authorization"):
+        if "authorization" in request.headers:
             authorization_header = request.headers.get("authorization")
         else:
             authorization_header = None

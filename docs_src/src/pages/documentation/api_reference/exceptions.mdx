@@ -2,12 +2,8 @@
 
 Batman learned how to create custom error handlers for different exception types in his application. He wrote the following code to handle exceptions and return a custom error response:
 
-
-## Scaling the Application
-
 <Row>
 <Col>
-Batman scaled his application across multiple cores for better performance. He used the following command:
 </Col>
   <Col sticky>
 
@@ -16,13 +12,13 @@ Batman scaled his application across multiple cores for better performance. He u
     ```python {{ title: 'untyped' }}
     @app.exception
     def handle_exception(error):
-        return {"status_code": 500, "body": f"error msg: {error}"}
+        return Response({status_code=500, body=f"error msg: {error}", headers={}})
     ```
 
     ```python {{ title: 'typed' }}
     @app.exception
     def handle_exception(error: Exception):
-        return {"status_code": 500, "body": f"error msg: {error}"}
+        return Response({status_code=500, body=f"error msg: {error}", headers={}})
     ```
     </CodeGroup>
   </Col>
@@ -32,7 +28,7 @@ Batman scaled his application across multiple cores for better performance. He u
 
 ## What's next?
 
-Now, Batman wanted to extend Robyn. Robyn told him about the plugins.
+Now, Batman wanted to scale his application across multiple cores. Robyn led him to Scaling.
 
-- [Plugins](/documentation/plugins)
+- [Scaling](/documentation/api_reference/scaling)
 

@@ -25,7 +25,7 @@ A view, simply is a function with a collection of other closures. e.g.
 
       def post(request):
           body = request.body
-          return {"status_code": 200, "description": body}
+          return Response({"status_code": 200, "description": body, "headers": {}})
 
     ```
 
@@ -38,7 +38,7 @@ A view, simply is a function with a collection of other closures. e.g.
 
         def post(request: Request):
             body = request.body
-            return {"status_code": 200, "description": body}
+            return Response({"status_code": 200, "description": body, "headers": {}})
     ```
     </CodeGroup>
   </Col>
@@ -62,7 +62,7 @@ You can serve views in two ways:
 
        def post(request):
            body = request.body
-           return {"status_code": 200, "description": body}
+           return body
 
       ```
       ```python {{ title: 'typed' }}
@@ -75,7 +75,7 @@ You can serve views in two ways:
 
        def post(request: Request):
            body = request.body
-           return {"status_code": 200, "description": body}
+           return body
 
       ```
     </CodeGroup>
