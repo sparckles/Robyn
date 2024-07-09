@@ -47,7 +47,6 @@ websocket_state = defaultdict(int)
 
 @websocket_json.on("message")
 async def jsonws_message(ws, msg: str) -> str:
-    print("Bruh", ws.query_params)
     websocket_id = ws.id
     response: dict = {"ws_id": websocket_id, "resp": "", "msg": msg}
     global websocket_state
@@ -64,7 +63,6 @@ async def jsonws_message(ws, msg: str) -> str:
 
 @websocket.on("message")
 async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
-    print("Bruh", ws.query_params)
     global websocket_state
     websocket_id = ws.id
     state = websocket_state[websocket_id]
@@ -78,7 +76,7 @@ async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
     elif state == 2:
         resp = "*chika* *chika* Slim Shady."
     websocket_state[websocket_id] = (state + 1) % 3
-    return f"{ws.query_params}"
+    return resp
 
 
 @websocket.on("close")
