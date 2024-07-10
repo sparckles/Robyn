@@ -77,29 +77,75 @@ For a simple synchronous request, Batman wrote:
 
 Batman was curious about how to run the application. Robyn explained that he could run the application through a simple command `python3 app.py`
 
-A robyn application exposes certain commands to the user. These commands can be used to run the application, or to generate a new project.
 
-```bash
-usage: app.py [-h] [--processes PROCESSES] [--workers WORKERS] [--dev] [--log-level LOG_LEVEL] [--create] [--docs] [--open-browser] [--version]
+<Row>
+  <Col>
+    A robyn application exposes certain commands to the user. These commands can be used to run the application, or to generate a new project.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+      ```bash
+      usage: app.py [-h] [--processes PROCESSES] [--workers WORKERS] [--log-level LOG_LEVEL] [--create] [--docs] [--open-browser] [--version]
 
-Robyn, a fast async web framework with a rust runtime.
+      Robyn, a fast async web framework with a rust runtime.
 
-options:
-  -h, --help            show this help message and exit
-  --processes PROCESSES
-                        Choose the number of processes. [Default: 1]
-  --workers WORKERS     Choose the number of workers. [Default: 1]
-  --dev                 Development mode. It restarts the server based on file changes.
-  --log-level LOG_LEVEL
-                        Set the log level name
-  --open-browser        Open the browser on successful start.
+      options:
+        -h, --help            show this help message and exit
+        --processes PROCESSES
+                              Choose the number of processes. [Default: 1]
+        --workers WORKERS     Choose the number of workers. [Default: 1]
+        --log-level LOG_LEVEL
+                              Set the log level name
+        --open-browser        Open the browser on successful start.
 
-  Module flags
-  --create              Create a new project template.
-  --docs                Open the Robyn documentation.
-  --version             Show the Robyn version.
+        Module flags
+        --create              Create a new project template.
+        --docs                Open the Robyn documentation.
+        --version             Show the Robyn version.
+        --dev                 Development mode. It restarts the server based on file changes.
 
-```
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+<Row />
+
+<Row>
+  <Col>
+    Or the application can be run using Robyn's CLI, i.e. using `python -m robyn app.py`
+  </Col>
+
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+      ```bash
+
+      usage: python -m robyn app.py [-h] [--processes PROCESSES] [--workers WORKERS] [--dev] [--log-level LOG_LEVEL] [--create] [--docs] [--open-browser] [--version]
+
+
+      Robyn, a fast async web framework with a rust runtime.
+
+      options:
+        -h, --help            show this help message and exit
+        --processes PROCESSES
+                              Choose the number of processes. [Default: 1]
+        --workers WORKERS     Choose the number of workers. [Default: 1]
+        --log-level LOG_LEVEL
+                              Set the log level name
+        --open-browser        Open the browser on successful start.
+
+        Module flags
+        --create              Create a new project template.
+        --docs                Open the Robyn documentation.
+        --version             Show the Robyn version.
+        --dev                 Development mode. It restarts the server based on file changes.
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+
+
 
 ---
 
@@ -152,7 +198,7 @@ Batman was curios about the ability to return JSON responses from the applicatio
 
     @app.post("/jsonify")
     async def json(request):
-        return jsonify({"hello": "world"})
+        return {"hello": "world"}
 
     ```
 
@@ -162,7 +208,7 @@ Batman was curios about the ability to return JSON responses from the applicatio
 
     @app.post("/jsonify")
     async def json(request: Request):
-        return jsonify({"hello": "world"})
+        return {"hello": "world"}
 
     ```
     </CodeGroup>
@@ -192,8 +238,8 @@ Batman was curious about how to access path parameters and query parameters from
 
     @app.post("/jsonify/:id")
     async def json(request):
-        print(request["path_params"]["id"])
-        return jsonify({"hello": "world"})
+        print(request.path_params["id"])
+        return {"hello": "world"}
 
 
     ```
@@ -203,8 +249,8 @@ Batman was curious about how to access path parameters and query parameters from
 
     @app.post("/jsonify/:id")
     async def json(request: Request):
-        print(request["path_params"]["id"])
-        return jsonify({"hello": "world"})
+        print(request.path_params["id"])
+        return {"hello": "world"}
 
     ```
 
@@ -230,7 +276,7 @@ Batman was curious about how to access path parameters and query parameters from
     ```python {{ title: 'untyped' }}
     @app.get("/query")
     async def query_get(request):
-        query_data = request["queries"]
+        query_data = request.query_params.to_dict()
         return jsonify(query_data)
     ```
 
@@ -239,7 +285,7 @@ Batman was curious about how to access path parameters and query parameters from
 
     @app.get("/query")
     async def query_get(request: Request):
-        query_data = request["queries"]
+        query_data = request.query_params.to_dict()
         return jsonify(query_data)
     ```
 
@@ -312,7 +358,7 @@ To use the Response object, he wrote:
 
     @app.get("/response")
     async def response(request):
-        return Response(status_code=200, headers={}, description="OK")
+        return Response(status_code=200, headers=Headers({}), description="OK")
     ```
 
     ```python {{title: 'typed'}}
@@ -320,7 +366,7 @@ To use the Response object, he wrote:
 
     @app.get("/response")
     async def response(request: Request):
-        return Response(status_code=200, headers={}, description="OK")
+        return Response(status_code=200, headers=Headers({}), description="OK")
 
     ```
     </CodeGroup>
@@ -457,6 +503,58 @@ Or setting the Headers globally *per* router.
   </Col>
 </Row>
 
+<Row>
+<Col>
+`add_response_header` appends the header to the list of headers, while `set_response_header` replaces the header if it exists.
+</Col>
+<Col>
+
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    app.set_response_header("content-type", "application/json")
+    ```
+
+    ```python {{title: 'typed'}}
+    app.set_response_header("content-type", "application/json")
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+### Cookies
+
+<Row>
+<Col>
+Set cookies using the `set_cookies` function.
+</Col>
+<Col sticky>
+
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    @app.get("/")
+    def binary_output_response_sync(request):
+        response = Response(200, {'type': 'int'}, "desc")
+        response.set_cookie(key="fakesession", value="fake-cookie-session-value")
+        return response
+    ```
+
+    ```python {{title: 'typed'}}
+    from robyn import Request
+
+    @app.get("/")
+    def binary_output_response_sync(request: Request):
+        response = Response(200, {'type': 'int'}, "desc")
+        response.set_cookie(key="fakesession", value="fake-cookie-session-value")
+        return response
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
 
 ## Request Headers
 
@@ -479,8 +577,12 @@ Either, by using the `headers` field in the `Request` object:
       headers = request.headers
 
       print("These are the request headers: ", headers)
+      existing_header = headers.get("exisiting_header")
+      existing_header = headers.get("exisiting_header", "default_value")
+      exisiting_header = headers["exisiting_header"] # This syntax is also valid
 
-      headers["modified"] = ["modified_value"]
+      headers.set("modified", "modified_value")
+      headers["new_header"] = "new_value" # This syntax is also valid
 
       print("These are the modified request headers: ", headers)
       
@@ -495,8 +597,12 @@ Either, by using the `headers` field in the `Request` object:
       headers = request.headers
 
       print("These are the request headers: ", headers)
+      existing_header = headers.get("exisiting_header")
+      existing_header = headers.get("exisiting_header", "default_value")
+      exisiting_header = headers["exisiting_header"] # This syntax is also valid
 
-      headers["modified"] = ["modified_value"]
+      headers.set("modified", "modified_value")
+      headers["new_header"] = "new_value" # This syntax is also valid
 
       print("These are the modified request headers: ", headers)
       
@@ -527,6 +633,26 @@ Or by using the global Request Headers:
   </Col>
 </Row>
 
+<Row>
+<Col>
+`add_request_header` appends the header to the list of headers, while `set_request_header` replaces the header if it exists.
+</Col>
+<Col sticky>
+
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    app.set_request_header("server", "robyn")
+    ```
+
+    ```python {{title: 'typed'}}
+    app.set_request_header("server", "robyn")
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
 
 ---
 
@@ -545,7 +671,7 @@ After learning about response formats and headers, Batman learned to set status 
 
     @app.get("/response")
     async def response(request):
-        return Response(status_code=status_codes.HTTP_200_OK, headers={}, description="OK")
+        return Response(status_code=status_codes.HTTP_200_OK, headers=Headers({}), description="OK")
     ```
 
     ```python {{title: 'typed'}}
@@ -554,7 +680,7 @@ After learning about response formats and headers, Batman learned to set status 
 
     @app.get("/response")
     async def response(request: Request):
-        return Response(status_code=status_codes.HTTP_200_OK, headers={}, description="OK")
+        return Response(status_code=status_codes.HTTP_200_OK, headers=Headers({}), description="OK")
     ```
     </CodeGroup>
   </Col>

@@ -7,13 +7,13 @@ use crate::routers::http_router::HttpRouter;
 use crate::routers::{middleware_router::MiddlewareRouter, web_socket_router::WebSocketRouter};
 use crate::shared_socket::SocketHeld;
 use crate::types::function_info::{FunctionInfo, MiddlewareType};
+use crate::types::headers::Headers;
 use crate::types::request::Request;
 use crate::types::response::Response;
 use crate::types::HttpMethod;
 use crate::types::MiddlewareReturn;
 use crate::websockets::start_web_socket;
 
-use std::convert::TryInto;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::{Relaxed, SeqCst};
 use std::sync::{Arc, RwLock};
@@ -23,9 +23,7 @@ use std::{env, thread};
 
 use actix_files::Files;
 use actix_http::KeepAlive;
-use actix_web::web::Bytes;
 use actix_web::*;
-use dashmap::DashMap;
 
 // pyO3 module
 use log::{debug, error};
@@ -51,8 +49,8 @@ pub struct Server {
     const_router: Arc<ConstRouter>,
     websocket_router: Arc<WebSocketRouter>,
     middleware_router: Arc<MiddlewareRouter>,
-    global_request_headers: Arc<DashMap<String, String>>,
-    global_response_headers: Arc<DashMap<String, String>>,
+    global_request_headers: Arc<Headers>,
+    global_response_headers: Arc<Headers>,
     directories: Arc<RwLock<Vec<Directory>>>,
     startup_handler: Option<Arc<FunctionInfo>>,
     shutdown_handler: Option<Arc<FunctionInfo>>,
@@ -67,8 +65,8 @@ impl Server {
             const_router: Arc::new(ConstRouter::new()),
             websocket_router: Arc::new(WebSocketRouter::new()),
             middleware_router: Arc::new(MiddlewareRouter::new()),
-            global_request_headers: Arc::new(DashMap::new()),
-            global_response_headers: Arc::new(DashMap::new()),
+            global_request_headers: Arc::new(Headers::new(None)),
+            global_response_headers: Arc::new(Headers::new(None)),
             directories: Arc::new(RwLock::new(Vec::new())),
             startup_handler: None,
             shutdown_handler: None,
@@ -191,18 +189,18 @@ impl Server {
                             move |router: web::Data<Arc<HttpRouter>>,
                                   const_router: web::Data<Arc<ConstRouter>>,
                                   middleware_router: web::Data<Arc<MiddlewareRouter>>,
+                                  payload: web::Payload,
                                   global_request_headers,
                                   global_response_headers,
-                                  body,
                                   req| {
                                 pyo3_asyncio::tokio::scope_local(task_locals.clone(), async move {
                                     index(
                                         router,
+                                        payload,
                                         const_router,
                                         middleware_router,
                                         global_request_headers,
                                         global_response_headers,
-                                        body,
                                         req,
                                     )
                                     .await
@@ -213,7 +211,7 @@ impl Server {
                 .keep_alive(KeepAlive::Os)
                 .workers(workers)
                 .client_request_timeout(std::time::Duration::from_secs(0))
-                .listen(raw_socket.try_into().unwrap())
+                .listen(raw_socket.into())
                 .unwrap()
                 .run()
                 .await
@@ -252,35 +250,47 @@ impl Server {
         });
     }
 
-    /// Adds a new request header to our concurrent hashmap
-    /// this can be called after the server has started.
-    pub fn add_request_header(&self, key: &str, value: &str) {
-        self.global_request_headers
-            .insert(key.to_string(), value.to_string());
-    }
-
-    /// Adds a new response header to our concurrent hashmap
-    /// this can be called after the server has started.
-    pub fn add_response_header(&self, key: &str, value: &str) {
-        self.global_response_headers
-            .insert(key.to_string(), value.to_string());
-    }
-
     /// Removes a new request header to our concurrent hashmap
     /// this can be called after the server has started.
     pub fn remove_header(&self, key: &str) {
-        self.global_request_headers.remove(key);
+        self.global_request_headers.headers.remove(key);
     }
 
     /// Removes a new response header to our concurrent hashmap
     /// this can be called after the server has started.
     pub fn remove_response_header(&self, key: &str) {
-        self.global_response_headers.remove(key);
+        self.global_response_headers.headers.remove(key);
+    }
+
+    pub fn apply_request_headers(&mut self, headers: &Headers) {
+        self.global_request_headers = Arc::new(headers.clone());
+    }
+
+    pub fn apply_response_headers(&mut self, headers: &Headers) {
+        self.global_response_headers = Arc::new(headers.clone());
     }
 
     /// Add a new route to the routing tables
     /// can be called after the server has been started
     pub fn add_route(
+        &self,
+        py: Python,
+        route_type: &HttpMethod,
+        route: &str,
+        function: FunctionInfo,
+        is_const: bool,
+    ) {
+        let second_route: String = if route.ends_with('/') {
+            route[0..route.len() - 1].to_string()
+        } else {
+            format!("{}/", route)
+        };
+
+        self._add_route(py, route_type, route, function.clone(), is_const);
+        self._add_route(py, route_type, &second_route, function, is_const);
+    }
+
+    fn _add_route(
         &self,
         py: Python,
         route_type: &HttpMethod,
@@ -373,14 +383,14 @@ impl Default for Server {
 /// path, and returns a Future of a Response.
 async fn index(
     router: web::Data<Arc<HttpRouter>>,
+    payload: web::Payload,
     const_router: web::Data<Arc<ConstRouter>>,
     middleware_router: web::Data<Arc<MiddlewareRouter>>,
-    global_request_headers: web::Data<Arc<DashMap<String, String>>>,
-    global_response_headers: web::Data<Arc<DashMap<String, String>>>,
-    body: Bytes,
+    global_request_headers: web::Data<Arc<Headers>>,
+    global_response_headers: web::Data<Arc<Headers>>,
     req: HttpRequest,
 ) -> impl Responder {
-    let mut request = Request::from_actix_request(&req, body, &global_request_headers);
+    let mut request = Request::from_actix_request(&req, payload, &global_request_headers).await;
 
     // Before middleware
     // Global
@@ -406,7 +416,7 @@ async fn index(
                     req.uri().path(),
                     get_traceback(e.downcast_ref::<PyErr>().unwrap())
                 );
-                return Response::internal_server_error(&request.headers);
+                return Response::internal_server_error(None);
             }
         };
     }
@@ -422,26 +432,27 @@ async fn index(
         req.uri().path(),
     ) {
         request.path_params = route_params;
-        execute_http_function(&request, &function)
-            .await
-            .unwrap_or_else(|e| {
+        match execute_http_function(&request, &function).await {
+            Ok(r) => r,
+            Err(e) => {
                 error!(
                     "Error while executing route function for endpoint `{}`: {}",
                     req.uri().path(),
                     get_traceback(&e)
                 );
 
-                Response::internal_server_error(&request.headers)
-            })
+                Response::internal_server_error(None)
+            }
+        }
     } else {
-        Response::not_found(&request.headers)
+        Response::not_found(None)
     };
 
-    response.headers.extend(
-        global_response_headers
-            .iter()
-            .map(|elt| (elt.key().clone(), elt.value().clone())),
-    );
+    debug!("OG Response : {:?}", response);
+
+    response.headers.extend(&global_response_headers);
+
+    debug!("Extended Response : {:?}", response);
 
     // After middleware
     // Global
@@ -457,21 +468,26 @@ async fn index(
         response = match execute_middleware_function(&response, &after_middleware).await {
             Ok(MiddlewareReturn::Request(_)) => {
                 error!("After middleware returned a request");
-                return Response::internal_server_error(&request.headers);
+                return Response::internal_server_error(Some(&response.headers));
             }
-            Ok(MiddlewareReturn::Response(r)) => r,
+            Ok(MiddlewareReturn::Response(r)) => {
+                let response = r;
+
+                debug!("Response returned: {:?}", response);
+                response
+            }
             Err(e) => {
                 error!(
                     "Error while executing after middleware function for endpoint `{}`: {}",
                     req.uri().path(),
                     get_traceback(e.downcast_ref::<PyErr>().unwrap())
                 );
-                return Response::internal_server_error(&request.headers);
+                return Response::internal_server_error(Some(&response.headers));
             }
         };
     }
 
-    debug!("Response: {:?}", response);
+    debug!("Response returned: {:?}", response);
 
     response
 }

@@ -13,8 +13,8 @@ jobs:
   benchmarks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.8"
 
@@ -33,7 +33,7 @@ jobs:
           maturin build -i python --universal2 --out dist
           pip install --no-index --find-links=dist/ robyn
       - name: Run benchmarks
-        uses: CodSpeedHQ/action@v1
+        uses: CodSpeedHQ/action@v2
         with:
           token: ${{ secrets.CODSPEED_TOKEN }}
           run: pytest integration_tests --codspeed

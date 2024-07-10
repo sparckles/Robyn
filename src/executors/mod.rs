@@ -1,3 +1,4 @@
+#[deny(clippy::if_same_then_else)]
 /// This is the module that has all the executor functions
 /// i.e. the functions that have the responsibility of parsing and executing functions.
 pub mod web_socket_executors;
@@ -17,25 +18,36 @@ use crate::types::{
 fn get_function_output<'a, T>(
     function: &'a FunctionInfo,
     py: Python<'a>,
-    input: &T,
+    function_args: &T,
 ) -> Result<&'a PyAny, PyErr>
 where
     T: ToPyObject,
 {
     let handler = function.handler.as_ref(py);
+    let kwargs = function.kwargs.as_ref(py);
+    let function_args = function_args.to_object(py);
+    debug!("Function args: {:?}", function_args);
 
-    // this makes the request object accessible across every route
     match function.number_of_params {
         0 => handler.call0(),
-        1 => handler.call1((input.to_object(py),)),
-        // this is done to accommodate any future params
-        2_u8..=u8::MAX => handler.call1((input.to_object(py),)),
+        1 => {
+            if kwargs.get_item("global_dependencies").is_some()
+                || kwargs.get_item("router_dependencies").is_some()
+            // these are reserved keywords
+            {
+                handler.call((), Some(kwargs))
+            } else {
+                handler.call1((function_args,))
+            }
+        }
+        _ => handler.call((function_args,), Some(kwargs)),
     }
 }
 
 // Execute the middleware function
 // type T can be either Request (before middleware) or Response (after middleware)
 // Return type can either be a Request or a Response, we wrap it inside an enum for easier handling
+#[inline]
 pub async fn execute_middleware_function<T>(
     input: &T,
     function: &FunctionInfo,
@@ -59,6 +71,7 @@ where
     } else {
         Python::with_gil(|py| -> Result<MiddlewareReturn> {
             let output = get_function_output(function, py, input)?;
+            debug!("Middleware output: {:?}", output);
             match output.extract::<Response>() {
                 Ok(o) => Ok(MiddlewareReturn::Response(o)),
                 Err(_) => Ok(MiddlewareReturn::Request(output.extract::<Request>()?)),

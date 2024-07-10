@@ -6,7 +6,15 @@ import { Layout as ReleaseLayout } from '@/components/releases/Layout'
 import { serialize } from 'next-mdx-remote/serialize'
 import { MDXRemote } from 'next-mdx-remote'
 
-import { a, wrapper, H2, img, Article, code } from '@/components/releases/mdx'
+import {
+  a,
+  wrapper,
+  H2,
+  img,
+  Article,
+  code,
+  p,
+} from '@/components/releases/mdx'
 
 import * as releaseMdxComponents from '@/components/releases/mdx'
 

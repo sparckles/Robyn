@@ -1,4 +1,5 @@
 import pytest
+import requests
 from requests import Response
 
 from integration_tests.helpers.http_methods_helpers import get
@@ -47,7 +48,24 @@ def test_template(function_type: str, session):
 @pytest.mark.parametrize("function_type", ["sync", "async"])
 def test_queries(function_type: str, session):
     r = get(f"/{function_type}/queries?hello=robyn")
-    assert r.json() == {"hello": "robyn"}
+    assert r.json() == {"hello": ["robyn"]}
 
     r = get(f"/{function_type}/queries")
     assert r.json() == {}
+
+
+@pytest.mark.benchmark
+def test_trailing_slash(session):
+    r = requests.get("http://localhost:8080/trailing")  # `integration_tests#get` strips the trailing slash, tests always pass!`
+    assert r.text == "Trailing slash test successful!"
+
+    r = requests.get("http://localhost:8080/trailing/")
+    assert r.text == "Trailing slash test successful!"
+
+
+@pytest.mark.benchmark
+@pytest.mark.parametrize("key, value", [("fakesession", "fake-cookie-session-value")])
+def test_cookies(session, key, value):
+    response = get("/cookie", 200)
+
+    assert response.headers[key] == value

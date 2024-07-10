@@ -25,7 +25,7 @@ A view, simply is a function with a collection of other closures. e.g.
 
       def post(request):
           body = request.body
-          return {"status_code": 200, "description": body}
+          return Response({"status_code": 200, "description": body, "headers": {}})
 
     ```
 
@@ -38,7 +38,7 @@ A view, simply is a function with a collection of other closures. e.g.
 
         def post(request: Request):
             body = request.body
-            return {"status_code": 200, "description": body}
+            return Response({"status_code": 200, "description": body, "headers": {}})
     ```
     </CodeGroup>
   </Col>
@@ -62,7 +62,7 @@ You can serve views in two ways:
 
        def post(request):
            body = request.body
-           return {"status_code": 200, "description": body}
+           return body
 
       ```
       ```python {{ title: 'typed' }}
@@ -75,7 +75,7 @@ You can serve views in two ways:
 
        def post(request: Request):
            body = request.body
-           return {"status_code": 200, "description": body}
+           return body
 
       ```
     </CodeGroup>
@@ -176,9 +176,7 @@ The only thing to remember is that you need to add the subrouter to the main rou
 
 ## What's next?
 
-Batman, being the familiar with the dark side wanted to know about Exceptions!
+Now, that Batman knows how to organise his code, he wants to know how to add dependencies to his code. Robyn tells him that he can add dependencies at the global level, router level and the view level.
 
-Robyn introduced him to the concept of exceptions and how he can use them to handle errors in his application.
-
-- [Exceptions](/documentation/api_reference/exceptions)
+- [Dependency Injection](/documentation/api_reference/dependency_injection)
 

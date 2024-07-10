@@ -1,6 +1,6 @@
 .typography {
   --typography-body: theme(colors.gray.600);
-  --typography-headings: theme(colors.gray.900);
+  --typography-headings: theme(colors.white);
   --typography-quotes: theme(colors.gray.500);
   --typography-quotes-border: theme(colors.gray.200);
   --typography-links: theme(colors.sky.500);

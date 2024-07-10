@@ -1,0 +1,110 @@
+export const description =
+  'On this page, we will learn about dependency injection in Robyn.'
+
+
+## Dependency Injection
+
+Batman wanted to learn about dependency injection in Robyn. Robyn introduced him to the concept of dependency injection and how it can be used in Robyn.
+
+
+
+Robyn has two types of dependency injection:
+One is for the application level and the other is for the router level.
+
+### Application Level Dependency Injection
+
+<Row>
+<Col>
+Application level dependency injection is used to inject dependencies into the application. These dependencies are available to all the requests.
+</Col>
+  <Col>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+      from robyn import Robyn, ALLOW_CORS
+
+      app = Robyn(__file__)
+      GLOBAL_DEPENDENCY = "GLOBAL DEPENDENCY"
+
+      app.inject_global(GLOBAL_DEPENDENCY=GLOBAL_DEPENDENCY)
+
+      @app.get("/sync/global_di")
+      def sync_global_di(request, global_dependencies):
+        return global_dependencies["GLOBAL_DEPENDENCY"]
+    ```
+
+    ```python {{ title: 'typed' }}
+      from robyn import Robyn, ALLOW_CORS
+
+      app = Robyn(__file__)
+      GLOBAL_DEPENDENCY = "GLOBAL DEPENDENCY"
+
+      app.inject_global(GLOBAL_DEPENDENCY=GLOBAL_DEPENDENCY)
+
+      @app.get("/sync/global_di")
+      def sync_global_di(request, global_dependencies):
+        return global_dependencies["GLOBAL_DEPENDENCY"]
+
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+
+### Router Level Dependency Injection
+
+<Row>
+<Col>
+Router level dependency injection is used to inject dependencies into the router. These dependencies are available to all the requests of that router.
+</Col>
+  <Col>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+      from robyn import Robyn, ALLOW_CORS
+
+      app = Robyn(__file__)
+      ROUTER_DEPENDENCY = "ROUTER DEPENDENCY"
+
+      app.inject(ROUTER_DEPENDENCY=ROUTER_DEPENDENCY)
+
+      @app.get("/sync/global_di")
+      def sync_global_di(r, router_dependencies): # r is the request object
+        return router_dependencies["ROUTER_DEPENDENCY"]
+    ```
+
+    ```python {{ title: 'typed' }}
+      from robyn import Robyn, ALLOW_CORS, Request
+
+      app = Robyn(__file__)
+      ROUTER_DEPENDENCY = "ROUTER DEPENDENCY"
+
+      app.inject(ROUTER_DEPENDENCY=ROUTER_DEPENDENCY)
+
+      @app.get("/sync/global_di")
+      def sync_global_di(r: Request, router_dependencies):
+        return router_dependencies["ROUTER_DEPENDENCY"]
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+<Row>
+<Col>
+Note: `router_dependencies`, `global_dependencies` are reserved parameters and **must** be named as such. The order of the parameters does not matter among them. However, the `router_dependencies` and `global_dependencies` must only come after the `request` parameter. 
+</Col>
+</Row>
+
+---
+
+
+## What's next?
+
+Batman, being the familiar with the dark side wanted to know about Exceptions!
+
+Robyn introduced him to the concept of exceptions and how he can use them to handle errors in his application.
+
+- [Exceptions](/documentation/api_reference/exceptions)
+

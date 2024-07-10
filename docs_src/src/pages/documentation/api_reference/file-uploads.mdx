@@ -6,7 +6,7 @@ export const description =
 Batman learned how to handle file uploads using Robyn. He created an endpoint to handle file uploads using the following code:
 
 
-## Scaling the Application
+## Sending a File without MultiPart Form Data
 
 <Row>
 <Col>
@@ -17,8 +17,6 @@ Batman scaled his application across multiple cores for better performance. He u
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
     ```python {{ title: 'untyped' }}
-    from robyn.robyn import File
-
     @app.post("/upload")
     async def upload():
       body = request.body
@@ -28,11 +26,9 @@ Batman scaled his application across multiple cores for better performance. He u
       with open('test.txt', 'wb') as f:
           f.write(body)
 
-      return jsonify({'message': 'success'})
+      return {'message': 'success'}
     ```
     ```python {{ title: 'typed' }}
-    from robyn.robyn import File
-
     @app.post("/upload")
     async def upload():
       body = request.body
@@ -42,7 +38,39 @@ Batman scaled his application across multiple cores for better performance. He u
       with open('test.txt', 'wb') as f:
           f.write(file)
 
-      return jsonify({'message': 'success'})
+      return {'message': 'success'}
+    ```
+
+    </CodeGroup>
+  </Col>
+</Row>
+
+
+## Sending a File with MultiPart Form Data
+
+<Row>
+<Col>
+Batman scaled his application across multiple cores for better performance. He used the following command:
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+
+    @app.post("/sync/multipart-file")
+    def sync_multipart_file(request: Request):
+        files = request.files
+        file_names = files.keys()
+        return {"file_names": list(file_names)}
+    ```
+    ```python {{ title: 'typed' }}
+
+    @app.post("/sync/multipart-file")
+    def sync_multipart_file(request: Request):
+        files = request.files
+        file_names = files.keys()
+        return {"file_names": list(file_names)}
     ```
 
     </CodeGroup>
@@ -97,6 +125,51 @@ Batman scaled his application across multiple cores for better performance. He u
   </Col>
 </Row>
 
+
+### Serving simple HTML strings
+
+<Row>
+<Col>
+Speaking of HTML files, Batman wanted to serve simple HTML strings. He was suggested to use the following code:
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    from robyn import Robyn, html
+
+    app = Robyn(__file__)
+
+
+    @app.get("/")
+    async def h(request):
+        html_string = "<h1>Hello World</h1>"
+        return html(html_string)
+
+    app.start(port=8080)
+
+    ```
+
+    ```python {{ title: 'typed' }}
+    from robyn import Robyn, Request, html
+
+    app = Robyn(__file__)
+
+
+    @app.get("/")
+    async def h(request: Request):
+        html_string = "<h1>Hello World</h1>"
+        return html(html_string)
+
+    app.start(port=8080)
+
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+
 ### Serving Other Files
 
 
@@ -116,7 +189,7 @@ Batman scaled his application across multiple cores for better performance. He u
 
     @app.get("/")
     async def h(request):
-        return serve_file("./index.html")
+        return serve_file("./index.html", file_name="index.html") # file_name is optional
 
     app.start(port=8080)
 
@@ -130,7 +203,7 @@ Batman scaled his application across multiple cores for better performance. He u
 
     @app.get("/")
     async def h(request: Request):
-        return serve_file("./index.html")
+        return serve_file("./index.html", file_name="index.html") # file_name is optional
 
     app.start(port=8080)
 
@@ -143,9 +216,9 @@ Batman scaled his application across multiple cores for better performance. He u
 
 ## What's next?
 
-Now, Batman was ready to learn about the advanced features of Robyn. He wanted to find a way to get realtime updates in his dashboard.
+Now, Batman was ready to learn about the advanced features of Robyn. He wanted to find a way to handle form data
 
-- [WebSockets](/documentation/api_reference/websockets)
+- [Form Data](/documentation/api_reference/form_data)
 
 
 

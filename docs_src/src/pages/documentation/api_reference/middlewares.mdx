@@ -72,7 +72,14 @@ Batman was excited to learn that he could add events as functions as well as dec
 <Row>
   <Col>
 
-  Batman learned to use both sync and async functions for middlewares. He wrote the following code to add a middleware that would execute before and after each request:
+  Batman learned to use both sync and async functions for middlewares. He wrote the following code to add a middleware that would execute before and after each request.
+  A before request middleware is a function that executes before each request. It can modify the request object or perform any other operation before the request is processed.
+  An after request middleware is a function that executes after each request. It can modify the response object or perform any other operation after the request is processed.
+
+  Every before request middleware should accept a request object and return a request object. Every after request middleware should accept a response object and return a response object on happy case scenario.
+
+  The execution of the before request middleware is stopped if any of the before request middleware returns a response object. The response object is returned to the client without executing the after request middleware or the main entry point code.
+
 
   
 
@@ -85,12 +92,12 @@ Batman was excited to learn that he could add events as functions as well as dec
     @app.before_request("/")
     async def hello_before_request(request: Request):
         request.headers["before"] = "sync_before_request"
-        print(request)
+        return request
 
     @app.after_request("/")
     def hello_after_request(response: Response):
-        response.headers["after"] = "sync_after_request"
-        print(response)
+        response.headers.set("after", "sync_after_request"")
+        return response
     ```
 
     ```python {{ title: 'typed' }}
@@ -98,13 +105,13 @@ Batman was excited to learn that he could add events as functions as well as dec
 
     @app.before_request("/")
     async def hello_before_request(request):
-        request.headers["before"] = "sync_before_request"
-        print(request)
+        request.headers.set("before", "sync_before_request")
+        return request
 
     @app.after_request("/")
     def hello_after_request(response):
-        response.headers["after"] = "sync_after_request"
-        print(response)
+        response.headers.set("after", "sync_after_request"")
+        return response
     ```
 
 

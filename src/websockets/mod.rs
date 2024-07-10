@@ -2,6 +2,7 @@ pub mod registry;
 
 use crate::executors::web_socket_executors::execute_ws_function;
 use crate::types::function_info::FunctionInfo;
+use crate::types::multimap::QueryParams;
 use registry::{SendMessageToAll, SendText};
 
 use actix::prelude::*;
@@ -26,6 +27,7 @@ pub struct WebSocketConnector {
     pub router: HashMap<String, FunctionInfo>,
     pub task_locals: TaskLocals,
     pub registry_addr: Addr<WebSocketRegistry>,
+    pub query_params: QueryParams,
 }
 
 // By default mailbox capacity is 16 messages.
@@ -173,6 +175,11 @@ impl WebSocketConnector {
     pub fn get_id(&self) -> String {
         self.id.to_string()
     }
+
+    #[getter]
+    pub fn get_query_params(&self) -> QueryParams {
+        self.query_params.clone()
+    }
 }
 
 static REGISTRY_ADDRESSES: OnceCell<RwLock<HashMap<String, Addr<WebSocketRegistry>>>> =
@@ -207,12 +214,26 @@ pub async fn start_web_socket(
 ) -> Result<HttpResponse, Error> {
     let registry_addr = get_or_init_registry_for_endpoint(endpoint);
 
+    let mut query_params = QueryParams::new();
+
+    if !req.query_string().is_empty() {
+        let split = req.query_string().split('&');
+        for s in split {
+            let path_params = s.split_once('=').unwrap_or((s, ""));
+            let key = path_params.0.to_string();
+            let value = path_params.1.to_string();
+
+            query_params.set(key, value);
+        }
+    }
+
     ws::start(
         WebSocketConnector {
             router,
             task_locals,
             id: Uuid::new_v4(),
             registry_addr,
+            query_params,
         },
         &req,
         stream,

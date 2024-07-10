@@ -1,9 +1,12 @@
 from robyn import SubRouter, jsonify, WebSocket
 
+from .di_subrouter import di_subrouter
 
 sub_router = SubRouter(__name__, prefix="/sub_router")
 
 websocket = WebSocket(sub_router, "/ws")
+
+__all__ = ["sub_router", "websocket", "di_subrouter"]
 
 
 @websocket.on("connect")
@@ -22,40 +25,40 @@ async def close(ws):
 
 
 @sub_router.get("/foo")
-def get_foo(name):
-    return jsonify({"message": "foo"})
+def get_foo():
+    return {"message": "foo"}
 
 
 @sub_router.post("/foo")
-def post_foo(name):
-    return jsonify({"message": "foo"})
+def post_foo():
+    return {"message": "foo"}
 
 
 @sub_router.put("/foo")
-def put_foo(name):
-    return jsonify({"message": "foo"})
+def put_foo():
+    return {"message": "foo"}
 
 
 @sub_router.delete("/foo")
-def delete_foo(name):
-    return jsonify({"message": "foo"})
+def delete_foo():
+    return {"message": "foo"}
 
 
 @sub_router.patch("/foo")
-def patch_foo(name):
-    return jsonify({"message": "foo"})
+def patch_foo():
+    return {"message": "foo"}
 
 
 @sub_router.options("/foo")
-def option_foo(name):
-    return jsonify({"message": "foo"})
+def option_foo():
+    return {"message": "foo"}
 
 
 @sub_router.trace("/foo")
-def trace_foo(name):
-    return jsonify({"message": "foo"})
+def trace_foo():
+    return {"message": "foo"}
 
 
 @sub_router.head("/foo")
-def head_foo(name):
-    return jsonify({"message": "foo"})
+def head_foo():
+    return {"message": "foo"}

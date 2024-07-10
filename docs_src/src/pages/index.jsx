@@ -1,15 +1,7 @@
 import Head from 'next/head'
 import Link from 'next/link'
-import Image from 'next/image'
 
 import { Container } from '@/components/Container'
-import {
-  GitHubIcon,
-  InstagramIcon,
-  LinkedInIcon,
-  TwitterIcon,
-} from '@/components/SocialIcons'
-
 import hljs from 'highlight.js/lib/core'
 import python from 'highlight.js/lib/languages/python'
 import 'highlight.js/styles/tomorrow-night-blue.css'
@@ -18,14 +10,6 @@ import Testimonials from '@/components/Testimonials'
 hljs.registerLanguage('python', python)
 
 import { useEffect, useRef } from 'react'
-
-function SocialLink({ icon: Icon, ...props }) {
-  return (
-    <Link className="group -m-1 p-1" {...props}>
-      <Icon className="h-6 w-6 fill-zinc-400 transition group-hover:fill-zinc-300" />
-    </Link>
-  )
-}
 
 function CodeSnippet() {
   const ref = useRef(null)
@@ -77,22 +61,37 @@ export default function Home({ articles }) {
           Robyn - A Fast, Innovator Friendly, and Community Driven Python Web
           Framework.
         </title>
-          <meta name="description" content="Robyn - A Fast, Innovator Friendly, and Community Driven Python Web Framework." />
-          <meta property="og:title" content="Robyn - A Fast, Innovator Friendly, and Community Driven Python Web Framework." />
-          <meta property="og:image" content="https://robyn.tech/robynog.png" />
-          <meta property="og:description" content="Robyn is a fast, innovator-friendly, and community-driven Python web framework." />
-          <meta property="og:url" content="https://robyn.tech" />
+        <meta
+          name="description"
+          content="Robyn - A Fast, Innovator Friendly, and Community Driven Python Web Framework."
+        />
+        <meta
+          property="og:title"
+          content="Robyn - A Fast, Innovator Friendly, and Community Driven Python Web Framework."
+        />
+        <meta property="og:image" content="https://robyn.tech/robynog.png" />
+        <meta
+          property="og:description"
+          content="Robyn is a fast, innovator-friendly, and community-driven Python web framework."
+        />
+        <meta property="og:url" content="https://robyn.tech" />
 
-          { /*Twitter specific meta tags*/ }
-          <meta name="twitter:card" content="summary_large_image" />
-          <meta name="twitter:site" content="@yourTwitterHandle" />
-          <meta name="twitter:title" content="Robyn - A Fast, Innovator Friendly, and Community Driven Python Web Framework." />
-          <meta name="twitter:description" content="Robyn is a fast, innovator-friendly, and community-driven Python web framework." />
-          <meta name="twitter:image" content="https://robyn.tech/robynog.png" />
+        {/*Twitter specific meta tags*/}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@yourTwitterHandle" />
+        <meta
+          name="twitter:title"
+          content="Robyn - A Fast, Innovator Friendly, and Community Driven Python Web Framework."
+        />
+        <meta
+          name="twitter:description"
+          content="Robyn is a fast, innovator-friendly, and community-driven Python web framework."
+        />
+        <meta name="twitter:image" content="https://robyn.tech/robynog.png" />
 
-          { /*LinkedIn specific meta tags*/ }
-          <meta property="og:type" content="website" />
-          <meta property="og:site_name" content="Robyn Framework" />
+        {/*LinkedIn specific meta tags*/}
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Robyn Framework" />
       </Head>
 
       <Container className="mt-10 md:mt-14">

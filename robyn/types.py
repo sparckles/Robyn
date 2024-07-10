@@ -16,12 +16,3 @@ class Directory:
             self.show_files_listing,
             self.index_file,
         ]
-
-
-@dataclass
-class Header:
-    key: str
-    val: str
-
-    def as_list(self):
-        return [self.key, self.val]

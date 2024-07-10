@@ -4,6 +4,7 @@ import argparse
 class Config:
     def __init__(self) -> None:
         parser = argparse.ArgumentParser(description="Robyn, a fast async web framework with a rust runtime.")
+        self.parser = parser
         parser.add_argument(
             "--processes",
             type=int,
@@ -55,8 +56,21 @@ class Config:
             default=False,
             help="Show the Robyn version.",
         )
+        parser.add_argument(
+            "--compile-rust-path",
+            dest="compile_rust_path",
+            default=None,
+            help="Compile rust files in the given path.",
+        )
 
-        args, _ = parser.parse_known_args()
+        parser.add_argument(
+            "--create-rust-file",
+            dest="create_rust_file",
+            default=None,
+            help="Create a rust file with the given name.",
+        )
+
+        args, unknown_args = parser.parse_known_args()
 
         self.processes = args.processes
         self.workers = args.workers
@@ -65,12 +79,21 @@ class Config:
         self.docs = args.docs
         self.open_browser = args.open_browser
         self.version = args.version
+        self.compile_rust_path = args.compile_rust_path
+        self.create_rust_file = args.create_rust_file
+
+        # find something that ends with .py in unknown_args
+        for arg in unknown_args:
+            if arg.endswith(".py"):
+                self.file_path = arg
+                break
 
         if self.dev and (self.processes != 1 or self.workers != 1):
             raise Exception("--processes and --workers shouldn't be used with --dev")
 
         if self.dev and args.log_level is None:
             self.log_level = "DEBUG"
+
         elif args.log_level is None:
             self.log_level = "INFO"
         else:

@@ -233,6 +233,10 @@ export const navigation = [
         title: 'The Request Object',
       },
       {
+        href: '/documentation/api_reference/robyn_env',
+        title: 'The Robyn Env file',
+      },
+      {
         href: '/documentation/api_reference/middlewares',
         title: 'Middlewares, Events and Websockets',
       },
@@ -253,8 +257,16 @@ export const navigation = [
         title: 'Templating',
       },
       {
+        title: 'Redirection',
+        href: '/documentation/api_reference/redirection',
+      },
+      {
         href: '/documentation/api_reference/file-uploads',
         title: 'File Uploads',
+      },
+      {
+        href: '/documentation/api_reference/form_data',
+        title: 'Form Data',
       },
       {
         href: '/documentation/api_reference/websockets',
@@ -264,14 +276,26 @@ export const navigation = [
         href: '/documentation/api_reference/views',
         title: 'Code Organisation',
       },
+      {
+        href: '/documentation/api_reference/dependency_injection',
+        title: 'Dependency Injection',
+      },
 
       {
         href: '/documentation/api_reference/exceptions',
         title: 'Exceptions',
       },
       {
-        href: '/documentation/api_reference/advanced_features#keep-a-track-of-clients-ip-address',
+        href: '/documentation/api_reference/scaling',
+        title: 'Scaling the Application',
+      },
+      {
+        href: '/documentation/api_reference/advanced_features',
         title: 'Advanced Features',
+      },
+      {
+        href: '/documentation/api_reference/using_rust_directly',
+        title: 'Using Rust Directly',
       },
       {
         href: '/documentation/api_reference/graphql-support',

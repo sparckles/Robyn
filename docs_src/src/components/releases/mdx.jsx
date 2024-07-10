@@ -24,6 +24,10 @@ export function H2(props) {
   )
 }
 
+export const p = function Paragraph({ children }) {
+  return <p className="text-2xs/4 typography text-white">{children}</p>
+}
+
 export const img = function Img(props) {
   return (
     <div className="relative mt-8 overflow-hidden rounded-xl bg-gray-900 [&+*]:mt-8">
@@ -95,7 +99,7 @@ export function Article({ id, title, date, children }) {
 
   if (isFeed) {
     return (
-      <article>
+      <article class="text-white">
         <script
           type="text/metadata"
           dangerouslySetInnerHTML={{

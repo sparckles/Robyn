@@ -1,7 +1,7 @@
-from abc import ABC, abstractclassmethod, abstractmethod
+from abc import ABC, abstractmethod
 from typing import Optional
 
-from robyn.robyn import Identity, Request, Response
+from robyn.robyn import Headers, Identity, Request, Response
 from robyn.status_codes import HTTP_401_UNAUTHORIZED
 
 
@@ -23,7 +23,8 @@ class TokenGetter(ABC):
         """
         return self.__class__.__name__
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def get_token(cls, request: Request) -> Optional[str]:
         """
         Gets the token from the request.
@@ -33,7 +34,8 @@ class TokenGetter(ABC):
         """
         raise NotImplementedError()
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def set_token(cls, request: Request, token: str):
         """
         Sets the token in the request.
@@ -56,7 +58,7 @@ class AuthenticationHandler(ABC):
     @property
     def unauthorized_response(self) -> Response:
         return Response(
-            headers={"WWW-Authenticate": self.token_getter.scheme},
+            headers=Headers({"WWW-Authenticate": self.token_getter.scheme}),
             description="Unauthorized",
             status_code=HTTP_401_UNAUTHORIZED,
         )
@@ -79,7 +81,10 @@ class BearerGetter(TokenGetter):
 
     @classmethod
     def get_token(cls, request: Request) -> Optional[str]:
-        authorization_header = request.headers.get("authorization")
+        if "authorization" in request.headers:
+            authorization_header = request.headers.get("authorization")
+        else:
+            authorization_header = None
 
         if not authorization_header or not authorization_header.startswith("Bearer "):
             return None

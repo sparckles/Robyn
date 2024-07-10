@@ -1,5 +1,4 @@
 import os
-
 import pathlib
 from collections import defaultdict
 from typing import Optional
@@ -15,21 +14,29 @@ from robyn import (
     WebSocketConnector,
 )
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
+from robyn.robyn import Headers
 from robyn.templating import JinjaTemplate
 
 from integration_tests.views import SyncView, AsyncView
-from integration_tests.subroutes import sub_router
+from integration_tests.subroutes import sub_router, di_subrouter
 
 
 app = Robyn(__file__)
 websocket = WebSocket(app, "/web_socket")
 
+
 # Creating a new WebSocket app to test json handling + to serve an example to future users of this lib
 # while the original "raw" web_socket is used with benchmark tests
 websocket_json = WebSocket(app, "/web_socket_json")
 
+websocket_di = WebSocket(app, "/web_socket_di")
+
+websocket_di.inject_global(GLOBAL_DEPENDENCY="GLOBAL DEPENDENCY")
+websocket_di.inject(ROUTER_DEPENDENCY="ROUTER DEPENDENCY")
+
 current_file_path = pathlib.Path(__file__).parent.resolve()
 jinja_template = JinjaTemplate(os.path.join(current_file_path, "templates"))
+
 
 # ===== Websockets =====
 
@@ -54,7 +61,7 @@ async def jsonws_message(ws, msg: str) -> str:
 
 
 @websocket.on("message")
-async def message(ws: WebSocketConnector, msg: str) -> str:
+async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
     global websocket_state
     websocket_id = ws.id
     state = websocket_state[websocket_id]
@@ -66,9 +73,10 @@ async def message(ws: WebSocketConnector, msg: str) -> str:
     elif state == 1:
         resp = "Whooo??"
     elif state == 2:
+        await ws.async_broadcast(ws.query_params.get("one"))
+        ws.sync_send_to(websocket_id, ws.query_params.get("two"))
         resp = "*chika* *chika* Slim Shady."
     websocket_state[websocket_id] = (state + 1) % 3
-
     return resp
 
 
@@ -92,6 +100,21 @@ def jsonws_connect():
     return "Hello world, from ws"
 
 
+@websocket_di.on("connect")
+async def di_message_connect(global_dependencies, router_dependencies):
+    return global_dependencies["GLOBAL_DEPENDENCY"] + " " + router_dependencies["ROUTER_DEPENDENCY"]
+
+
+@websocket_di.on("message")
+async def di_message():
+    return ""
+
+
+@websocket_di.on("close")
+async def di_message_close():
+    return ""
+
+
 # ===== Lifecycle handlers =====
 
 
@@ -111,20 +134,23 @@ def shutdown_handler():
 
 @app.before_request()
 def global_before_request(request: Request):
-    request.headers["global_before"] = "global_before_request"
+    request.headers.set("global_before", "global_before_request")
     return request
 
 
 @app.after_request()
 def global_after_request(response: Response):
-    response.headers["global_after"] = "global_after_request"
+    response.headers.set("global_after", "global_after_request")
     return response
 
 
 @app.get("/sync/global/middlewares")
 def sync_global_middlewares(request: Request):
+    print(request.headers)
+    print(request.headers.get("txt"))
+    print(request.headers["txt"])
     assert "global_before" in request.headers
-    assert request.headers["global_before"] == "global_before_request"
+    assert request.headers.get("global_before") == "global_before_request"
     return "sync global middlewares"
 
 
@@ -133,13 +159,13 @@ def sync_global_middlewares(request: Request):
 
 @app.before_request("/sync/middlewares")
 def sync_before_request(request: Request):
-    request.headers["before"] = "sync_before_request"
+    request.headers.set("before", "sync_before_request")
     return request
 
 
 @app.after_request("/sync/middlewares")
 def sync_after_request(response: Response):
-    response.headers["after"] = "sync_after_request"
+    response.headers.set("after", "sync_after_request")
     response.description = response.description + " after"
     return response
 
@@ -147,20 +173,20 @@ def sync_after_request(response: Response):
 @app.get("/sync/middlewares")
 def sync_middlewares(request: Request):
     assert "before" in request.headers
-    assert request.headers["before"] == "sync_before_request"
+    assert request.headers.get("before") == "sync_before_request"
     assert request.ip_addr == "127.0.0.1"
     return "sync middlewares"
 
 
 @app.before_request("/async/middlewares")
 async def async_before_request(request: Request):
-    request.headers["before"] = "async_before_request"
+    request.headers.set("before", "async_before_request")
     return request
 
 
 @app.after_request("/async/middlewares")
 async def async_after_request(response: Response):
-    response.headers["after"] = "async_after_request"
+    response.headers.set("after", "async_after_request")
     response.description = response.description + " after"
     return response
 
@@ -168,14 +194,14 @@ async def async_after_request(response: Response):
 @app.get("/async/middlewares")
 async def async_middlewares(request: Request):
     assert "before" in request.headers
-    assert request.headers["before"] == "async_before_request"
+    assert request.headers.get("before") == "async_before_request"
     assert request.ip_addr == "127.0.0.1"
     return "async middlewares"
 
 
 @app.before_request("/sync/middlewares/401")
 def sync_before_request_401():
-    return Response(401, {}, "sync before request 401")
+    return Response(401, Headers({}), "sync before request 401")
 
 
 @app.get("/sync/middlewares/401")
@@ -189,13 +215,17 @@ def sync_middlewares_401():
 
 # Hello world
 
+app.inject(RouterDependency="Router Dependency")
+
 
 @app.get("/")
-async def hello_world():
-    return "Hello world"
+async def hello_world(r):
+    return "Hello, world!"
 
 
-# str
+@app.get("/trailing")
+def trailing_slash(request):
+    return "Trailing slash test successful!"
 
 
 @app.get("/sync/str")
@@ -223,42 +253,38 @@ async def async_str_const_get():
 
 @app.get("/sync/dict")
 def sync_dict_get():
-    return {
-        "status_code": 200,
-        "description": "sync dict get",
-        "type": "text",
-        "headers": {"sync": "dict"},
-    }
+    return Response(
+        status_code=200,
+        description="sync dict get",
+        headers={"sync": "dict"},
+    )
 
 
 @app.get("/async/dict")
 async def async_dict_get():
-    return {
-        "status_code": 200,
-        "description": "async dict get",
-        "type": "text",
-        "headers": {"async": "dict"},
-    }
+    return Response(
+        status_code=200,
+        description="async dict get",
+        headers={"async": "dict"},
+    )
 
 
 @app.get("/sync/dict/const", const=True)
 def sync_dict_const_get():
-    return {
-        "status_code": 200,
-        "description": "sync dict const get",
-        "type": "text",
-        "headers": {"sync_const": "dict"},
-    }
+    return Response(
+        status_code=200,
+        description="sync dict const get",
+        headers={"sync_const": "dict"},
+    )
 
 
 @app.get("/async/dict/const", const=True)
 async def async_dict_const_get():
-    return {
-        "status_code": 200,
-        "description": "async dict const get",
-        "type": "text",
-        "headers": {"async_const": "dict"},
-    }
+    return Response(
+        status_code=200,
+        description="async dict const get",
+        headers={"async_const": "dict"},
+    )
 
 
 # Response
@@ -266,22 +292,22 @@ async def async_dict_const_get():
 
 @app.get("/sync/response")
 def sync_response_get():
-    return Response(200, {"sync": "response"}, "sync response get")
+    return Response(200, Headers({"sync": "response"}), "sync response get")
 
 
 @app.get("/async/response")
 async def async_response_get():
-    return Response(200, {"async": "response"}, "async response get")
+    return Response(200, Headers({"async": "response"}), "async response get")
 
 
 @app.get("/sync/response/const", const=True)
 def sync_response_const_get():
-    return Response(200, {"sync_const": "response"}, "sync response const get")
+    return Response(200, Headers({"sync_const": "response"}), "sync response const get")
 
 
 @app.get("/async/response/const", const=True)
 async def async_response_const_get():
-    return Response(200, {"async_const": "response"}, "async response const get")
+    return Response(200, Headers({"async_const": "response"}), "async response const get")
 
 
 # Binary
@@ -301,7 +327,7 @@ async def async_octet_get():
 def sync_octet_response_get():
     return Response(
         status_code=200,
-        headers={"Content-Type": "application/octet-stream"},
+        headers=Headers({"Content-Type": "application/octet-stream"}),
         description="sync octet response",
     )
 
@@ -310,7 +336,7 @@ def sync_octet_response_get():
 async def async_octet_response_get():
     return Response(
         status_code=200,
-        headers={"Content-Type": "application/octet-stream"},
+        headers=Headers({"Content-Type": "application/octet-stream"}),
         description="async octet response",
     )
 
@@ -443,18 +469,28 @@ async def file_download_async():
     return serve_file(file_path)
 
 
+# Multipart file
+
+
+@app.post("/sync/multipart-file")
+def sync_multipart_file(request: Request):
+    files = request.files
+    file_names = files.keys()
+    return {"file_names": list(file_names)}
+
+
 # Queries
 
 
 @app.get("/sync/queries")
 def sync_queries(request: Request):
-    query_data = request.queries
+    query_data = request.query_params.to_dict()
     return jsonify(query_data)
 
 
 @app.get("/async/queries")
 async def async_query(request: Request):
-    query_data = request.queries
+    query_data = request.query_params.to_dict()
     return jsonify(query_data)
 
 
@@ -463,22 +499,21 @@ async def async_query(request: Request):
 
 @app.get("/404")
 def return_404():
-    return {"status_code": 404, "description": "not found", "type": "text"}
+    return Response(status_code=404, description="not found", headers={"Content-Type": "text"})
 
 
 @app.get("/202")
 def return_202():
-    return {"status_code": 202, "description": "hello", "type": "text"}
+    return Response(status_code=202, description="hello", headers={"Content-Type": "text"})
 
 
 @app.get("/307")
 async def redirect():
-    return {
-        "status_code": 307,
-        "description": "",
-        "type": "text",
-        "headers": {"Location": "redirect_route"},
-    }
+    return Response(
+        status_code=307,
+        description="",
+        headers={"Location": "redirect_route"},
+    )
 
 
 @app.get("/redirect_route")
@@ -496,6 +531,15 @@ async def async_raise():
     raise Exception()
 
 
+# cookie
+@app.get("/cookie")
+def cookie():
+    response = Response(status_code=200, headers=Headers({}), description="test cookies")
+    response.set_cookie(key="fakesession", value="fake-cookie-session-value")
+
+    return response
+
+
 # --- POST ---
 
 # dict
@@ -503,22 +547,20 @@ async def async_raise():
 
 @app.post("/sync/dict")
 def sync_dict_post():
-    return {
-        "status_code": 200,
-        "description": "sync dict post",
-        "type": "text",
-        "headers": {"sync": "dict"},
-    }
+    return Response(
+        status_code=200,
+        description="sync dict post",
+        headers={"sync": "dict"},
+    )
 
 
 @app.post("/async/dict")
 async def async_dict_post():
-    return {
-        "status_code": 200,
-        "description": "async dict post",
-        "type": "text",
-        "headers": {"async": "dict"},
-    }
+    return Response(
+        status_code=200,
+        description="async dict post",
+        headers={"async": "dict"},
+    )
 
 
 # Body
@@ -532,6 +574,11 @@ def sync_body_post(request: Request):
 @app.post("/async/body")
 async def async_body_post(request: Request):
     return request.body
+
+
+@app.post("/sync/form_data")
+def sync_form_data(request: Request):
+    return request.headers["Content-Type"]
 
 
 # JSON Request
@@ -553,6 +600,12 @@ async def async_json_post(request: Request):
         return None
 
 
+@app.post("/sync/request_json/key")
+async def request_json(request: Request):
+    json = request.json()
+    return json["key"]
+
+
 # --- PUT ---
 
 # dict
@@ -560,22 +613,20 @@ async def async_json_post(request: Request):
 
 @app.put("/sync/dict")
 def sync_dict_put():
-    return {
-        "status_code": 200,
-        "description": "sync dict put",
-        "type": "text",
-        "headers": {"sync": "dict"},
-    }
+    return Response(
+        status_code=200,
+        description="sync dict put",
+        headers={"sync": "dict"},
+    )
 
 
 @app.put("/async/dict")
 async def async_dict_put():
-    return {
-        "status_code": 200,
-        "description": "async dict put",
-        "type": "text",
-        "headers": {"async": "dict"},
-    }
+    return Response(
+        status_code=200,
+        description="async dict put",
+        headers={"async": "dict"},
+    )
 
 
 # Body
@@ -598,22 +649,20 @@ async def async_body_put(request: Request):
 
 @app.delete("/sync/dict")
 def sync_dict_delete():
-    return {
-        "status_code": 200,
-        "description": "sync dict delete",
-        "type": "text",
-        "headers": {"sync": "dict"},
-    }
+    return Response(
+        status_code=200,
+        description="sync dict delete",
+        headers={"sync": "dict"},
+    )
 
 
 @app.delete("/async/dict")
 async def async_dict_delete():
-    return {
-        "status_code": 200,
-        "description": "async dict delete",
-        "type": "text",
-        "headers": {"async": "dict"},
-    }
+    return Response(
+        status_code=200,
+        description="async dict delete",
+        headers={"async": "dict"},
+    )
 
 
 # Body
@@ -621,6 +670,7 @@ async def async_dict_delete():
 
 @app.delete("/sync/body")
 def sync_body_delete(request: Request):
+    print(request.body)
     return request.body
 
 
@@ -636,22 +686,21 @@ async def async_body_delete(request: Request):
 
 @app.patch("/sync/dict")
 def sync_dict_patch():
-    return {
-        "status_code": 200,
-        "description": "sync dict patch",
-        "type": "text",
-        "headers": {"sync": "dict"},
-    }
+    return Response(
+        status_code=200,
+        description="sync dict patch",
+        headers={"sync": "dict"},
+    )
 
 
 @app.patch("/async/dict")
 async def async_dict_patch():
-    return {
-        "status_code": 200,
-        "description": "async dict patch",
-        "type": "text",
-        "headers": {"async": "dict"},
-    }
+    return Response(
+        status_code=200,
+        description="async dict patch",
+        # need to fix this
+        headers={"async": "dict"},
+    )
 
 
 # Body
@@ -677,7 +726,7 @@ def sync_decorator_view():
 
     def post(request: Request):
         body = request.body
-        return {"status_code": 200, "description": body}
+        return body
 
 
 @app.view("/async/view/decorator")
@@ -687,7 +736,7 @@ def async_decorator_view():
 
     async def post(request: Request):
         body = request.body
-        return {"status_code": 200, "description": body}
+        return body
 
 
 # ==== Exception Handling ====
@@ -695,7 +744,7 @@ def async_decorator_view():
 
 @app.exception
 def handle_exception(error):
-    return {"status_code": 500, "description": f"error msg: {error}"}
+    return Response(status_code=500, description=f"error msg: {error}", headers={})
 
 
 @app.get("/sync/exception/get")
@@ -709,22 +758,22 @@ async def async_exception_get():
 
 
 @app.put("/sync/exception/put")
-def sync_exception_put(_: Request):
+def sync_exception_put(request: Request):
     raise ValueError("value error")
 
 
 @app.put("/async/exception/put")
-async def async_exception_put(_: Request):
+async def async_exception_put(request: Request):
     raise ValueError("value error")
 
 
 @app.post("/sync/exception/post")
-def sync_exception_post(_: Request):
+def sync_exception_post(request: Request):
     raise ValueError("value error")
 
 
 @app.post("/async/exception/post")
-async def async_exception_post(_: Request):
+async def async_exception_post(request: Request):
     raise ValueError("value error")
 
 
@@ -763,11 +812,28 @@ app.add_route("GET", "/async/get/no_dec", async_without_decorator)
 app.add_route("PUT", "/async/put/no_dec", async_without_decorator)
 app.add_route("POST", "/async/post/no_dec", async_without_decorator)
 
-# ===== Main =====
+
+# ===== Dependency Injection =====
+
+GLOBAL_DEPENDENCY = "GLOBAL DEPENDENCY"
+ROUTER_DEPENDENCY = "ROUTER DEPENDENCY"
+
+app.inject_global(GLOBAL_DEPENDENCY=GLOBAL_DEPENDENCY)
+app.inject(ROUTER_DEPENDENCY=ROUTER_DEPENDENCY)
+
+
+@app.get("/sync/global_di")
+def sync_global_di(request, router_dependencies, global_dependencies):
+    return global_dependencies["GLOBAL_DEPENDENCY"]
+
+
+@app.get("/sync/router_di")
+def sync_router_di(request, router_dependencies):
+    return router_dependencies["ROUTER_DEPENDENCY"]
 
 
 def main():
-    app.add_response_header("server", "robyn")
+    app.set_response_header("server", "robyn")
     app.add_directory(
         route="/test_dir",
         directory_path=os.path.join(current_file_path, "build"),
@@ -777,16 +843,20 @@ def main():
     app.add_view("/sync/view", SyncView)
     app.add_view("/async/view", AsyncView)
     app.include_router(sub_router)
+    app.include_router(di_subrouter)
 
     class BasicAuthHandler(AuthenticationHandler):
         def authenticate(self, request: Request) -> Optional[Identity]:
             token = self.token_getter.get_token(request)
+            if token is not None:
+                # Useless but we call the set_token method for testing purposes
+                self.token_getter.set_token(request, token)
             if token == "valid":
                 return Identity(claims={"key": "value"})
             return None
 
     app.configure_authentication(BasicAuthHandler(token_getter=BearerGetter()))
-    app.start(port=8080)
+    app.start(port=8080, _check_port=False)
 
 
 if __name__ == "__main__":
