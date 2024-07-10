@@ -6,6 +6,7 @@ from typing import Callable, List, Optional, Tuple, Union
 
 import multiprocess as mp
 from nestd import get_all_nested
+from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, WebSocketConnector, get_version
 
 from robyn import status_codes
 from robyn.argument_parser import Config
@@ -18,10 +19,10 @@ from robyn.logger import Colors, logger
 from robyn.processpool import run_processes
 from robyn.reloader import compile_rust_files
 from robyn.responses import html, serve_file, serve_html
-from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, WebSocketConnector, get_version
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory
 from robyn.ws import WebSocket
+from .openapi_helper import add_openapi_route, init_schema, get_html_file, get_json_file
 
 __version__ = get_version()
 
@@ -39,6 +40,7 @@ class Robyn:
     def __init__(
         self,
         file_object: str,
+        openapi_schema=None,
         config: Config = Config(),
         dependencies: DependencyMap = DependencyMap(),
     ) -> None:
@@ -68,6 +70,15 @@ class Robyn:
         self.event_handlers = {}
         self.exception_handler: Optional[Callable] = None
         self.authentication_handler: Optional[AuthenticationHandler] = None
+
+        if openapi_schema:
+            init_schema(openapi_schema)
+
+            def docs_handler():
+                return serve_html(get_html_file())
+
+            self.add_route(route_type=HttpMethod.GET, endpoint="/openapi.json", handler=get_json_file, is_const=False)
+            self.add_route(route_type=HttpMethod.GET, endpoint="/docs", handler=docs_handler, is_const=False)
 
     def add_route(
         self,
@@ -287,7 +298,16 @@ class Robyn:
 
         return inner
 
-    def get(self, endpoint: str, const: bool = False, auth_required: bool = False):
+    def get(
+        self,
+        endpoint: str,
+        const: bool = False,
+        auth_required: bool = False,
+        openapi_path: str = None,
+        openapi_method: str = None,
+        openapi_summary: str = None,
+        openapi_tags: list = None,
+    ):
         """
         The @app.get decorator to add a route with the GET method
 
@@ -295,6 +315,7 @@ class Robyn:
         """
 
         def inner(handler):
+            add_openapi_route(openapi_path, openapi_method, openapi_summary, openapi_tags)
             return self.add_route(HttpMethod.GET, endpoint, handler, const, auth_required)
 
         return inner
