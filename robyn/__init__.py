@@ -395,12 +395,24 @@ class Robyn:
 
         return inner
 
+    def handle_nested_router(self, router):
+        self.include_router(router)
+        for nested in router.sub_router:
+            self.handle_nested_router(nested)
+
     def include_router(self, router):
         """
         The method to include the routes from another router
 
         :param router Robyn: the router object to include the routes from
         """
+        if isinstance(self, SubRouter):
+            router.prefix = f"{self.prefix}{router.prefix}"
+            self.sub_router.append(router)
+        if isinstance(self, Robyn):
+            for sub_router in router.sub_router:
+                self.handle_nested_router(sub_router)
+
         self.router.routes.extend(router.router.routes)
         self.middleware_router.global_middlewares.extend(router.middleware_router.global_middlewares)
         self.middleware_router.route_middlewares.extend(router.middleware_router.route_middlewares)
@@ -427,33 +439,34 @@ class SubRouter(Robyn):
     def __init__(self, file_object: str, prefix: str = "", config: Config = Config()) -> None:
         super().__init__(file_object, config)
         self.prefix = prefix
+        self.sub_router = []
 
     def __add_prefix(self, endpoint: str):
         return f"{self.prefix}{endpoint}"
 
-    def get(self, endpoint: str, const: bool = False):
-        return super().get(self.__add_prefix(endpoint), const)
+    def get(self, endpoint: str, const: bool = False, auth_required: bool = False):
+        return super().get(self.__add_prefix(endpoint), const, auth_required)
 
-    def post(self, endpoint: str):
-        return super().post(self.__add_prefix(endpoint))
+    def post(self, endpoint: str, auth_required: bool = False):
+        return super().post(self.__add_prefix(endpoint), auth_required)
 
-    def put(self, endpoint: str):
-        return super().put(self.__add_prefix(endpoint))
+    def put(self, endpoint: str, auth_required: bool = False):
+        return super().put(self.__add_prefix(endpoint), auth_required)
 
-    def delete(self, endpoint: str):
-        return super().delete(self.__add_prefix(endpoint))
+    def delete(self, endpoint: str, auth_required: bool = False):
+        return super().delete(self.__add_prefix(endpoint), auth_required)
 
-    def patch(self, endpoint: str):
-        return super().patch(self.__add_prefix(endpoint))
+    def patch(self, endpoint: str, auth_required: bool = False):
+        return super().patch(self.__add_prefix(endpoint), auth_required)
 
-    def head(self, endpoint: str):
-        return super().head(self.__add_prefix(endpoint))
+    def head(self, endpoint: str, auth_required: bool = False):
+        return super().head(self.__add_prefix(endpoint), auth_required)
 
-    def trace(self, endpoint: str):
-        return super().trace(self.__add_prefix(endpoint))
+    def trace(self, endpoint: str, auth_required: bool = False):
+        return super().trace(self.__add_prefix(endpoint), auth_required)
 
-    def options(self, endpoint: str):
-        return super().options(self.__add_prefix(endpoint))
+    def options(self, endpoint: str, auth_required: bool = False):
+        return super().options(self.__add_prefix(endpoint), auth_required)
 
 
 def ALLOW_CORS(app: Robyn, origins: List[str]):
