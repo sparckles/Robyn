@@ -395,23 +395,32 @@ class Robyn:
 
         return inner
 
-    def handle_nested_router(self, router):
-        self.include_router(router)
+    def handle_nested_router(self, router, added_routes):
+        self.include_router(router, added_routes)
         for nested in router.sub_router:
-            self.handle_nested_router(nested)
+            for route_type, endpoint, handler, const, auth_required in nested.temp_routes:
+                full_endpoint = f"{nested.prefix}{endpoint}"
+                route_key = full_endpoint
+                if route_key not in added_routes:
+                    added_routes.add(route_key)
+                    self.add_route(route_type, full_endpoint, handler, const, auth_required)
+            self.handle_nested_router(nested, added_routes)
 
-    def include_router(self, router):
+    def include_router(self, router, added_routes=None):
         """
         The method to include the routes from another router
 
         :param router Robyn: the router object to include the routes from
         """
+        if added_routes is None:
+            added_routes = set()
+
         if isinstance(self, SubRouter):
             router.prefix = f"{self.prefix}{router.prefix}"
             self.sub_router.append(router)
         if isinstance(self, Robyn):
             for sub_router in router.sub_router:
-                self.handle_nested_router(sub_router)
+                self.handle_nested_router(sub_router, added_routes)
 
         self.router.routes.extend(router.router.routes)
         self.middleware_router.global_middlewares.extend(router.middleware_router.global_middlewares)
@@ -440,33 +449,58 @@ class SubRouter(Robyn):
         super().__init__(file_object, config)
         self.prefix = prefix
         self.sub_router = []
+        self.temp_routes = []  # Temporary storage for routes
 
-    def __add_prefix(self, endpoint: str):
-        return f"{self.prefix}{endpoint}"
+    def add_temp_route(self, route_type: HttpMethod, endpoint: str, handler: Callable, const: bool, auth_required: bool):
+        self.temp_routes.append((route_type, endpoint, handler, const, auth_required))
 
     def get(self, endpoint: str, const: bool = False, auth_required: bool = False):
-        return super().get(self.__add_prefix(endpoint), const, auth_required)
+        def inner(handler):
+            self.add_temp_route(HttpMethod.GET, endpoint, handler, const, auth_required)
+
+        return inner
 
     def post(self, endpoint: str, auth_required: bool = False):
-        return super().post(self.__add_prefix(endpoint), auth_required)
+        def inner(handler):
+            self.add_temp_route(HttpMethod.POST, endpoint, handler, False, auth_required)
+
+        return inner
 
     def put(self, endpoint: str, auth_required: bool = False):
-        return super().put(self.__add_prefix(endpoint), auth_required)
+        def inner(handler):
+            self.add_temp_route(HttpMethod.PUT, endpoint, handler, False, auth_required)
+
+        return inner
 
     def delete(self, endpoint: str, auth_required: bool = False):
-        return super().delete(self.__add_prefix(endpoint), auth_required)
+        def inner(handler):
+            self.add_temp_route(HttpMethod.DELETE, endpoint, handler, False, auth_required)
+
+        return inner
 
     def patch(self, endpoint: str, auth_required: bool = False):
-        return super().patch(self.__add_prefix(endpoint), auth_required)
+        def inner(handler):
+            self.add_temp_route(HttpMethod.PATCH, endpoint, handler, False, auth_required)
+
+        return inner
 
     def head(self, endpoint: str, auth_required: bool = False):
-        return super().head(self.__add_prefix(endpoint), auth_required)
+        def inner(handler):
+            self.add_temp_route(HttpMethod.HEAD, endpoint, handler, False, auth_required)
+
+        return inner
 
     def trace(self, endpoint: str, auth_required: bool = False):
-        return super().trace(self.__add_prefix(endpoint), auth_required)
+        def inner(handler):
+            self.add_temp_route(HttpMethod.TRACE, endpoint, handler, False, auth_required)
+
+        return inner
 
     def options(self, endpoint: str, auth_required: bool = False):
-        return super().options(self.__add_prefix(endpoint), auth_required)
+        def inner(handler):
+            self.add_temp_route(HttpMethod.OPTIONS, endpoint, handler, False, auth_required)
+
+        return inner
 
 
 def ALLOW_CORS(app: Robyn, origins: List[str]):
