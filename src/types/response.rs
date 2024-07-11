@@ -1,15 +1,15 @@
 use actix_http::{body::BoxBody, StatusCode};
 use actix_web::{HttpRequest, HttpResponse, HttpResponseBuilder, Responder};
 use pyo3::{
-    exceptions::{PyIOError, PyValueError},
+    exceptions::PyIOError,
     prelude::*,
-    types::{PyBytes, PyDict, PyString},
+    types::{PyBytes, PyDict},
 };
 
-use super::headers::Headers;
-
 use crate::io_helpers::{apply_hashmap_headers, read_file};
-use crate::types::{check_description_type, get_description_from_pyobject};
+use crate::types::{check_body_type, check_description_type, get_description_from_pyobject};
+
+use super::headers::Headers;
 
 #[derive(Debug, Clone, FromPyObject)]
 pub struct Response {
@@ -107,13 +107,7 @@ impl PyResponse {
         headers: &PyAny,
         description: Py<PyAny>,
     ) -> PyResult<Self> {
-        if description.downcast::<PyString>(py).is_err()
-            && description.downcast::<PyBytes>(py).is_err()
-        {
-            return Err(PyValueError::new_err(
-                "Could not convert specified body to bytes",
-            ));
-        };
+        check_body_type(py, &description)?;
 
         let headers_output: Py<Headers> = if let Ok(headers_dict) = headers.downcast::<PyDict>() {
             // Here you'd have logic to create a Headers instance from a PyDict
