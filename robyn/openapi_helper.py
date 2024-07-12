@@ -22,4 +22,9 @@ def get_openapi_obj(path: str, summary: str, tags: list):
         "summary": summary,
         "tags": tags,
         "parameters": parameters,
+        "responses": {
+            "200": {
+                "description": "Successful Response",
+            }
+        },
     }
