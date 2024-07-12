@@ -395,17 +395,6 @@ class Robyn:
 
         return inner
 
-    def handle_nested_router(self, router, added_routes):
-        self.include_router(router, added_routes)
-        for nested in router.sub_router:
-            for route_type, endpoint, handler, const, auth_required in nested.temp_routes:
-                full_endpoint = f"{nested.prefix}{endpoint}"
-                route_key = full_endpoint
-                if route_key not in added_routes:
-                    added_routes.add(route_key)
-                    self.add_route(route_type, full_endpoint, handler, const, auth_required)
-            self.handle_nested_router(nested, added_routes)
-
     def include_router(self, router, added_routes=None):
         """
         The method to include the routes from another router
@@ -414,13 +403,14 @@ class Robyn:
         """
         if added_routes is None:
             added_routes = set()
-
-        if isinstance(self, SubRouter):
-            router.prefix = f"{self.prefix}{router.prefix}"
-            self.sub_router.append(router)
-        if isinstance(self, Robyn):
-            for sub_router in router.sub_router:
-                self.handle_nested_router(sub_router, added_routes)
+        for route_type, endpoint, handler, const, auth_required in router.temp_routes:
+            full_endpoint = f"{router.prefix}{endpoint}"
+            route_key = f"{full_endpoint}{route_type}"
+            if route_key not in added_routes:
+                added_routes.add(route_key)
+                self.add_route(route_type, full_endpoint, handler, const, auth_required)
+        for sub_router in router.sub_router:
+            self.include_router(sub_router, added_routes)
 
         self.router.routes.extend(router.router.routes)
         self.middleware_router.global_middlewares.extend(router.middleware_router.global_middlewares)
@@ -453,6 +443,17 @@ class SubRouter(Robyn):
 
     def add_temp_route(self, route_type: HttpMethod, endpoint: str, handler: Callable, const: bool, auth_required: bool):
         self.temp_routes.append((route_type, endpoint, handler, const, auth_required))
+
+    def include_router(self, router, added_routes=None):
+        """
+        The method to include the routes from another router
+
+        :param router Robyn: the router object to include the routes from
+        """
+        router.prefix = f"{self.prefix}{router.prefix}"
+        self.sub_router.append(router)
+        for sub_router in router.sub_router:
+            self.include_router(sub_router)
 
     def get(self, endpoint: str, const: bool = False, auth_required: bool = False):
         def inner(handler):

@@ -19,7 +19,6 @@ from robyn.templating import JinjaTemplate
 
 from integration_tests.views import SyncView, AsyncView
 from integration_tests.subroutes import sub_router, di_subrouter
-from integration_tests.subroutes.nested_router import main_nest
 
 app = Robyn(__file__)
 websocket = WebSocket(app, "/web_socket")
@@ -844,7 +843,6 @@ def main():
     app.add_view("/async/view", AsyncView)
     app.include_router(sub_router)
     app.include_router(di_subrouter)
-    app.include_router(main_nest)
 
     class BasicAuthHandler(AuthenticationHandler):
         def authenticate(self, request: Request) -> Optional[Identity]:
