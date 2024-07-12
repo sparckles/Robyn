@@ -18,5 +18,10 @@ async def get_user(name: str):
     return {"message": f"User {name}"}
 
 
+@app.delete("/users/{name}", openapi_summary="Delete User by ID", openapi_tags=["Users"])
+async def delete_user(name: str):
+    return f"Successfully deleted {name}"
+
+
 if __name__ == "__main__":
     app.start()

@@ -323,18 +323,23 @@ class Robyn:
         """
 
         def inner(handler):
+            openapi_obj = get_openapi_obj(endpoint, openapi_summary, openapi_tags)
+
             if endpoint not in self.openapi_schema["paths"]:
-                openapi_obj = get_openapi_obj(endpoint, HttpMethod.GET, openapi_summary, openapi_tags)
-
                 self.openapi_schema["paths"][endpoint] = {}
-
-                self.openapi_schema["paths"][endpoint]["get"] = openapi_obj
+            self.openapi_schema["paths"][endpoint]["get"] = openapi_obj
 
             return self.add_route(HttpMethod.GET, endpoint, handler, const, auth_required)
 
         return inner
 
-    def post(self, endpoint: str, auth_required: bool = False):
+    def post(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        openapi_summary: str = "",
+        openapi_tags: list = ["default"],
+    ):
         """
         The @app.post decorator to add a route with POST method
 
@@ -342,11 +347,23 @@ class Robyn:
         """
 
         def inner(handler):
+            openapi_obj = get_openapi_obj(endpoint, openapi_summary, openapi_tags)
+
+            if endpoint not in self.openapi_schema["paths"]:
+                self.openapi_schema["paths"][endpoint] = {}
+            self.openapi_schema["paths"][endpoint]["post"] = openapi_obj
+
             return self.add_route(HttpMethod.POST, endpoint, handler, auth_required=auth_required)
 
         return inner
 
-    def put(self, endpoint: str, auth_required: bool = False):
+    def put(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        openapi_summary: str = "",
+        openapi_tags: list = ["default"],
+    ):
         """
         The @app.put decorator to add a get route with PUT method
 
@@ -354,11 +371,23 @@ class Robyn:
         """
 
         def inner(handler):
+            openapi_obj = get_openapi_obj(endpoint, openapi_summary, openapi_tags)
+
+            if endpoint not in self.openapi_schema["paths"]:
+                self.openapi_schema["paths"][endpoint] = {}
+            self.openapi_schema["paths"][endpoint]["put"] = openapi_obj
+
             return self.add_route(HttpMethod.PUT, endpoint, handler, auth_required=auth_required)
 
         return inner
 
-    def delete(self, endpoint: str, auth_required: bool = False):
+    def delete(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        openapi_summary: str = "",
+        openapi_tags: list = ["default"],
+    ):
         """
         The @app.delete decorator to add a route with DELETE method
 
@@ -366,11 +395,23 @@ class Robyn:
         """
 
         def inner(handler):
+            openapi_obj = get_openapi_obj(endpoint, openapi_summary, openapi_tags)
+
+            if endpoint not in self.openapi_schema["paths"]:
+                self.openapi_schema["paths"][endpoint] = {}
+            self.openapi_schema["paths"][endpoint]["delete"] = openapi_obj
+
             return self.add_route(HttpMethod.DELETE, endpoint, handler, auth_required=auth_required)
 
         return inner
 
-    def patch(self, endpoint: str, auth_required: bool = False):
+    def patch(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        openapi_summary: str = "",
+        openapi_tags: list = ["default"],
+    ):
         """
         The @app.patch decorator to add a route with PATCH method
 
@@ -378,11 +419,23 @@ class Robyn:
         """
 
         def inner(handler):
+            openapi_obj = get_openapi_obj(endpoint, openapi_summary, openapi_tags)
+
+            if endpoint not in self.openapi_schema["paths"]:
+                self.openapi_schema["paths"][endpoint] = {}
+            self.openapi_schema["paths"][endpoint]["patch"] = openapi_obj
+
             return self.add_route(HttpMethod.PATCH, endpoint, handler, auth_required=auth_required)
 
         return inner
 
-    def head(self, endpoint: str, auth_required: bool = False):
+    def head(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        openapi_summary: str = "",
+        openapi_tags: list = ["default"],
+    ):
         """
         The @app.head decorator to add a route with HEAD method
 
@@ -390,11 +443,23 @@ class Robyn:
         """
 
         def inner(handler):
+            openapi_obj = get_openapi_obj(endpoint, openapi_summary, openapi_tags)
+
+            if endpoint not in self.openapi_schema["paths"]:
+                self.openapi_schema["paths"][endpoint] = {}
+            self.openapi_schema["paths"][endpoint]["head"] = openapi_obj
+
             return self.add_route(HttpMethod.HEAD, endpoint, handler, auth_required=auth_required)
 
         return inner
 
-    def options(self, endpoint: str, auth_required: bool = False):
+    def options(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        openapi_summary: str = "",
+        openapi_tags: list = ["default"],
+    ):
         """
         The @app.options decorator to add a route with OPTIONS method
 
@@ -402,11 +467,23 @@ class Robyn:
         """
 
         def inner(handler):
+            openapi_obj = get_openapi_obj(endpoint, openapi_summary, openapi_tags)
+
+            if endpoint not in self.openapi_schema["paths"]:
+                self.openapi_schema["paths"][endpoint] = {}
+            self.openapi_schema["paths"][endpoint]["options"] = openapi_obj
+
             return self.add_route(HttpMethod.OPTIONS, endpoint, handler, auth_required=auth_required)
 
         return inner
 
-    def connect(self, endpoint: str, auth_required: bool = False):
+    def connect(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        openapi_summary: str = "",
+        openapi_tags: list = ["default"],
+    ):
         """
         The @app.connect decorator to add a route with CONNECT method
 
@@ -414,11 +491,23 @@ class Robyn:
         """
 
         def inner(handler):
+            openapi_obj = get_openapi_obj(endpoint, openapi_summary, openapi_tags)
+
+            if endpoint not in self.openapi_schema["paths"]:
+                self.openapi_schema["paths"][endpoint] = {}
+            self.openapi_schema["paths"][endpoint]["connect"] = openapi_obj
+
             return self.add_route(HttpMethod.CONNECT, endpoint, handler, auth_required=auth_required)
 
         return inner
 
-    def trace(self, endpoint: str, auth_required: bool = False):
+    def trace(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        openapi_summary: str = "",
+        openapi_tags: list = ["default"],
+    ):
         """
         The @app.trace decorator to add a route with TRACE method
 
@@ -426,6 +515,12 @@ class Robyn:
         """
 
         def inner(handler):
+            openapi_obj = get_openapi_obj(endpoint, openapi_summary, openapi_tags)
+
+            if endpoint not in self.openapi_schema["paths"]:
+                self.openapi_schema["paths"][endpoint] = {}
+            self.openapi_schema["paths"][endpoint]["trace"] = openapi_obj
+
             return self.add_route(HttpMethod.TRACE, endpoint, handler, auth_required=auth_required)
 
         return inner

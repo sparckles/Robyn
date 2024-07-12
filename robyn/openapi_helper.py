@@ -5,7 +5,7 @@ def extract_path_params(path: str):
     return re.findall(r"{(.*?)}", path)
 
 
-def get_openapi_obj(path: str, _: str, summary: str, tags: list):
+def get_openapi_obj(path: str, summary: str, tags: list):
     path_params = extract_path_params(path)
     parameters = []
     for param in path_params:
