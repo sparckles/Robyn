@@ -68,9 +68,13 @@ impl Response {
 impl ToPyObject for Response {
     fn to_object(&self, py: Python) -> PyObject {
         let headers = self.headers.clone().into_py(py).extract(py).unwrap();
-        let description = String::from_utf8(self.description.to_vec())
-            .unwrap()
-            .to_object(py);
+        // The description should only be either string or binary.
+        // it should raise an exception otherwise
+        let description = match String::from_utf8(self.description.to_vec()) {
+            Ok(description) => description.to_object(py),
+            Err(_) => PyBytes::new(py, &self.description.to_vec()).into(),
+        };
+
         let response = PyResponse {
             status_code: self.status_code,
             response_type: self.response_type.clone(),
