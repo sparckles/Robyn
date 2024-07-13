@@ -2,6 +2,7 @@ import os
 import pathlib
 from collections import defaultdict
 from typing import Optional
+from base64 import b64encode
 
 from robyn import (
     Request,
@@ -13,7 +14,7 @@ from robyn import (
     serve_html,
     WebSocketConnector,
 )
-from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
+from robyn.authentication import AuthenticationHandler, BearerGetter, Identity, BasicGetter
 from robyn.robyn import Headers
 from robyn.templating import JinjaTemplate
 
@@ -793,6 +794,34 @@ async def async_auth(request: Request):
     return "authenticated"
 
 
+@app.get("/sync/auth/basic", auth_required=True, auth_middleware_name="basic")
+def sync_auth_basic(request: Request):
+    assert request.identity is not None
+    assert request.identity.claims == {"key": "value"}
+    return "authenticated"
+
+
+@app.get("/async/auth/basic", auth_required=True, auth_middleware_name="basic")
+async def async_auth_basic(request: Request):
+    assert request.identity is not None
+    assert request.identity.claims == {"key": "value"}
+    return "authenticated"
+
+
+@app.get("/sync/auth/bearer-2", auth_required=True, auth_middleware_name="bearer-2")
+def sync_auth_bearer_2(request: Request):
+    assert request.identity is not None
+    assert request.identity.claims == {"key": "value"}
+    return "authenticated"
+
+
+@app.get("/async/auth/bearer-2", auth_required=True, auth_middleware_name="bearer-2")
+async def async_auth_bearer_2(request: Request):
+    assert request.identity is not None
+    assert request.identity.claims == {"key": "value"}
+    return "authenticated"
+
+
 # ===== Main =====
 
 
@@ -844,7 +873,7 @@ def main():
     app.include_router(sub_router)
     app.include_router(di_subrouter)
 
-    class BasicAuthHandler(AuthenticationHandler):
+    class BearerAuthHandler(AuthenticationHandler):
         def authenticate(self, request: Request) -> Optional[Identity]:
             token = self.token_getter.get_token(request)
             if token is not None:
@@ -854,7 +883,29 @@ def main():
                 return Identity(claims={"key": "value"})
             return None
 
-    app.configure_authentication(BasicAuthHandler(token_getter=BearerGetter()))
+    class OtherBearerAuthHandler(AuthenticationHandler):
+        def authenticate(self, request: Request) -> Optional[Identity]:
+            token = self.token_getter.get_token(request)
+            if token is not None:
+                # Useless but we call the set_token method for testing purposes
+                self.token_getter.set_token(request, token)
+            if token == "valid-2":
+                return Identity(claims={"key": "value"})
+            return None
+
+    class BasicAuthHandler(AuthenticationHandler):
+        def authenticate(self, request: Request) -> Optional[Identity]:
+            username, password = self.token_getter.get_credentials(request)
+            if username is not None and password is not None:
+                # Useless but we call the set_token method for testing purposes
+                self.token_getter.set_token(request, b64encode(f"{username}:{password}".encode()).decode())
+            if username == "valid" and password == "valid":
+                return Identity(claims={"key": "value"})
+            return None
+
+    app.configure_authentication(BasicAuthHandler(token_getter=BasicGetter(), name="basic"))
+    app.configure_authentication(BearerAuthHandler(token_getter=BearerGetter(), name="bearer", default=True))
+    app.configure_authentication(OtherBearerAuthHandler(token_getter=BearerGetter(), name="bearer-2"))
     app.start(port=8080, _check_port=False)
 
 

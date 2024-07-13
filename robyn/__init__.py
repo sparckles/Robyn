@@ -67,7 +67,7 @@ class Robyn:
         self.directories: List[Directory] = []
         self.event_handlers = {}
         self.exception_handler: Optional[Callable] = None
-        self.authentication_handler: Optional[AuthenticationHandler] = None
+        self.authentication_handler: List[AuthenticationHandler] = []
 
     def add_route(
         self,
@@ -76,6 +76,7 @@ class Robyn:
         handler: Callable,
         is_const: bool = False,
         auth_required: bool = False,
+        auth_middleware_name: Optional[str] = None,
     ):
         """
         Connect a URI to a handler
@@ -85,6 +86,7 @@ class Robyn:
         :param handler function: represents the sync or async function passed as a handler for the route
         :param is_const bool: represents if the handler is a const function or not
         :param auth_required bool: represents if the route needs authentication or not
+        :param auth_middleware_name str: represents auth handler name for the route
         """
 
         """ We will add the status code here only
@@ -92,7 +94,7 @@ class Robyn:
         injected_dependencies = self.dependencies.get_dependency_map(self)
 
         if auth_required:
-            self.middleware_router.add_auth_middleware(endpoint)(handler)
+            self.middleware_router.add_auth_middleware(endpoint, auth_middleware_name)(handler)
 
         if isinstance(route_type, str):
             http_methods = {
@@ -198,6 +200,28 @@ class Robyn:
         except Exception:
             raise Exception(f"Invalid port number: {port}")
 
+    def auth_handler_configured(self):
+        handler_count = len(self.authentication_handler)
+        if handler_count == 0:
+            return
+        if handler_count == 1:
+            self.authentication_handler[0].default = True
+            return
+
+        default_handlers = [handler for handler in self.authentication_handler if handler.default]
+
+        if len(default_handlers) == 0:
+            raise ValueError(
+                "Multiple authentication handlers are configured, but none is set as the default. "
+                "Please set one of the authentication handlers as the default."
+            )
+
+        if len(default_handlers) > 1:
+            raise ValueError(
+                "Multiple authentication handlers are configured with more than one default. "
+                "Please ensure only one authentication handler is set as the default."
+            )
+
     def start(self, host: str = "127.0.0.1", port: int = 8080, _check_port: bool = True):
         """
         Starts the server
@@ -210,6 +234,8 @@ class Robyn:
         host = os.getenv("ROBYN_HOST", host)
         port = int(os.getenv("ROBYN_PORT", port))
         open_browser = bool(os.getenv("ROBYN_BROWSER_OPEN", self.config.open_browser))
+
+        self.auth_handler_configured()
 
         if _check_port:
             while self.is_port_in_use(port):
@@ -287,7 +313,7 @@ class Robyn:
 
         return inner
 
-    def get(self, endpoint: str, const: bool = False, auth_required: bool = False):
+    def get(self, endpoint: str, const: bool = False, auth_required: bool = False, auth_middleware_name: Optional[str] = None):
         """
         The @app.get decorator to add a route with the GET method
 
@@ -295,11 +321,11 @@ class Robyn:
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.GET, endpoint, handler, const, auth_required)
+            return self.add_route(HttpMethod.GET, endpoint, handler, const, auth_required, auth_middleware_name=auth_middleware_name)
 
         return inner
 
-    def post(self, endpoint: str, auth_required: bool = False):
+    def post(self, endpoint: str, auth_required: bool = False, auth_middleware_name: Optional[str] = None):
         """
         The @app.post decorator to add a route with POST method
 
@@ -307,11 +333,11 @@ class Robyn:
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.POST, endpoint, handler, auth_required=auth_required)
+            return self.add_route(HttpMethod.POST, endpoint, handler, auth_required=auth_required, auth_middleware_name=auth_middleware_name)
 
         return inner
 
-    def put(self, endpoint: str, auth_required: bool = False):
+    def put(self, endpoint: str, auth_required: bool = False, auth_middleware_name: Optional[str] = None):
         """
         The @app.put decorator to add a get route with PUT method
 
@@ -319,11 +345,11 @@ class Robyn:
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.PUT, endpoint, handler, auth_required=auth_required)
+            return self.add_route(HttpMethod.PUT, endpoint, handler, auth_required=auth_required, auth_middleware_name=auth_middleware_name)
 
         return inner
 
-    def delete(self, endpoint: str, auth_required: bool = False):
+    def delete(self, endpoint: str, auth_required: bool = False, auth_middleware_name: Optional[str] = None):
         """
         The @app.delete decorator to add a route with DELETE method
 
@@ -331,11 +357,11 @@ class Robyn:
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.DELETE, endpoint, handler, auth_required=auth_required)
+            return self.add_route(HttpMethod.DELETE, endpoint, handler, auth_required=auth_required, auth_middleware_name=auth_middleware_name)
 
         return inner
 
-    def patch(self, endpoint: str, auth_required: bool = False):
+    def patch(self, endpoint: str, auth_required: bool = False, auth_middleware_name: Optional[str] = None):
         """
         The @app.patch decorator to add a route with PATCH method
 
@@ -343,11 +369,11 @@ class Robyn:
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.PATCH, endpoint, handler, auth_required=auth_required)
+            return self.add_route(HttpMethod.PATCH, endpoint, handler, auth_required=auth_required, auth_middleware_name=auth_middleware_name)
 
         return inner
 
-    def head(self, endpoint: str, auth_required: bool = False):
+    def head(self, endpoint: str, auth_required: bool = False, auth_middleware_name: Optional[str] = None):
         """
         The @app.head decorator to add a route with HEAD method
 
@@ -355,11 +381,11 @@ class Robyn:
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.HEAD, endpoint, handler, auth_required=auth_required)
+            return self.add_route(HttpMethod.HEAD, endpoint, handler, auth_required=auth_required, auth_middleware_name=auth_middleware_name)
 
         return inner
 
-    def options(self, endpoint: str, auth_required: bool = False):
+    def options(self, endpoint: str, auth_required: bool = False, auth_middleware_name: Optional[str] = None):
         """
         The @app.options decorator to add a route with OPTIONS method
 
@@ -367,11 +393,11 @@ class Robyn:
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.OPTIONS, endpoint, handler, auth_required=auth_required)
+            return self.add_route(HttpMethod.OPTIONS, endpoint, handler, auth_required=auth_required, auth_middleware_name=auth_middleware_name)
 
         return inner
 
-    def connect(self, endpoint: str, auth_required: bool = False):
+    def connect(self, endpoint: str, auth_required: bool = False, auth_middleware_name: Optional[str] = None):
         """
         The @app.connect decorator to add a route with CONNECT method
 
@@ -379,11 +405,11 @@ class Robyn:
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.CONNECT, endpoint, handler, auth_required=auth_required)
+            return self.add_route(HttpMethod.CONNECT, endpoint, handler, auth_required=auth_required, auth_middleware_name=auth_middleware_name)
 
         return inner
 
-    def trace(self, endpoint: str, auth_required: bool = False):
+    def trace(self, endpoint: str, auth_required: bool = False, auth_middleware_name: Optional[str] = None):
         """
         The @app.trace decorator to add a route with TRACE method
 
@@ -391,26 +417,21 @@ class Robyn:
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.TRACE, endpoint, handler, auth_required=auth_required)
+            return self.add_route(HttpMethod.TRACE, endpoint, handler, auth_required=auth_required, auth_middleware_name=auth_middleware_name)
 
         return inner
 
-    def include_router(self, router, added_routes=None):
+    def include_router(self, router):
         """
         The method to include the routes from another router
 
         :param router Robyn: the router object to include the routes from
         """
-        if added_routes is None:
-            added_routes = set()
-        for route_type, endpoint, handler, const, auth_required in router.temp_routes:
+        for route_type, endpoint, handler, const, auth_required, auth_middleware_name in router.temp_routes:
             full_endpoint = f"{router.prefix}{endpoint}"
-            route_key = f"{full_endpoint}{route_type}"
-            if route_key not in added_routes:
-                added_routes.add(route_key)
-                self.add_route(route_type, full_endpoint, handler, const, auth_required)
+            self.add_route(route_type, full_endpoint, handler, const, auth_required, auth_middleware_name)
         for sub_router in router.sub_router:
-            self.include_router(sub_router, added_routes)
+            self.include_router(sub_router)
 
         self.router.routes.extend(router.router.routes)
         self.middleware_router.global_middlewares.extend(router.middleware_router.global_middlewares)
@@ -430,7 +451,7 @@ class Robyn:
 
         :param authentication_handler: the instance of a class inheriting the AuthenticationHandler base class
         """
-        self.authentication_handler = authentication_handler
+        self.authentication_handler.append(authentication_handler)
         self.middleware_router.set_authentication_handler(authentication_handler)
 
 
@@ -441,65 +462,76 @@ class SubRouter(Robyn):
         self.sub_router = []
         self.temp_routes = []  # Temporary storage for routes
 
-    def add_temp_route(self, route_type: HttpMethod, endpoint: str, handler: Callable, const: bool, auth_required: bool):
-        self.temp_routes.append((route_type, endpoint, handler, const, auth_required))
+    def add_temp_route(
+        self, route_type: HttpMethod, endpoint: str, handler: Callable, const: bool, auth_required: bool, auth_middleware_name: Optional[str] = None
+    ):
+        """
+        Add all decoration route to temporary routes before adding when main Robyn call include router.
+        """
+        self.temp_routes.append((route_type, endpoint, handler, const, auth_required, auth_middleware_name))
 
-    def include_router(self, router, added_routes=None):
+    def include_router(self, router):
         """
         The method to include the routes from another router
 
         :param router Robyn: the router object to include the routes from
         """
-        router.prefix = f"{self.prefix}{router.prefix}"
+        self.__add_prefix(router)
         self.sub_router.append(router)
+
+    def __add_prefix(self, router):
+        """
+        Apply nested prefix to all sub router
+        """
+        router.prefix = f"{self.prefix}{router.prefix}"
         for sub_router in router.sub_router:
-            self.include_router(sub_router)
+            self.__add_prefix(sub_router)
 
-    def get(self, endpoint: str, const: bool = False, auth_required: bool = False):
+    def get(self, endpoint: str, const: bool = False, auth_required: bool = False, auth_middleware_name: Optional[str] = None):
         def inner(handler):
-            self.add_temp_route(HttpMethod.GET, endpoint, handler, const, auth_required)
+            self.add_temp_route(HttpMethod.GET, endpoint, handler, const, auth_required, auth_middleware_name)
 
         return inner
 
-    def post(self, endpoint: str, auth_required: bool = False):
+    def post(self, endpoint: str, auth_required: bool = False, auth_middleware_name: Optional[str] = None):
         def inner(handler):
-            self.add_temp_route(HttpMethod.POST, endpoint, handler, False, auth_required)
+            self.add_temp_route(HttpMethod.POST, endpoint, handler, False, auth_required, auth_middleware_name)
 
         return inner
 
-    def put(self, endpoint: str, auth_required: bool = False):
+    def put(self, endpoint: str, auth_required: bool = False, auth_middleware_name: Optional[str] = None):
         def inner(handler):
-            self.add_temp_route(HttpMethod.PUT, endpoint, handler, False, auth_required)
+            self.add_temp_route(HttpMethod.PUT, endpoint, handler, False, auth_required, auth_middleware_name)
 
         return inner
 
-    def delete(self, endpoint: str, auth_required: bool = False):
+    def delete(self, endpoint: str, auth_required: bool = False, auth_middleware_name: Optional[str] = None):
         def inner(handler):
-            self.add_temp_route(HttpMethod.DELETE, endpoint, handler, False, auth_required)
+            self.add_temp_route(HttpMethod.DELETE, endpoint, handler, False, auth_required, auth_middleware_name)
 
         return inner
 
-    def patch(self, endpoint: str, auth_required: bool = False):
+    def patch(self, endpoint: str, auth_required: bool = False, auth_middleware_name: Optional[str] = None):
         def inner(handler):
-            self.add_temp_route(HttpMethod.PATCH, endpoint, handler, False, auth_required)
+            self.add_temp_route(HttpMethod.PATCH, endpoint, handler, False, auth_required, auth_middleware_name)
 
         return inner
 
-    def head(self, endpoint: str, auth_required: bool = False):
+    def head(self, endpoint: str, auth_required: bool = False, auth_middleware_name: Optional[str] = None):
         def inner(handler):
-            self.add_temp_route(HttpMethod.HEAD, endpoint, handler, False, auth_required)
+            self.add_temp_route(HttpMethod.HEAD, endpoint, handler, False, auth_required, auth_middleware_name)
 
         return inner
 
-    def trace(self, endpoint: str, auth_required: bool = False):
+    def trace(self, endpoint: str, auth_required: bool = False, auth_middleware_name: Optional[str] = None):
         def inner(handler):
-            self.add_temp_route(HttpMethod.TRACE, endpoint, handler, False, auth_required)
+            self.add_temp_route(HttpMethod.TRACE, endpoint, handler, False, auth_required, auth_middleware_name)
 
         return inner
 
-    def options(self, endpoint: str, auth_required: bool = False):
+    def options(self, endpoint: str, auth_required: bool = False, auth_middleware_name: Optional[str] = None):
         def inner(handler):
-            self.add_temp_route(HttpMethod.OPTIONS, endpoint, handler, False, auth_required)
+            self.add_temp_route(HttpMethod.OPTIONS, endpoint, handler, False, auth_required, auth_middleware_name)
 
         return inner
 
