@@ -40,3 +40,11 @@ def nested_route_example_3(request: Request):
     Example route inside the nested router.
     """
     return "This is a route inside nested_router_3."
+
+
+@nested_router_2.get("/nested-route-2", auth_required=True)
+def nested_route_example_2(request: Request):
+    """
+    Example route inside the nested router.
+    """
+    return "This is a route inside nested_router_2."

@@ -43,6 +43,41 @@ def test_invalid_authentication_no_token(session, function_type: str):
 
 
 @pytest.mark.benchmark
+def test_nested_router_valid_authentication(session):
+    r = get("/di_subrouter/main-nest/nested-1/nested-2/nested-route-2", headers={"Authorization": "Bearer valid"})
+    assert r.text == "This is a route inside nested_router_2."
+
+
+@pytest.mark.benchmark
+def test_nested_router_invalid_authentication_token(session):
+    r = get(
+        "/di_subrouter/main-nest/nested-1/nested-2/nested-route-2",
+        headers={"Authorization": "Bearer invalid"},
+        should_check_response=False,
+    )
+    assert r.status_code == 401
+    assert r.headers.get("WWW-Authenticate") == "BearerGetter"
+
+
+@pytest.mark.benchmark
+def test_nested_router_invalid_authentication_header(session):
+    r = get(
+        "/di_subrouter/main-nest/nested-1/nested-2/nested-route-2",
+        headers={"Authorization": "Bear valid"},
+        should_check_response=False,
+    )
+    assert r.status_code == 401
+    assert r.headers.get("WWW-Authenticate") == "BearerGetter"
+
+
+@pytest.mark.benchmark
+def test_nested_router_invalid_authentication_no_token(session):
+    r = get("/di_subrouter/main-nest/nested-1/nested-2/nested-route-2", should_check_response=False)
+    assert r.status_code == 401
+    assert r.headers.get("WWW-Authenticate") == "BearerGetter"
+
+
+@pytest.mark.benchmark
 @pytest.mark.parametrize("function_type", ["sync", "async"])
 def test_valid_authentication_bearer_2(session, function_type: str):
     r = get(f"/{function_type}/auth/bearer-2", headers={"Authorization": "Bearer valid-2"})
