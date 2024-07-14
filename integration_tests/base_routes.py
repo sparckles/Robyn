@@ -830,6 +830,85 @@ def sync_router_di(request, router_dependencies):
     return router_dependencies["ROUTER_DEPENDENCY"]
 
 
+# ===== Split request body =====
+
+
+@app.get("/sync/split_request/query_params")
+def sync_split_request_basic(request: Request, query_params):
+    return jsonify(query_params.to_dict())
+
+
+@app.get("/async/split_request/query_params")
+async def async_split_request_basic(request: Request, query_params):
+    return jsonify(query_params.to_dict())
+
+
+@app.get("/sync/split_request/headers")
+def sync_split_request_headers(request: Request, headers):
+    return headers.get("server")
+
+
+@app.get("/async/split_request/headers")
+async def async_split_request_headers(request: Request, headers):
+    return headers.get("server")
+
+
+@app.get("/sync/split_request/path_params/:id")
+def sync_split_request_path_params(request: Request, path_params):
+    return path_params
+
+
+@app.get("/async/split_request/path_params/:id")
+async def async_split_request_path_params(request: Request, path_params):
+    return path_params
+
+
+@app.get("/sync/split_request/method")
+def sync_split_request_method(request: Request, method):
+    return method
+
+
+@app.get("/async/split_request/method")
+async def async_split_request_method(request: Request, method):
+    return method
+
+
+@app.post("/sync/split_request/body")
+def sync_split_request_body(request: Request, body):
+    return body
+
+
+@app.post("/async/split_request/body")
+async def async_split_request_body(request: Request, body):
+    return body
+
+
+@app.post("/sync/split_request/combined")
+def sync_split_request_combined(request: Request, body, query_params, method, url, headers):
+    return jsonify(
+        {
+            "body": body,
+            "query_params": query_params.to_dict(),
+            "method": method,
+            "url": url.path,
+            "headers": headers.get("server"),
+        }
+    )
+
+
+@app.post("/async/split_request/combined")
+async def async_split_request_combined(request: Request, body, query_params, method, url, headers):
+    return jsonify(
+        {
+            "body": body,
+            "query_params": query_params.to_dict(),
+            "method": method,
+            "url": url.path,
+            "headers": headers.get("server"),
+        }
+    )
+
+
 def main():
     app.set_response_header("server", "robyn")
     app.add_directory(
