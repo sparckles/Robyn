@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import socket
+import sys
 from typing import Callable, List, Optional, Tuple, Union
 
 import multiprocess as mp
@@ -48,9 +49,12 @@ class Robyn:
         self.config = config
         self.dependencies = dependencies
 
+        if bool(os.environ.get("ROBYN_CLI", False)) == False:
+            # the env variables are already set when are running through the cli
+            load_vars(project_root=directory_path)
+
         self._handle_dev_mode()
 
-        load_vars(project_root=directory_path)
         logging.basicConfig(level=self.config.log_level)
 
         if self.config.log_level.lower() != "warn":
@@ -70,17 +74,16 @@ class Robyn:
         self.authentication_handler: Optional[AuthenticationHandler] = None
 
     def _handle_dev_mode(self):
-        cli_dev_mode = self.config.dev
-        env_dev_mode = os.getenv("ROBYN_DEV_MODE", "False").lower() == "true"
-        # if we have reached here and we have ROBYN_DEV_MODE set to True
-        # we understand that we are operating in CLI mode and not through the ROBYN MODULE
+        cli_dev_mode = self.config.dev  # --dev
+        env_dev_mode = os.getenv("ROBYN_DEV_MODE", "False").lower() == "true"  # ROBYN_DEV_MODE=True
+        is_robyn = os.getenv("ROBYN_CLI", False)
 
-        if cli_dev_mode:
-            raise SystemExit("Dev mode is not supported in the python wrapper. Please use the CLI. e.g. python3 -m robyn app.py --dev")
+        if cli_dev_mode and not is_robyn:
+            raise SystemExit("Dev mode is not supported in the python wrapper. Please use the Robyn CLI. e.g. python3 -m robyn app.py --dev")
 
-        if env_dev_mode:
+        if env_dev_mode and not is_robyn:
             logger.error("Ignoring ROBYN_DEV_MODE environment variable. Dev mode is not supported in the python wrapper.")
-            logger.warn("Starting app normally...")
+            raise SystemExit("Dev mode is not supported in the python wrapper. Please use the Robyn CLI. e.g. python3 -m robyn app.py")
 
     def add_route(
         self,

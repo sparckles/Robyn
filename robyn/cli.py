@@ -110,6 +110,7 @@ def run():
         config.file_path = f"{os.getcwd()}/{__name__}"
 
     load_vars(project_root=os.path.dirname(os.path.abspath(config.file_path)))
+    os.environ["ROBYN_CLI"] = "True"
 
     if config.dev is None:
         config.dev = os.getenv("ROBYN_DEV_MODE", False) == "True"
