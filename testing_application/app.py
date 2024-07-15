@@ -1,11 +1,18 @@
 from robyn import Robyn
 
-schema = {
-    "openapi": "3.0.0",
-    "info": {"title": "Sample API", "version": "1.0.0"},
-}
-
-app = Robyn(__file__, schema)
+app = Robyn(
+    file_object=__file__,
+    openapi_title="Sample Pet Store App",
+    openapi_summary=" A pet store manager.",
+    openapi_description=" This is a sample server for a pet store.",
+    openapi_terms_of_service=" https://example.com/terms/",
+    openapi_version=" 1.0.1",
+    openapi_contact_name="API Support",
+    openapi_contact_url="https://www.example.com/support",
+    openapi_contact_email="support@example.com",
+    openapi_license_name="Apache 2.0",
+    openapi_license_url="https://www.apache.org/licenses/LICENSE-2.0.html",
+)
 
 
 @app.get("/")
