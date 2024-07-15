@@ -19,10 +19,8 @@ from robyn.logger import Colors, logger
 from robyn.processpool import run_processes
 from robyn.reloader import compile_rust_files
 from robyn.responses import html, serve_file, serve_html
-from robyn.robyn import (FunctionInfo, Headers, HttpMethod, Request, Response,
-                         WebSocketConnector, get_version)
-from robyn.router import (MiddlewareRouter, MiddlewareType, Router,
-                          WebSocketRouter)
+from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, WebSocketConnector, get_version
+from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory
 from robyn.ws import WebSocket
 
@@ -51,7 +49,6 @@ class Robyn:
         self.config = config
         self.dependencies = dependencies
 
-
         if bool(os.environ.get("ROBYN_CLI", False)) == False:
             # the env variables are already set when are running through the cli
             load_vars(project_root=directory_path)
@@ -77,8 +74,8 @@ class Robyn:
         self.authentication_handler: Optional[AuthenticationHandler] = None
 
     def _handle_dev_mode(self):
-        cli_dev_mode = self.config.dev # --dev 
-        env_dev_mode = os.getenv("ROBYN_DEV_MODE", "False").lower() == "true" # ROBYN_DEV_MODE=True
+        cli_dev_mode = self.config.dev  # --dev
+        env_dev_mode = os.getenv("ROBYN_DEV_MODE", "False").lower() == "true"  # ROBYN_DEV_MODE=True
         is_robyn = os.getenv("ROBYN_CLI", False)
 
         if cli_dev_mode and not is_robyn:
