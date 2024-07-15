@@ -106,6 +106,7 @@ class EventHandler(FileSystemEventHandler):
 
     def reload(self):
         self.stop_server()
+        print("Reloading the server")
 
         new_env = os.environ.copy()
         new_env["IS_RELOADER_RUNNING"] = "True"  # This is used to check if a reloader is already running
@@ -116,8 +117,9 @@ class EventHandler(FileSystemEventHandler):
         # child processes should not be in dev mode, i.e. can be killed by the reloader
             del new_env["ROBYN_DEV_MODE"]
 
-        print(f"Reloading {self.file_path}...")
+        # print(f"Reloading {self.file_path}...", new_env["ROBYN_DEV_MODE"])
         arguments = [arg for arg in sys.argv[1:] if not arg.startswith("--dev")]
+        print("argumens")
 
         clean_rust_binaries(self.built_rust_binaries)
         self.built_rust_binaries = compile_rust_files(self.directory_path)
