@@ -26,8 +26,11 @@ export function GithubButton() {
 export function Footer() {
   return (
     <>
-      <Container className="bottom-2 w-[90%] z-40" style={{ position: 'fixed' }}>
-        <div className="flex justify-end md:flex-1 ]">
+      <Container
+        className="bottom-2 right-2 z-40"
+        style={{ position: 'fixed' }}
+      >
+        <div className="flex md:flex-1">
           <div className="pointer-events-auto ">
             <Link target="_blank" href="https://github.com/sparckles/robyn">
               <GithubButton />
