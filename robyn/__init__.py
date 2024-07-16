@@ -458,6 +458,7 @@ class SubRouter(Robyn):
 
 # keep the func params compatible with current one
 def ALLOW_CORS(app: Robyn, origins: List[str] | str):
+    """Allows CORS for the given origins for the entire router."""
 
     # https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors/CORSMultipleAllowOriginNotAllowed
     if isinstance(origins, list):
@@ -466,7 +467,6 @@ def ALLOW_CORS(app: Robyn, origins: List[str] | str):
         origin = origins
     else:
         origin = None
-
 
     if origin:
         app.add_response_header("Access-Control-Allow-Origin", origin)
@@ -489,8 +489,6 @@ def ALLOW_CORS(app: Robyn, origins: List[str] | str):
                     "Access-Control-Allow-Credentials": "true"
                 }, description='')
             return request
-
-
 
 
 __all__ = [
