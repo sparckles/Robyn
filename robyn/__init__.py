@@ -456,36 +456,41 @@ class SubRouter(Robyn):
         return super().options(self.__add_prefix(endpoint))
 
 
+# keep the func params compatible with current one
 def ALLOW_CORS(app: Robyn, origins: List[str] | str):
     """Allows CORS for the given origins for the entire router."""
+def ALLOW_CORS(app: Robyn, origins: List[str] | str):
 
     # https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors/CORSMultipleAllowOriginNotAllowed
-    origin = origins[0] if isinstance(origins, list) else origins
+    if isinstance(origins, list):
+        origin = origins[0]
+    elif isinstance(origins, str):
+        origin = origins
+    else:
+        origin = None
 
-    app.add_response_header("Access-Control-Allow-Origin", origin)
-    app.add_response_header(
-        "Access-Control-Allow-Methods",
-        "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS",
-    )
-    app.add_response_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
-    app.add_response_header("Access-Control-Allow-Credentials", "true")
+    if origin:
+        app.add_response_header("Access-Control-Allow-Origin", origin)
+        app.add_response_header(
+            "Access-Control-Allow-Methods",
+            "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS",
+        )
+        app.add_response_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        app.add_response_header("Access-Control-Allow-Credentials", "true")
 
-    # https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request
-    @app.before_request()
-    async def cors_options_status_before_request(request: Request):
-        if request.method.lower() == "options":
-            return Response(
-                status_code=200,
-                headers={
+        # https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request
+        @app.before_request()
+        async def cors_options_status_before_request(request: Request):
+            if request.method.lower() == 'options':
+                return Response(status_code=200, headers={
                     "Access-Control-Allow-Origin": origin,
                     "Access-Control-Allow-Methods": "OPTIONS, GET, POST, PUT, DELETE, PATCH, HEAD",
                     "Access-Control-Max-Age": "600",
                     "Access-Control-Allow-Headers": "Content-Type, Authorization, Access-Control-Allow-Origin, Access-Control-Allow-Methods",
                     "Access-Control-Allow-Credentials": "true",
-                },
-                description="",
-            )
-        return request
+                    "Access-Control-Allow-Credentials": "true"
+                }, description='')
+            return request
 
 
 __all__ = [
