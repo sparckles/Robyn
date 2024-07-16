@@ -480,14 +480,18 @@ def ALLOW_CORS(app: Robyn, origins: List[str] | str):
         # https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request
         @app.before_request()
         async def cors_options_status_before_request(request: Request):
-            if request.method.lower() == 'options':
-                return Response(status_code=200, headers={
-                    "Access-Control-Allow-Origin": origin,
-                    "Access-Control-Allow-Methods": "OPTIONS, GET, POST, PUT, DELETE, PATCH, HEAD",
-                    "Access-Control-Max-Age": "600",
-                    "Access-Control-Allow-Headers": "Content-Type, Authorization, Access-Control-Allow-Origin, Access-Control-Allow-Methods",
-                    "Access-Control-Allow-Credentials": "true"
-                }, description='')
+            if request.method.lower() == "options":
+                return Response(
+                    status_code=200,
+                    headers={
+                        "Access-Control-Allow-Origin": origin,
+                        "Access-Control-Allow-Methods": "OPTIONS, GET, POST, PUT, DELETE, PATCH, HEAD",
+                        "Access-Control-Max-Age": "600",
+                        "Access-Control-Allow-Headers": "Content-Type, Authorization, Access-Control-Allow-Origin, Access-Control-Allow-Methods",
+                        "Access-Control-Allow-Credentials": "true",
+                    },
+                    description="",
+                )
             return request
 
 
