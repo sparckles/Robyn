@@ -1,6 +1,3 @@
-import re
-
-
 def build_schema(
     title: str = None,
     summary: str = None,
@@ -51,24 +48,31 @@ def build_schema(
     return openapi_object
 
 
-def extract_path_params(path: str):
-    return re.findall(r"{(.*?)}", path)
+def get_path_obj(endpoint: str, summary: str, tags: list):
+    modified_endpoint = endpoint
 
-
-def get_path_obj(path: str, summary: str, tags: list):
-    path_params = extract_path_params(path)
+    path_params = endpoint.split(":")
     parameters = []
-    for param in path_params:
-        parameters.append(
-            {
-                "name": param,
-                "in": "path",
-                "required": True,
-                "schema": {"type": "string"},
-            }
-        )
 
-    return {
+    if len(path_params) > 1:
+        path = path_params[0]
+
+        modified_endpoint = path[:-1] if path.endswith("/") else path
+
+        for param in path_params[1:]:
+            param_name = param[:-1] if param.endswith("/") else param
+
+            parameters.append(
+                {
+                    "name": param_name,
+                    "in": "path",
+                    "required": True,
+                    "schema": {"type": "string"},
+                }
+            )
+            modified_endpoint += "/{" + param_name + "}"
+
+    return modified_endpoint, {
         "summary": summary,
         "tags": tags,
         "parameters": parameters,

@@ -106,6 +106,13 @@ class Robyn:
         self.add_route(route_type=HttpMethod.GET, endpoint="/openapi.json", handler=json_handler, is_const=False)
         self.add_route(route_type=HttpMethod.GET, endpoint="/docs", handler=docs_handler, is_const=False)
 
+    def add_path_obj(self, route_type, endpoint, openapi_summary, openapi_tags):
+        modified_endpoint, path_obj = get_path_obj(endpoint, openapi_summary, openapi_tags)
+
+        if modified_endpoint not in self.openapi_schema["paths"]:
+            self.openapi_schema["paths"][modified_endpoint] = {}
+        self.openapi_schema["paths"][modified_endpoint][route_type] = path_obj
+
     def add_route(
         self,
         route_type: Union[HttpMethod, str],
@@ -259,6 +266,7 @@ class Robyn:
 
         logger.info("Robyn version: %s", __version__)
         logger.info("Starting server at http://%s:%s", host, port)
+        logger.info("Docs hosted at http://%s:%s/docs", host, port)
 
         mp.allow_connection_pickling()
 
@@ -339,11 +347,7 @@ class Robyn:
         """
 
         def inner(handler):
-            path_obj = get_path_obj(endpoint, openapi_summary, openapi_tags)
-
-            if endpoint not in self.openapi_schema["paths"]:
-                self.openapi_schema["paths"][endpoint] = {}
-            self.openapi_schema["paths"][endpoint]["get"] = path_obj
+            self.add_path_obj("get", endpoint, openapi_summary, openapi_tags)
 
             return self.add_route(HttpMethod.GET, endpoint, handler, const, auth_required)
 
@@ -363,11 +367,7 @@ class Robyn:
         """
 
         def inner(handler):
-            path_obj = get_path_obj(endpoint, openapi_summary, openapi_tags)
-
-            if endpoint not in self.openapi_schema["paths"]:
-                self.openapi_schema["paths"][endpoint] = {}
-            self.openapi_schema["paths"][endpoint]["post"] = path_obj
+            self.add_path_obj("post", endpoint, openapi_summary, openapi_tags)
 
             return self.add_route(HttpMethod.POST, endpoint, handler, auth_required=auth_required)
 
@@ -387,11 +387,7 @@ class Robyn:
         """
 
         def inner(handler):
-            path_obj = get_path_obj(endpoint, openapi_summary, openapi_tags)
-
-            if endpoint not in self.openapi_schema["paths"]:
-                self.openapi_schema["paths"][endpoint] = {}
-            self.openapi_schema["paths"][endpoint]["put"] = path_obj
+            self.add_path_obj("put", endpoint, openapi_summary, openapi_tags)
 
             return self.add_route(HttpMethod.PUT, endpoint, handler, auth_required=auth_required)
 
@@ -411,11 +407,7 @@ class Robyn:
         """
 
         def inner(handler):
-            path_obj = get_path_obj(endpoint, openapi_summary, openapi_tags)
-
-            if endpoint not in self.openapi_schema["paths"]:
-                self.openapi_schema["paths"][endpoint] = {}
-            self.openapi_schema["paths"][endpoint]["delete"] = path_obj
+            self.add_path_obj("delete", endpoint, openapi_summary, openapi_tags)
 
             return self.add_route(HttpMethod.DELETE, endpoint, handler, auth_required=auth_required)
 
@@ -435,11 +427,7 @@ class Robyn:
         """
 
         def inner(handler):
-            path_obj = get_path_obj(endpoint, openapi_summary, openapi_tags)
-
-            if endpoint not in self.openapi_schema["paths"]:
-                self.openapi_schema["paths"][endpoint] = {}
-            self.openapi_schema["paths"][endpoint]["patch"] = path_obj
+            self.add_path_obj("patch", endpoint, openapi_summary, openapi_tags)
 
             return self.add_route(HttpMethod.PATCH, endpoint, handler, auth_required=auth_required)
 
@@ -459,11 +447,7 @@ class Robyn:
         """
 
         def inner(handler):
-            path_obj = get_path_obj(endpoint, openapi_summary, openapi_tags)
-
-            if endpoint not in self.openapi_schema["paths"]:
-                self.openapi_schema["paths"][endpoint] = {}
-            self.openapi_schema["paths"][endpoint]["head"] = path_obj
+            self.add_path_obj("head", endpoint, openapi_summary, openapi_tags)
 
             return self.add_route(HttpMethod.HEAD, endpoint, handler, auth_required=auth_required)
 
@@ -483,11 +467,7 @@ class Robyn:
         """
 
         def inner(handler):
-            path_obj = get_path_obj(endpoint, openapi_summary, openapi_tags)
-
-            if endpoint not in self.openapi_schema["paths"]:
-                self.openapi_schema["paths"][endpoint] = {}
-            self.openapi_schema["paths"][endpoint]["options"] = path_obj
+            self.add_path_obj("options", endpoint, openapi_summary, openapi_tags)
 
             return self.add_route(HttpMethod.OPTIONS, endpoint, handler, auth_required=auth_required)
 
@@ -507,11 +487,7 @@ class Robyn:
         """
 
         def inner(handler):
-            path_obj = get_path_obj(endpoint, openapi_summary, openapi_tags)
-
-            if endpoint not in self.openapi_schema["paths"]:
-                self.openapi_schema["paths"][endpoint] = {}
-            self.openapi_schema["paths"][endpoint]["connect"] = path_obj
+            self.add_path_obj("connect", endpoint, openapi_summary, openapi_tags)
 
             return self.add_route(HttpMethod.CONNECT, endpoint, handler, auth_required=auth_required)
 
@@ -531,11 +507,7 @@ class Robyn:
         """
 
         def inner(handler):
-            path_obj = get_path_obj(endpoint, openapi_summary, openapi_tags)
-
-            if endpoint not in self.openapi_schema["paths"]:
-                self.openapi_schema["paths"][endpoint] = {}
-            self.openapi_schema["paths"][endpoint]["trace"] = path_obj
+            self.add_path_obj("trace", endpoint, openapi_summary, openapi_tags)
 
             return self.add_route(HttpMethod.TRACE, endpoint, handler, auth_required=auth_required)
 

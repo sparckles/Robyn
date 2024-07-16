@@ -1,4 +1,4 @@
-from robyn import Robyn
+from robyn import Robyn, Request
 
 app = Robyn(
     file_object=__file__,
@@ -20,14 +20,14 @@ async def welcome():
     return "hiiiiii"
 
 
-@app.get("/users/{name}", openapi_summary="Get User by ID", openapi_tags=["Users"])
-async def get_user(name: str):
-    return {"message": f"User {name}"}
+@app.get("/users/:name/:age", openapi_summary="Get User by ID", openapi_tags=["Users"])
+async def get_user(r: Request):
+    return {"message": f"User {r.path_params['name']} : {r.path_params['age']}"}
 
 
-@app.delete("/users/{name}", openapi_summary="Delete User by ID", openapi_tags=["Users"])
-async def delete_user(name: str):
-    return f"Successfully deleted {name}"
+@app.delete("/users/:name/:age", openapi_summary="Delete User by ID", openapi_tags=["Users"])
+async def delete_user(r: Request):
+    return f"Successfully deleted {r.path_params['name']} : {r.path_params['age']}"
 
 
 if __name__ == "__main__":
