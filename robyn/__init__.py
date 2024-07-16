@@ -457,7 +457,8 @@ class SubRouter(Robyn):
 
 
 # keep the func params compatible with current one
-def ALLOW_CORS(app: Robyn, origins: List[str] | str):
+# use the type definition for compatible with python before 3.10
+def ALLOW_CORS(app: Robyn, origins: Union[List[str], str]):
     """Allows CORS for the given origins for the entire router."""
 
     # https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors/CORSMultipleAllowOriginNotAllowed
