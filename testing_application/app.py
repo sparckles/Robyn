@@ -17,16 +17,19 @@ app = Robyn(
 
 @app.get("/")
 async def welcome():
+    """hiiii"""
     return "hiiiiii"
 
 
-@app.get("/users/:name/:age", openapi_summary="Get User by ID", openapi_tags=["Users"])
+@app.get("/users/:name/:age", openapi_tags=["Users"])
 async def get_user(r: Request):
+    """Get User by ID"""
     return {"message": f"User {r.path_params['name']} : {r.path_params['age']}"}
 
 
-@app.delete("/users/:name/:age", openapi_summary="Delete User by ID", openapi_tags=["Users"])
+@app.delete("/users/:name/:age", openapi_tags=["Users"])
 async def delete_user(r: Request):
+    """Delete User by ID"""
     return f"Successfully deleted {r.path_params['name']} : {r.path_params['age']}"
 
 
