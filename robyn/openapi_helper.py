@@ -1,3 +1,6 @@
+from typing import List, Dict, Union, Any
+
+
 def build_schema(
     title: str = None,
     summary: str = None,
@@ -9,6 +12,8 @@ def build_schema(
     contact_url: str = None,
     license_name: str = None,
     license_url: str = None,
+    servers: List[Dict[str, Union[str, Any]]] = None,
+    external_docs: Dict[str, str] = None,
 ) -> {}:
     openapi_info_object = {}
 
@@ -44,6 +49,12 @@ def build_schema(
         "info": openapi_info_object,
         "paths": {},
     }
+
+    if servers:
+        openapi_object["servers"] = servers
+
+    if external_docs:
+        openapi_object["externalDocs"] = external_docs
 
     return openapi_object
 

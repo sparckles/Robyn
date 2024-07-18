@@ -4,7 +4,7 @@ import json
 import logging
 import os
 import socket
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Union, Dict, Any
 
 import multiprocess as mp
 from nestd import get_all_nested
@@ -52,6 +52,8 @@ class Robyn:
         openapi_contact_url: str = None,
         openapi_license_name: str = None,
         openapi_license_url: str = None,
+        openapi_servers: List[Dict[str, Union[str, Any]]] = None,
+        openapi_external_docs: Dict[str, str] = None,
         config: Config = Config(),
         dependencies: DependencyMap = DependencyMap(),
     ) -> None:
@@ -93,6 +95,8 @@ class Robyn:
             contact_url=openapi_contact_url,
             license_name=openapi_license_name,
             license_url=openapi_license_url,
+            servers=openapi_servers,
+            external_docs=openapi_external_docs,
         )
 
         def docs_handler():

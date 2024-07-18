@@ -1,4 +1,4 @@
-from robyn import Robyn, Request
+from robyn import Robyn, Request, jsonify
 
 app = Robyn(
     file_object=__file__,
@@ -12,6 +12,14 @@ app = Robyn(
     openapi_contact_email="support@example.com",
     openapi_license_name="Apache 2.0",
     openapi_license_url="https://www.apache.org/licenses/LICENSE-2.0.html",
+    # openapi_servers=[
+    #     {"url": "/", "description": "Debug environment"},
+    #     {"url": "https://example.com/api/v1/", "description": "Production environment"},
+    # ],
+    # openapi_external_docs={
+    #     "description": "Find more info here",
+    #     "url": "https://example.com/"
+    # }
 )
 
 
@@ -30,7 +38,7 @@ async def get_user(r: Request):
 @app.delete("/users/:name/:age", openapi_tags=["Users"])
 async def delete_user(r: Request):
     """Delete User by ID"""
-    return f"Successfully deleted {r.path_params['name']} : {r.path_params['age']}"
+    return jsonify(r.path_params)
 
 
 if __name__ == "__main__":
