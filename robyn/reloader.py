@@ -1,5 +1,5 @@
-import os
 import glob
+import os
 import signal
 import subprocess
 import sys
@@ -9,6 +9,7 @@ from typing import List
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
+from robyn.argument_parser import Config
 from robyn.logger import Colors, logger
 
 dir_path = None
@@ -58,8 +59,8 @@ def clean_rust_binaries(rust_binaries: List[str]):
         os.remove(file)
 
 
-def setup_reloader(directory_path: str, file_path: str):
-    event_handler = EventHandler(file_path, directory_path)
+def setup_reloader(config: Config, directory_path: str, file_path: str):
+    event_handler = EventHandler(config, file_path, directory_path)
 
     # sets the IS_RELOADER_RUNNING environment variable to True
     event_handler.reload()
@@ -92,7 +93,8 @@ def setup_reloader(directory_path: str, file_path: str):
 
 
 class EventHandler(FileSystemEventHandler):
-    def __init__(self, file_path: str, directory_path: str) -> None:
+    def __init__(self, config: Config, file_path: str, directory_path: str) -> None:
+        self.config = config
         self.file_path = file_path
         self.directory_path = directory_path
         self.process = None  # Keep track of the subprocess
@@ -120,10 +122,20 @@ class EventHandler(FileSystemEventHandler):
         if prev_process:
             prev_process.kill()
 
-        self.process = subprocess.Popen(
-            [sys.executable, *arguments],
-            env=new_env,
-        )
+        if self.config.dev and self.config.running_as_module:
+            module_name = self.config.file_path.split("/")[-2]
+
+            self.process = subprocess.Popen(
+                [sys.executable, "-m", module_name, *arguments],
+                env=new_env,
+                start_new_session=False,
+            )
+        else:
+            self.process = subprocess.Popen(
+                [sys.executable, *arguments],
+                env=new_env,
+                start_new_session=False,
+            )
 
         self.last_reload = time.time()
 
