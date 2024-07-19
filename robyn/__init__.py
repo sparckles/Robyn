@@ -2,7 +2,6 @@ import asyncio
 import logging
 import os
 import socket
-import sys
 from typing import Callable, List, Optional, Tuple, Union
 
 import multiprocess as mp
@@ -49,7 +48,7 @@ class Robyn:
         self.config = config
         self.dependencies = dependencies
 
-        if bool(os.environ.get("ROBYN_CLI", False)) == False:
+        if not bool(os.environ.get("ROBYN_CLI", False)):
             # the env variables are already set when are running through the cli
             load_vars(project_root=directory_path)
 
