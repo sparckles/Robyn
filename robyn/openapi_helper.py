@@ -14,6 +14,15 @@ def build_schema(
     license_url: str = None,
     servers: List[Dict[str, Union[str, Any]]] = None,
     external_docs: Dict[str, str] = None,
+    component_schemas=None,
+    component_responses=None,
+    component_parameters=None,
+    component_examples=None,
+    component_request_bodies=None,
+    component_security_schemes=None,
+    component_links=None,
+    component_callbacks=None,
+    component_path_items=None,
 ) -> {}:
     openapi_info_object = {}
 
@@ -55,6 +64,35 @@ def build_schema(
 
     if external_docs:
         openapi_object["externalDocs"] = external_docs
+
+    openapi_object["components"] = {}
+
+    if component_schemas:
+        openapi_object["components"]["schemas"] = component_schemas
+
+    if component_responses:
+        openapi_object["components"]["responses"] = component_responses
+
+    if component_parameters:
+        openapi_object["components"]["parameters"] = component_parameters
+
+    if component_examples:
+        openapi_object["components"]["examples"] = component_examples
+
+    if component_request_bodies:
+        openapi_object["components"]["requestBodies"] = component_request_bodies
+
+    if component_security_schemes:
+        openapi_object["components"]["securitySchemes"] = component_security_schemes
+
+    if component_links:
+        openapi_object["components"]["links"] = component_links
+
+    if component_callbacks:
+        openapi_object["components"]["callbacks"] = component_callbacks
+
+    if component_path_items:
+        openapi_object["components"]["pathItems"] = component_path_items
 
     return openapi_object
 

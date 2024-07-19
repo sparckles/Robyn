@@ -54,6 +54,15 @@ class Robyn:
         openapi_license_url: str = None,
         openapi_servers: List[Dict[str, Union[str, Any]]] = None,
         openapi_external_docs: Dict[str, str] = None,
+        openapi_component_schemas=None,
+        openapi_component_responses=None,
+        openapi_component_parameters=None,
+        openapi_component_examples=None,
+        openapi_component_request_bodies=None,
+        openapi_component_security_schemes=None,
+        openapi_component_links=None,
+        openapi_component_callbacks=None,
+        openapi_component_path_items=None,
         config: Config = Config(),
         dependencies: DependencyMap = DependencyMap(),
     ) -> None:
@@ -97,6 +106,15 @@ class Robyn:
             license_url=openapi_license_url,
             servers=openapi_servers,
             external_docs=openapi_external_docs,
+            component_schemas=openapi_component_schemas,
+            component_responses=openapi_component_responses,
+            component_parameters=openapi_component_parameters,
+            component_examples=openapi_component_examples,
+            component_request_bodies=openapi_component_request_bodies,
+            component_security_schemes=openapi_component_security_schemes,
+            component_links=openapi_component_links,
+            component_callbacks=openapi_component_callbacks,
+            component_path_items=openapi_component_path_items,
         )
 
         def docs_handler():
