@@ -4,8 +4,8 @@ build-backend = "maturin"
 
 [project]
 name = "robyn"
-version = "0.57.1"
-description = "A High-Performance, Community-Driven, and Innovator Friendly Web Framework with a Rust runtime."
+version = "0.58.0"
+description = "A Super Fast Async Python Web Framework with a Rust runtime."
 authors = [{ name = "Sanskar Jethi", email = "sansyrox@gmail.com" }]
 classifiers = [
   "Development Status :: 3 - Alpha",
@@ -48,7 +48,7 @@ Changelog = "https://github.com/sparckles/robyn/blob/main/CHANGELOG.md"
 
 [tool.poetry]
 name = "robyn"
-version = "0.57.1"
+version = "0.58.0"
 description = "A Super Fast Async Python Web Framework with a Rust runtime."
 authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 
