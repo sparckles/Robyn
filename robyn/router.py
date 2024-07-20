@@ -193,11 +193,11 @@ class MiddlewareRouter(BaseRouter):
         super().__init__()
         self.global_middlewares: List[GlobalMiddleware] = []
         self.route_middlewares: List[RouteMiddleware] = []
-        self.authentication_handler: Optional[AuthenticationHandler] = None
+        self.authentication_handler: List[AuthenticationHandler] = []
         self.dependencies = dependencies
 
     def set_authentication_handler(self, authentication_handler: AuthenticationHandler):
-        self.authentication_handler = authentication_handler
+        self.authentication_handler.append(authentication_handler)
 
     def add_route(
         self,
@@ -226,7 +226,7 @@ class MiddlewareRouter(BaseRouter):
         self.route_middlewares.append(RouteMiddleware(middleware_type, endpoint, function))
         return handler
 
-    def add_auth_middleware(self, endpoint: str):
+    def add_auth_middleware(self, endpoint: str, name: str = None):
         """
         This method adds an authentication middleware to the specified endpoint.
         """
@@ -236,11 +236,27 @@ class MiddlewareRouter(BaseRouter):
         def decorator(handler):
             @wraps(handler)
             def inner_handler(request: Request, *args):
-                if not self.authentication_handler:
+                if len(self.authentication_handler) == 0:
                     raise AuthenticationNotConfiguredError()
-                identity = self.authentication_handler.authenticate(request)
+
+                auth_handler = None
+
+                for authentication_handler in self.authentication_handler:
+                    if name and authentication_handler.name == name:
+                        auth_handler = authentication_handler
+                        break
+                    if not name and authentication_handler.default:
+                        auth_handler = authentication_handler
+                        break
+
+                if not auth_handler:
+                    raise AuthenticationNotConfiguredError()
+
+                identity = auth_handler.authenticate(request)
+
                 if identity is None:
-                    return self.authentication_handler.unauthorized_response
+                    return auth_handler.unauthorized_response
+
                 request.identity = identity
 
                 return request
