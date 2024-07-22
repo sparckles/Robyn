@@ -1,0 +1,61 @@
+export const description =
+  'On this page, we’ll dive into the different conversation endpoints you can use to manage conversations programmatically.'
+
+## Multithreading
+
+Batman wondered about the nuances of using multithreading in Robyn.
+
+
+<Row>
+<Col>
+Whilst using multithreading in Robyn, the global variables are not protected. One should use `multiprocessing.Value` for achieving the required result.
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}  
+        import threading
+        import time
+        from multiprocessing import Value
+
+        from robyn import Robyn, Request
+
+        app = Robyn(__file__)
+
+        count = Value("i", 0)
+
+        def counter():
+            while True:
+                count.value += 1
+                time.sleep(0.2)
+                print(count.value, "added 1")
+
+        @app.get("/")
+        def index(request: Request):
+            return f"{count.value}"
+
+        threading.Thread(target=counter, daemon=True).start()
+
+        app.start()
+
+    ```
+
+    </CodeGroup>
+  </Col>
+</Row>
+---
+
+
+## What's next?
+
+
+Batman wondered if it was possible to use Rust directly from Robyn's codebase.
+
+Robyn showed him the path.
+
+[Using Rust Directly](/documentation/api_reference/using_rust_directly)
+
+
+
+

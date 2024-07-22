@@ -89,6 +89,12 @@ const guides = [
     name: 'Advanced Features',
     description: 'Learn about advanced features in Robyn.',
   },
+  {
+    href: '/documentation/api_reference/multithreading',
+    name: 'Multithreading',
+    description: 'Learn about multithreading in Robyn.',
+  },
+  
 
   {
     href: '/documentation/api_reference/using_rust_directly',
@@ -97,7 +103,7 @@ const guides = [
   },
   {
     href: '/documentation/api_reference/graphql-support',
-    name: 'Advanced Features',
+    name: 'GraphQL Support',
     description: 'Learn about GraphQL Support in Robyn.',
   },
   {

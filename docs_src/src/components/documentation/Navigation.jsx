@@ -294,6 +294,10 @@ export const navigation = [
         title: 'Advanced Features',
       },
       {
+        href: '/documentation/api_reference/multithreading',
+        title: 'Multithreading',
+      },
+      {
         href: '/documentation/api_reference/using_rust_directly',
         title: 'Using Rust Directly',
       },
