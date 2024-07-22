@@ -4,7 +4,7 @@ import json
 import logging
 import os
 import socket
-from typing import Callable, List, Optional, Tuple, Union, Dict, Any
+from typing import Callable, List, Optional, Tuple, Union
 
 import multiprocess as mp
 from nestd import get_all_nested
@@ -24,7 +24,7 @@ from robyn.responses import html, serve_file, serve_html
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory
 from robyn.ws import WebSocket
-from .openapi_helper import get_path_obj, build_schema
+from .openapi import OpenAPI
 
 __version__ = get_version()
 
@@ -42,34 +42,15 @@ class Robyn:
     def __init__(
         self,
         file_object: str,
-        openapi_title: str = "Robyn",
-        openapi_summary: str = None,
-        openapi_description: str = None,
-        openapi_terms_of_service: str = None,
-        openapi_version: str = None,
-        openapi_contact_name: str = None,
-        openapi_contact_email: str = None,
-        openapi_contact_url: str = None,
-        openapi_license_name: str = None,
-        openapi_license_url: str = None,
-        openapi_servers: List[Dict[str, Union[str, Any]]] = None,
-        openapi_external_docs: Dict[str, str] = None,
-        openapi_component_schemas=None,
-        openapi_component_responses=None,
-        openapi_component_parameters=None,
-        openapi_component_examples=None,
-        openapi_component_request_bodies=None,
-        openapi_component_security_schemes=None,
-        openapi_component_links=None,
-        openapi_component_callbacks=None,
-        openapi_component_path_items=None,
         config: Config = Config(),
+        openapi: OpenAPI = OpenAPI(),
         dependencies: DependencyMap = DependencyMap(),
     ) -> None:
         directory_path = os.path.dirname(os.path.abspath(file_object))
         self.file_path = file_object
         self.directory_path = directory_path
         self.config = config
+        self.openapi = openapi
         self.dependencies = dependencies
 
         load_vars(project_root=directory_path)
@@ -93,30 +74,6 @@ class Robyn:
         self.exception_handler: Optional[Callable] = None
         self.authentication_handler: Optional[AuthenticationHandler] = None
 
-        self.openapi_schema = build_schema(
-            title=openapi_title,
-            summary=openapi_summary,
-            description=openapi_description,
-            terms_of_service=openapi_terms_of_service,
-            version=openapi_version,
-            contact_name=openapi_contact_name,
-            contact_email=openapi_contact_email,
-            contact_url=openapi_contact_url,
-            license_name=openapi_license_name,
-            license_url=openapi_license_url,
-            servers=openapi_servers,
-            external_docs=openapi_external_docs,
-            component_schemas=openapi_component_schemas,
-            component_responses=openapi_component_responses,
-            component_parameters=openapi_component_parameters,
-            component_examples=openapi_component_examples,
-            component_request_bodies=openapi_component_request_bodies,
-            component_security_schemes=openapi_component_security_schemes,
-            component_links=openapi_component_links,
-            component_callbacks=openapi_component_callbacks,
-            component_path_items=openapi_component_path_items,
-        )
-
         def docs_handler():
             json_handler()
             cwd = os.getcwd()
@@ -124,17 +81,10 @@ class Robyn:
             return serve_html(html_file)
 
         def json_handler():
-            return json.dumps(self.openapi_schema)
+            return json.dumps(self.openapi.openapi_schema)
 
         self.add_route(route_type=HttpMethod.GET, endpoint="/openapi.json", handler=json_handler, is_const=False)
         self.add_route(route_type=HttpMethod.GET, endpoint="/docs", handler=docs_handler, is_const=False)
-
-    def add_openapi_path_obj(self, route_type, endpoint, openapi_summary, openapi_tags):
-        modified_endpoint, path_obj = get_path_obj(endpoint, openapi_summary, openapi_tags)
-
-        if modified_endpoint not in self.openapi_schema["paths"]:
-            self.openapi_schema["paths"][modified_endpoint] = {}
-        self.openapi_schema["paths"][modified_endpoint][route_type] = path_obj
 
     def add_route(
         self,
@@ -369,7 +319,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.add_openapi_path_obj("get", endpoint, inspect.getdoc(handler), openapi_tags)
+            self.openapi.add_openapi_path_obj("get", endpoint, inspect.getdoc(handler), openapi_tags)
 
             return self.add_route(HttpMethod.GET, endpoint, handler, const, auth_required)
 
@@ -388,7 +338,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.add_openapi_path_obj("post", endpoint, inspect.getdoc(handler), openapi_tags)
+            self.openapi.add_openapi_path_obj("post", endpoint, inspect.getdoc(handler), openapi_tags)
 
             return self.add_route(HttpMethod.POST, endpoint, handler, auth_required=auth_required)
 
@@ -407,7 +357,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.add_openapi_path_obj("put", endpoint, inspect.getdoc(handler), openapi_tags)
+            self.openapi.add_openapi_path_obj("put", endpoint, inspect.getdoc(handler), openapi_tags)
 
             return self.add_route(HttpMethod.PUT, endpoint, handler, auth_required=auth_required)
 
@@ -426,7 +376,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.add_openapi_path_obj("delete", endpoint, inspect.getdoc(handler), openapi_tags)
+            self.openapi.add_openapi_path_obj("delete", endpoint, inspect.getdoc(handler), openapi_tags)
 
             return self.add_route(HttpMethod.DELETE, endpoint, handler, auth_required=auth_required)
 
@@ -445,7 +395,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.add_openapi_path_obj("patch", endpoint, inspect.getdoc(handler), openapi_tags)
+            self.openapi.add_openapi_path_obj("patch", endpoint, inspect.getdoc(handler), openapi_tags)
 
             return self.add_route(HttpMethod.PATCH, endpoint, handler, auth_required=auth_required)
 
@@ -464,7 +414,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.add_openapi_path_obj("head", endpoint, inspect.getdoc(handler), openapi_tags)
+            self.openapi.add_openapi_path_obj("head", endpoint, inspect.getdoc(handler), openapi_tags)
 
             return self.add_route(HttpMethod.HEAD, endpoint, handler, auth_required=auth_required)
 
@@ -483,7 +433,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.add_openapi_path_obj("options", endpoint, inspect.getdoc(handler), openapi_tags)
+            self.openapi.add_openapi_path_obj("options", endpoint, inspect.getdoc(handler), openapi_tags)
 
             return self.add_route(HttpMethod.OPTIONS, endpoint, handler, auth_required=auth_required)
 
@@ -502,7 +452,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.add_openapi_path_obj("connect", endpoint, inspect.getdoc(handler), openapi_tags)
+            self.openapi.add_openapi_path_obj("connect", endpoint, inspect.getdoc(handler), openapi_tags)
 
             return self.add_route(HttpMethod.CONNECT, endpoint, handler, auth_required=auth_required)
 
@@ -521,7 +471,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.add_openapi_path_obj("trace", endpoint, inspect.getdoc(handler), openapi_tags)
+            self.openapi.add_openapi_path_obj("trace", endpoint, inspect.getdoc(handler), openapi_tags)
 
             return self.add_route(HttpMethod.TRACE, endpoint, handler, auth_required=auth_required)
 
