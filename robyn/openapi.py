@@ -1,4 +1,8 @@
+import json
+import os
 from typing import List, Dict, Union, Any
+
+from robyn import serve_html
 
 
 class OpenAPI:
@@ -153,6 +157,8 @@ class OpenAPI:
             self.openapi_schema["paths"][modified_endpoint] = {}
         self.openapi_schema["paths"][modified_endpoint][route_type] = path_obj
 
+        print(self.openapi_schema)
+
     def get_path_obj(self, endpoint: str, summary: str, tags: list):
         modified_endpoint = endpoint
 
@@ -187,3 +193,14 @@ class OpenAPI:
                 }
             },
         }
+
+    def docs_handler(self):
+        json.dumps(self.openapi_schema)
+        html_file = os.path.join(os.getcwd(), "robyn/swagger.html")
+        return serve_html(html_file)
+
+    def json_handler(self):
+        return json.dumps(self.openapi_schema)
+
+
+openapi = OpenAPI()

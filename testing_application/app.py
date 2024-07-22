@@ -1,8 +1,8 @@
-from robyn import Robyn, Request, jsonify, OpenAPI
+from robyn import Robyn, Request, jsonify, OpenAPI, SubRouter
 
 app = Robyn(
     file_object=__file__,
-    openapi=OpenAPI(
+    openapi_instance=OpenAPI(
         openapi_title="Sample Pet Store App",
         openapi_summary=" A pet store manager.",
         openapi_description=" This is a sample server for a pet store.",
@@ -42,6 +42,29 @@ async def delete_user(r: Request):
     """Delete User by ID"""
     return jsonify(r.path_params)
 
+
+doctor_router = SubRouter(__name__, prefix="/doctor")
+
+
+@doctor_router.get("/")
+async def doctor_welcome():
+    """hiiii"""
+    return "doctor_hiiiiii"
+
+
+@doctor_router.get("/users/:name/:age")
+async def doctor_get_user(r: Request):
+    """Get User by ID"""
+    return {"message": f"doctor_User {r.path_params['name']} : {r.path_params['age']}"}
+
+
+@doctor_router.delete("/users/:name/:age")
+async def doctor_delete_user(r: Request):
+    """Delete User by ID"""
+    return f"doctor_{jsonify(r.path_params)}"
+
+
+app.include_router(doctor_router)
 
 if __name__ == "__main__":
     app.start()
