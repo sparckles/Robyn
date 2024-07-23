@@ -91,8 +91,8 @@ const guides = [
   },
   {
     href: '/documentation/api_reference/multithreading',
-    name: 'Multithreading',
-    description: 'Learn about multithreading in Robyn.',
+    name: 'Variables in Multithreading',
+    description: 'Learn about the behaviour or variables during multithreading',
   },
   
 

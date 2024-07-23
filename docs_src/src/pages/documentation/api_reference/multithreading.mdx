@@ -1,14 +1,22 @@
 export const description =
   'On this page, we’ll dive into the different conversation endpoints you can use to manage conversations programmatically.'
 
-## Multithreading
+## Variables in Multithreading
 
-Batman wondered about the nuances of using multithreading in Robyn.
+Batman wondered about the behavour of variables in a Robyn multiprocessing environment.
 
 
 <Row>
 <Col>
-Whilst using multithreading in Robyn, the global variables are not protected. One should use `multiprocessing.Value` for achieving the required result.
+
+Any variable used in a multiprocessing environment is shared across multiple processes.
+
+Whilst using multithreading in Robyn, the variables are not protected from multiple threads access by default.
+
+We need the value to be protected within the process, while accessing the count from different threads.
+
+for eg: <a href="https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Value">`multiprocessing.Value`</a> can be used for achieving the required protection.
+
 </Col>
   <Col sticky>
 
