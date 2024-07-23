@@ -32,13 +32,38 @@ Whilst using multithreading in Robyn, the global variables are not protected. On
                 print(count.value, "added 1")
 
         @app.get("/")
+        def index(request):
+            return f"{count.value}"
+
+        threading.Thread(target=counter, daemon=True).start()
+
+        app.start()
+    ```
+
+    ```python {{ title: 'typed' }}
+        import threading
+        import time
+        from multiprocessing import Value
+
+        from robyn import Robyn, Request
+
+        app = Robyn(__file__)
+
+        count: Value = Value("i", 0)
+
+        def counter():
+            while True:
+                count.value += 1
+                time.sleep(0.2)
+                print(count.value, "added 1")
+
+        @app.get("/")
         def index(request: Request):
             return f"{count.value}"
 
         threading.Thread(target=counter, daemon=True).start()
 
         app.start()
-
     ```
 
     </CodeGroup>
