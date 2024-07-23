@@ -2,7 +2,7 @@ from robyn import Robyn, Request, jsonify, OpenAPI, SubRouter
 
 app = Robyn(
     file_object=__file__,
-    openapi_instance=OpenAPI(
+    openapi=OpenAPI(
         openapi_title="Sample Pet Store App",
         openapi_summary=" A pet store manager.",
         openapi_description=" This is a sample server for a pet store.",
