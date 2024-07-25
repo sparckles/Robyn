@@ -17,13 +17,13 @@ from robyn.env_populator import load_vars
 from robyn.events import Events
 from robyn.jsonify import jsonify
 from robyn.logger import Colors, logger
+from robyn.openapi import OpenAPI
 from robyn.processpool import run_processes
 from robyn.reloader import compile_rust_files
 from robyn.responses import html, serve_file, serve_html
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory
 from robyn.ws import WebSocket
-from .openapi import OpenAPI
 
 __version__ = get_version()
 

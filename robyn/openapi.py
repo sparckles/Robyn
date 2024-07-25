@@ -2,7 +2,7 @@ import json
 import os
 from typing import List, Dict, Union, Any
 
-from robyn import serve_html
+import robyn
 
 
 class OpenAPI:
@@ -233,7 +233,7 @@ class OpenAPI:
         """
         json.dumps(self.openapi_schema)
         html_file = os.path.join(os.getcwd(), "robyn/swagger.html")
-        return serve_html(html_file)
+        return robyn.serve_html(html_file)
 
     def json_handler(self):
         """
@@ -241,6 +241,3 @@ class OpenAPI:
         @return: the openapi spec json object
         """
         return json.dumps(self.openapi_schema)
-
-
-openapi = OpenAPI()
