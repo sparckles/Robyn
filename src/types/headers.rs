@@ -171,7 +171,10 @@ impl Headers {
 
         for (key, value) in req_headers {
             let key = key.to_string().to_lowercase();
-            let value = value.to_str().unwrap().to_string();
+            let value = match value.to_str() {
+                Ok(value) => value.to_string(),
+                Err(_) => continue,
+            };
             headers.headers.entry(key).or_default().push(value);
         }
 
