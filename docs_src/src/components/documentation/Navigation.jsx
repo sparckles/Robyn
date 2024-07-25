@@ -295,7 +295,7 @@ export const navigation = [
       },
       {
         href: '/documentation/api_reference/multithreading',
-        title: 'Variables in Multithreading',
+        title: 'Multiprocess Execution',
       },
       {
         href: '/documentation/api_reference/using_rust_directly',

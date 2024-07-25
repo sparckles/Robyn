@@ -91,7 +91,7 @@ const guides = [
   },
   {
     href: '/documentation/api_reference/multithreading',
-    name: 'Variables in Multithreading',
+    name: 'Multiprocess Execution',
     description: 'Learn about the behaviour or variables during multithreading',
   },
   
