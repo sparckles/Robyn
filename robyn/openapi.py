@@ -157,7 +157,11 @@ class OpenAPI:
             self.openapi_schema["paths"][modified_endpoint] = {}
         self.openapi_schema["paths"][modified_endpoint][route_type] = path_obj
 
-        print(self.openapi_schema)
+    def add_subrouter_paths(self, subrouter_openapi):
+        paths = subrouter_openapi.openapi_schema["paths"]
+
+        for path in paths:
+            self.openapi_schema["paths"][path] = paths[path]
 
     def get_path_obj(self, endpoint: str, summary: str, tags: list):
         modified_endpoint = endpoint

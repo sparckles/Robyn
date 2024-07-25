@@ -477,6 +477,8 @@ class Robyn:
         self.middleware_router.global_middlewares.extend(router.middleware_router.global_middlewares)
         self.middleware_router.route_middlewares.extend(router.middleware_router.route_middlewares)
 
+        self.openapi.add_subrouter_paths(router.openapi)
+
         # extend the websocket routes
         prefix = router.prefix
         for route in router.web_socket_router.routes:
