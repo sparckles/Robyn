@@ -5,17 +5,16 @@ export const description =
 
 Batman wondered about the behavour of variables in a Robyn multiprocessing environment.
 
-
-<Row>
-<Col>
+Robyn reassured that it can indeed support them! i.e, handlers can be dispatched to multiple threads.
 
 Any variable used in a multiprocessing environment is shared across multiple processes.
 
 Whilst using multithreading in Robyn, the variables are not protected from multiple threads access by default.
 
-We need the value to be protected within the process, while accessing the count from different threads.
+<Row>
+<Col>
 
-for eg: <a href="https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Value">`multiprocessing.Value`</a> can be used for achieving the required protection.
+If one needs a variable to be protected within a process, while accessing it from different threads, one can use <a href="https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Value">`multiprocessing.Value`</a> for achieving the required protection.
 
 </Col>
   <Col sticky>
