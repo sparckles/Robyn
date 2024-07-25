@@ -78,6 +78,11 @@ class OpenAPI:
         component_callbacks=None,
         component_path_items=None,
     ) -> {}:
+        """
+        builds the initial openapi schema. please refer to https://swagger.io/specification/ for params & types.
+
+        :return: the openapi object with provided params
+        """
         openapi_info_object = {}
 
         if title:
@@ -150,7 +155,15 @@ class OpenAPI:
 
         return openapi_object
 
-    def add_openapi_path_obj(self, route_type, endpoint, openapi_summary, openapi_tags):
+    def add_openapi_path_obj(self, route_type: str, endpoint: str, openapi_summary: str, openapi_tags: list):
+        """
+        adds the given path to openapi spec
+
+        :param route_type: the http method as string (get, post ...)
+        :param endpoint: the endpoint to be added
+        :param openapi_summary: short summary of the endpoint (to be fetched from the endpoint defenition by default)
+        :param openapi_tags: tags -- for grouping of endpoints
+        """
         modified_endpoint, path_obj = self.get_path_obj(endpoint, openapi_summary, openapi_tags)
 
         if modified_endpoint not in self.openapi_schema["paths"]:
@@ -158,12 +171,27 @@ class OpenAPI:
         self.openapi_schema["paths"][modified_endpoint][route_type] = path_obj
 
     def add_subrouter_paths(self, subrouter_openapi):
+        """
+
+        adds the subrouter paths to main router's openapi specs
+
+        :param subrouter_openapi: the OpenAPI object of the current subrouter
+        """
         paths = subrouter_openapi.openapi_schema["paths"]
 
         for path in paths:
             self.openapi_schema["paths"][path] = paths[path]
 
     def get_path_obj(self, endpoint: str, summary: str, tags: list):
+        """
+        get the "path" openapi object according to spec
+
+        :param endpoint: the endpoint to be added
+        :param summary: short summary of the endpoint (to be fetched from the endpoint defenition by default)
+        :param tags: tags -- for grouping of endpoints
+
+        :return: the "path" openapi object according to spec
+        """
         modified_endpoint = endpoint
 
         path_params = endpoint.split(":")
@@ -199,11 +227,19 @@ class OpenAPI:
         }
 
     def docs_handler(self):
+        """
+        get the swagger html page
+        @return: the swagger html page
+        """
         json.dumps(self.openapi_schema)
         html_file = os.path.join(os.getcwd(), "robyn/swagger.html")
         return serve_html(html_file)
 
     def json_handler(self):
+        """
+        get the openapi spec json object
+        @return: the openapi spec json object
+        """
         return json.dumps(self.openapi_schema)
 
 
