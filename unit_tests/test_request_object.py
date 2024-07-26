@@ -1,15 +1,18 @@
 import pytest
-from robyn.openapi_middleware import OpenAPIMiddleware, OpenAPIInfo
+from robyn.openapi_middleware import OpenAPIMiddleware
 from robyn.robyn import Headers, QueryParams, Request, Url
+
 
 # Fixtures to set up the necessary objects
 @pytest.fixture
 def app():
-    return type('TestApp', (), {})()  # Mock app object
+    return type("TestApp", (), {})()  # Mock app object
+
 
 @pytest.fixture
 def middleware(app):
     return OpenAPIMiddleware(app)
+
 
 def test_update_info(middleware):
     # Initial assertions
@@ -30,15 +33,7 @@ def test_update_info(middleware):
         license_url="http://www.apache.org/licenses/LICENSE-2.0.html",
         servers=[{"url": "https://api.example.com", "description": "Production server"}],
         externalDocs={"description": "Find more info here", "url": "http://example.com/docs"},
-        component_schemas={
-            "Error": {
-                "type": "object",
-                "properties": {
-                    "message": {"type": "string"},
-                    "code": {"type": "integer"}
-                }
-            }
-        }
+        component_schemas={"Error": {"type": "object", "properties": {"message": {"type": "string"}, "code": {"type": "integer"}}}},
     )
 
     # Assertions after update
@@ -57,6 +52,7 @@ def test_update_info(middleware):
     assert middleware.info.externalDocs.description == "Find more info here"
     assert middleware.info.externalDocs.url == "http://example.com/docs"
     assert "Error" in middleware.info.components.schemas
+
 
 def test_request_object():
     url = Url(
