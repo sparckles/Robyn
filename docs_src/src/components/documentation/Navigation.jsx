@@ -294,7 +294,7 @@ export const navigation = [
         title: 'Advanced Features',
       },
       {
-        href: '/documentation/api_reference/multithreading',
+        href: '/documentation/api_reference/multiprocess_execution',
         title: 'Multiprocess Execution',
       },
       {
