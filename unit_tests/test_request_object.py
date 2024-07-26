@@ -1,12 +1,11 @@
 import unittest
-from robyn.openapi_middleware import OpenAPIMiddleware, OpenAPIInfo
+from robyn.openapi_middleware import OpenAPIMiddleware
 from robyn.robyn import Headers, QueryParams, Request, Url
 
 
 class TestOpenAPIMiddleware(unittest.TestCase):
-
     def setUp(self):
-        self.app = type('TestApp', (), {})()  # Mock app object
+        self.app = type("TestApp", (), {})()  # Mock app object
         self.middleware = OpenAPIMiddleware(self.app)
 
     def test_update_info(self):
@@ -28,15 +27,7 @@ class TestOpenAPIMiddleware(unittest.TestCase):
             license_url="http://www.apache.org/licenses/LICENSE-2.0.html",
             servers=[{"url": "https://api.example.com", "description": "Production server"}],
             externalDocs={"description": "Find more info here", "url": "http://example.com/docs"},
-            component_schemas={
-                "Error": {
-                    "type": "object",
-                    "properties": {
-                        "message": {"type": "string"},
-                        "code": {"type": "integer"}
-                    }
-                }
-            }
+            component_schemas={"Error": {"type": "object", "properties": {"message": {"type": "string"}, "code": {"type": "integer"}}}},
         )
 
         # Assertions after update
@@ -58,7 +49,6 @@ class TestOpenAPIMiddleware(unittest.TestCase):
 
 
 class TestRequestObject(unittest.TestCase):
-
     def test_request_object(self):
         url = Url(
             scheme="https",
@@ -85,5 +75,5 @@ class TestRequestObject(unittest.TestCase):
         self.assertEqual(request.method, "GET")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
