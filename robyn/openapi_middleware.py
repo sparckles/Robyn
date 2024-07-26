@@ -3,26 +3,31 @@ from typing import List, Optional, Dict
 import os
 from dataclasses import dataclass, field, asdict
 
+
 @dataclass
 class Contact:
     name: Optional[str] = None
     url: Optional[str] = None
     email: Optional[str] = None
 
+
 @dataclass
 class License:
     name: Optional[str] = None
     url: Optional[str] = None
+
 
 @dataclass
 class Server:
     url: str
     description: Optional[str] = None
 
+
 @dataclass
 class ExternalDocumentation:
     description: Optional[str] = None
     url: Optional[str] = None
+
 
 @dataclass
 class Components:
@@ -36,6 +41,7 @@ class Components:
     callbacks: Optional[Dict[str, Dict]] = field(default_factory=dict)
     pathItems: Optional[Dict[str, Dict]] = field(default_factory=dict)
 
+
 @dataclass
 class OpenAPIInfo:
     title: str = "Robyn API"
@@ -47,6 +53,7 @@ class OpenAPIInfo:
     servers: List[Server] = field(default_factory=list)
     externalDocs: Optional[ExternalDocumentation] = field(default_factory=ExternalDocumentation)
     components: Components = field(default_factory=Components)
+
 
 @dataclass
 class OpenAPIMiddleware:
@@ -114,14 +121,7 @@ class OpenAPIMiddleware:
     def add_route(self, path, method):
         if path not in self.openapi_spec["paths"]:
             self.openapi_spec["paths"][path] = {}
-        self.openapi_spec["paths"][path][method.lower()] = {
-            "summary": f"{method.upper()} {path}",
-            "responses": {
-                "200": {
-                    "description": "Successful response"
-                }
-            }
-        }
+        self.openapi_spec["paths"][path][method.lower()] = {"summary": f"{method.upper()} {path}", "responses": {"200": {"description": "Successful response"}}}
 
     def update_info(self, **kwargs):
         """Update the OpenAPI info section."""
