@@ -1,6 +1,8 @@
 import json
 import os
-from typing import List, Dict, Union, Any
+import re
+from inspect import Signature
+from typing import List, Dict, Union, Any, TypedDict
 
 import robyn
 
@@ -155,7 +157,7 @@ class OpenAPI:
 
         return openapi_object
 
-    def add_openapi_path_obj(self, route_type: str, endpoint: str, openapi_summary: str, openapi_tags: list):
+    def add_openapi_path_obj(self, route_type: str, endpoint: str, openapi_summary: str, openapi_tags: list, signature: Signature = None):
         """
         adds the given path to openapi spec
 
@@ -163,8 +165,15 @@ class OpenAPI:
         :param endpoint: the endpoint to be added
         :param openapi_summary: short summary of the endpoint (to be fetched from the endpoint defenition by default)
         :param openapi_tags: tags -- for grouping of endpoints
+        :param signature: the function signature -- to grab the typed dict annotations for query params
         """
-        modified_endpoint, path_obj = self.get_path_obj(endpoint, openapi_summary, openapi_tags)
+
+        query_params = None
+
+        if "query_params" in signature.parameters:
+            query_params = signature.parameters["query_params"].default
+
+        modified_endpoint, path_obj = self.get_path_obj(endpoint, openapi_summary, openapi_tags, query_params)
 
         if modified_endpoint not in self.openapi_schema["paths"]:
             self.openapi_schema["paths"][modified_endpoint] = {}
@@ -182,13 +191,14 @@ class OpenAPI:
         for path in paths:
             self.openapi_schema["paths"][path] = paths[path]
 
-    def get_path_obj(self, endpoint: str, summary: str, tags: list):
+    def get_path_obj(self, endpoint: str, summary: str, tags: list, query_params: TypedDict = None):
         """
         get the "path" openapi object according to spec
 
         :param endpoint: the endpoint to be added
         :param summary: short summary of the endpoint (to be fetched from the endpoint defenition by default)
         :param tags: tags -- for grouping of endpoints
+        :param query_params: query params for the function
 
         :return: the "path" openapi object according to spec
         """
@@ -209,11 +219,25 @@ class OpenAPI:
                     {
                         "name": param_name,
                         "in": "path",
-                        "required": True,
+                        "required": True,  # should handle this too.
                         "schema": {"type": "string"},
                     }
                 )
                 modified_endpoint += "/{" + param_name + "}"
+
+        if query_params:
+            for query_param in query_params.__annotations__:
+                # ugly hack -- should fix!
+                param_type = re.findall("'[a-z]+'", str(query_params.__annotations__[query_param]))[0].replace("'", "")
+
+                parameters.append(
+                    {
+                        "name": query_param,
+                        "in": "query",
+                        "required": False,
+                        "schema": {"type": param_type},
+                    }
+                )
 
         return modified_endpoint, {
             "summary": summary,

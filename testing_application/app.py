@@ -1,3 +1,5 @@
+from typing import TypedDict
+
 from robyn import Robyn, Request, jsonify, OpenAPI, SubRouter
 
 app = Robyn(
@@ -31,8 +33,13 @@ async def welcome():
     return "hiiiiii"
 
 
+class GetParams(TypedDict):
+    appointment_id: str
+    year: int
+
+
 @app.get("/users/:name/:age", openapi_tags=["Users"])
-async def get_user(r: Request):
+async def get_user(r: Request, query_params=GetParams):
     """Get User by ID"""
     return {"message": f"User {r.path_params['name']} : {r.path_params['age']}"}
 

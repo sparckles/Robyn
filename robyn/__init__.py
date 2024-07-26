@@ -309,7 +309,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.openapi.add_openapi_path_obj("get", endpoint, inspect.getdoc(handler), openapi_tags)
+            self.openapi.add_openapi_path_obj("get", endpoint, inspect.getdoc(handler), openapi_tags, inspect.signature(handler))
 
             return self.add_route(HttpMethod.GET, endpoint, handler, const, auth_required)
 
@@ -328,7 +328,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.openapi.add_openapi_path_obj("post", endpoint, inspect.getdoc(handler), openapi_tags)
+            self.openapi.add_openapi_path_obj("post", endpoint, inspect.getdoc(handler), openapi_tags, inspect.signature(handler))
 
             return self.add_route(HttpMethod.POST, endpoint, handler, auth_required=auth_required)
 
@@ -347,7 +347,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.openapi.add_openapi_path_obj("put", endpoint, inspect.getdoc(handler), openapi_tags)
+            self.openapi.add_openapi_path_obj("put", endpoint, inspect.getdoc(handler), openapi_tags, inspect.signature(handler))
 
             return self.add_route(HttpMethod.PUT, endpoint, handler, auth_required=auth_required)
 
@@ -366,7 +366,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.openapi.add_openapi_path_obj("delete", endpoint, inspect.getdoc(handler), openapi_tags)
+            self.openapi.add_openapi_path_obj("delete", endpoint, inspect.getdoc(handler), openapi_tags, inspect.signature(handler))
 
             return self.add_route(HttpMethod.DELETE, endpoint, handler, auth_required=auth_required)
 
@@ -385,7 +385,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.openapi.add_openapi_path_obj("patch", endpoint, inspect.getdoc(handler), openapi_tags)
+            self.openapi.add_openapi_path_obj("patch", endpoint, inspect.getdoc(handler), openapi_tags, inspect.signature(handler))
 
             return self.add_route(HttpMethod.PATCH, endpoint, handler, auth_required=auth_required)
 
@@ -404,7 +404,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.openapi.add_openapi_path_obj("head", endpoint, inspect.getdoc(handler), openapi_tags)
+            self.openapi.add_openapi_path_obj("head", endpoint, inspect.getdoc(handler), openapi_tags, inspect.signature(handler))
 
             return self.add_route(HttpMethod.HEAD, endpoint, handler, auth_required=auth_required)
 
@@ -423,7 +423,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.openapi.add_openapi_path_obj("options", endpoint, inspect.getdoc(handler), openapi_tags)
+            self.openapi.add_openapi_path_obj("options", endpoint, inspect.getdoc(handler), openapi_tags, inspect.signature(handler))
 
             return self.add_route(HttpMethod.OPTIONS, endpoint, handler, auth_required=auth_required)
 
@@ -442,7 +442,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.openapi.add_openapi_path_obj("connect", endpoint, inspect.getdoc(handler), openapi_tags)
+            self.openapi.add_openapi_path_obj("connect", endpoint, inspect.getdoc(handler), openapi_tags, inspect.signature(handler))
 
             return self.add_route(HttpMethod.CONNECT, endpoint, handler, auth_required=auth_required)
 
@@ -461,7 +461,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.openapi.add_openapi_path_obj("trace", endpoint, inspect.getdoc(handler), openapi_tags)
+            self.openapi.add_openapi_path_obj("trace", endpoint, inspect.getdoc(handler), openapi_tags, inspect.signature(handler))
 
             return self.add_route(HttpMethod.TRACE, endpoint, handler, auth_required=auth_required)
 
