@@ -23,7 +23,7 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
 ]
 dependencies = [
-  'watchdog == 2.2.1',
+  'watchdog == 4.0.1',
   'multiprocess == 0.70.14',
   'nestd == 0.3.1',
   'inquirerpy == 0.3.4',
