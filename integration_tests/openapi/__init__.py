@@ -3,7 +3,7 @@ from typing import TypedDict
 from robyn import Robyn, Request, jsonify, OpenAPI, SubRouter
 from robyn.openapi import OpenAPIInfo, Contact, License, ExternalDocumentation, Components
 
-app = Robyn(
+pet_sample_app = Robyn(
     file_object=__file__,
     openapi=OpenAPI(
         info=OpenAPIInfo(
@@ -37,7 +37,7 @@ app = Robyn(
 )
 
 
-@app.get("/")
+@pet_sample_app.get("/")
 async def welcome():
     """hiiii"""
     return "hiiiiii"
@@ -48,43 +48,43 @@ class GetParams(TypedDict):
     year: int
 
 
-@app.get("/users/:name/:age", openapi_tags=["Users"])
-async def get_user(r: Request, query_params=GetParams):
-    """Get User by ID"""
-    return {"message": f"User {r.path_params['name']} : {r.path_params['age']}"}
-
-
-@app.delete("/users/:name/:age", openapi_tags=["Users"])
-async def delete_user(r: Request):
-    """Delete User by ID"""
+@pet_sample_app.get("/users/:name/:age", openapi_tags=["Pet"])
+async def get_pet(r: Request, query_params=GetParams):
+    """Get Pet by ID"""
     return jsonify(r.path_params)
 
 
-doctor_router = SubRouter(__name__, prefix="/doctor")
+@pet_sample_app.delete("/users/:name/:age", openapi_tags=["Pet"])
+async def delete_pet(r: Request):
+    """Delete Pet by ID"""
+    return jsonify(r.path_params)
 
 
-@doctor_router.get("/")
+doctor_subrouter = SubRouter(__name__, prefix="/doctor")
+
+
+@doctor_subrouter.get("//")
 async def doctor_welcome():
-    """hiiii"""
-    return "doctor_hiiiiii"
+    """hiiii doctor"""
+    return "hiiiiii doctor"
 
 
-@doctor_router.get("/users/:name/:age")
-async def doctor_get_user(r: Request):
-    """Get User by ID"""
-    return {"message": f"doctor_User {r.path_params['name']} : {r.path_params['age']}"}
+@doctor_subrouter.get("/users/:name/:age")
+async def get_doctor(r: Request):
+    """Get Doctor by ID"""
+    return jsonify(r.path_params)
 
 
-@doctor_router.delete("/users/:name/:age")
-async def doctor_delete_user(r: Request):
-    """Delete User by ID"""
-    return f"doctor_{jsonify(r.path_params)}"
+@doctor_subrouter.delete("/users/:name/:age")
+async def delete_doctor(r: Request):
+    """Delete Doctor by ID"""
+    return jsonify(r.path_params)
 
 
-app.include_router(doctor_router)
+pet_sample_app.include_router(doctor_subrouter)
 
 if __name__ == "__main__":
-    app.start()
+    pet_sample_app.start()
 
 # query params ->> typed dict
 # subrouter impl for openapi
