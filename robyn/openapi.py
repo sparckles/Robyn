@@ -1,161 +1,78 @@
 import json
 import os
 import re
+from dataclasses import dataclass, field, asdict
 from inspect import Signature
-from typing import List, Dict, Union, Any, TypedDict
+from typing import List, Dict, TypedDict, Optional
 
 import robyn
 
 
+@dataclass
+class Contact:
+    name: Optional[str] = None
+    url: Optional[str] = None
+    email: Optional[str] = None
+
+
+@dataclass
+class License:
+    name: Optional[str] = None
+    url: Optional[str] = None
+
+
+@dataclass
+class Server:
+    url: str
+    description: Optional[str] = None
+
+
+@dataclass
+class ExternalDocumentation:
+    description: Optional[str] = None
+    url: Optional[str] = None
+
+
+@dataclass
+class Components:
+    schemas: Optional[Dict[str, Dict]] = field(default_factory=dict)
+    responses: Optional[Dict[str, Dict]] = field(default_factory=dict)
+    parameters: Optional[Dict[str, Dict]] = field(default_factory=dict)
+    examples: Optional[Dict[str, Dict]] = field(default_factory=dict)
+    requestBodies: Optional[Dict[str, Dict]] = field(default_factory=dict)
+    securitySchemes: Optional[Dict[str, Dict]] = field(default_factory=dict)
+    links: Optional[Dict[str, Dict]] = field(default_factory=dict)
+    callbacks: Optional[Dict[str, Dict]] = field(default_factory=dict)
+    pathItems: Optional[Dict[str, Dict]] = field(default_factory=dict)
+
+
+@dataclass
+class OpenAPIInfo:
+    title: str = "Robyn API"
+    version: str = "1.0.0"
+    description: Optional[str] = None
+    termsOfService: Optional[str] = None
+    contact: Contact = field(default_factory=Contact)
+    license: License = field(default_factory=License)
+    servers: List[Server] = field(default_factory=list)
+    externalDocs: Optional[ExternalDocumentation] = field(default_factory=ExternalDocumentation)
+    components: Components = field(default_factory=Components)
+
+
+@dataclass
 class OpenAPI:
-    def __init__(
-        self,
-        openapi_title: str = "Robyn",
-        openapi_summary: str = None,
-        openapi_description: str = None,
-        openapi_terms_of_service: str = None,
-        openapi_version: str = None,
-        openapi_contact_name: str = None,
-        openapi_contact_email: str = None,
-        openapi_contact_url: str = None,
-        openapi_license_name: str = None,
-        openapi_license_url: str = None,
-        openapi_servers: List[Dict[str, Union[str, Any]]] = None,
-        openapi_external_docs: Dict[str, str] = None,
-        openapi_component_schemas=None,
-        openapi_component_responses=None,
-        openapi_component_parameters=None,
-        openapi_component_examples=None,
-        openapi_component_request_bodies=None,
-        openapi_component_security_schemes=None,
-        openapi_component_links=None,
-        openapi_component_callbacks=None,
-        openapi_component_path_items=None,
-    ):
-        self.openapi_schema = self.build_schema(
-            title=openapi_title,
-            summary=openapi_summary,
-            description=openapi_description,
-            terms_of_service=openapi_terms_of_service,
-            version=openapi_version,
-            contact_name=openapi_contact_name,
-            contact_email=openapi_contact_email,
-            contact_url=openapi_contact_url,
-            license_name=openapi_license_name,
-            license_url=openapi_license_url,
-            servers=openapi_servers,
-            external_docs=openapi_external_docs,
-            component_schemas=openapi_component_schemas,
-            component_responses=openapi_component_responses,
-            component_parameters=openapi_component_parameters,
-            component_examples=openapi_component_examples,
-            component_request_bodies=openapi_component_request_bodies,
-            component_security_schemes=openapi_component_security_schemes,
-            component_links=openapi_component_links,
-            component_callbacks=openapi_component_callbacks,
-            component_path_items=openapi_component_path_items,
-        )
+    info: OpenAPIInfo = field(default_factory=OpenAPIInfo)
+    openapi_spec: dict = field(init=False)
 
-    def build_schema(
-        self,
-        title: str = None,
-        summary: str = None,
-        description: str = None,
-        terms_of_service: str = None,
-        version: str = None,
-        contact_name: str = None,
-        contact_email: str = None,
-        contact_url: str = None,
-        license_name: str = None,
-        license_url: str = None,
-        servers: List[Dict[str, Union[str, Any]]] = None,
-        external_docs: Dict[str, str] = None,
-        component_schemas=None,
-        component_responses=None,
-        component_parameters=None,
-        component_examples=None,
-        component_request_bodies=None,
-        component_security_schemes=None,
-        component_links=None,
-        component_callbacks=None,
-        component_path_items=None,
-    ) -> {}:
-        """
-        builds the initial openapi schema. please refer to https://swagger.io/specification/ for params & types.
-
-        :return: the openapi object with provided params
-        """
-        openapi_info_object = {}
-
-        if title:
-            openapi_info_object["title"] = title
-        if summary:
-            openapi_info_object["summary"] = summary
-        if description:
-            openapi_info_object["description"] = description
-        if terms_of_service:
-            openapi_info_object["termsOfService"] = terms_of_service
-        if version:
-            openapi_info_object["version"] = version
-
-        openapi_info_object["contact"] = {}
-
-        if contact_name:
-            openapi_info_object["contact"]["name"] = contact_name
-        if contact_email:
-            openapi_info_object["contact"]["email"] = contact_email
-        if contact_url:
-            openapi_info_object["contact"]["url"] = contact_url
-
-        openapi_info_object["license"] = {}
-
-        if license_name:
-            openapi_info_object["license"]["name"] = license_name
-        if license_url:
-            openapi_info_object["license"]["url"] = license_url
-
-        openapi_object = {
+    def __post_init__(self):
+        self.openapi_spec = {
             "openapi": "3.0.0",
-            "info": openapi_info_object,
+            "info": asdict(self.info),
             "paths": {},
+            "components": asdict(self.info.components),
+            "servers": [asdict(server) for server in self.info.servers],
+            "externalDocs": asdict(self.info.externalDocs) if self.info.externalDocs.url else None,
         }
-
-        if servers:
-            openapi_object["servers"] = servers
-
-        if external_docs:
-            openapi_object["externalDocs"] = external_docs
-
-        openapi_object["components"] = {}
-
-        if component_schemas:
-            openapi_object["components"]["schemas"] = component_schemas
-
-        if component_responses:
-            openapi_object["components"]["responses"] = component_responses
-
-        if component_parameters:
-            openapi_object["components"]["parameters"] = component_parameters
-
-        if component_examples:
-            openapi_object["components"]["examples"] = component_examples
-
-        if component_request_bodies:
-            openapi_object["components"]["requestBodies"] = component_request_bodies
-
-        if component_security_schemes:
-            openapi_object["components"]["securitySchemes"] = component_security_schemes
-
-        if component_links:
-            openapi_object["components"]["links"] = component_links
-
-        if component_callbacks:
-            openapi_object["components"]["callbacks"] = component_callbacks
-
-        if component_path_items:
-            openapi_object["components"]["pathItems"] = component_path_items
-
-        return openapi_object
 
     def add_openapi_path_obj(self, route_type: str, endpoint: str, openapi_summary: str, openapi_tags: list, signature: Signature = None):
         """
@@ -175,9 +92,9 @@ class OpenAPI:
 
         modified_endpoint, path_obj = self.get_path_obj(endpoint, openapi_summary, openapi_tags, query_params)
 
-        if modified_endpoint not in self.openapi_schema["paths"]:
-            self.openapi_schema["paths"][modified_endpoint] = {}
-        self.openapi_schema["paths"][modified_endpoint][route_type] = path_obj
+        if modified_endpoint not in self.openapi_spec["paths"]:
+            self.openapi_spec["paths"][modified_endpoint] = {}
+        self.openapi_spec["paths"][modified_endpoint][route_type] = path_obj
 
     def add_subrouter_paths(self, subrouter_openapi):
         """
@@ -186,10 +103,10 @@ class OpenAPI:
 
         :param subrouter_openapi: the OpenAPI object of the current subrouter
         """
-        paths = subrouter_openapi.openapi_schema["paths"]
+        paths = subrouter_openapi.openapi_spec["paths"]
 
         for path in paths:
-            self.openapi_schema["paths"][path] = paths[path]
+            self.openapi_spec["paths"][path] = paths[path]
 
     def get_path_obj(self, endpoint: str, summary: str, tags: list, query_params: TypedDict = None):
         """
@@ -255,7 +172,7 @@ class OpenAPI:
         get the swagger html page
         @return: the swagger html page
         """
-        json.dumps(self.openapi_schema)
+        json.dumps(self.openapi_spec)
         html_file = os.path.join(os.getcwd(), "robyn/swagger.html")
         return robyn.serve_html(html_file)
 
@@ -264,4 +181,4 @@ class OpenAPI:
         get the openapi spec json object
         @return: the openapi spec json object
         """
-        return json.dumps(self.openapi_schema)
+        return json.dumps(self.openapi_spec)
