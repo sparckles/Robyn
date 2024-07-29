@@ -8,13 +8,13 @@ As the codebase grew, Batman wanted to have a way to organise the code. Robyn to
 
 
 
-<Row>
+
 <Col>
 To organise your code in a better way - either to group by responsibility or for code splitting, you can use views.
 
 A view, simply is a function with a collection of other closures. e.g.
 </Col>
-  <Col sticky>
+  <Col>
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
@@ -42,16 +42,16 @@ A view, simply is a function with a collection of other closures. e.g.
     ```
     </CodeGroup>
   </Col>
-</Row>
+
 The above view contains two closures for the get and the post request.
 
 You can serve views in two ways:
-<Row>
+
 
   <Col>
   Using an `@app.view` decorator.
   </Col>
-  <Col sticky>
+  <Col>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
       ```python {{ title: 'untyped' }}
@@ -80,13 +80,13 @@ You can serve views in two ways:
       ```
     </CodeGroup>
   </Col>
-</Row>
 
-<Row>
+
+
   <Col>
   Using an `@app.view` decorator.
   </Col>
-  <Col sticky>
+  <Col>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
       ```python {{ title: 'untyped' }}
@@ -107,7 +107,7 @@ You can serve views in two ways:
       ```
     </CodeGroup>
   </Col>
-</Row>
+
 
 
 ---
@@ -117,7 +117,7 @@ You can serve views in two ways:
 
 
 
-<Row>
+
 
   <Col>
 
@@ -127,7 +127,7 @@ Subrouters can be used for both normal routes and web sockets. They are basicall
 
 The only thing to remember is that you need to add the subrouter to the main router.
   </Col>
-  <Col sticky>
+  <Col>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
       ```python {{ title: 'untyped' }}
@@ -172,7 +172,7 @@ The only thing to remember is that you need to add the subrouter to the main rou
       ```
     </CodeGroup>
   </Col>
-</Row>
+
 
 ## What's next?
 

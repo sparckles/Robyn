@@ -7,11 +7,11 @@ export const description =
 To begin, Robyn taught Batman about its ability to handle both synchronous and asynchronous requests. Batman was excited to learn about these features and started implementing them in the application.
 
 
-<Row>
+
 <Col>
 For a simple synchronous request, Batman wrote:
 </Col>
-  <Col sticky>
+  <Col>
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
@@ -43,13 +43,14 @@ For a simple synchronous request, Batman wrote:
     ```
     </CodeGroup>
   </Col>
-</Row>
-<Row>
+
+
 
   <Col>
     For an asynchronous request, Batman used:
   </Col>
-  <Col sticky>
+
+ <Col>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
       ```python {{ title: 'untyped' }}
@@ -69,20 +70,21 @@ For a simple synchronous request, Batman wrote:
       ```
     </CodeGroup>
   </Col>
-</Row>
 
---- 
+
+---
 
 ## Running the Application
 
 Batman was curious about how to run the application. Robyn explained that he could run the application through a simple command `python3 app.py`
 
 
-<Row>
+
   <Col>
     A robyn application exposes certain commands to the user. These commands can be used to run the application, or to generate a new project.
   </Col>
-  <Col sticky>
+
+ <Col>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
       ```bash
       usage: app.py [-h] [--processes PROCESSES] [--workers WORKERS] [--log-level LOG_LEVEL] [--create] [--docs] [--open-browser] [--version]
@@ -107,16 +109,17 @@ Batman was curious about how to run the application. Robyn explained that he cou
       ```
     </CodeGroup>
   </Col>
-</Row>
+
 
 <Row />
 
-<Row>
+
   <Col>
     Or the application can be run using Robyn's CLI, i.e. using `python -m robyn app.py`
   </Col>
 
-  <Col sticky>
+
+ <Col>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
       ```bash
 
@@ -142,7 +145,7 @@ Batman was curious about how to run the application. Robyn explained that he cou
       ```
     </CodeGroup>
   </Col>
-</Row>
+
 
 
 
@@ -152,11 +155,12 @@ Batman was curious about how to run the application. Robyn explained that he cou
 ## Handling Different HTTP Requests
 Robyn then taught Batman how to handle various HTTP requests like GET, POST, PUT, PATCH, and DELETE. With Robyn's guidance, Batman could create endpoints for each request type, making the application versatile and efficient.
 
-<Row>
+
 <Col>
 For example, Batman learned to create a POST request like this:
 </Col>
-  <Col sticky>
+
+ <Col>
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
@@ -177,7 +181,7 @@ For example, Batman learned to create a POST request like this:
     ```
     </CodeGroup>
   </Col>
-</Row>
+
 
 ---
 
@@ -185,11 +189,12 @@ For example, Batman learned to create a POST request like this:
 ## Returning JSON Responses
 Batman was curios about the ability to return JSON responses from the application. Robyn showed him how to do this using the `jsonify` function.
 
-<Row>
+
 <Col>
   Batman could now return JSON responses from his application, making it easier to parse the data on the frontend.
 </Col>
-  <Col sticky>
+
+ <Col>
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
@@ -213,23 +218,24 @@ Batman was curios about the ability to return JSON responses from the applicatio
     ```
     </CodeGroup>
   </Col>
-</Row>
+
 
 
 ## Accessing Path Parameters and Query Parameters
 
 Batman was curious about how to access path parameters and query parameters from incoming requests. This allowed Batman to create dynamic routes and gather specific information from the request.
 
-<Row>
+
   <Col>
 
   Robyn also showed Batman how to access path parameters and query parameters from incoming requests.
 
   For instance, Batman could create a route with a path parameter and access it like this:
-  
+
 
   </Col>
-  <Col sticky>
+
+ <Col>
 
     <CodeGroup title="Request" tag="POST" label="/http_requests">
 
@@ -259,17 +265,18 @@ Batman was curious about how to access path parameters and query parameters from
 
 
   </Col>
-</Row>
 
 
-<Row>
+
+
   <Col>
 
   And for accessing query parameters, Batman could use the following code snippet:
-  
+
 
   </Col>
-  <Col sticky>
+
+ <Col>
 
     <CodeGroup title="Request" tag="POST" label="/http_requests">
 
@@ -291,7 +298,7 @@ Batman was curious about how to access path parameters and query parameters from
 
     </CodeGroup>
   </Col>
-</Row>
+
 
 
 ---
@@ -305,11 +312,12 @@ After understanding the dynamic nature of Robyn, Batman, now wanted the ability 
 
 ### Using Dictionaries
 
-<Row>
+
 <Col>
 Batman learned to customize response formats by returning dictionaries or using Robyn's Response object. He could also set status codes and headers for each response. For example, Batman created a response with a dictionary like this:
 </Col>
-  <Col sticky>
+
+ <Col>
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
@@ -341,15 +349,16 @@ Batman learned to customize response formats by returning dictionaries or using 
     ```
     </CodeGroup>
   </Col>
-</Row>
+
 
 
 ### Using the Response object
-<Row>
+
 <Col>
 To use the Response object, he wrote:
 </Col>
-  <Col sticky>
+
+ <Col>
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
@@ -371,15 +380,16 @@ To use the Response object, he wrote:
     ```
     </CodeGroup>
   </Col>
-</Row>
+
 
 ### Returning a Binary Output
 
-<Row>
+
 <Col>
 Batman then wanted to return a binary output from his application. He could do this by setting the type of the response to "binary" and returning a bytes object. For example, he wrote:
 </Col>
-  <Col sticky>
+
+ <Col>
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
@@ -434,7 +444,7 @@ Batman then wanted to return a binary output from his application. He could do t
     ```
     </CodeGroup>
   </Col>
-</Row>
+
 
 
 
@@ -446,11 +456,12 @@ Batman, being the world's greatest detective, spotted the `headers` field in the
 
 ### Local Response Headers
 
-<Row>
+
 <Col>
 Either, by using the `headers` field in the `Response` object:
 </Col>
-<Col sticky>
+
+ <Col>
 
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
@@ -479,11 +490,11 @@ Either, by using the `headers` field in the `Response` object:
     ```
     </CodeGroup>
   </Col>
-</Row>
+
 
 ### Global Response Headers
 
-<Row>
+
 <Col>
 Or setting the Headers globally *per* router.
 </Col>
@@ -501,9 +512,9 @@ Or setting the Headers globally *per* router.
     ```
     </CodeGroup>
   </Col>
-</Row>
 
-<Row>
+
+
 <Col>
 `add_response_header` appends the header to the list of headers, while `set_response_header` replaces the header if it exists.
 </Col>
@@ -521,15 +532,16 @@ Or setting the Headers globally *per* router.
     ```
     </CodeGroup>
   </Col>
-</Row>
+
 
 ### Cookies
 
-<Row>
+
 <Col>
 Set cookies using the `set_cookies` function.
 </Col>
-<Col sticky>
+
+ <Col>
 
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
@@ -553,7 +565,7 @@ Set cookies using the `set_cookies` function.
     ```
     </CodeGroup>
   </Col>
-</Row>
+
 
 
 ## Request Headers
@@ -562,11 +574,12 @@ Batman, now wanted to know how to read request headers. Robyn explained that he 
 
 ### Local Request Headers
 
-<Row>
+
 <Col>
 Either, by using the `headers` field in the `Request` object:
 </Col>
-<Col sticky>
+
+ <Col>
 
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
@@ -585,7 +598,7 @@ Either, by using the `headers` field in the `Request` object:
       headers["new_header"] = "new_value" # This syntax is also valid
 
       print("These are the modified request headers: ", headers)
-      
+
       return ""
     ```
 
@@ -605,19 +618,20 @@ Either, by using the `headers` field in the `Request` object:
       headers["new_header"] = "new_value" # This syntax is also valid
 
       print("These are the modified request headers: ", headers)
-      
+
       return ""
 
     ```
     </CodeGroup>
   </Col>
-</Row>
 
-<Row>
+
+
 <Col>
 Or by using the global Request Headers:
 </Col>
-<Col sticky>
+
+ <Col>
 
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
@@ -631,13 +645,14 @@ Or by using the global Request Headers:
     ```
     </CodeGroup>
   </Col>
-</Row>
 
-<Row>
+
+
 <Col>
 `add_request_header` appends the header to the list of headers, while `set_request_header` replaces the header if it exists.
 </Col>
-<Col sticky>
+
+ <Col>
 
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
@@ -651,18 +666,19 @@ Or by using the global Request Headers:
     ```
     </CodeGroup>
   </Col>
-</Row>
+
 
 
 ---
 
 ## Status Codes
 
-<Row>
+
 <Col>
-After learning about response formats and headers, Batman learned to set status codes for his responses. 
+After learning about response formats and headers, Batman learned to set status codes for his responses.
 </Col>
-  <Col sticky>
+
+ <Col>
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
@@ -684,7 +700,7 @@ After learning about response formats and headers, Batman learned to set status 
     ```
     </CodeGroup>
   </Col>
-</Row>
+
 
 
 ---

@@ -105,11 +105,11 @@ if __name__ == "__main__":
 
 Let us try to decipher the usage line by line.
 
-<Row>
+
 <Col>
 These statements just import the dependencies.
 </Col>
-  <Col sticky>
+  <Col>
 
     <CodeGroup title="Section 1">
 
@@ -127,17 +127,17 @@ These statements just import the dependencies.
     </CodeGroup>
 
   </Col>
-</Row>
 
 
-<Row>
+
+
 <Col>
 Here, we are creating a base `User` type with a `name` property.
 
 We are then creating a GraphQl `Query` that returns the `User`.
 
 </Col>
-  <Col sticky>
+  <Col>
 
     <CodeGroup title="Section 2">
 
@@ -159,14 +159,14 @@ We are then creating a GraphQl `Query` that returns the `User`.
     </CodeGroup>
 
   </Col>
-</Row>
 
 
-<Row>
+
+
 <Col>
 Now, we are initializing a Robyn app. For us, to serve a GraphQl app, we need to have a `get` route to return the `GraphiQL(ide)` and then a post route to process the `GraphQl` request.
 </Col>
-  <Col sticky>
+  <Col>
 
     <CodeGroup title="Section 3">
 
@@ -176,14 +176,14 @@ Now, we are initializing a Robyn app. For us, to serve a GraphQl app, we need to
     </CodeGroup>
 
   </Col>
-</Row>
 
 
-<Row>
+
+
 <Col>
 We are populating the html page with the GraphiQL IDE using `strawberry`. We are using `const=True` to precompute this population. Essentially, making it very fast and bypassing the execution overhead in this get request.
 </Col>
-  <Col sticky>
+  <Col>
 
     <CodeGroup title="Section 4">
 
@@ -195,14 +195,14 @@ We are populating the html page with the GraphiQL IDE using `strawberry`. We are
     </CodeGroup>
 
   </Col>
-</Row>
 
 
-<Row>
+
+
 <Col>
 Finally, we are getting params(body, query, variables, context_value, root_value, operation_name) from the `request` object.
 </Col>
-  <Col sticky>
+  <Col>
 
     <CodeGroup title="Section 5">
 
@@ -235,7 +235,7 @@ Finally, we are getting params(body, query, variables, context_value, root_value
     </CodeGroup>
 
   </Col>
-</Row>
+
 
 The above is the example for just one route. You can do the same for as many as you like. :)
 

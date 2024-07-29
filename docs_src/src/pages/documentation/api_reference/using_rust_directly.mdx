@@ -6,11 +6,11 @@ There may be occassions where Batman may be working with a high computation task
 
 
 
-<Row>
+
 <Col>
 The first thing you need to is to create a Rust file. Let's call it `hello_world.rs`. You can do it using the cli:
 </Col>
-  <Col sticky>
+  <Col>
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
@@ -24,15 +24,15 @@ The first thing you need to is to create a Rust file. Let's call it `hello_world
 
     </CodeGroup>
   </Col>
-</Row>
-<Row>
+
+
 
   <Col>
   Then you can open the file and write your Rust code. For example, let's write a function that returns a string.
 
 
   </Col>
-  <Col sticky>
+  <Col>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
       ```rust
@@ -52,9 +52,9 @@ The first thing you need to is to create a Rust file. Let's call it `hello_world
 
     </CodeGroup>
   </Col>
-</Row>
 
-<Row>
+
+
 
   <Col>
   Every Rust file that you create using the cli will have a special comment at the top of the file. This comment is used by Robyn to know which dependencies to import. In this case, we are importing the `pyo3` crate. You can import as many crates as you want. You can also import crates from crates.io. For example, if you want to use the `rusqlite` crate, you can do it like this:
@@ -62,7 +62,7 @@ The first thing you need to is to create a Rust file. Let's call it `hello_world
 
 
   </Col>
-  <Col sticky>
+  <Col>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
       ```rust
@@ -84,13 +84,13 @@ The first thing you need to is to create a Rust file. Let's call it `hello_world
 
     </CodeGroup>
   </Col>
-</Row>
 
 
-<Row>
+
+
   Then you can import the function in your Python code and use it.
 
-  <Col sticky>
+  <Col>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
       ```python {{ title: 'untyped' }}
@@ -109,7 +109,7 @@ The first thing you need to is to create a Rust file. Let's call it `hello_world
 
   To run the code, you need to use the `--compile-rust-path` flag. This will compile the Rust code and run it. You can also use the `--dev` flag to watch for changes in the Rust code and recompile it on the fly.
 
-  <Col sticky>
+  <Col>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
       ```python {{ title: 'untyped' }}
@@ -122,7 +122,7 @@ The first thing you need to is to create a Rust file. Let's call it `hello_world
     </CodeGroup>
 
   </Col>
-</Row>
+
 
 An example of a Robyn app with a Rust file that using the `rusqlite` crate to connect to a database and return the number of rows in a table: https://github.com/sansyrox/rusty-sql
 
