@@ -120,7 +120,8 @@ class OpenAPI:
         :return: the "path" openapi object according to spec
         """
         # for converting path param from `:param` to `{param}`
-        stripped_endpoint_without_path_params = None
+        # initialized with endpoint for handling endpoints without path params
+        endpoint_with_path_params_wrapped_in_braces = endpoint
 
         path_params = endpoint.split(":")
         openapi_parameter_object = []
@@ -128,7 +129,7 @@ class OpenAPI:
         if len(path_params) > 1:
             path = path_params[0]
 
-            stripped_endpoint_without_path_params = path.removesuffix("/")
+            endpoint_with_path_params_wrapped_in_braces = path.removesuffix("/")
 
             for param in path_params[1:]:
                 param_name = param[:-1] if param.endswith("/") else param
@@ -141,7 +142,7 @@ class OpenAPI:
                         "schema": {"type": "string"},
                     }
                 )
-                stripped_endpoint_without_path_params += "/{" + param_name + "}"
+                endpoint_with_path_params_wrapped_in_braces += "/{" + param_name + "}"
 
         if query_params:
             for query_param in query_params.__annotations__:
@@ -158,7 +159,7 @@ class OpenAPI:
                     }
                 )
 
-        return stripped_endpoint_without_path_params, {
+        return endpoint_with_path_params_wrapped_in_braces, {
             "summary": summary,
             "tags": tags,
             "parameters": openapi_parameter_object,
