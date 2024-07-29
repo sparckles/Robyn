@@ -1,8 +1,8 @@
 import json
-import os
 import re
 from dataclasses import dataclass, field, asdict
 from inspect import Signature
+from pathlib import Path
 from typing import List, Dict, TypedDict, Optional
 
 import robyn
@@ -119,35 +119,37 @@ class OpenAPI:
 
         :return: the "path" openapi object according to spec
         """
-        modified_endpoint = endpoint
+        # for converting path param from `:param` to `{param}`
+        stripped_endpoint_without_path_params = None
 
         path_params = endpoint.split(":")
-        parameters = []
+        openapi_parameter_object = []
 
         if len(path_params) > 1:
             path = path_params[0]
 
-            modified_endpoint = path[:-1] if path.endswith("/") else path
+            stripped_endpoint_without_path_params = path.removesuffix("/")
 
             for param in path_params[1:]:
                 param_name = param[:-1] if param.endswith("/") else param
 
-                parameters.append(
+                openapi_parameter_object.append(
                     {
                         "name": param_name,
                         "in": "path",
-                        "required": True,  # should handle this too.
+                        "required": True,
                         "schema": {"type": "string"},
                     }
                 )
-                modified_endpoint += "/{" + param_name + "}"
+                stripped_endpoint_without_path_params += "/{" + param_name + "}"
 
         if query_params:
             for query_param in query_params.__annotations__:
-                # ugly hack -- should fix!
+                # ugly hack!
+                # returns "<class 'int'>" -- this line strips out the type a.k.a int from it
                 param_type = re.findall("'[a-z]+'", str(query_params.__annotations__[query_param]))[0].replace("'", "")
 
-                parameters.append(
+                openapi_parameter_object.append(
                     {
                         "name": query_param,
                         "in": "query",
@@ -156,10 +158,10 @@ class OpenAPI:
                     }
                 )
 
-        return modified_endpoint, {
+        return stripped_endpoint_without_path_params, {
             "summary": summary,
             "tags": tags,
-            "parameters": parameters,
+            "parameters": openapi_parameter_object,
             "responses": {
                 "200": {
                     "description": "Successful Response",
@@ -170,10 +172,11 @@ class OpenAPI:
     def docs_handler(self):
         """
         get the swagger html page
+        side effect: this function also dumps the openapi json file
         @return: the swagger html page
         """
         json.dumps(self.openapi_spec)
-        html_file = os.path.join(os.getcwd(), "robyn/swagger.html")
+        html_file = str(Path("./robyn/swagger.html"))
         return robyn.serve_html(html_file)
 
     def json_handler(self):
