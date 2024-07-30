@@ -10,6 +10,15 @@ import robyn
 
 @dataclass
 class Contact:
+    """
+    The contact information for the exposed API.
+    (https://swagger.io/specification/#contact-object)
+
+    @param name The identifying name of the contact person/organization.
+    @param url The URL pointing to the contact information. This MUST be in the form of a URL.
+    @param email The email address of the contact person/organization. This MUST be in the form of an email address.
+    """
+
     name: Optional[str] = None
     url: Optional[str] = None
     email: Optional[str] = None
@@ -17,24 +26,66 @@ class Contact:
 
 @dataclass
 class License:
+    """
+    The license information for the exposed API.
+    (https://swagger.io/specification/#license-object)
+
+    @param name The license name used for the API.
+    @param url A URL to the license used for the API. This MUST be in the form of a URL.
+    """
+
     name: Optional[str] = None
     url: Optional[str] = None
 
 
 @dataclass
 class Server:
+    """
+    An array of Server Objects, which provide connectivity information to a target server. If the servers property is
+    not provided, or is an empty array, the default value would be a Server Object with a url value of /.
+    (https://swagger.io/specification/#server-object)
+
+    @param url A URL to the target host. This URL supports Server Variables and MAY be relative,
+    to indicate that the host location is relative to the location where the OpenAPI document is being served.
+    Variable substitutions will be made when a variable is named in {brackets}.
+    @param description An optional string describing the host designated by the URL.
+    """
+
     url: str
     description: Optional[str] = None
 
 
 @dataclass
 class ExternalDocumentation:
+    """
+    Additional external documentation for this operation.
+    (https://swagger.io/specification/#external-documentation-object)
+
+    @param description A description of the target documentation.
+    @param url The URL for the target documentation.
+    """
+
     description: Optional[str] = None
     url: Optional[str] = None
 
 
 @dataclass
 class Components:
+    """
+    Additional external documentation for this operation.
+    (https://swagger.io/specification/#components-object)
+
+    @param schemas An object to hold reusable Schema Objects.
+    @param responses An object to hold reusable Response Objects.
+    @param parameters An object to hold reusable Parameter Objects.
+    @param examples An object to hold reusable Example Objects.
+    @param requestBodies An object to hold reusable Request Body Objects.
+    @param securitySchemes An object to hold reusable Security Scheme Objects.
+    @param links An object to hold reusable Link Objects.
+    @param callbacks An object to hold reusable Callback Objects.
+    @param pathItems An object to hold reusable Callback Objects.
+    """
+
     schemas: Optional[Dict[str, Dict]] = field(default_factory=dict)
     responses: Optional[Dict[str, Dict]] = field(default_factory=dict)
     parameters: Optional[Dict[str, Dict]] = field(default_factory=dict)
@@ -48,6 +99,21 @@ class Components:
 
 @dataclass
 class OpenAPIInfo:
+    """
+    Provides metadata about the API. The metadata MAY be used by tooling as required.
+    (https://swagger.io/specification/#info-object)
+
+    @param title: The title of the API.
+    @param version: The version of the API.
+    @param description: A description of the API.
+    @param termsOfService: A URL to the Terms of Service for the API.
+    @param contact: The contact information for the exposed API.
+    @param license: The license information for the exposed API.
+    @param servers: An list of Server objects representing the servers.
+    @param externalDocs: Additional external documentation.
+    @param components: An element to hold various schemas for the document.
+    """
+
     title: str = "Robyn API"
     version: str = "1.0.0"
     description: Optional[str] = None
@@ -61,10 +127,20 @@ class OpenAPIInfo:
 
 @dataclass
 class OpenAPI:
+    """
+    This is the root object of the OpenAPI document.
+
+    @param info: Provides metadata about the API.
+    @param openapi_spec: The content of openapi.json as a dict
+    """
+
     info: OpenAPIInfo = field(default_factory=OpenAPIInfo)
     openapi_spec: dict = field(init=False)
 
     def __post_init__(self):
+        """
+        initializes the openapi_spec dict
+        """
         self.openapi_spec = {
             "openapi": "3.0.0",
             "info": asdict(self.info),
