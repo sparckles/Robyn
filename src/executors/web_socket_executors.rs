@@ -23,31 +23,31 @@ fn get_function_output<'a>(
     match function.number_of_params {
         0 => handler.call0(),
         1 => {
-            if args.get_item("ws").is_some() {
+            if args.get_item("ws")?.is_some() {
                 handler.call1((ws.clone(),))
-            } else if args.get_item("msg").is_some() {
+            } else if args.get_item("msg")?.is_some() {
                 handler.call1((fn_msg.unwrap_or_default(),))
             } else {
                 handler.call((), Some(kwargs))
             }
         }
         2 => {
-            if args.get_item("ws").is_some() && args.get_item("msg").is_some() {
+            if args.get_item("ws")?.is_some() && args.get_item("msg")?.is_some() {
                 handler.call1((ws.clone(), fn_msg.unwrap_or_default()))
-            } else if args.get_item("ws").is_some() {
+            } else if args.get_item("ws")?.is_some() {
                 handler.call((ws.clone(),), Some(kwargs))
-            } else if args.get_item("msg").is_some() {
+            } else if args.get_item("msg")?.is_some() {
                 handler.call((fn_msg.unwrap_or_default(),), Some(kwargs))
             } else {
                 handler.call((), Some(kwargs))
             }
         }
         3 => {
-            if args.get_item("ws").is_some() && args.get_item("msg").is_some() {
+            if args.get_item("ws")?.is_some() && args.get_item("msg")?.is_some() {
                 handler.call((ws.clone(), fn_msg.unwrap_or_default()), Some(kwargs))
-            } else if args.get_item("ws").is_some() {
+            } else if args.get_item("ws")?.is_some() {
                 handler.call((ws.clone(),), Some(kwargs))
-            } else if args.get_item("msg").is_some() {
+            } else if args.get_item("msg")?.is_some() {
                 handler.call((fn_msg.unwrap_or_default(),), Some(kwargs))
             } else {
                 handler.call((), Some(kwargs))
