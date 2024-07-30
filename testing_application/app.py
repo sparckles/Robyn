@@ -3,6 +3,8 @@ from typing import TypedDict
 from robyn import Robyn, Request, jsonify, OpenAPI, SubRouter
 from robyn.openapi import OpenAPIInfo, Contact, License, ExternalDocumentation, Components
 
+# this is a file currently for testing the implementation -- will be removed once the PR is ready for merging
+
 pet_sample_app = Robyn(
     file_object=__file__,
     openapi=OpenAPI(
@@ -85,8 +87,3 @@ pet_sample_app.include_router(doctor_subrouter)
 
 if __name__ == "__main__":
     pet_sample_app.start()
-
-# query params ->> typed dict
-# subrouter impl for openapi
-
-# add_direcotry
