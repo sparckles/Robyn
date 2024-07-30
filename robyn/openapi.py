@@ -163,7 +163,7 @@ class OpenAPI:
 
         query_params = None
 
-        if "query_params" in signature.parameters:
+        if signature and "query_params" in signature.parameters:
             query_params = signature.parameters["query_params"].default
 
         modified_endpoint, path_obj = self.get_path_obj(endpoint, openapi_summary, openapi_tags, query_params)
@@ -174,7 +174,6 @@ class OpenAPI:
 
     def add_subrouter_paths(self, subrouter_openapi):
         """
-
         adds the subrouter paths to main router's openapi specs
 
         :param subrouter_openapi: the OpenAPI object of the current subrouter
