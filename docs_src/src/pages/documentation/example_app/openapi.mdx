@@ -1,0 +1,123 @@
+export const description =
+  'Welcome to the Robyn API documentation. You will find comprehensive guides and documentation to help you start working with Robyn as quickly as possible, as well as support if you get stuck.'
+
+
+## OpenAPI Docs
+
+A while after deploying the application, Batman got multiple queries from the users on how to use the endpoints. Robyn helped him by showing him how to generate OpenAPI Specification for his application.
+
+Out of the box, the following endpoints are setup for you:
+
+- `/docs` The Swagger UI
+- `/openapi.json` The JSON Specification
+
+## How to use?
+
+```python {{ title: 'OpenAPI' }}
+from typing import TypedDict
+
+from robyn import Robyn, Request, jsonify, OpenAPI
+from robyn.openapi import OpenAPIInfo, Contact, License, ExternalDocumentation, Components
+
+app = Robyn(
+    file_object=__file__,
+    openapi=OpenAPI(
+        info=OpenAPIInfo(
+            title="Sample App",
+            description=" This is a sample server application.",
+            termsOfService=" https://example.com/terms/",
+            version=" 1.2.2",
+            contact=Contact(
+                name="API Support",
+                url="https://www.example.com/support",
+                email="support@example.com",
+            ),
+            license=License(
+                name="GPLv3.0+",
+                url="https://www.gnu.org/licenses/gpl-3.0.en.html",
+            ),
+            servers=[
+                Server(
+                    url="//",
+                    description="Debug environment"
+                ),
+                Server(
+                    url="https://example.com/api/v1/",
+                    description="Production environment"
+                ),
+            ],
+            externalDocs=ExternalDocumentation(description="Find more info here", url="https://example.com/"),
+            components=Components(),
+        ),
+    ),
+)
+
+
+@app.get("/")
+async def welcome():
+    """welcome endpoint"""
+    return "hi"
+
+
+class GetRequestParams(TypedDict):
+    appointment_id: str
+    year: int
+
+
+@app.get("/api/v1/:name", openapi_tags=["Name"])
+async def get(r: Request, query_params=GetRequestParams):
+    """Get Name by ID"""
+    return jsonify(r.path_params)
+
+
+@app.delete("/users/:name", openapi_tags=["Name"])
+async def delete(r: Request):
+    """Delete Name by ID"""
+    return jsonify(r.path_params)
+
+
+if __name__ == "__main__":
+    app.start()
+```
+
+## How does it work with subrouters?
+
+```python {{ title: 'OpenAPI Subrouters' }}
+subrouter = SubRouter(__name__, prefix="/sub")
+
+
+@subrouter.get("/")
+async def subrouter_welcome():
+    """welcome subrouter"""
+    return "hiiiiii subrouter"
+
+
+@subrouter.get("/:name")
+async def subrouter_get(r: Request):
+    """Get Name by ID"""
+    return jsonify(r.path_params)
+
+
+@subrouter.delete("/:name")
+async def subrouter_delete(r: Request):
+    """Delete Name by ID"""
+    return jsonify(r.path_params)
+
+
+app.include_router(subrouter)
+```
+
+With the reference documentation deployed and running smoothly, Batman had a powerful new tool at his disposal. The Robyn framework had provided him with the flexibility, scalability, and performance needed to create an effective crime-fighting application, giving him a technological edge in his ongoing battle to protect Gotham City.
+
+
+<div className="not-prose">
+  <Button
+    href="/documentation/example_app/templates"
+    variant="text"
+    arrow="right"
+    children="Templates"
+  />
+</div>
+
+
+
