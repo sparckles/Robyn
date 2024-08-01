@@ -6,6 +6,7 @@ import { Navigation } from '@/components/documentation/Navigation'
 import { Prose } from '@/components/documentation/Prose'
 import { SectionProvider } from '@/components/documentation/SectionProvider'
 import { useState, useEffect } from 'react'
+import { Container } from '../Container'
 
 export function Layout({ children, sections = [] }) {
   const [showSideBar, setShowSideBar] = useState(true)
@@ -29,14 +30,23 @@ export function Layout({ children, sections = [] }) {
           <div className="contents lg:pointer-events-auto lg:block lg:w-72 lg:overflow-y-auto lg:border-white/10 lg:px-6 lg:pb-8 xl:w-80">
             <BottomNavbar />
 
-            <HideIcon
-              className="mt-8 h-12 w-12 fill-zinc-700"
-              onClick={() => {
-                setShowSideBar(!showSideBar)
-              }}
-            />
+            {showSideBar && <Navigation className="lg:mt-8 lg:block" />}
 
-            {showSideBar && <Navigation className="hidden lg:mt-8 lg:block" />}
+            <Container
+              className="bottom-2 left-0 z-40"
+              style={{ position: 'fixed' }}
+            >
+              <div className="flex md:flex-1">
+                <button className="border-1 group rounded-full border-yellow-500 bg-zinc-800/90 px-2 py-2 ring-1 ring-white/10 backdrop-blur transition hover:ring-white/20 ">
+                  <MenuIcon
+                    className="h-6 w-6 fill-zinc-700"
+                    onClick={() => {
+                      setShowSideBar(!showSideBar)
+                    }}
+                  />
+                </button>
+              </div>
+            </Container>
           </div>
         </motion.header>
         <div className="relative px-4 sm:px-6 lg:px-8">
@@ -50,9 +60,9 @@ export function Layout({ children, sections = [] }) {
   )
 }
 
-function HideIcon(props) {
+function MenuIcon(props) {
   return (
-    <svg viewBox="0 -960 960 960" fill="#FFFFFF" {...props}>
+    <svg viewBox="0 -960 960 960" {...props}>
       <path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z" />
     </svg>
   )
