@@ -31,26 +31,36 @@ export function Layout({ children, sections = [] }) {
             <BottomNavbar />
 
             {showSideBar && <Navigation className="lg:mt-8 lg:block" />}
-
+          </div>
+        </motion.header>
+        <div className="relative px-4 sm:px-6 lg:px-8">
+          <main className="py-16">
             <Container
               className="bottom-2 left-0 z-40"
               style={{ position: 'fixed' }}
             >
               <div className="flex md:flex-1">
-                <button className="border-1 group rounded-full border-yellow-500 bg-zinc-800/90 px-2 py-2 ring-1 ring-white/10 backdrop-blur transition hover:ring-white/20 ">
-                  <MenuIcon
-                    className="h-6 w-6 fill-zinc-700"
-                    onClick={() => {
-                      setShowSideBar(!showSideBar)
-                    }}
-                  />
+                <button className="border-1 group rounded-full bg-zinc-800/90 px-2 py-2 backdrop-blur transition hover:ring-white/20 ">
+
+                  {showSideBar ? (
+                    <LeftIcon
+                      className="h-6 w-6 fill-zinc-700"
+                      onClick={() => {
+                        setShowSideBar(false)
+                      }}
+                    />
+                  ) : (
+                    <RightIcon
+                      className="h-6 w-6 fill-zinc-700"
+                      onClick={() => {
+                        setShowSideBar(true)
+                      }}
+                    />
+                  )}
                 </button>
               </div>
             </Container>
-          </div>
-        </motion.header>
-        <div className="relative px-4 sm:px-6 lg:px-8">
-          <main className="py-16">
+
             <Prose>{children}</Prose>
           </main>
           <Footer />
@@ -60,10 +70,18 @@ export function Layout({ children, sections = [] }) {
   )
 }
 
-function MenuIcon(props) {
+function LeftIcon(props) {
   return (
     <svg viewBox="0 -960 960 960" {...props}>
       <path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z" />
+    </svg>
+  )
+}
+
+function RightIcon(props) {
+  return (
+    <svg viewBox="0 -960 960 960" {...props}>
+      <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z" />
     </svg>
   )
 }
