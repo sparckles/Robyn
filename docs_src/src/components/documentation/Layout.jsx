@@ -38,27 +38,9 @@ export function Layout({ children, sections = [] }) {
 
         <div className="relative px-4 sm:px-6 lg:px-8">
           <main className="py-16">
-            <div className="bottom-4 left-4 z-40" style={{ position: 'fixed' }}>
-              <div className="flex md:flex-1">
-                <button className="border-1 group rounded-full bg-zinc-800/90 px-2 py-2 backdrop-blur transition hover:ring-white/20 ">
-                  {showSideBar ? (
-                    <LeftIcon
-                      className="h-6 w-6 fill-zinc-700"
-                      onClick={() => {
-                        setShowSideBar(false)
-                      }}
-                    />
-                  ) : (
-                    <RightIcon
-                      className="h-6 w-6 fill-zinc-700"
-                      onClick={() => {
-                        setShowSideBar(true)
-                      }}
-                    />
-                  )}
-                </button>
-              </div>
-            </div>
+            {SideBarToggleIcon(showSideBar, () => {
+              setShowSideBar(!showSideBar)
+            })}
 
             <Prose>{children}</Prose>
           </main>
@@ -66,6 +48,28 @@ export function Layout({ children, sections = [] }) {
         </div>
       </div>
     </SectionProvider>
+  )
+}
+
+function SideBarToggleIcon(showSideBar, onClick) {
+  return (
+    <div className="bottom-4 left-4 z-40" style={{ position: 'fixed' }}>
+      <div className="flex md:flex-1">
+        <button className="border-1 group rounded-full bg-zinc-800/90 px-2 py-2 backdrop-blur transition hover:ring-white/20 ">
+          {showSideBar ? (
+            <LeftIcon
+              className="h-6 w-6 fill-zinc-700"
+              onClick={() => onClick()}
+            />
+          ) : (
+            <RightIcon
+              className="h-6 w-6 fill-zinc-700"
+              onClick={() => onClick()}
+            />
+          )}
+        </button>
+      </div>
+    </div>
   )
 }
 
