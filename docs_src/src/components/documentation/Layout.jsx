@@ -35,8 +35,8 @@ export function Layout({ children, sections = [] }) {
         </motion.header>
         <div className="relative px-4 sm:px-6 lg:px-8">
           <main className="py-16">
-            <Container
-              className="bottom-2 left-0 z-40"
+            <div
+              className="bottom-4 left-4 z-40"
               style={{ position: 'fixed' }}
             >
               <div className="flex md:flex-1">
@@ -59,7 +59,7 @@ export function Layout({ children, sections = [] }) {
                   )}
                 </button>
               </div>
-            </Container>
+            </div>
 
             <Prose>{children}</Prose>
           </main>
