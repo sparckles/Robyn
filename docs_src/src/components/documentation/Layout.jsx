@@ -10,38 +10,37 @@ import { Container } from '../Container'
 
 export function Layout({ children, sections = [] }) {
   const [showSideBar, setShowSideBar] = useState(true)
-  const [margin, setMargin] = useState('lg:ml-72 xl:ml-80')
+  const [divMargin, setDivMargin] = useState('lg:ml-72 xl:ml-80')
 
   useEffect(() => {
     if (showSideBar) {
-      setMargin('lg:ml-72 xl:ml-80')
+      setDivMargin('lg:ml-72 xl:ml-80')
     } else {
-      setMargin('lg:ml-8 xl:ml-8')
+      setDivMargin('lg:ml-8 xl:ml-8')
     }
   }, [showSideBar])
 
   return (
     <SectionProvider sections={sections}>
-      <div className={margin}>
-        <motion.header
-          layoutScroll
-          className="contents lg:pointer-events-none lg:fixed lg:inset-0 lg:z-40 lg:flex"
-        >
-          <div className="contents lg:pointer-events-auto lg:block lg:w-72 lg:overflow-y-auto lg:border-white/10 lg:px-6 lg:pb-8 xl:w-80">
-            <BottomNavbar />
+      <div className={divMargin}>
+        {showSideBar && (
+          <motion.header
+            layoutScroll
+            className="contents lg:pointer-events-none lg:fixed lg:inset-0 lg:z-40 lg:flex"
+          >
+            <div className="contents lg:pointer-events-auto lg:block lg:w-72 lg:overflow-y-auto lg:border-white/10 lg:px-6 lg:pb-8 xl:w-80">
+              <BottomNavbar />
 
-            {showSideBar && <Navigation className="lg:mt-8 lg:block" />}
-          </div>
-        </motion.header>
+              <Navigation className="lg:mt-8 lg:block" />
+            </div>
+          </motion.header>
+        )}
+
         <div className="relative px-4 sm:px-6 lg:px-8">
           <main className="py-16">
-            <div
-              className="bottom-4 left-4 z-40"
-              style={{ position: 'fixed' }}
-            >
+            <div className="bottom-4 left-4 z-40" style={{ position: 'fixed' }}>
               <div className="flex md:flex-1">
                 <button className="border-1 group rounded-full bg-zinc-800/90 px-2 py-2 backdrop-blur transition hover:ring-white/20 ">
-
                   {showSideBar ? (
                     <LeftIcon
                       className="h-6 w-6 fill-zinc-700"
