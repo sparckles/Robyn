@@ -294,6 +294,10 @@ export const navigation = [
         title: 'Advanced Features',
       },
       {
+        href: '/documentation/api_reference/multiprocess_execution',
+        title: 'Multiprocess Execution',
+      },
+      {
         href: '/documentation/api_reference/using_rust_directly',
         title: 'Using Rust Directly',
       },
