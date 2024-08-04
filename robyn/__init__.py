@@ -22,6 +22,7 @@ from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, We
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory
 from robyn.ws import WebSocket
+from robyn.openapi_middleware import OpenAPIMiddleware
 
 __version__ = get_version()
 
@@ -71,6 +72,7 @@ class Robyn:
         self.event_handlers = {}
         self.exception_handler: Optional[Callable] = None
         self.authentication_handler: Optional[AuthenticationHandler] = None
+        self.openapi_middleware = OpenAPIMiddleware(self)
 
     def _handle_dev_mode(self):
         cli_dev_mode = self.config.dev  # --dev
