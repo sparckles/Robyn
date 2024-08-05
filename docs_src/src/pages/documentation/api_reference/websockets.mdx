@@ -4,11 +4,11 @@ export const description =
 
 ## WebSockets {{ tag: 'GET', label: '/hello_world' }}
 
-<Row>
+
 <Col>
 To handle real-time communication, Batman learned how to work with WebSockets. He created a WebSocket class and wrapped it around his Robyn app:
 </Col>
-  <Col sticky>
+  <Col>
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
@@ -55,13 +55,13 @@ To handle real-time communication, Batman learned how to work with WebSockets. H
     ```
     </CodeGroup>
   </Col>
-</Row>
-<Row>
+
+
 
   <Col>
     For sending a message to the client, Batman used the `sync_send_to` method. 
   </Col>
-  <Col sticky>
+  <Col>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
       ```python {{ title: 'untyped' }}
@@ -86,15 +86,15 @@ To handle real-time communication, Batman learned how to work with WebSockets. H
       ```
     </CodeGroup>
   </Col>
-</Row>
 
 
-<Row>
+
+
 
   <Col>
     For sending a message to the client in async manner, Batman used the `async_send_to` method. 
   </Col>
-  <Col sticky>
+  <Col>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
       ```python {{ title: 'untyped' }}
@@ -119,14 +119,14 @@ To handle real-time communication, Batman learned how to work with WebSockets. H
       ```
     </CodeGroup>
   </Col>
-</Row>
 
 
-<Row>
+
+
   <Col>
     For sending broadcast messages, Batman used the `sync_broadcast` method.
   </Col>
-  <Col sticky>
+  <Col>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
       ```python {{ title: 'untyped' }}
@@ -150,13 +150,13 @@ To handle real-time communication, Batman learned how to work with WebSockets. H
       ```
     </CodeGroup>
   </Col>
-</Row>
 
-<Row>
+
+
   <Col>
     For sending broadcast messages in async style, Batman used the `async_broadcast` method.
   </Col>
-  <Col sticky>
+  <Col>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
       ```python {{ title: 'untyped' }}
@@ -180,13 +180,13 @@ To handle real-time communication, Batman learned how to work with WebSockets. H
       ```
     </CodeGroup>
   </Col>
-</Row>
 
-<Row>
+
+
   <Col>
     Robyn also showed Batman to work with query params.
   </Col>
-  <Col sticky>
+  <Col>
     <CodeGroup title="Request" tag="GET" label="/hello_world?name=gordon&desg=commissioner">
 
       ```python {{ title: 'untyped' }}
@@ -212,7 +212,7 @@ To handle real-time communication, Batman learned how to work with WebSockets. H
       ```
     </CodeGroup>
   </Col>
-</Row>
+
 
 ---
 

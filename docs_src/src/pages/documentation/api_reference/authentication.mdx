@@ -12,10 +12,10 @@ As Batman found out, Robyn provides an easy way to add an authentication middlew
 
 
 
-<Row>
+
 <Col>
 </Col>
-  <Col sticky>
+  <Col>
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
@@ -37,15 +37,15 @@ As Batman found out, Robyn provides an easy way to add an authentication middlew
     ```
     </CodeGroup>
   </Col>
-</Row>
-<Row>
+
+
 
   <Col>
   To add an authentication middleware, you can use the `configure_authentication` method. This method requires an `AuthenticationHandler` object as an argument. This object specifies how to authenticate a user, and uses a `TokenGetter` object to retrieve the token from the request. Robyn does currently provide a `BearerGetter` class that gets the token from the `Authorization` header, using the `Bearer` scheme. Here is an example of a basic authentication handler:
 
 
   </Col>
-  <Col sticky>
+  <Col>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
       ```python {{ title: 'untyped' }}
@@ -81,7 +81,7 @@ The authenticate method should return an `Identity` object if the user is authen
 </b>
 
 
-</Row>
+
 
 --- 
 

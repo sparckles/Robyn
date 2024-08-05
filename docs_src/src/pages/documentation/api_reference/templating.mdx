@@ -8,11 +8,11 @@ export const description =
 Batman wanted to quickly render html pages on the website. He wanted to use a templating engine to render the html pages. Robyn told him that he can use the Jinja2 templating engine to render the html pages. He can use the `JinjaTemplate` class to render the html pages.
 
 
-<Row>
+
 <Col>
 Batman was excited to learn that he could add events as functions as well as decorators.
 </Col>
-  <Col sticky>
+  <Col>
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
@@ -47,13 +47,13 @@ Batman was excited to learn that he could add events as functions as well as dec
     ```
     </CodeGroup>
   </Col>
-</Row>
-<Row>
+
+
 
   <Col>
   test.html file
   </Col>
-  <Col sticky>
+  <Col>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
       ```html
@@ -70,18 +70,18 @@ Batman was excited to learn that he could add events as functions as well as dec
       ```
     </CodeGroup>
   </Col>
-</Row>
+
 
 
 ## Supporting Custom Templating Engines
 
 Batman was also super excited to know that Robyn allows the support of custom templating engines.
 
-<Row>
+
 <Col>
 To do that, you need to import the `TemplateInterface` from `robyn.templating`
 </Col>
-  <Col sticky>
+  <Col>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
       ```python {{ title: 'untyped' }}
@@ -93,14 +93,14 @@ To do that, you need to import the `TemplateInterface` from `robyn.templating`
       ```
     </CodeGroup>
   </Col>
-</Row>
 
 
-<Row>
+
+
 <Col>
 Then You need to have a `render_template` method inside your implementation. So, an example would look like the following:
 </Col>
-  <Col sticky>
+  <Col>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
       ```python {{ title: 'untyped' }}
@@ -130,7 +130,7 @@ Then You need to have a `render_template` method inside your implementation. So,
       ```
     </CodeGroup>
   </Col>
-</Row>
+
 
 
 
