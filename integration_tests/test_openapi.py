@@ -11,41 +11,42 @@ def test_docs_handler():
 
 @pytest.mark.benchmark
 def test_json_handler():
-    json_response = get("/openapi.json").json()
-    assert isinstance(json_response, dict)
-    assert "openapi" in json_response
-    assert "info" in json_response
-    assert "paths" in json_response
-    assert "components" in json_response
-    assert "servers" in json_response
-    assert "externalDocs" in json_response
+    openapi_spec = get("/openapi.json").json()
+
+    assert isinstance(openapi_spec, dict)
+    assert "openapi" in openapi_spec
+    assert "info" in openapi_spec
+    assert "paths" in openapi_spec
+    assert "components" in openapi_spec
+    assert "servers" in openapi_spec
+    assert "externalDocs" in openapi_spec
 
 
 @pytest.mark.benchmark
 def test_add_openapi_path():
-    json_response = get("/openapi.json").json()
+    openapi_spec = get("/openapi.json").json()
 
     route_type = "get"
     endpoint = "/openapi_test"
     openapi_summary = "Get openapi"
     openapi_tags = ["test tag"]
 
-    assert endpoint in json_response["paths"]
-    assert route_type in json_response["paths"][endpoint]
-    assert openapi_summary == json_response["paths"][endpoint][route_type]["summary"]
-    assert openapi_tags == json_response["paths"][endpoint][route_type]["tags"]
+    assert endpoint in openapi_spec["paths"]
+    assert route_type in openapi_spec["paths"][endpoint]
+    assert openapi_summary == openapi_spec["paths"][endpoint][route_type]["summary"]
+    assert openapi_tags == openapi_spec["paths"][endpoint][route_type]["tags"]
 
 
 @pytest.mark.benchmark
 def test_add_subrouter_paths():
-    json_response = get("/openapi.json").json()
+    openapi_spec = get("/openapi.json").json()
 
     route_type = "post"
     endpoint = "/sub_router/openapi_test"
     openapi_summary = "Get subrouter openapi"
-    # openapi_tags = ["test subrouter tag"]
+    openapi_tags = ["test subrouter tag"]
 
-    assert endpoint in json_response["paths"]
-    assert route_type in json_response["paths"][endpoint]
-    assert openapi_summary == json_response["paths"][endpoint][route_type]["summary"]
-    # assert openapi_tags == openapi_instance.openapi_spec["paths"][endpoint][route_type]["tags"]
+    assert endpoint in openapi_spec["paths"]
+    assert route_type in openapi_spec["paths"][endpoint]
+    assert openapi_summary == openapi_spec["paths"][endpoint][route_type]["summary"]
+    assert openapi_tags == openapi_spec["paths"][endpoint][route_type]["tags"]

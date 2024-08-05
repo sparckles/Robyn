@@ -505,29 +505,29 @@ class SubRouter(Robyn):
     def __add_prefix(self, endpoint: str):
         return f"{self.prefix}{endpoint}"
 
-    def get(self, endpoint: str, const: bool = False):
-        return super().get(self.__add_prefix(endpoint), const)
+    def get(self, endpoint: str, const: bool = False, openapi_tags: list = ["default"]):
+        return super().get(endpoint=self.__add_prefix(endpoint), const=const, openapi_tags=openapi_tags)
 
-    def post(self, endpoint: str):
-        return super().post(self.__add_prefix(endpoint))
+    def post(self, endpoint: str, openapi_tags: list = ["default"]):
+        return super().post(endpoint=self.__add_prefix(endpoint), openapi_tags=openapi_tags)
 
-    def put(self, endpoint: str):
-        return super().put(self.__add_prefix(endpoint))
+    def put(self, endpoint: str, openapi_tags: list = ["default"]):
+        return super().put(endpoint=self.__add_prefix(endpoint), openapi_tags=openapi_tags)
 
-    def delete(self, endpoint: str):
-        return super().delete(self.__add_prefix(endpoint))
+    def delete(self, endpoint: str, openapi_tags: list = ["default"]):
+        return super().delete(endpoint=self.__add_prefix(endpoint), openapi_tags=openapi_tags)
 
-    def patch(self, endpoint: str):
-        return super().patch(self.__add_prefix(endpoint))
+    def patch(self, endpoint: str, openapi_tags: list = ["default"]):
+        return super().patch(endpoint=self.__add_prefix(endpoint), openapi_tags=openapi_tags)
 
-    def head(self, endpoint: str):
-        return super().head(self.__add_prefix(endpoint))
+    def head(self, endpoint: str, openapi_tags: list = ["default"]):
+        return super().head(endpoint=self.__add_prefix(endpoint), openapi_tags=openapi_tags)
 
-    def trace(self, endpoint: str):
-        return super().trace(self.__add_prefix(endpoint))
+    def trace(self, endpoint: str, openapi_tags: list = ["default"]):
+        return super().trace(endpoint=self.__add_prefix(endpoint), openapi_tags=openapi_tags)
 
-    def options(self, endpoint: str):
-        return super().options(self.__add_prefix(endpoint))
+    def options(self, endpoint: str, openapi_tags: list = ["default"]):
+        return super().options(endpoint=self.__add_prefix(endpoint), openapi_tags=openapi_tags)
 
 
 def ALLOW_CORS(app: Robyn, origins: List[str]):
