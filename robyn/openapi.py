@@ -139,7 +139,7 @@ class OpenAPI:
 
     def __post_init__(self):
         """
-        initializes the openapi_spec dict
+        Initializes the openapi_spec dict
         """
         self.openapi_spec = {
             "openapi": "3.0.0",
