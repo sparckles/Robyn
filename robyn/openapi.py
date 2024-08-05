@@ -152,7 +152,7 @@ class OpenAPI:
 
     def add_openapi_path_obj(self, route_type: str, endpoint: str, openapi_summary: str, openapi_tags: list, signature: Signature = None):
         """
-        adds the given path to openapi spec
+        Adds the given path to openapi spec
 
         :param route_type: the http method as string (get, post ...)
         :param endpoint: the endpoint to be added
