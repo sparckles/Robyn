@@ -185,7 +185,7 @@ class OpenAPI:
 
     def get_path_obj(self, endpoint: str, summary: str, tags: list, query_params: TypedDict = None):
         """
-        get the "path" openapi object according to spec
+        Get the "path" openapi object according to spec
 
         :param endpoint: the endpoint to be added
         :param summary: short summary of the endpoint (to be fetched from the endpoint defenition by default)
