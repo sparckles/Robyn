@@ -15,11 +15,10 @@ from robyn import (
 )
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.robyn import Headers
-from robyn.templating import JinjaTemplate
 
 from integration_tests.views import SyncView, AsyncView
 from integration_tests.subroutes import sub_router, di_subrouter
-
+from robyn.templating import JinjaTemplate
 
 app = Robyn(__file__)
 websocket = WebSocket(app, "/web_socket")
@@ -452,6 +451,21 @@ async def async_template_render():
     context = {"framework": "Robyn", "templating_engine": "Jinja2"}
     template = jinja_template.render_template(template_name="test.html", **context)
     return template
+
+
+# add route and it's function for url_for for template for integration testing
+
+
+@app.get("/sync/url_for")
+def sync_url_for():
+    context = {"framework": "Robyn", "templating_engine": "Jinja2"}
+    return jinja_template.render_template("url_for.html", **context)
+
+
+@app.get("/async/url_for")
+async def async_url_for():
+    context = {"framework": "Robyn", "templating_engine": "Jinja2"}
+    return jinja_template.render_template("url_for.html", **context)
 
 
 # File download
