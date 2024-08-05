@@ -194,7 +194,8 @@ class OpenAPI:
 
         :return: the "path" openapi object according to spec
         """
-        # for converting path param from `:param` to `{param}`
+        # robyn has paths like /:url/:etc whereas openapi requires path like /{url}/{path}
+        # this function is used for converting path params to the required form
         # initialized with endpoint for handling endpoints without path params
         endpoint_with_path_params_wrapped_in_braces = endpoint
 
@@ -247,7 +248,7 @@ class OpenAPI:
 
     def docs_handler(self):
         """
-        get the swagger html page
+        handler to the swagger html page to be deployed to the endpoint `/docs`
         side effect: this function also dumps the openapi json file
         @return: the swagger html page
         """
@@ -257,7 +258,7 @@ class OpenAPI:
 
     def json_handler(self):
         """
-        get the openapi spec json object
+        handler to the openapi spec json object to be deployed to the endpoint `/openapi.json`
         @return: the openapi spec json object
         """
         return json.dumps(self.openapi_spec)
