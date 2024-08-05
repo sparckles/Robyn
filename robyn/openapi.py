@@ -174,7 +174,7 @@ class OpenAPI:
 
     def add_subrouter_paths(self, subrouter_openapi):
         """
-        adds the subrouter paths to main router's openapi specs
+        Adds the subrouter paths to main router's openapi specs
 
         :param subrouter_openapi: the OpenAPI object of the current subrouter
         """
@@ -246,19 +246,26 @@ class OpenAPI:
             },
         }
 
+    def dump_openapi_spec_file(self):
+        """
+        Write the current openapi spec dictionary to openapi.json file
+        @return: a JSON string representing the openapi spec
+        """
+        return json.dumps(self.openapi_spec)
+
     def docs_handler(self):
         """
-        handler to the swagger html page to be deployed to the endpoint `/docs`
+        Handler to the swagger html page to be deployed to the endpoint `/docs`
         side effect: this function also dumps the openapi json file
         @return: the swagger html page
         """
-        json.dumps(self.openapi_spec)
+        self.dump_openapi_spec_file()
         html_file = str(Path("./robyn/swagger.html"))
         return robyn.serve_html(html_file)
 
     def json_handler(self):
         """
-        handler to the openapi spec json object to be deployed to the endpoint `/openapi.json`
-        @return: the openapi spec json object
+        Handler to the openapi spec json object to be deployed to the endpoint `/openapi.json`
+        @return: a JSON string representing the openapi spec
         """
-        return json.dumps(self.openapi_spec)
+        return self.dump_openapi_spec_file()
