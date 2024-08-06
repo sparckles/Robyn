@@ -1,6 +1,6 @@
+use parking_lot::RwLock;
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::sync::RwLock;
 
 use crate::executors::execute_http_function;
 use crate::types::function_info::FunctionInfo;
@@ -47,7 +47,7 @@ impl Router<Response, HttpMethod> for ConstRouter {
                 .await
                 .unwrap();
             debug!("This is the result of the output {:?}", output);
-            table.write().unwrap().insert(route, output).unwrap();
+            table.write().insert(route, output).unwrap();
             Ok(())
         })?;
 
@@ -56,7 +56,7 @@ impl Router<Response, HttpMethod> for ConstRouter {
 
     fn get_route(&self, route_method: &HttpMethod, route: &str) -> Option<Response> {
         let table = self.routes.get(route_method)?;
-        let route_map = table.read().ok()?;
+        let route_map = table.read();
 
         match route_map.at(route) {
             Ok(res) => Some(res.value.clone()),

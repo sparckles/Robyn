@@ -1338,6 +1338,7 @@ dependencies = [
  "log",
  "matchit",
  "once_cell",
+ "parking_lot",
  "pyo3",
  "pyo3-asyncio",
  "pyo3-log",

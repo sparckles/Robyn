@@ -1,5 +1,5 @@
+use parking_lot::RwLock;
 use std::collections::HashMap;
-use std::sync::RwLock;
 
 use matchit::Router as MatchItRouter;
 use pyo3::types::PyAny;
@@ -28,7 +28,7 @@ impl Router<(FunctionInfo, HashMap<String, String>), HttpMethod> for HttpRouter 
         let table = self.routes.get(route_type).context("No relevant map")?;
 
         // try removing unwrap here
-        table.write().unwrap().insert(route.to_string(), function)?;
+        table.write().insert(route.to_string(), function)?;
 
         Ok(())
     }
@@ -40,7 +40,7 @@ impl Router<(FunctionInfo, HashMap<String, String>), HttpMethod> for HttpRouter 
     ) -> Option<(FunctionInfo, HashMap<String, String>)> {
         let table = self.routes.get(route_method)?;
 
-        let table_lock = table.read().ok()?;
+        let table_lock = table.read();
         let res = table_lock.at(route).ok()?;
         let mut route_params = HashMap::new();
         for (key, value) in res.params.iter() {
