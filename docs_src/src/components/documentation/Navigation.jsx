@@ -210,6 +210,7 @@ export const navigation = [
         href: '/documentation/example_app/monitoring_and_logging',
       },
       { title: 'Deployment', href: '/documentation/example_app/deployment' },
+      { title: 'OpenAPI Specification', href: '/documentation/example_app/openapi' },
       { title: 'Templates', href: '/documentation/example_app/templates' },
       {
         title: 'SubRouters and Views',

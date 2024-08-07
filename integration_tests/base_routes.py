@@ -15,6 +15,7 @@ from robyn import (
 )
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.robyn import Headers
+from robyn.openapi import OpenAPI, OpenAPIInfo, Contact, License, ExternalDocumentation, Components
 from robyn.templating import JinjaTemplate
 
 from integration_tests.views import SyncView, AsyncView
@@ -830,6 +831,34 @@ def sync_global_di(request, router_dependencies, global_dependencies):
 @app.get("/sync/router_di")
 def sync_router_di(request, router_dependencies):
     return router_dependencies["ROUTER_DEPENDENCY"]
+
+
+# ===== OpenAPI =====
+app.openapi = OpenAPI(
+    info=OpenAPIInfo(
+        title="Sample Pet Store App",
+        description=" This is a sample server for a pet store.",
+        termsOfService=" https://example.com/terms/",
+        version=" 1.0.1",
+        contact=Contact(
+            name="API Support",
+            url="https://www.example.com/support",
+            email="support@example.com",
+        ),
+        license=License(
+            name="Apache 2.0",
+            url="https://www.apache.org/licenses/LICENSE-2.0.html",
+        ),
+        externalDocs=ExternalDocumentation(description="Find more info here", url="https://example.com/"),
+        components=Components(),
+    ),
+)
+
+
+@app.get("/openapi_test", openapi_tags=["test tag"])
+def sample_openapi_endpoint():
+    """Get openapi"""
+    return 200
 
 
 def main():
