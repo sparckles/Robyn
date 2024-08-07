@@ -11,9 +11,9 @@ use actix_web::{web, Error, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
 use log::debug;
 use once_cell::sync::OnceCell;
+use parking_lot::RwLock;
 use pyo3::prelude::*;
 use pyo3_asyncio::TaskLocals;
-use std::sync::RwLock;
 use uuid::Uuid;
 
 use registry::{Register, WebSocketRegistry};
@@ -189,7 +189,7 @@ fn get_or_init_registry_for_endpoint(endpoint: String) -> Addr<WebSocketRegistry
     let map_lock = REGISTRY_ADDRESSES.get_or_init(|| RwLock::new(HashMap::new()));
 
     {
-        let map = map_lock.read().unwrap();
+        let map = map_lock.read();
         if let Some(registry_addr) = map.get(&endpoint) {
             return registry_addr.clone();
         }
@@ -198,7 +198,7 @@ fn get_or_init_registry_for_endpoint(endpoint: String) -> Addr<WebSocketRegistry
     let new_registry = WebSocketRegistry::new().start();
 
     {
-        let mut map = map_lock.write().unwrap();
+        let mut map = map_lock.write();
         map.insert(endpoint.to_string(), new_registry.clone());
     }
 

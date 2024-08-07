@@ -1,5 +1,5 @@
+use parking_lot::RwLock;
 use std::collections::HashMap;
-use std::sync::RwLock;
 
 use log::debug;
 
@@ -40,7 +40,6 @@ impl WebSocketRouter {
 
             table
                 .write()
-                .unwrap()
                 .entry(route.to_string())
                 .or_default()
                 .insert(socket_type.to_string(), function)

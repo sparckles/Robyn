@@ -163,7 +163,7 @@ impl Server {
                         .app_data(web::Data::new(global_response_headers.clone()));
 
                     let web_socket_map = web_socket_router.get_web_socket_map();
-                    for (elem, value) in (web_socket_map.read().unwrap()).iter() {
+                    for (elem, value) in (web_socket_map.read()).iter() {
                         let endpoint = elem.clone();
                         let path_params = value.clone();
                         let task_locals = task_locals.clone();
