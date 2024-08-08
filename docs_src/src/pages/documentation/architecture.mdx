@@ -1,38 +1,223 @@
 export const description = 'Robyn is a Python web server that employs the tokio runtime and leverages a blend of Python and Rust, enabling efficient request handling through a worker event cycle, multi-core scaling, and introducing "Const Requests" for optimized, cached responses in a multi-threaded environment.'
 
+
+## Robyn Design Document
+
+## Server Model
+
+Robyn is built on a multi-process, multi-threaded model that leverages both Python and Rust. It uses a main process that manages multiple worker processes, each capable of handling multiple threads. This design allows Robyn to efficiently utilize system resources and handle a high number of concurrent requests.
+
+## Master Process
+
+The master process in Robyn is responsible for initializing the server, managing worker processes, and handling signals. It creates a socket and passes it to the worker processes, allowing them to accept connections. The master process is implemented in Python, providing a familiar interface for developers while leveraging Rust's performance for core operations.
+
+
+```python
+216:257:robyn/__init__.py
+    def start(self, host: str = "127.0.0.1", port: int = 8080, _check_port: bool = True):
+        """
+        Starts the server
+
+        :param host str: represents the host at which the server is listening
+        :param port int: represents the port number at which the server is listening
+        :param _check_port bool: represents if the port should be checked if it is already in use
+        """
+
+        host = os.getenv("ROBYN_HOST", host)
+        port = int(os.getenv("ROBYN_PORT", port))
+        open_browser = bool(os.getenv("ROBYN_BROWSER_OPEN", self.config.open_browser))
+
+        if _check_port:
+            while self.is_port_in_use(port):
+                logger.error("Port %s is already in use. Please use a different port.", port)
+                try:
+                    port = int(input("Enter a different port: "))
+                except Exception:
+                    logger.error("Invalid port number. Please enter a valid port number.")
+                    continue
+
+        logger.info("Robyn version: %s", __version__)
+        logger.info("Starting server at http://%s:%s", host, port)
+
+        mp.allow_connection_pickling()
+
+        run_processes(
+            host,
+            port,
+            self.directories,
+            self.request_headers,
+            self.router.get_routes(),
+            self.middleware_router.get_global_middlewares(),
+            self.middleware_router.get_route_middlewares(),
+            self.web_socket_router.get_routes(),
+            self.event_handlers,
+            self.config.workers,
+            self.config.processes,
+            self.response_headers,
+            open_browser,
+        )
+```
+
+
+## Worker Processes
+
+Robyn uses multiple worker processes to handle incoming requests. Each worker process is capable of managing multiple threads, allowing for efficient concurrent processing. The number of worker processes can be configured using the `--processes` flag, with a default of 1.
+
+
+```python
+66:116:robyn/processpool.py
+def init_processpool(
+    directories: List[Directory],
+    request_headers: Headers,
+    routes: List[Route],
+    global_middlewares: List[GlobalMiddleware],
+    route_middlewares: List[RouteMiddleware],
+    web_sockets: Dict[str, WebSocket],
+    event_handlers: Dict[Events, FunctionInfo],
+    socket: SocketHeld,
+    workers: int,
+    processes: int,
+    response_headers: Headers,
+) -> List[Process]:
+    process_pool = []
+    if sys.platform.startswith("win32") or processes == 1:
+        spawn_process(
+            directories,
+            request_headers,
+            routes,
+            global_middlewares,
+            route_middlewares,
+            web_sockets,
+            event_handlers,
+            socket,
+            workers,
+            response_headers,
+        )
+
+        return process_pool
+
+    for _ in range(processes):
+        copied_socket = socket.try_clone()
+        process = Process(
+            target=spawn_process,
+            args=(
+                directories,
+                request_headers,
+                routes,
+                global_middlewares,
+                route_middlewares,
+                web_sockets,
+                event_handlers,
+                copied_socket,
+                workers,
+                response_headers,
+            ),
+        )
+        process.start()
+        process_pool.append(process)
+
+    return process_pool
+```
+
+
+## Worker Threads
+
+Within each worker process, Robyn utilizes multiple threads to handle requests concurrently. The number of worker threads can be configured using the `--workers` flag. By default, Robyn uses a single worker thread per process.
+
+## Rust Integration
+
+One of Robyn's unique features is its integration with Rust. The core server functionality, including request handling and routing, is implemented in Rust. This allows Robyn to achieve high performance while still providing a Python-friendly API.
+
+
+```python
+76:107:src/server.rs
+    pub fn start(
+        &mut self,
+        py: Python,
+        socket: &PyCell<SocketHeld>,
+        workers: usize,
+    ) -> PyResult<()> {
+        pyo3_log::init();
+
+        if STARTED
+            .compare_exchange(false, true, SeqCst, Relaxed)
+            .is_err()
+        {
+            debug!("Robyn is already running...");
+            return Ok(());
+        }
+
+        let raw_socket = socket.try_borrow_mut()?.get_socket();
+
+        let router = self.router.clone();
+        let const_router = self.const_router.clone();
+        let middleware_router = self.middleware_router.clone();
+        let web_socket_router = self.websocket_router.clone();
+        let global_request_headers = self.global_request_headers.clone();
+        let global_response_headers = self.global_response_headers.clone();
+        let directories = self.directories.clone();
+
+        let asyncio = py.import("asyncio")?;
+        let event_loop = asyncio.call_method0("new_event_loop")?;
+        asyncio.call_method1("set_event_loop", (event_loop,))?;
+
+        let startup_handler = self.startup_handler.clone();
+        let shutdown_handler = self.shutdown_handler.clone();
+```
+
+
+## Const Requests
+
+Robyn introduces an optimization feature called "Const Requests". This feature allows certain routes to be cached in the Rust layer, reducing overhead for frequently accessed endpoints that return constant data.
+
+## Choosing Worker and Process Configuration
+
+Robyn's performance can be optimized by adjusting the number of workers and processes based on the available system resources and the nature of the application.
+
+1. Number of Processes:
+   Set the number of processes equal to the number of CPU cores (N). This allows Robyn to fully utilize multi-core systems.
+
+2. Number of Workers:
+   Use the formula 2 * N + 1, where N is the number of CPU cores. This configuration allows for efficient handling of I/O-bound and CPU-bound tasks.
+
+For example, on a 4-core system:
+```
+python app.py --processes=4 --workers=9
+```
+
+Remember that the optimal configuration can vary based on your specific application and server resources. It's recommended to perform load testing with different configurations to find the best balance for your use case.
+
+## Scaling Considerations
+
+- Robyn's multi-process model allows it to scale across multiple CPU cores effectively.
+- The combination of Python and Rust allows for both ease of development and high performance.
+- Const Requests feature can significantly improve performance for routes with constant output.
+- When scaling, consider both the number of processes and workers to find the optimal configuration for your hardware and application needs.
+
+## Development Mode
+
+Robyn provides a development mode that can be activated using the `--dev` flag. This mode is designed for ease of development and includes features like hot reloading. Note that in development mode, multi-process and multi-worker configurations are disabled to ensure consistent behavior during development.
+
+
+```python
+92:101:robyn/argument_parser.py
+        if self.dev and (self.processes != 1 or self.workers != 1):
+            raise Exception("--processes and --workers shouldn't be used with --dev")
+
+        if self.dev and args.log_level is None:
+            self.log_level = "DEBUG"
+
+        elif args.log_level is None:
+            self.log_level = "INFO"
+        else:
+            self.log_level = args.log_level
+```
+
+
+By understanding these design principles and adjusting the configuration accordingly, developers can leverage Robyn's unique architecture to build high-performance web applications that efficiently utilize system resources.
+
+
+## Design Diagram
+
 <img src="/architecture/architecture.png" />
-
-## Robyn Web Server: Architecture Overview
-
-Robyn is a unique Python web server, leveraging the efficiency and concurrency model of the tokio runtime.
-
-### Worker Event Cycle:
-At the heart of Robyn is the worker event cycle that oversees the runtime and directs all instructions to the underlying Rust code. This cycle is instrumental in initializing the thread pool, ensuring smooth execution.
-
-
-### Python-to-Rust Interplay:
-When the server is initiated with the python3 app.py command, Python code is dynamically transformed into Rust objects. Subsequently, the router gets populated. The architecture allows incoming requests to be matched against this router, and relevant Rust objects are queued for execution in the thread pool based on their types.
-
-
-### Scalability with Multi-Core Support:
-<img src="/architecture/multi-processing.png" />
-
-Robyn is designed to scale efficiently. It has the capability to employ multiple workers and span across multiple processes. This architecture facet ensures that the TCP socket can distribute its load across various cores, optimizing performance.
-
-### Const Requests: The Robyn Speciality:
-<img src="/architecture/const-request-optimisation.png" />
-
-Const Requests is a feature that sets Robyn apart. Instead of executing a function every time it's called, what if we could run it once and cache the response? This would substantially reduce overhead, negating the need to frequently call the router.
-
-Const Request Optimisation: This feature aims to store function responses in the Rust layer after their initial execution. Thus, when the same function is called again, the cached result from Rust is returned, bypassing the router.
-
-<div className="not-prose">
-  <Button
-    href="/documentation/example_app/authentication-middlewares"
-    variant="text"
-    arrow="right"
-    children="Next: Authentication Middlewares"
-  />
-</div>
-
 
