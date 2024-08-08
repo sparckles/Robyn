@@ -13,7 +13,8 @@ Robyn is built on a multi-process, multi-threaded model that leverages both Pyth
 The master process in Robyn is responsible for initializing the server, managing worker processes, and handling signals. It creates a socket and passes it to the worker processes, allowing them to accept connections. The master process is implemented in Python, providing a familiar interface for developers while leveraging Rust's performance for core operations.
 
 
-```216:257:robyn/__init__.py
+```python
+216:257:robyn/__init__.py
     def start(self, host: str = "127.0.0.1", port: int = 8080, _check_port: bool = True):
         """
         Starts the server
@@ -64,7 +65,8 @@ The master process in Robyn is responsible for initializing the server, managing
 Robyn uses multiple worker processes to handle incoming requests. Each worker process is capable of managing multiple threads, allowing for efficient concurrent processing. The number of worker processes can be configured using the `--processes` flag, with a default of 1.
 
 
-```66:116:robyn/processpool.py
+```python
+66:116:robyn/processpool.py
 def init_processpool(
     directories: List[Directory],
     request_headers: Headers,
@@ -128,7 +130,8 @@ Within each worker process, Robyn utilizes multiple threads to handle requests c
 One of Robyn's unique features is its integration with Rust. The core server functionality, including request handling and routing, is implemented in Rust. This allows Robyn to achieve high performance while still providing a Python-friendly API.
 
 
-```76:107:src/server.rs
+```python
+76:107:src/server.rs
     pub fn start(
         &mut self,
         py: Python,
@@ -197,7 +200,8 @@ Remember that the optimal configuration can vary based on your specific applicat
 Robyn provides a development mode that can be activated using the `--dev` flag. This mode is designed for ease of development and includes features like hot reloading. Note that in development mode, multi-process and multi-worker configurations are disabled to ensure consistent behavior during development.
 
 
-```92:101:robyn/argument_parser.py
+```python
+92:101:robyn/argument_parser.py
         if self.dev and (self.processes != 1 or self.workers != 1):
             raise Exception("--processes and --workers shouldn't be used with --dev")
 
