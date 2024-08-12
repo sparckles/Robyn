@@ -305,7 +305,10 @@ class Robyn:
         """
         The @app.get decorator to add a route with the GET method
 
-        :param endpoint str: endpoint to server the route
+        :param endpoint str: endpoint for the route added
+        :param const bool: represents if the handler is a const function or not
+        :param auth_required bool: represents if the route needs authentication or not
+        :param openapi_tags: tags -- for grouping of endpoints in the openapi spec
         """
 
         def inner(handler):
@@ -324,7 +327,9 @@ class Robyn:
         """
         The @app.post decorator to add a route with POST method
 
-        :param endpoint str: endpoint to server the route
+        :param endpoint str: endpoint for the route added
+        :param auth_required bool: represents if the route needs authentication or not
+        :param openapi_tags: tags -- for grouping of endpoints in the openapi spec
         """
 
         def inner(handler):
@@ -343,7 +348,9 @@ class Robyn:
         """
         The @app.put decorator to add a get route with PUT method
 
-        :param endpoint str: endpoint to server the route
+        :param endpoint str: endpoint for the route added
+        :param auth_required bool: represents if the route needs authentication or not
+        :param openapi_tags: tags -- for grouping of endpoints in the openapi spec
         """
 
         def inner(handler):
@@ -362,7 +369,9 @@ class Robyn:
         """
         The @app.delete decorator to add a route with DELETE method
 
-        :param endpoint str: endpoint to server the route
+        :param endpoint str: endpoint for the route added
+        :param auth_required bool: represents if the route needs authentication or not
+        :param openapi_tags: tags -- for grouping of endpoints in the openapi spec
         """
 
         def inner(handler):
@@ -381,7 +390,9 @@ class Robyn:
         """
         The @app.patch decorator to add a route with PATCH method
 
-        :param endpoint [str]: [endpoint to server the route]
+        :param endpoint str: endpoint for the route added
+        :param auth_required bool: represents if the route needs authentication or not
+        :param openapi_tags: tags -- for grouping of endpoints in the openapi spec
         """
 
         def inner(handler):
@@ -400,7 +411,9 @@ class Robyn:
         """
         The @app.head decorator to add a route with HEAD method
 
-        :param endpoint str: endpoint to server the route
+        :param endpoint str: endpoint for the route added
+        :param auth_required bool: represents if the route needs authentication or not
+        :param openapi_tags: tags -- for grouping of endpoints in the openapi spec
         """
 
         def inner(handler):
@@ -419,7 +432,9 @@ class Robyn:
         """
         The @app.options decorator to add a route with OPTIONS method
 
-        :param endpoint str: endpoint to server the route
+        :param endpoint str: endpoint for the route added
+        :param auth_required bool: represents if the route needs authentication or not
+        :param openapi_tags: tags -- for grouping of endpoints in the openapi spec
         """
 
         def inner(handler):
@@ -438,7 +453,9 @@ class Robyn:
         """
         The @app.connect decorator to add a route with CONNECT method
 
-        :param endpoint str: endpoint to server the route
+        :param endpoint str: endpoint for the route added
+        :param auth_required bool: represents if the route needs authentication or not
+        :param openapi_tags: tags -- for grouping of endpoints in the openapi spec
         """
 
         def inner(handler):
@@ -457,7 +474,9 @@ class Robyn:
         """
         The @app.trace decorator to add a route with TRACE method
 
-        :param endpoint str: endpoint to server the route
+        :param endpoint str: endpoint for the route added
+        :param auth_required bool: represents if the route needs authentication or not
+        :param openapi_tags: tags -- for grouping of endpoints in the openapi spec
         """
 
         def inner(handler):
