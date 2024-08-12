@@ -101,6 +101,12 @@ const guides = [
     description: 'Learn about GraphQL Support in Robyn.',
   },
   {
+    href: '/documentation/example_app/openapi',
+    name: 'OpenAPI Specification',
+    description:
+      'Learn how to generate OpenAPI docs for your applications.',
+  },
+  {
     href: '/documentation/api_reference/dependency_injection',
     name: 'Dependency Injection',
     description: 'Learn about Dependency Injection in Robyn.',
