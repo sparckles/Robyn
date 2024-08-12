@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, TypedDict
 
 import robyn
+from robyn.responses import FileResponse
 
 
 @dataclass
@@ -183,7 +184,7 @@ class OpenAPI:
         for path in paths:
             self.openapi_spec["paths"][path] = paths[path]
 
-    def get_path_obj(self, endpoint: str, summary: str, tags: list, query_params: TypedDict = None):
+    def get_path_obj(self, endpoint: str, summary: str, tags: list, query_params: TypedDict = None) -> (str, dict):
         """
         Get the "path" openapi object according to spec
 
@@ -192,7 +193,8 @@ class OpenAPI:
         :param tags: tags -- for grouping of endpoints
         :param query_params: query params for the function
 
-        :return: the "path" openapi object according to spec
+        :return: a tuple containing the endpoint with path params wrapped in braces and the "path" openapi object
+        according to spec
         """
         # robyn has paths like /:url/:etc whereas openapi requires path like /{url}/{path}
         # this function is used for converting path params to the required form
@@ -244,14 +246,14 @@ class OpenAPI:
             },
         }
 
-    def dump_openapi_spec_file(self):
+    def dump_openapi_spec_file(self) -> str:
         """
         Write the current openapi spec dictionary to openapi.json file
         @return: a JSON string representing the openapi spec
         """
         return json.dumps(self.openapi_spec)
 
-    def docs_handler(self):
+    def docs_handler(self) -> FileResponse:
         """
         Handler to the swagger html page to be deployed to the endpoint `/docs`
         side effect: this function also dumps the openapi json file
@@ -261,7 +263,7 @@ class OpenAPI:
         html_file = str(Path("./robyn/swagger.html"))
         return robyn.serve_html(html_file)
 
-    def json_handler(self):
+    def json_handler(self) -> str:
         """
         Handler to the openapi spec json object to be deployed to the endpoint `/openapi.json`
         @return: a JSON string representing the openapi spec
