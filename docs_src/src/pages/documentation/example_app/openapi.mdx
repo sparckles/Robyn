@@ -18,7 +18,7 @@ Out of the box, the following endpoints are setup for you:
 ```python {{ title: 'untyped' }}
 from typing import TypedDict
 
-from robyn import Robyn, Request, jsonify, OpenAPI
+from robyn import Robyn, OpenAPI
 from robyn.openapi import OpenAPIInfo, Contact, License, ExternalDocumentation, Components
 
 app = Robyn(
@@ -38,16 +38,6 @@ app = Robyn(
                 name="GPLv3.0+",
                 url="https://www.gnu.org/licenses/gpl-3.0.en.html",
             ),
-            servers=[
-                Server(
-                    url="//",
-                    description="Debug environment"
-                ),
-                Server(
-                    url="https://example.com/api/v1/",
-                    description="Production environment"
-                ),
-            ],
             externalDocs=ExternalDocumentation(description="Find more info here", url="https://example.com/"),
             components=Components(),
         ),
@@ -67,15 +57,15 @@ class GetRequestParams(TypedDict):
 
 
 @app.get("/api/v1/:name", openapi_tags=["Name"])
-async def get(r: Request, query_params=GetRequestParams):
+async def get(r, query_params=GetRequestParams):
     """Get Name by ID"""
-    return jsonify(r.path_params)
+    return r.path_params
 
 
 @app.delete("/users/:name", openapi_tags=["Name"])
 async def delete(r):
     """Delete Name by ID"""
-    return jsonify(r.path_params)
+    return r.path_params
 
 
 if __name__ == "__main__":
@@ -85,10 +75,10 @@ if __name__ == "__main__":
 ```python {{ title: 'typed' }}
 from typing import TypedDict
 
-from robyn import Robyn, Request, jsonify, OpenAPI
+from robyn import Robyn, OpenAPI, Request
 from robyn.openapi import OpenAPIInfo, Contact, License, ExternalDocumentation, Components
 
-app = Robyn(
+app: Robyn = Robyn(
     file_object=__file__,
     openapi=OpenAPI(
         info=OpenAPIInfo(
@@ -105,16 +95,6 @@ app = Robyn(
                 name="GPLv3.0+",
                 url="https://www.gnu.org/licenses/gpl-3.0.en.html",
             ),
-            servers=[
-                Server(
-                    url="//",
-                    description="Debug environment"
-                ),
-                Server(
-                    url="https://example.com/api/v1/",
-                    description="Production environment"
-                ),
-            ],
             externalDocs=ExternalDocumentation(description="Find more info here", url="https://example.com/"),
             components=Components(),
         ),
@@ -136,13 +116,13 @@ class GetRequestParams(TypedDict):
 @app.get("/api/v1/:name", openapi_tags=["Name"])
 async def get(r: Request, query_params=GetRequestParams):
     """Get Name by ID"""
-    return jsonify(r.path_params)
+    return r.path_params
 
 
 @app.delete("/users/:name", openapi_tags=["Name"])
 async def delete(r: Request):
     """Delete Name by ID"""
-    return jsonify(r.path_params)
+    return r.path_params
 
 
 if __name__ == "__main__":
@@ -181,7 +161,7 @@ app.include_router(subrouter)
 ```
 
 ```python {{ title: 'typed' }}
-subrouter = SubRouter(__name__, prefix="/sub")
+subrouter: SubRouter = SubRouter(__name__, prefix="/sub")
 
 
 @subrouter.get("/")
