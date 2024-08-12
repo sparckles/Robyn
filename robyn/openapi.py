@@ -201,14 +201,18 @@ class OpenAPI:
         # initialized with endpoint for handling endpoints without path params
         endpoint_with_path_params_wrapped_in_braces = endpoint
 
-        path_params = endpoint.split(":")
+        endpoint_path_params_split = endpoint.split(":")
         openapi_parameter_object = []
 
-        if len(path_params) > 1:
-            endpoint_with_path_params_wrapped_in_braces = path_params[0].removesuffix("/")
+        if len(endpoint_path_params_split) > 1:
+            endpoint_without_path_params = endpoint_path_params_split[0]
 
-            for path_param in path_params[1:]:
-                path_param_name = path_param.removesuffix("/")
+            endpoint_with_path_params_wrapped_in_braces = (
+                endpoint_without_path_params[:-1] if endpoint_without_path_params.endswith("/") else endpoint_without_path_params
+            )
+
+            for path_param in endpoint_path_params_split[1:]:
+                path_param_name = path_param[:-1] if path_param.endswith("/") else path_param
 
                 openapi_parameter_object.append(
                     {
