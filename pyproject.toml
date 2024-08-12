@@ -4,8 +4,8 @@ build-backend = "maturin"
 
 [project]
 name = "robyn"
-version = "0.57.0"
-description = "A High-Performance, Community-Driven, and Innovator Friendly Web Framework with a Rust runtime."
+version = "0.58.2"
+description = "A Super Fast Async Python Web Framework with a Rust runtime."
 authors = [{ name = "Sanskar Jethi", email = "sansyrox@gmail.com" }]
 classifiers = [
   "Development Status :: 3 - Alpha",
@@ -23,7 +23,7 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
 ]
 dependencies = [
-  'watchdog == 2.2.1',
+  'watchdog == 4.0.1',
   'multiprocess == 0.70.14',
   'nestd == 0.3.1',
   'inquirerpy == 0.3.4',
@@ -48,8 +48,8 @@ Changelog = "https://github.com/sparckles/robyn/blob/main/CHANGELOG.md"
 
 [tool.poetry]
 name = "robyn"
-version = "0.57.0"
-description = "A High-Performance, Community-Driven, and Innovator Friendly Web Framework with a Rust runtime."
+version = "0.58.2"
+description = "A Super Fast Async Python Web Framework with a Rust runtime."
 authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 
 
@@ -57,7 +57,7 @@ authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 python = "^3.8"
 inquirerpy = "0.3.4"
 maturin = "0.14.12"
-watchdog = "2.2.1"
+watchdog = "4.0.1"
 multiprocess = "0.70.14"
 nestd = "0.3.1"
 uvloop = { version = "0.19.0", markers = "sys_platform != 'win32' and (sys_platform != 'cygwin' and platform_python_implementation != 'PyPy')" }

@@ -506,7 +506,7 @@ export function MobileSearch() {
         aria-label="Find something..."
         {...buttonProps}
       >
-        <SearchIcon className="h-5 w-5 stroke-white" />
+        <SearchIcon className="mt-4 h-5 w-5 stroke-white" />
       </button>
       <SearchDialog className="lg:hidden" {...dialogProps} />
     </div>

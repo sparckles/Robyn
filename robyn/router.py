@@ -66,7 +66,7 @@ class Router(BaseRouter):
             # this should change
             headers = Headers({})
             if "Content-Type" not in headers:
-                headers.set("Content-Type", "text/json")
+                headers.set("Content-Type", "application/json")
 
             description = jsonify(res)
 

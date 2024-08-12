@@ -16,6 +16,9 @@ Batman wanted to configure the server through an environment file. Changing code
  - `ROBYN_BROWSER_OPEN`: Open the browser on successful start.
     - Default: `False`
     - Example: `ROBYN_BROWSER_OPEN=True`
+ - `ROBYN_DEV_MODE`: Configures the dev mode
+    - Default: `False`
+    - Example: `ROBYN_DEV_MODE=True`
  - `ROBYN_MAX_PAYLOAD_SIZE`: Sets the maximum payload size for requests in bytes.
     - Default: `1000000` bytes
     - Example: `ROBYN_MAX_PAYLOAD_SIZE=1000000`
@@ -40,6 +43,7 @@ ROBYN_PORT=8080
 ROBYN_HOST=127.0.0.1
 RANDOM_ENV=123
 ROBYN_BROWSER_OPEN=True
+ROBYN_DEV_MODE=True
 ROBYN_MAX_PAYLOAD_SIZE=1000000
 ```
 
