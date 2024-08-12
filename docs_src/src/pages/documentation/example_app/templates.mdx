@@ -65,6 +65,16 @@ This is Robyn introduced him to the concept of routers and views.
   />
 </div>
 
+## Jinja Templating with `url_for`
 
+To integrate resource loading functionality into Jinja templates similar to Flask's `url_for`, follow these steps:
 
+**Loading Resources in Templates**: In your Jinja templates, use the `url_for` function to generate URLs for static resources.
 
+    ```html
+    <img src="{{ url_for('static', filename='images/planets.jpeg') }}" alt="Planets">
+    ```
+
+    Adjust the path and filename according to your project's directory structure.
+
+With these steps, you can integrate resource loading functionality into Jinja templates and use `url_for` to generate URLs for static resources.
