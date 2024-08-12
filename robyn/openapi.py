@@ -14,9 +14,9 @@ class Contact:
     The contact information for the exposed API.
     (https://swagger.io/specification/#contact-object)
 
-    @param name The identifying name of the contact person/organization.
-    @param url The URL pointing to the contact information. This MUST be in the form of a URL.
-    @param email The email address of the contact person/organization. This MUST be in the form of an email address.
+    @param name: Optional[str] The identifying name of the contact person/organization.
+    @param url: Optional[str] The URL pointing to the contact information. This MUST be in the form of a URL.
+    @param email: Optional[str] The email address of the contact person/organization. This MUST be in the form of an email address.
     """
 
     name: Optional[str] = None
