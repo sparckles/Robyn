@@ -107,7 +107,7 @@ const guides = [
     description: 'Learn about GraphQL Support in Robyn.',
   },
   {
-    href: '/documentation/example_app/openapi',
+    href: '/documentation/api_reference/openapi',
     name: 'OpenAPI Specification',
     description:
       'Learn how to generate OpenAPI docs for your applications.',

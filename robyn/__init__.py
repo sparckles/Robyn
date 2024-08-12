@@ -226,8 +226,8 @@ class Robyn:
         :param _check_port bool: represents if the port should be checked if it is already in use
         """
 
-        self.add_route(route_type=HttpMethod.GET, endpoint="/openapi.json", handler=self.openapi.json_handler, is_const=False)
-        self.add_route(route_type=HttpMethod.GET, endpoint="/docs", handler=self.openapi.docs_handler, is_const=False)
+        self.add_route(route_type=HttpMethod.GET, endpoint="/openapi.json", handler=self.openapi.json_handler, is_const=True)
+        self.add_route(route_type=HttpMethod.GET, endpoint="/docs", handler=self.openapi.docs_handler, is_const=True)
 
         host = os.getenv("ROBYN_HOST", host)
         port = int(os.getenv("ROBYN_PORT", port))
