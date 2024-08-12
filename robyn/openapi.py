@@ -203,35 +203,33 @@ class OpenAPI:
         openapi_parameter_object = []
 
         if len(path_params) > 1:
-            path = path_params[0]
+            endpoint_with_path_params_wrapped_in_braces = path_params[0].removesuffix("/")
 
-            endpoint_with_path_params_wrapped_in_braces = path.removesuffix("/")
-
-            for param in path_params[1:]:
-                param_name = param[:-1] if param.endswith("/") else param
+            for path_param in path_params[1:]:
+                path_param_name = path_param.removesuffix("/")
 
                 openapi_parameter_object.append(
                     {
-                        "name": param_name,
+                        "name": path_param_name,
                         "in": "path",
                         "required": True,
                         "schema": {"type": "string"},
                     }
                 )
-                endpoint_with_path_params_wrapped_in_braces += "/{" + param_name + "}"
+                endpoint_with_path_params_wrapped_in_braces += "/{" + path_param_name + "}"
 
         if query_params:
             for query_param in query_params.__annotations__:
                 # ugly hack!
                 # returns "<class 'int'>" -- this line strips out the type a.k.a int from it
-                param_type = re.findall("'[a-z]+'", str(query_params.__annotations__[query_param]))[0].replace("'", "")
+                query_param_type = re.findall("'[a-z]+'", str(query_params.__annotations__[query_param]))[0].replace("'", "")
 
                 openapi_parameter_object.append(
                     {
                         "name": query_param,
                         "in": "query",
                         "required": False,
-                        "schema": {"type": param_type},
+                        "schema": {"type": query_param_type},
                     }
                 )
 
