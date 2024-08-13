@@ -299,7 +299,7 @@ export const navigation = [
       },
       {
         title: 'OpenAPI Documentation',
-        href: '/documentation/example_app/openapi',
+        href: '/documentation/api_reference/openapi',
       },
       {
         href: '/documentation/api_reference/multiprocess_execution',
