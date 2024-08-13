@@ -1,4 +1,3 @@
-import json
 import re
 from dataclasses import asdict, dataclass, field
 from inspect import Signature
@@ -249,20 +248,11 @@ class OpenAPI:
             },
         }
 
-    def dump_openapi_spec_file(self) -> str:
-        """
-        Write the current openapi spec dictionary to openapi.json file
-        @return: a JSON string representing the openapi spec
-        """
-        return json.dumps(self.openapi_spec)
-
     def docs_handler(self) -> FileResponse:
         """
         Handler to the swagger html page to be deployed to the endpoint `/docs`
-        side effect: this function also dumps the openapi json file
         @return: the swagger html page
         """
-        self.dump_openapi_spec_file()
         html_file = str(Path("./robyn/swagger.html"))
         return serve_html(html_file)
 
@@ -271,4 +261,4 @@ class OpenAPI:
         Handler to the openapi spec json object to be deployed to the endpoint `/openapi.json`
         @return: a JSON string representing the openapi spec
         """
-        return self.dump_openapi_spec_file()
+        return self.openapi_spec.__repr__()
