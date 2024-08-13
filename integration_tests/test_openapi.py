@@ -1,3 +1,5 @@
+import ast
+
 import pytest
 
 from integration_tests.helpers.http_methods_helpers import get
@@ -11,7 +13,7 @@ def test_docs_handler():
 
 @pytest.mark.benchmark
 def test_json_handler():
-    openapi_spec = get("/openapi.json").json()
+    openapi_spec = ast.literal_eval(get("/openapi.json").text)
 
     assert isinstance(openapi_spec, dict)
     assert "openapi" in openapi_spec
@@ -24,7 +26,9 @@ def test_json_handler():
 
 @pytest.mark.benchmark
 def test_add_openapi_path():
-    openapi_spec = get("/openapi.json").json()
+    openapi_spec = ast.literal_eval(get("/openapi.json").text)
+
+    assert isinstance(openapi_spec, dict)
 
     route_type = "get"
     endpoint = "/openapi_test"
@@ -39,7 +43,9 @@ def test_add_openapi_path():
 
 @pytest.mark.benchmark
 def test_add_subrouter_paths():
-    openapi_spec = get("/openapi.json").json()
+    openapi_spec = ast.literal_eval(get("/openapi.json").text)
+
+    assert isinstance(openapi_spec, dict)
 
     route_type = "post"
     endpoint = "/sub_router/openapi_test"
