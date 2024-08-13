@@ -305,6 +305,6 @@ fn json_string_to_pyobject(py: Python, json_string: &str) -> PyResult<PyObject> 
     }
     match serde_json::from_str(json_string) {
         Ok(value) => value_to_pyobject(py, value),
-        _ => Err(PyValueError::new_err("json decode error")),
+        Err(e) => Err(PyValueError::new_err(format!("Invalid JSON: {}", e.to_string()) )),
     }
 }
