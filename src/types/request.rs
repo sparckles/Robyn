@@ -256,7 +256,7 @@ impl PyRequest {
 
     pub fn json(&self, py: Python) -> PyResult<PyObject> {
         match self.body.as_ref(py).downcast::<PyString>() {
-            Ok(python_string) => json_string_to_py_object(py, python_string.extract()?),
+            Ok(python_string) => json_string_to_pyobject(py, python_string.extract()?),
             Err(e) => Err(e.into())
         }
     }
