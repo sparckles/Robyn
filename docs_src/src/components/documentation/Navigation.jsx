@@ -298,7 +298,7 @@ export const navigation = [
         title: 'Advanced Features',
       },
       {
-        title: 'OpenAPI Specification',
+        title: 'OpenAPI Documentation',
         href: '/documentation/example_app/openapi',
       },
       {

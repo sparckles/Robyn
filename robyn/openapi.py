@@ -265,7 +265,7 @@ class OpenAPI:
         """
         self.dump_openapi_spec_file()
         html_file = str(Path("./robyn/swagger.html"))
-        return robyn.serve_html(html_file)
+        return serve_html(html_file)
 
     def json_handler(self) -> str:
         """

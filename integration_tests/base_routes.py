@@ -837,9 +837,9 @@ def sync_router_di(request, router_dependencies):
 app.openapi = OpenAPI(
     info=OpenAPIInfo(
         title="Sample Pet Store App",
-        description=" This is a sample server for a pet store.",
-        termsOfService=" https://example.com/terms/",
-        version=" 1.0.1",
+        description="This is a sample server for a pet store.",
+        termsOfService="https://example.com/terms/",
+        version="1.0.1",
         contact=Contact(
             name="API Support",
             url="https://www.example.com/support",

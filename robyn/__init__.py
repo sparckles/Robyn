@@ -315,7 +315,7 @@ class Robyn:
         endpoint: str,
         const: bool = False,
         auth_required: bool = False,
-        openapi_tags: list = ["default"],
+        openapi_tags: list = ["get"],
     ):
         """
         The @app.get decorator to add a route with the GET method
@@ -337,7 +337,7 @@ class Robyn:
         self,
         endpoint: str,
         auth_required: bool = False,
-        openapi_tags: list = ["default"],
+        openapi_tags: list = ["post"],
     ):
         """
         The @app.post decorator to add a route with POST method
@@ -532,7 +532,7 @@ class Robyn:
 
 
 class SubRouter(Robyn):
-    def __init__(self, file_object: str, prefix: str = "", config: Config = Config()) -> None:
+    def __init__(self, file_object: str, prefix: str = "", config: Config = Config(), openapi = OpenAPI()) -> None:
         super().__init__(file_object, config, OpenAPI())
         self.prefix = prefix
 
