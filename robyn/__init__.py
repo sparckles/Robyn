@@ -358,7 +358,7 @@ class Robyn:
         self,
         endpoint: str,
         auth_required: bool = False,
-        openapi_tags: list = ["default"],
+        openapi_tags: list = ["put"],
     ):
         """
         The @app.put decorator to add a get route with PUT method
@@ -379,7 +379,7 @@ class Robyn:
         self,
         endpoint: str,
         auth_required: bool = False,
-        openapi_tags: list = ["default"],
+        openapi_tags: list = ["delete"],
     ):
         """
         The @app.delete decorator to add a route with DELETE method
@@ -400,7 +400,7 @@ class Robyn:
         self,
         endpoint: str,
         auth_required: bool = False,
-        openapi_tags: list = ["default"],
+        openapi_tags: list = ["patch"],
     ):
         """
         The @app.patch decorator to add a route with PATCH method
@@ -421,7 +421,7 @@ class Robyn:
         self,
         endpoint: str,
         auth_required: bool = False,
-        openapi_tags: list = ["default"],
+        openapi_tags: list = ["head"],
     ):
         """
         The @app.head decorator to add a route with HEAD method
@@ -442,7 +442,7 @@ class Robyn:
         self,
         endpoint: str,
         auth_required: bool = False,
-        openapi_tags: list = ["default"],
+        openapi_tags: list = ["options"],
     ):
         """
         The @app.options decorator to add a route with OPTIONS method
@@ -463,7 +463,7 @@ class Robyn:
         self,
         endpoint: str,
         auth_required: bool = False,
-        openapi_tags: list = ["default"],
+        openapi_tags: list = ["connect"],
     ):
         """
         The @app.connect decorator to add a route with CONNECT method
@@ -484,7 +484,7 @@ class Robyn:
         self,
         endpoint: str,
         auth_required: bool = False,
-        openapi_tags: list = ["default"],
+        openapi_tags: list = ["trace"],
     ):
         """
         The @app.trace decorator to add a route with TRACE method
@@ -539,28 +539,28 @@ class SubRouter(Robyn):
     def __add_prefix(self, endpoint: str):
         return f"{self.prefix}{endpoint}"
 
-    def get(self, endpoint: str, const: bool = False, openapi_tags: list = ["default"]):
+    def get(self, endpoint: str, const: bool = False, openapi_tags: list = ["get"]):
         return super().get(endpoint=self.__add_prefix(endpoint), const=const, openapi_tags=openapi_tags)
 
-    def post(self, endpoint: str, openapi_tags: list = ["default"]):
+    def post(self, endpoint: str, openapi_tags: list = ["post"]):
         return super().post(endpoint=self.__add_prefix(endpoint), openapi_tags=openapi_tags)
 
-    def put(self, endpoint: str, openapi_tags: list = ["default"]):
+    def put(self, endpoint: str, openapi_tags: list = ["put"]):
         return super().put(endpoint=self.__add_prefix(endpoint), openapi_tags=openapi_tags)
 
-    def delete(self, endpoint: str, openapi_tags: list = ["default"]):
+    def delete(self, endpoint: str, openapi_tags: list = ["delete"]):
         return super().delete(endpoint=self.__add_prefix(endpoint), openapi_tags=openapi_tags)
 
-    def patch(self, endpoint: str, openapi_tags: list = ["default"]):
+    def patch(self, endpoint: str, openapi_tags: list = ["patch"]):
         return super().patch(endpoint=self.__add_prefix(endpoint), openapi_tags=openapi_tags)
 
-    def head(self, endpoint: str, openapi_tags: list = ["default"]):
+    def head(self, endpoint: str, openapi_tags: list = ["head"]):
         return super().head(endpoint=self.__add_prefix(endpoint), openapi_tags=openapi_tags)
 
-    def trace(self, endpoint: str, openapi_tags: list = ["default"]):
+    def trace(self, endpoint: str, openapi_tags: list = ["trace"]):
         return super().trace(endpoint=self.__add_prefix(endpoint), openapi_tags=openapi_tags)
 
-    def options(self, endpoint: str, openapi_tags: list = ["default"]):
+    def options(self, endpoint: str, openapi_tags: list = ["options"]):
         return super().options(endpoint=self.__add_prefix(endpoint), openapi_tags=openapi_tags)
 
 
