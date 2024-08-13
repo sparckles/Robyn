@@ -140,8 +140,8 @@ impl Request {
 
         let body: Vec<u8> = if headers.contains(String::from("content-type"))
             && headers
-            .get(String::from("content-type"))
-            .is_some_and(|val| val.contains("multipart/form-data"))
+                .get(String::from("content-type"))
+                .is_some_and(|val| val.contains("multipart/form-data"))
         {
             let h = headers.get(String::from("content-type")).unwrap();
             debug!("Content-Type: {:?}", h);
@@ -257,7 +257,7 @@ impl PyRequest {
     pub fn json(&self, py: Python) -> PyResult<PyObject> {
         match self.body.as_ref(py).downcast::<PyString>() {
             Ok(python_string) => json_string_to_pyobject(py, python_string.extract()?),
-            Err(e) => Err(e.into())
+            Err(e) => Err(e.into()),
         }
     }
 }
@@ -272,27 +272,26 @@ fn json_string_to_pyobject(py: Python, json_string: &str) -> PyResult<PyObject> 
                 Some(i) => Ok(i.into_py(py)),
                 None => match num.as_f64() {
                     Some(f) => Ok(f.into_py(py)),
-                    None => Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>("Invalid number format")),
+                    None => Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+                        "Invalid number format",
+                    )),
                 },
             },
         }
     }
-    
+
     /// Converts a serde_json::Value to a Python object.
     fn value_to_pyobject(py: Python, value: serde_json::Value) -> PyResult<PyObject> {
         match value {
             Value::Null => Ok(().into_py(py)),
             Value::Bool(b) => Ok(b.into_py(py)),
             Value::Number(num) => number_to_pyobject(num, py),
-            Value::String(s) => {
-                Ok(s.into_py(py))
-            }
-            Value::Array(array) => {
-                array.into_iter()
-                    .map(|v| value_to_pyobject(py, v))
-                    .collect::<PyResult<Vec<PyObject>>>()
-                    .map(|list|PyList::new(py, list).into())
-            }
+            Value::String(s) => Ok(s.into_py(py)),
+            Value::Array(array) => array
+                .into_iter()
+                .map(|v| value_to_pyobject(py, v))
+                .collect::<PyResult<Vec<PyObject>>>()
+                .map(|list| PyList::new(py, list).into()),
             Value::Object(map) => {
                 let dict = PyDict::new(py);
                 for (key, value) in map.into_iter() {
@@ -309,5 +308,3 @@ fn json_string_to_pyobject(py: Python, json_string: &str) -> PyResult<PyObject> 
         _ => Err(PyValueError::new_err("json decode error")),
     }
 }
-
-
