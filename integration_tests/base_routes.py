@@ -606,6 +606,12 @@ async def request_json(request: Request):
     return json["key"]
 
 
+@app.post("/sync/request_json/json_type")
+async def request_json_type(request: Request):
+    jsondict = request.json()
+    return jsonify(jsondict)
+
+
 # --- PUT ---
 
 # dict
@@ -792,6 +798,12 @@ async def async_auth(request: Request):
     assert request.identity is not None
     assert request.identity.claims == {"key": "value"}
     return "authenticated"
+
+
+@app.post("/api/pimeditor/openField")
+async def openField(request):
+    j = request.json()
+    print(f"{request.headers['x-real-ip']}:{request.query_params.get('app','?')} {request.url.path} {j}")
 
 
 # ===== Main =====
