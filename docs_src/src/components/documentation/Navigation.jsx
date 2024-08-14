@@ -211,7 +211,7 @@ export const navigation = [
       },
       { title: 'Deployment', href: '/documentation/example_app/deployment' },
       {
-        title: 'OpenAPI Specification',
+        title: 'OpenAPI Documentation',
         href: '/documentation/example_app/openapi',
       },
       { title: 'Templates', href: '/documentation/example_app/templates' },

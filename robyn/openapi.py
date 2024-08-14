@@ -2,9 +2,9 @@ import re
 from dataclasses import asdict, dataclass, field
 from inspect import Signature
 from pathlib import Path
-from typing import Dict, List, Optional, TypedDict
+from typing import Optional, TypedDict
 
-from .responses import FileResponse, serve_html
+from robyn.responses import FileResponse, serve_html
 
 
 @dataclass
@@ -119,7 +119,7 @@ class OpenAPIInfo:
     termsOfService: Optional[str] = None
     contact: Contact = field(default_factory=Contact)
     license: License = field(default_factory=License)
-    servers: List[Server] = field(default_factory=list)
+    servers: list[Server] = field(default_factory=list)
     externalDocs: Optional[ExternalDocumentation] = field(default_factory=ExternalDocumentation)
     components: Components = field(default_factory=Components)
 

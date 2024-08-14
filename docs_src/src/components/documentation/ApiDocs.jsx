@@ -108,7 +108,7 @@ const guides = [
   },
   {
     href: '/documentation/api_reference/openapi',
-    name: 'OpenAPI Specification',
+    name: 'OpenAPI Documentation',
     description:
       'Learn how to generate OpenAPI docs for your applications.',
   },

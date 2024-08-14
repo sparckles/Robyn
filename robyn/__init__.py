@@ -337,7 +337,7 @@ class Robyn:
         self,
         endpoint: str,
         auth_required: bool = False,
-        openapi_tags: list = ["post"],
+        openapi_tags: list[str] = ["post"],
     ):
         """
         The @app.post decorator to add a route with POST method
@@ -533,7 +533,7 @@ class Robyn:
 
 class SubRouter(Robyn):
     def __init__(self, file_object: str, prefix: str = "", config: Config = Config(), openapi: OpenAPI = OpenAPI()) -> None:
-        super().__init__(file_object, config, OpenAPI())
+        super().__init__(file_object, config, openapi)
         self.prefix = prefix
 
     def __add_prefix(self, endpoint: str):
