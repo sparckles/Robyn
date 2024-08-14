@@ -186,10 +186,10 @@ class OpenAPI:
         """
         Get the "path" openapi object according to spec
 
-        :param endpoint: the endpoint to be added
-        :param summary: short summary of the endpoint (to be fetched from the endpoint defenition by default)
-        :param tags: tags -- for grouping of endpoints
-        :param query_params: query params for the function
+        :param endpoint: str the endpoint to be added
+        :param summary: Optional[str] short summary of the endpoint (to be fetched from the endpoint defenition by default)
+        :param tags: list[str] for grouping of endpoints
+        :param query_params: TypedDict query params for the function
 
         :return: a tuple containing the endpoint with path params wrapped in braces and the "path" openapi object
         according to spec
@@ -236,6 +236,9 @@ class OpenAPI:
                         "schema": {"type": query_param_type},
                     }
                 )
+
+        if not summary:
+            summary = "No summary provided"
 
         return endpoint_with_path_params_wrapped_in_braces, {
             "summary": summary,
