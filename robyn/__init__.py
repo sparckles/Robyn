@@ -315,7 +315,7 @@ class Robyn:
         endpoint: str,
         const: bool = False,
         auth_required: bool = False,
-        openapi_tags: list = ["get"],
+        openapi_tags: list[str] = ["get"],
     ):
         """
         The @app.get decorator to add a route with the GET method
@@ -323,7 +323,7 @@ class Robyn:
         :param endpoint str: endpoint for the route added
         :param const bool: represents if the handler is a const function or not
         :param auth_required bool: represents if the route needs authentication or not
-        :param openapi_tags: tags -- for grouping of endpoints in the openapi spec
+        :param openapi_tags: list[str] -- for grouping of endpoints in the openapi spec
         """
 
         def inner(handler):
@@ -344,7 +344,7 @@ class Robyn:
 
         :param endpoint str: endpoint for the route added
         :param auth_required bool: represents if the route needs authentication or not
-        :param openapi_tags: tags -- for grouping of endpoints in the openapi spec
+        :param openapi_tags: list[str] -- for grouping of endpoints in the openapi spec
         """
 
         def inner(handler):
@@ -358,14 +358,14 @@ class Robyn:
         self,
         endpoint: str,
         auth_required: bool = False,
-        openapi_tags: list = ["put"],
+        openapi_tags: list[str] = ["put"],
     ):
         """
         The @app.put decorator to add a get route with PUT method
 
         :param endpoint str: endpoint for the route added
         :param auth_required bool: represents if the route needs authentication or not
-        :param openapi_tags: tags -- for grouping of endpoints in the openapi spec
+        :param openapi_tags: list[str] -- for grouping of endpoints in the openapi spec
         """
 
         def inner(handler):
@@ -379,14 +379,14 @@ class Robyn:
         self,
         endpoint: str,
         auth_required: bool = False,
-        openapi_tags: list = ["delete"],
+        openapi_tags: list[str] = ["delete"],
     ):
         """
         The @app.delete decorator to add a route with DELETE method
 
         :param endpoint str: endpoint for the route added
         :param auth_required bool: represents if the route needs authentication or not
-        :param openapi_tags: tags -- for grouping of endpoints in the openapi spec
+        :param openapi_tags: list[str] -- for grouping of endpoints in the openapi spec
         """
 
         def inner(handler):
@@ -400,14 +400,14 @@ class Robyn:
         self,
         endpoint: str,
         auth_required: bool = False,
-        openapi_tags: list = ["patch"],
+        openapi_tags: list[str] = ["patch"],
     ):
         """
         The @app.patch decorator to add a route with PATCH method
 
         :param endpoint str: endpoint for the route added
         :param auth_required bool: represents if the route needs authentication or not
-        :param openapi_tags: tags -- for grouping of endpoints in the openapi spec
+        :param openapi_tags: list[str] -- for grouping of endpoints in the openapi spec
         """
 
         def inner(handler):
@@ -421,14 +421,14 @@ class Robyn:
         self,
         endpoint: str,
         auth_required: bool = False,
-        openapi_tags: list = ["head"],
+        openapi_tags: list[str] = ["head"],
     ):
         """
         The @app.head decorator to add a route with HEAD method
 
         :param endpoint str: endpoint for the route added
         :param auth_required bool: represents if the route needs authentication or not
-        :param openapi_tags: tags -- for grouping of endpoints in the openapi spec
+        :param openapi_tags: list[str] -- for grouping of endpoints in the openapi spec
         """
 
         def inner(handler):
@@ -442,14 +442,14 @@ class Robyn:
         self,
         endpoint: str,
         auth_required: bool = False,
-        openapi_tags: list = ["options"],
+        openapi_tags: list[str] = ["options"],
     ):
         """
         The @app.options decorator to add a route with OPTIONS method
 
         :param endpoint str: endpoint for the route added
         :param auth_required bool: represents if the route needs authentication or not
-        :param openapi_tags: tags -- for grouping of endpoints in the openapi spec
+        :param openapi_tags: list[str] -- for grouping of endpoints in the openapi spec
         """
 
         def inner(handler):
@@ -463,14 +463,14 @@ class Robyn:
         self,
         endpoint: str,
         auth_required: bool = False,
-        openapi_tags: list = ["connect"],
+        openapi_tags: list[str] = ["connect"],
     ):
         """
         The @app.connect decorator to add a route with CONNECT method
 
         :param endpoint str: endpoint for the route added
         :param auth_required bool: represents if the route needs authentication or not
-        :param openapi_tags: tags -- for grouping of endpoints in the openapi spec
+        :param openapi_tags: list[str] -- for grouping of endpoints in the openapi spec
         """
 
         def inner(handler):
@@ -484,14 +484,14 @@ class Robyn:
         self,
         endpoint: str,
         auth_required: bool = False,
-        openapi_tags: list = ["trace"],
+        openapi_tags: list[str] = ["trace"],
     ):
         """
         The @app.trace decorator to add a route with TRACE method
 
         :param endpoint str: endpoint for the route added
         :param auth_required bool: represents if the route needs authentication or not
-        :param openapi_tags: tags -- for grouping of endpoints in the openapi spec
+        :param openapi_tags: list[str] -- for grouping of endpoints in the openapi spec
         """
 
         def inner(handler):
@@ -539,28 +539,28 @@ class SubRouter(Robyn):
     def __add_prefix(self, endpoint: str):
         return f"{self.prefix}{endpoint}"
 
-    def get(self, endpoint: str, const: bool = False, openapi_tags: list = ["get"]):
+    def get(self, endpoint: str, const: bool = False, openapi_tags: list[str] = ["get"]):
         return super().get(endpoint=self.__add_prefix(endpoint), const=const, openapi_tags=openapi_tags)
 
-    def post(self, endpoint: str, openapi_tags: list = ["post"]):
+    def post(self, endpoint: str, openapi_tags: list[str] = ["post"]):
         return super().post(endpoint=self.__add_prefix(endpoint), openapi_tags=openapi_tags)
 
-    def put(self, endpoint: str, openapi_tags: list = ["put"]):
+    def put(self, endpoint: str, openapi_tags: list[str] = ["put"]):
         return super().put(endpoint=self.__add_prefix(endpoint), openapi_tags=openapi_tags)
 
-    def delete(self, endpoint: str, openapi_tags: list = ["delete"]):
+    def delete(self, endpoint: str, openapi_tags: list[str] = ["delete"]):
         return super().delete(endpoint=self.__add_prefix(endpoint), openapi_tags=openapi_tags)
 
-    def patch(self, endpoint: str, openapi_tags: list = ["patch"]):
+    def patch(self, endpoint: str, openapi_tags: list[str] = ["patch"]):
         return super().patch(endpoint=self.__add_prefix(endpoint), openapi_tags=openapi_tags)
 
-    def head(self, endpoint: str, openapi_tags: list = ["head"]):
+    def head(self, endpoint: str, openapi_tags: list[str] = ["head"]):
         return super().head(endpoint=self.__add_prefix(endpoint), openapi_tags=openapi_tags)
 
-    def trace(self, endpoint: str, openapi_tags: list = ["trace"]):
+    def trace(self, endpoint: str, openapi_tags: list[str] = ["trace"]):
         return super().trace(endpoint=self.__add_prefix(endpoint), openapi_tags=openapi_tags)
 
-    def options(self, endpoint: str, openapi_tags: list = ["options"]):
+    def options(self, endpoint: str, openapi_tags: list[str] = ["options"]):
         return super().options(endpoint=self.__add_prefix(endpoint), openapi_tags=openapi_tags)
 
 

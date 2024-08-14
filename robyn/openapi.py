@@ -74,26 +74,26 @@ class Components:
     Additional external documentation for this operation.
     (https://swagger.io/specification/#components-object)
 
-    @param schemas: Optional[Dict[str, Dict]] An object to hold reusable Schema Objects.
-    @param responses: Optional[Dict[str, Dict]] An object to hold reusable Response Objects.
-    @param parameters: Optional[Dict[str, Dict]] An object to hold reusable Parameter Objects.
-    @param examples: Optional[Dict[str, Dict]] An object to hold reusable Example Objects.
-    @param requestBodies: Optional[Dict[str, Dict]] An object to hold reusable Request Body Objects.
-    @param securitySchemes: Optional[Dict[str, Dict]] An object to hold reusable Security Scheme Objects.
-    @param links: Optional[Dict[str, Dict]] An object to hold reusable Link Objects.
-    @param callbacks: Optional[Dict[str, Dict]] An object to hold reusable Callback Objects.
-    @param pathItems: Optional[Dict[str, Dict]] An object to hold reusable Callback Objects.
+    @param schemas: Optional[dict[str, dict]] An object to hold reusable Schema Objects.
+    @param responses: Optional[dict[str, dict]] An object to hold reusable Response Objects.
+    @param parameters: Optional[dict[str, dict]] An object to hold reusable Parameter Objects.
+    @param examples: Optional[dict[str, dict]] An object to hold reusable Example Objects.
+    @param requestBodies: Optional[dict[str, dict]] An object to hold reusable Request Body Objects.
+    @param securitySchemes: Optional[dict[str, dict]] An object to hold reusable Security Scheme Objects.
+    @param links: Optional[dict[str, dict]] An object to hold reusable Link Objects.
+    @param callbacks: Optional[dict[str, dict]] An object to hold reusable Callback Objects.
+    @param pathItems: Optional[dict[str, dict]] An object to hold reusable Callback Objects.
     """
 
-    schemas: Optional[Dict[str, Dict]] = field(default_factory=dict)
-    responses: Optional[Dict[str, Dict]] = field(default_factory=dict)
-    parameters: Optional[Dict[str, Dict]] = field(default_factory=dict)
-    examples: Optional[Dict[str, Dict]] = field(default_factory=dict)
-    requestBodies: Optional[Dict[str, Dict]] = field(default_factory=dict)
-    securitySchemes: Optional[Dict[str, Dict]] = field(default_factory=dict)
-    links: Optional[Dict[str, Dict]] = field(default_factory=dict)
-    callbacks: Optional[Dict[str, Dict]] = field(default_factory=dict)
-    pathItems: Optional[Dict[str, Dict]] = field(default_factory=dict)
+    schemas: Optional[dict[str, dict]] = field(default_factory=dict)
+    responses: Optional[dict[str, dict]] = field(default_factory=dict)
+    parameters: Optional[dict[str, dict]] = field(default_factory=dict)
+    examples: Optional[dict[str, dict]] = field(default_factory=dict)
+    requestBodies: Optional[dict[str, dict]] = field(default_factory=dict)
+    securitySchemes: Optional[dict[str, dict]] = field(default_factory=dict)
+    links: Optional[dict[str, dict]] = field(default_factory=dict)
+    callbacks: Optional[dict[str, dict]] = field(default_factory=dict)
+    pathItems: Optional[dict[str, dict]] = field(default_factory=dict)
 
 
 @dataclass
@@ -108,7 +108,7 @@ class OpenAPIInfo:
     @param termsOfService: Optional[str] A URL to the Terms of Service for the API.
     @param contact: Contact The contact information for the exposed API.
     @param license: License The license information for the exposed API.
-    @param servers: List[Server] An list of Server objects representing the servers.
+    @param servers: list[Server] An list of Server objects representing the servers.
     @param externalDocs: Optional[ExternalDocumentation] Additional external documentation.
     @param components: Components An element to hold various schemas for the document.
     """
