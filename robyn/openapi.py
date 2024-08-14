@@ -251,7 +251,7 @@ class OpenAPI:
             },
         }
 
-    def docs_handler(self) -> FileResponse:
+    def get_openapi_docs_page(self) -> FileResponse:
         """
         Handler to the swagger html page to be deployed to the endpoint `/docs`
         @return: the swagger html page
@@ -259,7 +259,7 @@ class OpenAPI:
         html_file = str(Path("./robyn/swagger.html"))
         return serve_html(html_file)
 
-    def json_handler(self) -> str:
+    def get_openapi_config_string(self) -> str:
         """
         Handler to the openapi spec json object to be deployed to the endpoint `/openapi.json`
         @return: a JSON string representing the openapi spec
