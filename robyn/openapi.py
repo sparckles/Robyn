@@ -1,4 +1,3 @@
-import re
 from dataclasses import asdict, dataclass, field
 from inspect import Signature
 from pathlib import Path
@@ -224,9 +223,7 @@ class OpenAPI:
 
         if query_params:
             for query_param in query_params.__annotations__:
-                # ugly hack!
-                # returns "<class 'int'>" -- this line strips out the type a.k.a int from it
-                query_param_type = re.findall("'[a-z]+'", str(query_params.__annotations__[query_param]))[0].replace("'", "")
+                query_param_type = self.get_openapi_type(query_params.__annotations__[query_param])
 
                 openapi_parameter_object.append(
                     {
@@ -250,6 +247,29 @@ class OpenAPI:
                 }
             },
         }
+
+    def get_openapi_type(self, typed_dict: TypedDict) -> str:
+        """
+        Get actual type from the TypedDict annotations
+
+        :param typed_dict: The TypedDict to be converted
+        :return: the type inferred
+        """
+        type_mapping = {
+            int: "integer",
+            str: "string",
+            bool: "boolean",
+            float: "number",
+            dict: "object",
+            list: "array",
+        }
+
+        for type_name in type_mapping:
+            if typed_dict is type_name:
+                return type_mapping[type_name]
+
+        # default to "string" if type is not found
+        return "string"
 
     def get_openapi_docs_page(self) -> FileResponse:
         """
