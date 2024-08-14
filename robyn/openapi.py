@@ -1,7 +1,7 @@
 from dataclasses import asdict, dataclass, field
 from inspect import Signature
 from pathlib import Path
-from typing import Optional, TypedDict
+from typing import Optional, TypedDict, List, Dict
 
 from robyn.responses import FileResponse, serve_html
 
@@ -73,26 +73,26 @@ class Components:
     Additional external documentation for this operation.
     (https://swagger.io/specification/#components-object)
 
-    @param schemas: Optional[dict[str, dict]] An object to hold reusable Schema Objects.
-    @param responses: Optional[dict[str, dict]] An object to hold reusable Response Objects.
-    @param parameters: Optional[dict[str, dict]] An object to hold reusable Parameter Objects.
-    @param examples: Optional[dict[str, dict]] An object to hold reusable Example Objects.
-    @param requestBodies: Optional[dict[str, dict]] An object to hold reusable Request Body Objects.
-    @param securitySchemes: Optional[dict[str, dict]] An object to hold reusable Security Scheme Objects.
-    @param links: Optional[dict[str, dict]] An object to hold reusable Link Objects.
-    @param callbacks: Optional[dict[str, dict]] An object to hold reusable Callback Objects.
-    @param pathItems: Optional[dict[str, dict]] An object to hold reusable Callback Objects.
+    @param schemas: Optional[Dict[str, Dict]] An object to hold reusable Schema Objects.
+    @param responses: Optional[Dict[str, Dict]] An object to hold reusable Response Objects.
+    @param parameters: Optional[Dict[str, Dict]] An object to hold reusable Parameter Objects.
+    @param examples: Optional[Dict[str, Dict]] An object to hold reusable Example Objects.
+    @param requestBodies: Optional[Dict[str, Dict]] An object to hold reusable Request Body Objects.
+    @param securitySchemes: Optional[Dict[str, Dict]] An object to hold reusable Security Scheme Objects.
+    @param links: Optional[Dict[str, Dict]] An object to hold reusable Link Objects.
+    @param callbacks: Optional[Dict[str, Dict]] An object to hold reusable Callback Objects.
+    @param pathItems: Optional[Dict[str, Dict]] An object to hold reusable Callback Objects.
     """
 
-    schemas: Optional[dict[str, dict]] = field(default_factory=dict)
-    responses: Optional[dict[str, dict]] = field(default_factory=dict)
-    parameters: Optional[dict[str, dict]] = field(default_factory=dict)
-    examples: Optional[dict[str, dict]] = field(default_factory=dict)
-    requestBodies: Optional[dict[str, dict]] = field(default_factory=dict)
-    securitySchemes: Optional[dict[str, dict]] = field(default_factory=dict)
-    links: Optional[dict[str, dict]] = field(default_factory=dict)
-    callbacks: Optional[dict[str, dict]] = field(default_factory=dict)
-    pathItems: Optional[dict[str, dict]] = field(default_factory=dict)
+    schemas: Optional[Dict[str, Dict]] = field(default_factory=dict)
+    responses: Optional[Dict[str, Dict]] = field(default_factory=dict)
+    parameters: Optional[Dict[str, Dict]] = field(default_factory=dict)
+    examples: Optional[Dict[str, Dict]] = field(default_factory=dict)
+    requestBodies: Optional[Dict[str, Dict]] = field(default_factory=dict)
+    securitySchemes: Optional[Dict[str, Dict]] = field(default_factory=dict)
+    links: Optional[Dict[str, Dict]] = field(default_factory=dict)
+    callbacks: Optional[Dict[str, Dict]] = field(default_factory=dict)
+    pathItems: Optional[Dict[str, Dict]] = field(default_factory=dict)
 
 
 @dataclass
@@ -118,7 +118,7 @@ class OpenAPIInfo:
     termsOfService: Optional[str] = None
     contact: Contact = field(default_factory=Contact)
     license: License = field(default_factory=License)
-    servers: list[Server] = field(default_factory=list)
+    servers: List[Server] = field(default_factory=list)
     externalDocs: Optional[ExternalDocumentation] = field(default_factory=ExternalDocumentation)
     components: Components = field(default_factory=Components)
 
@@ -181,13 +181,13 @@ class OpenAPI:
         for path in paths:
             self.openapi_spec["paths"][path] = paths[path]
 
-    def get_path_obj(self, endpoint: str, summary: str, tags: list, query_params: TypedDict = None) -> (str, dict):
+    def get_path_obj(self, endpoint: str, summary: str, tags: List[str], query_params: TypedDict = None) -> (str, dict):
         """
         Get the "path" openapi object according to spec
 
         :param endpoint: str the endpoint to be added
         :param summary: Optional[str] short summary of the endpoint (to be fetched from the endpoint defenition by default)
-        :param tags: list[str] for grouping of endpoints
+        :param tags: List[str] for grouping of endpoints
         :param query_params: TypedDict query params for the function
 
         :return: a tuple containing the endpoint with path params wrapped in braces and the "path" openapi object
