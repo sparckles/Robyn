@@ -20,10 +20,8 @@ from robyn.templating import JinjaTemplate
 from integration_tests.views import SyncView, AsyncView
 from integration_tests.subroutes import sub_router, di_subrouter
 
-
 app = Robyn(__file__)
 websocket = WebSocket(app, "/web_socket")
-
 
 # Creating a new WebSocket app to test json handling + to serve an example to future users of this lib
 # while the original "raw" web_socket is used with benchmark tests
@@ -36,7 +34,6 @@ websocket_di.inject(ROUTER_DEPENDENCY="ROUTER DEPENDENCY")
 
 current_file_path = pathlib.Path(__file__).parent.resolve()
 jinja_template = JinjaTemplate(os.path.join(current_file_path, "templates"))
-
 
 # ===== Websockets =====
 
@@ -608,7 +605,10 @@ async def request_json(request: Request):
 
 @app.post("/sync/request_json/json_type")
 async def request_json_type(request: Request):
-    jsondict = request.json()
+    try:
+        jsondict = request.json()
+    except ValueError:
+        jsondict = None
     return jsonify(jsondict)
 
 
@@ -803,7 +803,7 @@ async def async_auth(request: Request):
 @app.post("/api/pimeditor/openField")
 async def openField(request):
     j = request.json()
-    print(f"{request.headers['x-real-ip']}:{request.query_params.get('app','?')} {request.url.path} {j}")
+    print(f"{request.headers['x-real-ip']}:{request.query_params.get('app', '?')} {request.url.path} {j}")
 
 
 # ===== Main =====
@@ -823,7 +823,6 @@ app.add_route("POST", "/sync/post/no_dec", sync_without_decorator)
 app.add_route("GET", "/async/get/no_dec", async_without_decorator)
 app.add_route("PUT", "/async/put/no_dec", async_without_decorator)
 app.add_route("POST", "/async/post/no_dec", async_without_decorator)
-
 
 # ===== Dependency Injection =====
 
