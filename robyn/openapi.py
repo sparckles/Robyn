@@ -148,15 +148,15 @@ class OpenAPI:
             "externalDocs": asdict(self.info.externalDocs) if self.info.externalDocs.url else None,
         }
 
-    def add_openapi_path_obj(self, route_type: str, endpoint: str, openapi_summary: str, openapi_tags: list, signature: Optional[Signature] = None):
+    def add_openapi_path_obj(self, route_type: str, endpoint: str, openapi_summary: str, openapi_tags: List[str], signature: Optional[Signature]):
         """
         Adds the given path to openapi spec
 
-        :param route_type: the http method as string (get, post ...)
-        :param endpoint: the endpoint to be added
-        :param openapi_summary: short summary of the endpoint (to be fetched from the endpoint defenition by default)
-        :param openapi_tags: tags -- for grouping of endpoints
-        :param signature: the function signature -- to grab the typed dict annotations for query params
+        @param route_type: str the http method as string (get, post ...)
+        @param endpoint: srt the endpoint to be added
+        @param openapi_summary: str short summary of the endpoint (to be fetched from the endpoint defenition by default)
+        @param openapi_tags: List[str] for grouping of endpoints
+        @param signature: Optional[Signature] the function signature -- to grab the typed dict annotations for query params
         """
 
         query_params = None
@@ -170,27 +170,27 @@ class OpenAPI:
             self.openapi_spec["paths"][modified_endpoint] = {}
         self.openapi_spec["paths"][modified_endpoint][route_type] = path_obj
 
-    def add_subrouter_paths(self, subrouter_openapi):
+    def add_subrouter_paths(self, subrouter_openapi: "OpenAPI"):
         """
         Adds the subrouter paths to main router's openapi specs
 
-        :param subrouter_openapi: the OpenAPI object of the current subrouter
+        @param subrouter_openapi: OpenAPI the OpenAPI object of the current subrouter
         """
         paths = subrouter_openapi.openapi_spec["paths"]
 
         for path in paths:
             self.openapi_spec["paths"][path] = paths[path]
 
-    def get_path_obj(self, endpoint: str, summary: str, tags: List[str], query_params: Optional[TypedDict] = None) -> (str, dict):
+    def get_path_obj(self, endpoint: str, summary: str, tags: List[str], query_params: Optional[TypedDict]) -> (str, dict):
         """
         Get the "path" openapi object according to spec
 
-        :param endpoint: str the endpoint to be added
-        :param summary: Optional[str] short summary of the endpoint (to be fetched from the endpoint defenition by default)
-        :param tags: List[str] for grouping of endpoints
-        :param query_params: Optional[TypedDict] query params for the function
+        @param endpoint: str the endpoint to be added
+        @param summary: Optional[str] short summary of the endpoint (to be fetched from the endpoint defenition by default)
+        @param tags: List[str] for grouping of endpoints
+        @param query_params: Optional[TypedDict] query params for the function
 
-        :return: a tuple containing the endpoint with path params wrapped in braces and the "path" openapi object
+        @return: (str, dict) a tuple containing the endpoint with path params wrapped in braces and the "path" openapi object
         according to spec
         """
         # robyn has paths like /:url/:etc whereas openapi requires path like /{url}/{path}
@@ -252,8 +252,8 @@ class OpenAPI:
         """
         Get actual type from the TypedDict annotations
 
-        :param typed_dict: The TypedDict to be converted
-        :return: the type inferred
+        @param typed_dict: TypedDict The TypedDict to be converted
+        @return: str the type inferred
         """
         type_mapping = {
             int: "integer",
@@ -274,7 +274,7 @@ class OpenAPI:
     def get_openapi_docs_page(self) -> FileResponse:
         """
         Handler to the swagger html page to be deployed to the endpoint `/docs`
-        @return: the swagger html page
+        @return: FileResponse the swagger html page
         """
         html_file = str(Path("./robyn/swagger.html"))
         return serve_html(html_file)
@@ -282,6 +282,6 @@ class OpenAPI:
     def get_openapi_config_string(self) -> str:
         """
         Handler to the openapi spec json object to be deployed to the endpoint `/openapi.json`
-        @return: a JSON string representing the openapi spec
+        @return: str a JSON string representing the openapi spec
         """
         return self.openapi_spec.__repr__()
