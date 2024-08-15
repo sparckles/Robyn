@@ -800,12 +800,6 @@ async def async_auth(request: Request):
     return "authenticated"
 
 
-@app.post("/api/pimeditor/openField")
-async def openField(request):
-    j = request.json()
-    print(f"{request.headers['x-real-ip']}:{request.query_params.get('app', '?')} {request.url.path} {j}")
-
-
 # ===== Main =====
 
 
