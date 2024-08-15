@@ -59,7 +59,7 @@ class GetRequestParams(TypedDict):
     year: int
 
 
-@app.get("/api/v1/:name", openapi_tags=["Name"])
+@app.get("/api/v1/name", openapi_tags=["Name"])
 async def get(r, query_params=GetRequestParams):
     """Get Name by ID"""
     return r.query_params
@@ -116,7 +116,7 @@ class GetRequestParams(TypedDict):
     year: int
 
 
-@app.get("/api/v1/:name", openapi_tags=["Name"])
+@app.get("/api/v1/name", openapi_tags=["Name"])
 async def get(r: Request, query_params=GetRequestParams):
     """Get Name by ID"""
     return r.query_params
@@ -157,7 +157,7 @@ class SubRouterGetRequestParams(TypedDict):
     value: str
 
 
-@subrouter.get("/:name")
+@subrouter.get("/name")
 async def subrouter_get(r, query_params=SubRouterGetRequestParams):
     """Get Name by ID"""
     return r.query_params
@@ -191,7 +191,7 @@ class SubRouterGetRequestParams(TypedDict):
     value: str
 
 
-@subrouter.get("/:name")
+@subrouter.get("/name")
 async def subrouter_get(r: Request, query_params=SubRouterGetRequestParams):
     """Get Name by ID"""
     return r.query_params
