@@ -3,7 +3,7 @@ import pathlib
 from collections import defaultdict
 from typing import Optional
 
-from robyn.robyn import Headers
+from robyn import Headers
 
 from integration_tests.subroutes import sub_router, di_subrouter
 from integration_tests.views import SyncView, AsyncView
