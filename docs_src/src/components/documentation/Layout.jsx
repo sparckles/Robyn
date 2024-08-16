@@ -7,6 +7,7 @@ import { Prose } from '@/components/documentation/Prose'
 import { SectionProvider } from '@/components/documentation/SectionProvider'
 import { useState, useEffect } from 'react'
 import { Container } from '../Container'
+import { useIsInsideMobileNavigation } from '@/components/documentation/MobileNavigation'
 
 export function Layout({ children, sections = [] }) {
   const [showSideBar, setShowSideBar] = useState(true)
@@ -20,6 +21,8 @@ export function Layout({ children, sections = [] }) {
     }
   }, [showSideBar])
 
+  let isInsideMobileNavigation = useIsInsideMobileNavigation() // TODO: always returns false
+
   return (
     <SectionProvider sections={sections}>
       <div className={divMargin}>
@@ -31,14 +34,14 @@ export function Layout({ children, sections = [] }) {
             <div className="contents lg:pointer-events-auto lg:block lg:w-72 lg:overflow-y-auto lg:border-white/10 lg:px-6 lg:pb-8 xl:w-80">
               <BottomNavbar />
 
-              <Navigation className="lg:mt-8 lg:block" />
+              { !isInsideMobileNavigation && <Navigation className="lg:mt-8 lg:block" /> }
             </div>
           </motion.header>
         )}
 
         <div className="relative px-4 sm:px-6 lg:px-8">
           <main className="py-16">
-            {SideBarToggleIcon(showSideBar, () => {
+            { !isInsideMobileNavigation && SideBarToggleIcon(showSideBar, () => {
               setShowSideBar(!showSideBar)
             })}
 
