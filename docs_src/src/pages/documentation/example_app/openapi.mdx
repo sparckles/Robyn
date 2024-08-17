@@ -11,6 +11,12 @@ Out of the box, the following endpoints are setup for you:
 - `/docs` The Swagger UI
 - `/openapi.json` The JSON Specification
 
+However, if you don't want to generate the OpenAPI docs, you can disable it by passing `--disable-openapi` flag while starting the application.
+
+```bash
+python app.py --disable-openapi
+```
+
 ## How to use?
 
 - Query Params: The typing for query params can be added as `def get(r: Request, query_params=GetRequestParams)` where `GetRequestParams` is a `TypedDict`
@@ -24,28 +30,8 @@ from typing import TypedDict
 from robyn import Robyn, OpenAPI
 from robyn.openapi import OpenAPIInfo, Contact, License, ExternalDocumentation, Components
 
-app = Robyn(
-    file_object=__file__,
-    openapi=OpenAPI(
-        info=OpenAPIInfo(
-            title="Sample App",
-            description="This is a sample server application.",
-            termsOfService="https://example.com/terms/",
-            version="1.0.0",
-            contact=Contact(
-                name="API Support",
-                url="https://www.example.com/support",
-                email="support@example.com",
-            ),
-            license=License(
-                name="BSD2.0",
-                url="https://opensource.org/license/bsd-2-clause",
-            ),
-            externalDocs=ExternalDocumentation(description="Find more info here", url="https://example.com/"),
-            components=Components(),
-        ),
-    ),
-)
+
+app = Robyn(file_object=__file__)
 
 
 @app.get("/")
@@ -81,28 +67,7 @@ from typing import TypedDict
 from robyn import Robyn, OpenAPI, Request
 from robyn.openapi import OpenAPIInfo, Contact, License, ExternalDocumentation, Components
 
-app: Robyn = Robyn(
-    file_object=__file__,
-    openapi=OpenAPI(
-        info=OpenAPIInfo(
-            title="Sample App",
-            description="This is a sample server application.",
-            termsOfService="https://example.com/terms/",
-            version="1.0.0",
-            contact=Contact(
-                name="API Support",
-                url="https://www.example.com/support",
-                email="support@example.com",
-            ),
-            license=License(
-                name="BSD2.0",
-                url="https://opensource.org/license/bsd-2-clause",
-            ),
-            externalDocs=ExternalDocumentation(description="Find more info here", url="https://example.com/"),
-            components=Components(),
-        ),
-    ),
-)
+app: Robyn = Robyn(file_object=__file__)
 
 
 @app.get("/")
