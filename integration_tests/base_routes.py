@@ -3,6 +3,10 @@ import pathlib
 from collections import defaultdict
 from typing import Optional
 
+from robyn import Headers
+
+from integration_tests.subroutes import sub_router, di_subrouter
+from integration_tests.views import SyncView, AsyncView
 from robyn import (
     Request,
     Response,
@@ -14,16 +18,10 @@ from robyn import (
     WebSocketConnector,
 )
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
-from robyn.robyn import Headers
 from robyn.templating import JinjaTemplate
-
-from integration_tests.views import SyncView, AsyncView
-from integration_tests.subroutes import sub_router, di_subrouter
-
 
 app = Robyn(__file__)
 websocket = WebSocket(app, "/web_socket")
-
 
 # Creating a new WebSocket app to test json handling + to serve an example to future users of this lib
 # while the original "raw" web_socket is used with benchmark tests
@@ -36,7 +34,6 @@ websocket_di.inject(ROUTER_DEPENDENCY="ROUTER DEPENDENCY")
 
 current_file_path = pathlib.Path(__file__).parent.resolve()
 jinja_template = JinjaTemplate(os.path.join(current_file_path, "templates"))
-
 
 # ===== Websockets =====
 
@@ -812,7 +809,6 @@ app.add_route("GET", "/async/get/no_dec", async_without_decorator)
 app.add_route("PUT", "/async/put/no_dec", async_without_decorator)
 app.add_route("POST", "/async/post/no_dec", async_without_decorator)
 
-
 # ===== Dependency Injection =====
 
 GLOBAL_DEPENDENCY = "GLOBAL DEPENDENCY"
@@ -830,6 +826,12 @@ def sync_global_di(request, router_dependencies, global_dependencies):
 @app.get("/sync/router_di")
 def sync_router_di(request, router_dependencies):
     return router_dependencies["ROUTER_DEPENDENCY"]
+
+
+@app.get("/openapi_test", openapi_tags=["test tag"])
+def sample_openapi_endpoint():
+    """Get openapi"""
+    return 200
 
 
 def main():

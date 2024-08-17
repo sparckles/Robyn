@@ -62,3 +62,9 @@ def trace_foo():
 @sub_router.head("/foo")
 def head_foo():
     return {"message": "foo"}
+
+
+@sub_router.post("/openapi_test", openapi_tags=["test subrouter tag"])
+def sample_subrouter_openapi_endpoint():
+    """Get subrouter openapi"""
+    return 200

@@ -34,6 +34,12 @@ const guides = [
     description:
       'Learn how to deploy your app to production and manage your deployments.',
   },
+  {
+    href: '/documentation/example_app/openapi',
+    name: 'OpenAPI Documentation',
+    description:
+      'Learn how OpenAPI docs are generate for your applications.',
+  },
 ]
 
 export function Guides() {
