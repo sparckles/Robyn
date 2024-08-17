@@ -18,7 +18,6 @@ from robyn import (
     WebSocketConnector,
 )
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
-from robyn.openapi import OpenAPI, OpenAPIInfo, Contact, License, ExternalDocumentation, Components
 from robyn.templating import JinjaTemplate
 
 app = Robyn(__file__)
