@@ -225,9 +225,10 @@ class Robyn:
         :param port int: represents the port number at which the server is listening
         :param _check_port bool: represents if the port should be checked if it is already in use
         """
-
-        self.add_route(route_type=HttpMethod.GET, endpoint="/openapi.json", handler=self.openapi.get_openapi_config_string, is_const=True)
-        self.add_route(route_type=HttpMethod.GET, endpoint="/docs", handler=self.openapi.get_openapi_docs_page, is_const=True)
+        if not self.config.disable_openapi:
+            self.add_route(route_type=HttpMethod.GET, endpoint="/openapi.json", handler=self.openapi.get_openapi_config_string, is_const=True)
+            self.add_route(route_type=HttpMethod.GET, endpoint="/docs", handler=self.openapi.get_openapi_docs_page, is_const=True)
+            logger.info("Docs hosted at http://%s:%s/docs", host, port)
 
         host = os.getenv("ROBYN_HOST", host)
         port = int(os.getenv("ROBYN_PORT", port))
@@ -244,7 +245,6 @@ class Robyn:
 
         logger.info("Robyn version: %s", __version__)
         logger.info("Starting server at http://%s:%s", host, port)
-        logger.info("Docs hosted at http://%s:%s/docs", host, port)
 
         mp.allow_connection_pickling()
 

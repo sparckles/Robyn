@@ -69,6 +69,13 @@ class Config:
             default=None,
             help="Create a rust file with the given name.",
         )
+        parser.add_argument(
+            "--disable-openapi",
+            dest="disable_openapi",
+            action="store_true",
+            default=False,
+            help="Disable the OpenAPI documentation.",
+        )
 
         args, unknown_args = parser.parse_known_args()
 
@@ -82,6 +89,7 @@ class Config:
         self.compile_rust_path = args.compile_rust_path
         self.create_rust_file = args.create_rust_file
         self.file_path = None
+        self.disable_openapi = args.disable_openapi
 
         # find something that ends with .py in unknown_args
         for arg in unknown_args:
