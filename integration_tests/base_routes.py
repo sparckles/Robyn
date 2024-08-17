@@ -606,10 +606,10 @@ async def request_json(request: Request):
 @app.post("/sync/request_json/json_type")
 async def request_json_type(request: Request):
     try:
-        jsondict = request.json()
+        jsonobj = request.json()
     except ValueError:
-        jsondict = None
-    return jsonify(jsondict)
+        jsonobj = None
+    return jsonify(jsonobj)
 
 
 # --- PUT ---
