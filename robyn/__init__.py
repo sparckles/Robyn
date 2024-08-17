@@ -245,7 +245,6 @@ class Robyn:
 
         logger.info("Robyn version: %s", __version__)
         logger.info("Starting server at http://%s:%s", host, port)
-        
 
         mp.allow_connection_pickling()
 
