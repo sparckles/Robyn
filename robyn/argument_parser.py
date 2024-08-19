@@ -117,6 +117,9 @@ class Config:
                 self.log_level,
             )
 
+        self.processes = self.processes or 1
+        self.workers = self.workers or 1
+
         # find something that ends with .py in unknown_args
         for arg in unknown_args:
             if arg.endswith(".py"):
