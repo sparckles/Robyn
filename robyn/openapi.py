@@ -140,7 +140,7 @@ class OpenAPI:
         Initializes the openapi_spec dict
         """
         self.openapi_spec = {
-            "openapi": "3.0.0",
+            "openapi": "3.1.0",
             "info": asdict(self.info),
             "paths": {},
             "components": asdict(self.info.components),
