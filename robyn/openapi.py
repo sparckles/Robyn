@@ -241,11 +241,7 @@ class OpenAPI:
             "summary": summary,
             "tags": tags,
             "parameters": openapi_parameter_object,
-            "responses": {
-                "200": {
-                    "description": "Successful Response",
-                }
-            },
+            "responses": {"200": {"description": "Successful Response", "content": {"application/json": {"schema": {}}}}},
         }
 
     def get_openapi_type(self, typed_dict: TypedDict) -> str:
