@@ -1,21 +1,24 @@
 import argparse
+import os
 
 
 class Config:
     def __init__(self) -> None:
-        parser = argparse.ArgumentParser(description="Robyn, a fast async web framework with a rust runtime.")
+        parser = argparse.ArgumentParser(
+            description="Robyn, a fast async web framework with a rust runtime."
+        )
         self.parser = parser
         parser.add_argument(
             "--processes",
             type=int,
-            default=1,
+            default=None,
             required=False,
             help="Choose the number of processes. [Default: 1]",
         )
         parser.add_argument(
             "--workers",
             type=int,
-            default=1,
+            default=None,
             required=False,
             help="Choose the number of workers. [Default: 1]",
         )
@@ -76,12 +79,19 @@ class Config:
             default=False,
             help="Disable the OpenAPI documentation.",
         )
+        parser.add_argument(
+            "--fast",
+            dest="fast",
+            action="store_true",
+            default=False,
+            help="Enable the fast mode.",
+        )
 
         args, unknown_args = parser.parse_known_args()
-
+        self.fast = args.fast
+        self.dev = args.dev
         self.processes = args.processes
         self.workers = args.workers
-        self.dev = args.dev
         self.create = args.create
         self.docs = args.docs
         self.open_browser = args.open_browser
@@ -90,6 +100,22 @@ class Config:
         self.create_rust_file = args.create_rust_file
         self.file_path = None
         self.disable_openapi = args.disable_openapi
+        self.log_level = args.log_level
+
+        if self.fast:
+            # doing this here before every other check
+            # so that processes, workers and log_level can be overridden
+            self.processes = self.processes or os.cpu_count() or 1
+            self.workers = self.workers or ((os.cpu_count() * 2) + 1) or 1
+            self.log_level = self.log_level or "WARNING"
+            print(
+                "Fast mode enabled. Processes: ",
+                self.processes,
+                "Workers: ",
+                self.workers,
+                "Log Level: ",
+                self.log_level,
+            )
 
         # find something that ends with .py in unknown_args
         for arg in unknown_args:
@@ -97,13 +123,13 @@ class Config:
                 self.file_path = arg
                 break
 
+        if self.fast and self.dev:
+            raise Exception("--fast and --dev shouldn't be used together")
+
         if self.dev and (self.processes != 1 or self.workers != 1):
             raise Exception("--processes and --workers shouldn't be used with --dev")
 
-        if self.dev and args.log_level is None:
+        if self.dev and self.log_level is None:
             self.log_level = "DEBUG"
-
-        elif args.log_level is None:
+        elif self.log_level is None:
             self.log_level = "INFO"
-        else:
-            self.log_level = args.log_level
