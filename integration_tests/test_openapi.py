@@ -30,12 +30,12 @@ def test_add_openapi_path():
 
     route_type = "get"
     endpoint = "/openapi_test"
-    openapi_summary = "Get openapi"
+    openapi_description = "Get openapi"
     openapi_tags = ["test tag"]
 
     assert endpoint in openapi_spec["paths"]
     assert route_type in openapi_spec["paths"][endpoint]
-    assert openapi_summary == openapi_spec["paths"][endpoint][route_type]["summary"]
+    assert openapi_description == openapi_spec["paths"][endpoint][route_type]["description"]
     assert openapi_tags == openapi_spec["paths"][endpoint][route_type]["tags"]
 
 
@@ -47,10 +47,10 @@ def test_add_subrouter_paths():
 
     route_type = "post"
     endpoint = "/sub_router/openapi_test"
-    openapi_summary = "Get subrouter openapi"
+    openapi_description = "Get subrouter openapi"
     openapi_tags = ["test subrouter tag"]
 
     assert endpoint in openapi_spec["paths"]
     assert route_type in openapi_spec["paths"][endpoint]
-    assert openapi_summary == openapi_spec["paths"][endpoint][route_type]["summary"]
+    assert openapi_description == openapi_spec["paths"][endpoint][route_type]["description"]
     assert openapi_tags == openapi_spec["paths"][endpoint][route_type]["tags"]
