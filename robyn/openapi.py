@@ -164,7 +164,11 @@ class OpenAPI:
         if signature and "query_params" in signature.parameters:
             query_params = signature.parameters["query_params"].default
 
-        modified_endpoint, path_obj = self.get_path_obj(endpoint, openapi_summary, openapi_tags, query_params)
+        return_annotation = signature.return_annotation
+
+        return_type = "text/plain" if return_annotation == Signature.empty or return_annotation is str else "application/json"
+
+        modified_endpoint, path_obj = self.get_path_obj(endpoint, openapi_summary, openapi_tags, query_params, return_type)
 
         if modified_endpoint not in self.openapi_spec["paths"]:
             self.openapi_spec["paths"][modified_endpoint] = {}
@@ -181,7 +185,7 @@ class OpenAPI:
         for path in paths:
             self.openapi_spec["paths"][path] = paths[path]
 
-    def get_path_obj(self, endpoint: str, summary: str, tags: List[str], query_params: Optional[TypedDict]) -> (str, dict):
+    def get_path_obj(self, endpoint: str, summary: str, tags: List[str], query_params: Optional[TypedDict], return_type: str) -> (str, dict):
         """
         Get the "path" openapi object according to spec
 
@@ -189,6 +193,7 @@ class OpenAPI:
         @param summary: Optional[str] short summary of the endpoint (to be fetched from the endpoint defenition by default)
         @param tags: List[str] for grouping of endpoints
         @param query_params: Optional[TypedDict] query params for the function
+        @param return_type: str return type of the endpoint handler
 
         @return: (str, dict) a tuple containing the endpoint with path params wrapped in braces and the "path" openapi object
         according to spec
@@ -241,7 +246,7 @@ class OpenAPI:
             "summary": summary,
             "tags": tags,
             "parameters": openapi_parameter_object,
-            "responses": {"200": {"description": "Successful Response", "content": {"application/json": {"schema": {}}}}},
+            "responses": {"200": {"description": "Successful Response", "content": {return_type: {"schema": {}}}}},
         }
 
     def get_openapi_type(self, typed_dict: TypedDict) -> str:
