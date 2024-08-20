@@ -226,7 +226,7 @@ class Robyn:
         :param _check_port bool: represents if the port should be checked if it is already in use
         """
         if not self.config.disable_openapi:
-            self.add_route(route_type=HttpMethod.GET, endpoint="/openapi.json", handler=self.openapi.get_openapi_config_string, is_const=True)
+            self.add_route(route_type=HttpMethod.GET, endpoint="/openapi.json", handler=self.openapi.get_openapi_config, is_const=True)
             self.add_route(route_type=HttpMethod.GET, endpoint="/docs", handler=self.openapi.get_openapi_docs_page, is_const=True)
             logger.info("Docs hosted at http://%s:%s/docs", host, port)
 
