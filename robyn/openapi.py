@@ -280,9 +280,9 @@ class OpenAPI:
         html_file = str(Path("./robyn/swagger.html"))
         return serve_html(html_file)
 
-    def get_openapi_config_string(self) -> str:
+    def get_openapi_config(self) -> dict:
         """
-        Handler to the openapi spec json object to be deployed to the endpoint `/openapi.json`
-        @return: str a JSON string representing the openapi spec
+        Returns the openapi spec as a dict
+        @return: dict the openapi spec
         """
-        return self.openapi_spec.__repr__()
+        return self.openapi_spec
