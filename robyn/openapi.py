@@ -148,13 +148,13 @@ class OpenAPI:
             "externalDocs": asdict(self.info.externalDocs) if self.info.externalDocs.url else None,
         }
 
-    def add_openapi_path_obj(self, route_type: str, endpoint: str, openapi_summary: str, openapi_tags: List[str], signature: Optional[Signature]):
+    def add_openapi_path_obj(self, route_type: str, endpoint: str, openapi_description: str, openapi_tags: List[str], signature: Optional[Signature]):
         """
         Adds the given path to openapi spec
 
         @param route_type: str the http method as string (get, post ...)
         @param endpoint: srt the endpoint to be added
-        @param openapi_summary: str short summary of the endpoint (to be fetched from the endpoint defenition by default)
+        @param openapi_description: str short description of the endpoint (to be fetched from the endpoint defenition by default)
         @param openapi_tags: List[str] for grouping of endpoints
         @param signature: Optional[Signature] the function signature -- to grab the typed dict annotations for query params
         """
@@ -168,7 +168,7 @@ class OpenAPI:
 
         return_type = "text/plain" if return_annotation == Signature.empty or return_annotation is str else "application/json"
 
-        modified_endpoint, path_obj = self.get_path_obj(endpoint, openapi_summary, openapi_tags, query_params, return_type)
+        modified_endpoint, path_obj = self.get_path_obj(endpoint, openapi_description, openapi_tags, query_params, return_type)
 
         if modified_endpoint not in self.openapi_spec["paths"]:
             self.openapi_spec["paths"][modified_endpoint] = {}
@@ -185,12 +185,12 @@ class OpenAPI:
         for path in paths:
             self.openapi_spec["paths"][path] = paths[path]
 
-    def get_path_obj(self, endpoint: str, summary: str, tags: List[str], query_params: Optional[TypedDict], return_type: str) -> (str, dict):
+    def get_path_obj(self, endpoint: str, description: str, tags: List[str], query_params: Optional[TypedDict], return_type: str) -> (str, dict):
         """
         Get the "path" openapi object according to spec
 
         @param endpoint: str the endpoint to be added
-        @param summary: Optional[str] short summary of the endpoint (to be fetched from the endpoint defenition by default)
+        @param description: Optional[str] short description of the endpoint (to be fetched from the endpoint defenition by default)
         @param tags: List[str] for grouping of endpoints
         @param query_params: Optional[TypedDict] query params for the function
         @param return_type: str return type of the endpoint handler
@@ -239,11 +239,11 @@ class OpenAPI:
                     }
                 )
 
-        if not summary:
-            summary = "No summary provided"
+        if not description:
+            description = "No description provided"
 
         return endpoint_with_path_params_wrapped_in_braces, {
-            "summary": summary,
+            "description": description,
             "tags": tags,
             "parameters": openapi_parameter_object,
             "responses": {"200": {"description": "Successful Response", "content": {return_type: {"schema": {}}}}},
