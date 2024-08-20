@@ -11,7 +11,7 @@ def test_docs_handler():
 
 @pytest.mark.benchmark
 def test_json_handler():
-    openapi_spec = eval(get("/openapi.json").text)
+    openapi_spec = get("/openapi.json").json()
 
     assert isinstance(openapi_spec, dict)
     assert "openapi" in openapi_spec
@@ -24,7 +24,7 @@ def test_json_handler():
 
 @pytest.mark.benchmark
 def test_add_openapi_path():
-    openapi_spec = eval(get("/openapi.json").text)
+    openapi_spec = get("/openapi.json").json()
 
     assert isinstance(openapi_spec, dict)
 
@@ -41,7 +41,7 @@ def test_add_openapi_path():
 
 @pytest.mark.benchmark
 def test_add_subrouter_paths():
-    openapi_spec = eval(get("/openapi.json").text)
+    openapi_spec = get("/openapi.json").json()
 
     assert isinstance(openapi_spec, dict)
 
