@@ -149,7 +149,7 @@ class OpenAPI:
             "externalDocs": asdict(self.info.externalDocs) if self.info.externalDocs.url else None,
         }
 
-    def add_openapi_path_obj(self, route_type: str, endpoint: str, openapi_name:str, openapi_tags: List[str],handler: Callable):
+    def add_openapi_path_obj(self, route_type: str, endpoint: str, openapi_name: str, openapi_tags: List[str], handler: Callable):
         """
         Adds the given path to openapi spec
 
@@ -188,7 +188,7 @@ class OpenAPI:
         for path in paths:
             self.openapi_spec["paths"][path] = paths[path]
 
-    def get_path_obj(self, endpoint: str, name:str,  description: str, tags: List[str], query_params: Optional[TypedDict], return_type: str) -> (str, dict):
+    def get_path_obj(self, endpoint: str, name: str, description: str, tags: List[str], query_params: Optional[TypedDict], return_type: str) -> (str, dict):
         """
         Get the "path" openapi object according to spec
 
