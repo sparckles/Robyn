@@ -1,7 +1,8 @@
 from dataclasses import asdict, dataclass, field
+import inspect
 from inspect import Signature
 from pathlib import Path
-from typing import Optional, TypedDict, List, Dict
+from typing import Callable, Optional, TypedDict, List, Dict
 
 from robyn.responses import FileResponse, serve_html
 
@@ -140,7 +141,7 @@ class OpenAPI:
         Initializes the openapi_spec dict
         """
         self.openapi_spec = {
-            "openapi": "3.0.0",
+            "openapi": "3.1.0",
             "info": asdict(self.info),
             "paths": {},
             "components": asdict(self.info.components),
@@ -148,23 +149,29 @@ class OpenAPI:
             "externalDocs": asdict(self.info.externalDocs) if self.info.externalDocs.url else None,
         }
 
-    def add_openapi_path_obj(self, route_type: str, endpoint: str, openapi_summary: str, openapi_tags: List[str], signature: Optional[Signature]):
+    def add_openapi_path_obj(self, route_type: str, endpoint: str, openapi_name: str, openapi_tags: List[str], handler: Callable):
         """
         Adds the given path to openapi spec
 
         @param route_type: str the http method as string (get, post ...)
-        @param endpoint: srt the endpoint to be added
-        @param openapi_summary: str short summary of the endpoint (to be fetched from the endpoint defenition by default)
+        @param endpoint: str the endpoint to be added
+        @param openapi_name: str the name of the endpoint
         @param openapi_tags: List[str] for grouping of endpoints
-        @param signature: Optional[Signature] the function signature -- to grab the typed dict annotations for query params
+        @param handler: Callable the handler function for the endpoint
         """
 
         query_params = None
+        signature = inspect.signature(handler)
+        openapi_description = inspect.getdoc(handler) or ""
 
         if signature and "query_params" in signature.parameters:
             query_params = signature.parameters["query_params"].default
 
-        modified_endpoint, path_obj = self.get_path_obj(endpoint, openapi_summary, openapi_tags, query_params)
+        return_annotation = signature.return_annotation
+
+        return_type = "text/plain" if return_annotation == Signature.empty or return_annotation is str else "application/json"
+
+        modified_endpoint, path_obj = self.get_path_obj(endpoint, openapi_name, openapi_description, openapi_tags, query_params, return_type)
 
         if modified_endpoint not in self.openapi_spec["paths"]:
             self.openapi_spec["paths"][modified_endpoint] = {}
@@ -181,14 +188,16 @@ class OpenAPI:
         for path in paths:
             self.openapi_spec["paths"][path] = paths[path]
 
-    def get_path_obj(self, endpoint: str, summary: str, tags: List[str], query_params: Optional[TypedDict]) -> (str, dict):
+    def get_path_obj(self, endpoint: str, name: str, description: str, tags: List[str], query_params: Optional[TypedDict], return_type: str) -> (str, dict):
         """
         Get the "path" openapi object according to spec
 
         @param endpoint: str the endpoint to be added
-        @param summary: Optional[str] short summary of the endpoint (to be fetched from the endpoint defenition by default)
+        @param name: str the name of the endpoint
+        @param description: Optional[str] short description of the endpoint (to be fetched from the endpoint defenition by default)
         @param tags: List[str] for grouping of endpoints
         @param query_params: Optional[TypedDict] query params for the function
+        @param return_type: str return type of the endpoint handler
 
         @return: (str, dict) a tuple containing the endpoint with path params wrapped in braces and the "path" openapi object
         according to spec
@@ -234,18 +243,15 @@ class OpenAPI:
                     }
                 )
 
-        if not summary:
-            summary = "No summary provided"
+        if not description:
+            description = "No description provided"
 
         return endpoint_with_path_params_wrapped_in_braces, {
-            "summary": summary,
+            "summary": name,
+            "description": description,
             "tags": tags,
             "parameters": openapi_parameter_object,
-            "responses": {
-                "200": {
-                    "description": "Successful Response",
-                }
-            },
+            "responses": {"200": {"description": "Successful Response", "content": {return_type: {"schema": {}}}}},
         }
 
     def get_openapi_type(self, typed_dict: TypedDict) -> str:
