@@ -97,6 +97,37 @@ class Components:
 
 
 @dataclass
+class Parameter:
+    def __post_init__(self):
+        self.__setattr__("in", self._in)
+        self.__delattr__("_in")
+
+    name: str = (None,)
+    _in: str = (None,)
+    description: Optional[str] = (None,)
+    required: Optional[bool] = (False,)
+    deprecated: Optional[bool] = (False,)
+    allowEmptyValue: Optional[bool] = (False,)
+
+
+@dataclass
+class Operation:
+    tags: Optional[List[str]] = (field(default_factory=list),)
+    summary: Optional[str] = (None,)
+    description: Optional[str] = (None,)
+    externalDocs: Optional[ExternalDocumentation] = (field(default_factory=ExternalDocumentation),)
+    operationId: Optional[str] = (None,)
+
+    parameters = (field(default_factory=dict),)
+    requestBody = (field(default_factory=dict),)
+    responses = (field(default_factory=dict),)
+    callbacks = (field(default_factory=dict),)
+    deprecated = (field(default_factory=dict),)
+    security = (field(default_factory=dict),)
+    servers = (field(default_factory=dict),)
+
+
+@dataclass
 class OpenAPIInfo:
     """
     Provides metadata about the API. The metadata MAY be used by tooling as required.
@@ -251,6 +282,20 @@ class OpenAPI:
             "description": description,
             "tags": tags,
             "parameters": openapi_parameter_object,
+            "requestBody": {
+                "content": {
+                    "application/x-www-form-urlencoded": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "name": {"description": "Updated name of the pet", "type": "string"},
+                                "status": {"description": "Updated status of the pet", "type": "string"},
+                            },
+                            "required": ["status"],
+                        }
+                    }
+                }
+            },
             "responses": {"200": {"description": "Successful Response", "content": {return_type: {"schema": {}}}}},
         }
 
