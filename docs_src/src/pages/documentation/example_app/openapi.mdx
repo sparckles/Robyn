@@ -2,7 +2,7 @@ export const description =
   'Welcome to the Robyn API documentation. You will find comprehensive guides and documentation to help you start working with Robyn as quickly as possible, as well as support if you get stuck.'
 
 
-## OpenAPI Docs (Coming Soon)
+## OpenAPI Docs
 
 After deploying the application, Batman got multiple queries from the users on how to use the endpoints. Robyn showed him how to generate OpenAPI specifications for his application.
 
@@ -45,7 +45,7 @@ class GetRequestParams(TypedDict):
     year: int
 
 
-@app.get("/api/v1/name", openapi_tags=["Name"])
+@app.get("/api/v1/name", openapi_name="Name Route", openapi_tags=["Name"])
 async def get(r, query_params=GetRequestParams):
     """Get Name by ID"""
     return r.query_params
@@ -81,7 +81,7 @@ class GetRequestParams(TypedDict):
     year: int
 
 
-@app.get("/api/v1/name", openapi_tags=["Name"])
+@app.get("/api/v1/name", openapi_name="Name Route", openapi_tags=["Name"])
 async def get(r: Request, query_params=GetRequestParams):
     """Get Name by ID"""
     return r.query_params
