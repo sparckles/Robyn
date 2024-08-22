@@ -171,13 +171,21 @@ class Robyn:
         """
         return self.middleware_router.add_middleware(MiddlewareType.AFTER_REQUEST, endpoint)
 
-    def add_directory(
+    def serve_directory(
         self,
         route: str,
         directory_path: str,
         index_file: Optional[str] = None,
         show_files_listing: bool = False,
     ):
+        """
+        Serves a directory at the given route
+
+        :param route str: the route at which the directory is to be served
+        :param directory_path str: the path of the directory to be served
+        :param index_file str|None: the index file to be served
+        :param show_files_listing bool: if the files listing should be shown or not
+        """
         self.directories.append(Directory(route, directory_path, show_files_listing, index_file))
 
     def add_request_header(self, key: str, value: str) -> None:
