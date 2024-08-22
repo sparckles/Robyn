@@ -224,10 +224,19 @@ impl Server {
             debug!("Ctrl c handler");
             Python::with_gil(|py| {
                 pyo3_asyncio::tokio::run(py, async move {
-                    execute_event_handler(shutdown_handler, &task_locals.clone())
-                        .await
-                        .unwrap();
-                    Ok(())
+                    let output =
+                        execute_event_handler(shutdown_handler, &task_locals.clone()).await;
+
+                    match output {
+                        Ok(_) => Ok(()),
+                        Err(e) => {
+                            error!("Error while executing the shutdown handler {:?}", e);
+                            Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
+                                "Error executing const route function: {:?}",
+                                e
+                            )))
+                        }
+                    }
                 })
             })?;
             abort();
