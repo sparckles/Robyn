@@ -2,7 +2,7 @@ from typing import Optional
 import os
 import mimetypes
 
-from robyn.robyn import Response, Headers
+from robyn.robyn import Response, Headers, StreamingResponse
 
 
 class FileResponse:

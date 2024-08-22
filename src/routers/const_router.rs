@@ -43,9 +43,17 @@ impl Router<Response, HttpMethod> for ConstRouter {
             event_loop.context("Event loop must be provided to add a route to the const router")?;
 
         pyo3_asyncio::tokio::run_until_complete(event_loop, async move {
-            let output = execute_http_function(&Request::default(), &function)
-                .await
-                .unwrap();
+            let output = execute_http_function(&Request::default(), &function).await;
+            let output = match output {
+                Ok(o) => {
+                    debug!("This is the output {:?}", o);
+                    o
+                }
+                Err(e) => {
+                    debug!("Error while executing the function {:?}", e);
+                    Response::internal_server_error(None)
+                }
+            };
             debug!("This is the result of the output {:?}", output);
             table.write().insert(route, output).unwrap();
             Ok(())

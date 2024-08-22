@@ -96,7 +96,9 @@ pub async fn execute_http_function(
     };
 
     Python::with_gil(|py| -> PyResult<Response> {
-        get_function_output(function, py, request)?.extract()
+        let response = get_function_output(function, py, request)?.extract();
+        debug!("Response: {:?}", response);
+        response
     })
 }
 
