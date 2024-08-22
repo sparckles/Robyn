@@ -166,3 +166,74 @@ impl PyResponse {
         Ok(())
     }
 }
+
+
+
+use futures::Stream;
+use bytes::Bytes;
+
+#[pyclass(name = "StreamingResponse")]
+#[derive(Debug, Clone)]
+pub struct StreamingResponse {
+    #[pyo3(get)]
+    pub status_code: u16,
+    #[pyo3(get)]
+    pub response_type: String,
+    #[pyo3(get, set)]
+    pub headers: Py<Headers>,
+    #[pyo3(get)]
+    pub description: Py<PyAny>,
+    #[pyo3(get)]
+    pub streaming: bool,
+}
+
+#[pymethods]
+impl StreamingResponse {
+    #[new]
+    pub fn new(
+        py: Python,
+        status_code: u16,
+        headers: &PyAny,
+        description: Py<PyAny>,
+    ) -> PyResult<Self> {
+        check_body_type(py, &description)?;
+
+        let headers_output: Py<Headers> = if let Ok(headers_dict) = headers.downcast::<PyDict>() {
+            let headers = Headers::new(Some(headers_dict));
+            Py::new(py, headers)?
+        } else if let Ok(headers) = headers.extract::<Py<Headers>>() {
+            headers
+        } else {
+            return Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+                "headers must be a Headers instance or a dict",
+            ));
+        };
+
+        Ok(Self {
+            status_code,
+            response_type: "streaming".to_string(),
+            headers: headers_output,
+            description,
+            streaming: true,
+        })
+    }
+
+    #[setter]
+    pub fn set_description(&mut self, py: Python, description: Py<PyAny>) -> PyResult<()> {
+        check_description_type(py, &description)?;
+        self.description = description;
+        Ok(())
+    }
+}
+
+impl From<StreamingResponse> for Response {
+    fn from(streaming_response: StreamingResponse) -> Self {
+        Self {
+            status_code: streaming_response.status_code,
+            response_type: streaming_response.response_type,
+            headers: streaming_response.headers.extract().unwrap(),
+            description: get_description_from_pyobject(&streaming_response.description.as_ref(Python::acquire_gil())).unwrap(),
+            file_path: None,
+        }
+    }
+}
