@@ -839,7 +839,7 @@ def sample_openapi_endpoint():
 
 def main():
     app.set_response_header("server", "robyn")
-    app.add_directory(
+    app.serve_directory(
         route="/test_dir",
         directory_path=os.path.join(current_file_path, "build"),
         index_file="index.html",
