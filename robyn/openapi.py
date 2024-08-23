@@ -1,10 +1,11 @@
 from dataclasses import asdict, dataclass, field
 import inspect
 from inspect import Signature
+from importlib import resources
 from pathlib import Path
 from typing import Callable, Optional, TypedDict, List, Dict
 
-from robyn.responses import FileResponse, serve_html
+from robyn.responses import FileResponse, html
 
 
 @dataclass
@@ -282,8 +283,9 @@ class OpenAPI:
         Handler to the swagger html page to be deployed to the endpoint `/docs`
         @return: FileResponse the swagger html page
         """
-        html_file = str(Path("./robyn/swagger.html"))
-        return serve_html(html_file)
+        with resources.open_text("robyn", "swagger.html") as path:
+            html_file = path.read()
+        return html(html_file)
 
     def get_openapi_config(self) -> dict:
         """
