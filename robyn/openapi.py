@@ -2,7 +2,6 @@ from dataclasses import asdict, dataclass, field
 import inspect
 from inspect import Signature
 from importlib import resources
-from pathlib import Path
 from typing import Callable, Optional, TypedDict, List, Dict
 
 from robyn.responses import FileResponse, html
