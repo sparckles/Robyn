@@ -84,7 +84,7 @@ class Config:
             dest="fast",
             action="store_true",
             default=False,
-            help="Enable the fast mode.",
+            help="Fast mode. It sets the optimal values for processes, workers and log level. However, you can override them.",
         )
 
         args, unknown_args = parser.parse_known_args()
@@ -108,14 +108,6 @@ class Config:
             self.processes = self.processes or os.cpu_count() or 1
             self.workers = self.workers or ((os.cpu_count() * 2) + 1) or 1
             self.log_level = self.log_level or "WARNING"
-            print(
-                "Fast mode enabled. Processes: ",
-                self.processes,
-                "Workers: ",
-                self.workers,
-                "Log Level: ",
-                self.log_level,
-            )
 
         self.processes = self.processes or 1
         self.workers = self.workers or 1
