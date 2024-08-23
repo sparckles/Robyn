@@ -835,12 +835,12 @@ def sync_router_di(request, router_dependencies):
 
 @app.get("/sync/split_request/query_params")
 def sync_split_request_basic(request: Request, query_params):
-    return jsonify(query_params.to_dict())
+    return query_params.to_dict()
 
 
 @app.get("/async/split_request/query_params")
 async def async_split_request_basic(request: Request, query_params):
-    return jsonify(query_params.to_dict())
+    return query_params.to_dict()
 
 
 @app.get("/sync/split_request/headers")
@@ -885,28 +885,24 @@ async def async_split_request_body(request: Request, body):
 
 @app.post("/sync/split_request/combined")
 def sync_split_request_combined(request: Request, body, query_params, method, url, headers):
-    return jsonify(
-        {
-            "body": body,
-            "query_params": query_params.to_dict(),
-            "method": method,
-            "url": url.path,
-            "headers": headers.get("server"),
-        }
-    )
+    return {
+        "body": body,
+        "query_params": query_params.to_dict(),
+        "method": method,
+        "url": url.path,
+        "headers": headers.get("server"),
+    }
 
 
 @app.post("/async/split_request/combined")
 async def async_split_request_combined(request: Request, body, query_params, method, url, headers):
-    return jsonify(
-        {
-            "body": body,
-            "query_params": query_params.to_dict(),
-            "method": method,
-            "url": url.path,
-            "headers": headers.get("server"),
-        }
-    )
+    return {
+        "body": body,
+        "query_params": query_params.to_dict(),
+        "method": method,
+        "url": url.path,
+        "headers": headers.get("server"),
+    }
 
 
 def main():
