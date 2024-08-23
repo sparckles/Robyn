@@ -66,14 +66,23 @@ usage: app.py [-h] [--processes PROCESSES] [--workers WORKERS] [--dev] [--log-le
 Robyn, a fast async web framework with a rust runtime.
 
 options:
-  -h, --help                show this help message and exit
-  --processes PROCESSES     Choose the number of processes. [Default: 1]
-  --workers WORKERS         Choose the number of workers. [Default: 1]
-  --dev                     Development mode. It restarts the server based on file changes.
-  --log-level LOG_LEVEL     Set the log level name
-  --create                  Create a new project template.
-  --docs                    Open the Robyn documentation.
-  --open-browser            Open the browser on successful start.
+  -h, --help            show this help message and exit
+  --processes PROCESSES
+                        Choose the number of processes. [Default: 1]
+  --workers WORKERS     Choose the number of workers. [Default: 1]
+  --dev                 Development mode. It restarts the server based on file changes.
+  --log-level LOG_LEVEL
+                        Set the log level name
+  --create              Create a new project template.
+  --docs                Open the Robyn documentation.
+  --open-browser        Open the browser on successful start.
+  --version             Show the Robyn version.
+  --compile-rust-path COMPILE_RUST_PATH
+                        Compile rust files in the given path.
+  --create-rust-file CREATE_RUST_FILE
+                        Create a rust file with the given name.
+  --disable-openapi     Disable the OpenAPI documentation.
+  --fast                Enable the fast mode.
 ```
 
 Log level can be `DEBUG`, `INFO`, `WARNING`, or `ERROR`.
