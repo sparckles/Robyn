@@ -4,9 +4,7 @@ import os
 
 class Config:
     def __init__(self) -> None:
-        parser = argparse.ArgumentParser(
-            description="Robyn, a fast async web framework with a rust runtime."
-        )
+        parser = argparse.ArgumentParser(description="Robyn, a fast async web framework with a rust runtime.")
         self.parser = parser
         parser.add_argument(
             "--processes",
