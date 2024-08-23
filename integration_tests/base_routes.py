@@ -215,11 +215,8 @@ def sync_middlewares_401():
 app.inject(RouterDependency="Router Dependency")
 
 
-@app.get("/", openapi_name="Index")
+@app.get("/")
 async def hello_world(r):
-    """
-    Get hello world
-    """
     return "Hello, world!"
 
 

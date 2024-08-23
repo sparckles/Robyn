@@ -11,7 +11,7 @@ def test_docs_handler():
 
 @pytest.mark.benchmark
 def test_json_handler():
-    openapi_spec = get("/openapi.json").json()
+    openapi_spec = eval(get("/openapi.json").text)
 
     assert isinstance(openapi_spec, dict)
     assert "openapi" in openapi_spec
@@ -24,33 +24,33 @@ def test_json_handler():
 
 @pytest.mark.benchmark
 def test_add_openapi_path():
-    openapi_spec = get("/openapi.json").json()
+    openapi_spec = eval(get("/openapi.json").text)
 
     assert isinstance(openapi_spec, dict)
 
     route_type = "get"
     endpoint = "/openapi_test"
-    openapi_description = "Get openapi"
+    openapi_summary = "Get openapi"
     openapi_tags = ["test tag"]
 
     assert endpoint in openapi_spec["paths"]
     assert route_type in openapi_spec["paths"][endpoint]
-    assert openapi_description == openapi_spec["paths"][endpoint][route_type]["description"]
+    assert openapi_summary == openapi_spec["paths"][endpoint][route_type]["summary"]
     assert openapi_tags == openapi_spec["paths"][endpoint][route_type]["tags"]
 
 
 @pytest.mark.benchmark
 def test_add_subrouter_paths():
-    openapi_spec = get("/openapi.json").json()
+    openapi_spec = eval(get("/openapi.json").text)
 
     assert isinstance(openapi_spec, dict)
 
     route_type = "post"
     endpoint = "/sub_router/openapi_test"
-    openapi_description = "Get subrouter openapi"
+    openapi_summary = "Get subrouter openapi"
     openapi_tags = ["test subrouter tag"]
 
     assert endpoint in openapi_spec["paths"]
     assert route_type in openapi_spec["paths"][endpoint]
-    assert openapi_description == openapi_spec["paths"][endpoint][route_type]["description"]
+    assert openapi_summary == openapi_spec["paths"][endpoint][route_type]["summary"]
     assert openapi_tags == openapi_spec["paths"][endpoint][route_type]["tags"]
