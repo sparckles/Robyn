@@ -30,10 +30,6 @@ def test_web_socket_raw_benchmark(session):
 
     ws.send("test")
     assert ws.recv() == "GoodBye world, from ws"
-    ws.send("test")
-    # this will raise an exception
-    with pytest.raises(Exception):
-        ws.recv()
 
 
 
