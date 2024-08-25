@@ -60,7 +60,12 @@ impl Handler<SendText> for WebSocketConnector {
 
     fn handle(&mut self, msg: SendText, ctx: &mut Self::Context) {
         if self.id == msg.recipient_id {
+            let message = msg.message.clone();
             ctx.text(msg.message);
+            if message == "Connection closed" {
+                // Close the WebSocket connection
+                ctx.stop();
+            }
         }
     }
 }
