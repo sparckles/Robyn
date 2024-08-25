@@ -70,6 +70,8 @@ impl Handler<SendText> for WebSocketRegistry {
 
         if let Some(client_addr) = self.clients.get(&recipient_id) {
             client_addr.do_send(msg);
+        } else {
+            log::warn!("No client found for id: {}", recipient_id);
         }
     }
 }
@@ -92,6 +94,29 @@ impl Handler<SendMessageToAll> for WebSocketRegistry {
                 recipient_id: *id,
                 message: msg.message.clone(),
                 sender_id: msg.sender_id,
+            });
+        }
+    }
+}
+
+pub struct Close {
+    pub id: Uuid,
+}
+
+impl Message for Close {
+    type Result = ();
+}
+
+impl Handler<Close> for WebSocketRegistry {
+    type Result = ();
+
+    fn handle(&mut self, msg: Close, _ctx: &mut Self::Context) {
+        if let Some(client) = self.clients.remove(&msg.id) {
+            // Send a close message to the client before removing it
+            client.do_send(SendText {
+                recipient_id: msg.id,
+                message: "Connection closed".to_string(),
+                sender_id: msg.id,
             });
         }
     }

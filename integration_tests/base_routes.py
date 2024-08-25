@@ -73,7 +73,10 @@ async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
         await ws.async_broadcast(ws.query_params.get("one"))
         ws.sync_send_to(websocket_id, ws.query_params.get("two"))
         resp = "*chika* *chika* Slim Shady."
-    websocket_state[websocket_id] = (state + 1) % 3
+    elif state == 3:
+        ws.close()
+
+    websocket_state[websocket_id] = (state + 1) % 4
     return resp
 
 
