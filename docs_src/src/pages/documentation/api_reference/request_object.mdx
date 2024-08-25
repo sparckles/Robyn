@@ -46,7 +46,7 @@ identity (Optional[Identity]): The identity of the client
 
 
 </Col>
-  <Col sticky>
+  <Col>
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
@@ -86,6 +86,36 @@ identity (Optional[Identity]): The identity of the client
     </CodeGroup>
   </Col>
 </Row>
+
+## Extra Path Parameters
+
+Robyn supports capturing extra path parameters using the `*extra` syntax in route definitions. This allows you to capture any additional segments in the URL path that come after the defined route.
+
+For example, if you define a route like this:
+
+<CodeGroup>
+```python
+@app.get("/sync/extra/*extra")
+def sync_param_extra(request: Request):
+    extra = request.path_params["extra"]
+    return extra
+```
+</CodeGroup>
+
+Any additional path segments after `/sync/extra/` will be captured in the `extra` parameter. For instance:
+
+<ul>
+<li>
+A request to `/sync/extra/foo/bar` would result in `extra = "foo/bar"`
+</li>
+<li>
+     A request to `/sync/extra/123/456/789` would result in `extra = "123/456/789"`
+</li>
+</ul>
+
+You can access the extra path parameters through `request.path_params["extra"]` in your route handler.
+
+This feature is particularly useful when you need to handle dynamic, nested routes or when you want to capture an unknown number of path segments.
 
 ---
 
