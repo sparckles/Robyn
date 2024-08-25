@@ -236,6 +236,10 @@ class Headers:
         pass
 
     def is_empty(self) -> bool:
+        """
+        Returns:
+            True if the headers are empty, False otherwise
+        """
         pass
 
 @dataclass
@@ -295,15 +299,20 @@ class Response:
 
     def set_cookie(self, key: str, value: str) -> None:
         """
+        Sets the cookie in the response.
 
-        The function to set a cookie (onto headers).
-
-        @param key: the cookie name
-        @param value: the actual cookie value
+        Args:
+            key (str): The key of the cookie
+            value (str): The value of the cookie
         """
         pass
 
 class Server:
+    """
+    The Server object used to create a Robyn server.
+
+    This object is used to create a Robyn server and add routes, middlewares, etc.
+    """
     def __init__(self) -> None:
         pass
     def add_directory(
@@ -369,10 +378,41 @@ class WebSocketConnector:
     query_params: QueryParams
 
     async def async_broadcast(self, message: str) -> None:
+        """
+        Broadcasts a message to all clients.
+
+        Args:
+            message (str): The message to broadcast
+        """
         pass
     async def async_send_to(self, sender_id: str, message: str) -> None:
+        """
+        Sends a message to a specific client.
+
+        Args:
+            sender_id (str): The id of the sender
+            message (str): The message to send
+        """
         pass
     def sync_broadcast(self, message: str) -> None:
+        """
+        Broadcasts a message to all clients.
+
+        Args:
+            message (str): The message to broadcast
+        """
         pass
     def sync_send_to(self, sender_id: str, message: str) -> None:
+        """
+        Sends a message to a specific client.
+
+        Args:
+            sender_id (str): The id of the sender
+            message (str): The message to send
+        """
+        pass
+    def close(self) -> None:
+        """
+        Closes the connection.
+        """
         pass

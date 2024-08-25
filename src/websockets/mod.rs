@@ -3,7 +3,7 @@ pub mod registry;
 use crate::executors::web_socket_executors::execute_ws_function;
 use crate::types::function_info::FunctionInfo;
 use crate::types::multimap::QueryParams;
-use registry::{SendMessageToAll, SendText};
+use registry::{Close, SendMessageToAll, SendText};
 
 use actix::prelude::*;
 use actix::{Actor, AsyncContext, StreamHandler};
@@ -169,6 +169,10 @@ impl WebSocketConnector {
         })?;
 
         Ok(awaitable.into_py(py))
+    }
+
+    pub fn close(&self) {
+        self.registry_addr.do_send(Close { id: self.id });
     }
 
     #[getter]

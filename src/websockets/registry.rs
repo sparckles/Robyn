@@ -96,3 +96,19 @@ impl Handler<SendMessageToAll> for WebSocketRegistry {
         }
     }
 }
+
+pub struct Close {
+    pub id: Uuid,
+}
+
+impl Message for Close {
+    type Result = ();
+}
+
+impl Handler<Close> for WebSocketRegistry {
+    type Result = ();
+
+    fn handle(&mut self, msg: Close, _ctx: &mut Self::Context) {
+        self.clients.remove(&msg.id);
+    }
+}
