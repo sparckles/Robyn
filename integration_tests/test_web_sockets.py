@@ -20,9 +20,21 @@ def test_web_socket_raw_benchmark(session):
     assert ws.recv() == "Whooo??"
 
     ws.send("My name is?")
-    ws.recv() == "hi"
-    ws.recv() == "hello"
+    assert ws.recv() == "hi"
+    assert ws.recv() == "hello"
     assert ws.recv() == "*chika* *chika* Slim Shady."
+
+    # this will close the connection
+    ws.send("test")
+    assert ws.recv() == "Connection closed"
+
+    ws.send("test")
+    assert ws.recv() == "GoodBye world, from ws"
+    ws.send("test")
+    # this will raise an exception
+    with pytest.raises(Exception):
+        ws.recv()
+
 
 
 def test_web_socket_json(session):
@@ -49,6 +61,7 @@ def test_web_socket_json(session):
     resp = json.loads(ws.recv())
     assert resp["resp"] == "*chika* *chika* Slim Shady."
     assert resp["msg"] == msg
+
 
 
 def test_websocket_di(session):
