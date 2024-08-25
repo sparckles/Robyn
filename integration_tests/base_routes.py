@@ -74,7 +74,6 @@ async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
         ws.sync_send_to(websocket_id, ws.query_params.get("two"))
         resp = "*chika* *chika* Slim Shady."
     elif state == 3:
-        print("Closing websocket", websocket_id)
         ws.close()
 
     websocket_state[websocket_id] = (state + 1) % 4
