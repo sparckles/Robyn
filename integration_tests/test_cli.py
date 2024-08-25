@@ -12,9 +12,7 @@ def test_create_robyn_app():
             "project_type": "no-db",
         }
         with patch("robyn.cli.os.makedirs") as mock_makedirs:
-            with patch("robyn.cli.shutil.copytree") as mock_copytree, patch(
-                "robyn.os.remove"
-            ) as _mock_remove:
+            with patch("robyn.cli.shutil.copytree") as mock_copytree, patch("robyn.os.remove") as _mock_remove:
                 create_robyn_app()
                 mock_makedirs.assert_called_once()
                 mock_copytree.assert_called_once()
