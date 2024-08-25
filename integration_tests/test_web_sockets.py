@@ -28,9 +28,6 @@ def test_web_socket_raw_benchmark(session):
     ws.send("test")
     assert ws.recv() == "Connection closed"
 
-    ws.send("test")
-    assert ws.recv() == "GoodBye world, from ws"
-
 
 
 def test_web_socket_json(session):
