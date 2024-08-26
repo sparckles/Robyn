@@ -24,6 +24,16 @@ Batman scaled his application across multiple cores for better performance. He u
         return f"hello to you, {request.ip_addr}"
 
     ```
+    ```python {{ title: 'typed' }}  
+    from robyn import Robyn, Request
+
+    app = Robyn(__file__)
+
+    @app.get("/")
+    async def h(request: Request):
+        return f"hello to you, {request.ip_addr}"
+
+    ```
 
     </CodeGroup>
   </Col>
@@ -34,11 +44,11 @@ Batman scaled his application across multiple cores for better performance. He u
 ## What's next?
 
 
-Batman wondered if it was possible to use Rust directly from Robyn's codebase.
+Batman wondered about how to help users explore the endpoints in his application.
 
-Robyn showed him the path.
+Robyn showed him the OpenAPI Documentation!
 
-[Using Rust Directly](/documentation/api_reference/using_rust_directly)
+[OpenAPI Documentation](/documentation/api_reference/openapi)
 
 
 

@@ -1,0 +1,93 @@
+export const description =
+  'On this page, we’ll dive into the different conversation endpoints you can use to manage conversations programmatically.'
+
+## Multiprocess Execution
+
+Batman wondered about the behavour of variables in a Robyn multiprocessing environment.
+
+Robyn reassured that it can indeed support them! i.e, handlers can be dispatched to multiple threads.
+
+Any variable used in a multiprocessing environment is shared across multiple processes.
+
+Whilst using multithreading in Robyn, the variables are not protected from multiple threads access by default.
+
+<Row>
+<Col>
+
+If one needs a variable to be protected within a process, while accessing it from different threads, one can use <a href="https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Value">`multiprocessing.Value`</a> for achieving the required protection.
+
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}  
+        import threading
+        import time
+        from multiprocessing import Value
+
+        from robyn import Robyn, Request
+
+        app = Robyn(__file__)
+
+        count = Value("i", 0)
+
+        def counter():
+            while True:
+                count.value += 1
+                time.sleep(0.2)
+                print(count.value, "added 1")
+
+        @app.get("/")
+        def index(request):
+            return f"{count.value}"
+
+        threading.Thread(target=counter, daemon=True).start()
+
+        app.start()
+    ```
+
+    ```python {{ title: 'typed' }}
+        import threading
+        import time
+        from multiprocessing import Value
+
+        from robyn import Robyn, Request
+
+        app = Robyn(__file__)
+
+        count: Value = Value("i", 0)
+
+        def counter():
+            while True:
+                count.value += 1
+                time.sleep(0.2)
+                print(count.value, "added 1")
+
+        @app.get("/")
+        def index(request: Request):
+            return f"{count.value}"
+
+        threading.Thread(target=counter, daemon=True).start()
+
+        app.start()
+    ```
+
+    </CodeGroup>
+  </Col>
+</Row>
+---
+
+
+## What's next?
+
+
+Batman wondered if it was possible to use Rust directly from Robyn's codebase.
+
+Robyn showed him the path.
+
+[Using Rust Directly](/documentation/api_reference/using_rust_directly)
+
+
+
+

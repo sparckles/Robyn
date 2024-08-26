@@ -2,7 +2,7 @@ export const description =
   'On this page, we’ll dive into the different conversation endpoints you can use to manage conversations programmatically.'
 
 
-## WebSockets {{ tag: 'GET', label: '/hello_world' }}
+## WebSockets {{ tag: 'WebSockets', label: 'WebSockets' }}
 
 <Row>
 <Col>
@@ -182,6 +182,74 @@ To handle real-time communication, Batman learned how to work with WebSockets. H
   </Col>
 </Row>
 
+<Row>
+  <Col>
+    Robyn also showed Batman to work with query params.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/hello_world?name=gordon&desg=commissioner">
+
+      ```python {{ title: 'untyped' }}
+
+        @websocket.on("message")
+        async def message(ws, msg, global_dependencies) -> str:
+            websocket_id = ws.id
+            if (ws.query_params.get("name") == "gordon" and ws.query_params.get("desg") == "commissioner"):
+              ws.sync_broadcast("Gordon authorized to login!")
+            return ""
+
+      ```
+
+      ```python {{title: 'typed'}}
+
+        @websocket.on("message")
+        async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
+            websocket_id = ws.id
+            if (ws.query_params.get("name") == "gordon" and ws.query_params.get("desg") == "commissioner"):
+              ws.sync_broadcast("Gordon authorized to login!")
+            return ""
+
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+
+
+<Row>
+  <Col>
+    To programmatically close a WebSocket connection from the server side, Batman learned to use the `close()` method:
+    The `close()` method does the following:
+1. Sends a close message to the client.
+2. Removes the client from the WebSocket registry.
+3. Closes the WebSocket connection.
+
+This method is useful for scenarios where you need to programmatically end a WebSocket connection based on certain conditions or events on the server side.
+
+  </Col>
+  <Col>
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+      ```python {{ title: 'untyped' }}
+      @websocket.on("message")
+      def message(ws, msg):
+          if msg == "disconnect":
+              ws.close()
+              return "Closing connection"
+          return "Message received"
+      ```
+
+      ```python {{title: 'typed'}}
+      @websocket.on("message")
+      def message(ws: WebSocketConnector, msg: str) -> str:
+          if msg == "disconnect":
+              ws.close()
+              return "Closing connection"
+          return "Message received"
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
 
 ---
 

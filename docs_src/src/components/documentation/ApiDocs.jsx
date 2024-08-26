@@ -89,6 +89,12 @@ const guides = [
     name: 'Advanced Features',
     description: 'Learn about advanced features in Robyn.',
   },
+  {
+    href: '/documentation/api_reference/multiprocess_execution',
+    name: 'Multiprocess Execution',
+    description: 'Learn about the behaviour or variables during multithreading',
+  },
+  
 
   {
     href: '/documentation/api_reference/using_rust_directly',
@@ -97,8 +103,14 @@ const guides = [
   },
   {
     href: '/documentation/api_reference/graphql-support',
-    name: 'Advanced Features',
+    name: 'GraphQL Support',
     description: 'Learn about GraphQL Support in Robyn.',
+  },
+  {
+    href: '/documentation/api_reference/openapi',
+    name: 'OpenAPI Documentation',
+    description:
+      'Learn how to generate OpenAPI docs for your applications.',
   },
   {
     href: '/documentation/api_reference/dependency_injection',

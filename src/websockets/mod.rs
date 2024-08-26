@@ -2,7 +2,8 @@ pub mod registry;
 
 use crate::executors::web_socket_executors::execute_ws_function;
 use crate::types::function_info::FunctionInfo;
-use registry::{SendMessageToAll, SendText};
+use crate::types::multimap::QueryParams;
+use registry::{Close, SendMessageToAll, SendText};
 
 use actix::prelude::*;
 use actix::{Actor, AsyncContext, StreamHandler};
@@ -10,9 +11,9 @@ use actix_web::{web, Error, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
 use log::debug;
 use once_cell::sync::OnceCell;
+use parking_lot::RwLock;
 use pyo3::prelude::*;
 use pyo3_asyncio::TaskLocals;
-use std::sync::RwLock;
 use uuid::Uuid;
 
 use registry::{Register, WebSocketRegistry};
@@ -26,6 +27,7 @@ pub struct WebSocketConnector {
     pub router: HashMap<String, FunctionInfo>,
     pub task_locals: TaskLocals,
     pub registry_addr: Addr<WebSocketRegistry>,
+    pub query_params: QueryParams,
 }
 
 // By default mailbox capacity is 16 messages.
@@ -58,7 +60,12 @@ impl Handler<SendText> for WebSocketConnector {
 
     fn handle(&mut self, msg: SendText, ctx: &mut Self::Context) {
         if self.id == msg.recipient_id {
+            let message = msg.message.clone();
             ctx.text(msg.message);
+            if message == "Connection closed" {
+                // Close the WebSocket connection
+                ctx.stop();
+            }
         }
     }
 }
@@ -169,9 +176,18 @@ impl WebSocketConnector {
         Ok(awaitable.into_py(py))
     }
 
+    pub fn close(&self) {
+        self.registry_addr.do_send(Close { id: self.id });
+    }
+
     #[getter]
     pub fn get_id(&self) -> String {
         self.id.to_string()
+    }
+
+    #[getter]
+    pub fn get_query_params(&self) -> QueryParams {
+        self.query_params.clone()
     }
 }
 
@@ -182,7 +198,7 @@ fn get_or_init_registry_for_endpoint(endpoint: String) -> Addr<WebSocketRegistry
     let map_lock = REGISTRY_ADDRESSES.get_or_init(|| RwLock::new(HashMap::new()));
 
     {
-        let map = map_lock.read().unwrap();
+        let map = map_lock.read();
         if let Some(registry_addr) = map.get(&endpoint) {
             return registry_addr.clone();
         }
@@ -191,7 +207,7 @@ fn get_or_init_registry_for_endpoint(endpoint: String) -> Addr<WebSocketRegistry
     let new_registry = WebSocketRegistry::new().start();
 
     {
-        let mut map = map_lock.write().unwrap();
+        let mut map = map_lock.write();
         map.insert(endpoint.to_string(), new_registry.clone());
     }
 
@@ -207,12 +223,26 @@ pub async fn start_web_socket(
 ) -> Result<HttpResponse, Error> {
     let registry_addr = get_or_init_registry_for_endpoint(endpoint);
 
+    let mut query_params = QueryParams::new();
+
+    if !req.query_string().is_empty() {
+        let split = req.query_string().split('&');
+        for s in split {
+            let path_params = s.split_once('=').unwrap_or((s, ""));
+            let key = path_params.0.to_string();
+            let value = path_params.1.to_string();
+
+            query_params.set(key, value);
+        }
+    }
+
     ws::start(
         WebSocketConnector {
             router,
             task_locals,
             id: Uuid::new_v4(),
             registry_addr,
+            query_params,
         },
         &req,
         stream,

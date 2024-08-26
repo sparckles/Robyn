@@ -16,8 +16,10 @@ dir_path = None
 
 def compile_rust_files(directory_path: str):
     rust_files = glob.glob(os.path.join(directory_path, "**/*.rs"), recursive=True)
+    rust_binaries: list[str] = []
+
     for rust_file in rust_files:
-        print("Compiling rust file : %s", rust_file)
+        print(f"Compiling rust file: {rust_file}")
 
         result = subprocess.run(
             [sys.executable, "-m", "rustimport", "build", rust_file],
@@ -26,11 +28,27 @@ def compile_rust_files(directory_path: str):
             start_new_session=False,
         )
         if result.returncode != 0:
-            print("Error compiling rust file : %s %s", result.stderr.decode("utf-8"), result.stdout.decode("utf-8"))
+            print(f"Error compiling rust file: {rust_file} \n {result.stderr.decode('utf-8')} \n {result.stdout.decode('utf-8')}")
         else:
-            print("Compiled rust file : %s", rust_file)
+            print(f"Compiled rust file: {rust_file}")
+            rust_file_base = rust_file.removesuffix(".rs")
 
-    return rust_files
+            # Define the search pattern for the binary file
+            if sys.platform == "win32":
+                binary_extension = ".dll"
+            elif sys.platform == "darwin":
+                binary_extension = ".so"
+            elif sys.platform == "linux":
+                binary_extension = ".so"
+            else:
+                raise ValueError(f"Unsupported platform: {sys.platform}")
+
+            search_pattern = f"{rust_file_base}.*{binary_extension}"
+            # Use glob to find matching binary files
+            matching_binaries = glob.glob(search_pattern)
+            rust_binaries.extend(matching_binaries)
+
+    return rust_binaries
 
 
 def create_rust_file(file_name: str):
@@ -47,7 +65,11 @@ def create_rust_file(file_name: str):
     )
 
     if result.returncode != 0:
-        print("Error creating rust file : %s %s", result.stderr.decode("utf-8"), result.stdout.decode("utf-8"))
+        print(
+            "Error creating rust file : %s %s",
+            result.stderr.decode("utf-8"),
+            result.stdout.decode("utf-8"),
+        )
     else:
         print("Created rust file : %s", rust_file)
 
@@ -106,11 +128,12 @@ class EventHandler(FileSystemEventHandler):
 
     def reload(self):
         self.stop_server()
+        print("Reloading the server")
 
         new_env = os.environ.copy()
         new_env["IS_RELOADER_RUNNING"] = "True"  # This is used to check if a reloader is already running
+        # IS_RELOADER_RUNNING is specifically used for IPC between the reloader and the server
 
-        print(f"Reloading {self.file_path}...")
         arguments = [arg for arg in sys.argv[1:] if not arg.startswith("--dev")]
 
         clean_rust_binaries(self.built_rust_binaries)

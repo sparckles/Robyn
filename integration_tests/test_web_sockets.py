@@ -8,7 +8,7 @@ BASE_URL = "ws://127.0.0.1:8080"
 
 @pytest.mark.benchmark
 def test_web_socket_raw_benchmark(session):
-    ws = create_connection(f"{BASE_URL}/web_socket")
+    ws = create_connection(f"{BASE_URL}/web_socket?one=hi&two=hello")
     assert ws.recv() == "Hello world, from ws"
 
     ws.send("My name is?")
@@ -20,7 +20,13 @@ def test_web_socket_raw_benchmark(session):
     assert ws.recv() == "Whooo??"
 
     ws.send("My name is?")
+    assert ws.recv() == "hi"
+    assert ws.recv() == "hello"
     assert ws.recv() == "*chika* *chika* Slim Shady."
+
+    # this will close the connection
+    ws.send("test")
+    assert ws.recv() == "Connection closed"
 
 
 def test_web_socket_json(session):

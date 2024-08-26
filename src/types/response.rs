@@ -1,15 +1,15 @@
 use actix_http::{body::BoxBody, StatusCode};
 use actix_web::{HttpRequest, HttpResponse, HttpResponseBuilder, Responder};
 use pyo3::{
-    exceptions::{PyIOError, PyValueError},
+    exceptions::PyIOError,
     prelude::*,
-    types::{PyBytes, PyDict, PyString},
+    types::{PyBytes, PyDict},
 };
 
-use super::headers::Headers;
-
 use crate::io_helpers::{apply_hashmap_headers, read_file};
-use crate::types::{check_description_type, get_description_from_pyobject};
+use crate::types::{check_body_type, check_description_type, get_description_from_pyobject};
+
+use super::headers::Headers;
 
 #[derive(Debug, Clone, FromPyObject)]
 pub struct Response {
@@ -68,9 +68,13 @@ impl Response {
 impl ToPyObject for Response {
     fn to_object(&self, py: Python) -> PyObject {
         let headers = self.headers.clone().into_py(py).extract(py).unwrap();
-        let description = String::from_utf8(self.description.to_vec())
-            .unwrap()
-            .to_object(py);
+        // The description should only be either string or binary.
+        // it should raise an exception otherwise
+        let description = match String::from_utf8(self.description.to_vec()) {
+            Ok(description) => description.to_object(py),
+            Err(_) => PyBytes::new(py, &self.description.to_vec()).into(),
+        };
+
         let response = PyResponse {
             status_code: self.status_code,
             response_type: self.response_type.clone(),
@@ -107,13 +111,7 @@ impl PyResponse {
         headers: &PyAny,
         description: Py<PyAny>,
     ) -> PyResult<Self> {
-        if description.downcast::<PyString>(py).is_err()
-            && description.downcast::<PyBytes>(py).is_err()
-        {
-            return Err(PyValueError::new_err(
-                "Could not convert specified body to bytes",
-            ));
-        };
+        check_body_type(py, &description)?;
 
         let headers_output: Py<Headers> = if let Ok(headers_dict) = headers.downcast::<PyDict>() {
             // Here you'd have logic to create a Headers instance from a PyDict
@@ -141,7 +139,7 @@ impl PyResponse {
 
     #[setter]
     pub fn set_description(&mut self, py: Python, description: Py<PyAny>) -> PyResult<()> {
-        check_description_type(py, description.clone())?;
+        check_description_type(py, &description)?;
         self.description = description;
         Ok(())
     }

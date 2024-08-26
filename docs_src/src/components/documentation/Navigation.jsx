@@ -210,6 +210,10 @@ export const navigation = [
         href: '/documentation/example_app/monitoring_and_logging',
       },
       { title: 'Deployment', href: '/documentation/example_app/deployment' },
+      {
+        title: 'OpenAPI Documentation',
+        href: '/documentation/example_app/openapi',
+      },
       { title: 'Templates', href: '/documentation/example_app/templates' },
       {
         title: 'SubRouters and Views',
@@ -292,6 +296,14 @@ export const navigation = [
       {
         href: '/documentation/api_reference/advanced_features',
         title: 'Advanced Features',
+      },
+      {
+        title: 'OpenAPI Documentation',
+        href: '/documentation/api_reference/openapi',
+      },
+      {
+        href: '/documentation/api_reference/multiprocess_execution',
+        title: 'Multiprocess Execution',
       },
       {
         href: '/documentation/api_reference/using_rust_directly',

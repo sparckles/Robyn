@@ -94,16 +94,19 @@ Batman was curious about how to run the application. Robyn explained that he cou
         --processes PROCESSES
                               Choose the number of processes. [Default: 1]
         --workers WORKERS     Choose the number of workers. [Default: 1]
+        --dev                 Development mode. It restarts the server based on file changes.
         --log-level LOG_LEVEL
                               Set the log level name
-        --open-browser        Open the browser on successful start.
-
-        Module flags
         --create              Create a new project template.
         --docs                Open the Robyn documentation.
+        --open-browser        Open the browser on successful start.
         --version             Show the Robyn version.
-        --dev                 Development mode. It restarts the server based on file changes.
-
+        --compile-rust-path COMPILE_RUST_PATH
+                              Compile rust files in the given path.
+        --create-rust-file CREATE_RUST_FILE
+                              Create a rust file with the given name.
+        --disable-openapi     Disable the OpenAPI documentation.
+        --fast                Fast mode. It sets the optimal values for processes, workers and log level. However, you can override them.
       ```
     </CodeGroup>
   </Col>
@@ -130,15 +133,19 @@ Batman was curious about how to run the application. Robyn explained that he cou
         --processes PROCESSES
                               Choose the number of processes. [Default: 1]
         --workers WORKERS     Choose the number of workers. [Default: 1]
+        --dev                 Development mode. It restarts the server based on file changes.
         --log-level LOG_LEVEL
                               Set the log level name
-        --open-browser        Open the browser on successful start.
-
-        Module flags
         --create              Create a new project template.
         --docs                Open the Robyn documentation.
+        --open-browser        Open the browser on successful start.
         --version             Show the Robyn version.
-        --dev                 Development mode. It restarts the server based on file changes.
+        --compile-rust-path COMPILE_RUST_PATH
+                              Compile rust files in the given path.
+        --create-rust-file CREATE_RUST_FILE
+                              Create a rust file with the given name.
+        --disable-openapi     Disable the OpenAPI documentation.
+        --fast                Fast mode. It sets the optimal values for processes, workers and log level. However, you can override them.
       ```
     </CodeGroup>
   </Col>
