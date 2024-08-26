@@ -296,6 +296,7 @@ class Response:
     description: Union[str, bytes]
     response_type: Optional[str] = None
     file_path: Optional[str] = None
+    request: Optional[Request] = None
 
     def set_cookie(self, key: str, value: str) -> None:
         """

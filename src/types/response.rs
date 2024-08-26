@@ -9,7 +9,7 @@ use pyo3::{
 use crate::io_helpers::{apply_hashmap_headers, read_file};
 use crate::types::{check_body_type, check_description_type, get_description_from_pyobject};
 
-use super::headers::Headers;
+use super::{headers::Headers, request::Request};
 
 #[derive(Debug, Clone, FromPyObject)]
 pub struct Response {
@@ -20,6 +20,7 @@ pub struct Response {
     #[pyo3(from_py_with = "get_description_from_pyobject")]
     pub description: Vec<u8>,
     pub file_path: Option<String>,
+    pub request: Option<Request>,
 }
 
 impl Responder for Response {
@@ -46,6 +47,7 @@ impl Response {
             headers,
             description: "Not found".to_owned().into_bytes(),
             file_path: None,
+            request: None,
         }
     }
 
@@ -61,6 +63,7 @@ impl Response {
             headers,
             description: "Internal server error".to_owned().into_bytes(),
             file_path: None,
+            request: None,
         }
     }
 }
@@ -81,6 +84,7 @@ impl ToPyObject for Response {
             headers,
             description,
             file_path: self.file_path.clone(),
+            request: None,
         };
         Py::new(py, response).unwrap().as_ref(py).into()
     }
@@ -99,6 +103,7 @@ pub struct PyResponse {
     pub description: Py<PyAny>,
     #[pyo3(get)]
     pub file_path: Option<String>,
+    pub request: Option<Request>
 }
 
 #[pymethods]
@@ -134,6 +139,7 @@ impl PyResponse {
             headers: headers_output,
             description,
             file_path: None,
+            request: None,
         })
     }
 
