@@ -833,6 +833,7 @@ def sync_global_di(request, router_dependencies, global_dependencies):
 def sync_router_di(request, router_dependencies):
     return router_dependencies["ROUTER_DEPENDENCY"]
 
+
 # ===== Split request body =====
 
 
@@ -907,7 +908,7 @@ async def async_split_request_combined(request: Request, body, query_params, met
         "headers": headers.get("server"),
     }
 
-  
+
 @app.get("/openapi_test", openapi_tags=["test tag"])
 def sample_openapi_endpoint():
     """Get openapi"""
