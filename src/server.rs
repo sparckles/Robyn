@@ -448,11 +448,10 @@ async fn index(
         Response::not_found(None)
     };
 
-    println!("OG Response : {:?}", response);
-    println!("Request : {:?}", request);
+    debug!("OG Response : {:?}", response);
 
     response.headers.extend(&global_response_headers);
-    response.request = Some(request); // FIXME: 'builtins.Response' object has no attribute 'request'
+    response.request = Some(request);
 
     debug!("Extended Response : {:?}", response);
 

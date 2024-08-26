@@ -113,6 +113,9 @@ class Router(BaseRouter):
                 headers=headers,
                 description=str(res).encode("utf-8"),
             )
+
+        print("vishnu: ", response.request)  # always None
+
         return response
 
     def add_route(

@@ -78,6 +78,12 @@ impl ToPyObject for Request {
     }
 }
 
+impl IntoPy<PyObject> for Request {
+    fn into_py(self, py: Python<'_>) -> PyObject {
+        self.to_object(py)
+    }
+}
+
 async fn handle_multipart(
     mut payload: Multipart,
     files: &mut HashMap<String, Vec<u8>>,
