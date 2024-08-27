@@ -161,17 +161,22 @@ class OpenAPI:
         """
 
         query_params = None
+        request_body = None
+
         signature = inspect.signature(handler)
         openapi_description = inspect.getdoc(handler) or ""
 
         if signature and "query_params" in signature.parameters:
             query_params = signature.parameters["query_params"].default
 
+        if signature and "body" in signature.parameters:
+            request_body = signature.parameters["body"].default
+
         return_annotation = signature.return_annotation
 
         return_type = "text/plain" if return_annotation == Signature.empty or return_annotation is str else "application/json"
 
-        modified_endpoint, path_obj = self.get_path_obj(endpoint, openapi_name, openapi_description, openapi_tags, query_params, return_type)
+        modified_endpoint, path_obj = self.get_path_obj(endpoint, openapi_name, openapi_description, openapi_tags, query_params, request_body, return_type)
 
         if modified_endpoint not in self.openapi_spec["paths"]:
             self.openapi_spec["paths"][modified_endpoint] = {}
@@ -188,7 +193,16 @@ class OpenAPI:
         for path in paths:
             self.openapi_spec["paths"][path] = paths[path]
 
-    def get_path_obj(self, endpoint: str, name: str, description: str, tags: List[str], query_params: Optional[TypedDict], return_type: str) -> (str, dict):
+    def get_path_obj(
+        self,
+        endpoint: str,
+        name: str,
+        description: str,
+        tags: List[str],
+        query_params: Optional[TypedDict],
+        request_body: Optional[TypedDict],
+        return_type: str,
+    ) -> (str, dict):
         """
         Get the "path" openapi object according to spec
 
@@ -197,6 +211,7 @@ class OpenAPI:
         @param description: Optional[str] short description of the endpoint (to be fetched from the endpoint defenition by default)
         @param tags: List[str] for grouping of endpoints
         @param query_params: Optional[TypedDict] query params for the function
+        @param request_body: Optional[TypedDict] request body for the function
         @param return_type: str return type of the endpoint handler
 
         @return: (str, dict) a tuple containing the endpoint with path params wrapped in braces and the "path" openapi object
@@ -253,6 +268,27 @@ class OpenAPI:
                         "schema": {"type": query_param_type},
                     }
                 )
+
+        if request_body:
+            properties = {}
+
+            for body_item in request_body.__annotations__:
+                query_param_type = self.get_openapi_type(request_body.__annotations__[body_item])
+
+                properties[body_item] = {"type": query_param_type}
+
+            request_body_object = {
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": properties,
+                        }
+                    }
+                }
+            }
+
+            openapi_path_object["requestBody"] = request_body_object
 
         return endpoint_with_path_params_wrapped_in_braces, openapi_path_object
 
