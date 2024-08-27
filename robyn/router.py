@@ -127,13 +127,18 @@ class Router(BaseRouter):
     ) -> Union[Callable, CoroutineType]:
         def wrapped_handler(*args, **kwargs):
             # In the execute functions the request is passed into *args
-            handler_params = signature(handler).parameters
-            # If no request arg, assume no other args are present
             requests = list(filter(lambda a: isinstance(a, Request), args))
-            if not len(requests):
+
+            handler_params = signature(handler).parameters
+
+            if not requests or (len(handler_params) == 1 and next(iter(handler_params)) is Request):
                 return handler(*args, **kwargs)
+
             request = requests[0]
+
             request_components = {
+                "r": request,
+                "request": request,
                 "query_params": request.query_params,
                 "headers": request.headers,
                 "path_params": request.path_params,
@@ -148,6 +153,7 @@ class Router(BaseRouter):
                 "global_dependencies": injected_dependencies["global_dependencies"],
                 **kwargs,
             }
+
             filtered_params = {k: v for k, v in request_components.items() if k in handler_params}
 
             return handler(**filtered_params)
