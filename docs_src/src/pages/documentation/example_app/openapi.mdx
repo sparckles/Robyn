@@ -180,29 +180,29 @@ We support all the params mentioned in the latest OpenAPI specifications (https:
 <CodeGroup title="Request Body">
 
 ```python {{ title: 'untyped' }}
-class CustomBody(TypedDict):
-    file: bytes
-    file_name: str
+class CreateItemBody(TypedDict):
+    name: str
+    description: str
+    price: float
+    tax: float
 
 
-@app.post("/sync/multipart-file")
-def sync_multipart_file(request, body=CustomBody):
-    files = request.files
-    file_names = files.keys()
-    return {"file_names": list(file_names)}
+@app.post("/upload/file")
+def create_item(request, body=CreateItemBody):
+    return request.body
 ```
 
 ```python {{ title: 'typed' }}
-class CustomBody(TypedDict):
-    file: bytes
-    file_name: str
+class CreateItemBody(TypedDict):
+    name: str
+    description: str
+    price: float
+    tax: float
 
 
-@app.post("/sync/multipart-file")
-def sync_multipart_file(request: Request, body=CustomBody) -> dict:
-    files = request.files
-    file_names = files.keys()
-    return {"file_names": list(file_names)}
+@app.post("/upload/file")
+def create_item(request: Request, body=CreateItemBody):
+    return request.body
 ```
 
 </CodeGroup>
