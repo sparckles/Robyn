@@ -833,15 +833,22 @@ def sync_router_di(request, router_dependencies):
     return router_dependencies["ROUTER_DEPENDENCY"]
 
 
-class CustomBody(TypedDict):
-    file: bytes
-    file_name: str
-
-
 @app.get("/openapi_test", openapi_tags=["test tag"])
-def sample_openapi_endpoint(body=CustomBody):
+def sample_openapi_endpoint():
     """Get openapi"""
     return 200
+
+
+class CreateItemBody(TypedDict):
+    name: str
+    description: str
+    price: float
+    tax: float
+
+
+@app.post("/openapi_request_body")
+def create_item(request, body=CreateItemBody):
+    return request.body
 
 
 def main():
