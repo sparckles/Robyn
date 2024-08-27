@@ -54,3 +54,24 @@ def test_add_subrouter_paths():
     assert route_type in openapi_spec["paths"][endpoint]
     assert openapi_description == openapi_spec["paths"][endpoint][route_type]["description"]
     assert openapi_tags == openapi_spec["paths"][endpoint][route_type]["tags"]
+
+
+@pytest.mark.benchmark
+def test_request_body():
+    openapi_spec = get("/openapi.json").json()
+
+    assert isinstance(openapi_spec, dict)
+
+    route_type = "get"
+    endpoint = "/openapi_test"
+
+    assert endpoint in openapi_spec["paths"]
+    assert route_type in openapi_spec["paths"][endpoint]
+    assert "requestBody" in openapi_spec["paths"][endpoint][route_type]
+    assert "content" in openapi_spec["paths"][endpoint][route_type]["requestBody"]
+    assert "application/json" in openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]
+    assert "schema" in openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]["application/json"]
+    assert "properties" in openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]["application/json"]["schema"]
+
+    assert "file" in openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]["application/json"]["schema"]["properties"]
+    assert "file_name" in openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]["application/json"]["schema"]["properties"]

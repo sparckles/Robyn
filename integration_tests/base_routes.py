@@ -1,12 +1,11 @@
 import os
 import pathlib
 from collections import defaultdict
-from typing import Optional
-
-from robyn import Headers
+from typing import Optional, TypedDict
 
 from integration_tests.subroutes import sub_router, di_subrouter
 from integration_tests.views import SyncView, AsyncView
+from robyn import Headers
 from robyn import (
     Request,
     Response,
@@ -834,8 +833,13 @@ def sync_router_di(request, router_dependencies):
     return router_dependencies["ROUTER_DEPENDENCY"]
 
 
+class CustomBody(TypedDict):
+    file: bytes
+    file_name: str
+
+
 @app.get("/openapi_test", openapi_tags=["test tag"])
-def sample_openapi_endpoint():
+def sample_openapi_endpoint(body=CustomBody):
     """Get openapi"""
     return 200
 
