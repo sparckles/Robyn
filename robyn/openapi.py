@@ -1,8 +1,8 @@
-from dataclasses import asdict, dataclass, field
 import inspect
-from inspect import Signature
+from dataclasses import asdict, dataclass, field
 from importlib import resources
-from typing import Callable, Optional, TypedDict, List, Dict
+from inspect import Signature
+from typing import Callable, Dict, List, Optional, TypedDict
 
 from robyn.responses import FileResponse, html
 
@@ -202,13 +202,24 @@ class OpenAPI:
         @return: (str, dict) a tuple containing the endpoint with path params wrapped in braces and the "path" openapi object
         according to spec
         """
+
+        if not description:
+            description = "No description provided"
+
+        openapi_path_object = {
+            "summary": name,
+            "description": description,
+            "parameters": [],
+            "tags": tags,
+            "responses": {"200": {"description": "Successful Response", "content": {return_type: {"schema": {}}}}},
+        }
+
         # robyn has paths like /:url/:etc whereas openapi requires path like /{url}/{path}
         # this function is used for converting path params to the required form
         # initialized with endpoint for handling endpoints without path params
         endpoint_with_path_params_wrapped_in_braces = endpoint
 
         endpoint_path_params_split = endpoint.split(":")
-        openapi_parameter_object = []
 
         if len(endpoint_path_params_split) > 1:
             endpoint_without_path_params = endpoint_path_params_split[0]
@@ -220,7 +231,7 @@ class OpenAPI:
             for path_param in endpoint_path_params_split[1:]:
                 path_param_name = path_param[:-1] if path_param.endswith("/") else path_param
 
-                openapi_parameter_object.append(
+                openapi_path_object["parameters"].append(
                     {
                         "name": path_param_name,
                         "in": "path",
@@ -234,7 +245,7 @@ class OpenAPI:
             for query_param in query_params.__annotations__:
                 query_param_type = self.get_openapi_type(query_params.__annotations__[query_param])
 
-                openapi_parameter_object.append(
+                openapi_path_object["parameters"].append(
                     {
                         "name": query_param,
                         "in": "query",
@@ -243,16 +254,7 @@ class OpenAPI:
                     }
                 )
 
-        if not description:
-            description = "No description provided"
-
-        return endpoint_with_path_params_wrapped_in_braces, {
-            "summary": name,
-            "description": description,
-            "tags": tags,
-            "parameters": openapi_parameter_object,
-            "responses": {"200": {"description": "Successful Response", "content": {return_type: {"schema": {}}}}},
-        }
+        return endpoint_with_path_params_wrapped_in_braces, openapi_path_object
 
     def get_openapi_type(self, typed_dict: TypedDict) -> str:
         """
