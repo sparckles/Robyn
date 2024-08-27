@@ -2,7 +2,7 @@ import inspect
 from dataclasses import asdict, dataclass, field
 from importlib import resources
 from inspect import Signature
-from typing import Callable, Dict, List, Optional, TypedDict
+from typing import Callable, Dict, List, Optional, TypedDict, Any
 
 from robyn.responses import FileResponse, html
 
@@ -273,12 +273,7 @@ class OpenAPI:
             properties = {}
 
             for body_item in request_body.__annotations__:
-                query_param_type = self.get_openapi_type(request_body.__annotations__[body_item])
-
-                properties[body_item] = {
-                    "type": query_param_type,
-                    "title": query_param_type.capitalize(),
-                }
+                properties[body_item] = self.get_properties_object(body_item, request_body.__annotations__[body_item])
 
             request_body_object = {
                 "content": {
@@ -317,6 +312,42 @@ class OpenAPI:
 
         # default to "string" if type is not found
         return "string"
+
+    def get_properties_object(self, parameter: str, type: Any) -> dict:
+        """
+        Get the properties object for request body
+
+        @param parameter: name of the parameter
+        @param type: Any the type to be inferred
+        @return: dict the properties object
+        """
+
+        properties = {
+            "title": parameter.capitalize(),
+        }
+
+        type_mapping = {
+            int: "integer",
+            str: "string",
+            bool: "boolean",
+            float: "number",
+            dict: "object",
+            list: "array",
+        }
+
+        for type_name in type_mapping:
+            if type is type_name:
+                properties["type"] = type_mapping[type_name]
+                return properties
+
+        # check for Optional type
+        if type.__module__ == "typing":
+            properties["anyOf"] = [{"type": self.get_openapi_type(type.__args__[0])}, {"type": "null"}]
+            return properties
+
+        properties["type"] = "string"
+
+        return properties
 
     def get_openapi_docs_page(self) -> FileResponse:
         """
