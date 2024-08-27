@@ -275,7 +275,10 @@ class OpenAPI:
             for body_item in request_body.__annotations__:
                 query_param_type = self.get_openapi_type(request_body.__annotations__[body_item])
 
-                properties[body_item] = {"type": query_param_type}
+                properties[body_item] = {
+                    "type": query_param_type,
+                    "title": query_param_type.capitalize(),
+                }
 
             request_body_object = {
                 "content": {
