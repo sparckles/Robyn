@@ -114,8 +114,6 @@ class Router(BaseRouter):
                 description=str(res).encode("utf-8"),
             )
 
-        print("vishnu: ", response.request)  # always None
-
         return response
 
     def add_route(
@@ -152,7 +150,7 @@ class Router(BaseRouter):
             }
             filtered_params = {k: v for k, v in request_components.items() if k in handler_params}
 
-            return handler(*args, **filtered_params)
+            return handler(**filtered_params)
 
         @wraps(handler)
         async def async_inner_handler(*args, **kwargs):
