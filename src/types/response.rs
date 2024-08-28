@@ -103,7 +103,6 @@ pub struct PyResponse {
     pub description: Py<PyAny>,
     #[pyo3(get)]
     pub file_path: Option<String>,
-    #[pyo3(get, set)]
     pub request: Option<Request>
 }
 
