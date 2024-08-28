@@ -584,6 +584,11 @@ def sync_form_data(request: Request):
     return request.headers["Content-Type"]
 
 
+@app.post("/sync/simple_form_data")
+def sync_simple_form_data(request: Request):
+    return request.headers["Content-Type"]
+
+
 # JSON Request
 
 

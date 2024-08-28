@@ -113,6 +113,22 @@ async fn handle_multipart(
     Ok(())
 }
 
+async fn handle_form(
+    mut payload: web::Payload,
+    body: &mut Vec<u8>,
+) -> Result<HashMap<String, String>, Error> {
+    // Iterate over multipart stream
+    let mut data = web::BytesMut::new();
+    while let Some(chunk) = payload.next().await {
+        let chunk = chunk?;
+        data.extend_from_slice(&chunk);
+        body.extend_from_slice(&chunk);
+    }
+    let body_str = std::str::from_utf8(&data)?;
+    let form_data: HashMap<String, String> = serde_urlencoded::from_str(body_str)?;
+    Ok(form_data)
+}
+
 impl Request {
     pub async fn from_actix_request(
         req: &HttpRequest,
@@ -152,6 +168,23 @@ impl Request {
 
             if let Err(e) = a {
                 debug!("Error handling multipart data: {:?}", e);
+            }
+
+            body_local
+        } else if headers.contains(String::from("content-type"))
+            && headers
+                .get(String::from("content-type"))
+                .is_some_and(|val| val.contains("application/x-www-form-urlencoded"))
+        {
+            let h = headers.get(String::from("content-type")).unwrap();
+            debug!("Content-Type: {:?}", h);
+            let mut body_local: Vec<u8> = Vec::new();
+
+            let a = handle_form(payload, &mut body_local).await;
+
+            match a {
+                Ok(d) => form_data = d,
+                Err(e) => debug!("Error handling multipart data: {:?}", e),
             }
 
             body_local
