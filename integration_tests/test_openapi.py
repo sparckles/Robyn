@@ -57,7 +57,7 @@ def test_add_subrouter_paths():
 
 
 @pytest.mark.benchmark
-def test_request_body():
+def test_openapi_request_body():
     openapi_spec = get("/openapi.json").json()
 
     assert isinstance(openapi_spec, dict)
