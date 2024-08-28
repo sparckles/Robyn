@@ -167,6 +167,9 @@ class OpenAPI:
         if signature and "query_params" in signature.parameters:
             query_params = signature.parameters["query_params"].default
 
+            if query_params is Signature.empty:
+                query_params = None
+
         return_annotation = signature.return_annotation
 
         return_type = "text/plain" if return_annotation == Signature.empty or return_annotation is str else "application/json"
