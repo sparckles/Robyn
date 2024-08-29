@@ -3,7 +3,7 @@ pub mod registry;
 use crate::executors::web_socket_executors::execute_ws_function;
 use crate::types::function_info::FunctionInfo;
 use crate::types::multimap::QueryParams;
-use registry::{SendMessageToAll, SendText};
+use registry::{Close, SendMessageToAll, SendText};
 
 use actix::prelude::*;
 use actix::{Actor, AsyncContext, StreamHandler};
@@ -60,7 +60,12 @@ impl Handler<SendText> for WebSocketConnector {
 
     fn handle(&mut self, msg: SendText, ctx: &mut Self::Context) {
         if self.id == msg.recipient_id {
+            let message = msg.message.clone();
             ctx.text(msg.message);
+            if message == "Connection closed" {
+                // Close the WebSocket connection
+                ctx.stop();
+            }
         }
     }
 }
@@ -169,6 +174,10 @@ impl WebSocketConnector {
         })?;
 
         Ok(awaitable.into_py(py))
+    }
+
+    pub fn close(&self) {
+        self.registry_addr.do_send(Close { id: self.id });
     }
 
     #[getter]

@@ -1,0 +1,231 @@
+export const description =
+  'Welcome to the Robyn API documentation. You will find comprehensive guides and documentation to help you start working with Robyn as quickly as possible, as well as support if you get stuck.'
+
+
+## OpenAPI Docs a.k.a Swagger (Coming Soon)
+
+After deploying the application, Batman got multiple queries from the users on how to use the endpoints. Robyn showed him how to generate OpenAPI specifications for his application.
+
+Out of the box, the following endpoints are setup for you:
+
+- `/docs` The Swagger UI
+- `/openapi.json` The JSON Specification
+
+
+However, if you don't want to generate the OpenAPI docs, you can disable it by passing `--disable-openapi` flag while starting the application.
+
+```bash
+python app.py --disable-openapi
+```
+
+## How to use?
+
+- Query Params: The typing for query params can be added as `def get(r: Request, query_params=GetRequestParams)` where `GetRequestParams` is a `TypedDict`
+- Path Params are defaulted to string type (ref: https://en.wikipedia.org/wiki/Query_string)
+
+<CodeGroup title="Basic App">
+
+```python {{ title: 'untyped' }}
+from typing import TypedDict
+
+from robyn import Robyn, OpenAPI
+from robyn.openapi import OpenAPIInfo, Contact, License, ExternalDocumentation, Components
+
+app = Robyn(
+    file_object=__file__,
+    openapi=OpenAPI(
+        info=OpenAPIInfo(
+            title="Sample App",
+            description="This is a sample server application.",
+            termsOfService="https://example.com/terms/",
+            version="1.0.0",
+            contact=Contact(
+                name="API Support",
+                url="https://www.example.com/support",
+                email="support@example.com",
+            ),
+            license=License(
+                name="BSD2.0",
+                url="https://opensource.org/license/bsd-2-clause",
+            ),
+            externalDocs=ExternalDocumentation(description="Find more info here", url="https://example.com/"),
+            components=Components(),
+        ),
+    ),
+)
+
+
+@app.get("/")
+async def welcome():
+    """welcome endpoint"""
+    return "hi"
+
+
+class GetRequestParams(TypedDict):
+    appointment_id: str
+    year: int
+
+
+@app.get("/api/v1/name", openapi_name="Name Route", openapi_tags=["Name"])
+async def get(r, query_params=GetRequestParams):
+    """Get Name by ID"""
+    return r.query_params
+
+
+@app.delete("/users/:name", openapi_tags=["Name"])
+async def delete(r):
+    """Delete Name by ID"""
+    return r.path_params
+
+
+if __name__ == "__main__":
+    app.start()
+```
+
+```python {{ title: 'typed' }}
+from typing import TypedDict
+
+from robyn import Robyn, OpenAPI, Request
+from robyn.openapi import OpenAPIInfo, Contact, License, ExternalDocumentation, Components
+
+app: Robyn = Robyn(
+    file_object=__file__,
+    openapi=OpenAPI(
+        info=OpenAPIInfo(
+            title="Sample App",
+            description="This is a sample server application.",
+            termsOfService="https://example.com/terms/",
+            version="1.0.0",
+            contact=Contact(
+                name="API Support",
+                url="https://www.example.com/support",
+                email="support@example.com",
+            ),
+            license=License(
+                name="BSD2.0",
+                url="https://opensource.org/license/bsd-2-clause",
+            ),
+            externalDocs=ExternalDocumentation(description="Find more info here", url="https://example.com/"),
+            components=Components(),
+        ),
+    ),
+)
+
+
+@app.get("/")
+async def welcome():
+    """welcome endpoint"""
+    return "hi"
+
+
+class GetRequestParams(TypedDict):
+    appointment_id: str
+    year: int
+
+
+@app.get("/api/v1/name", openapi_name="Name Route", openapi_tags=["Name"])
+async def get(r: Request, query_params=GetRequestParams):
+    """Get Name by ID"""
+    return r.query_params
+
+
+@app.delete("/users/:name", openapi_tags=["Name"])
+async def delete(r: Request):
+    """Delete Name by ID"""
+    return r.path_params
+
+
+if __name__ == "__main__":
+    app.start()
+```
+
+</CodeGroup>
+
+## How does it work with subrouters?
+
+<CodeGroup title="Subrouters">
+
+```python {{ title: 'untyped' }}
+from typing import TypedDict
+
+from robyn import SubRouter
+
+subrouter = SubRouter(__name__, prefix="/sub")
+
+
+@subrouter.get("/")
+async def subrouter_welcome():
+    """welcome subrouter"""
+    return "hiiiiii subrouter"
+
+
+class SubRouterGetRequestParams(TypedDict):
+    _id: int
+    value: str
+
+
+@subrouter.get("/name")
+async def subrouter_get(r, query_params=SubRouterGetRequestParams):
+    """Get Name by ID"""
+    return r.query_params
+
+
+@subrouter.delete("/:name")
+async def subrouter_delete(r):
+    """Delete Name by ID"""
+    return r.path_params
+
+
+app.include_router(subrouter)
+```
+
+```python {{ title: 'typed' }}
+from typing import TypedDict
+
+from robyn import Request, SubRouter
+
+subrouter: SubRouter = SubRouter(__name__, prefix="/sub")
+
+
+@subrouter.get("/")
+async def subrouter_welcome():
+    """welcome subrouter"""
+    return "hiiiiii subrouter"
+
+
+class SubRouterGetRequestParams(TypedDict):
+    _id: int
+    value: str
+
+
+@subrouter.get("/name")
+async def subrouter_get(r: Request, query_params=SubRouterGetRequestParams):
+    """Get Name by ID"""
+    return r.query_params
+
+
+@subrouter.delete("/:name")
+async def subrouter_delete(r: Request):
+    """Delete Name by ID"""
+    return r.path_params
+
+
+app.include_router(subrouter)
+```
+
+</CodeGroup>
+
+With the reference documentation deployed and running smoothly, Batman had a powerful new tool at his disposal. The Robyn framework had provided him with the flexibility, scalability, and performance needed to create an effective crime-fighting application, giving him a technological edge in his ongoing battle to protect Gotham City.
+
+
+## What's next?
+
+
+Batman wondered about whether Robyn handlers can be dispatched to multiple processes.
+
+Robyn showed him the way!
+
+[Multitiprocess Execution](/documentation/api_reference/multiprocess_execution)
+
+
+

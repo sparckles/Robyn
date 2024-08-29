@@ -24,6 +24,16 @@ Batman scaled his application across multiple cores for better performance. He u
         return f"hello to you, {request.ip_addr}"
 
     ```
+    ```python {{ title: 'typed' }}  
+    from robyn import Robyn, Request
+
+    app = Robyn(__file__)
+
+    @app.get("/")
+    async def h(request: Request):
+        return f"hello to you, {request.ip_addr}"
+
+    ```
 
     </CodeGroup>
   </Col>
@@ -34,11 +44,11 @@ Batman scaled his application across multiple cores for better performance. He u
 ## What's next?
 
 
-Batman wondered about whether Robyn handlers can be dispatched to multiple processes.
+Batman wondered about how to help users explore the endpoints in his application.
 
-Robyn showed him the way!
+Robyn showed him the OpenAPI Documentation!
 
-[Multitiprocess Execution](/documentation/api_reference/multiprocess_execution)
+[OpenAPI Documentation](/documentation/api_reference/openapi)
 
 
 

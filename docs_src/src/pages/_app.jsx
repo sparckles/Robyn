@@ -9,13 +9,10 @@ import 'focus-visible'
 import { Router, useRouter } from 'next/router'
 
 import { MDXProvider } from '@mdx-js/react'
-import Link from 'next/link'
 
 import { Layout } from '@/components/documentation/Layout'
-import { Container } from '@/components/Container'
 import { Layout as ReleaseLayout } from '@/components/releases/Layout'
 import * as mdxComponents from '@/components/documentation/mdx'
-import * as releaseMdxComponents from '@/components/releases/mdx'
 import { useMobileNavigationStore } from '@/components/documentation/MobileNavigation'
 
 import { Analytics } from '@vercel/analytics/react'

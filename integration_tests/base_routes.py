@@ -3,6 +3,10 @@ import pathlib
 from collections import defaultdict
 from typing import Optional
 
+from robyn import Headers
+
+from integration_tests.subroutes import sub_router, di_subrouter
+from integration_tests.views import SyncView, AsyncView
 from robyn import (
     Request,
     Response,
@@ -14,11 +18,7 @@ from robyn import (
     WebSocketConnector,
 )
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
-from robyn.robyn import Headers
 from robyn.templating import JinjaTemplate
-
-from integration_tests.views import SyncView, AsyncView
-from integration_tests.subroutes import sub_router, di_subrouter
 
 app = Robyn(__file__)
 websocket = WebSocket(app, "/web_socket")
@@ -73,7 +73,10 @@ async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
         await ws.async_broadcast(ws.query_params.get("one"))
         ws.sync_send_to(websocket_id, ws.query_params.get("two"))
         resp = "*chika* *chika* Slim Shady."
-    websocket_state[websocket_id] = (state + 1) % 3
+    elif state == 3:
+        ws.close()
+
+    websocket_state[websocket_id] = (state + 1) % 4
     return resp
 
 
@@ -215,8 +218,11 @@ def sync_middlewares_401():
 app.inject(RouterDependency="Router Dependency")
 
 
-@app.get("/")
+@app.get("/", openapi_name="Index")
 async def hello_world(r):
+    """
+    Get hello world
+    """
     return "Hello, world!"
 
 
@@ -818,6 +824,7 @@ app.add_route("GET", "/async/get/no_dec", async_without_decorator)
 app.add_route("PUT", "/async/put/no_dec", async_without_decorator)
 app.add_route("POST", "/async/post/no_dec", async_without_decorator)
 
+
 # ===== Dependency Injection =====
 
 GLOBAL_DEPENDENCY = "GLOBAL DEPENDENCY"
@@ -837,9 +844,15 @@ def sync_router_di(request, router_dependencies):
     return router_dependencies["ROUTER_DEPENDENCY"]
 
 
+@app.get("/openapi_test", openapi_tags=["test tag"])
+def sample_openapi_endpoint():
+    """Get openapi"""
+    return 200
+
+
 def main():
     app.set_response_header("server", "robyn")
-    app.add_directory(
+    app.serve_directory(
         route="/test_dir",
         directory_path=os.path.join(current_file_path, "build"),
         index_file="index.html",

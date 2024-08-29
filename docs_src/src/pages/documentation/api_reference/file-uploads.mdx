@@ -175,7 +175,7 @@ Speaking of HTML files, Batman wanted to serve simple HTML strings. He was sugge
 
 <Row>
 <Col>
-Batman scaled his application across multiple cores for better performance. He used the following command:
+Now, that Batman was able to serve HTML files, he wanted to serve other files like CSS, JS, and images. He was suggested to use the following code:
 </Col>
   <Col sticky>
 
@@ -214,11 +214,57 @@ Batman scaled his application across multiple cores for better performance. He u
 </Row>
 
 
+### Serving Directories
+
+<Row>
+<Col>
+After serving other files, Batman wanted to serve directories, e.g. to serve a React build directory or just a simple HTML/CSS/JS directory. He was suggested to use the following code:
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    from robyn import Robyn, serve_file
+
+    app = Robyn(__file__)
+
+
+    app.serve_directory(
+        route="/test_dir",
+        directory_path=os.path.join(current_file_path, "build"),
+        index_file="index.html",
+    )
+
+    app.start(port=8080)
+
+    ```
+
+    ```python {{ title: 'typed' }}
+    from robyn import Robyn, serve_file, Request
+
+    app = Robyn(__file__)
+
+
+    app.serve_directory(
+        route="/test_dir",
+        directory_path=os.path.join(current_file_path, "build"),
+        index_file="index.html",
+    )
+
+    app.start(port=8080)
+
+    ```
+
+    </CodeGroup>
+  </Col>
+</Row>
+
+
 ## What's next?
 
 Now, Batman was ready to learn about the advanced features of Robyn. He wanted to find a way to handle form data
 
 - [Form Data](/documentation/api_reference/form_data)
-
 
 
