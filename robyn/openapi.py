@@ -345,7 +345,7 @@ class OpenAPI:
             properties["anyOf"] = [{"type": self.get_openapi_type(type.__args__[0])}, {"type": "null"}]
             return properties
 
-        properties["type"] = "string"
+        properties["type"] = "object"
 
         return properties
 
