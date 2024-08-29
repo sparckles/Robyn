@@ -6,11 +6,12 @@ use actix_web::{
 use futures_util::StreamExt as _;
 use log::debug;
 use pyo3::types::{PyBytes, PyDict, PyString};
-use pyo3::{exceptions::PyValueError, prelude::*};
+use pyo3::{exceptions::PyValueError, prelude::*, types::{PyList, PyAny}};
 use serde_json::Value;
 use std::collections::HashMap;
+use percent_encoding::percent_decode;
 
-use crate::types::{check_body_type, get_body_from_pyobject, Url};
+use crate::types::{check_body_type, get_body_from_pyobject, get_form_data_from_pyobject, Url};
 
 use super::{headers::Headers, identity::Identity, multimap::QueryParams};
 
@@ -26,7 +27,8 @@ pub struct Request {
     pub url: Url,
     pub ip_addr: Option<String>,
     pub identity: Option<Identity>,
-    pub form_data: Option<HashMap<String, String>>,
+    #[pyo3(from_py_with = "get_form_data_from_pyobject")]
+    pub form_data: Option<HashMap<String, Value>>,
     pub files: Option<HashMap<String, Vec<u8>>>,
 }
 
@@ -43,7 +45,7 @@ impl ToPyObject for Request {
             Some(data) => {
                 let dict = PyDict::new(py);
                 for (key, value) in data.iter() {
-                    dict.set_item(key, value).unwrap();
+                    dict.set_item(key, value_to_pyany(py, value).unwrap()).unwrap();
                 }
                 dict.into_py(py)
             }
@@ -81,7 +83,7 @@ impl ToPyObject for Request {
 async fn handle_multipart(
     mut payload: Multipart,
     files: &mut HashMap<String, Vec<u8>>,
-    form_data: &mut HashMap<String, String>,
+    form_data: &mut HashMap<String, Value>,
     body: &mut Vec<u8>,
 ) -> Result<(), Error> {
     // Iterate over multipart stream
@@ -105,8 +107,8 @@ async fn handle_multipart(
 
         if let Some(name) = file_name {
             files.insert(name, data);
-        } else if let Ok(text) = String::from_utf8(data) {
-            form_data.insert(field_name.to_string(), text);
+        } else if let Ok(value) = String::from_utf8(data) {
+            form_data_handler(form_data, field_name, &value)?;
         }
     }
 
@@ -115,8 +117,9 @@ async fn handle_multipart(
 
 async fn handle_form(
     mut payload: web::Payload,
+    form_data: &mut HashMap<String, Value>,
     body: &mut Vec<u8>,
-) -> Result<HashMap<String, String>, Error> {
+) -> Result<(), Error> {
     // Iterate over multipart stream
     let mut data = web::BytesMut::new();
     while let Some(chunk) = payload.next().await {
@@ -125,8 +128,14 @@ async fn handle_form(
         body.extend_from_slice(&chunk);
     }
     let body_str = std::str::from_utf8(&data)?;
-    let form_data: HashMap<String, String> = serde_urlencoded::from_str(body_str)?;
-    Ok(form_data)
+    let body_str_split: Vec<&str> = body_str.split("&").collect();
+    for i in body_str_split {
+        let key_value: Vec<&str> = i.split("=").collect();
+        if let [key, value] = key_value[..] {
+            form_data_handler(form_data, key, value)?;
+        }
+    }
+    Ok(())
 }
 
 impl Request {
@@ -136,7 +145,7 @@ impl Request {
         global_headers: &Headers,
     ) -> Self {
         let mut query_params: QueryParams = QueryParams::new();
-        let mut form_data: HashMap<String, String> = HashMap::new();
+        let mut form_data: HashMap<String, Value> = HashMap::new();
         let mut files = HashMap::new();
 
         if !req.query_string().is_empty() {
@@ -180,11 +189,10 @@ impl Request {
             debug!("Content-Type: {:?}", h);
             let mut body_local: Vec<u8> = Vec::new();
 
-            let a = handle_form(payload, &mut body_local).await;
+            let a = handle_form(payload, &mut form_data, &mut body_local).await;
 
-            match a {
-                Ok(d) => form_data = d,
-                Err(e) => debug!("Error handling multipart data: {:?}", e),
+            if let Err(e) = a {
+                debug!("Error handling multipart data: {:?}", e);
             }
 
             body_local
@@ -289,25 +297,84 @@ impl PyRequest {
 
     pub fn json(&self, py: Python) -> PyResult<PyObject> {
         match self.body.as_ref(py).downcast::<PyString>() {
+            // use python orjson deserialization
+            // let orjson_mod = PyModule::import(py, "orjson")?;
+            // let fun = orjson_mod.getattr("loads")?;
+            // let parsed_json = fun.call1((python_string,))?;
+
+            // Ok(parsed_json.into_py(py))
+
             Ok(python_string) => match serde_json::from_str(python_string.extract()?) {
-                Ok(Value::Object(map)) => {
-                    let dict = PyDict::new(py);
-
-                    for (key, value) in map.iter() {
-                        let py_key = key.to_string().into_py(py);
-                        let py_value = match value {
-                            Value::String(s) => s.as_str().into_py(py),
-                            _ => value.to_string().into_py(py),
-                        };
-
-                        dict.set_item(py_key, py_value)?;
-                    }
-
+                Ok(map) => {
+                    let dict = value_to_pydict(py, &map)?;
                     Ok(dict.into_py(py))
                 }
-                _ => Err(PyValueError::new_err("Invalid JSON object")),
+                Err(_) => Err(PyValueError::new_err("Invalid JSON Object.")),
             },
             Err(e) => Err(e.into()),
         }
     }
+}
+
+fn value_to_pydict<'a>(py: Python<'a>, value: &Value) -> PyResult<&'a PyDict> {
+    let dict = PyDict::new(py);
+
+    if let Value::Object(map) = value {
+        for (key, val) in map {
+            let py_val = value_to_pyany(py, val)?;
+            dict.set_item(key, py_val)?;
+        }
+    }
+
+    Ok(dict)
+}
+
+fn value_to_pyany(py: Python, val: &Value) -> PyResult<Py<PyAny>> {
+    let object = match val {
+        Value::Null => py.None(),
+        Value::Bool(b) => b.into_py(py),
+        Value::Number(num) => {
+            if let Some(i) = num.as_i64() {
+                i.into_py(py)
+            } else if let Some(u) = num.as_u64() {
+                u.into_py(py)
+            } else if let Some(f) = num.as_f64() {
+                f.into_py(py)
+            } else {
+                return Err(PyValueError::new_err("Unsupported number type"));
+            }
+        }
+        Value::String(s) => s.into_py(py),
+        Value::Array(arr) => {
+            let py_list =
+                PyList::new(py, arr.iter().map(|v| value_to_pyany(py, v).unwrap()));
+            py_list.into_py(py)
+        }
+        Value::Object(_) => value_to_pydict(py, val)?.into_py(py),
+    };
+    Ok(object)
+}
+
+fn form_data_handler(form_data: &mut HashMap<String, Value>, key: &str, value: &str) -> Result<(), Error> {
+    match form_data.get(key) {
+        Some(v) => {
+            match v {
+                Value::Array(vs) => {
+                    let mut _vs = vs.clone();
+                    _vs.push(serde_json::Value::String(percent_decode(value.as_bytes()).decode_utf8()?.into_owned()));
+                    form_data.insert(key.to_owned(), serde_json::Value::Array(_vs));
+                },
+                _ => {
+                    form_data.insert(key.to_owned(), vec![v.clone(), serde_json::Value::String(percent_decode(value.as_bytes()).decode_utf8()?.into_owned())].into());
+                },
+            }
+        },
+        None => {
+            form_data.insert(
+                key.to_owned(),
+                percent_decode(value.as_bytes()).decode_utf8()?.into_owned().into(),
+            );
+        }
+    };
+    Ok(())
 }

@@ -19,5 +19,6 @@ def test_multipart_file(function_type: str, session):
 @pytest.mark.benchmark
 @pytest.mark.parametrize("function_type", ["sync"])
 def test_simple_form_data(function_type: str, session):
-    res = post(f"/{function_type}/simple_form_data", data={"hello": "world"})
-    assert "x-www-form-urlencoded" in res.text
+    data = {"hello": "world", "list_field": ["a=", "b"]}
+    res = post(f"/{function_type}/simple_form_data", data=data)
+    assert str(data["list_field"]) == res.text

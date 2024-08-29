@@ -586,7 +586,7 @@ def sync_form_data(request: Request):
 
 @app.post("/sync/simple_form_data")
 def sync_simple_form_data(request: Request):
-    return request.headers["Content-Type"]
+    return request.form_data["list_field"]
 
 
 # JSON Request
@@ -612,6 +612,12 @@ async def async_json_post(request: Request):
 async def request_json(request: Request):
     json = request.json()
     return json["key"]
+
+
+@app.post("/sync/request_json/list")
+async def request_json_list(request: Request):
+    json = request.json()
+    return json["field"]
 
 
 # --- PUT ---
