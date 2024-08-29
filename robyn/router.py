@@ -137,6 +137,7 @@ class Router(BaseRouter):
 
             request_components = {
                 "r": request,
+                "req": request,
                 "request": request,
                 "query_params": request.query_params,
                 "headers": request.headers,
