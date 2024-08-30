@@ -117,6 +117,9 @@ fn pyany_to_value(obj: &PyAny) -> PyResult<Value> {
     } else if let Ok(val) = obj.downcast::<PyString>() {
         let str_val: String = val.extract()?;
         Ok(Value::String(str_val))
+    } else if let Ok(val) = obj.downcast::<PyBytes>() {
+        let bytes_val = val.extract::<Vec<u8>>()?.into_iter().map(|c| Value::Number(c.into())).collect();
+        Ok(Value::Array(bytes_val))
     } else if let Ok(dict) = obj.downcast::<PyDict>() {
         let mut map = serde_json::Map::new();
         for (key, value) in dict.iter() {

@@ -482,6 +482,13 @@ def sync_multipart_file(request: Request):
     return {"file_names": list(file_names)}
 
 
+@app.post("/sync/multipart-file-form")
+def sync_multipart_file_form(request: Request):
+    files = request.files
+    file_names = files.keys()
+    return {"form_data": request.form_data, "file_names": list(file_names)}
+
+
 # Queries
 
 
