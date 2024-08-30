@@ -1,13 +1,11 @@
 import inspect
+import logging
 from abc import ABC, abstractmethod
 from asyncio import iscoroutinefunction
 from functools import wraps
 from inspect import signature
 from types import CoroutineType
 from typing import Callable, Dict, List, NamedTuple, Union, Optional
-from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
-from robyn.dependency_injection import DependencyMap
-from robyn.responses import FileResponse
 
 from robyn.robyn import (
     FunctionInfo,
@@ -16,13 +14,17 @@ from robyn.robyn import (
     MiddlewareType,
     Request,
     Response,
+    QueryParams,
+    Url,
+    Identity,
 )
+
 from robyn import status_codes
+from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
+from robyn.dependency_injection import DependencyMap
 from robyn.jsonify import jsonify
-
+from robyn.responses import FileResponse
 from robyn.ws import WebSocket
-
-import logging
 
 _logger = logging.getLogger(__name__)
 
@@ -135,6 +137,31 @@ class Router(BaseRouter):
 
             request = requests[0]
 
+            type_mapping = {
+                "request": Request,
+                "query_params": QueryParams,
+                "headers": Headers,
+                "path_params": dict[str, str],
+                "body": Union[str, bytes],
+                "method": str,
+                "url": Url,
+                "form_data": dict[str, str],
+                "files": dict[str, bytes],
+                "ip_addr": Optional[str],
+                "identity": Optional[Identity],
+            }
+
+            type_filtered_params = {}
+
+            for handler_param in iter(handler_params):
+                for type_name in type_mapping:
+                    handler_param_type = handler_params[handler_param].annotation
+                    handler_param_name = handler_params[handler_param].name
+                    if handler_param_type is Request:
+                        type_filtered_params[handler_param_name] = request
+                    elif handler_param_type is type_mapping[type_name]:
+                        type_filtered_params[handler_param_name] = getattr(request, type_name)
+
             request_components = {
                 "r": request,
                 "req": request,
@@ -154,9 +181,9 @@ class Router(BaseRouter):
                 **kwargs,
             }
 
-            filtered_params = {k: v for k, v in request_components.items() if k in handler_params}
+            name_filtered_params = {k: v for k, v in request_components.items() if k in handler_params and k not in type_filtered_params}
 
-            return handler(**filtered_params)
+            return handler(**dict(**type_filtered_params, **name_filtered_params))
 
         @wraps(handler)
         async def async_inner_handler(*args, **kwargs):
