@@ -182,6 +182,12 @@ class Router(BaseRouter):
 
             name_filtered_params = {k: v for k, v in request_components.items() if k in handler_params and k not in type_filtered_params}
 
+            filtered_params = dict(**type_filtered_params, **name_filtered_params)
+
+            if len(filtered_params) != len(handler_params):
+                invalid_args = set(handler_params) - set(filtered_params)
+                raise SyntaxError(f"Unexpected request params found: ${invalid_args}")
+
             return handler(**dict(**type_filtered_params, **name_filtered_params))
 
         @wraps(handler)
