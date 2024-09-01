@@ -1,5 +1,7 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Dict, Union
+
+from robyn.robyn import Url, Identity
 
 
 @dataclass
@@ -16,3 +18,13 @@ class Directory:
             self.show_files_listing,
             self.index_file,
         ]
+
+
+PathParams = Dict[str, str]
+RequestBody = Union[str, bytes]
+RequestMethod = str
+RequestURL = Url
+FormData = dict[str, str]
+RequestFiles = dict[str, bytes]
+RequestIP = Optional[str]
+RequestIdentity = Optional[Identity]

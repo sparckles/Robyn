@@ -15,8 +15,6 @@ from robyn.robyn import (
     Request,
     Response,
     QueryParams,
-    Url,
-    Identity,
 )
 
 from robyn import status_codes
@@ -24,6 +22,7 @@ from robyn.authentication import AuthenticationHandler, AuthenticationNotConfigu
 from robyn.dependency_injection import DependencyMap
 from robyn.jsonify import jsonify
 from robyn.responses import FileResponse
+from robyn.types import PathParams, RequestBody, RequestMethod, RequestURL, FormData, RequestFiles, RequestIP, RequestIdentity
 from robyn.ws import WebSocket
 
 _logger = logging.getLogger(__name__)
@@ -141,14 +140,14 @@ class Router(BaseRouter):
                 "request": Request,
                 "query_params": QueryParams,
                 "headers": Headers,
-                "path_params": Dict[str, str],
-                "body": Union[str, bytes],
-                "method": str,
-                "url": Url,
-                "form_data": Dict[str, str],
-                "files": Dict[str, bytes],
-                "ip_addr": Optional[str],
-                "identity": Optional[Identity],
+                "path_params": PathParams,
+                "body": RequestBody,
+                "method": RequestMethod,
+                "url": RequestURL,
+                "form_data": FormData,
+                "files": RequestFiles,
+                "ip_addr": RequestIP,
+                "identity": RequestIdentity,
             }
 
             type_filtered_params = {}
