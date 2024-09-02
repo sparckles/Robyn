@@ -5,53 +5,59 @@ from integration_tests.helpers.http_methods_helpers import get, post
 
 @pytest.mark.benchmark
 @pytest.mark.parametrize("function_type", ["sync", "async"])
-def test_split_request_params_get_query_params(session, function_type):
-    r = get(f"/{function_type}/split_request/query_params?hello=robyn")
+@pytest.mark.parametrize("type_route", ["split_request_untyped", "split_request_typed"])
+def test_split_request_params_get_query_params(session, type_route, function_type):
+    r = get(f"/{function_type}/{type_route}/query_params?hello=robyn")
     assert r.json() == {"hello": ["robyn"]}
-    r = get(f"/{function_type}/split_request/query_params?hello=robyn&a=1&b=2")
+    r = get(f"/{function_type}/{type_route}/query_params?hello=robyn&a=1&b=2")
     assert r.json() == {"hello": ["robyn"], "a": ["1"], "b": ["2"]}
-    r = get(f"/{function_type}/split_request/query_params")
+    r = get(f"/{function_type}/{type_route}/query_params")
     assert r.json() == {}
 
 
 @pytest.mark.benchmark
 @pytest.mark.parametrize("function_type", ["sync", "async"])
-def test_split_request_params_get_headers(session, function_type):
-    r = get(f"/{function_type}/split_request/headers")
+@pytest.mark.parametrize("type_route", ["split_request_untyped", "split_request_typed"])
+def test_split_request_params_get_headers(session, type_route, function_type):
+    r = get(f"/{function_type}/{type_route}/headers")
     assert r.text == "robyn"
 
 
 @pytest.mark.benchmark
 @pytest.mark.parametrize("function_type", ["sync", "async"])
-def test_split_request_params_get_path_params(session, function_type):
-    r = get(f"/{function_type}/split_request/path_params/123")
+@pytest.mark.parametrize("type_route", ["split_request_untyped", "split_request_typed"])
+def test_split_request_params_get_path_params(session, type_route, function_type):
+    r = get(f"/{function_type}/{type_route}/path_params/123")
     assert r.json() == {"id": "123"}
 
 
 @pytest.mark.benchmark
 @pytest.mark.parametrize("function_type", ["sync", "async"])
-def test_split_request_params_get_method(session, function_type):
-    r = get(f"/{function_type}/split_request/method")
+@pytest.mark.parametrize("type_route", ["split_request_untyped", "split_request_typed"])
+def test_split_request_params_get_method(session, type_route, function_type):
+    r = get(f"/{function_type}/{type_route}/method")
     assert r.text == "GET"
 
 
 @pytest.mark.benchmark
 @pytest.mark.parametrize("function_type", ["sync", "async"])
-def test_split_request_params_get_body(session, function_type):
-    res = post(f"/{function_type}/split_request/body", data={"hello": "world"})
+@pytest.mark.parametrize("type_route", ["split_request_untyped", "split_request_typed"])
+def test_split_request_params_get_body(session, type_route, function_type):
+    res = post(f"/{function_type}/{type_route}/body", data={"hello": "world"})
     assert res.text == "hello=world"
 
 
 @pytest.mark.benchmark
 @pytest.mark.parametrize("function_type", ["sync", "async"])
-def test_split_request_params_get_combined(session, function_type):
+@pytest.mark.parametrize("type_route", ["split_request_untyped", "split_request_typed"])
+def test_split_request_params_get_combined(session, type_route, function_type):
     res = post(
-        f"/{function_type}/split_request/combined?hello=robyn&a=1&b=2",
+        f"/{function_type}/{type_route}/combined?hello=robyn&a=1&b=2",
         data={"hello": "world"},
     )
     out = res.json()
     assert out["query_params"] == {"hello": ["robyn"], "a": ["1"], "b": ["2"]}
     assert out["body"] == "hello=world"
     assert out["method"] == "POST"
-    assert out["url"] == f"/{function_type}/split_request/combined"
+    assert out["url"] == f"/{function_type}/{type_route}/combined"
     assert out["headers"] == "robyn"

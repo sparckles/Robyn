@@ -3,10 +3,11 @@ import pathlib
 from collections import defaultdict
 from typing import Optional
 
-from robyn import Headers
+from robyn.robyn import QueryParams
 
 from integration_tests.subroutes import sub_router, di_subrouter
 from integration_tests.views import SyncView, AsyncView
+from robyn import Headers
 from robyn import (
     Request,
     Response,
@@ -19,6 +20,7 @@ from robyn import (
 )
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.templating import JinjaTemplate
+from robyn.types import RequestMethod, RequestURL, RequestBody, PathParams
 
 app = Robyn(__file__)
 websocket = WebSocket(app, "/web_socket")
@@ -837,58 +839,58 @@ def sync_router_di(request, router_dependencies):
 # ===== Split request body =====
 
 
-@app.get("/sync/split_request/query_params")
-def sync_split_request_basic(query_params):
+@app.get("/sync/split_request_untyped/query_params")
+def sync_split_request_untyped_basic(query_params):
     return query_params.to_dict()
 
 
-@app.get("/async/split_request/query_params")
-async def async_split_request_basic(query_params):
+@app.get("/async/split_request_untyped/query_params")
+async def async_split_request_untyped_basic(query_params):
     return query_params.to_dict()
 
 
-@app.get("/sync/split_request/headers")
-def sync_split_request_headers(headers):
+@app.get("/sync/split_request_untyped/headers")
+def sync_split_request_untyped_headers(headers):
     return headers.get("server")
 
 
-@app.get("/async/split_request/headers")
-async def async_split_request_headers(headers):
+@app.get("/async/split_request_untyped/headers")
+async def async_split_request_untyped_headers(headers):
     return headers.get("server")
 
 
-@app.get("/sync/split_request/path_params/:id")
-def sync_split_request_path_params(path_params):
+@app.get("/sync/split_request_untyped/path_params/:id")
+def sync_split_request_untyped_path_params(path_params):
     return path_params
 
 
-@app.get("/async/split_request/path_params/:id")
-async def async_split_request_path_params(path_params):
+@app.get("/async/split_request_untyped/path_params/:id")
+async def async_split_request_untyped_path_params(path_params):
     return path_params
 
 
-@app.get("/sync/split_request/method")
-def sync_split_request_method(method):
+@app.get("/sync/split_request_untyped/method")
+def sync_split_request_untyped_method(method):
     return method
 
 
-@app.get("/async/split_request/method")
-async def async_split_request_method(method):
+@app.get("/async/split_request_untyped/method")
+async def async_split_request_untyped_method(method):
     return method
 
 
-@app.post("/sync/split_request/body")
-def sync_split_request_body(body):
+@app.post("/sync/split_request_untyped/body")
+def sync_split_request_untyped_body(body):
     return body
 
 
-@app.post("/async/split_request/body")
-async def async_split_request_body(body):
+@app.post("/async/split_request_untyped/body")
+async def async_split_request_untyped_body(body):
     return body
 
 
-@app.post("/sync/split_request/combined")
-def sync_split_request_combined(body, query_params, method, url, headers):
+@app.post("/sync/split_request_untyped/combined")
+def sync_split_request_untyped_combined(body, query_params, method, url, headers):
     return {
         "body": body,
         "query_params": query_params.to_dict(),
@@ -898,14 +900,98 @@ def sync_split_request_combined(body, query_params, method, url, headers):
     }
 
 
-@app.post("/async/split_request/combined")
-async def async_split_request_combined(body, query_params, method, url, headers):
+@app.post("/async/split_request_untyped/combined")
+async def async_split_request_untyped_combined(body, query_params, method, url, headers):
     return {
         "body": body,
         "query_params": query_params.to_dict(),
         "method": method,
         "url": url.path,
         "headers": headers.get("server"),
+    }
+
+
+@app.get("/sync/split_request_typed/query_params")
+def sync_split_request_basic(query_data: QueryParams):
+    return query_data.to_dict()
+
+
+@app.get("/async/split_request_typed/query_params")
+async def async_split_request_basic(query_data: QueryParams):
+    return query_data.to_dict()
+
+
+@app.get("/sync/split_request_typed/headers")
+def sync_split_request_headers(request_headers: Headers):
+    return request_headers.get("server")
+
+
+@app.get("/async/split_request_typed/headers")
+async def async_split_request_headers(request_headers: Headers):
+    return request_headers.get("server")
+
+
+@app.get("/sync/split_request_typed/path_params/:id")
+def sync_split_request_path_params(path_data: PathParams):
+    return path_data
+
+
+@app.get("/async/split_request_typed/path_params/:id")
+async def async_split_request_path_params(path_data: PathParams):
+    return path_data
+
+
+@app.get("/sync/split_request_typed/method")
+def sync_split_request_method(request_method: RequestMethod):
+    return request_method
+
+
+@app.get("/async/split_request_typed/method")
+async def async_split_request_method(request_method: RequestMethod):
+    return request_method
+
+
+@app.post("/sync/split_request_typed/body")
+def sync_split_request_body(request_body: RequestBody):
+    return request_body
+
+
+@app.post("/async/split_request_typed/body")
+async def async_split_request_body(request_body: RequestBody):
+    return request_body
+
+
+@app.post("/sync/split_request_typed/combined")
+def sync_split_request_combined(
+    request_body: RequestBody,
+    query_data: QueryParams,
+    request_method: RequestMethod,
+    request_url: RequestURL,
+    request_headers: Headers,
+):
+    return {
+        "body": request_body,
+        "query_params": query_data.to_dict(),
+        "method": request_method,
+        "url": request_url.path,
+        "headers": request_headers.get("server"),
+    }
+
+
+@app.post("/async/split_request_typed/combined")
+async def async_split_request_combined(
+    request_body: RequestBody,
+    query_data: QueryParams,
+    request_method: RequestMethod,
+    request_url: RequestURL,
+    request_headers: Headers,
+):
+    return {
+        "body": request_body,
+        "query_params": query_data.to_dict(),
+        "method": request_method,
+        "url": request_url.path,
+        "headers": request_headers.get("server"),
     }
 
 
