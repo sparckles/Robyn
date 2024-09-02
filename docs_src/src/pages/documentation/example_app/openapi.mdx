@@ -180,27 +180,49 @@ We support all the params mentioned in the latest OpenAPI specifications (https:
 <CodeGroup title="Request Body">
 
 ```python {{ title: 'untyped' }}
+class Initial(TypedDict):
+    is_present: bool
+    initial: Optional[str]
+
+
+class FullName(TypedDict):
+    first: str
+    second: str
+    initial: Initial
+
+
 class CreateItemBody(TypedDict):
-    name: str
+    name: FullName
     description: str
     price: float
     tax: float
 
 
-@app.post("/upload/file")
+@app.post("/")
 def create_item(request, body=CreateItemBody):
     return request.body
 ```
 
 ```python {{ title: 'typed' }}
+class Initial(TypedDict):
+    is_present: bool
+    initial: Optional[str]
+
+
+class FullName(TypedDict):
+    first: str
+    second: str
+    initial: Initial
+
+
 class CreateItemBody(TypedDict):
-    name: str
+    name: FullName
     description: str
     price: float
     tax: float
 
 
-@app.post("/upload/file")
+@app.post("/")
 def create_item(request: Request, body=CreateItemBody):
     return request.body
 ```
