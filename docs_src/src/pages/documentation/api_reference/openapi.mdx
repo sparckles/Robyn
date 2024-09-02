@@ -224,7 +224,7 @@ We support all the params mentioned in the latest OpenAPI specifications (https:
 ```python {{ title: 'untyped' }}
 class Initial(TypedDict):
     is_present: bool
-    initial: Optional[str]
+    letter: Optional[str]
 
 
 class FullName(TypedDict):
@@ -248,7 +248,7 @@ def create_item(request, body=CreateItemBody):
 ```python {{ title: 'typed' }}
 class Initial(TypedDict):
     is_present: bool
-    initial: Optional[str]
+    letter: Optional[str]
 
 
 class FullName(TypedDict):
