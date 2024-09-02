@@ -61,3 +61,25 @@ def test_split_request_params_get_combined(session, type_route, function_type):
     assert out["method"] == "POST"
     assert out["url"] == f"/{function_type}/{type_route}/combined"
     assert out["headers"] == "robyn"
+
+
+@pytest.mark.benchmark
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_split_request_params_typed_untyped_post_combined(session, function_type):
+    res = post(
+        f"/{function_type}/split_request_typed_untyped/combined?hello=robyn&a=1&b=2",
+        data={"hello": "world"},
+    )
+    out = res.json()
+    assert out["query_params"] == {"hello": ["robyn"], "a": ["1"], "b": ["2"]}
+    assert out["body"] == "hello=world"
+    assert out["method"] == "POST"
+    assert out["url"] == f"/{function_type}/split_request_typed_untyped/combined"
+    assert out["headers"] == "robyn"
+
+
+@pytest.mark.benchmark
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_split_request_params_get_combined_failure(session, function_type):
+    res = post(f"/{function_type}/split_request_typed_untyped/combined/failure?hello=robyn&a=1&b=2", data={"hello": "world"}, should_check_response=False)
+    assert 500 == res.status_code

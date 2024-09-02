@@ -995,6 +995,68 @@ async def async_split_request_combined(
     }
 
 
+@app.post("/sync/split_request_typed_untyped/combined")
+def sync_split_request_typed_untyped_combined(
+    query_params,
+    request_method: RequestMethod,
+    request_body: RequestBody,
+    url: RequestURL,
+    headers: Headers,
+):
+    return {
+        "body": request_body,
+        "query_params": query_params.to_dict(),
+        "method": request_method,
+        "url": url.path,
+        "headers": headers.get("server"),
+    }
+
+
+@app.post("/async/split_request_typed_untyped/combined")
+async def async_split_request_typed_untyped_combined(
+    query_params,
+    request_method: RequestMethod,
+    request_body: RequestBody,
+    url: RequestURL,
+    headers: Headers,
+):
+    return {
+        "body": request_body,
+        "query_params": query_params.to_dict(),
+        "method": request_method,
+        "url": url.path,
+        "headers": headers.get("server"),
+    }
+
+
+@app.post("/sync/split_request_typed_untyped/combined/failure")
+def sync_split_request_typed_untyped_combined_failure(
+    query_params, request_method: RequestMethod, request_body: RequestBody, url: RequestURL, headers: Headers, vishnu
+):
+    return {
+        "body": request_body,
+        "query_params": query_params.to_dict(),
+        "method": request_method,
+        "url": url.path,
+        "headers": headers.get("server"),
+        "vishnu": vishnu,
+    }
+
+
+@app.post("/async/split_request_typed_untyped/combined/failure")
+async def async_split_request_typed_untyped_combined_failure(
+    query_params, request_method: RequestMethod, request_body: RequestBody, url: RequestURL, headers: Headers, vishnu
+):
+    return {
+        "body": request_body,
+        "query_params": query_params.to_dict(),
+        "method": request_method,
+        "url": url.path,
+        "headers": headers.get("server"),
+        "vishnu": vishnu,
+    }
+
+
 @app.get("/openapi_test", openapi_tags=["test tag"])
 def sample_openapi_endpoint():
     """Get openapi"""
