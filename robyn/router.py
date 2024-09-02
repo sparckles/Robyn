@@ -188,7 +188,7 @@ class Router(BaseRouter):
                 invalid_args = set(handler_params) - set(filtered_params)
                 raise SyntaxError(f"Unexpected request params found: ${invalid_args}")
 
-            return handler(**dict(**type_filtered_params, **name_filtered_params))
+            return handler(**filtered_params)
 
         @wraps(handler)
         async def async_inner_handler(*args, **kwargs):

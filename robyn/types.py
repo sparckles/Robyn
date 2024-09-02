@@ -1,3 +1,4 @@
+import typing
 from dataclasses import dataclass
 from typing import Optional, Dict, Union
 
@@ -20,11 +21,11 @@ class Directory:
         ]
 
 
-PathParams = Dict[str, str]
-RequestBody = Union[str, bytes]
-RequestMethod = str
-RequestURL = Url
-FormData = Dict[str, str]
-RequestFiles = Dict[str, bytes]
-RequestIP = Optional[str]
-RequestIdentity = Optional[Identity]
+PathParams = typing.NewType("PathParams", Dict[str, str])
+RequestBody = typing.NewType("RequestBody", Union[str, bytes])
+RequestMethod = typing.NewType("RequestMethod", str)
+RequestURL = typing.NewType("RequestURL", Url)
+FormData = typing.NewType("FormData", Dict[str, str])
+RequestFiles = typing.NewType("RequestFiles", Dict[str, bytes])
+RequestIP = typing.NewType("RequestIP", Optional[str])
+RequestIdentity = typing.NewType("RequestIdentity", Optional[Identity])
