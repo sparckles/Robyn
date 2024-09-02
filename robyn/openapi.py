@@ -313,12 +313,12 @@ class OpenAPI:
         # default to "string" if type is not found
         return "string"
 
-    def get_properties_object(self, parameter: str, type: Any) -> dict:
+    def get_properties_object(self, parameter: str, param_type: Any) -> dict:
         """
         Get the properties object for request body
 
         @param parameter: name of the parameter
-        @param type: Any the type to be inferred
+        @param param_type: Any the type to be inferred
         @return: dict the properties object
         """
 
@@ -336,14 +336,22 @@ class OpenAPI:
         }
 
         for type_name in type_mapping:
-            if type is type_name:
+            if param_type is type_name:
                 properties["type"] = type_mapping[type_name]
                 return properties
 
         # check for Optional type
-        if type.__module__ == "typing":
-            properties["anyOf"] = [{"type": self.get_openapi_type(type.__args__[0])}, {"type": "null"}]
+        if param_type.__module__ == "typing":
+            properties["anyOf"] = [{"type": self.get_openapi_type(param_type.__args__[0])}, {"type": "null"}]
             return properties
+        # check for custom classes and TypedDicts
+        elif inspect.isclass(param_type):
+            properties["type"] = "object"
+
+            properties["properties"] = {}
+
+            for e in param_type.__annotations__:
+                properties["properties"][e] = self.get_properties_object(e, param_type.__annotations__[e])
 
         properties["type"] = "object"
 
