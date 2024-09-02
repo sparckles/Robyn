@@ -839,8 +839,19 @@ def sample_openapi_endpoint():
     return 200
 
 
+class Initial(TypedDict):
+    is_present: bool
+    letter: Optional[str]
+
+
+class FullName(TypedDict):
+    first: str
+    second: str
+    initial: Initial
+
+
 class CreateItemBody(TypedDict):
-    name: str
+    name: FullName
     description: str
     price: float
     tax: float
