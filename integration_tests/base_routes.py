@@ -3,24 +3,13 @@ import pathlib
 from collections import defaultdict
 from typing import Optional
 
-from robyn.robyn import QueryParams
-
-from integration_tests.subroutes import sub_router, di_subrouter
-from integration_tests.views import SyncView, AsyncView
-from robyn import Headers
-from robyn import (
-    Request,
-    Response,
-    Robyn,
-    WebSocket,
-    jsonify,
-    serve_file,
-    serve_html,
-    WebSocketConnector,
-)
+from integration_tests.subroutes import di_subrouter, sub_router
+from integration_tests.views import AsyncView, SyncView
+from robyn import Headers, Request, Response, Robyn, WebSocket, WebSocketConnector, jsonify, serve_file, serve_html
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
+from robyn.robyn import QueryParams
 from robyn.templating import JinjaTemplate
-from robyn.types import RequestMethod, RequestURL, RequestBody, PathParams
+from robyn.types import PathParams, RequestBody, RequestMethod, RequestURL
 
 app = Robyn(__file__)
 websocket = WebSocket(app, "/web_socket")
