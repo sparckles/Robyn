@@ -118,14 +118,12 @@ class Router(BaseRouter):
     ) -> Union[Callable, CoroutineType]:
         def wrapped_handler(*args, **kwargs):
             # In the execute functions the request is passed into *args
-            requests = list(filter(lambda a: isinstance(a, Request), args))
+            request = next(filter(lambda it: isinstance(it, Request), args), None)
 
             handler_params = signature(handler).parameters
 
-            if not requests or (len(handler_params) == 1 and next(iter(handler_params)) is Request):
+            if not request or len(handler_params) == 1 and next(iter(handler_params)) is Request:
                 return handler(*args, **kwargs)
-
-            request = requests[0]
 
             type_mapping = {
                 "request": Request,
