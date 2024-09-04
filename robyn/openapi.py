@@ -176,6 +176,9 @@ class OpenAPI:
             if "body" in signature.parameters:
                 request_body = signature.parameters["body"].default
 
+                if request_body is Signature.empty:
+                    request_body = None
+
         return_annotation = signature.return_annotation
 
         return_type = "text/plain" if return_annotation == Signature.empty or return_annotation is str else "application/json"
