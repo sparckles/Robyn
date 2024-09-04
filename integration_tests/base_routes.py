@@ -1,7 +1,7 @@
 import os
 import pathlib
 from collections import defaultdict
-from typing import Optional
+from typing import Optional, TypedDict
 
 from integration_tests.subroutes import di_subrouter, sub_router
 from integration_tests.views import AsyncView, SyncView
@@ -1050,6 +1050,29 @@ async def async_split_request_typed_untyped_combined_failure(
 def sample_openapi_endpoint():
     """Get openapi"""
     return 200
+
+
+class Initial(TypedDict):
+    is_present: bool
+    letter: Optional[str]
+
+
+class FullName(TypedDict):
+    first: str
+    second: str
+    initial: Initial
+
+
+class CreateItemBody(TypedDict):
+    name: FullName
+    description: str
+    price: float
+    tax: float
+
+
+@app.post("/openapi_request_body")
+def create_item(request, body=CreateItemBody):
+    return request.body
 
 
 def main():

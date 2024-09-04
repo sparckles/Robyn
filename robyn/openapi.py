@@ -1,8 +1,8 @@
-from dataclasses import asdict, dataclass, field
 import inspect
-from inspect import Signature
+from dataclasses import asdict, dataclass, field
 from importlib import resources
-from typing import Callable, Optional, TypedDict, List, Dict
+from inspect import Signature
+from typing import Callable, Dict, List, Optional, TypedDict, Any
 
 from robyn.responses import FileResponse, html
 
@@ -161,6 +161,8 @@ class OpenAPI:
         """
 
         query_params = None
+        request_body = None
+
         signature = inspect.signature(handler)
         openapi_description = inspect.getdoc(handler) or ""
 
@@ -170,11 +172,14 @@ class OpenAPI:
             if query_params is Signature.empty:
                 query_params = None
 
+        if signature and "body" in signature.parameters:
+            request_body = signature.parameters["body"].default
+
         return_annotation = signature.return_annotation
 
         return_type = "text/plain" if return_annotation == Signature.empty or return_annotation is str else "application/json"
 
-        modified_endpoint, path_obj = self.get_path_obj(endpoint, openapi_name, openapi_description, openapi_tags, query_params, return_type)
+        modified_endpoint, path_obj = self.get_path_obj(endpoint, openapi_name, openapi_description, openapi_tags, query_params, request_body, return_type)
 
         if modified_endpoint not in self.openapi_spec["paths"]:
             self.openapi_spec["paths"][modified_endpoint] = {}
@@ -191,7 +196,16 @@ class OpenAPI:
         for path in paths:
             self.openapi_spec["paths"][path] = paths[path]
 
-    def get_path_obj(self, endpoint: str, name: str, description: str, tags: List[str], query_params: Optional[TypedDict], return_type: str) -> (str, dict):
+    def get_path_obj(
+        self,
+        endpoint: str,
+        name: str,
+        description: str,
+        tags: List[str],
+        query_params: Optional[TypedDict],
+        request_body: Optional[TypedDict],
+        return_type: str,
+    ) -> (str, dict):
         """
         Get the "path" openapi object according to spec
 
@@ -200,18 +214,30 @@ class OpenAPI:
         @param description: Optional[str] short description of the endpoint (to be fetched from the endpoint defenition by default)
         @param tags: List[str] for grouping of endpoints
         @param query_params: Optional[TypedDict] query params for the function
+        @param request_body: Optional[TypedDict] request body for the function
         @param return_type: str return type of the endpoint handler
 
         @return: (str, dict) a tuple containing the endpoint with path params wrapped in braces and the "path" openapi object
         according to spec
         """
+
+        if not description:
+            description = "No description provided"
+
+        openapi_path_object = {
+            "summary": name,
+            "description": description,
+            "parameters": [],
+            "tags": tags,
+            "responses": {"200": {"description": "Successful Response", "content": {return_type: {"schema": {}}}}},
+        }
+
         # robyn has paths like /:url/:etc whereas openapi requires path like /{url}/{path}
         # this function is used for converting path params to the required form
         # initialized with endpoint for handling endpoints without path params
         endpoint_with_path_params_wrapped_in_braces = endpoint
 
         endpoint_path_params_split = endpoint.split(":")
-        openapi_parameter_object = []
 
         if len(endpoint_path_params_split) > 1:
             endpoint_without_path_params = endpoint_path_params_split[0]
@@ -223,7 +249,7 @@ class OpenAPI:
             for path_param in endpoint_path_params_split[1:]:
                 path_param_name = path_param[:-1] if path_param.endswith("/") else path_param
 
-                openapi_parameter_object.append(
+                openapi_path_object["parameters"].append(
                     {
                         "name": path_param_name,
                         "in": "path",
@@ -237,7 +263,7 @@ class OpenAPI:
             for query_param in query_params.__annotations__:
                 query_param_type = self.get_openapi_type(query_params.__annotations__[query_param])
 
-                openapi_parameter_object.append(
+                openapi_path_object["parameters"].append(
                     {
                         "name": query_param,
                         "in": "query",
@@ -246,16 +272,26 @@ class OpenAPI:
                     }
                 )
 
-        if not description:
-            description = "No description provided"
+        if request_body:
+            properties = {}
 
-        return endpoint_with_path_params_wrapped_in_braces, {
-            "summary": name,
-            "description": description,
-            "tags": tags,
-            "parameters": openapi_parameter_object,
-            "responses": {"200": {"description": "Successful Response", "content": {return_type: {"schema": {}}}}},
-        }
+            for body_item in request_body.__annotations__:
+                properties[body_item] = self.get_properties_object(body_item, request_body.__annotations__[body_item])
+
+            request_body_object = {
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": properties,
+                        }
+                    }
+                }
+            }
+
+            openapi_path_object["requestBody"] = request_body_object
+
+        return endpoint_with_path_params_wrapped_in_braces, openapi_path_object
 
     def get_openapi_type(self, typed_dict: TypedDict) -> str:
         """
@@ -279,6 +315,50 @@ class OpenAPI:
 
         # default to "string" if type is not found
         return "string"
+
+    def get_properties_object(self, parameter: str, param_type: Any) -> dict:
+        """
+        Get the properties object for request body
+
+        @param parameter: name of the parameter
+        @param param_type: Any the type to be inferred
+        @return: dict the properties object
+        """
+
+        properties = {
+            "title": parameter.capitalize(),
+        }
+
+        type_mapping = {
+            int: "integer",
+            str: "string",
+            bool: "boolean",
+            float: "number",
+            dict: "object",
+            list: "array",
+        }
+
+        for type_name in type_mapping:
+            if param_type is type_name:
+                properties["type"] = type_mapping[type_name]
+                return properties
+
+        # check for Optional type
+        if param_type.__module__ == "typing":
+            properties["anyOf"] = [{"type": self.get_openapi_type(param_type.__args__[0])}, {"type": "null"}]
+            return properties
+        # check for custom classes and TypedDicts
+        elif inspect.isclass(param_type):
+            properties["type"] = "object"
+
+            properties["properties"] = {}
+
+            for e in param_type.__annotations__:
+                properties["properties"][e] = self.get_properties_object(e, param_type.__annotations__[e])
+
+        properties["type"] = "object"
+
+        return properties
 
     def get_openapi_docs_page(self) -> FileResponse:
         """

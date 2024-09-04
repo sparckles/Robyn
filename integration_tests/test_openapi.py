@@ -54,3 +54,63 @@ def test_add_subrouter_paths():
     assert route_type in openapi_spec["paths"][endpoint]
     assert openapi_description == openapi_spec["paths"][endpoint][route_type]["description"]
     assert openapi_tags == openapi_spec["paths"][endpoint][route_type]["tags"]
+
+
+@pytest.mark.benchmark
+def test_openapi_request_body():
+    openapi_spec = get("/openapi.json").json()
+
+    assert isinstance(openapi_spec, dict)
+
+    route_type = "post"
+    endpoint = "/openapi_request_body"
+
+    assert endpoint in openapi_spec["paths"]
+    assert route_type in openapi_spec["paths"][endpoint]
+    assert "requestBody" in openapi_spec["paths"][endpoint][route_type]
+    assert "content" in openapi_spec["paths"][endpoint][route_type]["requestBody"]
+    assert "application/json" in openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]
+    assert "schema" in openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]["application/json"]
+    assert "properties" in openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]["application/json"]["schema"]
+
+    assert "name" in openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]["application/json"]["schema"]["properties"]
+    assert "description" in openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]["application/json"]["schema"]["properties"]
+    assert "price" in openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]["application/json"]["schema"]["properties"]
+    assert "tax" in openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]["application/json"]["schema"]["properties"]
+
+    assert "string" == openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]["application/json"]["schema"]["properties"]["description"]["type"]
+    assert "number" == openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]["application/json"]["schema"]["properties"]["price"]["type"]
+    assert "number" == openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]["application/json"]["schema"]["properties"]["tax"]["type"]
+
+    assert "object" == openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]["application/json"]["schema"]["properties"]["name"]["type"]
+
+    assert "first" in openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]["application/json"]["schema"]["properties"]["name"]["properties"]
+    assert "second" in openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]["application/json"]["schema"]["properties"]["name"]["properties"]
+    assert "initial" in openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]["application/json"]["schema"]["properties"]["name"]["properties"]
+
+    assert (
+        "object"
+        in openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]["application/json"]["schema"]["properties"]["name"]["properties"]["initial"][
+            "type"
+        ]
+    )
+
+    assert (
+        "is_present"
+        in openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]["application/json"]["schema"]["properties"]["name"]["properties"]["initial"][
+            "properties"
+        ]
+    )
+    assert (
+        "letter"
+        in openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]["application/json"]["schema"]["properties"]["name"]["properties"]["initial"][
+            "properties"
+        ]
+    )
+
+    assert {"type": "string"} in openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]["application/json"]["schema"]["properties"]["name"][
+        "properties"
+    ]["initial"]["properties"]["letter"]["anyOf"]
+    assert {"type": "null"} in openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]["application/json"]["schema"]["properties"]["name"][
+        "properties"
+    ]["initial"]["properties"]["letter"]["anyOf"]
