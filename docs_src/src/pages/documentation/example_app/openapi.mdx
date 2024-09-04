@@ -173,6 +173,62 @@ app.include_router(subrouter)
 
 </CodeGroup>
 
+## Other Specification Params
+
+We support all the params mentioned in the latest OpenAPI specifications (https://swagger.io/specification/). See an example of using request body below.
+
+<CodeGroup title="Request Body">
+
+```python {{ title: 'untyped' }}
+class Initial(TypedDict):
+    is_present: bool
+    letter: Optional[str]
+
+
+class FullName(TypedDict):
+    first: str
+    second: str
+    initial: Initial
+
+
+class CreateItemBody(TypedDict):
+    name: FullName
+    description: str
+    price: float
+    tax: float
+
+
+@app.post("/")
+def create_item(request, body=CreateItemBody):
+    return request.body
+```
+
+```python {{ title: 'typed' }}
+class Initial(TypedDict):
+    is_present: bool
+    letter: Optional[str]
+
+
+class FullName(TypedDict):
+    first: str
+    second: str
+    initial: Initial
+
+
+class CreateItemBody(TypedDict):
+    name: FullName
+    description: str
+    price: float
+    tax: float
+
+
+@app.post("/")
+def create_item(request: Request, body=CreateItemBody):
+    return request.body
+```
+
+</CodeGroup>
+
 With the reference documentation deployed and running smoothly, Batman had a powerful new tool at his disposal. The Robyn framework had provided him with the flexibility, scalability, and performance needed to create an effective crime-fighting application, giving him a technological edge in his ongoing battle to protect Gotham City.
 
 
