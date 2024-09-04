@@ -122,7 +122,7 @@ class Router(BaseRouter):
 
             handler_params = signature(handler).parameters
 
-            if not request or len(handler_params) == 1 and next(iter(handler_params)) is Request:
+            if not request or (len(handler_params) == 1 and next(iter(handler_params)) is Request):
                 return handler(*args, **kwargs)
 
             type_mapping = {
