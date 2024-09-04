@@ -166,14 +166,15 @@ class OpenAPI:
         signature = inspect.signature(handler)
         openapi_description = inspect.getdoc(handler) or ""
 
-        if signature and "query_params" in signature.parameters:
-            query_params = signature.parameters["query_params"].default
+        if signature:
+            if "query_params" in signature.parameters:
+                query_params = signature.parameters["query_params"].default
 
-            if query_params is Signature.empty:
-                query_params = None
+                if query_params is Signature.empty:
+                    query_params = None
 
-        if signature and "body" in signature.parameters:
-            request_body = signature.parameters["body"].default
+            if "body" in signature.parameters:
+                request_body = signature.parameters["body"].default
 
         return_annotation = signature.return_annotation
 
