@@ -23,5 +23,5 @@ Please ensure that:
 
 ## Pre-Commit Instructions:
 
-- [ ] Ensure that you have run the [pre-commit hooks](https://github.com/sansyrox/robyn#%EF%B8%8F-to-develop-locally) on your PR.
+- [ ] Ensure that you have run the [pre-commit hooks](https://github.com/sparckles/robyn#%EF%B8%8F-to-develop-locally) on your PR.
 
