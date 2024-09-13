@@ -5,7 +5,7 @@
 [![Twitter](https://badgen.net/badge/icon/twitter?icon=twitter&label)](https://twitter.com/Robyn_oss)
 [![Downloads](https://static.pepy.tech/personalized-badge/Robyn?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Downloads)](https://pepy.tech/project/Robyn)
 [![GitHub tag](https://img.shields.io/github/tag/sparckles/Robyn?include_prereleases=&sort=semver&color=black)](https://github.com/sparckles/Robyn/releases/)
-[![License](https://img.shields.io/badge/License-BSD_2.0-black)](#license)
+[![License](https://img.shields.io/badge/License-BSD_2.0-black)](https://github.com/sparckles/Robyn/blob/main/LICENSE)
 ![Python](https://img.shields.io/badge/Support-Version%20%E2%89%A5%203.8-brightgreen)
 
 [![view - Documentation](https://img.shields.io/badge/view-Documentation-blue?style=for-the-badge)](https://robyn.tech/documentation)

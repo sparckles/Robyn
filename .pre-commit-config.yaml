@@ -6,11 +6,5 @@ repos:
         args:
           - --fix
       - id: ruff-format
-
-  - repo: https://github.com/tcort/markdown-link-check
-    rev: v3.11.2
-    hooks:
-      - id: markdown-link-check
-        args: [-q]
 ci:
   autoupdate_schedule: weekly
