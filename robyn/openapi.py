@@ -4,6 +4,7 @@ from importlib import resources
 from inspect import Signature
 from typing import Callable, Dict, List, Optional, TypedDict, Any
 
+from robyn import Response
 from robyn.responses import FileResponse, html
 
 
@@ -291,11 +292,13 @@ class OpenAPI:
             openapi_path_object["requestBody"] = request_body_object
 
         response_schema = {}
+        response_type = "text/plain"
 
-        if return_annotation:
+        if return_annotation and return_annotation is not Response:
+            response_type = "application/json"
             response_schema = self.get_schema_object("response object", return_annotation)
 
-        openapi_path_object["responses"] = {"200": {"description": "Successful Response", "content": {"application/json": {"schema": response_schema}}}}
+        openapi_path_object["responses"] = {"200": {"description": "Successful Response", "content": {response_type: {"schema": response_schema}}}}
 
         return endpoint_with_path_params_wrapped_in_braces, openapi_path_object
 

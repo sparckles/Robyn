@@ -1,3 +1,4 @@
+import typing
 from dataclasses import dataclass
 from typing import Optional
 
@@ -16,3 +17,7 @@ class Directory:
             self.show_files_listing,
             self.index_file,
         ]
+
+
+class JSONResponse(typing.TypedDict):
+    pass
