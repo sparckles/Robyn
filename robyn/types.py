@@ -1,6 +1,5 @@
-import typing as t
 from dataclasses import dataclass
-from typing import Dict, Optional, Union
+from typing import Dict, Optional, Union, NewType
 
 from robyn.robyn import Identity, Url
 
@@ -21,11 +20,11 @@ class Directory:
         ]
 
 
-PathParams = t.NewType("PathParams", Dict[str, str])
-RequestBody = t.NewType("RequestBody", Union[str, bytes])
-RequestMethod = t.NewType("RequestMethod", str)
-RequestURL = t.NewType("RequestURL", Url)
-FormData = t.NewType("FormData", Dict[str, str])
-RequestFiles = t.NewType("RequestFiles", Dict[str, bytes])
-RequestIP = t.NewType("RequestIP", Optional[str])
-RequestIdentity = t.NewType("RequestIdentity", Optional[Identity])
+PathParams = NewType("PathParams", Dict[str, str])
+RequestBody = NewType("RequestBody", Union[str, bytes])
+RequestMethod = NewType("RequestMethod", str)
+RequestURL = NewType("RequestURL", Url)
+FormData = NewType("FormData", Dict[str, str])
+RequestFiles = NewType("RequestFiles", Dict[str, bytes])
+RequestIP = NewType("RequestIP", Optional[str])
+RequestIdentity = NewType("RequestIdentity", Optional[Identity])
