@@ -1,6 +1,5 @@
-import typing
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, TypedDict
 
 
 @dataclass
@@ -19,5 +18,5 @@ class Directory:
         ]
 
 
-class JSONResponse(typing.TypedDict):
+class JSONResponse(TypedDict):
     pass
