@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, TypedDict
 
 
 @dataclass
@@ -16,3 +16,7 @@ class Directory:
             self.show_files_listing,
             self.index_file,
         ]
+
+
+class JSONResponse(TypedDict):
+    pass
