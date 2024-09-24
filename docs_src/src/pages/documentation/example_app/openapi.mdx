@@ -207,7 +207,7 @@ class CreateResponse(JSONResponse):
 
 @app.post("/")
 def create_item(request: Request, body=CreateItemBody) -> CreateResponse:
-    return CreateResponse(success=True, items_changed=2)
+    return {"success": True, "items_changed": 2}
 ```
 
 ```python {{ title: 'typed' }}
