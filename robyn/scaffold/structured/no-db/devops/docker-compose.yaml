@@ -1,0 +1,11 @@
+version: '3'
+services:
+
+  service:
+    image: service # build an image with this tag
+    container_name: "service"
+    env_file:
+    - ../config.env
+    network_mode: host
+
+
