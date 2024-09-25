@@ -13,7 +13,7 @@ from robyn.dependency_injection import DependencyMap
 from robyn.jsonify import jsonify
 from robyn.responses import FileResponse
 from robyn.robyn import FunctionInfo, Headers, HttpMethod, MiddlewareType, QueryParams, Request, Response
-from robyn.types import FormData, PathParams, RequestBody, RequestFiles, RequestIdentity, RequestIP, RequestMethod, RequestURL
+from robyn.types import FormData, PathParams, RequestBody, RequestFiles, RequestIdentity, RequestIP, RequestMethod, RequestURL, QueryParam
 from robyn.ws import WebSocket
 
 _logger = logging.getLogger(__name__)
@@ -149,6 +149,10 @@ class Router(BaseRouter):
                         type_filtered_params[handler_param_name] = request
                     elif handler_param_type is type_mapping[type_name]:
                         type_filtered_params[handler_param_name] = getattr(request, type_name)
+                    elif issubclass(handler_param_type, RequestBody):
+                        type_filtered_params[handler_param_name] = getattr(request, "body")
+                    elif issubclass(handler_param_type, QueryParam):
+                        type_filtered_params[handler_param_name] = getattr(request, "query_params")
 
             request_components = {
                 "r": request,
@@ -175,7 +179,7 @@ class Router(BaseRouter):
 
             if len(filtered_params) != len(handler_params):
                 invalid_args = set(handler_params) - set(filtered_params)
-                raise SyntaxError(f"Unexpected request params found: ${invalid_args}")
+                raise SyntaxError(f"Unexpected request params found: {invalid_args}")
 
             return handler(**filtered_params)
 

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, Optional, Union, NewType, TypedDict
+from typing import Dict, Optional, NewType, TypedDict
 
 from robyn.robyn import Identity, Url
 
@@ -21,7 +21,6 @@ class Directory:
 
 
 PathParams = NewType("PathParams", Dict[str, str])
-RequestBody = NewType("RequestBody", Union[str, bytes])
 RequestMethod = NewType("RequestMethod", str)
 RequestURL = NewType("RequestURL", Url)
 FormData = NewType("FormData", Dict[str, str])
@@ -31,4 +30,12 @@ RequestIdentity = NewType("RequestIdentity", Optional[Identity])
 
 
 class JSONResponse(TypedDict):
+    pass
+
+
+class RequestBody:
+    pass
+
+
+class QueryParam:
     pass
