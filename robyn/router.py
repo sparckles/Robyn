@@ -149,10 +149,11 @@ class Router(BaseRouter):
                         type_filtered_params[handler_param_name] = request
                     elif handler_param_type is type_mapping[type_name]:
                         type_filtered_params[handler_param_name] = getattr(request, type_name)
-                    elif issubclass(handler_param_type, RequestBody):
-                        type_filtered_params[handler_param_name] = getattr(request, "body")
-                    elif issubclass(handler_param_type, QueryParam):
-                        type_filtered_params[handler_param_name] = getattr(request, "query_params")
+                    elif inspect.isclass(handler_param_type):
+                        if issubclass(handler_param_type, RequestBody):
+                            type_filtered_params[handler_param_name] = getattr(request, "body")
+                        elif issubclass(handler_param_type, QueryParam):
+                            type_filtered_params[handler_param_name] = getattr(request, "query_params")
 
             request_components = {
                 "r": request,
