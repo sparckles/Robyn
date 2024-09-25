@@ -1,7 +1,7 @@
 import os
 import pathlib
 from collections import defaultdict
-from typing import Optional, TypedDict
+from typing import Optional
 
 from integration_tests.subroutes import di_subrouter, sub_router
 from integration_tests.views import AsyncView, SyncView
@@ -9,7 +9,7 @@ from robyn import Headers, Request, Response, Robyn, WebSocket, WebSocketConnect
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.robyn import QueryParams
 from robyn.templating import JinjaTemplate
-from robyn.types import PathParams, RequestBody, RequestMethod, RequestURL
+from robyn.types import PathParams, RequestBody, RequestMethod, RequestURL, JSONResponse
 
 app = Robyn(__file__)
 websocket = WebSocket(app, "/web_socket")
@@ -1052,27 +1052,32 @@ def sample_openapi_endpoint():
     return 200
 
 
-class Initial(TypedDict):
+class Initial(RequestBody):
     is_present: bool
     letter: Optional[str]
 
 
-class FullName(TypedDict):
+class FullName(RequestBody):
     first: str
     second: str
     initial: Initial
 
 
-class CreateItemBody(TypedDict):
+class CreateItemBody(RequestBody):
     name: FullName
     description: str
     price: float
     tax: float
 
 
+class CreateItemResponse(JSONResponse):
+    success: bool
+    items_changed: int
+
+
 @app.post("/openapi_request_body")
-def create_item(request, body=CreateItemBody) -> CreateItemBody:
-    return request.body
+def create_item(request, body: CreateItemBody) -> CreateItemResponse:
+    return CreateItemResponse(success=True, items_changed=2)
 
 
 def main():
