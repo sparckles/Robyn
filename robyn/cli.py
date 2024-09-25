@@ -37,11 +37,8 @@ def create_robyn_app():
         {
             "type": "list",
             "name": "scaffold_type",
-            "choices": [
-                Choice("simple", name="Simple"),
-                Choice("structured", name="Structured")
-            ],
-            "message": "Please choose if you'd like the scaffold to be a simple starter kit or an opinionated structure"
+            "choices": [Choice("simple", name="Simple"), Choice("structured", name="Structured")],
+            "message": "Please choose if you'd like the scaffold to be a simple starter kit or an opinionated structure",
         },
     ]
     result = prompt(questions=questions)
@@ -50,40 +47,44 @@ def create_robyn_app():
     scaffold_type: str = str(result["scaffold_type"])
     if scaffold_type == "simple":
         scaffold_type: str = "simple"
-        result = prompt(questions=[
-            {
-                "type": "list",
-                "message": "Please select project type (Mongo/Postgres/Sqlalchemy/Prisma): ",
-                "choices": [
-                    Choice("no-db", name="No DB"),
-                    Choice("sqlite", name="Sqlite"),
-                    Choice("postgres", name="Postgres"),
-                    Choice("mongo", name="MongoDB"),
-                    Choice("sqlalchemy", name="SqlAlchemy"),
-                    Choice("prisma", name="Prisma"),
-                    Choice("sqlmodel", name="SQLModel"),
-                ],
-                "default": Choice("no-db", name="No DB"),
-                "name": "project_type",
-            }
-        ])
+        result = prompt(
+            questions=[
+                {
+                    "type": "list",
+                    "message": "Please select project type (Mongo/Postgres/Sqlalchemy/Prisma): ",
+                    "choices": [
+                        Choice("no-db", name="No DB"),
+                        Choice("sqlite", name="Sqlite"),
+                        Choice("postgres", name="Postgres"),
+                        Choice("mongo", name="MongoDB"),
+                        Choice("sqlalchemy", name="SqlAlchemy"),
+                        Choice("prisma", name="Prisma"),
+                        Choice("sqlmodel", name="SQLModel"),
+                    ],
+                    "default": Choice("no-db", name="No DB"),
+                    "name": "project_type",
+                }
+            ]
+        )
         project_type = str(result["project_type"])
     else:
-        result = prompt(questions=[
-            {
-                "type": "list",
-                "message": "Please select project type (Mongo/Postgres/Sqlalchemy/Prisma): ",
-                "choices": [
-                    Choice("no-db", name="No DB"),
-                    Choice("sqlalchemy", name="SqlAlchemy"),
-                ],
-                "default": Choice("no-db", name="No DB"),
-                "name": "project_type",
-            }
-        ])
+        result = prompt(
+            questions=[
+                {
+                    "type": "list",
+                    "message": "Please select project type (Mongo/Postgres/Sqlalchemy/Prisma): ",
+                    "choices": [
+                        Choice("no-db", name="No DB"),
+                        Choice("sqlalchemy", name="SqlAlchemy"),
+                    ],
+                    "default": Choice("no-db", name="No DB"),
+                    "name": "project_type",
+                }
+            ]
+        )
         project_type = str(result["project_type"])
 
-    final_project_dir_path = (CURRENT_WORKING_DIR/project_dir_path).resolve()
+    final_project_dir_path = (CURRENT_WORKING_DIR / project_dir_path).resolve()
 
     print(f"Creating a new Robyn project '{final_project_dir_path}'...")
 

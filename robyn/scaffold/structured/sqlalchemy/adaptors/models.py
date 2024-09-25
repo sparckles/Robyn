@@ -1,9 +1,11 @@
 from sqlalchemy import String, Integer, Boolean
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
+
 # SQLAlchemy Base class for declarative mapping
 class Base(DeclarativeBase):
     pass
+
 
 # SQLAlchemy 2.0 model definition
 class User(Base):

@@ -3,7 +3,9 @@ from sqlalchemy.orm import sessionmaker
 from conf import settings
 
 import logging
+
 logger = logging.getLogger(__name__)
+
 
 def get_pool():
     dsn = settings.database_url
@@ -14,6 +16,6 @@ def get_pool():
         max_overflow=settings.db_pool_max_overflow,
         pool_timeout=settings.db_pool_timeout,
         pool_recycle=settings.db_pool_recycle,
-        echo=settings.db_pool_recycle
+        echo=settings.db_pool_recycle,
     )
     return sessionmaker(bind=engine)

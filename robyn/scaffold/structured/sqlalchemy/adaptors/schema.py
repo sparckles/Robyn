@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+
 class UserRead(BaseModel):
     id: int
     username: str
@@ -7,7 +8,8 @@ class UserRead(BaseModel):
     is_superuser: bool
 
     class Config:
-        orm_mode = True  
+        orm_mode = True
+
 
 # Pydantic model for creating/updating a user
 class UserCreate(BaseModel):

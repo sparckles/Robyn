@@ -4,13 +4,10 @@ router = SubRouter("/sample")
 
 
 class SampleHandlers:
-
     @router.post("/one")
     @staticmethod
-    def one():
-        ...
+    def one(): ...
 
     @router.get("/two")
     @staticmethod
-    def two():
-        ...
+    def two(): ...
