@@ -1,8 +1,7 @@
 from dataclasses import dataclass
-from typing import Dict, Optional, Union, NewType
+from typing import Dict, Optional, Union, NewType, TypedDict
 
 from robyn.robyn import Identity, Url
-
 
 @dataclass
 class Directory:
@@ -19,7 +18,6 @@ class Directory:
             self.index_file,
         ]
 
-
 PathParams = NewType("PathParams", Dict[str, str])
 RequestBody = NewType("RequestBody", Union[str, bytes])
 RequestMethod = NewType("RequestMethod", str)
@@ -28,3 +26,6 @@ FormData = NewType("FormData", Dict[str, str])
 RequestFiles = NewType("RequestFiles", Dict[str, bytes])
 RequestIP = NewType("RequestIP", Optional[str])
 RequestIdentity = NewType("RequestIdentity", Optional[Identity])
+
+class JSONResponse(TypedDict):
+    pass

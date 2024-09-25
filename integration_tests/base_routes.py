@@ -1071,7 +1071,7 @@ class CreateItemBody(TypedDict):
 
 
 @app.post("/openapi_request_body")
-def create_item(request, body=CreateItemBody):
+def create_item(request, body=CreateItemBody) -> CreateItemBody:
     return request.body
 
 

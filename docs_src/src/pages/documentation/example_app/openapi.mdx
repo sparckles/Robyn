@@ -175,11 +175,13 @@ app.include_router(subrouter)
 
 ## Other Specification Params
 
-We support all the params mentioned in the latest OpenAPI specifications (https://swagger.io/specification/). See an example of using request body below.
+We support all the params mentioned in the latest OpenAPI specifications (https://swagger.io/specification/). See an example using request & response bodies below:
 
-<CodeGroup title="Request Body">
+<CodeGroup title="Request & Response Body">
 
 ```python {{ title: 'untyped' }}
+from robyn.types import JSONResponse
+
 class Initial(TypedDict):
     is_present: bool
     letter: Optional[str]
@@ -198,12 +200,19 @@ class CreateItemBody(TypedDict):
     tax: float
 
 
+class CreateResponse(JSONResponse):
+    success: bool
+    items_changed: int
+
+
 @app.post("/")
-def create_item(request, body=CreateItemBody):
-    return request.body
+def create_item(request: Request, body=CreateItemBody) -> CreateResponse:
+    return {"success": True, "items_changed": 2}
 ```
 
 ```python {{ title: 'typed' }}
+from robyn.types import JSONResponse
+
 class Initial(TypedDict):
     is_present: bool
     letter: Optional[str]
@@ -221,10 +230,14 @@ class CreateItemBody(TypedDict):
     price: float
     tax: float
 
+class CreateResponse(JSONResponse):
+    success: bool
+    items_changed: int
+
 
 @app.post("/")
-def create_item(request: Request, body=CreateItemBody):
-    return request.body
+def create_item(request: Request, body=CreateItemBody) -> CreateResponse:
+    return CreateResponse(success=True, items_changed=2)
 ```
 
 </CodeGroup>

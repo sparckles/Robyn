@@ -4,6 +4,7 @@ from importlib import resources
 from inspect import Signature
 from typing import Callable, Dict, List, Optional, TypedDict, Any
 
+from robyn import Response
 from robyn.responses import FileResponse, html
 
 
@@ -162,6 +163,7 @@ class OpenAPI:
 
         query_params = None
         request_body = None
+        return_annotation = None
 
         signature = inspect.signature(handler)
         openapi_description = inspect.getdoc(handler) or ""
@@ -179,11 +181,12 @@ class OpenAPI:
                 if request_body is Signature.empty:
                     request_body = None
 
-        return_annotation = signature.return_annotation
+            if signature.return_annotation is not Signature.empty:
+                return_annotation = signature.return_annotation
 
-        return_type = "text/plain" if return_annotation == Signature.empty or return_annotation is str else "application/json"
-
-        modified_endpoint, path_obj = self.get_path_obj(endpoint, openapi_name, openapi_description, openapi_tags, query_params, request_body, return_type)
+        modified_endpoint, path_obj = self.get_path_obj(
+            endpoint, openapi_name, openapi_description, openapi_tags, query_params, request_body, return_annotation
+        )
 
         if modified_endpoint not in self.openapi_spec["paths"]:
             self.openapi_spec["paths"][modified_endpoint] = {}
@@ -208,7 +211,7 @@ class OpenAPI:
         tags: List[str],
         query_params: Optional[TypedDict],
         request_body: Optional[TypedDict],
-        return_type: str,
+        return_annotation: Optional[TypedDict],
     ) -> (str, dict):
         """
         Get the "path" openapi object according to spec
@@ -219,7 +222,7 @@ class OpenAPI:
         @param tags: List[str] for grouping of endpoints
         @param query_params: Optional[TypedDict] query params for the function
         @param request_body: Optional[TypedDict] request body for the function
-        @param return_type: str return type of the endpoint handler
+        @param return_annotation: Optional[TypedDict] return type of the endpoint handler
 
         @return: (str, dict) a tuple containing the endpoint with path params wrapped in braces and the "path" openapi object
         according to spec
@@ -233,7 +236,6 @@ class OpenAPI:
             "description": description,
             "parameters": [],
             "tags": tags,
-            "responses": {"200": {"description": "Successful Response", "content": {return_type: {"schema": {}}}}},
         }
 
         # robyn has paths like /:url/:etc whereas openapi requires path like /{url}/{path}
@@ -280,7 +282,7 @@ class OpenAPI:
             properties = {}
 
             for body_item in request_body.__annotations__:
-                properties[body_item] = self.get_properties_object(body_item, request_body.__annotations__[body_item])
+                properties[body_item] = self.get_schema_object(body_item, request_body.__annotations__[body_item])
 
             request_body_object = {
                 "content": {
@@ -294,6 +296,15 @@ class OpenAPI:
             }
 
             openapi_path_object["requestBody"] = request_body_object
+
+        response_schema = {}
+        response_type = "text/plain"
+
+        if return_annotation and return_annotation is not Response:
+            response_type = "application/json"
+            response_schema = self.get_schema_object("response object", return_annotation)
+
+        openapi_path_object["responses"] = {"200": {"description": "Successful Response", "content": {response_type: {"schema": response_schema}}}}
 
         return endpoint_with_path_params_wrapped_in_braces, openapi_path_object
 
@@ -320,9 +331,9 @@ class OpenAPI:
         # default to "string" if type is not found
         return "string"
 
-    def get_properties_object(self, parameter: str, param_type: Any) -> dict:
+    def get_schema_object(self, parameter: str, param_type: Any) -> dict:
         """
-        Get the properties object for request body
+        Get the schema object for request/response body
 
         @param parameter: name of the parameter
         @param param_type: Any the type to be inferred
@@ -358,7 +369,7 @@ class OpenAPI:
             properties["properties"] = {}
 
             for e in param_type.__annotations__:
-                properties["properties"][e] = self.get_properties_object(e, param_type.__annotations__[e])
+                properties["properties"][e] = self.get_schema_object(e, param_type.__annotations__[e])
 
         properties["type"] = "object"
 

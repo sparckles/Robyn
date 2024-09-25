@@ -5,7 +5,7 @@ authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 edition = "2021"
 description = "A web server that is fast!"
 license = "BSD License (BSD)"
-homepage = "https://github.com/sansyrox/robyn"
+homepage = "https://github.com/sparckles/robyn"
 readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
