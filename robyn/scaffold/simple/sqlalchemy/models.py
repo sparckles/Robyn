@@ -17,5 +17,3 @@ class User(Base):
     is_superuser = Column(Boolean, default=False)
 
 
-if __name__ == "__main__":
-    Base.metadata.create_all(bind=engine)
