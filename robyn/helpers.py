@@ -18,9 +18,7 @@ logger = logging.getLogger(__name__)
 def discover_routes(handler_path: str = "api.handlers") -> Robyn:
     mux: Robyn = Robyn(__file__)
     package = importlib.import_module(handler_path)
-    for _, module_name, _ in pkgutil.iter_modules(
-        package.__path__, package.__name__ + "."
-    ):
+    for _, module_name, _ in pkgutil.iter_modules(package.__path__, package.__name__ + "."):
         module = importlib.import_module(module_name)
         logger.info(f"member: {module}")
         mux.include_router(module.router)
@@ -28,14 +26,8 @@ def discover_routes(handler_path: str = "api.handlers") -> Robyn:
 
 
 class AcceptArrayEnvsSource(EnvSettingsSource):
-    def prepare_field_value(
-        self, field_name: str, field: Any, value: Any, value_is_complex: bool
-    ) -> Any:
-        if (
-            isinstance(field.annotation, type)
-            and issubclass(field.annotation, list)
-            and isinstance(value, str)
-        ):
+    def prepare_field_value(self, field_name: str, field: Any, value: Any, value_is_complex: bool) -> Any:
+        if isinstance(field.annotation, type) and issubclass(field.annotation, list) and isinstance(value, str):
             return [x.strip() for x in value.split(",") if x]
         return value
 
