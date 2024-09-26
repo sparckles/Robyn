@@ -18,4 +18,4 @@ def get_pool():
         pool_recycle=settings.db_pool_recycle,
         echo=settings.db_pool_recycle,
     )
-    return sessionmaker(bind=engine)
+    return sessionmaker(bind=engine)()
