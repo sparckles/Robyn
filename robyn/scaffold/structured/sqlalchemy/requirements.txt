@@ -1,4 +1,5 @@
 robyn
-SQLAlchemy==2.0.35
+SQLAlchemy~=2.0.35
+alembic~=1.13.3
 pydantic~=2.7.4
 pydantic-settings~=2.2.1
