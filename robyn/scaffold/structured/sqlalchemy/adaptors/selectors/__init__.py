@@ -5,12 +5,7 @@ from pydantic import BaseModel
 
 class Mutator(ABC):
     @abstractmethod
-    def retrieve(self, **kwargs):
-        ...
+    def retrieve(self, **kwargs): ...
 
     @abstractmethod
-    def list(self, **kwargs):
-        ...
-    
-
-
+    def list(self, **kwargs): ...
