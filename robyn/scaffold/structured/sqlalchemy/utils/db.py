@@ -16,6 +16,6 @@ def get_pool():
         max_overflow=settings.db_pool_max_overflow,
         pool_timeout=settings.db_pool_timeout,
         pool_recycle=settings.db_pool_recycle,
-        echo=settings.db_pool_recycle,
+        echo=settings.db_pool_echo,
     )
     return sessionmaker(bind=engine)()

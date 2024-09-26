@@ -1,5 +1,7 @@
 from logging.config import fileConfig
 
+from sqlalchemy import engine_from_config
+from sqlalchemy import pool
 
 from alembic import context
 
@@ -19,8 +21,7 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 from adaptors import models
-
-target_metadata = models.Base.metadata
+target_metadata = models.Base.metadata 
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -59,9 +60,10 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    session = get_pool()
-    with session.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+    with get_pool() as session:
+        context.configure(
+            connection=session.connection(), target_metadata=target_metadata
+        )
         with context.begin_transaction():
             context.run_migrations()
 
