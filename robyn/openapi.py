@@ -1,4 +1,5 @@
 import inspect
+import typing
 from dataclasses import asdict, dataclass, field
 from importlib import resources
 from inspect import Signature
@@ -277,8 +278,10 @@ class OpenAPI:
                 endpoint_with_path_params_wrapped_in_braces += "/{" + path_param_name + "}"
 
         if query_params:
-            for query_param in query_params.__annotations__:
-                query_param_type = self.get_openapi_type(query_params.__annotations__[query_param])
+            query_param_annotations = query_params.__annotations__ if query_params is TypedDict else typing.get_type_hints(query_params)
+
+            for query_param in query_param_annotations:
+                query_param_type = self.get_openapi_type(query_param_annotations[query_param])
 
                 openapi_path_object["parameters"].append(
                     {
@@ -292,8 +295,10 @@ class OpenAPI:
         if request_body:
             properties = {}
 
-            for body_item in request_body.__annotations__:
-                properties[body_item] = self.get_schema_object(body_item, request_body.__annotations__[body_item])
+            request_body_annotations = request_body.__annotations__ if request_body is TypedDict else typing.get_type_hints(request_body)
+
+            for body_item in request_body_annotations:
+                properties[body_item] = self.get_schema_object(body_item, request_body_annotations[body_item])
 
             request_body_object = {
                 "content": {
