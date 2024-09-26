@@ -1,5 +1,3 @@
 from user import Base as user
 
-metadata = [
-    user.metadata
-]
+metadata = [user.metadata]
