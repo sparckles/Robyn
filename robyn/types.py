@@ -37,5 +37,5 @@ class RequestBody:
     pass
 
 
-class QueryParam:
+class QueryParams:
     pass
