@@ -99,7 +99,7 @@ def create_robyn_app():
         if scaffold_type == "simple":
             os.remove(f"{final_project_dir_path}/Dockerfile")
         else:
-            shutil.rmtree(f"{final_project_dir_path}/devops")
+            shutil.rmtree(f"{final_project_dir_path}/devops", ignore_errors=True)
 
     print(f"New Robyn project created in '{final_project_dir_path}' ")
 
