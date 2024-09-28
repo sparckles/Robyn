@@ -131,4 +131,7 @@ def run():
         print("Starting dev server...")
         start_dev_server(config, config.file_path)
     else:
-        start_app_normally(config)
+        try:
+            start_app_normally(config)
+        except KeyboardInterrupt:
+            pass
