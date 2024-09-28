@@ -9,7 +9,7 @@ from robyn import Headers, Request, Response, Robyn, WebSocket, WebSocketConnect
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.robyn import QueryParams
 from robyn.templating import JinjaTemplate
-from robyn.types import PathParams, RequestBody, RequestMethod, RequestURL, JSONResponse
+from robyn.types import JSONResponse, PathParams, RequestBody, RequestMethod, RequestURL
 
 app = Robyn(__file__)
 websocket = WebSocket(app, "/web_socket")

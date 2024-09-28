@@ -3,11 +3,11 @@ import typing
 from dataclasses import asdict, dataclass, field
 from importlib import resources
 from inspect import Signature
-from typing import Callable, Dict, List, Optional, TypedDict, Any
+from typing import Any, Callable, Dict, List, Optional, TypedDict
 
 from robyn import Response
 from robyn.responses import FileResponse, html
-from robyn.types import RequestBody, QueryParam
+from robyn.types import QueryParam, RequestBody
 
 
 @dataclass

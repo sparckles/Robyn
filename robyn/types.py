@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, Optional, NewType, TypedDict
+from typing import Dict, NewType, Optional, TypedDict
 
 from robyn.robyn import Identity, Url
 
