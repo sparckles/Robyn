@@ -149,3 +149,21 @@ def test_openapi_response_body():
         "integer"
         == openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["items_changed"]["type"]
     )
+
+
+@pytest.mark.benchmark
+def test_openapi_query_params():
+    openapi_spec = get("/openapi.json").json()
+
+    assert isinstance(openapi_spec, dict)
+
+    route_type = "post"
+    endpoint = "/openapi_request_body"
+
+    assert endpoint in openapi_spec["paths"]
+    assert route_type in openapi_spec["paths"][endpoint]
+    assert "parameters" in openapi_spec["paths"][endpoint][route_type]
+
+    assert "required" == openapi_spec["paths"][endpoint][route_type]["parameters"][0]["name"]
+    assert "query" == openapi_spec["paths"][endpoint][route_type]["parameters"][0]["in"]
+    assert {"type": "boolean"} == openapi_spec["paths"][endpoint][route_type]["parameters"][0]["schema"]

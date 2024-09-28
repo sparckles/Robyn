@@ -9,7 +9,7 @@ from robyn import Headers, Request, Response, Robyn, WebSocket, WebSocketConnect
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.robyn import QueryParams
 from robyn.templating import JinjaTemplate
-from robyn.types import JSONResponse, PathParams, RequestBody, RequestMethod, RequestURL
+from robyn.types import JSONResponse, PathParams, RequestBody, RequestMethod, RequestURL, RequestQuery
 
 app = Robyn(__file__)
 websocket = WebSocket(app, "/web_socket")
@@ -1075,8 +1075,12 @@ class CreateItemResponse(JSONResponse):
     items_changed: int
 
 
+class CreateItemQueryParams(RequestQuery):
+    required: bool
+
+
 @app.post("/openapi_request_body")
-def create_item(request, body: CreateItemBody) -> CreateItemResponse:
+def create_item(request, body: CreateItemBody, query: CreateItemQueryParams) -> CreateItemResponse:
     return CreateItemResponse(success=True, items_changed=2)
 
 
