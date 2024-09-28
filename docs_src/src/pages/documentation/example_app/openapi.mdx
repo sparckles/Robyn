@@ -19,13 +19,13 @@ python app.py --disable-openapi
 
 ## How to use?
 
-- Query Params: The typing for query params can be added as `def get(r: Request, query_params=GetRequestParams)` where `GetRequestParams` is a subclass of `QueryParams`
+- Query Params: The typing for query params can be added as `def get(r: Request, query_params=GetRequestParams)` where `GetRequestParams` is a subclass of `RequestQuery`
 - Path Params are defaulted to string type (ref: https://en.wikipedia.org/wiki/Query_string)
 
 <CodeGroup title="Basic App">
 
 ```python {{ title: 'untyped' }}
-from robyn.types import RequestBody, QueryParams
+from robyn.types import RequestBody, RequestQuery
 
 from robyn import Robyn, OpenAPI
 from robyn.openapi import OpenAPIInfo, Contact, License, ExternalDocumentation, Components
@@ -40,7 +40,7 @@ async def welcome():
     return "hi"
 
 
-class GetRequestParams(QueryParams):
+class GetRequestParams(RequestQuery):
     appointment_id: str
     year: int
 
@@ -62,7 +62,7 @@ if __name__ == "__main__":
 ```
 
 ```python {{ title: 'typed' }}
-from robyn.types import RequestBody, QueryParams
+from robyn.types import RequestBody, RequestQuery
 
 from robyn import Robyn, OpenAPI, Request
 from robyn.openapi import OpenAPIInfo, Contact, License, ExternalDocumentation, Components
@@ -76,7 +76,7 @@ async def welcome():
     return "hi"
 
 
-class GetRequestParams(QueryParams):
+class GetRequestParams(RequestQuery):
     appointment_id: str
     year: int
 
@@ -104,7 +104,7 @@ if __name__ == "__main__":
 <CodeGroup title="Subrouters">
 
 ```python {{ title: 'untyped' }}
-from robyn.types import QueryParams
+from robyn.types import RequestQuery
 
 from robyn import SubRouter
 
@@ -117,7 +117,7 @@ async def subrouter_welcome():
     return "hiiiiii subrouter"
 
 
-class SubRouterGetRequestParams(QueryParams):
+class SubRouterGetRequestParams(RequestQuery):
     _id: int
     value: str
 
@@ -138,7 +138,7 @@ app.include_router(subrouter)
 ```
 
 ```python {{ title: 'typed' }}
-from robyn.types import QueryParams
+from robyn.types import RequestQuery
 
 from robyn import Request, SubRouter
 
@@ -151,7 +151,7 @@ async def subrouter_welcome():
     return "hiiiiii subrouter"
 
 
-class SubRouterGetRequestParams(QueryParams):
+class SubRouterGetRequestParams(RequestQuery):
     _id: int
     value: str
 
