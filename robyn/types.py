@@ -45,7 +45,7 @@ class RequestBody:
     pass
 
 
-class QueryParams:
+class RequestQuery:
     """
     A base class to override to implement query params type annotations in openapi
     """

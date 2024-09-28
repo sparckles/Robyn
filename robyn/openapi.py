@@ -7,7 +7,7 @@ from typing import Any, Callable, Dict, List, Optional, TypedDict
 
 from robyn import Response
 from robyn.responses import FileResponse, html
-from robyn.types import QueryParam, RequestBody
+from robyn.types import RequestQuery, RequestBody
 
 
 @dataclass
@@ -190,7 +190,7 @@ class OpenAPI:
                 if inspect.isclass(param_annotation):
                     if issubclass(param_annotation, RequestBody):
                         request_body = param_annotation
-                    elif issubclass(param_annotation, QueryParam):
+                    elif issubclass(param_annotation, RequestQuery):
                         query_params = param_annotation
 
             if signature.return_annotation is not Signature.empty:
