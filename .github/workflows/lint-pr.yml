@@ -21,4 +21,3 @@ jobs:
       run: |
         ruff check .
         isort --check-only --diff .
-        black --check --diff .
