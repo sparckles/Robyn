@@ -122,14 +122,10 @@ def start_dev_server(config: Config, file_path: Optional[str] = None):
 
 
 def start_app_normally(config: Config):
-    # Parsing the known and unknown arguments
-    known_arguments, unknown_args = config.parser.parse_known_args()
+    command = [sys.executable]
 
-    # Convert known arguments to a list of strings suitable for subprocess.run
-    known_args_list = [f"{key}={value}" for key, value in vars(known_arguments).items() if value is not None]
-
-    # Combine the python executable, unknown arguments, and known arguments
-    command = [sys.executable, *unknown_args, *known_args_list]
+    for arg in sys.argv[1:]:
+        command.append(arg)
 
     # Run the subprocess
     subprocess.run(command, start_new_session=False)
