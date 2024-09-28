@@ -18,6 +18,7 @@ def test_create_robyn_app_simple():
                 mock_makedirs.assert_called_once()
                 mock_copytree.assert_called_once()
 
+
 def test_create_robyn_app_structured():
     with patch("robyn.cli.prompt") as mock_prompt:
         mock_prompt.return_value = {
@@ -31,7 +32,6 @@ def test_create_robyn_app_structured():
                 create_robyn_app()
                 mock_makedirs.assert_called_once()
                 mock_copytree.assert_called_once()
-
 
 
 def test_docs():
