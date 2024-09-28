@@ -108,12 +108,14 @@ pub async fn execute_event_handler(
         if function.is_async {
             debug!("Startup event handler async");
             Python::with_gil(|py| {
-                pyo3_asyncio::into_future_with_locals(
-                    task_locals,
-                    function.handler.as_ref(py).call0()?,
+                pyo3_asyncio::tokio::run_until_complete(
+                    task_locals.event_loop(py),
+                    pyo3_asyncio::into_future_with_locals(
+                        task_locals,
+                        function.handler.as_ref(py).call0()?,
+                    ).unwrap(),
                 )
-            })?
-            .await?;
+            })?;
         } else {
             debug!("Startup event handler");
             Python::with_gil(|py| function.handler.call0(py))?;
