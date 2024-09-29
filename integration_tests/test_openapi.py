@@ -114,3 +114,78 @@ def test_openapi_request_body():
     assert {"type": "null"} in openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]["application/json"]["schema"]["properties"]["name"][
         "properties"
     ]["initial"]["properties"]["letter"]["anyOf"]
+
+
+@pytest.mark.benchmark
+def test_openapi_response_body():
+    openapi_spec = get("/openapi.json").json()
+
+    assert isinstance(openapi_spec, dict)
+
+    route_type = "post"
+    endpoint = "/openapi_request_body"
+
+    assert endpoint in openapi_spec["paths"]
+    assert route_type in openapi_spec["paths"][endpoint]
+    assert "responses" in openapi_spec["paths"][endpoint][route_type]
+    assert "200" in openapi_spec["paths"][endpoint][route_type]["responses"]
+
+    assert openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["description"] == "Successful Response"
+
+    assert "content" in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]
+
+    assert "application/json" in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]
+    assert "schema" in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]
+    assert "properties" in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]
+
+    assert "name" in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]
+    assert "description" in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]
+    assert "price" in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]
+    assert "tax" in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]
+
+    assert (
+        "string"
+        == openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["description"]["type"]
+    )
+    assert "number" == openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["price"]["type"]
+    assert "number" == openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["tax"]["type"]
+
+    assert "object" == openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["name"]["type"]
+
+    assert (
+        "first" in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["name"]["properties"]
+    )
+    assert (
+        "second" in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["name"]["properties"]
+    )
+    assert (
+        "initial"
+        in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["name"]["properties"]
+    )
+
+    assert (
+        "object"
+        in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["name"]["properties"][
+            "initial"
+        ]["type"]
+    )
+
+    assert (
+        "is_present"
+        in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["name"]["properties"][
+            "initial"
+        ]["properties"]
+    )
+    assert (
+        "letter"
+        in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["name"]["properties"][
+            "initial"
+        ]["properties"]
+    )
+
+    assert {"type": "string"} in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["name"][
+        "properties"
+    ]["initial"]["properties"]["letter"]["anyOf"]
+    assert {"type": "null"} in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["name"][
+        "properties"
+    ]["initial"]["properties"]["letter"]["anyOf"]
