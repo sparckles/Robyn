@@ -1,4 +1,4 @@
-use crate::executors::{execute_event_handler, execute_http_function, execute_middleware_function};
+use crate::executors::{execute_http_function, execute_middleware_function, execute_shutdown_handler, execute_startup_handler};
 
 use crate::routers::const_router::ConstRouter;
 use crate::routers::Router;
@@ -122,7 +122,7 @@ impl Server {
         thread::spawn(move || {
             actix_web::rt::System::new().block_on(async move {
                 debug!("The number of workers is {}", workers);
-                execute_event_handler(startup_handler, &task_locals_copy)
+                execute_startup_handler(startup_handler, &task_locals_copy)
                     .await
                     .unwrap();
 
@@ -224,7 +224,7 @@ impl Server {
             debug!("Ctrl c handler");
             Python::with_gil(|py| {
                 pyo3_asyncio::tokio::run(py, async move {
-                    execute_event_handler(shutdown_handler, &task_locals.clone())
+                    execute_shutdown_handler(shutdown_handler, &task_locals.clone())
                         .await
                         .unwrap();
                     Ok(())
