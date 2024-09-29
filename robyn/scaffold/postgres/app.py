@@ -1,4 +1,5 @@
 import psycopg2
+
 from robyn import Robyn
 
 DB_NAME = "postgresDB"

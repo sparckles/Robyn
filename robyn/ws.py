@@ -3,9 +3,9 @@ from __future__ import annotations
 import asyncio
 import inspect
 from typing import TYPE_CHECKING, Callable
+
 from robyn.argument_parser import Config
 from robyn.dependency_injection import DependencyMap
-
 from robyn.robyn import FunctionInfo
 
 if TYPE_CHECKING:
