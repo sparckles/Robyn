@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use pyo3::{pyclass, pymethods};
 
-#[pyclass]
+#[pyclass(name = "RustIdentity")]
 #[derive(Debug, Clone)]
 pub struct Identity {
     #[pyo3(get, set)]

@@ -1,14 +1,14 @@
-from robyn.robyn import Headers, QueryParams, Request, Url
+from robyn.robyn import Headers, RustQueryParams, Request, RustUrl
 
 
 def test_request_object():
-    url = Url(
+    url = RustUrl(
         scheme="https",
         host="localhost",
         path="/user",
     )
     request = Request(
-        query_params=QueryParams(),
+        query_params=RustQueryParams(),
         headers=Headers({"Content-Type": "application/json"}),
         path_params={},
         body="",

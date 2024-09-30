@@ -12,8 +12,8 @@ from robyn.authentication import AuthenticationHandler, AuthenticationNotConfigu
 from robyn.dependency_injection import DependencyMap
 from robyn.jsonify import jsonify
 from robyn.responses import FileResponse
-from robyn.robyn import FunctionInfo, Headers, HttpMethod, MiddlewareType, QueryParams, Request, Response
-from robyn.types import FormData, PathParams, RequestQuery, RequestBody, RequestFiles, RequestIdentity, RequestIP, RequestMethod, RequestURL
+from robyn.robyn import FunctionInfo, Headers, HttpMethod, MiddlewareType, RustQueryParams, Request, Response
+from robyn.types import FormData, PathParams, Body, Files, RustIdentity, IPAddress, Method, URL
 from robyn.ws import WebSocket
 
 _logger = logging.getLogger(__name__)
@@ -127,16 +127,16 @@ class Router(BaseRouter):
 
             type_mapping = {
                 "request": Request,
-                "query_params": QueryParams,
+                "query_params": RustQueryParams,
                 "headers": Headers,
                 "path_params": PathParams,
-                "body": RequestBody,
-                "method": RequestMethod,
-                "url": RequestURL,
+                "body": Body,
+                "method": Method,
+                "url": URL,
                 "form_data": FormData,
-                "files": RequestFiles,
-                "ip_addr": RequestIP,
-                "identity": RequestIdentity,
+                "files": Files,
+                "ip_addr": IPAddress,
+                "identity": RustIdentity,
             }
 
             type_filtered_params = {}
@@ -150,9 +150,9 @@ class Router(BaseRouter):
                     elif handler_param_type is type_mapping[type_name]:
                         type_filtered_params[handler_param_name] = getattr(request, type_name)
                     elif inspect.isclass(handler_param_type):
-                        if issubclass(handler_param_type, RequestBody):
+                        if issubclass(handler_param_type, Body):
                             type_filtered_params[handler_param_name] = getattr(request, "body")
-                        elif issubclass(handler_param_type, RequestQuery):
+                        elif issubclass(handler_param_type, RustQueryParams):
                             type_filtered_params[handler_param_name] = getattr(request, "query_params")
 
             request_components = {

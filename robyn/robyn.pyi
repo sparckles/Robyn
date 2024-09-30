@@ -71,7 +71,7 @@ class FunctionInfo:
     kwargs: dict
 
 @dataclass
-class Url:
+class RustUrl:
     """
     The url object passed to the route handler.
 
@@ -86,10 +86,10 @@ class Url:
     path: str
 
 @dataclass
-class Identity:
+class RustIdentity:
     claims: dict[str, str]
 
-class QueryParams:
+class RustQueryParams:
     """
     The query params object passed to the route handler.
 
@@ -154,12 +154,12 @@ class QueryParams:
         """
         pass
 
-    def extend(self, other: QueryParams) -> None:
+    def extend(self, other: RustQueryParams) -> None:
         """
         Extends the query params with the other query params.
 
         Args:
-            other (QueryParams): The other QueryParams object
+            other (RustQueryParams): The other QueryParams object
         """
         pass
 
@@ -248,28 +248,28 @@ class Request:
     The request object passed to the route handler.
 
     Attributes:
-        query_params (QueryParams): The query parameters of the request. e.g. /user?id=123 -> {"id": "123"}
+        query_params (RustQueryParams): The query parameters of the request. e.g. /user?id=123 -> {"id": "123"}
         headers Headers: The headers of the request. e.g. Headers({"Content-Type": "application/json"})
         path_params (dict[str, str]): The parameters of the request. e.g. /user/:id -> {"id": "123"}
         body (Union[str, bytes]): The body of the request. If the request is a JSON, it will be a dict.
         method (str): The method of the request. e.g. GET, POST, PUT etc.
-        url (Url): The url of the request. e.g. https://localhost/user
+        url (RustUrl): The url of the request. e.g. https://localhost/user
         form_data (dict[str, str]): The form data of the request. e.g. {"name": "John"}
         files (dict[str, bytes]): The files of the request. e.g. {"file": b"file"}
         ip_addr (Optional[str]): The IP Address of the client
         identity (Optional[Identity]): The identity of the client
     """
 
-    query_params: QueryParams
+    query_params: RustQueryParams
     headers: Headers
     path_params: dict[str, str]
     body: Union[str, bytes]
     method: str
-    url: Url
+    url: RustUrl
     form_data: dict[str, str]
     files: dict[str, bytes]
     ip_addr: Optional[str]
-    identity: Optional[Identity]
+    identity: Optional[RustIdentity]
 
     def json(self) -> dict:
         """
@@ -366,7 +366,7 @@ class WebSocketConnector:
 
     Attributes:
         id (str): The id of the client
-        query_params (QueryParams): The query parameters object
+        query_params (RustQueryParams): The query parameters object
 
         async_broadcast (Callable): The function to broadcast a message to all clients
         async_send_to (Callable): The function to send a message to the client
@@ -375,7 +375,7 @@ class WebSocketConnector:
     """
 
     id: str
-    query_params: QueryParams
+    query_params: RustQueryParams
 
     async def async_broadcast(self, message: str) -> None:
         """

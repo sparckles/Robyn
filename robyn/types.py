@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Dict, NewType, Optional, TypedDict
 
-from robyn.robyn import Identity, Url
+from robyn.robyn import RustIdentity, RustUrl
 
 
 @dataclass
@@ -21,12 +21,12 @@ class Directory:
 
 
 PathParams = NewType("PathParams", Dict[str, str])
-RequestMethod = NewType("RequestMethod", str)
-RequestURL = NewType("RequestURL", Url)
+Method = NewType("Method", str)
+URL = NewType("URL", RustUrl)
 FormData = NewType("FormData", Dict[str, str])
-RequestFiles = NewType("RequestFiles", Dict[str, bytes])
-RequestIP = NewType("RequestIP", Optional[str])
-RequestIdentity = NewType("RequestIdentity", Optional[Identity])
+Files = NewType("Files", Dict[str, bytes])
+IPAddress = NewType("IPAddress", Optional[str])
+Identity = NewType("Identity", Optional[RustIdentity])
 
 
 class JSONResponse(TypedDict):
@@ -37,7 +37,7 @@ class JSONResponse(TypedDict):
     pass
 
 
-class RequestBody:
+class Body:
     """
     A type alias for openapi request bodies
     """
@@ -45,7 +45,7 @@ class RequestBody:
     pass
 
 
-class RequestQuery:
+class QueryParams:
     """
     A type alias for query params type annotations
     """

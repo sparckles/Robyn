@@ -6,10 +6,9 @@ from typing import Optional
 from integration_tests.subroutes import di_subrouter, sub_router
 from integration_tests.views import AsyncView, SyncView
 from robyn import Headers, Request, Response, Robyn, WebSocket, WebSocketConnector, jsonify, serve_file, serve_html
-from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
-from robyn.robyn import QueryParams
+from robyn.authentication import AuthenticationHandler, BearerGetter, RustIdentity
 from robyn.templating import JinjaTemplate
-from robyn.types import JSONResponse, PathParams, RequestBody, RequestMethod, RequestURL, RequestQuery
+from robyn.types import JSONResponse, PathParams, Body, Method, URL, QueryParams
 
 app = Robyn(__file__)
 websocket = WebSocket(app, "/web_socket")
@@ -931,31 +930,31 @@ async def async_split_request_path_params(path_data: PathParams):
 
 
 @app.get("/sync/split_request_typed/method")
-def sync_split_request_method(request_method: RequestMethod):
+def sync_split_request_method(request_method: Method):
     return request_method
 
 
 @app.get("/async/split_request_typed/method")
-async def async_split_request_method(request_method: RequestMethod):
+async def async_split_request_method(request_method: Method):
     return request_method
 
 
 @app.post("/sync/split_request_typed/body")
-def sync_split_request_body(request_body: RequestBody):
+def sync_split_request_body(request_body: Body):
     return request_body
 
 
 @app.post("/async/split_request_typed/body")
-async def async_split_request_body(request_body: RequestBody):
+async def async_split_request_body(request_body: Body):
     return request_body
 
 
 @app.post("/sync/split_request_typed/combined")
 def sync_split_request_combined(
-    request_body: RequestBody,
+    request_body: Body,
     query_data: QueryParams,
-    request_method: RequestMethod,
-    request_url: RequestURL,
+    request_method: Method,
+    request_url: URL,
     request_headers: Headers,
 ):
     return {
@@ -969,10 +968,10 @@ def sync_split_request_combined(
 
 @app.post("/async/split_request_typed/combined")
 async def async_split_request_combined(
-    request_body: RequestBody,
+    request_body: Body,
     query_data: QueryParams,
-    request_method: RequestMethod,
-    request_url: RequestURL,
+    request_method: Method,
+    request_url: URL,
     request_headers: Headers,
 ):
     return {
@@ -987,9 +986,9 @@ async def async_split_request_combined(
 @app.post("/sync/split_request_typed_untyped/combined")
 def sync_split_request_typed_untyped_combined(
     query_params,
-    request_method: RequestMethod,
-    request_body: RequestBody,
-    url: RequestURL,
+    request_method: Method,
+    request_body: Body,
+    url: URL,
     headers: Headers,
 ):
     return {
@@ -1004,9 +1003,9 @@ def sync_split_request_typed_untyped_combined(
 @app.post("/async/split_request_typed_untyped/combined")
 async def async_split_request_typed_untyped_combined(
     query_params,
-    request_method: RequestMethod,
-    request_body: RequestBody,
-    url: RequestURL,
+    request_method: Method,
+    request_body: Body,
+    url: URL,
     headers: Headers,
 ):
     return {
@@ -1019,9 +1018,7 @@ async def async_split_request_typed_untyped_combined(
 
 
 @app.post("/sync/split_request_typed_untyped/combined/failure")
-def sync_split_request_typed_untyped_combined_failure(
-    query_params, request_method: RequestMethod, request_body: RequestBody, url: RequestURL, headers: Headers, vishnu
-):
+def sync_split_request_typed_untyped_combined_failure(query_params, request_method: Method, request_body: Body, url: URL, headers: Headers, vishnu):
     return {
         "body": request_body,
         "query_params": query_params.to_dict(),
@@ -1033,9 +1030,7 @@ def sync_split_request_typed_untyped_combined_failure(
 
 
 @app.post("/async/split_request_typed_untyped/combined/failure")
-async def async_split_request_typed_untyped_combined_failure(
-    query_params, request_method: RequestMethod, request_body: RequestBody, url: RequestURL, headers: Headers, vishnu
-):
+async def async_split_request_typed_untyped_combined_failure(query_params, request_method: Method, request_body: Body, url: URL, headers: Headers, vishnu):
     return {
         "body": request_body,
         "query_params": query_params.to_dict(),
@@ -1052,18 +1047,18 @@ def sample_openapi_endpoint():
     return 200
 
 
-class Initial(RequestBody):
+class Initial(Body):
     is_present: bool
     letter: Optional[str]
 
 
-class FullName(RequestBody):
+class FullName(Body):
     first: str
     second: str
     initial: Initial
 
 
-class CreateItemBody(RequestBody):
+class CreateItemBody(Body):
     name: FullName
     description: str
     price: float
@@ -1075,12 +1070,12 @@ class CreateItemResponse(JSONResponse):
     items_changed: int
 
 
-class CreateItemQueryParams(RequestQuery):
+class CreateItemQueryParamsParams(QueryParams):
     required: bool
 
 
 @app.post("/openapi_request_body")
-def create_item(request, body: CreateItemBody, query: CreateItemQueryParams) -> CreateItemResponse:
+def create_item(request, body: CreateItemBody, query: CreateItemQueryParamsParams) -> CreateItemResponse:
     return CreateItemResponse(success=True, items_changed=2)
 
 
@@ -1098,13 +1093,13 @@ def main():
     app.include_router(di_subrouter)
 
     class BasicAuthHandler(AuthenticationHandler):
-        def authenticate(self, request: Request) -> Optional[Identity]:
+        def authenticate(self, request: Request) -> Optional[RustIdentity]:
             token = self.token_getter.get_token(request)
             if token is not None:
                 # Useless but we call the set_token method for testing purposes
                 self.token_getter.set_token(request, token)
             if token == "valid":
-                return Identity(claims={"key": "value"})
+                return RustIdentity(claims={"key": "value"})
             return None
 
     app.configure_authentication(BasicAuthHandler(token_getter=BearerGetter()))
