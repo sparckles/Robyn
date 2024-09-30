@@ -230,7 +230,7 @@ impl Server {
                     Ok(())
                 })
             })?;
-           exit(0);
+            exit(0);
         }
         Ok(())
     }
