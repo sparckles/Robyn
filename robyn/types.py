@@ -31,7 +31,7 @@ RequestIdentity = NewType("RequestIdentity", Optional[Identity])
 
 class JSONResponse(TypedDict):
     """
-    A base class to override to implement openapi response bodies
+    A type alias for openapi response bodies
     """
 
     pass
@@ -39,7 +39,7 @@ class JSONResponse(TypedDict):
 
 class RequestBody:
     """
-    A base class to override to implement openapi request bodies
+    A type alias for openapi request bodies
     """
 
     pass
@@ -47,7 +47,7 @@ class RequestBody:
 
 class RequestQuery:
     """
-    A base class to override to implement query params type annotations in openapi
+    A type alias for query params type annotations
     """
 
     pass
