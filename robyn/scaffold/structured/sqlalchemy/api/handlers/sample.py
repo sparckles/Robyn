@@ -6,7 +6,7 @@ router = SubRouter(__name__, prefix="/sample/")
 class SampleHandlers:
     @router.post("one/")
     @staticmethod
-    def one(global_dependencies): 
+    def one(global_dependencies):
         with global_dependencies.get("pool") as session:
             # invoke your mutators/selectors here
             ...
