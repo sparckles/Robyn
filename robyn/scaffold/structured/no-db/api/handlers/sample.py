@@ -1,6 +1,6 @@
 from robyn import SubRouter
 
-router = SubRouter("/sample")
+router = SubRouter(__name__, "/sample")
 
 
 class SampleHandlers:

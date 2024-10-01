@@ -1,7 +1,7 @@
 from robyn import SubRouter
 
 
-router = SubRouter("/")
+router = SubRouter(__name__, prefix="/")
 
 
 @router.get("/livez/")
