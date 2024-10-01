@@ -50,7 +50,7 @@ impl HttpMethod {
     }
 }
 
-#[pyclass(name = "RustUrl")]
+#[pyclass(name = "Url")]
 #[derive(Default, Debug, Clone)]
 pub struct Url {
     #[pyo3(get)]

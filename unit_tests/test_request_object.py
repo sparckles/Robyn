@@ -1,8 +1,8 @@
-from robyn.robyn import Headers, RustQueryParams, Request, RustUrl
+from robyn.robyn import Headers, RustQueryParams, Request, Url
 
 
 def test_request_object():
-    url = RustUrl(
+    url = Url(
         scheme="https",
         host="localhost",
         path="/user",

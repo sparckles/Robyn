@@ -71,7 +71,7 @@ class FunctionInfo:
     kwargs: dict
 
 @dataclass
-class RustUrl:
+class Url:
     """
     The url object passed to the route handler.
 
@@ -86,7 +86,7 @@ class RustUrl:
     path: str
 
 @dataclass
-class RustIdentity:
+class Identity:
     claims: dict[str, str]
 
 class RustQueryParams:
@@ -253,7 +253,7 @@ class Request:
         path_params (dict[str, str]): The parameters of the request. e.g. /user/:id -> {"id": "123"}
         body (Union[str, bytes]): The body of the request. If the request is a JSON, it will be a dict.
         method (str): The method of the request. e.g. GET, POST, PUT etc.
-        url (RustUrl): The url of the request. e.g. https://localhost/user
+        url (Url): The url of the request. e.g. https://localhost/user
         form_data (dict[str, str]): The form data of the request. e.g. {"name": "John"}
         files (dict[str, bytes]): The files of the request. e.g. {"file": b"file"}
         ip_addr (Optional[str]): The IP Address of the client
@@ -265,11 +265,11 @@ class Request:
     path_params: dict[str, str]
     body: Union[str, bytes]
     method: str
-    url: RustUrl
+    url: Url
     form_data: dict[str, str]
     files: dict[str, bytes]
     ip_addr: Optional[str]
-    identity: Optional[RustIdentity]
+    identity: Optional[Identity]
 
     def json(self) -> dict:
         """

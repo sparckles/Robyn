@@ -13,7 +13,7 @@ from robyn.dependency_injection import DependencyMap
 from robyn.jsonify import jsonify
 from robyn.responses import FileResponse
 from robyn.robyn import FunctionInfo, Headers, HttpMethod, MiddlewareType, RustQueryParams, Request, Response
-from robyn.types import FormData, PathParams, Body, Files, RustIdentity, IPAddress, Method, URL, QueryParams
+from robyn.types import FormData, PathParams, Body, Files, Identity, IPAddress, Method, URL, QueryParams
 from robyn.ws import WebSocket
 
 _logger = logging.getLogger(__name__)
@@ -136,7 +136,7 @@ class Router(BaseRouter):
                 "form_data": FormData,
                 "files": Files,
                 "ip_addr": IPAddress,
-                "identity": RustIdentity,
+                "identity": Identity,
             }
 
             type_filtered_params = {}

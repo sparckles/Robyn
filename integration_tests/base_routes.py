@@ -6,7 +6,7 @@ from typing import Optional
 from integration_tests.subroutes import di_subrouter, sub_router
 from integration_tests.views import AsyncView, SyncView
 from robyn import Headers, Request, Response, Robyn, WebSocket, WebSocketConnector, jsonify, serve_file, serve_html
-from robyn.authentication import AuthenticationHandler, BearerGetter, RustIdentity
+from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.templating import JinjaTemplate
 from robyn.types import JSONResponse, PathParams, Body, Method, URL, QueryParams
 
@@ -1093,13 +1093,13 @@ def main():
     app.include_router(di_subrouter)
 
     class BasicAuthHandler(AuthenticationHandler):
-        def authenticate(self, request: Request) -> Optional[RustIdentity]:
+        def authenticate(self, request: Request) -> Optional[Identity]:
             token = self.token_getter.get_token(request)
             if token is not None:
                 # Useless but we call the set_token method for testing purposes
                 self.token_getter.set_token(request, token)
             if token == "valid":
-                return RustIdentity(claims={"key": "value"})
+                return Identity(claims={"key": "value"})
             return None
 
     app.configure_authentication(BasicAuthHandler(token_getter=BearerGetter()))

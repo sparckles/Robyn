@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Dict, NewType, Optional, TypedDict
 
-from robyn.robyn import RustIdentity, RustUrl
+from robyn.robyn import Identity, Url
 
 
 @dataclass
@@ -22,11 +22,11 @@ class Directory:
 
 PathParams = NewType("PathParams", Dict[str, str])
 Method = NewType("Method", str)
-URL = NewType("URL", RustUrl)
+URL = NewType("URL", Url)
 FormData = NewType("FormData", Dict[str, str])
 Files = NewType("Files", Dict[str, bytes])
 IPAddress = NewType("IPAddress", Optional[str])
-Identity = NewType("Identity", Optional[RustIdentity])
+Identity = NewType("Identity", Optional[Identity])
 
 
 class JSONResponse(TypedDict):

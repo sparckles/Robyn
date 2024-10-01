@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from robyn.robyn import Headers, RustIdentity, Request, Response
+from robyn.robyn import Headers, Identity, Request, Response
 from robyn.status_codes import HTTP_401_UNAUTHORIZED
 
 
@@ -64,7 +64,7 @@ class AuthenticationHandler(ABC):
         )
 
     @abstractmethod
-    def authenticate(self, request: Request) -> Optional[RustIdentity]:
+    def authenticate(self, request: Request) -> Optional[Identity]:
         """
         Authenticates the user.
         :param request: The request object.
