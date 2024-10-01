@@ -1,14 +1,14 @@
 from robyn import SubRouter
 
 
-router = SubRouter("/")
+router = SubRouter(__name__, prefix="/")
 
 
-@router.get("/livez/")
+@router.get("livez/")
 def livez() -> str:
     return "live"
 
 
-@router.get("/healthz/")
+@router.get("healthz/")
 def healthz() -> str:
     return "healthy"

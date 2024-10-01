@@ -1,13 +1,13 @@
 from robyn import SubRouter
 
-router = SubRouter("/sample")
+router = SubRouter(__name__, prefix="/sample/")
 
 
 class SampleHandlers:
-    @router.post("/one")
+    @router.post("one/")
     @staticmethod
     def one(): ...
 
-    @router.get("/two")
+    @router.get("two/")
     @staticmethod
     def two(): ...
