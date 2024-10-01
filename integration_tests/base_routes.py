@@ -8,7 +8,7 @@ from integration_tests.views import AsyncView, SyncView
 from robyn import Headers, Request, Response, Robyn, WebSocket, WebSocketConnector, jsonify, serve_file, serve_html
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.templating import JinjaTemplate
-from robyn.types import JSONResponse, PathParams, Body, Method, URL, QueryParams
+from robyn.types import JSONResponse, PathParams, Body, Method, Url, QueryParams
 
 app = Robyn(__file__)
 websocket = WebSocket(app, "/web_socket")
@@ -954,7 +954,7 @@ def sync_split_request_combined(
     request_body: Body,
     query_data: QueryParams,
     request_method: Method,
-    request_url: URL,
+    request_url: Url,
     request_headers: Headers,
 ):
     return {
@@ -971,7 +971,7 @@ async def async_split_request_combined(
     request_body: Body,
     query_data: QueryParams,
     request_method: Method,
-    request_url: URL,
+    request_url: Url,
     request_headers: Headers,
 ):
     return {
@@ -988,7 +988,7 @@ def sync_split_request_typed_untyped_combined(
     query_params,
     request_method: Method,
     request_body: Body,
-    url: URL,
+    url: Url,
     headers: Headers,
 ):
     return {
@@ -1005,7 +1005,7 @@ async def async_split_request_typed_untyped_combined(
     query_params,
     request_method: Method,
     request_body: Body,
-    url: URL,
+    url: Url,
     headers: Headers,
 ):
     return {
@@ -1018,7 +1018,7 @@ async def async_split_request_typed_untyped_combined(
 
 
 @app.post("/sync/split_request_typed_untyped/combined/failure")
-def sync_split_request_typed_untyped_combined_failure(query_params, request_method: Method, request_body: Body, url: URL, headers: Headers, vishnu):
+def sync_split_request_typed_untyped_combined_failure(query_params, request_method: Method, request_body: Body, url: Url, headers: Headers, vishnu):
     return {
         "body": request_body,
         "query_params": query_params.to_dict(),
@@ -1030,7 +1030,7 @@ def sync_split_request_typed_untyped_combined_failure(query_params, request_meth
 
 
 @app.post("/async/split_request_typed_untyped/combined/failure")
-async def async_split_request_typed_untyped_combined_failure(query_params, request_method: Method, request_body: Body, url: URL, headers: Headers, vishnu):
+async def async_split_request_typed_untyped_combined_failure(query_params, request_method: Method, request_body: Body, url: Url, headers: Headers, vishnu):
     return {
         "body": request_body,
         "query_params": query_params.to_dict(),
