@@ -59,7 +59,9 @@ def run_migrations_online() -> None:
 
     """
     with get_pool() as session:
-        context.configure(connection=session.connection(), target_metadata=target_metadata)
+        context.configure(
+            connection=session.connection(), target_metadata=target_metadata
+        )
         with context.begin_transaction():
             context.run_migrations()
 
