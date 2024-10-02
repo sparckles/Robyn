@@ -1,4 +1,6 @@
-use crate::executors::{execute_http_function, execute_middleware_function, execute_shutdown_handler, execute_startup_handler};
+use crate::executors::{
+    execute_http_function, execute_middleware_function, execute_startup_handler,
+};
 
 use crate::routers::const_router::ConstRouter;
 use crate::routers::Router;
@@ -222,14 +224,27 @@ impl Server {
         let event_loop = (*event_loop).call_method0("run_forever");
         if event_loop.is_err() {
             debug!("Ctrl c handler");
-            Python::with_gil(|py| {
-                pyo3_asyncio::tokio::run(py, async move {
-                    execute_shutdown_handler(shutdown_handler, &task_locals.clone())
-                        .await
-                        .unwrap();
-                    Ok(())
-                })
-            })?;
+
+            if let Some(function) = shutdown_handler {
+                if function.is_async {
+                    debug!("Shutdown event handler async");
+
+                    pyo3_asyncio::tokio::run_until_complete(
+                        task_locals.event_loop(py),
+                        pyo3_asyncio::into_future_with_locals(
+                            &task_locals.clone(),
+                            function.handler.as_ref(py).call0()?,
+                        )
+                        .unwrap(),
+                    )
+                    .unwrap();
+                } else {
+                    debug!("Shutdown event handler");
+
+                    Python::with_gil(|py| function.handler.call0(py))?;
+                }
+            }
+
             abort();
         }
         Ok(())
