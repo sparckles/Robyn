@@ -489,6 +489,8 @@ async fn index(
 
     debug!("Response returned: {:?}", response);
 
+    // TODO: Add support for streaming responses
+
     response
 }
 

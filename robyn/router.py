@@ -7,7 +7,7 @@ from types import CoroutineType
 from typing import Callable, Dict, List, NamedTuple, Union, Optional
 from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
 from robyn.dependency_injection import DependencyMap
-from robyn.responses import FileResponse
+from robyn.responses import FileResponse, StreamingResponse
 
 from robyn.robyn import (
     FunctionInfo,
@@ -84,6 +84,8 @@ class Router(BaseRouter):
                 description=res.file_path,
             )
             response.file_path = res.file_path
+        elif isinstance(res, StreamingResponse):
+            response = res
 
         elif isinstance(res, bytes):
             headers = Headers({"Content-Type": "application/octet-stream"})

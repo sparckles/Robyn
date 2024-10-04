@@ -10,6 +10,7 @@ use crate::io_helpers::{apply_hashmap_headers, read_file};
 use crate::types::{check_body_type, check_description_type, get_description_from_pyobject};
 
 use super::headers::Headers;
+use futures_util::stream::StreamExt;
 
 #[derive(Debug, Clone, FromPyObject)]
 pub struct Response {
@@ -20,16 +21,51 @@ pub struct Response {
     #[pyo3(from_py_with = "get_description_from_pyobject")]
     pub description: Vec<u8>,
     pub file_path: Option<String>,
+    pub streaming: bool,
 }
 
 impl Responder for Response {
     type Body = BoxBody;
 
     fn respond_to(self, _req: &HttpRequest) -> HttpResponse<Self::Body> {
-        let mut response_builder =
-            HttpResponseBuilder::new(StatusCode::from_u16(self.status_code).unwrap());
-        apply_hashmap_headers(&mut response_builder, &self.headers);
-        response_builder.body(self.description)
+        if self.streaming {
+            let stream = Python::with_gil(|py| {
+                PyBytes::new(py, &self.description)
+                    .extract::<PyObject>()
+                    .and_then(move |obj| {
+                        let iter = obj.as_ref(py).iter()?;
+                        Ok(iter
+                            .map(move |item| {
+                                item.and_then(|py_bytes| {
+                                    Python::with_gil(|_| py_bytes.extract::<Vec<u8>>())
+                                })
+                                .map(|bytes| {
+                                    Ok::<actix_web::web::Bytes, std::convert::Infallible>(
+                                        bytes.into(),
+                                    )
+                                })
+                                .unwrap_or_else(|_| Ok(Vec::new().into()))
+                            })
+                            .collect::<Vec<_>>())
+                    })
+            });
+
+            match stream {
+                Ok(stream_vec) => {
+                    let stream = futures_util::stream::iter(stream_vec);
+                    let mut builder =
+                        HttpResponse::build(StatusCode::from_u16(self.status_code).unwrap());
+                    apply_hashmap_headers(&mut builder, &self.headers);
+                    builder.streaming(stream)
+                }
+                Err(_) => HttpResponse::InternalServerError().finish(),
+            }
+        } else {
+            let mut response_builder =
+                HttpResponseBuilder::new(StatusCode::from_u16(self.status_code).unwrap());
+            apply_hashmap_headers(&mut response_builder, &self.headers);
+            response_builder.body(self.description)
+        }
     }
 }
 
@@ -46,6 +82,7 @@ impl Response {
             headers,
             description: "Not found".to_owned().into_bytes(),
             file_path: None,
+            streaming: false,
         }
     }
 
@@ -61,6 +98,7 @@ impl Response {
             headers,
             description: "Internal server error".to_owned().into_bytes(),
             file_path: None,
+            streaming: false,
         }
     }
 }
@@ -74,6 +112,17 @@ impl ToPyObject for Response {
             Ok(description) => description.to_object(py),
             Err(_) => PyBytes::new(py, &self.description.to_vec()).into(),
         };
+
+        if self.streaming {
+            let response = StreamingResponse {
+                status_code: self.status_code,
+                response_type: self.response_type.clone(),
+                headers,
+                description,
+                file_path: self.file_path.clone(),
+            };
+            return Py::new(py, response).unwrap().as_ref(py).into();
+        }
 
         let response = PyResponse {
             status_code: self.status_code,
@@ -166,3 +215,80 @@ impl PyResponse {
         Ok(())
     }
 }
+
+#[pyclass(name = "StreamingResponse")]
+#[derive(Debug, Clone)]
+pub struct StreamingResponse {
+    #[pyo3(get)]
+    pub status_code: u16,
+    #[pyo3(get)]
+    pub response_type: String,
+    #[pyo3(get, set)]
+    pub headers: Py<Headers>,
+    #[pyo3(get)]
+    pub description: Py<PyAny>,
+    #[pyo3(get)]
+    pub file_path: Option<String>,
+}
+
+#[pymethods]
+impl StreamingResponse {
+    #[new]
+    pub fn new(
+        py: Python,
+        status_code: u16,
+        headers: &PyAny,
+        description: Py<PyAny>,
+    ) -> PyResult<Self> {
+        check_body_type(py, &description)?;
+
+        let headers_output: Py<Headers> = if let Ok(headers_dict) = headers.downcast::<PyDict>() {
+            let headers = Headers::new(Some(headers_dict));
+            Py::new(py, headers)?
+        } else if let Ok(headers) = headers.extract::<Py<Headers>>() {
+            headers
+        } else {
+            return Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+                "headers must be a Headers instance or a dict",
+            ));
+        };
+
+        Ok(Self {
+            status_code,
+            response_type: "streaming".to_string(),
+            headers: headers_output,
+            description,
+            file_path: None,
+        })
+    }
+
+    #[setter]
+    pub fn set_description(&mut self, py: Python, description: Py<PyAny>) -> PyResult<()> {
+        check_description_type(py, &description)?;
+        self.description = description;
+        Ok(())
+    }
+
+    #[setter]
+    pub fn set_file_path(&mut self, py: Python, file_path: &str) -> PyResult<()> {
+        self.response_type = "static_file".to_string();
+        self.file_path = Some(file_path.to_string());
+
+        match read_file(file_path) {
+            Ok(content) => {
+                self.description = PyBytes::new(py, &content).into();
+                Ok(())
+            }
+            Err(e) => Err(PyIOError::new_err(format!("Failed to read file: {}", e))),
+        }
+    }
+
+    pub fn set_cookie(&mut self, py: Python, key: &str, value: &str) -> PyResult<()> {
+        self.headers
+            .try_borrow_mut(py)
+            .expect("value already borrowed")
+            .append(key.to_string(), value.to_string());
+        Ok(())
+    }
+}
+
