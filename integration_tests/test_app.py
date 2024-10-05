@@ -1,8 +1,8 @@
-from robyn import Robyn, ALLOW_CORS
+import pytest
+
+from robyn import ALLOW_CORS, Robyn
 from robyn.events import Events
 from robyn.robyn import Headers
-
-import pytest
 
 
 @pytest.mark.benchmark

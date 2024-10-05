@@ -1,5 +1,6 @@
-from integration_tests.helpers.http_methods_helpers import get, post
 import pytest
+
+from integration_tests.helpers.http_methods_helpers import get, post
 
 
 @pytest.mark.benchmark
