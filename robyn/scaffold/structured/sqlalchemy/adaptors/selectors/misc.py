@@ -1,5 +1,5 @@
 from sqlalchemy import text
 
 
-def sample_selector(session):
-    session.execute(text("select * from sample;"))
+async def sample_selector(conn):
+    await conn.execute(text("select * from sample;"))

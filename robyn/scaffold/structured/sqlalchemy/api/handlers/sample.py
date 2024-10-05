@@ -1,5 +1,6 @@
 from robyn import SubRouter
 from adaptors.selectors.misc import sample_selector
+from utils.db import get_db_connection
 
 router = SubRouter(__name__, prefix="/sample/")
 
@@ -7,10 +8,11 @@ router = SubRouter(__name__, prefix="/sample/")
 class SampleHandlers:
     @router.post("one/")
     @staticmethod
-    def one(global_dependencies):
-        with global_dependencies.get("pool") as session:
+    async def one(global_dependencies):
+        pool = global_dependencies.get("pool")
+        async with get_db_connection(pool) as conn:
             # invoke your mutators/selectors here
-            sample_selector(session)
+            await sample_selector(conn)
 
     @router.get("two/")
     @staticmethod

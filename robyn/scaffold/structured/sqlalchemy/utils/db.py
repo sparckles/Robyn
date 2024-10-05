@@ -1,21 +1,22 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+
+from contextlib import asynccontextmanager
+from sqlalchemy.ext.asyncio import create_async_engine
 from conf import settings
 
-import logging
-
-logger = logging.getLogger(__name__)
-
-
 def get_pool():
-    dsn = settings.database_url
-    logger.info(f"creating client db pool with dsn: {dsn}")
-    engine = create_engine(
-        dsn,
+    return create_async_engine(
+        settings.database_url,
         pool_size=settings.db_pool_size,
         max_overflow=settings.db_pool_max_overflow,
         pool_timeout=settings.db_pool_timeout,
         pool_recycle=settings.db_pool_recycle,
         echo=settings.db_pool_echo,
+        query_cache_size=0,
     )
-    return sessionmaker(bind=engine)()
+
+@asynccontextmanager
+async def get_db_connection(engine):
+    async with engine.connect() as conn:
+        yield conn
+
+
