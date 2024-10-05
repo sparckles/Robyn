@@ -6,7 +6,6 @@ router = SubRouter(__name__, prefix="/sample/")
 
 
 class SampleHandlers:
-    
     @staticmethod
     @router.post("one/")
     async def one(global_dependencies):
