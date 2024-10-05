@@ -2,7 +2,7 @@ robyn
 #DB
 SQLAlchemy~=2.0.35
 alembic~=1.13.3
-psycopg2-binary~=2.9.9
+asyncpg==0.29.0
 #schema
 pydantic~=2.7.4
 pydantic-settings~=2.2.1

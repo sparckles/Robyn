@@ -6,14 +6,18 @@ router = SubRouter(__name__, prefix="/sample/")
 
 
 class SampleHandlers:
-    @router.post("one/")
+    
     @staticmethod
+    @router.post("one/")
     async def one(global_dependencies):
         pool = global_dependencies.get("pool")
         async with get_db_connection(pool) as conn:
             # invoke your mutators/selectors here
-            await sample_selector(conn)
+            res = await sample_selector(conn)
+            print(res)
+        return {}
 
-    @router.get("two/")
     @staticmethod
-    def two(): ...
+    @router.get("two/")
+    def two():
+        return {}
