@@ -106,7 +106,7 @@ jobs:
           ]
         target: [aarch64, armv7]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Build Wheels
         uses: PyO3/maturin-action@v1
         env:
@@ -115,7 +115,7 @@ jobs:
           target: ${{ matrix.target }}
           manylinux: auto
           args: -i python${{matrix.python.version}} --release --out dist --no-sdist
-      - uses: uraimo/run-on-arch-action@v2.7.1
+      - uses: uraimo/run-on-arch-action@v2.7.2
         name: Install build wheel
         with:
           arch: ${{ matrix.target }}
