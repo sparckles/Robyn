@@ -1,17 +1,19 @@
 import os
-import sys
-from typing import Optional
-import webbrowser
-from InquirerPy.resolver import prompt
-from InquirerPy.base.control import Choice
-from .argument_parser import Config
-from .reloader import create_rust_file, setup_reloader
-from robyn.env_populator import load_vars
-from robyn.robyn import get_version
-from pathlib import Path
 import shutil
 import subprocess
+import sys
+import webbrowser
+from pathlib import Path
+from typing import Optional
 
+from InquirerPy.base.control import Choice
+from InquirerPy.resolver import prompt
+
+from robyn.env_populator import load_vars
+from robyn.robyn import get_version
+
+from .argument_parser import Config
+from .reloader import create_rust_file, setup_reloader
 
 SCAFFOLD_DIR = Path(__file__).parent / "scaffold"
 CURRENT_WORKING_DIR = Path.cwd()
@@ -90,14 +92,10 @@ def start_dev_server(config: Config, file_path: Optional[str] = None):
 
 
 def start_app_normally(config: Config):
-    # Parsing the known and unknown arguments
-    known_arguments, unknown_args = config.parser.parse_known_args()
+    command = [sys.executable]
 
-    # Convert known arguments to a list of strings suitable for subprocess.run
-    known_args_list = [f"{key}={value}" for key, value in vars(known_arguments).items() if value is not None]
-
-    # Combine the python executable, unknown arguments, and known arguments
-    command = [sys.executable, *unknown_args, *known_args_list]
+    for arg in sys.argv[1:]:
+        command.append(arg)
 
     # Run the subprocess
     subprocess.run(command, start_new_session=False)

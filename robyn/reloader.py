@@ -1,5 +1,5 @@
-import os
 import glob
+import os
 import signal
 import subprocess
 import sys

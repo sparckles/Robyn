@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "robyn"
-version = "0.61.1"
+version = "0.61.2"
 description = "A Super Fast Async Python Web Framework with a Rust runtime."
 authors = [{ name = "Sanskar Jethi", email = "sansyrox@gmail.com" }]
 classifiers = [
@@ -48,7 +48,7 @@ Changelog = "https://github.com/sparckles/robyn/blob/main/CHANGELOG.md"
 
 [tool.poetry]
 name = "robyn"
-version = "0.61.1"
+version = "0.61.2"
 description = "A Super Fast Async Python Web Framework with a Rust runtime."
 authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 
@@ -97,6 +97,28 @@ exclude = ["src/*", ".git", "docs"]
 
 [tool.ruff.mccabe]
 max-complexity = 10
+
+[tool.isort]
+profile = "black"
+line_length = 160
+
+[tool.black]
+line-length = 160
+target-version = ['py38']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
 
 [tool.maturin]
 module-name = "robyn"

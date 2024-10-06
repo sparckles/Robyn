@@ -1,5 +1,7 @@
 from collections.abc import Callable
+
 import pytest
+
 from integration_tests.helpers.http_methods_helpers import get, post, put
 
 
