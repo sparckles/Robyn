@@ -1,14 +1,15 @@
 import asyncio
-import webbrowser
-from multiprocess import Process
 import signal
 import sys
+import webbrowser
 from typing import Dict, List
-from robyn.logger import logger
+
+from multiprocess import Process
 
 from robyn.events import Events
+from robyn.logger import logger
 from robyn.robyn import FunctionInfo, Headers, Server, SocketHeld
-from robyn.router import GlobalMiddleware, RouteMiddleware, Route
+from robyn.router import GlobalMiddleware, Route, RouteMiddleware
 from robyn.types import Directory
 from robyn.ws import WebSocket
 

@@ -1,8 +1,7 @@
-from robyn import Robyn
-
-from sqlmodel import SQLModel, Session, create_engine, select
 from models import Hero
+from sqlmodel import Session, SQLModel, create_engine, select
 
+from robyn import Robyn
 
 app = Robyn(__file__)
 
