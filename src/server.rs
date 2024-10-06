@@ -224,6 +224,7 @@ impl Server {
         let event_loop = (*event_loop).call_method0("run_forever");
         if event_loop.is_err() {
             debug!("Ctrl c handler");
+
             if let Some(function) = shutdown_handler {
                 if function.is_async {
                     debug!("Shutdown event handler async");
@@ -244,7 +245,7 @@ impl Server {
                 }
             }
 
-            abort();
+            exit(0);
         }
         Ok(())
     }

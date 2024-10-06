@@ -121,27 +121,3 @@ pub async fn execute_startup_handler(
     }
     Ok(())
 }
-
-pub async fn execute_shutdown_handler(
-    event_handler: Option<Arc<FunctionInfo>>,
-    task_locals: &TaskLocals,
-) -> Result<()> {
-    if let Some(function) = event_handler {
-        if function.is_async {
-            debug!("Shutdown event handler async");
-            Python::with_gil(|py| {
-                pyo3_asyncio::tokio::run_until_complete(
-                    task_locals.event_loop(py),
-                    pyo3_asyncio::into_future_with_locals(
-                        task_locals,
-                        function.handler.as_ref(py).call0()?,
-                    ).unwrap(),
-                )
-            })?;
-        } else {
-            debug!("Shutdown event handler");
-            Python::with_gil(|py| function.handler.call0(py))?;
-        }
-    }
-    Ok(())
-}
