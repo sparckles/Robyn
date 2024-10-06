@@ -1,17 +1,19 @@
 import os
-import sys
-from typing import Optional
-import webbrowser
-from InquirerPy.resolver import prompt
-from InquirerPy.base.control import Choice
-from .argument_parser import Config
-from .reloader import create_rust_file, setup_reloader
-from robyn.env_populator import load_vars
-from robyn.robyn import get_version
-from pathlib import Path
 import shutil
 import subprocess
+import sys
+import webbrowser
+from pathlib import Path
+from typing import Optional
 
+from InquirerPy.base.control import Choice
+from InquirerPy.resolver import prompt
+
+from robyn.env_populator import load_vars
+from robyn.robyn import get_version
+
+from .argument_parser import Config
+from .reloader import create_rust_file, setup_reloader
 
 SCAFFOLD_DIR = Path(__file__).parent / "scaffold"
 CURRENT_WORKING_DIR = Path.cwd()

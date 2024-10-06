@@ -20,7 +20,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::{Relaxed, SeqCst};
 use std::sync::{Arc, RwLock};
 
-use std::process::abort;
+use std::process::exit;
 use std::{env, thread};
 
 use actix_files::Files;
@@ -224,7 +224,6 @@ impl Server {
         let event_loop = (*event_loop).call_method0("run_forever");
         if event_loop.is_err() {
             debug!("Ctrl c handler");
-
             if let Some(function) = shutdown_handler {
                 if function.is_async {
                     debug!("Shutdown event handler async");

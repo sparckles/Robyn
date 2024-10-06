@@ -1,5 +1,5 @@
-import socket
 import platform
+import socket
 
 
 def get_network_host():

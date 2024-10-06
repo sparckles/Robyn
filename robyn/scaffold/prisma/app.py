@@ -1,6 +1,7 @@
-from robyn import Robyn
 from prisma import Prisma
 from prisma.models import User
+
+from robyn import Robyn
 
 app = Robyn(__file__)
 prisma = Prisma(auto_register=True)
