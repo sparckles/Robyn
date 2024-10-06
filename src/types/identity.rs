@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use pyo3::{pyclass, pymethods};
 
-#[pyclass(name = "Identity")]
+#[pyclass]
 #[derive(Debug, Clone)]
 pub struct Identity {
     #[pyo3(get, set)]
