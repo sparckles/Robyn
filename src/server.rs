@@ -452,6 +452,10 @@ async fn index(
 
     response.headers.extend(&global_response_headers);
 
+    if req.uri().path().eq("/docs") {
+        response.headers.append("Content-Type".to_string(), "text/html".to_string());
+    }
+
     debug!("Extended Response : {:?}", response);
 
     // After middleware
