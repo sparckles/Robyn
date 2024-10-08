@@ -41,12 +41,4 @@ class Body:
     pass
 
 
-class QueryParams:
-    """
-    A type alias for query params type annotations
-    """
-
-    pass
-
-
-__all__ = ["JSONResponse", "Body", "QueryParams"]
+__all__ = ["JSONResponse", "Body"]

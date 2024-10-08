@@ -6,8 +6,8 @@ from inspect import Signature
 from typing import Any, Callable, Dict, List, Optional, TypedDict
 
 from robyn.responses import FileResponse, html
-from robyn.types import QueryParams, Body
-from robyn.robyn import Response
+from robyn.types import Body
+from robyn.robyn import Response, QueryParams
 
 
 @dataclass

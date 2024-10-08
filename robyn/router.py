@@ -12,8 +12,8 @@ from robyn.authentication import AuthenticationHandler, AuthenticationNotConfigu
 from robyn.dependency_injection import DependencyMap
 from robyn.jsonify import jsonify
 from robyn.responses import FileResponse
-from robyn.robyn import FunctionInfo, Headers, HttpMethod, MiddlewareType, RustQueryParams, Request, Response, Url, Identity
-from robyn.types import FormData, PathParams, Body, Files, IPAddress, Method, QueryParams
+from robyn.robyn import FunctionInfo, Headers, HttpMethod, MiddlewareType, QueryParams, Request, Response, Url, Identity
+from robyn.types import FormData, PathParams, Body, Files, IPAddress, Method
 from robyn.ws import WebSocket
 
 _logger = logging.getLogger(__name__)
@@ -127,7 +127,7 @@ class Router(BaseRouter):
 
             type_mapping = {
                 "request": Request,
-                "query_params": RustQueryParams,
+                "query_params": QueryParams,
                 "headers": Headers,
                 "path_params": PathParams,
                 "body": Body,

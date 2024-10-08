@@ -1,4 +1,4 @@
-from robyn.robyn import Headers, RustQueryParams, Request, Url
+from robyn.robyn import Headers, QueryParams, Request, Url
 
 
 def test_request_object():
@@ -8,7 +8,7 @@ def test_request_object():
         path="/user",
     )
     request = Request(
-        query_params=RustQueryParams(),
+        query_params=QueryParams(),
         headers=Headers({"Content-Type": "application/json"}),
         path_params={},
         body="",

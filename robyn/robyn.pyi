@@ -89,7 +89,7 @@ class Url:
 class Identity:
     claims: dict[str, str]
 
-class RustQueryParams:
+class QueryParams:
     """
     The query params object passed to the route handler.
 
@@ -154,12 +154,12 @@ class RustQueryParams:
         """
         pass
 
-    def extend(self, other: RustQueryParams) -> None:
+    def extend(self, other: QueryParams) -> None:
         """
         Extends the query params with the other query params.
 
         Args:
-            other (RustQueryParams): The other QueryParams object
+            other (QueryParams): The other QueryParams object
         """
         pass
 
@@ -248,7 +248,7 @@ class Request:
     The request object passed to the route handler.
 
     Attributes:
-        query_params (RustQueryParams): The query parameters of the request. e.g. /user?id=123 -> {"id": "123"}
+        query_params (QueryParams): The query parameters of the request. e.g. /user?id=123 -> {"id": "123"}
         headers Headers: The headers of the request. e.g. Headers({"Content-Type": "application/json"})
         path_params (dict[str, str]): The parameters of the request. e.g. /user/:id -> {"id": "123"}
         body (Union[str, bytes]): The body of the request. If the request is a JSON, it will be a dict.
@@ -260,7 +260,7 @@ class Request:
         identity (Optional[Identity]): The identity of the client
     """
 
-    query_params: RustQueryParams
+    query_params: QueryParams
     headers: Headers
     path_params: dict[str, str]
     body: Union[str, bytes]
@@ -366,7 +366,7 @@ class WebSocketConnector:
 
     Attributes:
         id (str): The id of the client
-        query_params (RustQueryParams): The query parameters object
+        query_params (QueryParams): The query parameters object
 
         async_broadcast (Callable): The function to broadcast a message to all clients
         async_send_to (Callable): The function to send a message to the client
@@ -375,7 +375,7 @@ class WebSocketConnector:
     """
 
     id: str
-    query_params: RustQueryParams
+    query_params: QueryParams
 
     async def async_broadcast(self, message: str) -> None:
         """

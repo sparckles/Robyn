@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 // Custom Multimap class
 // named as RustQueryParams to avoid conflict between types.QueryParams
-#[pyclass(name = "RustQueryParams")]
+#[pyclass(subclass)]
 #[derive(Clone, Debug, Default)]
 pub struct QueryParams {
     pub queries: HashMap<String, Vec<String>>,
