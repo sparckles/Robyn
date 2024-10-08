@@ -7,9 +7,9 @@ from integration_tests.subroutes import di_subrouter, sub_router
 from integration_tests.views import AsyncView, SyncView
 from robyn import Headers, Request, Response, Robyn, WebSocket, WebSocketConnector, jsonify, serve_file, serve_html
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
-from robyn.robyn import Url, QueryParams
+from robyn.robyn import QueryParams, Url
 from robyn.templating import JinjaTemplate
-from robyn.types import JSONResponse, PathParams, Body, Method
+from robyn.types import Body, JSONResponse, Method, PathParams
 
 app = Robyn(__file__)
 websocket = WebSocket(app, "/web_socket")
