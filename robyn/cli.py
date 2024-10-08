@@ -132,4 +132,5 @@ def run():
         try:
             start_app_normally(config)
         except KeyboardInterrupt:
+            # for the crash happening upon pressing Ctrl + C
             pass
