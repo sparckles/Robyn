@@ -1,4 +1,4 @@
-from .sync_view import SyncView
 from .async_view import AsyncView
+from .sync_view import SyncView
 
 __all__ = ["SyncView", "AsyncView"]

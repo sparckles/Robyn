@@ -1,22 +1,11 @@
 import os
 import pathlib
 from collections import defaultdict
-from typing import Optional
+from typing import Optional, TypedDict
 
-from robyn import Headers
-
-from integration_tests.subroutes import sub_router, di_subrouter
-from integration_tests.views import SyncView, AsyncView
-from robyn import (
-    Request,
-    Response,
-    Robyn,
-    WebSocket,
-    jsonify,
-    serve_file,
-    serve_html,
-    WebSocketConnector,
-)
+from integration_tests.subroutes import di_subrouter, sub_router
+from integration_tests.views import AsyncView, SyncView
+from robyn import Headers, Request, Response, Robyn, WebSocket, WebSocketConnector, jsonify, serve_file, serve_html
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.templating import JinjaTemplate
 
@@ -856,6 +845,29 @@ def sync_router_di(request, router_dependencies):
 def sample_openapi_endpoint():
     """Get openapi"""
     return 200
+
+
+class Initial(TypedDict):
+    is_present: bool
+    letter: Optional[str]
+
+
+class FullName(TypedDict):
+    first: str
+    second: str
+    initial: Initial
+
+
+class CreateItemBody(TypedDict):
+    name: FullName
+    description: str
+    price: float
+    tax: float
+
+
+@app.post("/openapi_request_body")
+def create_item(request, body=CreateItemBody) -> CreateItemBody:
+    return request.body
 
 
 def main():

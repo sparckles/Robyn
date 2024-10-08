@@ -173,6 +173,75 @@ app.include_router(subrouter)
 
 </CodeGroup>
 
+## Other Specification Params
+
+We support all the params mentioned in the latest OpenAPI specifications (https://swagger.io/specification/). See an example using request & response bodies below:
+
+<CodeGroup title="Request & Response Body">
+
+```python {{ title: 'untyped' }}
+from robyn.types import JSONResponse
+
+class Initial(TypedDict):
+    is_present: bool
+    letter: Optional[str]
+
+
+class FullName(TypedDict):
+    first: str
+    second: str
+    initial: Initial
+
+
+class CreateItemBody(TypedDict):
+    name: FullName
+    description: str
+    price: float
+    tax: float
+
+
+class CreateResponse(JSONResponse):
+    success: bool
+    items_changed: int
+
+
+@app.post("/")
+def create_item(request: Request, body=CreateItemBody) -> CreateResponse:
+    return {"success": True, "items_changed": 2}
+```
+
+```python {{ title: 'typed' }}
+from robyn.types import JSONResponse
+
+class Initial(TypedDict):
+    is_present: bool
+    letter: Optional[str]
+
+
+class FullName(TypedDict):
+    first: str
+    second: str
+    initial: Initial
+
+
+class CreateItemBody(TypedDict):
+    name: FullName
+    description: str
+    price: float
+    tax: float
+
+class CreateResponse(JSONResponse):
+    success: bool
+    items_changed: int
+
+
+@app.post("/")
+def create_item(request: Request, body=CreateItemBody) -> CreateResponse:
+    return CreateResponse(success=True, items_changed=2)
+```
+
+</CodeGroup>
+
 With the reference documentation deployed and running smoothly, Batman had a powerful new tool at his disposal. The Robyn framework had provided him with the flexibility, scalability, and performance needed to create an effective crime-fighting application, giving him a technological edge in his ongoing battle to protect Gotham City.
 
 

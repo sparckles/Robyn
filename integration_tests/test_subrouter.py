@@ -1,5 +1,5 @@
-from websocket import create_connection
 import pytest
+from websocket import create_connection
 
 from integration_tests.helpers.http_methods_helpers import generic_http_helper, head
 

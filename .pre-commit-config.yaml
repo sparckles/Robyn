@@ -6,5 +6,6 @@ repos:
         args:
           - --fix
       - id: ruff-format
+
 ci:
   autoupdate_schedule: weekly

@@ -1,6 +1,6 @@
 import os
-import pytest
 
+import pytest
 import requests
 
 from integration_tests.helpers.network_helpers import get_network_host
