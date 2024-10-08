@@ -25,12 +25,25 @@ Batman wanted to create a Robyn app and was about to create an `src/app.py` befo
 $ python -m robyn --create
 ```
 
-This, would result in the following output.
+You can choose to have a simple starter format or an opinionated scaffold ike so...
+
+```bash
+$ python -m robyn --create
+? Directory Path: myproject
+? Need Docker? (Y/N) Y
+? Please choose if you'd like the scaffold to be a simple starter kit or an opinionated structure
+  Simple
+❯ Structured
+```
+
+
+This, would result in the following output if you choose scaffold type as `simple`
 
 ```bash
 $ python3 -m robyn --create
 ? Directory Path: .
 ? Need Docker? (Y/N) Y
+? Please choose if you'd like the scaffold to be a simple starter kit or an opinionated structure
 ? Please select project type (Mongo/Postgres/Sqlalchemy/Prisma):
 ❯ No DB
   Sqlite
