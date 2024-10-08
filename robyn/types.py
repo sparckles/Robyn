@@ -27,7 +27,7 @@ IPAddress = NewType("IPAddress", Optional[str])
 
 class JSONResponse(TypedDict):
     """
-    A type alias for openapi response bodies
+    A type alias for openapi response bodies. This class should be inherited by the response class type definition.
     """
 
     pass
@@ -35,7 +35,7 @@ class JSONResponse(TypedDict):
 
 class Body:
     """
-    A type alias for openapi request bodies
+    A type alias for openapi request bodies. This class should be inherited by the request body class annotation.
     """
 
     pass
