@@ -149,7 +149,8 @@ if __name__ == "__main__":
 
 Comes with initial settings you need to work with the database. The `BaseConfig` class slight enhancement on pydantic-settings's `BaseSettings` class
 
-- Your endpoint and middleware handlers live under the api package
+- Your endpoint and middleware handlers live under the api package.
+> note: the example where the handlers are in a class as static methods is completely up to the developer preference and doesn't impact the actual routing in any way
 
 - It also comes pre-configured with alembic for database migrations
 
