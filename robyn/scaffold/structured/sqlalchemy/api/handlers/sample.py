@@ -6,6 +6,10 @@ router = SubRouter(__name__, prefix="/sample/")
 
 
 class SampleHandlers:
+    """
+    note: the handles being grouped in a class like this is complete optional, and doesn't have any impact on routing
+    """
+
     @staticmethod
     @router.post("one/")
     async def one(global_dependencies):
@@ -20,3 +24,7 @@ class SampleHandlers:
     @router.get("two/")
     def two():
         return {}
+
+@router.get("three/")
+def three():
+    return {}
