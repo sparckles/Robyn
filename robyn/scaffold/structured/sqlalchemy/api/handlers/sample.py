@@ -25,6 +25,7 @@ class SampleHandlers:
     def two():
         return {}
 
+
 @router.get("three/")
 def three():
     return {}
