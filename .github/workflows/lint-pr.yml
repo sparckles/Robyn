@@ -1,20 +1,23 @@
-name: "Lint PR"
+name: Lint PR
 
 on:
-  pull_request_target:
-    types:
-      - opened
-      - edited
-      - synchronize
-
-permissions:
-  pull-requests: read
+  pull_request:
+    branches: [main]
 
 jobs:
-  main:
-    name: Validate PR title
+  lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: amannn/action-semantic-pull-request@v5
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install ruff isort black
+    - name: Run linters
+      run: |
+        ruff check .
+        isort --check-only --diff .

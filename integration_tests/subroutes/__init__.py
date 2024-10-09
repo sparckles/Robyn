@@ -1,4 +1,4 @@
-from robyn import SubRouter, jsonify, WebSocket
+from robyn import SubRouter, WebSocket, jsonify
 
 from .di_subrouter import di_subrouter
 

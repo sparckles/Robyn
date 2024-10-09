@@ -1,7 +1,7 @@
 import json
 
-from websocket import create_connection
 import pytest
+from websocket import create_connection
 
 BASE_URL = "ws://127.0.0.1:8080"
 

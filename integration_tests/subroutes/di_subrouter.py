@@ -1,4 +1,4 @@
-from robyn import SubRouter, Request
+from robyn import Request, SubRouter
 
 di_subrouter = SubRouter(__file__, "/di_subrouter")
 GLOBAL_DEPENDENCY = "GLOBAL DEPENDENCY OVERRIDE"
