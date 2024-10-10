@@ -1,6 +1,6 @@
-from sqlalchemy import String, Integer, Boolean
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from pydantic import BaseModel
+from sqlalchemy import Boolean, Integer, String
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 class Base(DeclarativeBase):

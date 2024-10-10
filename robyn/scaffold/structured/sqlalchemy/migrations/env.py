@@ -1,9 +1,7 @@
 from logging.config import fileConfig
 
-
-from alembic import context
 from adaptors import models
-
+from alembic import context
 from utils.db import get_pool
 
 # this is the Alembic Config object, which provides

@@ -1,6 +1,7 @@
-from robyn import SubRouter
 from adaptors.selectors.misc import sample_selector
 from utils.db import get_db_connection
+
+from robyn import SubRouter
 
 router = SubRouter(__name__, prefix="/sample/")
 

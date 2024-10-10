@@ -1,6 +1,5 @@
 from robyn import SubRouter
 
-
 router = SubRouter(__name__, prefix="/")
 
 
