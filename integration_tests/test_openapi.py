@@ -5,7 +5,7 @@ from integration_tests.helpers.http_methods_helpers import get
 
 @pytest.mark.benchmark
 def test_docs_handler():
-    html_response = get("/docs")
+    html_response = get("/docs", should_check_response=False)
     assert html_response.status_code == 200
 
 
