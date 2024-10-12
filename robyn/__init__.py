@@ -200,6 +200,9 @@ class Robyn:
     def set_response_header(self, key: str, value: str) -> None:
         self.response_headers.set(key, value)
 
+    def exclude_response_headers(self, exclude_paths: Optional[list[str]]):
+        self.response_headers.set_exclude_paths(exclude_paths)
+
     def add_web_socket(self, endpoint: str, ws: WebSocket) -> None:
         self.web_socket_router.add_route(endpoint, ws)
 
@@ -235,6 +238,7 @@ class Robyn:
         if not self.config.disable_openapi:
             self.add_route(route_type=HttpMethod.GET, endpoint="/openapi.json", handler=self.openapi.get_openapi_config, is_const=True)
             self.add_route(route_type=HttpMethod.GET, endpoint="/docs", handler=self.openapi.get_openapi_docs_page, is_const=True)
+            self.exclude_response_headers(["/docs"])
             logger.info("Docs hosted at http://%s:%s/docs", host, port)
 
         host = os.getenv("ROBYN_HOST", host)

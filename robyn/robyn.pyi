@@ -177,6 +177,8 @@ class QueryParams:
         pass
 
 class Headers:
+    exclude_paths: Optional[list[str]] = None
+
     def __init__(self, default_headers: Optional[dict]) -> None:
         pass
 
@@ -240,6 +242,9 @@ class Headers:
         Returns:
             True if the headers are empty, False otherwise
         """
+        pass
+
+    def set_exclude_paths(self, exclude_paths: Optional[list[str]] = None):
         pass
 
 @dataclass

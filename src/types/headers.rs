@@ -9,6 +9,7 @@ use pyo3::types::{PyDict, PyList};
 #[derive(Clone, Debug, Default)]
 pub struct Headers {
     pub headers: DashMap<String, Vec<String>>,
+    pub exclude_paths: Option<Vec<String>>
 }
 
 #[pymethods]
@@ -31,10 +32,11 @@ impl Headers {
                         headers.entry(key).or_insert_with(Vec::new).push(value);
                     }
                 }
-                Headers { headers }
+                Headers { headers: headers, exclude_paths: None }
             }
             None => Headers {
                 headers: DashMap::new(),
+                exclude_paths: None
             },
         }
     }
@@ -110,6 +112,10 @@ impl Headers {
         self.headers.is_empty()
     }
 
+    pub fn set_exclude_paths(&mut self, exclude_paths: Option<Vec<String>>) {
+        self.exclude_paths = exclude_paths;
+    }
+
     fn __eq__(&self, other: &Headers) -> bool {
         if self.headers.is_empty() && other.headers.is_empty() {
             return true;
@@ -156,6 +162,10 @@ impl Headers {
 impl Headers {
     pub fn remove(&mut self, key: &str) {
         self.headers.remove(&key.to_lowercase());
+    }
+
+    pub fn remove_all(&mut self) {
+        self.headers.clear();
     }
 
     pub fn extend(&mut self, headers: &Headers) {

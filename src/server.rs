@@ -452,10 +452,15 @@ async fn index(
 
     response.headers.extend(&global_response_headers);
 
-    if req.uri().path().eq("/docs") {
-        response
-            .headers
-            .append("Content-Type".to_string(), "text/html".to_string());
+    match &global_response_headers.exclude_paths {
+        None => {},
+        Some(exclude_paths) => {
+            if exclude_paths.contains(&req.uri().path().to_owned()) {
+                response
+                    .headers
+                    .remove_all();
+            }
+        },
     }
 
     debug!("Extended Response : {:?}", response);
