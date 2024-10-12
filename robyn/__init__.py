@@ -200,7 +200,7 @@ class Robyn:
     def set_response_header(self, key: str, value: str) -> None:
         self.response_headers.set(key, value)
 
-    def exclude_response_headers(self, exclude_paths: Optional[list[str]]):
+    def exclude_response_headers(self, exclude_paths: Optional[List[str]]):
         self.response_headers.set_exclude_paths(exclude_paths)
 
     def add_web_socket(self, endpoint: str, ws: WebSocket) -> None:
