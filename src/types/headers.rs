@@ -9,7 +9,7 @@ use pyo3::types::{PyDict, PyList};
 #[derive(Clone, Debug, Default)]
 pub struct Headers {
     pub headers: DashMap<String, Vec<String>>,
-    pub exclude_paths: Option<Vec<String>>
+    pub exclude_paths: Option<Vec<String>>,
 }
 
 #[pymethods]
@@ -32,11 +32,14 @@ impl Headers {
                         headers.entry(key).or_insert_with(Vec::new).push(value);
                     }
                 }
-                Headers { headers: headers, exclude_paths: None }
+                Headers {
+                    headers,
+                    exclude_paths: None,
+                }
             }
             None => Headers {
                 headers: DashMap::new(),
-                exclude_paths: None
+                exclude_paths: None,
             },
         }
     }
