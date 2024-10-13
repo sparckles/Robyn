@@ -231,10 +231,10 @@ impl Server {
             // if I try to create a function & move the code there, I get an error stating
             // "unused implementer of `futures_util::Future` that must be used futures do nothing
             // unless you await or poll them."
-            
+
             // now, if I add `.await`, I get the error "await is used inside non-async function,
             // which is not an async context".
-            
+
             // which can be solved by starting a new async function & we are back to square one.
 
             if let Some(function) = shutdown_handler {
