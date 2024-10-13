@@ -246,7 +246,7 @@ class Robyn:
             is_const=True,
             auth_required=auth_required,
         )
-        self.exclude_response_headers(["/docs"])
+        self.exclude_response_headers(["/docs", "/openapi.json"])
 
     def start(self, host: str = "127.0.0.1", port: int = 8080, _check_port: bool = True):
         """
