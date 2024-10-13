@@ -228,14 +228,15 @@ impl Server {
             // executing this from the same file (and not creating a function -- like startup handler)
             // to fix an issue that arises when a new async function is spooled up.
 
-            // if I try to create a function & move the code there, I get an error stating
+            // if we create a function & move the code, the function won't run s & raises the warning:
             // "unused implementer of `futures_util::Future` that must be used futures do nothing
             // unless you await or poll them."
 
-            // now, if I add `.await`, I get the error "await is used inside non-async function,
+            // but, adding `.await` raises the error "await is used inside non-async function,
             // which is not an async context".
 
-            // which can be solved by starting a new async function & we are back to square one.
+            // which can only be solved by creating a new async function -- hence, resorting
+            // to this solution
 
             if let Some(function) = shutdown_handler {
                 if function.is_async {
