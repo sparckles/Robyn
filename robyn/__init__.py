@@ -242,6 +242,7 @@ class Robyn:
             is_const=True,
             auth_required=auth_required,
         )
+        self.exclude_response_headers(["/docs"])
 
     def start(self, host: str = "127.0.0.1", port: int = 8080, _check_port: bool = True):
         """
@@ -251,11 +252,6 @@ class Robyn:
         :param port int: represents the port number at which the server is listening
         :param _check_port bool: represents if the port should be checked if it is already in use
         """
-        if not self.config.disable_openapi:
-            self.add_route(route_type=HttpMethod.GET, endpoint="/openapi.json", handler=self.openapi.get_openapi_config, is_const=True)
-            self.add_route(route_type=HttpMethod.GET, endpoint="/docs", handler=self.openapi.get_openapi_docs_page, is_const=True)
-            self.exclude_response_headers(["/docs"])
-            logger.info("Docs hosted at http://%s:%s/docs", host, port)
 
         host = os.getenv("ROBYN_HOST", host)
         port = int(os.getenv("ROBYN_PORT", port))
