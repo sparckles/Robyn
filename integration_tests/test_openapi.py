@@ -5,13 +5,20 @@ from integration_tests.helpers.http_methods_helpers import get
 
 @pytest.mark.benchmark
 def test_docs_handler():
+    # should_check_response = False because check_response raises a
+    # failure if the global headers are not present in the response
+    # provided we are excluding headers for /docs and /openapi.json
     html_response = get("/docs", should_check_response=False)
     assert html_response.status_code == 200
 
 
 @pytest.mark.benchmark
 def test_json_handler():
-    openapi_spec = get("/openapi.json").json()
+    openapi_response = get("/openapi.json", should_check_response=False)
+
+    assert openapi_response.status_code == 200
+
+    openapi_spec = openapi_response.json()
 
     assert isinstance(openapi_spec, dict)
     assert "openapi" in openapi_spec
@@ -24,7 +31,11 @@ def test_json_handler():
 
 @pytest.mark.benchmark
 def test_add_openapi_path():
-    openapi_spec = get("/openapi.json").json()
+    openapi_response = get("/openapi.json", should_check_response=False)
+
+    assert openapi_response.status_code == 200
+
+    openapi_spec = openapi_response.json()
 
     assert isinstance(openapi_spec, dict)
 
@@ -41,7 +52,11 @@ def test_add_openapi_path():
 
 @pytest.mark.benchmark
 def test_add_subrouter_paths():
-    openapi_spec = get("/openapi.json").json()
+    openapi_response = get("/openapi.json", should_check_response=False)
+
+    assert openapi_response.status_code == 200
+
+    openapi_spec = openapi_response.json()
 
     assert isinstance(openapi_spec, dict)
 
@@ -58,7 +73,11 @@ def test_add_subrouter_paths():
 
 @pytest.mark.benchmark
 def test_openapi_request_body():
-    openapi_spec = get("/openapi.json").json()
+    openapi_response = get("/openapi.json", should_check_response=False)
+
+    assert openapi_response.status_code == 200
+
+    openapi_spec = openapi_response.json()
 
     assert isinstance(openapi_spec, dict)
 
@@ -118,7 +137,11 @@ def test_openapi_request_body():
 
 @pytest.mark.benchmark
 def test_openapi_response_body():
-    openapi_spec = get("/openapi.json").json()
+    openapi_response = get("/openapi.json", should_check_response=False)
+
+    assert openapi_response.status_code == 200
+
+    openapi_spec = openapi_response.json()
 
     assert isinstance(openapi_spec, dict)
 
