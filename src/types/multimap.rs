@@ -4,7 +4,6 @@ use pyo3::types::{PyDict, PyList};
 use std::collections::HashMap;
 
 // Custom Multimap class
-// named as RustQueryParams to avoid conflict between types.QueryParams
 #[pyclass(subclass)]
 #[derive(Clone, Debug, Default)]
 pub struct QueryParams {
