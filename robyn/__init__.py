@@ -227,6 +227,22 @@ class Robyn:
         except Exception:
             raise Exception(f"Invalid port number: {port}")
 
+    def _add_openapi_routes(self, auth_required: bool = False):
+        self.add_route(
+            route_type=HttpMethod.GET,
+            endpoint="/openapi.json",
+            handler=self.openapi.get_openapi_config,
+            is_const=True,
+            auth_required=auth_required,
+        )
+        self.add_route(
+            route_type=HttpMethod.GET,
+            endpoint="/docs",
+            handler=self.openapi.get_openapi_docs_page,
+            is_const=True,
+            auth_required=auth_required,
+        )
+
     def start(self, host: str = "127.0.0.1", port: int = 8080, _check_port: bool = True):
         """
         Starts the server
@@ -253,6 +269,10 @@ class Robyn:
                 except Exception:
                     logger.error("Invalid port number. Please enter a valid port number.")
                     continue
+
+        if not self.config.disable_openapi:
+            self._add_openapi_routes()
+            logger.info("Docs hosted at http://%s:%s/docs", host, port)
 
         logger.info("Robyn version: %s", __version__)
         logger.info("Starting server at http://%s:%s", host, port)
