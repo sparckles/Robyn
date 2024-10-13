@@ -201,6 +201,10 @@ class Robyn:
         self.response_headers.set(key, value)
 
     def exclude_response_headers(self, exclude_paths: Optional[List[str]]):
+        """
+        To disable certain routes from the application of response headers
+        @param exclude_paths: the paths to exclude response headers from
+        """
         self.response_headers.set_exclude_paths(exclude_paths)
 
     def add_web_socket(self, endpoint: str, ws: WebSocket) -> None:
