@@ -62,9 +62,7 @@ def run_migrations_online() -> None:
     Session = sessionmaker(bind=engine)
 
     with Session() as session:
-        context.configure(
-            connection=session.connection(), target_metadata=target_metadata
-        )
+        context.configure(connection=session.connection(), target_metadata=target_metadata)
         with context.begin_transaction():
             context.run_migrations()
 
