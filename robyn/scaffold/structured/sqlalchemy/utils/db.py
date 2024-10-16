@@ -1,16 +1,7 @@
 from contextlib import asynccontextmanager
 
 from conf import settings
-from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import create_async_engine
-
-
-def get_sync_pool():
-    # for databsae migrations
-    return create_engine(
-        settings.database_url,
-        echo=settings.db_pool_echo,
-    )
 
 
 def get_pool():
