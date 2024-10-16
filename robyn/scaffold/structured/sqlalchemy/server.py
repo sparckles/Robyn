@@ -1,5 +1,5 @@
 from conf import settings
-from utils.db import get_database_connection_pool 
+from utils.db import get_database_connection_pool
 
 from robyn import Robyn
 from robyn.helpers import discover_routes
