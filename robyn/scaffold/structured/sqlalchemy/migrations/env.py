@@ -1,8 +1,10 @@
 from logging.config import fileConfig
 
+from sqlalchemy.orm import sessionmaker
+
 from adaptors import models
 from alembic import context
-from utils.db import get_pool
+from utils.db import get_sync_pool
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -56,7 +58,10 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    with get_pool() as session:
+    engine = get_sync_pool()
+    Session = sessionmaker(bind=engine)
+
+    with Session() as session:
         context.configure(connection=session.connection(), target_metadata=target_metadata)
         with context.begin_transaction():
             context.run_migrations()
