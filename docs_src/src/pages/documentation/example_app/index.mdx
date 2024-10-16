@@ -53,12 +53,7 @@ $ python3 -m robyn --create
   Prisma
 ```
 
-and the following directory structure.
-
-
-Batman was asked a set of questions to configure the application. He chose to use the default values for most of the questions.
-
-And he was done! The Robyn CLI created a new application with the following structure.
+and the following directory structure
 
 ```bash
 
@@ -161,4 +156,51 @@ Comes with initial settings you need to work with the database. The `BaseConfig`
 
 > note: by default, we include sqlalchemy async pool, you can always change it as per your requirements
 
+Once you have set up your project like so, make sure to update the `sqlalchemy.url` field in your `alembic.ini`file to point to your DB like so...
 
+```
+sqlalchemy.url = postgresql+psycopg://consoleuser:buddy123@localhost:5432/console 
+```
+
+Then, once you are done writing your sqlalchemy model classes, you can go ahead and generate your migration files like so
+
+```bash
+alembic revision --autogenerate -m initial
+```
+You should see an output like so
+
+```
+/home/batman/.virtualenvs/base/lib/python3.12/site-packages/pydantic/_internal/_config.py:334: UserWarning: Valid config keys have changed in V2:
+* 'orm_mode' has been renamed to 'from_attributes'
+  warnings.warn(message, UserWarning)
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.autogenerate.compare] Detected added table 'users'
+INFO  [alembic.autogenerate.compare] Detected added index ''ix_users_id'' on '('id',)'
+INFO  [alembic.autogenerate.compare] Detected added index ''ix_users_username'' on '('username',)'
+INFO  [alembic.ddl.postgresql] Detected sequence named 'transactions_id_seq' as owned by integer column 'transactions(id)', assuming SERIAL and omitting
+INFO  [alembic.autogenerate.compare] Detected removed index 'idx_user_id' on 'transactions'
+INFO  [alembic.autogenerate.compare] Detected removed table 'transactions'
+  Generating /home/ashu/Desktop/aaa/migrations/versions/cefc632435c7_initial.py ...  done
+```
+
+This will generate the migration files like so
+
+```bash
+$ tree migrations/
+migrations/
+├── env.py
+├── README
+├── script.py.mako
+└── versions
+    ├── cefc632435c7_initial.py
+    └── __init__.py
+
+2 directories, 5 files
+```
+
+Now you can apply the migrations with `alembic upgrade head`
+
+Batman was asked a set of questions to configure the application. He chose to use the default values for most of the questions.
+
+And he was done! The Robyn CLI created a new application with the following structure.
