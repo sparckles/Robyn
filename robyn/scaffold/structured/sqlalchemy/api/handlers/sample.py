@@ -8,7 +8,7 @@ router = SubRouter(__name__, prefix="/sample/")
 
 @router.post("one/")
 async def one(global_dependencies):
-    pool = global_dependencies.get("pool")
+    pool = global_dependencies.get("db_connection_pool")
     async with get_db_connection(pool) as conn:
         # invoke your mutators/selectors here
         res = await sample_selector(conn)
