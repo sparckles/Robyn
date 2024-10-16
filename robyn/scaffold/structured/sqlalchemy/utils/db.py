@@ -4,7 +4,7 @@ from conf import settings
 from sqlalchemy.ext.asyncio import create_async_engine
 
 
-def get_pool():
+def get_database_connection_pool():
     return create_async_engine(
         settings.database_url,
         pool_size=settings.db_pool_size,
