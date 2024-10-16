@@ -4,6 +4,7 @@ SQLAlchemy~=2.0.35
 alembic~=1.13.3
 #drivers
 asyncpg~=0.29.0
+psycopg2-binary~=2.9.9
 aiosqlite~=0.20.0
 #schema
 pydantic~=2.7.4
