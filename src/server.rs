@@ -54,6 +54,7 @@ pub struct Server {
     directories: Arc<RwLock<Vec<Directory>>>,
     startup_handler: Option<Arc<FunctionInfo>>,
     shutdown_handler: Option<Arc<FunctionInfo>>,
+    exclude_paths: Option<Vec<String>>,
 }
 
 #[pymethods]
@@ -70,6 +71,7 @@ impl Server {
             directories: Arc::new(RwLock::new(Vec::new())),
             startup_handler: None,
             shutdown_handler: None,
+            exclude_paths: None,
         }
     }
 
@@ -105,6 +107,8 @@ impl Server {
 
         let startup_handler = self.startup_handler.clone();
         let shutdown_handler = self.shutdown_handler.clone();
+
+        let exclude_paths = self.exclude_paths.clone();
 
         let task_locals = pyo3_asyncio::TaskLocals::new(event_loop).copy_context(py)?;
         let task_locals_copy = task_locals.clone();
@@ -160,7 +164,8 @@ impl Server {
                         .app_data(web::Data::new(const_router.clone()))
                         .app_data(web::Data::new(middleware_router.clone()))
                         .app_data(web::Data::new(global_request_headers.clone()))
-                        .app_data(web::Data::new(global_response_headers.clone()));
+                        .app_data(web::Data::new(global_response_headers.clone()))
+                        .app_data(web::Data::new(exclude_paths.clone()));
 
                     let web_socket_map = web_socket_router.get_web_socket_map();
                     for (elem, value) in (web_socket_map.read()).iter() {
@@ -192,6 +197,7 @@ impl Server {
                                   payload: web::Payload,
                                   global_request_headers,
                                   global_response_headers,
+                                  exclude_paths,
                                   req| {
                                 pyo3_asyncio::tokio::scope_local(task_locals.clone(), async move {
                                     index(
@@ -201,6 +207,7 @@ impl Server {
                                         middleware_router,
                                         global_request_headers,
                                         global_response_headers,
+                                        exclude_paths,
                                         req,
                                     )
                                     .await
@@ -268,6 +275,10 @@ impl Server {
 
     pub fn apply_response_headers(&mut self, headers: &Headers) {
         self.global_response_headers = Arc::new(headers.clone());
+    }
+
+    pub fn set_exclude_paths(&mut self, exclude_paths: Option<Vec<String>>) {
+        self.exclude_paths = exclude_paths;
     }
 
     /// Add a new route to the routing tables
@@ -388,6 +399,7 @@ async fn index(
     middleware_router: web::Data<Arc<MiddlewareRouter>>,
     global_request_headers: web::Data<Arc<Headers>>,
     global_response_headers: web::Data<Arc<Headers>>,
+    exclude_paths: web::Data<Option<Vec<String>>>,
     req: HttpRequest,
 ) -> impl Responder {
     let mut request = Request::from_actix_request(&req, payload, &global_request_headers).await;
@@ -452,7 +464,7 @@ async fn index(
 
     response.headers.extend(&global_response_headers);
 
-    match &global_response_headers.exclude_paths {
+    match &exclude_paths.get_ref() {
         None => {}
         Some(exclude_paths) => {
             if exclude_paths.contains(&req.uri().path().to_owned()) {
