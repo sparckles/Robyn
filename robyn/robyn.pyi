@@ -342,6 +342,7 @@ class Server:
         self,
         middleware_type: MiddlewareType,
         route: str,
+        route_type: HttpMethod,
         function: FunctionInfo,
     ) -> None:
         pass
