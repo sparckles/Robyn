@@ -1,11 +1,13 @@
 import inspect
+import typing
 from dataclasses import asdict, dataclass, field
 from importlib import resources
 from inspect import Signature
 from typing import Any, Callable, Dict, List, Optional, TypedDict
 
 from robyn.responses import FileResponse, html
-from robyn.robyn import Response
+from robyn.robyn import QueryParams, Response
+from robyn.types import Body
 
 
 @dataclass
@@ -169,11 +171,29 @@ class OpenAPI:
         openapi_description = inspect.getdoc(handler) or ""
 
         if signature:
-            if "query_params" in signature.parameters:
-                query_params = signature.parameters["query_params"].default
+            parameters = signature.parameters
 
-            if "body" in signature.parameters:
-                request_body = signature.parameters["body"].default
+            if "query_params" in parameters:
+                query_params = parameters["query_params"].default
+
+                if query_params is Signature.empty:
+                    query_params = None
+
+            if "body" in parameters:
+                request_body = parameters["body"].default
+
+                if request_body is Signature.empty:
+                    request_body = None
+
+            # priority to typing
+            for parameter in parameters:
+                param_annotation = parameters[parameter].annotation
+
+                if inspect.isclass(param_annotation):
+                    if issubclass(param_annotation, Body):
+                        request_body = param_annotation
+                    elif issubclass(param_annotation, QueryParams):
+                        query_params = param_annotation
 
             if signature.return_annotation is not Signature.empty:
                 return_annotation = signature.return_annotation
@@ -260,8 +280,10 @@ class OpenAPI:
                 endpoint_with_path_params_wrapped_in_braces += "/{" + path_param_name + "}"
 
         if query_params:
-            for query_param in query_params.__annotations__:
-                query_param_type = self.get_openapi_type(query_params.__annotations__[query_param])
+            query_param_annotations = query_params.__annotations__ if query_params is TypedDict else typing.get_type_hints(query_params)
+
+            for query_param in query_param_annotations:
+                query_param_type = self.get_openapi_type(query_param_annotations[query_param])
 
                 openapi_path_object["parameters"].append(
                     {
@@ -275,8 +297,10 @@ class OpenAPI:
         if request_body:
             properties = {}
 
-            for body_item in request_body.__annotations__:
-                properties[body_item] = self.get_schema_object(body_item, request_body.__annotations__[body_item])
+            request_body_annotations = request_body.__annotations__ if request_body is TypedDict else typing.get_type_hints(request_body)
+
+            for body_item in request_body_annotations:
+                properties[body_item] = self.get_schema_object(body_item, request_body_annotations[body_item])
 
             request_body_object = {
                 "content": {
