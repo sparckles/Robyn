@@ -205,7 +205,7 @@ impl Server {
                                         payload,
                                         const_router,
                                         middleware_router,
-                                        (global_request_headers,global_response_headers),
+                                        (global_request_headers, global_response_headers),
                                         exclude_paths,
                                         req,
                                     )
