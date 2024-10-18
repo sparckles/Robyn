@@ -176,7 +176,11 @@ def test_openapi_response_body():
 
 @pytest.mark.benchmark
 def test_openapi_query_params():
-    openapi_spec = get("/openapi.json").json()
+    openapi_response = get("/openapi.json", should_check_response=False)
+
+    assert openapi_response.status_code == 200
+
+    openapi_spec = openapi_response.json()
 
     assert isinstance(openapi_spec, dict)
 
