@@ -181,7 +181,7 @@ def spawn_process(
         server.add_global_middleware(middleware_type, middleware_function)
 
     for middleware_type, endpoint, route_type, function in route_middlewares:
-        server.add_middleware_route(middleware_type, endpoint, route_type, function)
+        server.add_middleware_route(middleware_type, endpoint, function, route_type)
 
     if Events.STARTUP in event_handlers:
         server.add_startup_handler(event_handlers[Events.STARTUP])

@@ -342,8 +342,8 @@ class Server:
         self,
         middleware_type: MiddlewareType,
         route: str,
-        route_type: HttpMethod,
         function: FunctionInfo,
+        route_type: HttpMethod,
     ) -> None:
         pass
     def add_startup_handler(self, function: FunctionInfo) -> None:
