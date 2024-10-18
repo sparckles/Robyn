@@ -19,19 +19,37 @@ python app.py --disable-openapi
 
 ## How to use?
 
-- Query Params: The typing for query params can be added as `def get(r: Request, query_params=GetRequestParams)` where `GetRequestParams` is a `TypedDict`
+- Query Params: The typing for query params can be added as `def get(r: Request, query_params: GetRequestParams)` where `GetRequestParams` is a subclass of `QueryParams`
 - Path Params are defaulted to string type (ref: https://en.wikipedia.org/wiki/Query_string)
 
 <CodeGroup title="Basic App">
 
 ```python {{ title: 'untyped' }}
-from typing import TypedDict
+from robyn import Robyn
+from robyn.robyn import QueryParams
 
-from robyn import Robyn, OpenAPI
-from robyn.openapi import OpenAPIInfo, Contact, License, ExternalDocumentation, Components
-
-
-app = Robyn(file_object=__file__)
+app = Robyn(
+    file_object=__file__,
+    openapi=OpenAPI(
+        info=OpenAPIInfo(
+            title="Sample App",
+            description="This is a sample server application.",
+            termsOfService="https://example.com/terms/",
+            version="1.0.0",
+            contact=Contact(
+                name="API Support",
+                url="https://www.example.com/support",
+                email="support@example.com",
+            ),
+            license=License(
+                name="BSD2.0",
+                url="https://opensource.org/license/bsd-2-clause",
+            ),
+            externalDocs=ExternalDocumentation(description="Find more info here", url="https://example.com/"),
+            components=Components(),
+        ),
+    ),
+)
 
 
 @app.get("/")
@@ -40,13 +58,13 @@ async def welcome():
     return "hi"
 
 
-class GetRequestParams(TypedDict):
+class GetRequestParams(QueryParams):
     appointment_id: str
     year: int
 
 
 @app.get("/api/v1/name", openapi_name="Name Route", openapi_tags=["Name"])
-async def get(r, query_params=GetRequestParams):
+async def get(r, query_params: GetRequestParams):
     """Get Name by ID"""
     return r.query_params
 
@@ -62,12 +80,32 @@ if __name__ == "__main__":
 ```
 
 ```python {{ title: 'typed' }}
-from typing import TypedDict
+from robyn.robyn import QueryParams
 
-from robyn import Robyn, OpenAPI, Request
-from robyn.openapi import OpenAPIInfo, Contact, License, ExternalDocumentation, Components
+from robyn import Robyn, Request
 
-app: Robyn = Robyn(file_object=__file__)
+app = Robyn(
+    file_object=__file__,
+    openapi=OpenAPI(
+        info=OpenAPIInfo(
+            title="Sample App",
+            description="This is a sample server application.",
+            termsOfService="https://example.com/terms/",
+            version="1.0.0",
+            contact=Contact(
+                name="API Support",
+                url="https://www.example.com/support",
+                email="support@example.com",
+            ),
+            license=License(
+                name="BSD2.0",
+                url="https://opensource.org/license/bsd-2-clause",
+            ),
+            externalDocs=ExternalDocumentation(description="Find more info here", url="https://example.com/"),
+            components=Components(),
+        ),
+    ),
+)
 
 
 @app.get("/")
@@ -76,13 +114,13 @@ async def welcome():
     return "hi"
 
 
-class GetRequestParams(TypedDict):
+class GetRequestParams(QueryParams):
     appointment_id: str
     year: int
 
 
 @app.get("/api/v1/name", openapi_name="Name Route", openapi_tags=["Name"])
-async def get(r: Request, query_params=GetRequestParams):
+async def get(r: Request, query_params: GetRequestParams):
     """Get Name by ID"""
     return r.query_params
 
@@ -104,9 +142,8 @@ if __name__ == "__main__":
 <CodeGroup title="Subrouters">
 
 ```python {{ title: 'untyped' }}
-from typing import TypedDict
-
 from robyn import SubRouter
+from robyn.robyn import QueryParams
 
 subrouter = SubRouter(__name__, prefix="/sub")
 
@@ -117,13 +154,13 @@ async def subrouter_welcome():
     return "hiiiiii subrouter"
 
 
-class SubRouterGetRequestParams(TypedDict):
+class SubRouterGetRequestParams(QueryParams):
     _id: int
     value: str
 
 
 @subrouter.get("/name")
-async def subrouter_get(r, query_params=SubRouterGetRequestParams):
+async def subrouter_get(r, query_params: SubRouterGetRequestParams):
     """Get Name by ID"""
     return r.query_params
 
@@ -138,7 +175,7 @@ app.include_router(subrouter)
 ```
 
 ```python {{ title: 'typed' }}
-from typing import TypedDict
+from robyn.robyn import QueryParams
 
 from robyn import Request, SubRouter
 
@@ -151,13 +188,13 @@ async def subrouter_welcome():
     return "hiiiiii subrouter"
 
 
-class SubRouterGetRequestParams(TypedDict):
+class SubRouterGetRequestParams(QueryParams):
     _id: int
     value: str
 
 
 @subrouter.get("/name")
-async def subrouter_get(r: Request, query_params=SubRouterGetRequestParams):
+async def subrouter_get(r: Request, query_params: SubRouterGetRequestParams):
     """Get Name by ID"""
     return r.query_params
 
@@ -180,20 +217,20 @@ We support all the params mentioned in the latest OpenAPI specifications (https:
 <CodeGroup title="Request & Response Body">
 
 ```python {{ title: 'untyped' }}
-from robyn.types import JSONResponse
+from robyn.types import JSONResponse, Body
 
-class Initial(TypedDict):
+class Initial(Body):
     is_present: bool
     letter: Optional[str]
 
 
-class FullName(TypedDict):
+class FullName(Body):
     first: str
     second: str
     initial: Initial
 
 
-class CreateItemBody(TypedDict):
+class CreateItemBody(Body):
     name: FullName
     description: str
     price: float
@@ -206,29 +243,30 @@ class CreateResponse(JSONResponse):
 
 
 @app.post("/")
-def create_item(request: Request, body=CreateItemBody) -> CreateResponse:
-    return {"success": True, "items_changed": 2}
+def create_item(request: Request, body: CreateItemBody) -> CreateResponse:
+    return CreateResponse(success=True, items_changed=2)
 ```
 
 ```python {{ title: 'typed' }}
-from robyn.types import JSONResponse
+from robyn.types import JSONResponse, Body
 
-class Initial(TypedDict):
+class Initial(Body):
     is_present: bool
     letter: Optional[str]
 
 
-class FullName(TypedDict):
+class FullName(Body):
     first: str
     second: str
     initial: Initial
 
 
-class CreateItemBody(TypedDict):
+class CreateItemBody(Body):
     name: FullName
     description: str
     price: float
     tax: float
+
 
 class CreateResponse(JSONResponse):
     success: bool
@@ -236,7 +274,7 @@ class CreateResponse(JSONResponse):
 
 
 @app.post("/")
-def create_item(request: Request, body=CreateItemBody) -> CreateResponse:
+def create_item(request: Request, body: CreateItemBody) -> CreateResponse:
     return CreateResponse(success=True, items_changed=2)
 ```
 

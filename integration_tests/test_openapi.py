@@ -138,54 +138,32 @@ def test_openapi_response_body():
     assert "schema" in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]
     assert "properties" in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]
 
-    assert "name" in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]
-    assert "description" in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]
-    assert "price" in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]
-    assert "tax" in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]
+    assert "success" in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]
+    assert "items_changed" in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]
 
     assert (
-        "string"
-        == openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["description"]["type"]
-    )
-    assert "number" == openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["price"]["type"]
-    assert "number" == openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["tax"]["type"]
-
-    assert "object" == openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["name"]["type"]
-
-    assert (
-        "first" in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["name"]["properties"]
-    )
-    assert (
-        "second" in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["name"]["properties"]
-    )
-    assert (
-        "initial"
-        in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["name"]["properties"]
+        "boolean" == openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["success"]["type"]
     )
 
     assert (
-        "object"
-        in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["name"]["properties"][
-            "initial"
-        ]["type"]
+        "integer"
+        == openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["items_changed"]["type"]
     )
 
-    assert (
-        "is_present"
-        in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["name"]["properties"][
-            "initial"
-        ]["properties"]
-    )
-    assert (
-        "letter"
-        in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["name"]["properties"][
-            "initial"
-        ]["properties"]
-    )
 
-    assert {"type": "string"} in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["name"][
-        "properties"
-    ]["initial"]["properties"]["letter"]["anyOf"]
-    assert {"type": "null"} in openapi_spec["paths"][endpoint][route_type]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["name"][
-        "properties"
-    ]["initial"]["properties"]["letter"]["anyOf"]
+@pytest.mark.benchmark
+def test_openapi_query_params():
+    openapi_spec = get("/openapi.json").json()
+
+    assert isinstance(openapi_spec, dict)
+
+    route_type = "post"
+    endpoint = "/openapi_request_body"
+
+    assert endpoint in openapi_spec["paths"]
+    assert route_type in openapi_spec["paths"][endpoint]
+    assert "parameters" in openapi_spec["paths"][endpoint][route_type]
+
+    assert "required" == openapi_spec["paths"][endpoint][route_type]["parameters"][0]["name"]
+    assert "query" == openapi_spec["paths"][endpoint][route_type]["parameters"][0]["in"]
+    assert {"type": "boolean"} == openapi_spec["paths"][endpoint][route_type]["parameters"][0]["schema"]
