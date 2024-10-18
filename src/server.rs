@@ -364,14 +364,24 @@ impl Server {
         &self,
         middleware_type: &MiddlewareType,
         route: &str,
+        http_method: HttpMethod,
         function: FunctionInfo,
     ) {
+        let mut endpoint = http_method.to_string().to_owned();
+
+        if !route.starts_with('/') {
+            endpoint.push('/');
+        }
+
+        endpoint.push_str(route);
+
         debug!(
             "MiddleWare Route added for {:?} {} ",
-            middleware_type, route
+            middleware_type, &endpoint
         );
+
         self.middleware_router
-            .add_route(middleware_type, route, function, None)
+            .add_route(middleware_type, &endpoint, function, None)
             .unwrap();
     }
 
@@ -420,13 +430,16 @@ async fn index(
 ) -> impl Responder {
     let mut request = Request::from_actix_request(&req, payload, &global_request_headers).await;
 
+    let mut route = req.method().as_str().to_owned();
+    route.push_str(req.uri().path());
+
     // Before middleware
     // Global
     let mut before_middlewares =
         middleware_router.get_global_middlewares(&MiddlewareType::BeforeRequest);
     // Route specific
     if let Some((function, route_params)) =
-        middleware_router.get_route(&MiddlewareType::BeforeRequest, req.uri().path())
+        middleware_router.get_route(&MiddlewareType::BeforeRequest, &route)
     {
         before_middlewares.push(function);
         request.path_params = route_params;

@@ -50,6 +50,13 @@ impl HttpMethod {
     }
 }
 
+// for: https://stackoverflow.com/a/32712140/9652621
+impl std::fmt::Display for HttpMethod {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 #[pyclass]
 #[derive(Default, Debug, Clone)]
 pub struct Url {
