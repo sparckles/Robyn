@@ -304,7 +304,10 @@ impl Server {
         self.global_response_headers = Arc::new(headers.clone());
     }
 
-    pub fn set_response_header_exclude_paths(&mut self, response_header_exclude_paths: Option<Vec<String>>) {
+    pub fn set_response_header_exclude_paths(
+        &mut self,
+        response_header_exclude_paths: Option<Vec<String>>,
+    ) {
         self.response_header_exclude_paths = response_header_exclude_paths;
     }
 
