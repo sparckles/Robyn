@@ -179,7 +179,7 @@ def spawn_process(
 
     server.apply_response_headers(response_headers)
 
-    server.set_exclude_paths(header_exclude_paths)
+    server.set_response_header_exclude_paths(header_exclude_paths)
 
     for route in routes:
         route_type, endpoint, function, is_const = route
