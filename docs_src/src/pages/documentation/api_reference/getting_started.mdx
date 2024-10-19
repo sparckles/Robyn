@@ -594,17 +594,17 @@ Either, by using the `headers` field in the `Response` object:
   </Col>
   
 <Col>
-To prevent the headers from getting applied to certain endpoints, you can use the `exclude_response_headers` function.
+To prevent the headers from getting applied to certain endpoints, you can use the `response_headers_exclude` function.
 </Col>
 <Col>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
     ```python {{ title: 'untyped' }}
-    app.exclude_response_headers(["/login", "/signup"])
+    app.response_headers_exclude(["/login", "/signup"])
     ```
 
     ```python {{title: 'typed'}}
-    app.exclude_response_headers(["/login", "/signup"])
+    app.response_headers_exclude(["/login", "/signup"])
     ```
     </CodeGroup>
 
