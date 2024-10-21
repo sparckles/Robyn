@@ -203,7 +203,7 @@ class Robyn:
 
     def exclude_response_headers_for(self, exclude_paths: Optional[List[str]]):
         """
-        To disable certain routes from the application of response headers
+        To exclude response headers from certain routes
         @param exclude_paths: the paths to exclude response headers from
         """
         self.header_exclude_paths = exclude_paths

@@ -497,7 +497,7 @@ async fn index(
         None => {}
         Some(exclude_paths) => {
             if exclude_paths.contains(&req.uri().path().to_owned()) {
-                response.headers.remove_all();
+                response.headers.clear();
             }
         }
     }

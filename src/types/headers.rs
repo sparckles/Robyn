@@ -158,7 +158,7 @@ impl Headers {
         self.headers.remove(&key.to_lowercase());
     }
 
-    pub fn remove_all(&mut self) {
+    pub fn clear(&mut self) {
         self.headers.clear();
     }
 
