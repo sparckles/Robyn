@@ -103,8 +103,8 @@ class Config:
         if self.fast:
             # doing this here before every other check
             # so that processes, workers and log_level can be overridden
-            self.processes = self.processes or os.cpu_count() or 1
-            self.workers = self.workers or ((os.cpu_count() * 2) + 1) or 1
+            self.processes = self.processes or os.cpu_count() * 2 + 1 or 1
+            self.workers = self.workers or 2
             self.log_level = self.log_level or "WARNING"
 
         self.processes = self.processes or 1
