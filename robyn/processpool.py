@@ -27,7 +27,7 @@ def run_processes(
     workers: int,
     processes: int,
     response_headers: Headers,
-    header_exclude_paths: Optional[List[str]],
+    response_header_exclude_paths: Optional[List[str]],
     open_browser: bool,
 ) -> List[Process]:
     socket = SocketHeld(url, port)
@@ -44,7 +44,7 @@ def run_processes(
         workers,
         processes,
         response_headers,
-        header_exclude_paths,
+        response_header_exclude_paths,
     )
 
     def terminating_signal_handler(_sig, _frame):
@@ -78,7 +78,7 @@ def init_processpool(
     workers: int,
     processes: int,
     response_headers: Headers,
-    header_exclude_paths: Optional[List[str]],
+    response_header_exclude_paths: Optional[List[str]],
 ) -> List[Process]:
     process_pool = []
     if sys.platform.startswith("win32") or processes == 1:
@@ -93,7 +93,7 @@ def init_processpool(
             socket,
             workers,
             response_headers,
-            header_exclude_paths,
+            response_header_exclude_paths,
         )
 
         return process_pool
@@ -113,7 +113,7 @@ def init_processpool(
                 copied_socket,
                 workers,
                 response_headers,
-                header_exclude_paths,
+                response_header_exclude_paths,
             ),
         )
         process.start()
@@ -149,7 +149,7 @@ def spawn_process(
     socket: SocketHeld,
     workers: int,
     response_headers: Headers,
-    header_exclude_paths: Optional[List[str]],
+    response_header_exclude_paths: Optional[List[str]],
 ):
     """
     This function is called by the main process handler to create a server runtime.
@@ -179,7 +179,7 @@ def spawn_process(
 
     server.apply_response_headers(response_headers)
 
-    server.set_response_header_exclude_paths(header_exclude_paths)
+    server.set_response_header_exclude_paths(response_header_exclude_paths)
 
     for route in routes:
         route_type, endpoint, function, is_const = route

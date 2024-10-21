@@ -427,11 +427,11 @@ async fn index(
     payload: web::Payload,
     const_router: web::Data<Arc<ConstRouter>>,
     middleware_router: web::Data<Arc<MiddlewareRouter>>,
-    global_headers: (web::Data<Arc<Headers>>, web::Data<Arc<Headers>>),
+    global_request_response_headers: (web::Data<Arc<Headers>>, web::Data<Arc<Headers>>),
     response_header_exclude_paths: web::Data<Option<Vec<String>>>,
     req: HttpRequest,
 ) -> impl Responder {
-    let mut request = Request::from_actix_request(&req, payload, &global_headers.0).await;
+    let mut request = Request::from_actix_request(&req, payload, &global_request_response_headers.0).await;
 
     // Before middleware
     // Global
@@ -491,7 +491,7 @@ async fn index(
 
     debug!("OG Response : {:?}", response);
 
-    response.headers.extend(&global_headers.1);
+    response.headers.extend(&global_request_response_headers.1);
 
     match &response_header_exclude_paths.get_ref() {
         None => {}

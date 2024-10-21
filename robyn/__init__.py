@@ -201,7 +201,7 @@ class Robyn:
     def set_response_header(self, key: str, value: str) -> None:
         self.response_headers.set(key, value)
 
-    def response_headers_exclude(self, exclude_paths: Optional[List[str]]):
+    def exclude_response_headers_for(self, exclude_paths: Optional[List[str]]):
         """
         To disable certain routes from the application of response headers
         @param exclude_paths: the paths to exclude response headers from
@@ -247,7 +247,7 @@ class Robyn:
             is_const=True,
             auth_required=auth_required,
         )
-        self.response_headers_exclude(["/docs", "/openapi.json"])
+        self.exclude_response_headers_for(["/docs", "/openapi.json"])
 
     def start(self, host: str = "127.0.0.1", port: int = 8080, _check_port: bool = True):
         """
