@@ -33,7 +33,7 @@ jobs:
           maturin build -i python --universal2 --out dist
           pip install --no-index --find-links=dist/ robyn
       - name: Run benchmarks
-        uses: CodSpeedHQ/action@v2
+        uses: CodSpeedHQ/action@v3
         with:
           token: ${{ secrets.CODSPEED_TOKEN }}
           run: pytest integration_tests --codspeed
