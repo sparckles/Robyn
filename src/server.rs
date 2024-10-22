@@ -73,7 +73,7 @@ impl Server {
             directories: Arc::new(RwLock::new(Vec::new())),
             startup_handler: None,
             shutdown_handler: None,
-            response_header_exclude_paths: None,
+            excluded_response_header_paths: None,
         }
     }
 
@@ -110,7 +110,7 @@ impl Server {
         let startup_handler = self.startup_handler.clone();
         let shutdown_handler = self.shutdown_handler.clone();
 
-        let response_header_exclude_paths = self.response_header_exclude_paths.clone();
+        let excluded_response_header_paths = self.excluded_response_header_paths.clone();
 
         let task_locals = pyo3_asyncio::TaskLocals::new(event_loop).copy_context(py)?;
         let task_locals_copy = task_locals.clone();
@@ -167,7 +167,7 @@ impl Server {
                         .app_data(web::Data::new(middleware_router.clone()))
                         .app_data(web::Data::new(global_request_headers.clone()))
                         .app_data(web::Data::new(global_response_headers.clone()))
-                        .app_data(web::Data::new(response_header_exclude_paths.clone()));
+                        .app_data(web::Data::new(excluded_response_header_paths.clone()));
 
                     let web_socket_map = web_socket_router.get_web_socket_map();
                     for (elem, value) in (web_socket_map.read()).iter() {
@@ -308,7 +308,7 @@ impl Server {
         &mut self,
         excluded_response_header_paths: Option<Vec<String>>,
     ) {
-        self.response_header_exclude_paths = response_header_exclude_paths;
+        self.excluded_response_header_paths = excluded_response_header_paths;
     }
 
     /// Add a new route to the routing tables
@@ -428,7 +428,7 @@ async fn index(
     const_router: web::Data<Arc<ConstRouter>>,
     middleware_router: web::Data<Arc<MiddlewareRouter>>,
     global_request_response_headers: (web::Data<Arc<Headers>>, web::Data<Arc<Headers>>),
-    response_header_exclude_paths: web::Data<Option<Vec<String>>>,
+    excluded_response_header_paths: web::Data<Option<Vec<String>>>,
     req: HttpRequest,
 ) -> impl Responder {
     let mut request = Request::from_actix_request(&req, payload, &global_request_response_headers.0).await;

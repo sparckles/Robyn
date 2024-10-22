@@ -27,7 +27,7 @@ def run_processes(
     workers: int,
     processes: int,
     response_headers: Headers,
-    response_header_exclude_paths: Optional[List[str]],
+    excluded_response_header_paths: Optional[List[str]],
     open_browser: bool,
 ) -> List[Process]:
     socket = SocketHeld(url, port)
@@ -44,7 +44,7 @@ def run_processes(
         workers,
         processes,
         response_headers,
-        response_header_exclude_paths,
+        excluded_response_header_paths,
     )
 
     def terminating_signal_handler(_sig, _frame):
@@ -78,7 +78,7 @@ def init_processpool(
     workers: int,
     processes: int,
     response_headers: Headers,
-    response_header_exclude_paths: Optional[List[str]],
+    excluded_response_header_paths: Optional[List[str]],
 ) -> List[Process]:
     process_pool = []
     if sys.platform.startswith("win32") or processes == 1:
@@ -149,7 +149,7 @@ def spawn_process(
     socket: SocketHeld,
     workers: int,
     response_headers: Headers,
-    response_header_exclude_paths: Optional[List[str]],
+    excluded_response_header_paths: Optional[List[str]],
 ):
     """
     This function is called by the main process handler to create a server runtime.
