@@ -174,8 +174,8 @@ def spawn_process(
     server.apply_response_headers(response_headers)
 
     for route in routes:
-        middleware_type, endpoint, function, is_const = route
-        server.add_route(middleware_type, endpoint, function, is_const)
+        route_type, endpoint, function, is_const = route
+        server.add_route(route_type, endpoint, function, is_const)
 
     for middleware_type, middleware_function in global_middlewares:
         server.add_global_middleware(middleware_type, middleware_function)
