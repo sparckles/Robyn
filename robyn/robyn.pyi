@@ -327,7 +327,7 @@ class Server:
         pass
     def apply_response_headers(self, headers: Headers) -> None:
         pass
-    def set_response_header_exclude_paths(self, response_header_exclude_paths: Optional[list[str]] = None):
+    def set_response_header_exclude_paths(self, excluded_response_header_paths: Optional[list[str]] = None):
         pass
 
     def add_route(

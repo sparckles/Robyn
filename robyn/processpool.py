@@ -93,7 +93,7 @@ def init_processpool(
             socket,
             workers,
             response_headers,
-            response_header_exclude_paths,
+            excluded_response_header_paths,
         )
 
         return process_pool
@@ -113,7 +113,7 @@ def init_processpool(
                 copied_socket,
                 workers,
                 response_headers,
-                response_header_exclude_paths,
+                excluded_response_header_paths,
             ),
         )
         process.start()
@@ -179,7 +179,7 @@ def spawn_process(
 
     server.apply_response_headers(response_headers)
 
-    server.set_response_header_exclude_paths(response_header_exclude_paths)
+    server.set_response_header_exclude_paths(excluded_response_header_paths)
 
     for route in routes:
         route_type, endpoint, function, is_const = route

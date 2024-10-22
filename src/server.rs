@@ -56,7 +56,7 @@ pub struct Server {
     directories: Arc<RwLock<Vec<Directory>>>,
     startup_handler: Option<Arc<FunctionInfo>>,
     shutdown_handler: Option<Arc<FunctionInfo>>,
-    response_header_exclude_paths: Option<Vec<String>>,
+    excluded_response_header_paths: Option<Vec<String>>,
 }
 
 #[pymethods]
@@ -306,7 +306,7 @@ impl Server {
 
     pub fn set_response_header_exclude_paths(
         &mut self,
-        response_header_exclude_paths: Option<Vec<String>>,
+        excluded_response_header_paths: Option<Vec<String>>,
     ) {
         self.response_header_exclude_paths = response_header_exclude_paths;
     }
@@ -493,7 +493,7 @@ async fn index(
 
     response.headers.extend(&global_request_response_headers.1);
 
-    match &response_header_exclude_paths.get_ref() {
+    match &excluded_response_header_paths.get_ref() {
         None => {}
         Some(exclude_paths) => {
             if exclude_paths.contains(&req.uri().path().to_owned()) {
