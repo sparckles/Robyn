@@ -207,7 +207,8 @@ impl Server {
                                         payload,
                                         const_router,
                                         middleware_router,
-                                        (global_request_headers, global_response_headers),
+                                        global_request_headers,
+                                        global_response_headers,
                                         response_header_exclude_paths,
                                         req,
                                     )
@@ -422,16 +423,18 @@ impl Default for Server {
 
 /// This is our service handler. It receives a Request, routes on it
 /// path, and returns a Future of a Response.
+#[allow(clippy::too_many_arguments)]
 async fn index(
     router: web::Data<Arc<HttpRouter>>,
     payload: web::Payload,
     const_router: web::Data<Arc<ConstRouter>>,
     middleware_router: web::Data<Arc<MiddlewareRouter>>,
-    global_request_response_headers: (web::Data<Arc<Headers>>, web::Data<Arc<Headers>>),
+    global_request_headers: web::Data<Arc<Headers>>,
+    global_response_headers: web::Data<Arc<Headers>>,
     excluded_response_header_paths: web::Data<Option<Vec<String>>>,
     req: HttpRequest,
 ) -> impl Responder {
-    let mut request = Request::from_actix_request(&req, payload, &global_request_response_headers.0).await;
+    let mut request = Request::from_actix_request(&req, payload, &global_request_headers).await;
 
     // Before middleware
     // Global
@@ -491,7 +494,7 @@ async fn index(
 
     debug!("OG Response : {:?}", response);
 
-    response.headers.extend(&global_request_response_headers.1);
+    response.headers.extend(&global_response_headers);
 
     match &excluded_response_header_paths.get_ref() {
         None => {}
