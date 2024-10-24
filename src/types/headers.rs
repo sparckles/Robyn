@@ -158,6 +158,10 @@ impl Headers {
         self.headers.remove(&key.to_lowercase());
     }
 
+    pub fn clear(&mut self) {
+        self.headers.clear();
+    }
+
     pub fn extend(&mut self, headers: &Headers) {
         for iter in headers.headers.iter() {
             let (key, values) = iter.pair();
