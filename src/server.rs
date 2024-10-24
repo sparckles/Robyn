@@ -498,8 +498,8 @@ async fn index(
 
     match &excluded_response_header_paths.get_ref() {
         None => {}
-        Some(exclude_paths) => {
-            if exclude_paths.contains(&req.uri().path().to_owned()) {
+        Some(excluded_response_header_paths) => {
+            if excluded_response_header_paths.contains(&req.uri().path().to_owned()) {
                 response.headers.clear();
             }
         }
