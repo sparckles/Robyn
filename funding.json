@@ -1,0 +1,69 @@
+{
+  "version": "v1.0.0",
+  "entity": {
+    "type": "individual",
+    "role": "owner",
+    "name": "Sanskar Jethi",
+    "email": "sansyrox@gmail.com",
+    "description": "Sanskar is a FOSS engineer who created Robyn and Starfyre. Sanskar has created software for over half his life and used it for almost all of his.",
+    "webpageUrl": {
+      "url": "https://www.sanskar.me/"
+    }
+  },
+  "projects": [
+    {
+      "guid": "robyn",
+      "name": "robyn",
+      "description": "Robyn is one of the fastest Python web frameworks, which comes with a built in web server and a Rust runtime.",
+      "webpageUrl": {
+        "url": "https://robyn.tech/"
+      },
+      "repositoryUrl": {
+        "url": "https://github.com/sparckles/Robyn"
+      },
+      "licenses": ["BSD 2-Clause \"Simplified\" License"],
+      "tags": [
+        "programming",
+        "python",
+        "rust",
+        "web",
+        "backend",
+        "async",
+        "python3",
+        "http-server"
+      ]
+    }
+  ],
+  "funding": {
+    "channels": [
+      {
+        "guid": "mybank",
+        "type": "bank",
+        "description": "Send me an email to get my bank details"
+      }
+    ],
+    "plans": [
+      {
+        "guid": "mybank",
+        "status": "active",
+        "name": "Support Maintainer",
+        "description": "Support the maintainer for his work.",
+        "amount": 500,
+        "currency": "GBP",
+        "frequency": "monthly",
+        "channels": ["mybank"]
+      },
+      {
+        "guid": "150",
+        "status": "active",
+        "name": " Support Contributor",
+        "description": "Support for one contributor per month",
+        "amount": 150,
+        "currency": "GBP",
+        "frequency": "monthly",
+        "channels": ["mybank"]
+      }
+    ],
+    "history": []
+  }
+}
