@@ -365,13 +365,27 @@ impl Server {
         middleware_type: &MiddlewareType,
         route: &str,
         function: FunctionInfo,
+        http_method: Option<HttpMethod>,
     ) {
+        let mut method_endpoint = if let Some(method) = http_method {
+            method.to_string().to_owned()
+        } else {
+            "GET".to_string()
+        };
+
+        if !route.starts_with('/') {
+            method_endpoint.push('/');
+        }
+
+        method_endpoint.push_str(route);
+
         debug!(
             "MiddleWare Route added for {:?} {} ",
-            middleware_type, route
+            middleware_type, &method_endpoint
         );
+
         self.middleware_router
-            .add_route(middleware_type, route, function, None)
+            .add_route(middleware_type, &method_endpoint, function, None)
             .unwrap();
     }
 
@@ -420,13 +434,16 @@ async fn index(
 ) -> impl Responder {
     let mut request = Request::from_actix_request(&req, payload, &global_request_headers).await;
 
+    let mut route = req.method().as_str().to_owned();
+    route.push_str(req.uri().path());
+
     // Before middleware
     // Global
     let mut before_middlewares =
         middleware_router.get_global_middlewares(&MiddlewareType::BeforeRequest);
     // Route specific
     if let Some((function, route_params)) =
-        middleware_router.get_route(&MiddlewareType::BeforeRequest, req.uri().path())
+        middleware_router.get_route(&MiddlewareType::BeforeRequest, &route)
     {
         before_middlewares.push(function);
         request.path_params = route_params;
@@ -487,8 +504,7 @@ async fn index(
     let mut after_middlewares =
         middleware_router.get_global_middlewares(&MiddlewareType::AfterRequest);
     // Route specific
-    if let Some((function, _)) =
-        middleware_router.get_route(&MiddlewareType::AfterRequest, req.uri().path())
+    if let Some((function, _)) = middleware_router.get_route(&MiddlewareType::AfterRequest, &route)
     {
         after_middlewares.push(function);
     }
