@@ -368,26 +368,26 @@ impl Server {
         http_method: Option<HttpMethod>,
     ) {
 
-        let mut endpoint = route.to_string();
+        let mut method_endpoint = 
+            if let Some(method) = http_method {
+                method.to_string().to_owned()
+            } else {
+                "GET".to_string()
+            };
 
-        if let Some(method) = http_method {
-
-            endpoint = method.to_string().to_owned();
-
-            if !route.starts_with('/') {
-                endpoint.push('/');
-            }
-
-            endpoint.push_str(route);
+        if !route.starts_with('/') {
+            method_endpoint.push('/');
         }
+
+        method_endpoint.push_str(route);
 
         debug!(
             "MiddleWare Route added for {:?} {} ",
-            middleware_type, &endpoint
+            middleware_type, &method_endpoint
         );
 
         self.middleware_router
-            .add_route(middleware_type, &endpoint, function, None)
+            .add_route(middleware_type, &method_endpoint, function, None)
             .unwrap();
     }
 
