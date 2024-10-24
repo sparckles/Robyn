@@ -367,13 +367,11 @@ impl Server {
         function: FunctionInfo,
         http_method: Option<HttpMethod>,
     ) {
-
-        let mut method_endpoint =
-            if let Some(method) = http_method {
-                method.to_string().to_owned()
-            } else {
-                "GET".to_string()
-            };
+        let mut method_endpoint = if let Some(method) = http_method {
+            method.to_string().to_owned()
+        } else {
+            "GET".to_string()
+        };
 
         if !route.starts_with('/') {
             method_endpoint.push('/');
@@ -506,8 +504,7 @@ async fn index(
     let mut after_middlewares =
         middleware_router.get_global_middlewares(&MiddlewareType::AfterRequest);
     // Route specific
-    if let Some((function, _)) =
-        middleware_router.get_route(&MiddlewareType::AfterRequest, &route)
+    if let Some((function, _)) = middleware_router.get_route(&MiddlewareType::AfterRequest, &route)
     {
         after_middlewares.push(function);
     }
