@@ -110,7 +110,7 @@ impl Server {
         let startup_handler = self.startup_handler.clone();
         let shutdown_handler = self.shutdown_handler.clone();
 
-        let excluded_response_header_paths = self.excluded_response_header_paths.clone();
+        let excluded_response_headers_paths = self.excluded_response_headers_paths.clone();
 
         let task_locals = pyo3_asyncio::TaskLocals::new(event_loop).copy_context(py)?;
         let task_locals_copy = task_locals.clone();
