@@ -70,7 +70,7 @@ class Robyn:
         self.web_socket_router = WebSocketRouter()
         self.request_headers: Headers = Headers({})
         self.response_headers: Headers = Headers({})
-        self.excluded_response_header_paths: Optional[List[str]] = None
+        self.excluded_response_headers_paths: Optional[List[str]] = None
         self.directories: List[Directory] = []
         self.event_handlers = {}
         self.exception_handler: Optional[Callable] = None
