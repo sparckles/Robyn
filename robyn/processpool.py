@@ -2,7 +2,7 @@ import asyncio
 import signal
 import sys
 import webbrowser
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from multiprocess import Process
 
@@ -27,6 +27,7 @@ def run_processes(
     workers: int,
     processes: int,
     response_headers: Headers,
+    excluded_response_headers_paths: Optional[List[str]],
     open_browser: bool,
 ) -> List[Process]:
     socket = SocketHeld(url, port)
@@ -43,6 +44,7 @@ def run_processes(
         workers,
         processes,
         response_headers,
+        excluded_response_headers_paths,
     )
 
     def terminating_signal_handler(_sig, _frame):
@@ -76,6 +78,7 @@ def init_processpool(
     workers: int,
     processes: int,
     response_headers: Headers,
+    excluded_response_headers_paths: Optional[List[str]],
 ) -> List[Process]:
     process_pool = []
     if sys.platform.startswith("win32") or processes == 1:
@@ -90,6 +93,7 @@ def init_processpool(
             socket,
             workers,
             response_headers,
+            excluded_response_headers_paths,
         )
 
         return process_pool
@@ -109,6 +113,7 @@ def init_processpool(
                 copied_socket,
                 workers,
                 response_headers,
+                excluded_response_headers_paths,
             ),
         )
         process.start()
@@ -144,6 +149,7 @@ def spawn_process(
     socket: SocketHeld,
     workers: int,
     response_headers: Headers,
+    excluded_response_headers_paths: Optional[List[str]],
 ):
     """
     This function is called by the main process handler to create a server runtime.
@@ -172,6 +178,8 @@ def spawn_process(
     server.apply_request_headers(request_headers)
 
     server.apply_response_headers(response_headers)
+
+    server.set_response_headers_exclude_paths(excluded_response_headers_paths)
 
     for route in routes:
         route_type, endpoint, function, is_const = route
