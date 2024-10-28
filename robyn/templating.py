@@ -6,6 +6,7 @@ from robyn import status_codes
 
 from .robyn import Headers, Response
 
+
 def url_for() -> str:
     """Creates a link to an endpoint function name
 
@@ -17,6 +18,7 @@ def url_for() -> str:
     """
     return "called new url_for"
 
+
 class TemplateInterface(ABC):
     def __init__(self): ...
 
@@ -27,7 +29,7 @@ class TemplateInterface(ABC):
 class JinjaTemplate(TemplateInterface):
     def __init__(self, directory, encoding="utf-8", followlinks=False):
         self.env = Environment(loader=FileSystemLoader(searchpath=directory, encoding=encoding, followlinks=followlinks))
-        self.env.globals['url_for'] = url_for
+        self.env.globals["url_for"] = url_for
 
     def render_template(self, template_name, **kwargs) -> Response:
         rendered_template = self.env.get_template(template_name).render(**kwargs)
