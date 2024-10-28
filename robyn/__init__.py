@@ -41,6 +41,7 @@ class Robyn:
         self,
         file_object: str,
         config: Config = Config(),
+        openapi_json_path: str = None,
         openapi: OpenAPI = OpenAPI(),
         dependencies: DependencyMap = DependencyMap(),
     ) -> None:
@@ -50,6 +51,11 @@ class Robyn:
         self.config = config
         self.dependencies = dependencies
         self.openapi = openapi
+
+        if openapi_json_path:
+            openapi.set_json_spec(self.directory_path + "/" + openapi_json_path)
+        elif os.path.isfile(self.directory_path + "/openapi.json"):
+            openapi.set_json_spec(self.directory_path + "/openapi.json")
 
         if not bool(os.environ.get("ROBYN_CLI", False)):
             # the env variables are already set when are running through the cli

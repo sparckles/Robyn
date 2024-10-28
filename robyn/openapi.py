@@ -1,4 +1,5 @@
 import inspect
+import json
 import typing
 from dataclasses import asdict, dataclass, field
 from importlib import resources
@@ -138,11 +139,15 @@ class OpenAPI:
 
     info: OpenAPIInfo = field(default_factory=OpenAPIInfo)
     openapi_spec: dict = field(init=False)
+    is_pre_configured: bool = False
 
     def __post_init__(self):
         """
         Initializes the openapi_spec dict
         """
+        if self.is_pre_configured:
+            return
+
         self.openapi_spec = {
             "openapi": "3.1.0",
             "info": asdict(self.info),
@@ -162,6 +167,9 @@ class OpenAPI:
         @param openapi_tags: List[str] for grouping of endpoints
         @param handler: Callable the handler function for the endpoint
         """
+
+        if self.is_pre_configured:
+            return
 
         query_params = None
         request_body = None
@@ -212,6 +220,10 @@ class OpenAPI:
 
         @param subrouter_openapi: OpenAPI the OpenAPI object of the current subrouter
         """
+
+        if self.is_pre_configured:
+            return
+
         paths = subrouter_openapi.openapi_spec["paths"]
 
         for path in paths:
@@ -392,6 +404,16 @@ class OpenAPI:
         properties["type"] = "object"
 
         return properties
+
+    def set_json_spec(self, openapi_json_spec_path: str):
+        """
+        Set a pre-configured OpenAPI spec
+        @param openapi_json_spec_path: str the path to the json file
+        """
+        with open(openapi_json_spec_path) as json_file:
+            json_file_content = json.load(json_file)
+            self.openapi_spec = dict(json_file_content)
+            self.is_pre_configured = True
 
     def get_openapi_docs_page(self) -> FileResponse:
         """
