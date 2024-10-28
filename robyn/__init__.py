@@ -589,7 +589,7 @@ class Robyn:
 
 class SubRouter(Robyn):
     def __init__(self, file_object: str, prefix: str = "", config: Config = Config(), openapi: OpenAPI = OpenAPI()) -> None:
-        super().__init__(file_object, config, openapi)
+        super().__init__(file_object=file_object, config=config, openapi=openapi)
         self.prefix = prefix
 
     def __add_prefix(self, endpoint: str):
