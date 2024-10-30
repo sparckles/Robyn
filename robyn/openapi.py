@@ -139,13 +139,13 @@ class OpenAPI:
 
     info: OpenAPIInfo = field(default_factory=OpenAPIInfo)
     openapi_spec: dict = field(init=False)
-    is_pre_configured: bool = False
+    openapi_file_override: bool = False  # denotes whether running in the pre-configured file mode or not.
 
     def __post_init__(self):
         """
         Initializes the openapi_spec dict
         """
-        if self.is_pre_configured:
+        if self.openapi_file_override:
             return
 
         self.openapi_spec = {
@@ -168,7 +168,7 @@ class OpenAPI:
         @param handler: Callable the handler function for the endpoint
         """
 
-        if self.is_pre_configured:
+        if self.openapi_file_override:
             return
 
         query_params = None
@@ -221,7 +221,7 @@ class OpenAPI:
         @param subrouter_openapi: OpenAPI the OpenAPI object of the current subrouter
         """
 
-        if self.is_pre_configured:
+        if self.openapi_file_override:
             return
 
         paths = subrouter_openapi.openapi_spec["paths"]
@@ -413,7 +413,7 @@ class OpenAPI:
         with open(openapi_json_spec_path) as json_file:
             json_file_content = json.load(json_file)
             self.openapi_spec = dict(json_file_content)
-            self.is_pre_configured = True
+            self.openapi_file_override = True
 
     def get_openapi_docs_page(self) -> FileResponse:
         """
