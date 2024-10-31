@@ -264,7 +264,7 @@ class MiddlewareRouter(BaseRouter):
         self,
         middleware_type: MiddlewareType,
         endpoint: str,
-        route_type: Optional[HttpMethod],
+        route_type: HttpMethod,
         handler: Callable,
         injected_dependencies: dict,
     ) -> Callable:
@@ -339,12 +339,12 @@ class MiddlewareRouter(BaseRouter):
                     self.add_route(
                         middleware_type,
                         endpoint,
-                        None,
+                        HttpMethod.GET,
                         async_inner_handler,
                         injected_dependencies,
                     )
                 else:
-                    self.add_route(middleware_type, endpoint, None, inner_handler, injected_dependencies)
+                    self.add_route(middleware_type, endpoint, HttpMethod.GET, inner_handler, injected_dependencies)
             else:
                 params = dict(inspect.signature(handler).parameters)
 
