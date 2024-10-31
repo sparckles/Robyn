@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import socket
+from pathlib import Path
 from typing import Callable, List, Optional, Tuple, Union
 
 import multiprocess as mp
@@ -53,9 +54,9 @@ class Robyn:
         self.openapi = openapi
 
         if openapi_file_path:
-            openapi.set_json_spec(self.directory_path + "/" + openapi_file_path)
-        elif os.path.isfile(self.directory_path + "/openapi.json"):
-            openapi.set_json_spec(self.directory_path + "/openapi.json")
+            openapi.override_openapi(Path(self.directory_path).joinpath(openapi_file_path))
+        elif Path(self.directory_path).joinpath("openapi.json").exists():
+            openapi.override_openapi(Path(self.directory_path).joinpath("openapi.json"))
 
         if not bool(os.environ.get("ROBYN_CLI", False)):
             # the env variables are already set when are running through the cli

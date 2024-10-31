@@ -4,6 +4,7 @@ import typing
 from dataclasses import asdict, dataclass, field
 from importlib import resources
 from inspect import Signature
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, TypedDict
 
 from robyn.responses import FileResponse, html
@@ -405,7 +406,7 @@ class OpenAPI:
 
         return properties
 
-    def set_json_spec(self, openapi_json_spec_path: str):
+    def override_openapi(self, openapi_json_spec_path: Path):
         """
         Set a pre-configured OpenAPI spec
         @param openapi_json_spec_path: str the path to the json file
