@@ -434,8 +434,7 @@ async fn index(
 ) -> impl Responder {
     let mut request = Request::from_actix_request(&req, payload, &global_request_headers).await;
 
-    let mut route = req.method().as_str().to_owned();
-    route.push_str(req.uri().path());
+   let route = format!("{}{}", req.method(), req.uri().path());
 
     // Before middleware
     // Global
