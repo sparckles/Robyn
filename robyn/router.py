@@ -29,8 +29,8 @@ class Route(NamedTuple):
 class RouteMiddleware(NamedTuple):
     middleware_type: MiddlewareType
     route: str
-    route_type: HttpMethod
     function: FunctionInfo
+    route_type: HttpMethod
 
 
 class GlobalMiddleware(NamedTuple):
@@ -285,7 +285,7 @@ class MiddlewareRouter(BaseRouter):
             params,
             new_injected_dependencies,
         )
-        self.route_middlewares.append(RouteMiddleware(middleware_type, endpoint, route_type, function))
+        self.route_middlewares.append(RouteMiddleware(middleware_type, endpoint, function, route_type))
         return handler
 
     def add_auth_middleware(self, endpoint: str, route_type: HttpMethod):
