@@ -139,7 +139,7 @@ class OpenAPI:
 
     info: OpenAPIInfo = field(default_factory=OpenAPIInfo)
     openapi_spec: dict = field(init=False)
-    openapi_file_override: bool = False  # denotes whether running in the pre-configured file mode or not.
+    openapi_file_override: bool = False  # denotes whether there is an override or not.
 
     def __post_init__(self):
         """
