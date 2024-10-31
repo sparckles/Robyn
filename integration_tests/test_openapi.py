@@ -1,6 +1,26 @@
 import pytest
 
 from integration_tests.helpers.http_methods_helpers import get
+from robyn import Robyn
+
+
+@pytest.mark.benchmark
+def test_custom_openapi_spec():
+    app = Robyn(__file__, openapi_file_path="openapi_config.json")
+
+    openapi_spec = app.openapi.openapi_spec
+
+    assert isinstance(openapi_spec, dict)
+
+    assert "openapi" in openapi_spec
+    assert "info" in openapi_spec
+    assert "paths" in openapi_spec
+    assert "components" in openapi_spec
+    assert "servers" in openapi_spec
+    assert "externalDocs" in openapi_spec
+
+    assert openapi_spec["info"]["title"] == "Robyn Test API"
+    assert openapi_spec["info"]["version"] == "1.0.0"
 
 
 @pytest.mark.benchmark

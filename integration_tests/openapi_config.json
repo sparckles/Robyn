@@ -1,0 +1,69 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Robyn Test API",
+    "version": "1.0.0",
+    "description": null,
+    "termsOfService": null,
+    "contact": {
+      "name": null,
+      "url": null,
+      "email": null
+    },
+    "license": {
+      "name": null,
+      "url": null
+    },
+    "servers": [],
+    "externalDocs": {
+      "description": null,
+      "url": null
+    },
+    "components": {
+      "schemas": {},
+      "responses": {},
+      "parameters": {},
+      "examples": {},
+      "requestBodies": {},
+      "securitySchemes": {},
+      "links": {},
+      "callbacks": {},
+      "pathItems": {}
+    }
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "",
+        "description": "No description provided",
+        "parameters": [],
+        "tags": [
+          "get"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/plain": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "parameters": {},
+    "examples": {},
+    "requestBodies": {},
+    "securitySchemes": {},
+    "links": {},
+    "callbacks": {},
+    "pathItems": {}
+  },
+  "servers": [],
+  "externalDocs": null
+}
