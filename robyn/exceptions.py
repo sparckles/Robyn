@@ -1,8 +1,9 @@
 import http
+from typing import Optional
 
 
 class HTTPException(Exception):
-    def __init__(self, status_code: int, detail: str | None = None) -> None:
+    def __init__(self, status_code: int, detail: Optional[str] = None) -> None:
         if detail is None:
             detail = http.HTTPStatus(status_code).phrase
         self.status_code = status_code
@@ -17,7 +18,7 @@ class HTTPException(Exception):
 
 
 class WebSocketException(Exception):
-    def __init__(self, code: int, reason: str | None = None) -> None:
+    def __init__(self, code: int, reason: Optional[str] = None) -> None:
         self.code = code
         self.reason = reason or ""
 
