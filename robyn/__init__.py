@@ -71,6 +71,7 @@ class Robyn:
         self.web_socket_router = WebSocketRouter()
         self.request_headers: Headers = Headers({})
         self.response_headers: Headers = Headers({})
+        self.excluded_response_headers_paths: Optional[List[str]] = None
         self.directories: List[Directory] = []
         self.event_handlers = {}
         self.exception_handler: Optional[Callable] = None
@@ -201,6 +202,13 @@ class Robyn:
     def set_response_header(self, key: str, value: str) -> None:
         self.response_headers.set(key, value)
 
+    def exclude_response_headers_for(self, excluded_response_header_paths: Optional[List[str]]):
+        """
+        To exclude response headers from certain routes
+        @param exclude_paths: the paths to exclude response headers from
+        """
+        self.excluded_response_header_paths = excluded_response_header_paths
+
     def add_web_socket(self, endpoint: str, ws: WebSocket) -> None:
         self.web_socket_router.add_route(endpoint, ws)
 
@@ -240,6 +248,7 @@ class Robyn:
             is_const=True,
             auth_required=auth_required,
         )
+        self.exclude_response_headers_for(["/docs", "/openapi.json"])
 
     def start(self, host: str = "127.0.0.1", port: int = 8080, _check_port: bool = True):
         """
@@ -285,6 +294,7 @@ class Robyn:
             self.config.workers,
             self.config.processes,
             self.response_headers,
+            self.excluded_response_header_paths,
             open_browser,
         )
 

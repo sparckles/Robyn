@@ -558,12 +558,10 @@ Either, by using the `headers` field in the `Response` object:
 ### Global Response Headers
 
 <Row>
-<Col>
-Or setting the Headers globally *per* router.
-</Col>
-<Col>
 
+<Col>Or setting the Headers globally *per* router.</Col>
 
+  <Col>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
     ```python {{ title: 'untyped' }}
@@ -574,16 +572,14 @@ Or setting the Headers globally *per* router.
     app.add_response_header("content-type", "application/json")
     ```
     </CodeGroup>
-  </Col>
-</Row>
 
-<Row>
+  </Col>
+
 <Col>
 `add_response_header` appends the header to the list of headers, while `set_response_header` replaces the header if it exists.
 </Col>
 <Col>
 
-
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
     ```python {{ title: 'untyped' }}
@@ -594,7 +590,25 @@ Or setting the Headers globally *per* router.
     app.set_response_header("content-type", "application/json")
     ```
     </CodeGroup>
+
   </Col>
+  
+<Col>
+To prevent the headers from getting applied to certain endpoints, you can use the `exclude_response_headers_for` function.
+</Col>
+<Col>
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    app.exclude_response_headers_for(["/login", "/signup"])
+    ```
+
+    ```python {{title: 'typed'}}
+    app.exclude_response_headers_for(["/login", "/signup"])
+    ```
+    </CodeGroup>
+
+</Col>
 </Row>
 
 ### Cookies
