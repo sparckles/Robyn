@@ -381,7 +381,12 @@ impl Server {
         );
 
         self.middleware_router
-            .add_route(middleware_type, &endpoint_prefixed_with_method, function, None)
+            .add_route(
+                middleware_type,
+                &endpoint_prefixed_with_method,
+                function,
+                None,
+            )
             .unwrap();
     }
 
@@ -430,7 +435,7 @@ async fn index(
 ) -> impl Responder {
     let mut request = Request::from_actix_request(&req, payload, &global_request_headers).await;
 
-   let route = format!("{}{}", req.method(), req.uri().path());
+    let route = format!("{}{}", req.method(), req.uri().path());
 
     // Before middleware
     // Global
