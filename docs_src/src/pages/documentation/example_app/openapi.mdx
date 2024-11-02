@@ -13,6 +13,11 @@ Out of the box, the following endpoints are setup for you:
 
 However, if you don't want to generate the OpenAPI docs, you can disable it by passing `--disable-openapi` flag while starting the application.
 
+To use a custom openapi configuration, you can:
+
+    - Place the `openapi.json` config file in the root directory.
+    - Or, pass the file path to the `openapi_file_path` parameter in the `Robyn()` constructor. (the parameter gets priority over the file).
+
 ```bash
 python app.py --disable-openapi
 ```
