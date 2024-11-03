@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import socket
+from pathlib import Path
 from typing import Callable, List, Optional, Tuple, Union
 
 import multiprocess as mp
@@ -41,6 +42,7 @@ class Robyn:
         self,
         file_object: str,
         config: Config = Config(),
+        openapi_file_path: str = None,
         openapi: OpenAPI = OpenAPI(),
         dependencies: DependencyMap = DependencyMap(),
     ) -> None:
@@ -50,6 +52,11 @@ class Robyn:
         self.config = config
         self.dependencies = dependencies
         self.openapi = openapi
+
+        if openapi_file_path:
+            openapi.override_openapi(Path(self.directory_path).joinpath(openapi_file_path))
+        elif Path(self.directory_path).joinpath("openapi.json").exists():
+            openapi.override_openapi(Path(self.directory_path).joinpath("openapi.json"))
 
         if not bool(os.environ.get("ROBYN_CLI", False)):
             # the env variables are already set when are running through the cli
@@ -583,7 +590,7 @@ class Robyn:
 
 class SubRouter(Robyn):
     def __init__(self, file_object: str, prefix: str = "", config: Config = Config(), openapi: OpenAPI = OpenAPI()) -> None:
-        super().__init__(file_object, config, openapi)
+        super().__init__(file_object=file_object, config=config, openapi=openapi)
         self.prefix = prefix
 
     def __add_prefix(self, endpoint: str):

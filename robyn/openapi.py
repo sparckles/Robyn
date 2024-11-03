@@ -1,8 +1,10 @@
 import inspect
+import json
 import typing
 from dataclasses import asdict, dataclass, field
 from importlib import resources
 from inspect import Signature
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, TypedDict
 
 from robyn.responses import FileResponse, html
@@ -138,11 +140,15 @@ class OpenAPI:
 
     info: OpenAPIInfo = field(default_factory=OpenAPIInfo)
     openapi_spec: dict = field(init=False)
+    openapi_file_override: bool = False  # denotes whether there is an override or not.
 
     def __post_init__(self):
         """
         Initializes the openapi_spec dict
         """
+        if self.openapi_file_override:
+            return
+
         self.openapi_spec = {
             "openapi": "3.1.0",
             "info": asdict(self.info),
@@ -162,6 +168,9 @@ class OpenAPI:
         @param openapi_tags: List[str] for grouping of endpoints
         @param handler: Callable the handler function for the endpoint
         """
+
+        if self.openapi_file_override:
+            return
 
         query_params = None
         request_body = None
@@ -212,6 +221,10 @@ class OpenAPI:
 
         @param subrouter_openapi: OpenAPI the OpenAPI object of the current subrouter
         """
+
+        if self.openapi_file_override:
+            return
+
         paths = subrouter_openapi.openapi_spec["paths"]
 
         for path in paths:
@@ -392,6 +405,16 @@ class OpenAPI:
         properties["type"] = "object"
 
         return properties
+
+    def override_openapi(self, openapi_json_spec_path: Path):
+        """
+        Set a pre-configured OpenAPI spec
+        @param openapi_json_spec_path: str the path to the json file
+        """
+        with open(openapi_json_spec_path) as json_file:
+            json_file_content = json.load(json_file)
+            self.openapi_spec = dict(json_file_content)
+            self.openapi_file_override = True
 
     def get_openapi_docs_page(self) -> FileResponse:
         """
