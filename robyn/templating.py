@@ -7,8 +7,6 @@ from robyn import status_codes, HttpMethod, Robyn
 
 from .robyn import Headers, Response
 
-from robyn.argument_parser import Config
-
 
 class TemplateInterface(ABC):
     def __init__(self): ...
