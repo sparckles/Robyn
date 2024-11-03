@@ -32,7 +32,7 @@ def test_serve_html(function_type: str, session):
 
     check_response(get(f"/{function_type}/serve/html"))
 
-
+@pytest.mark.url_for
 @pytest.mark.benchmark
 @pytest.mark.parametrize("function_type", ["sync", "async"])
 def test_template(function_type: str, session):
@@ -40,7 +40,8 @@ def test_template(function_type: str, session):
         assert r.text.startswith("\n\n<!DOCTYPE html>")
         assert "Jinja2" in r.text
         assert "Robyn" in r.text
-        assert "called new url_for" in r.text
+        assert '<a href="/sync/auth">Testing url for</a>' in r.text
+
 
     check_response(get(f"/{function_type}/template"))
 
