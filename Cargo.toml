@@ -1,9 +1,9 @@
 [package]
 name = "robyn"
-version = "0.62.1"
+version = "0.63.0"
 authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 edition = "2021"
-description = "A web server that is fast!"
+description = "Robyn is a Super Fast Async Python Web Framework with a Rust runtime."
 license = "BSD License (BSD)"
 homepage = "https://github.com/sparckles/robyn"
 readme = "README.md"
