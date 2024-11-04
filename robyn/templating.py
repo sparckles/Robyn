@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 
 from jinja2 import Environment, FileSystemLoader
 
-from robyn import status_codes, HttpMethod, Robyn
+from robyn import status_codes, Robyn
 from robyn.router import Route
 
 from .robyn import Headers, Response
@@ -19,13 +19,13 @@ class TemplateInterface(ABC):
     def set_robyn(self, robyn: Robyn) -> None: ...
 
     @abstractmethod
-    def url_for(self, function_name: str, route_type: HttpMethod = HttpMethod.GET) -> str: ...
+    def get_function_url(self, function_name: str, route_type: str = "GET") -> str: ...
 
 
 class JinjaTemplate(TemplateInterface):
     def __init__(self, directory, encoding="utf-8", followlinks=False) -> None:
         self.env: Environment = Environment(loader=FileSystemLoader(searchpath=directory, encoding=encoding, followlinks=followlinks))
-        self.add_function_to_globals("url_for", self.url_for)
+        self.add_function_to_globals("get_function_url", self.get_function_url)
         self.robyn: Robyn | None = None
 
     def add_function_to_globals(self, name: str, func: Callable):
@@ -36,14 +36,14 @@ class JinjaTemplate(TemplateInterface):
 
     def set_robyn(self, robyn: Robyn) -> None:
         """
-        The url_for needs to have access to the list of routes stored in the apps Robyn object
+        The get_function_url needs to have access to the list of routes stored in the apps Robyn object
 
         Args:
             robyn (Robyn): The top instance of the Robyn class for this app.
         """
         self.robyn = robyn
 
-    def url_for(self, function_name: str, route_type: HttpMethod = HttpMethod.GET) -> str:
+    def get_function_url(self, function_name: str, route_type: str = "GET") -> str:
         """Creates a link to an endpoint function name
 
         Returns:
@@ -51,12 +51,11 @@ class JinjaTemplate(TemplateInterface):
         """
 
         if self.robyn is None:
-            return "url_for needs set_robyn"
+            return "get_function_url needs set_robyn"
 
         routes: List[Route] = self.robyn.router.get_routes()
-
         for r in routes:
-            if r.function.handler.__name__ == function_name and r.route_type == route_type:
+            if r.function.handler.__name__ == function_name and str(r.route_type) == f"HttpMethod.{route_type}":
                 return r.route
 
         return "route not found in Robyn router"
