@@ -45,7 +45,7 @@ def test_get_function_url():
     app.add_route("OPTIONS", "/options_hello", options_hello)
     app.add_route("HEAD", "/head_hello", head_hello)
 
-    jinja_template = JinjaTemplate(".", "templates", encoding="utf-8")
+    jinja_template = JinjaTemplate(".", "templates", "utf-8")
     jinja_template.set_robyn(app)
 
     assert jinja_template.get_function_url("h") == "/"
