@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from jinja2 import Environment, FileSystemLoader
 
 from robyn import status_codes, HttpMethod, Robyn
-from router import Route
+from robyn.router import Route
 
 from .robyn import Headers, Response
 
