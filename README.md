@@ -119,6 +119,7 @@ python --version
 - Written in Rust, btw xD
 - A multithreaded Runtime
 - Extensible
+- Automatic OpenAPI generation
 - A simple API
 - Sync and Async Function Support
 - Dynamic URL Routing
