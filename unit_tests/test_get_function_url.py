@@ -57,3 +57,18 @@ def test_get_function_url():
     assert jinja_template.get_function_url("patch_hello", "PATCH") == "/patch_hello"
     assert jinja_template.get_function_url("options_hello", "OPTIONS") == "/options_hello"
     assert jinja_template.get_function_url("head_hello", "HEAD") == "/head_hello"
+
+
+def get_hello_param(request):
+    return "get_Hello_param"
+
+
+def test_get_function_url_with_params() -> None:
+    app = Robyn(__file__)
+    app.add_route("GET", "/get_hello/:id", get_hello_param)
+
+    jinja_template = JinjaTemplate(".", "templates", "utf-8")
+    jinja_template.set_robyn(app)
+
+    url: str = jinja_template.get_function_url("get_hello_param", "GET", id=42)
+    assert url == "/get_hello/42", f"Param filled url|{url}|"
