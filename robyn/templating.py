@@ -5,8 +5,26 @@ from jinja2 import Environment, FileSystemLoader
 
 from robyn import status_codes, Robyn
 from robyn.router import Route
+# from robyn import robyn
 
 from .robyn import Headers, Response
+
+
+def get_param_filled_url(url: str, kwdict: dict | None = None) -> str:
+    """fill the :params in the url
+
+    Args:
+        url (str): typically comes from the route
+        kwdict (dict): the **kwargs as a dict
+
+    Returns:
+        str: _description_modified url (if there are elements in kwdict, otherwise unchanged)
+    """
+    if kwdict is not None:
+        for k, v in zip(kwdict.keys(), kwdict.values()):
+            url = url.replace(f":{k}", f"{v}")
+
+    return url
 
 
 class TemplateInterface(ABC):
@@ -19,7 +37,7 @@ class TemplateInterface(ABC):
     def set_robyn(self, robyn: Robyn) -> None: ...
 
     @abstractmethod
-    def get_function_url(self, function_name: str, route_type: str = "GET") -> str: ...
+    def get_function_url(self, function_name: str, route_type: str = "GET", **kwargs) -> str: ...
 
 
 class JinjaTemplate(TemplateInterface):
@@ -43,7 +61,7 @@ class JinjaTemplate(TemplateInterface):
         """
         self.robyn = robyn
 
-    def get_function_url(self, function_name: str, route_type: str = "GET") -> str:
+    def get_function_url(self, function_name: str, route_type: str = "GET", **kwargs) -> str:
         """Creates a link to an endpoint function name
 
         Returns:
@@ -56,6 +74,8 @@ class JinjaTemplate(TemplateInterface):
         routes: List[Route] = self.robyn.router.get_routes()
         for r in routes:
             if r.function.handler.__name__ == function_name and str(r.route_type) == f"HttpMethod.{route_type}":
+                if len(kwargs) > 0:
+                    return get_param_filled_url(r.route, kwargs)
                 return r.route
 
         return "route not found in Robyn router"
