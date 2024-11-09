@@ -28,4 +28,5 @@ class WebSocketException(Exception):
         class_name = self.__class__.__name__
         return f"{class_name}(code={self.code}, reason={self.reason})"
 
+
 __all__ = ["HTTPException", "WebSocketException"]

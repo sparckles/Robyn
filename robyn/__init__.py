@@ -624,7 +624,7 @@ class SubRouter(Robyn):
 def ALLOW_CORS(app: Robyn, origins: Union[List[str], str]):
     """
     Configure CORS headers for the application.
-    
+
     Args:
         app: Robyn application instance
         origins: List of allowed origins or "*" for all origins
@@ -637,11 +637,11 @@ def ALLOW_CORS(app: Robyn, origins: Union[List[str], str]):
     @app.options("/*")
     def handle_preflight(request):
         origin = request.headers.get("Origin")
-        
+
         # If specific origins are set, validate the request origin
         if "*" not in origins and origin not in origins:
             return {"status": 403}
-            
+
         return {
             "status": 204,
             "headers": {
@@ -649,8 +649,8 @@ def ALLOW_CORS(app: Robyn, origins: Union[List[str], str]):
                 "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS",
                 "Access-Control-Allow-Headers": "Content-Type, Authorization",
                 "Access-Control-Allow-Credentials": "true",
-                "Access-Control-Max-Age": "3600"
-            }
+                "Access-Control-Max-Age": "3600",
+            },
         }
 
     # Set default CORS headers for all responses
@@ -659,11 +659,8 @@ def ALLOW_CORS(app: Robyn, origins: Union[List[str], str]):
     else:
         # For multiple origins, we'll handle it dynamically in the response
         app.set_response_header("Access-Control-Allow-Origin", "*")
-    
-    app.set_response_header(
-        "Access-Control-Allow-Methods",
-        "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS"
-    )
+
+    app.set_response_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS")
     app.set_response_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
     app.set_response_header("Access-Control-Allow-Credentials", "true")
 
