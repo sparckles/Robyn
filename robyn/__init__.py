@@ -621,16 +621,51 @@ class SubRouter(Robyn):
         return super().options(endpoint=self.__add_prefix(endpoint), openapi_name=openapi_name, openapi_tags=openapi_tags)
 
 
-def ALLOW_CORS(app: Robyn, origins: List[str]):
-    """Allows CORS for the given origins for the entire router."""
-    for origin in origins:
-        app.add_response_header("Access-Control-Allow-Origin", origin)
-        app.add_response_header(
-            "Access-Control-Allow-Methods",
-            "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS",
-        )
-        app.add_response_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
-        app.add_response_header("Access-Control-Allow-Credentials", "true")
+def ALLOW_CORS(app: Robyn, origins: Union[List[str], str]):
+    """
+    Configure CORS headers for the application.
+    
+    Args:
+        app: Robyn application instance
+        origins: List of allowed origins or "*" for all origins
+    """
+    # Handle string input for origins
+    if isinstance(origins, str):
+        origins = [origins]
+
+    # Add OPTIONS handler for preflight requests
+    @app.options("/*")
+    def handle_preflight(request):
+        origin = request.headers.get("Origin")
+        
+        # If specific origins are set, validate the request origin
+        if "*" not in origins and origin not in origins:
+            return {"status": 403}
+            
+        return {
+            "status": 204,
+            "headers": {
+                "Access-Control-Allow-Origin": origin if origin else (origins[0] if origins else "*"),
+                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type, Authorization",
+                "Access-Control-Allow-Credentials": "true",
+                "Access-Control-Max-Age": "3600"
+            }
+        }
+
+    # Set default CORS headers for all responses
+    if len(origins) == 1:
+        app.set_response_header("Access-Control-Allow-Origin", origins[0])
+    else:
+        # For multiple origins, we'll handle it dynamically in the response
+        app.set_response_header("Access-Control-Allow-Origin", "*")
+    
+    app.set_response_header(
+        "Access-Control-Allow-Methods",
+        "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS"
+    )
+    app.set_response_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+    app.set_response_header("Access-Control-Allow-Credentials", "true")
 
 
 __all__ = [
