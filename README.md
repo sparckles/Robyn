@@ -209,6 +209,15 @@ maturin develop && pytest integration_tests
 maturin develop --cargo-extra-args="--features=io-uring"
 ```
 
+- **tip:** To use your local Robyn version in other projects, you can install it using pip:
+```
+pip install -e path/to/robyn/target/wheels/robyn-<version>-<python_version>-<platform>.whl
+```
+e.g.
+```
+pip install -e /repos/Robyn/target/wheels/robyn-0.63.0-cp312-cp312-macosx_10_15_universal2.whl
+```
+
 #### Troubleshooting
 If you face any issues, here are some common fixes:
   - install `patchelf` with `pip install patchelf` if you face `patchelf` not found issue during `maturin develop` (esp. on Arch Linux)
