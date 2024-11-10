@@ -145,6 +145,20 @@ If you still need help to get started, feel free to reach out on our [community 
 
 ### ⚙️ To Develop Locally
 
+#### Prerequisites
+
+Before starting, ensure you have the following installed:
+- Python >= 3.8, < 3.12 , Support for Python 3.13 is coming soon!
+- Rust (latest stable)
+- C compiler (gcc/clang)
+
+#### Setup
+
+- Clone the repository:
+```
+git clone https://github.com/sparckles/Robyn.git
+```
+
 - Setup a virtual environment:
 ```
 python3 -m venv .venv
@@ -190,8 +204,29 @@ maturin develop && poetry run test_server
 maturin develop && pytest integration_tests
 ```
 
-- Potential errors
+- **tip:** For IO-uring support, you can use the following command:
+```
+maturin develop --cargo-extra-args="--features=io-uring"
+```
+
+- **tip:** To use your local Robyn version in other projects, you can install it using pip:
+```
+pip install -e path/to/robyn/target/wheels/robyn-<version>-<python_version>-<platform>.whl
+```
+e.g.
+```
+pip install -e /repos/Robyn/target/wheels/robyn-0.63.0-cp312-cp312-macosx_10_15_universal2.whl
+```
+
+#### Troubleshooting
+If you face any issues, here are some common fixes:
   - install `patchelf` with `pip install patchelf` if you face `patchelf` not found issue during `maturin develop` (esp. on Arch Linux)
+  - If you get Rust compilation errors, ensure you have a C compiler installed:
+    - Ubuntu/Debian: `sudo apt install build-essential`
+    - Fedora: `sudo dnf install gcc`
+    - macOS: Install Xcode Command Line Tools
+    - Windows: Install Visual Studio Build Tools
+
 
 ## ✨ Special thanks
 
