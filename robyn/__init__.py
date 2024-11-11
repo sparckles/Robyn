@@ -42,7 +42,7 @@ class Robyn:
         self,
         file_object: str,
         config: Config = Config(),
-        openapi_file_path: str = None,
+        openapi_file_path: Optional[str] = None,
         openapi: OpenAPI = OpenAPI(),
         dependencies: DependencyMap = DependencyMap(),
     ) -> None:
