@@ -118,7 +118,7 @@ class EventHandler(FileSystemEventHandler):
         self.file_path = file_path
         self.directory_path = directory_path
         self.process = None  # Keep track of the subprocess
-        self.built_rust_binaries = []  # Keep track of the built rust binaries
+        self.built_rust_binaries: List = []  # Keep track of the built rust binaries
 
         self.last_reload = time.time()  # Keep track of the last reload. EventHandler is initialized with the process.
 
