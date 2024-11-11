@@ -4,7 +4,7 @@ from typing import Any
 
 
 class DependencyMap:
-    def __init__(self):
+    def __init__(self) -> None:
         self.global_dependency_map: dict[str, Any] = {}
         # {'router': {'dependency_name': dependency_class}
         self.router_dependency_map: dict[str, dict[str, Any]] = {}
