@@ -2,9 +2,14 @@ import asyncio
 import signal
 import sys
 import webbrowser
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, TYPE_CHECKING
 
-from multiprocess import Process
+# Workaround while multiprocess does not support mypy type checking
+# see https://github.com/uqfoundation/multiprocess/issues/128#issuecomment-2188208560
+if TYPE_CHECKING:
+    from multiprocessing import Process
+else:
+    from multiprocess import Process
 
 from robyn.events import Events
 from robyn.logger import logger
@@ -80,7 +85,7 @@ def init_processpool(
     response_headers: Headers,
     excluded_response_headers_paths: Optional[List[str]],
 ) -> List[Process]:
-    process_pool = []
+    process_pool: List = []
     if sys.platform.startswith("win32") or processes == 1:
         spawn_process(
             directories,
