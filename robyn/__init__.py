@@ -633,25 +633,27 @@ def ALLOW_CORS(app: Robyn, origins: Union[List[str], str]):
     if isinstance(origins, str):
         origins = [origins]
 
-    # Add OPTIONS handler for preflight requests
-    @app.options("/*")
-    def handle_preflight(request):
+    @app.before_request()
+    def cors_middleware(request):
         origin = request.headers.get("Origin")
 
         # If specific origins are set, validate the request origin
-        if "*" not in origins and origin not in origins:
-            return {"status": 403}
+        if origin and "*" not in origins and origin not in origins:
+            return Response(status_code=403, description="", headers={})
 
-        return {
-            "status": 204,
-            "headers": {
-                "Access-Control-Allow-Origin": origin if origin else (origins[0] if origins else "*"),
-                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS",
-                "Access-Control-Allow-Headers": "Content-Type, Authorization",
-                "Access-Control-Allow-Credentials": "true",
-                "Access-Control-Max-Age": "3600",
-            },
-        }
+        # Handle preflight requests
+        if request.method == "OPTIONS":
+            return Response(
+                status_code=204,
+                headers={
+                    "Access-Control-Allow-Origin": origin if origin else (origins[0] if origins else "*"),
+                    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS",
+                    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+                    "Access-Control-Allow-Credentials": "true",
+                    "Access-Control-Max-Age": "3600",
+                },
+                description="",
+            )
 
     # Set default CORS headers for all responses
     if len(origins) == 1:
