@@ -3,9 +3,13 @@ import logging
 import os
 import socket
 from pathlib import Path
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Union, TYPE_CHECKING
 
-import multiprocess as mp
+if TYPE_CHECKING:
+    import multiprocessing as mp
+else:
+    import multiprocess as mp
+
 from nestd import get_all_nested
 
 from robyn import status_codes
