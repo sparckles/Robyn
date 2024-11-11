@@ -5,6 +5,8 @@ import socket
 from pathlib import Path
 from typing import Callable, List, Optional, Tuple, Union, TYPE_CHECKING
 
+# Workaround while multiprocess does not support mypy type checking
+# see https://github.com/uqfoundation/multiprocess/issues/128#issuecomment-2188208560
 if TYPE_CHECKING:
     import multiprocessing as mp
 else:
