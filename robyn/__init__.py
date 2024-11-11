@@ -79,7 +79,7 @@ class Robyn:
         self.response_headers: Headers = Headers({})
         self.excluded_response_headers_paths: Optional[List[str]] = None
         self.directories: List[Directory] = []
-        self.event_handlers = {}
+        self.event_handlers: dict = {}
         self.exception_handler: Optional[Callable] = None
         self.authentication_handler: Optional[AuthenticationHandler] = None
 
