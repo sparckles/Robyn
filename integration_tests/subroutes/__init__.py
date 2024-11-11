@@ -1,4 +1,4 @@
-from robyn import SubRouter, WebSocket, jsonify
+from robyn import SubRouter, WebSocket, jsonify, Request
 
 from .di_subrouter import di_subrouter
 
@@ -68,3 +68,20 @@ def head_foo():
 def sample_subrouter_openapi_endpoint():
     """Get subrouter openapi"""
     return 200
+
+
+# ===== Authentication =====
+
+
+@sub_router.get("/sync/auth", auth_required=True)
+def sync_auth(request: Request):
+    assert request.identity is not None
+    assert request.identity.claims == {"key": "value"}
+    return "authenticated"
+
+
+@sub_router.get("/async/auth", auth_required=True)
+async def async_auth(request: Request):
+    assert request.identity is not None
+    assert request.identity.claims == {"key": "value"}
+    return "authenticated"
