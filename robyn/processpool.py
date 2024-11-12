@@ -2,14 +2,9 @@ import asyncio
 import signal
 import sys
 import webbrowser
-from typing import Dict, List, Optional, TYPE_CHECKING
+from typing import Dict, List, Optional
 
-# Workaround while multiprocess does not support mypy type checking
-# see https://github.com/uqfoundation/multiprocess/issues/128#issuecomment-2188208560
-if TYPE_CHECKING:
-    from multiprocessing import Process
-else:
-    from multiprocess import Process
+from multiprocess import Process  # type: ignore
 
 from robyn.events import Events
 from robyn.logger import logger
