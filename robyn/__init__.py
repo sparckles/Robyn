@@ -3,16 +3,10 @@ import logging
 import os
 import socket
 from pathlib import Path
-from typing import Callable, List, Optional, Tuple, Union, TYPE_CHECKING
+from typing import Callable, List, Optional, Tuple, Union
 
-# Workaround while multiprocess does not support mypy type checking
-# see https://github.com/uqfoundation/multiprocess/issues/128#issuecomment-2188208560
-if TYPE_CHECKING:
-    import multiprocessing as mp
-else:
-    import multiprocess as mp
-
-from nestd import get_all_nested
+import multiprocess as mp  # type: ignore
+from nestd import get_all_nested  # type: ignore
 
 from robyn import status_codes
 from robyn.argument_parser import Config
