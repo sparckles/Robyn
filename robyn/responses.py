@@ -1,6 +1,7 @@
 import mimetypes
 import os
 from typing import Optional, AsyncIterator, Iterator, Union
+import asyncio
 
 from robyn.robyn import Headers, Response
 
@@ -18,17 +19,21 @@ class FileResponse:
         self.headers = headers or Headers({"Content-Disposition": "attachment"})
 
 
+async def convert_sync_iterator(iterator: Iterator[str]) -> AsyncIterator[str]:
+    for item in iterator:
+        yield item
+
+
 class StreamingResponse:
     def __init__(
         self,
         content: Union[Iterator[str], AsyncIterator[str]],
         status_code: int = 200,
-        headers: Headers = None
+        headers: Optional[Headers] = None
     ):
-        self.content = content
+        self.content = content if asyncio.iscoroutine(content) else convert_sync_iterator(content)
         self.status_code = status_code
         self.headers = headers or Headers({})
-        # Set chunked transfer encoding
         self.headers.set("Transfer-Encoding", "chunked")
 
 

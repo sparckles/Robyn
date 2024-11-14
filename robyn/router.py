@@ -11,7 +11,7 @@ from robyn import status_codes
 from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
 from robyn.dependency_injection import DependencyMap
 from robyn.jsonify import jsonify
-from robyn.responses import FileResponse
+from robyn.responses import FileResponse, StreamingResponse
 from robyn.robyn import FunctionInfo, Headers, HttpMethod, Identity, MiddlewareType, QueryParams, Request, Response, Url
 from robyn.types import Body, Files, FormData, IPAddress, Method, PathParams
 from robyn.ws import WebSocket
@@ -76,6 +76,14 @@ class Router(BaseRouter):
                 description=res.file_path,
             )
             response.file_path = res.file_path
+        elif isinstance(res, StreamingResponse):
+            response = Response(
+                status_code=res.status_code,
+                headers=res.headers,
+                description=b"",  # Empty initial description
+                is_streaming=True,
+                stream=res.content
+            )
 
         elif isinstance(res, bytes):
             headers = Headers({"Content-Type": "application/octet-stream"})
@@ -187,9 +195,11 @@ class Router(BaseRouter):
         @wraps(handler)
         async def async_inner_handler(*args, **kwargs):
             try:
-                response = self._format_response(
-                    await wrapped_handler(*args, **kwargs),
-                )
+                result = await wrapped_handler(*args, **kwargs)
+                if isinstance(result, StreamingResponse):
+                    # Don't format streaming responses
+                    return result
+                response = self._format_response(result)
             except Exception as err:
                 if exception_handler is None:
                     raise
@@ -201,9 +211,11 @@ class Router(BaseRouter):
         @wraps(handler)
         def inner_handler(*args, **kwargs):
             try:
-                response = self._format_response(
-                    wrapped_handler(*args, **kwargs),
-                )
+                result = wrapped_handler(*args, **kwargs)
+                if isinstance(result, StreamingResponse):
+                    # Don't format streaming responses
+                    return result
+                response = self._format_response(result)
             except Exception as err:
                 if exception_handler is None:
                     raise

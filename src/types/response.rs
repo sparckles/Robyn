@@ -5,6 +5,9 @@ use pyo3::{
     prelude::*,
     types::{PyBytes, PyDict},
 };
+use futures::Stream;
+use std::pin::Pin;
+use actix_web::web::Bytes;
 
 use crate::io_helpers::{apply_hashmap_headers, read_file};
 use crate::types::{check_body_type, check_description_type, get_description_from_pyobject};
@@ -16,20 +19,30 @@ pub struct Response {
     pub status_code: u16,
     pub response_type: String,
     pub headers: Headers,
-    // https://pyo3.rs/v0.19.2/function.html?highlight=from_py_#per-argument-options
     #[pyo3(from_py_with = "get_description_from_pyobject")]
     pub description: Vec<u8>,
     pub file_path: Option<String>,
+    pub is_streaming: bool,
+    pub stream: Option<Pin<Box<dyn Stream<Item = Result<Bytes, actix_web::Error>>>>>,
 }
 
 impl Responder for Response {
     type Body = BoxBody;
 
     fn respond_to(self, _req: &HttpRequest) -> HttpResponse<Self::Body> {
-        let mut response_builder =
+        let mut response_builder = 
             HttpResponseBuilder::new(StatusCode::from_u16(self.status_code).unwrap());
         apply_hashmap_headers(&mut response_builder, &self.headers);
-        response_builder.body(self.description)
+        
+        if self.is_streaming {
+            if let Some(stream) = self.stream {
+                response_builder.streaming(stream)
+            } else {
+                response_builder.body(vec![])
+            }
+        } else {
+            response_builder.body(self.description)
+        }
     }
 }
 
@@ -46,6 +59,8 @@ impl Response {
             headers,
             description: "Not found".to_owned().into_bytes(),
             file_path: None,
+            is_streaming: false,
+            stream: None,
         }
     }
 
@@ -61,6 +76,8 @@ impl Response {
             headers,
             description: "Internal server error".to_owned().into_bytes(),
             file_path: None,
+            is_streaming: false,
+            stream: None,
         }
     }
 }
@@ -81,6 +98,8 @@ impl ToPyObject for Response {
             headers,
             description,
             file_path: self.file_path.clone(),
+            is_streaming: self.is_streaming,
+            stream: self.stream.clone(),
         };
         Py::new(py, response).unwrap().as_ref(py).into()
     }
@@ -99,6 +118,10 @@ pub struct PyResponse {
     pub description: Py<PyAny>,
     #[pyo3(get)]
     pub file_path: Option<String>,
+    #[pyo3(get)]
+    pub is_streaming: bool,
+    #[pyo3(get)]
+    pub stream: Option<Pin<Box<dyn Stream<Item = Result<Bytes, actix_web::Error>>>>>,
 }
 
 #[pymethods]
@@ -134,6 +157,8 @@ impl PyResponse {
             headers: headers_output,
             description,
             file_path: None,
+            is_streaming: false,
+            stream: None,
         })
     }
 
