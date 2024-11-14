@@ -5,7 +5,7 @@ from dataclasses import asdict, dataclass, field
 from importlib import resources
 from inspect import Signature
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, TypedDict
+from typing import Any, Callable, Dict, List, Optional, TypedDict
 
 from robyn.responses import html
 from robyn.robyn import QueryParams, Response
