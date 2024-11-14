@@ -7,8 +7,8 @@ from inspect import Signature
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, TypedDict
 
-from robyn.responses import FileResponse
-from robyn.robyn import QueryParams, Response, Headers
+from robyn.responses import html
+from robyn.robyn import QueryParams, Response
 from robyn.types import Body
 
 
@@ -416,14 +416,14 @@ class OpenAPI:
             self.openapi_spec = dict(json_file_content)
             self.openapi_file_override = True
 
-    def get_openapi_docs_page(self) -> FileResponse:
+    def get_openapi_docs_page(self) -> Response:
         """
         Handler to the swagger html page to be deployed to the endpoint `/docs`
         @return: FileResponse the swagger html page
         """
         with resources.open_text("robyn", "swagger.html") as path:
             html_file = path.read()
-        return FileResponse(html_file, headers=Headers({"Content-Type": "text/html"}))
+        return html(html_file)
 
     def get_openapi_config(self) -> dict:
         """
