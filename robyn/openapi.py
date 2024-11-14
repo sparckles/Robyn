@@ -239,7 +239,7 @@ class OpenAPI:
         query_params: Optional[TypedDict],
         request_body: Optional[TypedDict],
         return_annotation: Optional[TypedDict],
-    ) -> typing.Tuple[str, dict]:
+    ) -> Tuple[str, dict]:
         """
         Get the "path" openapi object according to spec
 
