@@ -20,8 +20,13 @@ class FileResponse:
 
 
 async def convert_sync_iterator(iterator: Iterator[str]) -> AsyncIterator[str]:
-    for item in iterator:
-        yield item
+    try:
+        for item in iterator:
+            if item is None:
+                continue
+            yield str(item) if not isinstance(item, (str, bytes)) else item
+    except StopIteration:
+        return
 
 
 class StreamingResponse:
@@ -29,12 +34,22 @@ class StreamingResponse:
         self,
         content: Union[Iterator[str], AsyncIterator[str]],
         status_code: int = 200,
+        response_type: str = "text/plain",
+        description: bytes = b"",
         headers: Optional[Headers] = None
     ):
-        self.content = content if asyncio.iscoroutine(content) else convert_sync_iterator(content)
+        self._content = content if asyncio.iscoroutine(content) else convert_sync_iterator(content)
         self.status_code = status_code
         self.headers = headers or Headers({})
         self.headers.set("Transfer-Encoding", "chunked")
+        self.response_type = response_type
+        self.description = description
+        self.file_path = None
+        self.is_streaming = True
+
+    @property
+    def stream(self):
+        return self._content
 
 
 def html(html: str) -> Response:

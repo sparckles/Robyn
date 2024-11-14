@@ -5,9 +5,13 @@ use pyo3::{
     prelude::*,
     types::{PyBytes, PyDict},
 };
+use log::debug;
 use futures::Stream;
 use std::pin::Pin;
 use actix_web::web::Bytes;
+use std::fmt;
+use std::sync::Arc;
+use std::sync::Mutex;
 
 use crate::io_helpers::{apply_hashmap_headers, read_file};
 use crate::types::{check_body_type, check_description_type, get_description_from_pyobject};
@@ -23,7 +27,7 @@ pub struct Response {
     pub description: Vec<u8>,
     pub file_path: Option<String>,
     pub is_streaming: bool,
-    pub stream: Option<Pin<Box<dyn Stream<Item = Result<Bytes, actix_web::Error>>>>>,
+    pub stream: Option<DebugStream>,
 }
 
 impl Responder for Response {
@@ -35,8 +39,13 @@ impl Responder for Response {
         apply_hashmap_headers(&mut response_builder, &self.headers);
         
         if self.is_streaming {
-            if let Some(stream) = self.stream {
-                response_builder.streaming(stream)
+            if let Some(DebugStream(stream)) = self.stream {
+                if let Ok(stream) = Arc::try_unwrap(stream) {
+                    if let Ok(stream) = stream.into_inner() {
+                        return response_builder.streaming(stream);
+                    }
+                }
+                response_builder.body(vec![])
             } else {
                 response_builder.body(vec![])
             }
@@ -105,23 +114,50 @@ impl ToPyObject for Response {
     }
 }
 
+#[derive(Clone)]
+pub struct DebugStream(Arc<Mutex<Pin<Box<dyn Stream<Item = Result<Bytes, actix_web::Error>> + Send + 'static>>>>);
+
+impl fmt::Debug for DebugStream {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Stream")
+            .field("type", &"Box<dyn Stream<...>>")
+            .finish()
+    }
+}
+
+impl<'source> FromPyObject<'source> for DebugStream {
+    fn extract(ob: &'source PyAny) -> PyResult<Self> {
+        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "Cannot convert Python object to Stream"
+        ))
+    }
+}
+
+impl IntoPy<PyObject> for DebugStream {
+    fn into_py(self, py: Python<'_>) -> PyObject {
+        // Since we can't meaningfully convert the stream to Python,
+        // return None
+        py.None()
+    }
+}
+
 #[pyclass(name = "Response")]
 #[derive(Debug, Clone)]
 pub struct PyResponse {
     #[pyo3(get)]
     pub status_code: u16,
-    #[pyo3(get)]
+    #[pyo3(get, set)]
     pub response_type: String,
     #[pyo3(get, set)]
     pub headers: Py<Headers>,
-    #[pyo3(get)]
+    #[pyo3(get, set)]
     pub description: Py<PyAny>,
-    #[pyo3(get)]
+    #[pyo3(get, set)]
     pub file_path: Option<String>,
-    #[pyo3(get)]
+    #[pyo3(get, set)]
     pub is_streaming: bool,
-    #[pyo3(get)]
-    pub stream: Option<Pin<Box<dyn Stream<Item = Result<Bytes, actix_web::Error>>>>>,
+    #[pyo3(get, set)]
+    pub stream: Option<DebugStream>,
 }
 
 #[pymethods]
@@ -192,21 +228,37 @@ impl PyResponse {
     }
 
     #[setter]
-    pub fn set_stream(&mut self, py: Python, iterator: PyObject) -> PyResult<()> {
+    pub fn set_stream(&mut self, _py: Python, iterator: PyObject) -> PyResult<()> {
         self.is_streaming = true;
-        self.stream = Some(Box::pin(futures::stream::unfold(iterator, move |iterator| {
+        let stream = Box::pin(futures::stream::unfold(iterator, move |iterator| {
             async move {
                 Python::with_gil(|py| {
-                    let next_item = iterator.call_method0(py, "__next__")?;
-                    if next_item.is_none(py) {
-                        return Ok(None);
+                    match iterator.call_method0(py, "__next__") {
+                        Ok(next_item) => {
+                            debug!("next_item: {:?}", next_item);
+                            if next_item.is_none(py) {
+                                None
+                            } else {
+                                debug!("next_item: {:?}", next_item);
+                                match get_description_from_pyobject(next_item.as_ref(py)) {
+                                    Ok(bytes) => Some((Ok(Bytes::from(bytes)), iterator)),
+                                    Err(e) => Some((Err(actix_web::error::ErrorInternalServerError(e.to_string())), iterator))
+                                }
+                            }
+                        },
+                        Err(e) => {
+                            if e.is_instance_of::<pyo3::exceptions::PyStopIteration>(py) {
+                                None
+                            } else {
+                                Some((Err(actix_web::error::ErrorInternalServerError(e.to_string())), iterator))
+                            }
+                        }
                     }
-                    let bytes = next_item.extract::<String>(py)?.into_bytes();
-                    Ok(Some((Ok(Bytes::from(bytes)), iterator)))
                 })
-                .map_err(actix_web::Error::from)
             }
-        })));
+        }));
+        
+        self.stream = Some(DebugStream(Arc::new(Mutex::new(stream))));
         Ok(())
     }
 }

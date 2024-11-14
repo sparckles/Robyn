@@ -1088,8 +1088,8 @@ def stream_numbers():
             yield f"{i}\n"
     return StreamingResponse(
         content=number_generator(),
-        headers={"Content-Type": "text/plain"}
-    )
+        headers=Headers({"Content-Type": "text/plain"}
+    ))
 
 @app.get("/stream-async")
 async def stream_numbers_async():
@@ -1099,7 +1099,7 @@ async def stream_numbers_async():
             await asyncio.sleep(0.1)
     return StreamingResponse(
         content=number_generator(),
-        headers={"Content-Type": "text/plain"}
+        headers=Headers( {"Content-Type": "text/plain"} )
     )
 
 

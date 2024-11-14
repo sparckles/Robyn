@@ -80,11 +80,12 @@ class Router(BaseRouter):
             response = Response(
                 status_code=res.status_code,
                 headers=res.headers,
-                description=b"",  # Empty initial description
-                is_streaming=True,
-                stream=res.content
+                description=res.description,
             )
-
+            response.response_type = res.response_type
+            response.is_streaming = True
+            response.file_path = res.file_path
+            response.set_stream(res.stream)
         elif isinstance(res, bytes):
             headers = Headers({"Content-Type": "application/octet-stream"})
             response = Response(
@@ -196,9 +197,6 @@ class Router(BaseRouter):
         async def async_inner_handler(*args, **kwargs):
             try:
                 result = await wrapped_handler(*args, **kwargs)
-                if isinstance(result, StreamingResponse):
-                    # Don't format streaming responses
-                    return result
                 response = self._format_response(result)
             except Exception as err:
                 if exception_handler is None:
@@ -212,9 +210,6 @@ class Router(BaseRouter):
         def inner_handler(*args, **kwargs):
             try:
                 result = wrapped_handler(*args, **kwargs)
-                if isinstance(result, StreamingResponse):
-                    # Don't format streaming responses
-                    return result
                 response = self._format_response(result)
             except Exception as err:
                 if exception_handler is None:
