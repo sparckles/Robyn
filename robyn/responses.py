@@ -1,6 +1,6 @@
 import mimetypes
 import os
-from typing import Optional
+from typing import Optional, AsyncIterator, Iterator, Union
 
 from robyn.robyn import Headers, Response
 
@@ -16,6 +16,20 @@ class FileResponse:
         self.description = ""
         self.status_code = status_code or 200
         self.headers = headers or Headers({"Content-Disposition": "attachment"})
+
+
+class StreamingResponse:
+    def __init__(
+        self,
+        content: Union[Iterator[str], AsyncIterator[str]],
+        status_code: int = 200,
+        headers: Headers = None
+    ):
+        self.content = content
+        self.status_code = status_code
+        self.headers = headers or Headers({})
+        # Set chunked transfer encoding
+        self.headers.set("Transfer-Encoding", "chunked")
 
 
 def html(html: str) -> Response:
