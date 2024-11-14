@@ -1,5 +1,6 @@
 import os
 import pathlib
+import asyncio
 from collections import defaultdict
 from typing import Optional
 
@@ -8,6 +9,7 @@ from integration_tests.views import AsyncView, SyncView
 from robyn import Headers, Request, Response, Robyn, WebSocket, WebSocketConnector, jsonify, serve_file, serve_html
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.robyn import QueryParams, Url
+from robyn.responses import StreamingResponse
 from robyn.templating import JinjaTemplate
 from robyn.types import Body, JSONResponse, Method, PathParams
 
@@ -1078,6 +1080,27 @@ class CreateItemQueryParamsParams(QueryParams):
 @app.post("/openapi_request_body")
 def create_item(request, body: CreateItemBody, query: CreateItemQueryParamsParams) -> CreateItemResponse:
     return CreateItemResponse(success=True, items_changed=2)
+
+@app.get("/stream")
+def stream_numbers():
+    def number_generator():
+        for i in range(3):
+            yield f"{i}\n"
+    return StreamingResponse(
+        content=number_generator(),
+        headers={"Content-Type": "text/plain"}
+    )
+
+@app.get("/stream-async")
+async def stream_numbers_async():
+    async def number_generator():
+        for i in range(3):
+            yield f"{i}\n"
+            await asyncio.sleep(0.1)
+    return StreamingResponse(
+        content=number_generator(),
+        headers={"Content-Type": "text/plain"}
+    )
 
 
 def main():

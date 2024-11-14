@@ -190,4 +190,23 @@ impl PyResponse {
             .append(key.to_string(), value.to_string());
         Ok(())
     }
+
+    #[setter]
+    pub fn set_stream(&mut self, py: Python, iterator: PyObject) -> PyResult<()> {
+        self.is_streaming = true;
+        self.stream = Some(Box::pin(futures::stream::unfold(iterator, move |iterator| {
+            async move {
+                Python::with_gil(|py| {
+                    let next_item = iterator.call_method0(py, "__next__")?;
+                    if next_item.is_none(py) {
+                        return Ok(None);
+                    }
+                    let bytes = next_item.extract::<String>(py)?.into_bytes();
+                    Ok(Some((Ok(Bytes::from(bytes)), iterator)))
+                })
+                .map_err(actix_web::Error::from)
+            }
+        })));
+        Ok(())
+    }
 }
