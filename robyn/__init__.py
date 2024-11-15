@@ -208,12 +208,12 @@ class Robyn:
     def set_response_header(self, key: str, value: str) -> None:
         self.response_headers.set(key, value)
 
-    def exclude_response_headers_for(self, excluded_response_header_paths: Optional[List[str]]):
+    def exclude_response_headers_for(self, excluded_response_headers_paths: Optional[List[str]]):
         """
         To exclude response headers from certain routes
         @param exclude_paths: the paths to exclude response headers from
         """
-        self.excluded_response_header_paths = excluded_response_header_paths
+        self.excluded_response_headers_paths = excluded_response_headers_paths
 
     def add_web_socket(self, endpoint: str, ws: WebSocket) -> None:
         self.web_socket_router.add_route(endpoint, ws)
@@ -300,7 +300,7 @@ class Robyn:
             self.config.workers,
             self.config.processes,
             self.response_headers,
-            self.excluded_response_header_paths,
+            self.excluded_response_headers_paths,
             open_browser,
         )
 
