@@ -596,29 +596,29 @@ class SubRouter(Robyn):
     def __add_prefix(self, endpoint: str):
         return f"{self.prefix}{endpoint}"
 
-    def get(self, endpoint: str, const: bool = False, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["get"]):
-        return super().get(endpoint=self.__add_prefix(endpoint), const=const, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def get(self, endpoint: str, const: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["get"]):
+        return super().get(endpoint=self.__add_prefix(endpoint), const=const, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def post(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["post"]):
-        return super().post(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def post(self, endpoint: str, openapi_name: str = "", openapi_tags: List[str] = ["post"]):
+        return super().post(endpoint=self.__add_prefix(endpoint), openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def put(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["put"]):
-        return super().put(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def put(self, endpoint: str, openapi_name: str = "", openapi_tags: List[str] = ["put"]):
+        return super().put(endpoint=self.__add_prefix(endpoint), openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def delete(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["delete"]):
-        return super().delete(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def delete(self, endpoint: str, openapi_name: str = "", openapi_tags: List[str] = ["delete"]):
+        return super().delete(endpoint=self.__add_prefix(endpoint), openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def patch(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["patch"]):
-        return super().patch(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def patch(self, endpoint: str, openapi_name: str = "", openapi_tags: List[str] = ["patch"]):
+        return super().patch(endpoint=self.__add_prefix(endpoint), openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def head(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["head"]):
-        return super().head(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def head(self, endpoint: str, openapi_name: str = "", openapi_tags: List[str] = ["head"]):
+        return super().head(endpoint=self.__add_prefix(endpoint), openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def trace(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["trace"]):
-        return super().trace(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def trace(self, endpoint: str, openapi_name: str = "", openapi_tags: List[str] = ["trace"]):
+        return super().trace(endpoint=self.__add_prefix(endpoint), openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def options(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["options"]):
-        return super().options(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def options(self, endpoint: str, openapi_name: str = "", openapi_tags: List[str] = ["options"]):
+        return super().options(endpoint=self.__add_prefix(endpoint), openapi_name=openapi_name, openapi_tags=openapi_tags)
 
 
 def ALLOW_CORS(app: Robyn, origins: Union[List[str], str]):
