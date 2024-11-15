@@ -4,7 +4,7 @@ import sys
 import webbrowser
 from typing import Dict, List, Optional
 
-from multiprocess import Process
+from multiprocess import Process  # type: ignore
 
 from robyn.events import Events
 from robyn.logger import logger
@@ -80,7 +80,7 @@ def init_processpool(
     response_headers: Headers,
     excluded_response_headers_paths: Optional[List[str]],
 ) -> List[Process]:
-    process_pool = []
+    process_pool: List = []
     if sys.platform.startswith("win32") or processes == 1:
         spawn_process(
             directories,

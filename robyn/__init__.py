@@ -5,8 +5,8 @@ import socket
 from pathlib import Path
 from typing import Callable, List, Optional, Tuple, Union
 
-import multiprocess as mp
-from nestd import get_all_nested
+import multiprocess as mp  # type: ignore
+from nestd import get_all_nested  # type: ignore
 
 from robyn import status_codes
 from robyn.argument_parser import Config
@@ -42,7 +42,7 @@ class Robyn:
         self,
         file_object: str,
         config: Config = Config(),
-        openapi_file_path: str = None,
+        openapi_file_path: Optional[str] = None,
         openapi: OpenAPI = OpenAPI(),
         dependencies: DependencyMap = DependencyMap(),
     ) -> None:
@@ -79,7 +79,7 @@ class Robyn:
         self.response_headers: Headers = Headers({})
         self.excluded_response_headers_paths: Optional[List[str]] = None
         self.directories: List[Directory] = []
-        self.event_handlers = {}
+        self.event_handlers: dict = {}
         self.exception_handler: Optional[Callable] = None
         self.authentication_handler: Optional[AuthenticationHandler] = None
 
