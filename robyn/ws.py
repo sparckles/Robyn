@@ -23,7 +23,7 @@ class WebSocket:
     def __init__(self, robyn_object: "Robyn", endpoint: str, config: Config = Config(), dependencies: DependencyMap = DependencyMap()) -> None:
         self.robyn_object = robyn_object
         self.endpoint = endpoint
-        self.methods = {}
+        self.methods: dict = {}
         self.config = config
         self.dependencies = dependencies
 
