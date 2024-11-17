@@ -5,7 +5,7 @@ from dataclasses import asdict, dataclass, field
 from importlib import resources
 from inspect import Signature
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, TypedDict
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from robyn.responses import html
 from robyn.robyn import QueryParams, Response
@@ -236,9 +236,9 @@ class OpenAPI:
         name: str,
         description: str,
         tags: List[str],
-        query_params: Optional[TypedDict],
-        request_body: Optional[TypedDict],
-        return_annotation: Optional[TypedDict],
+        query_params: Optional[Dict],
+        request_body: Optional[Dict],
+        return_annotation: Optional[Dict],
     ) -> Tuple[str, dict]:
         """
         Get the "path" openapi object according to spec
@@ -258,7 +258,7 @@ class OpenAPI:
         if not description:
             description = "No description provided"
 
-        openapi_path_object = {
+        openapi_path_object: dict = {
             "summary": name,
             "description": description,
             "parameters": [],
@@ -293,7 +293,7 @@ class OpenAPI:
                 endpoint_with_path_params_wrapped_in_braces += "/{" + path_param_name + "}"
 
         if query_params:
-            query_param_annotations = query_params.__annotations__ if query_params is TypedDict else typing.get_type_hints(query_params)
+            query_param_annotations = query_params.__annotations__ if query_params is Dict else typing.get_type_hints(query_params)
 
             for query_param in query_param_annotations:
                 query_param_type = self.get_openapi_type(query_param_annotations[query_param])
@@ -310,7 +310,7 @@ class OpenAPI:
         if request_body:
             properties = {}
 
-            request_body_annotations = request_body.__annotations__ if request_body is TypedDict else typing.get_type_hints(request_body)
+            request_body_annotations = request_body.__annotations__ if request_body is Dict else typing.get_type_hints(request_body)
 
             for body_item in request_body_annotations:
                 properties[body_item] = self.get_schema_object(body_item, request_body_annotations[body_item])
@@ -339,7 +339,7 @@ class OpenAPI:
 
         return endpoint_with_path_params_wrapped_in_braces, openapi_path_object
 
-    def get_openapi_type(self, typed_dict: TypedDict) -> str:
+    def get_openapi_type(self, typed_dict: Dict) -> str:
         """
         Get actual type from the TypedDict annotations
 
@@ -371,7 +371,7 @@ class OpenAPI:
         @return: dict the properties object
         """
 
-        properties = {
+        properties: dict = {
             "title": parameter.capitalize(),
         }
 
