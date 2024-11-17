@@ -289,13 +289,13 @@ class MiddlewareRouter(BaseRouter):
     def add_auth_middleware(self, endpoint: str, method: HttpMethod):
         """
         This method adds an authentication middleware to the specified endpoint.
-        
+
         Args:
             endpoint (str): The endpoint path
             method (HttpMethod): The HTTP method for this route
         """
         injected_dependencies = {}
-        
+
         # Create a unique route key that includes both method and path
         route_key = f"{method}:{endpoint}"
 
@@ -313,7 +313,7 @@ class MiddlewareRouter(BaseRouter):
             self.add_route(
                 MiddlewareType.BEFORE_REQUEST,
                 route_key,
-                inner_handler, 
+                inner_handler,
                 injected_dependencies,
             )
             return inner_handler
