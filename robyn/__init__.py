@@ -118,7 +118,7 @@ class Robyn:
         injected_dependencies = self.dependencies.get_dependency_map(self)
 
         if auth_required:
-            self.middleware_router.add_auth_middleware(endpoint)(handler)
+            self.middleware_router.add_auth_middleware(endpoint, route_type)(handler)
 
         if isinstance(route_type, str):
             http_methods = {

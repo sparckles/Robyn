@@ -286,12 +286,18 @@ class MiddlewareRouter(BaseRouter):
         self.route_middlewares.append(RouteMiddleware(middleware_type, endpoint, function))
         return handler
 
-    def add_auth_middleware(self, endpoint: str):
+    def add_auth_middleware(self, endpoint: str, method: HttpMethod):
         """
         This method adds an authentication middleware to the specified endpoint.
+        
+        Args:
+            endpoint (str): The endpoint path
+            method (HttpMethod): The HTTP method for this route
         """
-
         injected_dependencies = {}
+        
+        # Create a unique route key that includes both method and path
+        route_key = f"{method}:{endpoint}"
 
         def decorator(handler):
             @wraps(handler)
@@ -302,13 +308,12 @@ class MiddlewareRouter(BaseRouter):
                 if identity is None:
                     return self.authentication_handler.unauthorized_response
                 request.identity = identity
-
                 return request
 
             self.add_route(
                 MiddlewareType.BEFORE_REQUEST,
-                endpoint,
-                inner_handler,
+                route_key,
+                inner_handler, 
                 injected_dependencies,
             )
             return inner_handler

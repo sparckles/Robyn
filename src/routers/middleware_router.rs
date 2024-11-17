@@ -38,14 +38,10 @@ impl Router<(FunctionInfo, HashMap<String, String>), MiddlewareType> for Middlew
     ) -> Option<(FunctionInfo, HashMap<String, String>)> {
         let table = self.routes.get(route_method)?;
 
-        let table_lock = table.read().ok()?;
-        let res = table_lock.at(route).ok()?;
-        let mut route_params = HashMap::new();
-        for (key, value) in res.params.iter() {
-            route_params.insert(key.to_string(), value.to_string());
+        match table.read().at(route) {
+            Ok(m) => Some((m.value.clone(), m.params.into_iter().collect())),
+            Err(_) => None,
         }
-
-        Some((res.value.to_owned(), route_params))
     }
 }
 
