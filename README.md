@@ -192,6 +192,10 @@ poetry run test_server
 ```
 - Run tests
 ```
+pytest
+```
+For just integration tests use
+```
 pytest integration_tests
 ```
 - Test (refer to `integration_tests/base_routes.py` for more endpoints)
