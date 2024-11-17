@@ -36,7 +36,7 @@ class StreamingResponse:
         status_code: int = 200,
         response_type: str = "text/plain",
         description: bytes = b"",
-        headers: Optional[Headers] = None
+        headers: Optional[Headers] = None,
     ):
         self._content = content if asyncio.iscoroutine(content) else convert_sync_iterator(content)
         self.status_code = status_code

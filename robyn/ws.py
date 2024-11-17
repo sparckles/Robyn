@@ -45,7 +45,9 @@ class WebSocket:
                 else:
                     _logger.debug(f"Dependency {dependency} is not used in the handler {handler.__name__}")
 
-                self.methods[type] = FunctionInfo(handler=handler, is_async=is_async, is_streaming=False, number_of_params=num_params, args=params, kwargs=new_injected_dependencies)
+                self.methods[type] = FunctionInfo(
+                    handler=handler, is_async=is_async, is_streaming=False, number_of_params=num_params, args=params, kwargs=new_injected_dependencies
+                )
                 self.robyn_object.add_web_socket(self.endpoint, self)
 
         return inner
