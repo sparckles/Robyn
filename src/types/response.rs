@@ -89,6 +89,38 @@ impl Response {
             stream: None,
         }
     }
+
+    pub fn set_stream(&mut self, py: Python, stream: Py<PyAny>) -> PyResult<()> {
+        self.is_streaming = true;
+        let stream = Box::pin(futures::stream::unfold(stream, move |iterator| {
+            async move {
+                Python::with_gil(|py| {
+                    match iterator.call_method0(py, "__next__") {
+                        Ok(next_item) => {
+                            if next_item.is_none(py) {
+                                None
+                            } else {
+                                match get_description_from_pyobject(next_item.as_ref(py)) {
+                                    Ok(bytes) => Some((Ok(Bytes::from(bytes)), iterator)),
+                                    Err(e) => Some((Err(actix_web::error::ErrorInternalServerError(e.to_string())), iterator))
+                                }
+                            }
+                        },
+                        Err(e) => {
+                            if e.is_instance_of::<pyo3::exceptions::PyStopIteration>(py) {
+                                None
+                            } else {
+                                Some((Err(actix_web::error::ErrorInternalServerError(e.to_string())), iterator))
+                            }
+                        }
+                    }
+                })
+            }
+        }));
+        
+        self.stream = Some(DebugStream(Arc::new(Mutex::new(stream))));
+        Ok(())
+    }
 }
 
 impl ToPyObject for Response {

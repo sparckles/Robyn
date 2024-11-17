@@ -1081,7 +1081,7 @@ class CreateItemQueryParamsParams(QueryParams):
 def create_item(request, body: CreateItemBody, query: CreateItemQueryParamsParams) -> CreateItemResponse:
     return CreateItemResponse(success=True, items_changed=2)
 
-@app.get("/stream")
+@app.get("/stream", streaming=True)
 def stream_numbers():
     def number_generator():
         for i in range(3):
@@ -1091,7 +1091,7 @@ def stream_numbers():
         headers=Headers({"Content-Type": "text/plain"}
     ))
 
-@app.get("/stream-async")
+@app.get("/stream-async", streaming=True)
 async def stream_numbers_async():
     async def number_generator():
         for i in range(3):

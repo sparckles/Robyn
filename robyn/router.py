@@ -122,6 +122,7 @@ class Router(BaseRouter):
         endpoint: str,
         handler: Callable,
         is_const: bool,
+        is_streaming: bool,
         exception_handler: Optional[Callable],
         injected_dependencies: dict,
     ) -> Union[Callable, CoroutineType]:
@@ -232,21 +233,23 @@ class Router(BaseRouter):
 
         if iscoroutinefunction(handler):
             function = FunctionInfo(
-                async_inner_handler,
-                True,
-                number_of_params,
-                params,
-                new_injected_dependencies,
+                handler=async_inner_handler,
+                is_async=True,
+                is_streaming=is_streaming,
+                number_of_params=number_of_params,
+                args=params,
+                kwargs=new_injected_dependencies,
             )
             self.routes.append(Route(route_type, endpoint, function, is_const))
             return async_inner_handler
         else:
             function = FunctionInfo(
-                inner_handler,
-                False,
-                number_of_params,
-                params,
-                new_injected_dependencies,
+                handler=inner_handler,
+                is_async=False,
+                is_streaming=is_streaming,
+                number_of_params=number_of_params,
+                args=params,
+                kwargs=new_injected_dependencies,
             )
             self.routes.append(Route(route_type, endpoint, function, is_const))
             return inner_handler
@@ -284,11 +287,12 @@ class MiddlewareRouter(BaseRouter):
                 _logger.debug(f"Dependency {dependency} is not used in the middleware handler {handler.__name__}")
 
         function = FunctionInfo(
-            handler,
-            iscoroutinefunction(handler),
-            number_of_params,
-            params,
-            new_injected_dependencies,
+            handler=handler,
+            is_async=iscoroutinefunction(handler),
+            is_streaming=False,
+            number_of_params=number_of_params,
+            args=params,
+            kwargs=new_injected_dependencies,
         )
         self.route_middlewares.append(RouteMiddleware(middleware_type, endpoint, function))
         return handler
@@ -356,11 +360,12 @@ class MiddlewareRouter(BaseRouter):
                         GlobalMiddleware(
                             middleware_type,
                             FunctionInfo(
-                                async_inner_handler,
-                                True,
-                                len(params),
-                                params,
-                                injected_dependencies,
+                                handler=async_inner_handler,
+                                is_async=True,
+                                is_streaming=False,
+                                number_of_params=len(params),
+                                args=params,
+                                kwargs=injected_dependencies,
                             ),
                         )
                     )
@@ -369,11 +374,12 @@ class MiddlewareRouter(BaseRouter):
                         GlobalMiddleware(
                             middleware_type,
                             FunctionInfo(
-                                inner_handler,
-                                False,
-                                len(params),
-                                params,
-                                injected_dependencies,
+                                handler=inner_handler,
+                                is_async=False,
+                                is_streaming=False,
+                                number_of_params=len(params),
+                                args=params,
+                                kwargs=injected_dependencies,
                             ),
                         )
                     )
