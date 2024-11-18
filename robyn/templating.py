@@ -8,10 +8,12 @@ from jinja2 import Environment, FileSystemLoader
 
 
 class TemplateInterface(ABC):
-    def __init__(self): ...
+    def __init__(self):
+        ...
 
     @abstractmethod
-    def render_template(self, *args, **kwargs) -> Response: ...
+    def render_template(self, *args, **kwargs) -> Response:
+        ...
 
 
 class JinjaTemplate(TemplateInterface):

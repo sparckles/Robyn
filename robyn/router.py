@@ -47,7 +47,8 @@ class GlobalMiddleware(NamedTuple):
 
 class BaseRouter(ABC):
     @abstractmethod
-    def add_route(*args) -> Union[Callable, CoroutineType, WebSocket]: ...
+    def add_route(*args) -> Union[Callable, CoroutineType, WebSocket]:
+        ...
 
 
 class Router(BaseRouter):

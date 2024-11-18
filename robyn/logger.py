@@ -21,7 +21,11 @@ class Logger:
         self.logger = logging.getLogger(__name__)
 
     def logging_file(self, filename: str):
+        
+ 
         FileOutputHandler = logging.FileHandler(filename)
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        FileOutputHandler.setFormatter(formatter)
         self.logger.addHandler(FileOutputHandler)
 
     def _format_msg(
