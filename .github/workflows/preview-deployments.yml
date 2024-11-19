@@ -19,9 +19,10 @@ jobs:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-apple-darwin
@@ -32,16 +33,18 @@ jobs:
           args: -i python --release --out dist --no-sdist
       - name: Install build wheel - x86_64
         run: |
-          pip install --force-reinstall dist/robyn*.whl
-          cd ~ && python -c 'import robyn'
+          uv venv --seed
+          uv run pip install --force-reinstall dist/robyn*.whl
+          cd ~ && uv run python -c 'import robyn'
       - name: Build wheels - universal2
         uses: PyO3/maturin-action@v1
         with:
           args: -i python --release --universal2 --out dist --no-sdist
       - name: Install build wheel - universal2
         run: |
-          pip install --force-reinstall dist/robyn*_universal2.whl
-          cd ~ && python -c 'import robyn'
+          uv venv --seed
+          uv run pip install --force-reinstall dist/robyn*_universal2.whl
+          cd ~ && uv run python -c 'import robyn'
 
   windows:
     runs-on: windows-latest
@@ -51,10 +54,10 @@ jobs:
         target: [x64, x86]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-          architecture: ${{ matrix.target }}
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
       - uses: dtolnay/rust-toolchain@stable
       - name: Build wheels
         uses: PyO3/maturin-action@v1
@@ -64,8 +67,9 @@ jobs:
       - name: Install build wheel
         shell: bash
         run: |
-          pip install --force-reinstall dist/robyn*.whl
-          cd ~ && python -c 'import robyn'
+          uv venv --seed
+          uv run pip install --force-reinstall dist/robyn*.whl
+          cd ~ && uv run python -c 'import robyn'
 
   linux:
     runs-on: ubuntu-latest
@@ -76,9 +80,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
       - name: Build Wheels
         uses: PyO3/maturin-action@v1
         with:
@@ -88,8 +93,9 @@ jobs:
       - name: Install build wheel
         if: matrix.target == 'x86_64'
         run: |
-          pip install --force-reinstall dist/robyn*.whl
-          cd ~ && python -c 'import robyn'
+          uv venv --seed
+          uv run pip install --force-reinstall dist/robyn*.whl
+          cd ~ && uv run python -c 'import robyn'
 
   linux-cross:
     runs-on: ubuntu-latest
