@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         python-version:
-          - "3.8"
+          - "3.10"
     steps:
     - uses: actions/checkout@v4
     - name: Install uv
@@ -18,11 +18,16 @@ jobs:
       
     - name: Set up Python ${{ matrix.python-version }}
       run: uv python install ${{ matrix.python-version }}
-    - name: Install dependencies
+    - name: Install dependencies with uv
       run: |
-        python -m pip install --upgrade pip
-        pip install ruff isort black
+        uv venv --seed
+
+        uv python pin 3.10
+
+        uv run python -m pip install --upgrade pip
+
+        uv run pip install ruff isort black
     - name: Run linters
       run: |
-        ruff check .
-        isort --check-only --diff .
+        uv run ruff check .
+        uv run isort --check-only --diff .
