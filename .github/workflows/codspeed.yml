@@ -29,6 +29,7 @@ jobs:
       - name: Install dependencies with uv
         run: |
           uv venv --seed
+          uv python pin 3.8
           uv run python -m pip install --upgrade pip
           uv add pre-commit poetry maturin pytest patchelf
           uv run poetry export --with test --with dev --without-hashes --output requirements.txt
@@ -39,7 +40,7 @@ jobs:
         run: rustup target add aarch64-apple-darwin
       - name: Setup Rust part of the project
         run: |
-          maturin build -i python --universal2 --out dist
+          uv run maturin build -i python --universal2 --out dist
           uv run pip install --no-index --find-links=dist/ robyn
       - name: Run benchmarks
         uses: CodSpeedHQ/action@v2
