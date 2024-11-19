@@ -53,11 +53,10 @@ class Router(BaseRouter):
     ) -> Response:
         headers = Headers({"Content-Type": "text/plain"})
 
-        response = {}
         if isinstance(res, dict):
             # this should change
             headers = Headers({})
-            if "Content-Type" not in headers:
+            if not headers.contains("Content-Type"):
                 headers.set("Content-Type", "application/json")
 
             description = jsonify(res)
@@ -88,16 +87,16 @@ class Router(BaseRouter):
             if len(res) != 3:
                 raise ValueError("Tuple should have 3 elements")
             else:
-                description, headers, status_code = res
-                description = self._format_response(description).description
-                new_headers = Headers(headers)
-                if "Content-Type" in new_headers:
-                    headers.set("Content-Type", new_headers.get("Content-Type"))
+                description2, headers2, status_code2 = res
+                description2 = self._format_response(description2).description
+                new_headers: Headers = Headers(headers2)
+                if new_headers.contains("Content-Type"):
+                    headers2.set("Content-Type", new_headers.get("Content-Type"))
 
                 response = Response(
-                    status_code=status_code,
-                    headers=headers,
-                    description=description,
+                    status_code=status_code2,
+                    headers=headers2,
+                    description=description2,
                 )
         else:
             response = Response(
@@ -291,7 +290,7 @@ class MiddlewareRouter(BaseRouter):
         This method adds an authentication middleware to the specified endpoint.
         """
 
-        injected_dependencies = {}
+        injected_dependencies: dict = {}
 
         def decorator(handler):
             @wraps(handler)
@@ -320,7 +319,7 @@ class MiddlewareRouter(BaseRouter):
     # Arguments are returned as they could be modified by the middlewares.
     def add_middleware(self, middleware_type: MiddlewareType, endpoint: Optional[str]) -> Callable[..., None]:
         # no dependency injection here
-        injected_dependencies = {}
+        injected_dependencies: dict = {}
 
         def inner(handler):
             @wraps(handler)
@@ -383,7 +382,7 @@ class MiddlewareRouter(BaseRouter):
 class WebSocketRouter(BaseRouter):
     def __init__(self) -> None:
         super().__init__()
-        self.routes = {}
+        self.routes: dict = {}
 
     def add_route(self, endpoint: str, web_socket: WebSocket) -> None:
         self.routes[endpoint] = web_socket
