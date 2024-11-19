@@ -66,6 +66,7 @@ class FunctionInfo:
 
     handler: Callable
     is_async: bool
+    is_streaming: bool
     number_of_params: int
     args: dict
     kwargs: dict

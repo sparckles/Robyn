@@ -5,6 +5,13 @@ use pyo3::{
     prelude::*,
     types::{PyBytes, PyDict},
 };
+use log::debug;
+use futures::Stream;
+use std::pin::Pin;
+use actix_web::web::Bytes;
+use std::fmt;
+use std::sync::Arc;
+use std::sync::Mutex;
 
 use crate::io_helpers::{apply_hashmap_headers, read_file};
 use crate::types::{check_body_type, check_description_type, get_description_from_pyobject};
@@ -16,20 +23,35 @@ pub struct Response {
     pub status_code: u16,
     pub response_type: String,
     pub headers: Headers,
-    // https://pyo3.rs/v0.19.2/function.html?highlight=from_py_#per-argument-options
     #[pyo3(from_py_with = "get_description_from_pyobject")]
     pub description: Vec<u8>,
     pub file_path: Option<String>,
+    pub is_streaming: bool,
+    pub stream: Option<DebugStream>,
 }
 
 impl Responder for Response {
     type Body = BoxBody;
 
     fn respond_to(self, _req: &HttpRequest) -> HttpResponse<Self::Body> {
-        let mut response_builder =
+        let mut response_builder = 
             HttpResponseBuilder::new(StatusCode::from_u16(self.status_code).unwrap());
         apply_hashmap_headers(&mut response_builder, &self.headers);
-        response_builder.body(self.description)
+        
+        if self.is_streaming {
+            if let Some(DebugStream(stream)) = self.stream {
+                if let Ok(stream) = Arc::try_unwrap(stream) {
+                    if let Ok(stream) = stream.into_inner() {
+                        return response_builder.streaming(stream);
+                    }
+                }
+                response_builder.body(vec![])
+            } else {
+                response_builder.body(vec![])
+            }
+        } else {
+            response_builder.body(self.description)
+        }
     }
 }
 
@@ -46,6 +68,8 @@ impl Response {
             headers,
             description: "Not found".to_owned().into_bytes(),
             file_path: None,
+            is_streaming: false,
+            stream: None,
         }
     }
 
@@ -61,7 +85,41 @@ impl Response {
             headers,
             description: "Internal server error".to_owned().into_bytes(),
             file_path: None,
+            is_streaming: false,
+            stream: None,
         }
+    }
+
+    pub fn set_stream(&mut self, py: Python, stream: Py<PyAny>) -> PyResult<()> {
+        self.is_streaming = true;
+        let stream = Box::pin(futures::stream::unfold(stream, move |iterator| {
+            async move {
+                Python::with_gil(|py| {
+                    match iterator.call_method0(py, "__next__") {
+                        Ok(next_item) => {
+                            if next_item.is_none(py) {
+                                None
+                            } else {
+                                match get_description_from_pyobject(next_item.as_ref(py)) {
+                                    Ok(bytes) => Some((Ok(Bytes::from(bytes)), iterator)),
+                                    Err(e) => Some((Err(actix_web::error::ErrorInternalServerError(e.to_string())), iterator))
+                                }
+                            }
+                        },
+                        Err(e) => {
+                            if e.is_instance_of::<pyo3::exceptions::PyStopIteration>(py) {
+                                None
+                            } else {
+                                Some((Err(actix_web::error::ErrorInternalServerError(e.to_string())), iterator))
+                            }
+                        }
+                    }
+                })
+            }
+        }));
+        
+        self.stream = Some(DebugStream(Arc::new(Mutex::new(stream))));
+        Ok(())
     }
 }
 
@@ -81,8 +139,37 @@ impl ToPyObject for Response {
             headers,
             description,
             file_path: self.file_path.clone(),
+            is_streaming: self.is_streaming,
+            stream: self.stream.clone(),
         };
         Py::new(py, response).unwrap().as_ref(py).into()
+    }
+}
+
+#[derive(Clone)]
+pub struct DebugStream(Arc<Mutex<Pin<Box<dyn Stream<Item = Result<Bytes, actix_web::Error>> + Send + 'static>>>>);
+
+impl fmt::Debug for DebugStream {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Stream")
+            .field("type", &"Box<dyn Stream<...>>")
+            .finish()
+    }
+}
+
+impl<'source> FromPyObject<'source> for DebugStream {
+    fn extract(ob: &'source PyAny) -> PyResult<Self> {
+        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "Cannot convert Python object to Stream"
+        ))
+    }
+}
+
+impl IntoPy<PyObject> for DebugStream {
+    fn into_py(self, py: Python<'_>) -> PyObject {
+        // Since we can't meaningfully convert the stream to Python,
+        // return None
+        py.None()
     }
 }
 
@@ -91,14 +178,18 @@ impl ToPyObject for Response {
 pub struct PyResponse {
     #[pyo3(get)]
     pub status_code: u16,
-    #[pyo3(get)]
+    #[pyo3(get, set)]
     pub response_type: String,
     #[pyo3(get, set)]
     pub headers: Py<Headers>,
-    #[pyo3(get)]
+    #[pyo3(get, set)]
     pub description: Py<PyAny>,
-    #[pyo3(get)]
+    #[pyo3(get, set)]
     pub file_path: Option<String>,
+    #[pyo3(get, set)]
+    pub is_streaming: bool,
+    #[pyo3(get, set)]
+    pub stream: Option<DebugStream>,
 }
 
 #[pymethods]
@@ -134,6 +225,8 @@ impl PyResponse {
             headers: headers_output,
             description,
             file_path: None,
+            is_streaming: false,
+            stream: None,
         })
     }
 
@@ -163,6 +256,41 @@ impl PyResponse {
             .try_borrow_mut(py)
             .expect("value already borrowed")
             .append(key.to_string(), value.to_string());
+        Ok(())
+    }
+
+    #[setter]
+    pub fn set_stream(&mut self, _py: Python, iterator: PyObject) -> PyResult<()> {
+        self.is_streaming = true;
+        let stream = Box::pin(futures::stream::unfold(iterator, move |iterator| {
+            async move {
+                Python::with_gil(|py| {
+                    match iterator.call_method0(py, "__next__") {
+                        Ok(next_item) => {
+                            debug!("next_item: {:?}", next_item);
+                            if next_item.is_none(py) {
+                                None
+                            } else {
+                                debug!("next_item: {:?}", next_item);
+                                match get_description_from_pyobject(next_item.as_ref(py)) {
+                                    Ok(bytes) => Some((Ok(Bytes::from(bytes)), iterator)),
+                                    Err(e) => Some((Err(actix_web::error::ErrorInternalServerError(e.to_string())), iterator))
+                                }
+                            }
+                        },
+                        Err(e) => {
+                            if e.is_instance_of::<pyo3::exceptions::PyStopIteration>(py) {
+                                None
+                            } else {
+                                Some((Err(actix_web::error::ErrorInternalServerError(e.to_string())), iterator))
+                            }
+                        }
+                    }
+                })
+            }
+        }));
+        
+        self.stream = Some(DebugStream(Arc::new(Mutex::new(stream))));
         Ok(())
     }
 }

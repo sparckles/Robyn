@@ -1,6 +1,7 @@
 import mimetypes
 import os
-from typing import Optional
+from typing import Optional, AsyncIterator, Iterator, Union
+import asyncio
 
 from robyn.robyn import Headers, Response
 
@@ -16,6 +17,39 @@ class FileResponse:
         self.description = ""
         self.status_code = status_code or 200
         self.headers = headers or Headers({"Content-Disposition": "attachment"})
+
+
+async def convert_sync_iterator(iterator: Iterator[str]) -> AsyncIterator[str]:
+    try:
+        for item in iterator:
+            if item is None:
+                continue
+            yield str(item) if not isinstance(item, (str, bytes)) else item
+    except StopIteration:
+        return
+
+
+class StreamingResponse:
+    def __init__(
+        self,
+        content: Union[Iterator[str], AsyncIterator[str]],
+        status_code: int = 200,
+        response_type: str = "text/plain",
+        description: bytes = b"",
+        headers: Optional[Headers] = None,
+    ):
+        self._content = content if asyncio.iscoroutine(content) else convert_sync_iterator(content)
+        self.status_code = status_code
+        self.headers = headers or Headers({})
+        self.headers.set("Transfer-Encoding", "chunked")
+        self.response_type = response_type
+        self.description = description
+        self.file_path = None
+        self.is_streaming = True
+
+    @property
+    def stream(self):
+        return self._content
 
 
 def html(html: str) -> Response:

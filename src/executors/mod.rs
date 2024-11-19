@@ -92,11 +92,27 @@ pub async fn execute_http_function(
         })?
         .await?;
 
-        return Python::with_gil(|py| -> PyResult<Response> { output.extract(py) });
+        debug!("Output: {:?}", output);
+        return Python::with_gil(|py| -> PyResult<Response> { 
+            let mut response: Response = output.extract(py)?;
+            if function.is_streaming {
+                response.is_streaming = true;
+                response.set_stream(py, output.getattr(py, "stream")?.into())?;
+            }
+            Ok(response)
+        });
     };
 
     Python::with_gil(|py| -> PyResult<Response> {
-        get_function_output(function, py, request)?.extract()
+        let output = get_function_output(function, py, request)?;
+        debug!("Output: {:?}", output);
+        let mut response: Response = output.extract()?;
+        debug!("Response: {:?}", response);
+        if function.is_streaming {
+            response.is_streaming = true;
+            response.set_stream(py, output.getattr("stream")?.into())?;
+        }
+        Ok(response)
     })
 }
 

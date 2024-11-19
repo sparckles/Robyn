@@ -11,7 +11,7 @@ from robyn import status_codes
 from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
 from robyn.dependency_injection import DependencyMap
 from robyn.jsonify import jsonify
-from robyn.responses import FileResponse
+from robyn.responses import FileResponse, StreamingResponse
 from robyn.robyn import FunctionInfo, Headers, HttpMethod, Identity, MiddlewareType, QueryParams, Request, Response, Url
 from robyn.types import Body, Files, FormData, IPAddress, Method, PathParams
 from robyn.ws import WebSocket
@@ -76,7 +76,16 @@ class Router(BaseRouter):
                 description=res.file_path,
             )
             response.file_path = res.file_path
-
+        elif isinstance(res, StreamingResponse):
+            response = Response(
+                status_code=res.status_code,
+                headers=res.headers,
+                description=res.description,
+            )
+            response.response_type = res.response_type
+            response.is_streaming = True
+            response.file_path = res.file_path
+            response.set_stream(res.stream)
         elif isinstance(res, bytes):
             headers = Headers({"Content-Type": "application/octet-stream"})
             response = Response(
@@ -113,6 +122,7 @@ class Router(BaseRouter):
         endpoint: str,
         handler: Callable,
         is_const: bool,
+        is_streaming: bool,
         exception_handler: Optional[Callable],
         injected_dependencies: dict,
     ) -> Union[Callable, CoroutineType]:
@@ -187,9 +197,8 @@ class Router(BaseRouter):
         @wraps(handler)
         async def async_inner_handler(*args, **kwargs):
             try:
-                response = self._format_response(
-                    await wrapped_handler(*args, **kwargs),
-                )
+                result = await wrapped_handler(*args, **kwargs)
+                response = self._format_response(result)
             except Exception as err:
                 if exception_handler is None:
                     raise
@@ -201,9 +210,8 @@ class Router(BaseRouter):
         @wraps(handler)
         def inner_handler(*args, **kwargs):
             try:
-                response = self._format_response(
-                    wrapped_handler(*args, **kwargs),
-                )
+                result = wrapped_handler(*args, **kwargs)
+                response = self._format_response(result)
             except Exception as err:
                 if exception_handler is None:
                     raise
@@ -225,21 +233,23 @@ class Router(BaseRouter):
 
         if iscoroutinefunction(handler):
             function = FunctionInfo(
-                async_inner_handler,
-                True,
-                number_of_params,
-                params,
-                new_injected_dependencies,
+                handler=async_inner_handler,
+                is_async=True,
+                is_streaming=is_streaming,
+                number_of_params=number_of_params,
+                args=params,
+                kwargs=new_injected_dependencies,
             )
             self.routes.append(Route(route_type, endpoint, function, is_const))
             return async_inner_handler
         else:
             function = FunctionInfo(
-                inner_handler,
-                False,
-                number_of_params,
-                params,
-                new_injected_dependencies,
+                handler=inner_handler,
+                is_async=False,
+                is_streaming=is_streaming,
+                number_of_params=number_of_params,
+                args=params,
+                kwargs=new_injected_dependencies,
             )
             self.routes.append(Route(route_type, endpoint, function, is_const))
             return inner_handler
@@ -277,11 +287,12 @@ class MiddlewareRouter(BaseRouter):
                 _logger.debug(f"Dependency {dependency} is not used in the middleware handler {handler.__name__}")
 
         function = FunctionInfo(
-            handler,
-            iscoroutinefunction(handler),
-            number_of_params,
-            params,
-            new_injected_dependencies,
+            handler=handler,
+            is_async=iscoroutinefunction(handler),
+            is_streaming=False,
+            number_of_params=number_of_params,
+            args=params,
+            kwargs=new_injected_dependencies,
         )
         self.route_middlewares.append(RouteMiddleware(middleware_type, endpoint, function))
         return handler
@@ -349,11 +360,12 @@ class MiddlewareRouter(BaseRouter):
                         GlobalMiddleware(
                             middleware_type,
                             FunctionInfo(
-                                async_inner_handler,
-                                True,
-                                len(params),
-                                params,
-                                injected_dependencies,
+                                handler=async_inner_handler,
+                                is_async=True,
+                                is_streaming=False,
+                                number_of_params=len(params),
+                                args=params,
+                                kwargs=injected_dependencies,
                             ),
                         )
                     )
@@ -362,11 +374,12 @@ class MiddlewareRouter(BaseRouter):
                         GlobalMiddleware(
                             middleware_type,
                             FunctionInfo(
-                                inner_handler,
-                                False,
-                                len(params),
-                                params,
-                                injected_dependencies,
+                                handler=inner_handler,
+                                is_async=False,
+                                is_streaming=False,
+                                number_of_params=len(params),
+                                args=params,
+                                kwargs=injected_dependencies,
                             ),
                         )
                     )

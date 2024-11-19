@@ -37,6 +37,8 @@ pub struct FunctionInfo {
     pub args: Py<PyDict>,
     #[pyo3(get, set)]
     pub kwargs: Py<PyDict>,
+    #[pyo3(get, set)]
+    pub is_streaming: bool,
 }
 
 #[pymethods]
@@ -48,6 +50,7 @@ impl FunctionInfo {
         number_of_params: u8,
         args: Py<PyDict>,
         kwargs: Py<PyDict>,
+        is_streaming: bool,
     ) -> Self {
         Self {
             handler,
@@ -55,6 +58,7 @@ impl FunctionInfo {
             number_of_params,
             args,
             kwargs,
+            is_streaming,
         }
     }
 }
