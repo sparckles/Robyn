@@ -190,9 +190,18 @@ maturin develop --cargo-extra-args="--features=io-uring"
 ```
 poetry run test_server
 ```
-- Run tests
+- Run all tests
+```
+pytest
+```
+- Run only the integration tests
 ```
 pytest integration_tests
+```
+```
+- Run only the unit tests (you don't need to be running the test_server for these)
+```
+pytest unit_tests
 ```
 - Test (refer to `integration_tests/base_routes.py` for more endpoints)
 ```
@@ -202,7 +211,8 @@ curl http://localhost:8080/sync/str
 - **tip:** One liners for testing changes!
 ```
 maturin develop && poetry run test_server
-maturin develop && pytest integration_tests
+
+maturin develop && pytest 
 ```
 
 - **tip:** For IO-uring support, you can use the following command:

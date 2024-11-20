@@ -5,9 +5,9 @@ from dataclasses import asdict, dataclass, field
 from importlib import resources
 from inspect import Signature
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, TypedDict
+from typing import Any, Callable, Dict, List, Optional, Tuple, TypedDict
 
-from robyn.responses import FileResponse, html
+from robyn.responses import html
 from robyn.robyn import QueryParams, Response
 from robyn.types import Body
 
@@ -239,13 +239,13 @@ class OpenAPI:
         query_params: Optional[TypedDict],
         request_body: Optional[TypedDict],
         return_annotation: Optional[TypedDict],
-    ) -> (str, dict):
+    ) -> Tuple[str, dict]:
         """
         Get the "path" openapi object according to spec
 
         @param endpoint: str the endpoint to be added
         @param name: str the name of the endpoint
-        @param description: Optional[str] short description of the endpoint (to be fetched from the endpoint defenition by default)
+        @param description: Optional[str] short description of the endpoint (to be fetched from the endpoint definition by default)
         @param tags: List[str] for grouping of endpoints
         @param query_params: Optional[TypedDict] query params for the function
         @param request_body: Optional[TypedDict] request body for the function
@@ -328,7 +328,7 @@ class OpenAPI:
 
             openapi_path_object["requestBody"] = request_body_object
 
-        response_schema = {}
+        response_schema: dict = {}
         response_type = "text/plain"
 
         if return_annotation and return_annotation is not Response:
@@ -416,7 +416,7 @@ class OpenAPI:
             self.openapi_spec = dict(json_file_content)
             self.openapi_file_override = True
 
-    def get_openapi_docs_page(self) -> FileResponse:
+    def get_openapi_docs_page(self) -> Response:
         """
         Handler to the swagger html page to be deployed to the endpoint `/docs`
         @return: FileResponse the swagger html page
