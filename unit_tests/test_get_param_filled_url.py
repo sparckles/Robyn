@@ -1,10 +1,5 @@
 from robyn.templating import get_param_filled_url
 
-from robyn.templating import JinjaTemplate
-
-# stop git local problem
-_jinja_template = JinjaTemplate(".", "templates", "utf-8")
-
 
 def test_get_param_filled_url_42() -> None:
     d42: dict = {"id": 42}
