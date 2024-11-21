@@ -196,8 +196,11 @@ class Robyn:
         """
         self.directories.append(Directory(route, directory_path, show_files_listing, index_file))
 
-    def add_static_files_directory(self, route: str, directory_path: str) -> None:
-        pass
+    def set_static_files_directory(self, route: str = "static", static_directory_path: str = "static") -> None:
+        cwd = Path().resolve()
+        assert Path(static_directory_path).is_dir(), f"{static_directory_path} is not a directory of {cwd}"
+
+        self.serve_directory(route, static_directory_path)
 
     def add_request_header(self, key: str, value: str) -> None:
         self.request_headers.append(key, value)
