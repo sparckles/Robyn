@@ -47,64 +47,63 @@ class Router(BaseRouter):
         super().__init__()
         self.routes: List[Route] = []
 
+    def _format_dict_response(self, res: Dict) -> Response:
+        return Response(
+            status_code=status_codes.HTTP_200_OK,
+            headers=Headers({"Content-Type": "application/json"}),
+            description=jsonify(res),
+        )
+
+    def _format_tuple_response(self, res: tuple) -> Response:
+        if len(res) != 3:
+            raise ValueError("Tuple should have 3 elements")
+
+        description, headers, status_code = res
+        description = self._format_response(description).description
+        new_headers: Headers = Headers(headers)
+        if new_headers.contains("Content-Type"):
+            headers.set("Content-Type", new_headers.get("Content-Type"))
+
+        return Response(
+            status_code=status_code,
+            headers=headers,
+            description=description,
+        )
+
     def _format_response(
         self,
         res: Union[Dict, Response, bytes, tuple, str],
     ) -> Response:
-        headers = Headers({"Content-Type": "text/plain"})
+        if isinstance(res, Response):
+            return res
 
         if isinstance(res, dict):
-            # this should change
-            headers = Headers({})
-            if not headers.contains("Content-Type"):
-                headers.set("Content-Type", "application/json")
+            return self._format_dict_response(dict(res))
 
-            description = jsonify(res)
-
-            response = Response(
-                status_code=status_codes.HTTP_200_OK,
-                headers=headers,
-                description=description,
-            )
-        elif isinstance(res, Response):
-            response = res
-        elif isinstance(res, FileResponse):
-            response = Response(
+        if isinstance(res, FileResponse):
+            response: Response = Response(
                 status_code=res.status_code,
                 headers=res.headers,
                 description=res.file_path,
             )
             response.file_path = res.file_path
+            return response
 
-        elif isinstance(res, bytes):
-            headers = Headers({"Content-Type": "application/octet-stream"})
-            response = Response(
+        if isinstance(res, bytes):
+            return Response(
                 status_code=status_codes.HTTP_200_OK,
-                headers=headers,
+                headers=Headers({"Content-Type": "application/octet-stream"}),
                 description=res,
             )
-        elif isinstance(res, tuple):
-            if len(res) != 3:
-                raise ValueError("Tuple should have 3 elements")
-            else:
-                description2, headers2, status_code2 = res
-                description2 = self._format_response(description2).description
-                new_headers: Headers = Headers(headers2)
-                if new_headers.contains("Content-Type"):
-                    headers2.set("Content-Type", new_headers.get("Content-Type"))
 
-                response = Response(
-                    status_code=status_code2,
-                    headers=headers2,
-                    description=description2,
-                )
-        else:
-            response = Response(
-                status_code=status_codes.HTTP_200_OK,
-                headers=headers,
-                description=str(res).encode("utf-8"),
-            )
-        return response
+        if isinstance(res, tuple):
+            return self._format_tuple_response(tuple(res))
+
+        return Response(
+            status_code=status_codes.HTTP_200_OK,
+            headers=Headers({"Content-Type": "text/plain"}),
+            description=str(res).encode("utf-8"),
+        )
 
     def add_route(
         self,
