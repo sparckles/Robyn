@@ -47,13 +47,6 @@ class Router(BaseRouter):
         super().__init__()
         self.routes: List[Route] = []
 
-    def _format_dict_response(self, res: Dict) -> Response:
-        return Response(
-            status_code=status_codes.HTTP_200_OK,
-            headers=Headers({"Content-Type": "application/json"}),
-            description=jsonify(res),
-        )
-
     def _format_tuple_response(self, res: tuple) -> Response:
         if len(res) != 3:
             raise ValueError("Tuple should have 3 elements")
@@ -78,7 +71,11 @@ class Router(BaseRouter):
             return res
 
         if isinstance(res, dict):
-            return self._format_dict_response(dict(res))
+            return Response(
+                status_code=status_codes.HTTP_200_OK,
+                headers=Headers({"Content-Type": "application/json"}),
+                description=jsonify(res),
+            )
 
         if isinstance(res, FileResponse):
             response: Response = Response(
