@@ -258,7 +258,7 @@ class OpenAPI:
         if not description:
             description = "No description provided"
 
-        openapi_path_object = {
+        openapi_path_object: dict = {
             "summary": name,
             "description": description,
             "parameters": [],
@@ -371,11 +371,11 @@ class OpenAPI:
         @return: dict the properties object
         """
 
-        properties = {
+        properties: dict = {
             "title": parameter.capitalize(),
         }
 
-        type_mapping = {
+        type_mapping: dict = {
             int: "integer",
             str: "string",
             bool: "boolean",
