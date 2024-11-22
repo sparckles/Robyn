@@ -9,29 +9,36 @@ on:
   # performance analysis in order to generate initial data.
   workflow_dispatch:
 
+env:
+  UV_SYSTEM_PYTHON: 1
+
 jobs:
   benchmarks:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+      
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+      
       - uses: actions/setup-python@v5
         with:
           python-version: "3.8"
 
-      - name: Install dependencies
+
+      - name: Install dependencies with uv
         run: |
-          python -m pip install --upgrade pip
-          pip install poetry==1.3.0
-          poetry export --with test --with dev --without-hashes --output requirements.txt
-          pip install -r requirements.txt
-          pip install -e .
+          uv pip install poetry
+          uv run poetry export --with test --with dev --without-hashes --output requirements.txt
+          uv pip install -r requirements.txt
+          uv pip install -e .
       - name: Add macos target
         if: matrix.os == 'macos'
         run: rustup target add aarch64-apple-darwin
       - name: Setup Rust part of the project
         run: |
           maturin build -i python --universal2 --out dist
-          pip install --no-index --find-links=dist/ robyn
+          uv pip install --no-index --find-links=dist/ robyn
       - name: Run benchmarks
         uses: CodSpeedHQ/action@v2
         with:
