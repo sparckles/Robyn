@@ -156,78 +156,79 @@ Before starting, ensure you have the following installed:
 #### Setup
 
 - Clone the repository:
-```
-git clone https://github.com/sparckles/Robyn.git
-```
+
+  ```
+  git clone https://github.com/sparckles/Robyn.git
+  ```
 
 - Setup a virtual environment:
-```
-python3 -m venv .venv
-source .venv/bin/activate
-```
+  ```
+  python3 -m venv .venv
+  source .venv/bin/activate
+  ```
+
 - Install required packages
 
-```
-pip install pre-commit poetry maturin
-```
+  ```
+  pip install pre-commit poetry maturin
+  ```
 - Install development dependencies
-```
-poetry install --with dev --with test
-```
+  ```
+  poetry install --with dev --with test
+  ```
 - Install pre-commit git hooks
-```
-pre-commit install
-```
+  ```
+  pre-commit install
+  ```
 - Build & install Robyn Rust package
-```
-maturin develop
-```
+  ```
+  maturin develop
+  ```
 - Build & install Robyn Rust package (**experimental**)
-```
-maturin develop --cargo-extra-args="--features=io-uring"
-```
+  ```
+  maturin develop --cargo-extra-args="--features=io-uring"
+  ```
 - Run!
-```
-poetry run test_server
-```
+  ```
+  poetry run test_server
+  ```
 - Run all tests
-```
-pytest
-```
+  ```
+  pytest
+  ```
 - Run only the integration tests
-```
-pytest integration_tests
-```
-```
+  ```
+  pytest integration_tests
+  ```
 - Run only the unit tests (you don't need to be running the test_server for these)
-```
-pytest unit_tests
-```
+  ```
+  pytest unit_tests
+  ```
 - Test (refer to `integration_tests/base_routes.py` for more endpoints)
-```
-curl http://localhost:8080/sync/str
-```
+  ```
+  curl http://localhost:8080/sync/str
+  ```
 
 - **tip:** One liners for testing changes!
-```
-maturin develop && poetry run test_server
+  ```
+  maturin develop && poetry run test_server
 
-maturin develop && pytest 
-```
+  maturin develop && pytest 
+  ```
 
 - **tip:** For IO-uring support, you can use the following command:
-```
-maturin develop --cargo-extra-args="--features=io-uring"
-```
+  ```
+  maturin develop --cargo-extra-args="--features=io-uring"
+  ```
 
 - **tip:** To use your local Robyn version in other projects, you can install it using pip:
-```
-pip install -e path/to/robyn/target/wheels/robyn-<version>-<python_version>-<platform>.whl
-```
+  ```
+  pip install -e path/to/robyn/target/wheels/robyn-<version>-<python_version>-<platform>.whl
+  ```
 e.g.
-```
-pip install -e /repos/Robyn/target/wheels/robyn-0.63.0-cp312-cp312-macosx_10_15_universal2.whl
-```
+  ```
+  pip install -e /repos/Robyn/target/wheels/robyn-0.63.0-cp312-cp312-macosx_10_15_universal2.whl
+  ```
 
 #### Troubleshooting
 If you face any issues, here are some common fixes:
@@ -258,7 +259,6 @@ These sponsors help us make the magic happen!
 [![DigitalOcean Referral Badge](https://web-platforms.sfo2.cdn.digitaloceanspaces.com/WWW/Badge%201.svg)](https://www.digitalocean.com/?refcode=3f2b9fd4968d&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge)
 [![Appwrite Logo](https://avatars.githubusercontent.com/u/25003669?s=105&v=1)](https://github.com/appwrite)
 
-- [Shivay Lamba](https://github.com/shivaylamba)
 
 ## Star History
 
