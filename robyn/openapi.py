@@ -12,6 +12,11 @@ from robyn.robyn import QueryParams, Response
 from robyn.types import Body
 
 
+class str_typed_dict(TypedDict):
+    key: str
+    value: str
+
+
 @dataclass
 class Contact:
     """
@@ -236,9 +241,9 @@ class OpenAPI:
         name: str,
         description: str,
         tags: List[str],
-        query_params: Optional[TypedDict],
-        request_body: Optional[TypedDict],
-        return_annotation: Optional[TypedDict],
+        query_params: Optional[str_typed_dict],
+        request_body: Optional[str_typed_dict],
+        return_annotation: Optional[str_typed_dict],
     ) -> Tuple[str, dict]:
         """
         Get the "path" openapi object according to spec
@@ -258,7 +263,7 @@ class OpenAPI:
         if not description:
             description = "No description provided"
 
-        openapi_path_object = {
+        openapi_path_object: dict = {
             "summary": name,
             "description": description,
             "parameters": [],
@@ -293,7 +298,7 @@ class OpenAPI:
                 endpoint_with_path_params_wrapped_in_braces += "/{" + path_param_name + "}"
 
         if query_params:
-            query_param_annotations = query_params.__annotations__ if query_params is TypedDict else typing.get_type_hints(query_params)
+            query_param_annotations = query_params.__annotations__ if query_params is str_typed_dict else typing.get_type_hints(query_params)
 
             for query_param in query_param_annotations:
                 query_param_type = self.get_openapi_type(query_param_annotations[query_param])
@@ -339,7 +344,7 @@ class OpenAPI:
 
         return endpoint_with_path_params_wrapped_in_braces, openapi_path_object
 
-    def get_openapi_type(self, typed_dict: TypedDict) -> str:
+    def get_openapi_type(self, typed_dict: str_typed_dict) -> str:
         """
         Get actual type from the TypedDict annotations
 
@@ -371,11 +376,11 @@ class OpenAPI:
         @return: dict the properties object
         """
 
-        properties = {
+        properties: dict = {
             "title": parameter.capitalize(),
         }
 
-        type_mapping = {
+        type_mapping: dict = {
             int: "integer",
             str: "string",
             bool: "boolean",
