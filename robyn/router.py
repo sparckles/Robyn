@@ -1,6 +1,6 @@
 import inspect
 import logging
-from abc import ABC, abstractmethod
+from abc import ABC
 from asyncio import iscoroutinefunction
 from functools import wraps
 from inspect import signature
@@ -38,8 +38,18 @@ class GlobalMiddleware(NamedTuple):
 
 
 class BaseRouter(ABC):
-    @abstractmethod
-    def add_route(*args) -> Union[Callable, CoroutineType, WebSocket]: ...
+    """
+    TODO Handle variable args and return types for an abstract method
+    Emptied Abstract class until we can figure out a way for each subclass to have different arguments and return types for add_route
+    currently nothing in Robyn itself relies on the abstract method of add_route and only the 3 classes in router.py mention BaseRouter
+    Router, MiddlewareRouter, WedSocketRouter
+    add_route is used widely in both rust and python code.
+    One option will be to use abstract classes for the arguments and the return value see
+    """
+
+    pass
+    # @abstractmethod
+    # def add_route(*args) -> Union[Callable, CoroutineType, WebSocket]: ...
 
 
 class Router(BaseRouter):
