@@ -14,7 +14,7 @@ from robyn.logger import Colors, logger
 dir_path = None
 
 
-def compile_rust_files(directory_path: str):
+def compile_rust_files(directory_path: str) -> list[str]:
     rust_files = glob.glob(os.path.join(directory_path, "**/*.rs"), recursive=True)
     rust_binaries: list[str] = []
 
@@ -51,7 +51,7 @@ def compile_rust_files(directory_path: str):
     return rust_binaries
 
 
-def create_rust_file(file_name: str):
+def create_rust_file(file_name: str) -> None:
     if file_name.endswith(".rs"):
         file_name = file_name.removesuffix(".rs")
 
@@ -74,13 +74,13 @@ def create_rust_file(file_name: str):
         print("Created rust file : %s", rust_file)
 
 
-def clean_rust_binaries(rust_binaries: List[str]):
+def clean_rust_binaries(rust_binaries: List[str]) -> None:
     for file in rust_binaries:
         print("Cleaning rust file : %s", file)
         os.remove(file)
 
 
-def setup_reloader(directory_path: str, file_path: str):
+def setup_reloader(directory_path: str, file_path: str) -> None:
     event_handler = EventHandler(file_path, directory_path)
 
     # sets the IS_RELOADER_RUNNING environment variable to True
@@ -122,11 +122,11 @@ class EventHandler(FileSystemEventHandler):
 
         self.last_reload = time.time()  # Keep track of the last reload. EventHandler is initialized with the process.
 
-    def stop_server(self):
+    def stop_server(self) -> None:
         if self.process:
             os.kill(self.process.pid, signal.SIGTERM)  # Stop the subprocess using os.kill()
 
-    def reload(self):
+    def reload(self) -> None:
         self.stop_server()
         print("Reloading the server")
 
