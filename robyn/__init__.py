@@ -668,6 +668,8 @@ def ALLOW_CORS(app: Robyn, origins: Union[List[str], str]):
                 description="",
             )
 
+        return request
+
     # Set default CORS headers for all responses
     if len(origins) == 1:
         app.set_response_header("Access-Control-Allow-Origin", origins[0])
