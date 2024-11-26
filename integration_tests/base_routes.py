@@ -559,6 +559,7 @@ async def async_dict_post():
 
 # Body
 
+
 class TestMyRequest(Body):
     items: List[str]
     numbers: list[int]
@@ -577,6 +578,7 @@ async def async_body_post(request: Request):
 @app.post("/sync/form_data")
 def sync_form_data(request: Request):
     return request.headers["Content-Type"]
+
 
 @app.post("/sync/body/typed")
 def sync_body_typed(body: TestMyRequest):

@@ -403,12 +403,9 @@ class OpenAPI:
             # Handle Optional types
             if origin is Union and type(None) in args:
                 non_none_type = next(t for t in args if t is not type(None))
-                properties["anyOf"] = [
-                    {"type": self.get_openapi_type(non_none_type)}, 
-                    {"type": "null"}
-                ]
+                properties["anyOf"] = [{"type": self.get_openapi_type(non_none_type)}, {"type": "null"}]
                 return properties
-            
+
             # Handle List types
             elif origin in (list, List):
                 properties["type"] = "array"
@@ -424,9 +421,7 @@ class OpenAPI:
 
             if hasattr(param_type, "__annotations__"):
                 for e in param_type.__annotations__:
-                    properties["properties"][e] = self.get_schema_object(
-                        e, param_type.__annotations__[e]
-                    )
+                    properties["properties"][e] = self.get_schema_object(e, param_type.__annotations__[e])
 
         return properties
 
