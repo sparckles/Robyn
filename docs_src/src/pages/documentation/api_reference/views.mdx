@@ -174,6 +174,143 @@ The only thing to remember is that you need to add the subrouter to the main rou
   </Col>
 </Row>
 
+### Authentication on Subrouters
+
+Batman asked Robyn how to secure his routes. Robyn explained that authentication can be added to subrouters in three ways, giving developers flexibility to decide the scope and precedence of the authentication. 
+
+> **Important**: If any of these methods are used, the authentication for the endpoint is set to `False` unless explicitly overridden.
+
+---
+<Row>
+  <Col>
+#### 1. Authentication at the Endpoint Level
+
+Authentication can be applied directly to a specific endpoint using the decorator for that endpoint. This method has the **highest precedence**, meaning it overrides any authentication settings defined at the router or subrouter level.
+</Col>
+<Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/secured , /unsecured">
+```python {{ title: 'untyped' }}
+from robyn import Robyn, SubRouter
+
+app = Robyn(__file__)
+
+sub_router = SubRouter("/auth_example")
+
+@sub_router.get("/secured", auth_required=True)
+def secured(request):
+    return "This endpoint is secured with authentication!"
+
+@sub_router.get("/unsecured", auth_required=False)
+def unsecured(request):
+    return "This endpoint does not require authentication!"
+
+app.include_router(sub_router)
+```
+
+```python {{ title: 'typed' }}
+from robyn import Robyn, SubRouter, Request
+
+app = Robyn(__file__)
+
+sub_router = SubRouter("/auth_example")
+
+@sub_router.get("/secured", auth_required=True)
+def secured(request : Request) -> str:
+    return "This endpoint is secured with authentication!"
+
+@sub_router.get("/unsecured", auth_required=False)
+def unsecured(request : Request) -> str:
+    return "This endpoint does not require authentication!"
+
+app.include_router(sub_router)
+```
+    </CodeGroup>
+  </Col>
+</Row>
+
+
+<Row>
+  <Col>
+#### 2. Authentication via `include_router`
+When including a subrouter into the main router, you can specify an authentication flag. This setting applies to all endpoints in the subrouter unless overridden at the endpoint level.
+</Col>
+<Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/default_secured">
+```python {{ title: 'untyped' }}
+from robyn import Robyn, SubRouter
+
+app = Robyn(__file__)
+
+sub_router = SubRouter("/auth_example")
+
+@sub_router.get("/default_secured")
+def default_secured(request):
+    return "Authentication is set by include_router!"
+
+app.include_router(sub_router, auth_required=True)
+```
+
+```python {{ title: 'typed' }}
+from robyn import Robyn, SubRouter, Request
+
+app = Robyn(__file__)
+
+sub_router = SubRouter("/auth_example")
+
+@sub_router.get("/default_secured")
+def default_secured(request : Request) -> str:
+    return "Authentication is set by include_router!"
+
+app.include_router(sub_router, auth_required=True)
+```
+    </CodeGroup>
+  </Col>
+</Row>
+
+<Row>
+  <Col>
+#### 3. Authentication at SubRouter Instantiation
+Finally, you can define authentication at the time of the `SubRouter` instantiation. This acts as the **default authentication** setting for all endpoints in the subrouter unless overridden by the endpoint decorator or during inclusion into the main router.
+</Col>
+<Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/inherited_auth">
+```python {{ title: 'untyped' }}
+from robyn import Robyn, SubRouter
+
+app = Robyn(__file__)
+
+sub_router = SubRouter("/auth_example", auth_required=True)
+
+@sub_router.get("/inherited_auth")
+def inherited_auth(request):
+    return "Authentication is inherited from the SubRouter!"
+
+app.include_router(sub_router)
+```
+
+```python {{ title: 'typed' }}
+from robyn import Robyn, SubRouter, Request
+
+app = Robyn(__file__)
+
+sub_router = SubRouter("/auth_example", auth_required=True)
+
+@sub_router.get("/inherited_auth")
+def inherited_auth(request : Request) -> str:
+    return "Authentication is inherited from the SubRouter!"
+
+app.include_router(sub_router)
+```
+    </CodeGroup>
+  </Col>
+</Row>
+#### Precedence Rules
+Authentication precedence in Robyn follows this order:
+
+1. Endpoint-level decorator: If an endpoint explicitly sets `auth_required=True` or `auth_required=False`, this takes priority.
+2. `include_router` method: The auth_required parameter in app.include_router applies to all endpoints in the included subrouter unless overridden.
+3. `SubRouter` instantiation: The auth_required setting during SubRouter creation acts as the default for all its endpoints unless overridden at the endpoint or include_router level.
+
 ## What's next?
 
 Now, that Batman knows how to organise his code, he wants to know how to add dependencies to his code. Robyn tells him that he can add dependencies at the global level, router level and the view level.
