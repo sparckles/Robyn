@@ -24,6 +24,7 @@ class Route(NamedTuple):
     route: str
     function: FunctionInfo
     is_const: bool
+    auth_required: Optional[bool]
 
 
 class RouteMiddleware(NamedTuple):
@@ -110,6 +111,7 @@ class Router(BaseRouter):
         is_const: bool,
         exception_handler: Optional[Callable],
         injected_dependencies: dict,
+        auth_required: Optional[bool] = None,
     ) -> Union[Callable, CoroutineType]:
         def wrapped_handler(*args, **kwargs):
             # In the execute functions the request is passed into *args
@@ -226,7 +228,7 @@ class Router(BaseRouter):
                 params,
                 new_injected_dependencies,
             )
-            self.routes.append(Route(route_type, endpoint, function, is_const))
+            self.routes.append(Route(route_type, endpoint, function, is_const, auth_required))
             return async_inner_handler
         else:
             function = FunctionInfo(
@@ -236,7 +238,7 @@ class Router(BaseRouter):
                 params,
                 new_injected_dependencies,
             )
-            self.routes.append(Route(route_type, endpoint, function, is_const))
+            self.routes.append(Route(route_type, endpoint, function, is_const, auth_required))
             return inner_handler
 
     def get_routes(self) -> List[Route]:
@@ -288,27 +290,21 @@ class MiddlewareRouter(BaseRouter):
 
         injected_dependencies: dict = {}
 
-        def decorator(handler):
-            @wraps(handler)
-            def inner_handler(request: Request, *args):
-                if not self.authentication_handler:
-                    raise AuthenticationNotConfiguredError()
-                identity = self.authentication_handler.authenticate(request)
-                if identity is None:
-                    return self.authentication_handler.unauthorized_response
-                request.identity = identity
+        def inner_handler(request: Request, *args):
+            if not self.authentication_handler:
+                raise AuthenticationNotConfiguredError()
+            identity = self.authentication_handler.authenticate(request)
+            if identity is None:
+                return self.authentication_handler.unauthorized_response
+            request.identity = identity
+            return request  # Proceed to the next middleware or handler
 
-                return request
-
-            self.add_route(
-                MiddlewareType.BEFORE_REQUEST,
-                endpoint,
-                inner_handler,
-                injected_dependencies,
-            )
-            return inner_handler
-
-        return decorator
+        self.add_route(
+            MiddlewareType.BEFORE_REQUEST,
+            endpoint,
+            inner_handler,
+            injected_dependencies,
+        )
 
     # These inner functions are basically a wrapper around the closure(decorator) being returned.
     # They take a handler, convert it into a closure and return the arguments.
