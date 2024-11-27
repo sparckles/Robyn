@@ -11,8 +11,6 @@ from watchdog.observers import Observer
 
 from robyn.logger import Colors, logger
 
-dir_path = None
-
 
 def compile_rust_files(directory_path: str) -> list[str]:
     rust_files = glob.glob(os.path.join(directory_path, "**/*.rs"), recursive=True)
@@ -117,7 +115,7 @@ class EventHandler(FileSystemEventHandler):
     def __init__(self, file_path: str, directory_path: str) -> None:
         self.file_path = file_path
         self.directory_path = directory_path
-        self.process = None  # Keep track of the subprocess
+        self.process: subprocess.Popen[bytes] | None = None  # Keep track of the subprocess
         self.built_rust_binaries: List = []  # Keep track of the built rust binaries
 
         self.last_reload = time.time()  # Keep track of the last reload. EventHandler is initialized with the process.
