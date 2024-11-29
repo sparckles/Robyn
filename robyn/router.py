@@ -102,7 +102,7 @@ class Router(BaseRouter):
             description=str(res).encode("utf-8"),
         )
 
-    def add_route(
+    def add_route(  # type: ignore
         self,
         route_type: HttpMethod,
         endpoint: str,
@@ -254,7 +254,7 @@ class MiddlewareRouter(BaseRouter):
     def set_authentication_handler(self, authentication_handler: AuthenticationHandler):
         self.authentication_handler = authentication_handler
 
-    def add_route(
+    def add_route(  # type: ignore
         self,
         middleware_type: MiddlewareType,
         endpoint: str,
@@ -380,7 +380,7 @@ class WebSocketRouter(BaseRouter):
         super().__init__()
         self.routes: dict = {}
 
-    def add_route(self, endpoint: str, web_socket: WebSocket) -> None:
+    def add_route(self, endpoint: str, web_socket: WebSocket) -> None:  # type: ignore
         self.routes[endpoint] = web_socket
 
     def get_routes(self) -> Dict[str, WebSocket]:
