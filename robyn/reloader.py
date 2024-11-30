@@ -12,7 +12,7 @@ from watchdog.observers import Observer
 from robyn.logger import Colors, logger
 
 
-def compile_rust_files(directory_path: str) -> list[str]:
+def compile_rust_files(directory_path: str) -> List[str]:
     rust_files = glob.glob(os.path.join(directory_path, "**/*.rs"), recursive=True)
     rust_binaries: list[str] = []
 
