@@ -20,6 +20,7 @@ pub struct Response {
     #[pyo3(from_py_with = "get_description_from_pyobject")]
     pub description: Vec<u8>,
     pub file_path: Option<String>,
+    is_streaming: bool,
 }
 
 impl Responder for Response {
@@ -29,6 +30,14 @@ impl Responder for Response {
         let mut response_builder =
             HttpResponseBuilder::new(StatusCode::from_u16(self.status_code).unwrap());
         apply_hashmap_headers(&mut response_builder, &self.headers);
+
+        // @sansyrox remember this
+        // this will be very useful for streaming routes
+        if self.is_streaming {
+            return response_builder.streaming(Box::pin(async_stream::stream! {
+                yield Ok(actix_web::web::Bytes::from(self.description));
+            }));
+        }
         response_builder.body(self.description)
     }
 }
