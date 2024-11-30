@@ -4,17 +4,15 @@ import signal
 import subprocess
 import sys
 import time
-from typing import List
+from typing import List, Union
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
 from robyn.logger import Colors, logger
 
-dir_path = None
 
-
-def compile_rust_files(directory_path: str):
+def compile_rust_files(directory_path: str) -> List[str]:
     rust_files = glob.glob(os.path.join(directory_path, "**/*.rs"), recursive=True)
     rust_binaries: list[str] = []
 
@@ -51,7 +49,7 @@ def compile_rust_files(directory_path: str):
     return rust_binaries
 
 
-def create_rust_file(file_name: str):
+def create_rust_file(file_name: str) -> None:
     if file_name.endswith(".rs"):
         file_name = file_name.removesuffix(".rs")
 
@@ -74,13 +72,13 @@ def create_rust_file(file_name: str):
         print("Created rust file : %s", rust_file)
 
 
-def clean_rust_binaries(rust_binaries: List[str]):
+def clean_rust_binaries(rust_binaries: List[str]) -> None:
     for file in rust_binaries:
         print("Cleaning rust file : %s", file)
         os.remove(file)
 
 
-def setup_reloader(directory_path: str, file_path: str):
+def setup_reloader(directory_path: str, file_path: str) -> None:
     event_handler = EventHandler(file_path, directory_path)
 
     # sets the IS_RELOADER_RUNNING environment variable to True
@@ -117,16 +115,16 @@ class EventHandler(FileSystemEventHandler):
     def __init__(self, file_path: str, directory_path: str) -> None:
         self.file_path = file_path
         self.directory_path = directory_path
-        self.process = None  # Keep track of the subprocess
+        self.process: Union[subprocess.Popen[bytes], None] = None  # Keep track of the subprocess
         self.built_rust_binaries: List = []  # Keep track of the built rust binaries
 
         self.last_reload = time.time()  # Keep track of the last reload. EventHandler is initialized with the process.
 
-    def stop_server(self):
+    def stop_server(self) -> None:
         if self.process:
             os.kill(self.process.pid, signal.SIGTERM)  # Stop the subprocess using os.kill()
 
-    def reload(self):
+    def reload(self) -> None:
         self.stop_server()
         print("Reloading the server")
 
