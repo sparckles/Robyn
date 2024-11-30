@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Callable, List
+from typing import Callable, List, Union
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -9,7 +9,7 @@ from robyn.router import Route
 from .robyn import Headers, Response
 
 
-def get_param_filled_url(url: str, kwdict: dict | None = None) -> str:
+def get_param_filled_url(url: str, kwdict: Union[dict, None] = None) -> str:
     """fill the :params in the url
 
     Args:
@@ -43,7 +43,7 @@ class JinjaTemplate(TemplateInterface):
     def __init__(self, directory, encoding="utf-8", followlinks=False) -> None:
         self.env: Environment = Environment(loader=FileSystemLoader(searchpath=directory, encoding=encoding, followlinks=followlinks))
         self.add_function_to_globals("get_function_url", self.get_function_url)
-        self.robyn: Robyn | None = None
+        self.robyn: Union[Robyn, None] = None
 
     def add_function_to_globals(self, name: str, func: Callable):
         """
