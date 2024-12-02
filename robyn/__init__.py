@@ -51,10 +51,9 @@ class Robyn:
         self.directory_path = directory_path
         self.config = config
         self.dependencies = dependencies
-        self.openapi_file_path = openapi_file_path
         self.openapi = openapi
 
-        self.init_openapi()
+        self.init_openapi(openapi_file_path)
 
         if not bool(os.environ.get("ROBYN_CLI", False)):
             # the env variables are already set when are running through the cli
@@ -82,15 +81,15 @@ class Robyn:
         self.authentication_handler: Optional[AuthenticationHandler] = None
         self.included_routers: List[Router] = []
 
-    def init_openapi(self) -> None:
+    def init_openapi(self, openapi_file_path: Optional[str]) -> None:
         if self.config.disable_openapi:
             return
 
         if self.openapi is None:
             self.openapi = OpenAPI()
 
-        if self.openapi_file_path:
-            self.openapi.override_openapi(Path(self.directory_path).joinpath(self.openapi_file_path))
+        if openapi_file_path:
+            self.openapi.override_openapi(Path(self.directory_path).joinpath(openapi_file_path))
         elif Path(self.directory_path).joinpath("openapi.json").exists():
             self.openapi.override_openapi(Path(self.directory_path).joinpath("openapi.json"))
         # TODO! what about when the elif fails?
