@@ -131,9 +131,7 @@ class Robyn:
         """
         injected_dependencies = self.dependencies.get_dependency_map(self)
 
-        list_openapi_tags: List[str] = []
-        if not self.config.disable_openapi and openapi_tags is not None:
-            list_openapi_tags = openapi_tags
+        list_openapi_tags: List[str] = openapi_tags if openapi_tags else []
 
         if auth_required:
             self.middleware_router.add_auth_middleware(endpoint)(handler)
