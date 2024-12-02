@@ -21,7 +21,7 @@ _logger = logging.getLogger(__name__)
 
 
 def lower_http_method(method: HttpMethod):
-    return str(method).lower()[11:]
+    return (str(method))[11:].lower()
 
 
 class Route(NamedTuple):
