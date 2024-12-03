@@ -7,6 +7,7 @@ pub mod const_router;
 pub mod http_router;
 pub mod middleware_router;
 pub mod web_socket_router;
+pub mod streaming_router;
 
 pub trait Router<T, U> {
     /// Checks if the functions is an async function

@@ -6,6 +6,7 @@ use crate::routers::const_router::ConstRouter;
 use crate::routers::Router;
 
 use crate::routers::http_router::HttpRouter;
+use crate::routers::streaming_router::StreamingRouter;
 use crate::routers::{middleware_router::MiddlewareRouter, web_socket_router::WebSocketRouter};
 use crate::shared_socket::SocketHeld;
 use crate::types::function_info::{FunctionInfo, MiddlewareType};
@@ -49,6 +50,7 @@ struct Directory {
 pub struct Server {
     router: Arc<HttpRouter>,
     const_router: Arc<ConstRouter>,
+    streaming_router: Arc<StreamingRouter>,
     websocket_router: Arc<WebSocketRouter>,
     middleware_router: Arc<MiddlewareRouter>,
     global_request_headers: Arc<Headers>,
@@ -66,6 +68,7 @@ impl Server {
         Self {
             router: Arc::new(HttpRouter::new()),
             const_router: Arc::new(ConstRouter::new()),
+            streaming_router: Arc::new(StreamingRouter::new()),
             websocket_router: Arc::new(WebSocketRouter::new()),
             middleware_router: Arc::new(MiddlewareRouter::new()),
             global_request_headers: Arc::new(Headers::new(None)),
@@ -216,6 +219,7 @@ impl Server {
                                 })
                             },
                         ))
+                        
                 })
                 .keep_alive(KeepAlive::Os)
                 .workers(workers)
@@ -428,6 +432,7 @@ async fn index(
     router: web::Data<Arc<HttpRouter>>,
     payload: web::Payload,
     const_router: web::Data<Arc<ConstRouter>>,
+    // we can create a streaming router
     middleware_router: web::Data<Arc<MiddlewareRouter>>,
     global_request_headers: web::Data<Arc<Headers>>,
     global_response_headers: web::Data<Arc<Headers>>,
@@ -466,6 +471,7 @@ async fn index(
     }
 
     // Route execution
+    // and here if it is a streaming response, we handle things differently,
     let mut response = if let Some(res) = const_router.get_route(
         &HttpMethod::from_actix_method(req.method()),
         req.uri().path(),
