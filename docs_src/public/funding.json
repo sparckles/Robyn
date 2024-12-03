@@ -5,9 +5,10 @@
     "role": "owner",
     "name": "Sanskar Jethi",
     "email": "sansyrox@gmail.com",
+    "phone": "",
     "description": "Sanskar is a FOSS engineer who created Robyn and Starfyre. Sanskar has created software for over half his life and used it for almost all of his.",
     "webpageUrl": {
-      "url": "https://www.sanskar.me/"
+      "url": "https://robyn.tech/"
     }
   },
   "projects": [
@@ -19,19 +20,11 @@
         "url": "https://robyn.tech/"
       },
       "repositoryUrl": {
-        "url": "https://github.com/sparckles/Robyn"
+        "url": "https://github.com/sparckles/Robyn",
+        "wellKnown": "https://github.com/sparckles/Robyn/blob/main/.well-known/funding-manifest-urls"
       },
       "licenses": ["BSD 2-Clause \"Simplified\" License"],
-      "tags": [
-        "programming",
-        "python",
-        "rust",
-        "web",
-        "backend",
-        "async",
-        "python3",
-        "http-server"
-      ]
+      "tags": ["programming", "python", "rust", "web", "backend", "async"]
     }
   ],
   "funding": {
@@ -39,6 +32,7 @@
       {
         "guid": "mybank",
         "type": "bank",
+        "address": "",
         "description": "Send me an email to get my bank details"
       }
     ],
@@ -46,9 +40,19 @@
       {
         "guid": "mybank",
         "status": "active",
-        "name": "Support Maintainer",
-        "description": "Support the maintainer for his work.",
+        "name": "Support Maintainer Part Time",
+        "description": "Support the maintainer for his work on Robyn part time.",
         "amount": 500,
+        "currency": "GBP",
+        "frequency": "monthly",
+        "channels": ["mybank"]
+      },
+      {
+        "guid": "mybank",
+        "status": "active",
+        "name": "Support Maintainer Full Time",
+        "description": "Support the maintainer for his work on Robyn full time.",
+        "amount": 3000,
         "currency": "GBP",
         "frequency": "monthly",
         "channels": ["mybank"]
@@ -56,9 +60,19 @@
       {
         "guid": "150",
         "status": "active",
-        "name": " Support Contributor",
+        "name": " Support Contributor Part Time",
         "description": "Support for one contributor per month",
         "amount": 150,
+        "currency": "GBP",
+        "frequency": "monthly",
+        "channels": ["mybank"]
+      },
+      {
+        "guid": "500",
+        "status": "active",
+        "name": " Support Contributor Full Time",
+        "description": "Support for one contributor per month",
+        "amount": 500,
         "currency": "GBP",
         "frequency": "monthly",
         "channels": ["mybank"]
