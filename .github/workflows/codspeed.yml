@@ -14,16 +14,16 @@ env:
 
 jobs:
   benchmarks:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
-      
+        uses: astral-sh/setup-uv@v4
+
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.8"
+          python-version: "3.9"
 
 
       - name: Install dependencies with uv
@@ -40,7 +40,7 @@ jobs:
           maturin build -i python --universal2 --out dist
           uv pip install --no-index --find-links=dist/ robyn
       - name: Run benchmarks
-        uses: CodSpeedHQ/action@v2
+        uses: CodSpeedHQ/action@v3
         with:
           token: ${{ secrets.CODSPEED_TOKEN }}
           run: pytest integration_tests --codspeed
