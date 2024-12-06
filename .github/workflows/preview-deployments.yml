@@ -101,7 +101,7 @@ jobs:
           cd ~ && python -c 'import robyn'
 
   linux-cross:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
