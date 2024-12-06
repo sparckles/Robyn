@@ -1,3 +1,4 @@
+import os
 from robyn.router import Router
 from robyn import Robyn, SubRouter
 
@@ -7,6 +8,7 @@ def test_app_creation():
     router = app.router
     assert isinstance(router, Router)
     assert len(router.routes) == 0
+    assert app.directory_path == os.path.dirname(os.path.abspath(__file__))
 
 
 def test_subrouter_creation():
