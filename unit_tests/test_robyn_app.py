@@ -1,6 +1,7 @@
 import os
-from robyn.router import Router
+
 from robyn import Robyn, SubRouter
+from robyn.router import Router
 
 
 def test_app_creation():

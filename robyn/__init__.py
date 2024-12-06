@@ -8,7 +8,7 @@ from robyn.jsonify import jsonify
 from robyn.reloader import compile_rust_files
 from robyn.responses import html, serve_file, serve_html
 from robyn.robyn import Headers, Request, Response, WebSocketConnector
-from robyn.robyn_app import get_version, Robyn, SubRouter
+from robyn.robyn_app import Robyn, SubRouter, get_version
 from robyn.ws import WebSocket
 
 __version__ = get_version()
