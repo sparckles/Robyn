@@ -38,24 +38,53 @@ def create_robyn_app():
         },
         {
             "type": "list",
-            "message": "Please select project type (Mongo/Postgres/Sqlalchemy/Prisma): ",
-            "choices": [
-                Choice("no-db", name="No DB"),
-                Choice("sqlite", name="Sqlite"),
-                Choice("postgres", name="Postgres"),
-                Choice("mongo", name="MongoDB"),
-                Choice("sqlalchemy", name="SqlAlchemy"),
-                Choice("prisma", name="Prisma"),
-                Choice("sqlmodel", name="SQLModel"),
-            ],
-            "default": Choice("no-db", name="No DB"),
-            "name": "project_type",
+            "name": "scaffold_type",
+            "choices": [Choice("simple", name="Simple"), Choice("structured", name="Structured")],
+            "message": "Please choose if you'd like the scaffold to be a simple starter kit or an opinionated structure",
         },
     ]
     result = prompt(questions=questions)
     project_dir_path = Path(str(result["directory"])).resolve()
     docker = result["docker"]
-    project_type = str(result["project_type"])
+    scaffold_type: str = str(result["scaffold_type"])
+    if scaffold_type == "simple":
+        scaffold_type: str = "simple"
+        result = prompt(
+            questions=[
+                {
+                    "type": "list",
+                    "message": "Please select project type (Mongo/Postgres/Sqlalchemy/Prisma): ",
+                    "choices": [
+                        Choice("no-db", name="No DB"),
+                        Choice("sqlite", name="Sqlite"),
+                        Choice("postgres", name="Postgres"),
+                        Choice("mongo", name="MongoDB"),
+                        Choice("sqlalchemy", name="SqlAlchemy"),
+                        Choice("prisma", name="Prisma"),
+                        Choice("sqlmodel", name="SQLModel"),
+                    ],
+                    "default": Choice("no-db", name="No DB"),
+                    "name": "project_type",
+                }
+            ]
+        )
+        project_type = str(result["project_type"])
+    else:
+        result = prompt(
+            questions=[
+                {
+                    "type": "list",
+                    "message": "Please select project type (Mongo/Postgres/Sqlalchemy/Prisma): ",
+                    "choices": [
+                        Choice("no-db", name="No DB"),
+                        Choice("sqlalchemy", name="SqlAlchemy"),
+                    ],
+                    "default": Choice("no-db", name="No DB"),
+                    "name": "project_type",
+                }
+            ]
+        )
+        project_type = str(result["project_type"])
 
     final_project_dir_path = (CURRENT_WORKING_DIR / project_dir_path).resolve()
 
@@ -64,12 +93,15 @@ def create_robyn_app():
     # Create a new directory for the project
     os.makedirs(final_project_dir_path, exist_ok=True)
 
-    selected_project_template = (SCAFFOLD_DIR / Path(project_type)).resolve()
+    selected_project_template = (SCAFFOLD_DIR / Path(scaffold_type) / Path(project_type)).resolve()
     shutil.copytree(str(selected_project_template), str(final_project_dir_path), dirs_exist_ok=True)
 
     # If docker is not needed, delete the docker file
     if docker == "N":
-        os.remove(f"{final_project_dir_path}/Dockerfile")
+        if scaffold_type == "simple":
+            os.remove(f"{final_project_dir_path}/Dockerfile")
+        else:
+            shutil.rmtree(f"{final_project_dir_path}/devops", ignore_errors=True)
 
     print(f"New Robyn project created in '{final_project_dir_path}' ")
 
