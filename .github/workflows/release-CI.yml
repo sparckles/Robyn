@@ -105,7 +105,7 @@ jobs:
           name: wheels
           path: dist
   linux-cross:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         python:
