@@ -130,7 +130,7 @@ jobs:
         name: Install build wheel
         with:
           arch: ${{ matrix.target }}
-          distro: ubuntu-latest
+          distro: ubuntu-22.04
           githubToken: ${{ github.token }}
           # Mount the dist directory as /artifacts in the container
           dockerRunArgs: |
@@ -159,7 +159,7 @@ jobs:
           path: dist
   release:
     name: Release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [macos, windows, linux, linux-cross]
     steps:
       - uses: actions/download-artifact@v4
