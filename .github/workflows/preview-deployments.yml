@@ -75,7 +75,7 @@ jobs:
           cd ~ && python -c 'import robyn'
 
   linux:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12"]
@@ -101,7 +101,7 @@ jobs:
           cd ~ && python -c 'import robyn'
 
   linux-cross:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
