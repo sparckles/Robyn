@@ -101,7 +101,7 @@ jobs:
           cd ~ && python -c 'import robyn'
 
   linux-cross:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -127,7 +127,7 @@ jobs:
         name: Install build wheel
         with:
           arch: ${{ matrix.target }}
-          distro: ubuntu20.04
+          distro: ubuntu22.04
           githubToken: ${{ github.token }}
           # Mount the dist directory as /artifacts in the container
           dockerRunArgs: |
@@ -149,4 +149,3 @@ jobs:
             pip install --upgrade pip setuptools wheel
             pip install --force-reinstall dist/robyn*.whl
             cd ~ && python -c 'import robyn'
-
