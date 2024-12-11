@@ -3,7 +3,15 @@ import pathlib
 from collections import defaultdict
 from typing import Optional
 
-from integration_tests.subroutes import di_subrouter, sub_router
+from integration_tests.subroutes import (
+    di_subrouter,
+    sub_router,
+    auth_subrouter_endpoint,
+    auth_subrouter_include,
+    auth_subrouter_instance,
+    auth_subrouter_include_false,
+    auth_subrouter_include_true,
+)
 from integration_tests.views import AsyncView, SyncView
 from robyn import Headers, Request, Response, Robyn, WebSocket, WebSocketConnector, jsonify, serve_file, serve_html
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
@@ -1092,8 +1100,6 @@ def main():
     app.startup_handler(startup_handler)
     app.add_view("/sync/view", SyncView)
     app.add_view("/async/view", AsyncView)
-    app.include_router(sub_router)
-    app.include_router(di_subrouter)
 
     class BasicAuthHandler(AuthenticationHandler):
         def authenticate(self, request: Request) -> Optional[Identity]:
@@ -1105,7 +1111,15 @@ def main():
                 return Identity(claims={"key": "value"})
             return None
 
+    app.include_router(sub_router)
+    app.include_router(di_subrouter)
+    app.include_router(auth_subrouter_endpoint)
+    app.include_router(auth_subrouter_include, auth_required=True)
+    app.include_router(auth_subrouter_instance)
+    app.include_router(auth_subrouter_include_false, auth_required=False)
+    app.include_router(auth_subrouter_include_true, auth_required=True)
     app.configure_authentication(BasicAuthHandler(token_getter=BearerGetter()))
+
     app.start(port=8080, _check_port=False)
 
 

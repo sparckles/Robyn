@@ -10,7 +10,7 @@ from nestd import get_all_nested  # type: ignore
 
 from robyn import status_codes
 from robyn.argument_parser import Config
-from robyn.authentication import AuthenticationHandler
+from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
 from robyn.dependency_injection import DependencyMap
 from robyn.env_populator import load_vars
 from robyn.events import Events
@@ -21,7 +21,7 @@ from robyn.processpool import run_processes
 from robyn.reloader import compile_rust_files
 from robyn.responses import html, serve_file, serve_html
 from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, WebSocketConnector, get_version
-from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
+from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter, Route
 from robyn.types import Directory
 from robyn.ws import WebSocket
 
@@ -101,7 +101,7 @@ class Robyn:
         endpoint: str,
         handler: Callable,
         is_const: bool = False,
-        auth_required: bool = False,
+        auth_required: Optional[bool] = None,
     ):
         """
         Connect a URI to a handler
@@ -116,9 +116,6 @@ class Robyn:
         """ We will add the status code here only
         """
         injected_dependencies = self.dependencies.get_dependency_map(self)
-
-        if auth_required:
-            self.middleware_router.add_auth_middleware(endpoint)(handler)
 
         if isinstance(route_type, str):
             http_methods = {
@@ -139,11 +136,23 @@ class Robyn:
             is_const=is_const,
             exception_handler=self.exception_handler,
             injected_dependencies=injected_dependencies,
+            auth_required=auth_required,
         )
 
         logger.info("Added route %s %s", route_type, endpoint)
 
         return add_route_response
+
+    def _process_routes(self):
+        for route in self.router.routes:
+            # Determine auth_required based on precedence
+            auth_required = route.auth_required
+
+            if auth_required:
+                if not self.authentication_handler:
+                    raise AuthenticationNotConfiguredError()
+                # Add the authentication middleware
+                self.middleware_router.add_auth_middleware(route.route)
 
     def inject(self, **kwargs):
         """
@@ -286,6 +295,8 @@ class Robyn:
         logger.info("Starting server at http://%s:%s", host, port)
 
         mp.allow_connection_pickling()
+
+        self._process_routes()
 
         run_processes(
             host,
@@ -558,12 +569,37 @@ class Robyn:
 
         return inner
 
-    def include_router(self, router):
+    def include_router(self, router, auth_required: Optional[bool] = None):
         """
         The method to include the routes from another router
 
         :param router Robyn: the router object to include the routes from
         """
+        if router.authentication_handler is None:
+            router.authentication_handler = self.authentication_handler
+            router.middleware_router.set_authentication_handler(self.authentication_handler)
+
+        # Adjust auth_required for the routes based on precedence
+        for i, route in enumerate(router.router.routes):
+            # If route's auth_required is None, determine it based on precedence
+            if route.auth_required is None:
+                if auth_required is not None:
+                    route_auth_required = auth_required
+                elif router.auth_required is not None:
+                    route_auth_required = router.auth_required
+                else:
+                    route_auth_required = False
+                # Create a new Route with updated auth_required
+                updated_route = Route(
+                    route_type=route.route_type,
+                    route=route.route,
+                    function=route.function,
+                    is_const=route.is_const,
+                    auth_required=route_auth_required,
+                )
+                # Replace the route in router's routes list
+                router.router.routes[i] = updated_route
+
         self.router.routes.extend(router.router.routes)
         self.middleware_router.global_middlewares.extend(router.middleware_router.global_middlewares)
         self.middleware_router.route_middlewares.extend(router.middleware_router.route_middlewares)
@@ -589,35 +625,43 @@ class Robyn:
 
 
 class SubRouter(Robyn):
-    def __init__(self, file_object: str, prefix: str = "", config: Config = Config(), openapi: OpenAPI = OpenAPI()) -> None:
+    def __init__(
+        self,
+        file_object: str,
+        prefix: str = "",
+        auth_required: Optional[bool] = None,
+        config: Config = Config(),
+        openapi: OpenAPI = OpenAPI(),
+    ) -> None:
         super().__init__(file_object=file_object, config=config, openapi=openapi)
         self.prefix = prefix
+        self.auth_required = auth_required
 
     def __add_prefix(self, endpoint: str):
         return f"{self.prefix}{endpoint}"
 
-    def get(self, endpoint: str, const: bool = False, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["get"]):
+    def get(self, endpoint: str, const: bool = False, auth_required: Optional[bool] = None, openapi_name: str = "", openapi_tags: List[str] = ["get"]):
         return super().get(endpoint=self.__add_prefix(endpoint), const=const, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def post(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["post"]):
+    def post(self, endpoint: str, auth_required: Optional[bool] = None, openapi_name: str = "", openapi_tags: List[str] = ["post"]):
         return super().post(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def put(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["put"]):
+    def put(self, endpoint: str, auth_required: Optional[bool] = None, openapi_name: str = "", openapi_tags: List[str] = ["put"]):
         return super().put(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def delete(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["delete"]):
+    def delete(self, endpoint: str, auth_required: Optional[bool] = None, openapi_name: str = "", openapi_tags: List[str] = ["delete"]):
         return super().delete(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def patch(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["patch"]):
+    def patch(self, endpoint: str, auth_required: Optional[bool] = None, openapi_name: str = "", openapi_tags: List[str] = ["patch"]):
         return super().patch(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def head(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["head"]):
+    def head(self, endpoint: str, auth_required: Optional[bool] = None, openapi_name: str = "", openapi_tags: List[str] = ["head"]):
         return super().head(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def trace(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["trace"]):
+    def trace(self, endpoint: str, auth_required: Optional[bool] = None, openapi_name: str = "", openapi_tags: List[str] = ["trace"]):
         return super().trace(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def options(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["options"]):
+    def options(self, endpoint: str, auth_required: Optional[bool] = None, openapi_name: str = "", openapi_tags: List[str] = ["options"]):
         return super().options(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
 
