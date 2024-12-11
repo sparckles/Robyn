@@ -102,7 +102,7 @@ You can add more routes to your API. Check out the routes in [this file](https:/
 
 Robyn is compatible with the following Python versions:
 
-> Python >= 3.8
+> Python >= 3.9
 
 It is recommended to use the latest version of Python for the best performances.
 
@@ -149,7 +149,7 @@ If you still need help to get started, feel free to reach out on our [community 
 #### Prerequisites
 
 Before starting, ensure you have the following installed:
-- Python >= 3.8, <= 3.12 , Support for Python 3.13 is coming soon!
+- Python >= 3.9, <= 3.12 , Support for Python 3.13 is coming soon!
 - Rust (latest stable)
 - C compiler (gcc/clang)
 
