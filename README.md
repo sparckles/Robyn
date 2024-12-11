@@ -149,7 +149,7 @@ If you still need help to get started, feel free to reach out on our [community 
 #### Prerequisites
 
 Before starting, ensure you have the following installed:
-- Python >= 3.8, < 3.12 , Support for Python 3.13 is coming soon!
+- Python >= 3.8, <= 3.12 , Support for Python 3.13 is coming soon!
 - Rust (latest stable)
 - C compiler (gcc/clang)
 
