@@ -25,12 +25,25 @@ Batman wanted to create a Robyn app and was about to create an `src/app.py` befo
 $ python -m robyn --create
 ```
 
-This, would result in the following output.
+You can choose to have a simple barebones format or an structured scaffold (recommended) ike so...
+
+```bash
+$ python -m robyn --create
+? Directory Path: myproject
+? Need Docker? (Y/N) Y
+? Please choose if you'd like the scaffold to be a simple starter kit or an opinionated structure
+  Simple
+❯ Structured
+```
+
+
+This, would result in the following output if you choose scaffold type as `simple`
 
 ```bash
 $ python3 -m robyn --create
 ? Directory Path: .
 ? Need Docker? (Y/N) Y
+? Please choose if you would like the scaffold to be a barebones starter kit or a recommended structure
 ? Please select project type (Mongo/Postgres/Sqlalchemy/Prisma):
 ❯ No DB
   Sqlite
@@ -40,12 +53,7 @@ $ python3 -m robyn --create
   Prisma
 ```
 
-and the following directory structure.
-
-
-Batman was asked a set of questions to configure the application. He chose to use the default values for most of the questions.
-
-And he was done! The Robyn CLI created a new application with the following structure.
+and the following directory structure
 
 ```bash
 
@@ -65,3 +73,134 @@ And he was done! The Robyn CLI created a new application with the following stru
   />
 </div>
 
+If you choose to go with the structured scaffold, this is how your project will look like
+
+> note: at the moment, only no-db and sqlalchemy are supported here, you can always plug in other integrations as you see fit
+
+```bash
+├── adaptors
+│   ├── __init__.py
+│   ├── models
+│   │   ├── __init__.py
+│   │   └── user.py
+│   ├── mutators
+│   │   └── __init__.py
+│   └── selectors
+│       ├── __init__.py
+│       └── misc.py
+├── alembic.ini
+├── api
+│   ├── handlers
+│   │   ├── __init__.py
+│   │   ├── probes.py
+│   │   └── sample.py
+│   └── middlewares
+│       └── __init__.py
+├── conf.py
+├── config.env
+├── devops
+│   ├── Dockerfile
+│   ├── Dockerfile.src
+│   └── docker-compose.yaml
+├── migrations
+│   ├── README
+│   ├── env.py
+│   ├── script.py.mako
+│   └── versions
+│       └── __init__.py
+├── requirements.txt
+├── server.py
+└── utils
+    ├── __init__.py
+    └── db.py
+
+12 directories, 24 files
+```
+
+Here's what each of these stand for
+
+- server.py
+
+This is where you instantiate your robyn server and inject global dependencies
+
+```python
+from robyn.helpers import discover_routes
+from robyn import Robyn
+
+from utils.db import get_pool
+from conf import settings
+
+app: Robyn = discover_routes("api.handlers")
+# note: if you prefer to manuall refine routes, use your build_routes function instead
+
+app.inject_global(pool=get_pool())
+
+
+if __name__ == "__main__":
+    app.start(host="0.0.0.0", port=settings.service_port)
+```
+
+- conf.py/config.env
+
+Comes with initial settings you need to work with the database. The `BaseConfig` class slight enhancement on pydantic-settings's `BaseSettings` class
+
+- Your endpoint and middleware handlers live under the `api` package.
+> note: the example where the handlers are in a class as static methods is completely up to the developer preference and doesn't impact the actual routing in any way
+
+- It also comes pre-configured with alembic for database migrations
+
+- The database mutations and queries will be living under the `adaptors` package where you would do the following
+  - define your sqlalchemy and pydantic models
+  - define selectors for reusable query functions
+  - define mutators for any mutations over the model along with related functionality, usually in a transaction block
+
+> note: by default, we include sqlalchemy async pool, you can always change it as per your requirements
+
+Once you have set up your project like so, make sure to update the `sqlalchemy.url` field in your `alembic.ini`file to point to your DB like so...
+
+```
+sqlalchemy.url = postgresql+psycopg://consoleuser:buddy123@localhost:5432/console 
+```
+
+Then, once you are done writing your sqlalchemy model classes, you can go ahead and generate your migration files like so
+
+```bash
+alembic revision --autogenerate -m initial
+```
+You should see an output like so
+
+```
+/home/batman/.virtualenvs/base/lib/python3.12/site-packages/pydantic/_internal/_config.py:334: UserWarning: Valid config keys have changed in V2:
+* 'orm_mode' has been renamed to 'from_attributes'
+  warnings.warn(message, UserWarning)
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.autogenerate.compare] Detected added table 'users'
+INFO  [alembic.autogenerate.compare] Detected added index ''ix_users_id'' on '('id',)'
+INFO  [alembic.autogenerate.compare] Detected added index ''ix_users_username'' on '('username',)'
+INFO  [alembic.ddl.postgresql] Detected sequence named 'transactions_id_seq' as owned by integer column 'transactions(id)', assuming SERIAL and omitting
+INFO  [alembic.autogenerate.compare] Detected removed index 'idx_user_id' on 'transactions'
+INFO  [alembic.autogenerate.compare] Detected removed table 'transactions'
+  Generating /home/ashu/Desktop/aaa/migrations/versions/cefc632435c7_initial.py ...  done
+```
+
+This will generate the migration files like so
+
+```bash
+$ tree migrations/
+migrations/
+├── env.py
+├── README
+├── script.py.mako
+└── versions
+    ├── cefc632435c7_initial.py
+    └── __init__.py
+
+2 directories, 5 files
+```
+
+Now you can apply the migrations with `alembic upgrade head`
+
+Batman was asked a set of questions to configure the application. He chose to use the default values for most of the questions.
+
+And he was done! The Robyn CLI created a new application with the following structure.
