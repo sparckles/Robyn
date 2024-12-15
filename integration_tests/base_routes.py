@@ -1082,6 +1082,135 @@ def create_item(request, body: CreateItemBody, query: CreateItemQueryParamsParam
     return CreateItemResponse(success=True, items_changed=2)
 
 
+# --- Streaming responses ---
+
+@app.get("/stream/sync")
+def sync_stream():
+    def number_generator():
+        for i in range(5):
+            yield f"Chunk {i}\n".encode()
+    
+    return Response(
+        status_code=200,
+        headers={"Content-Type": "text/plain"},
+        description=number_generator()
+    )
+
+@app.get("/stream/async")
+async def async_stream():
+    async def async_generator():
+        import asyncio
+        for i in range(5):
+            await asyncio.sleep(1)  # Simulate async work
+            yield f"Async Chunk {i}\n".encode()
+    
+    return Response(
+        status_code=200,
+        headers={"Content-Type": "text/plain"},
+        description=async_generator()
+    )
+
+@app.get("/stream/mixed")
+async def mixed_stream():
+    async def mixed_generator():
+        import asyncio
+        # Binary data
+        yield b"Binary chunk\n"
+        await asyncio.sleep(0.5)
+        
+        # String data
+        yield "String chunk\n".encode()
+        await asyncio.sleep(0.5)
+        
+        # Integer data
+        yield str(42).encode() + b"\n"
+        await asyncio.sleep(0.5)
+        
+        # JSON data
+        import json
+        data = {"message": "JSON chunk", "number": 123}
+        yield json.dumps(data).encode() + b"\n"
+    
+    return Response(
+        status_code=200,
+        headers={"Content-Type": "text/plain"},
+        description=mixed_generator()
+    )
+
+@app.get("/stream/events")
+async def server_sent_events():
+    async def event_generator():
+        import asyncio
+        import json
+        import time
+        
+        # Regular event
+        yield f"event: message\ndata: {json.dumps({'time': time.time(), 'type': 'start'})}\n\n".encode()
+        await asyncio.sleep(1)
+        
+        # Event with ID
+        yield f"id: 1\nevent: update\ndata: {json.dumps({'progress': 50})}\n\n".encode()
+        await asyncio.sleep(1)
+        
+        # Multiple data lines
+        data = json.dumps({'status': 'complete', 'results': [1, 2, 3]}, indent=2)
+        yield f"event: complete\ndata: {data}\n\n".encode()
+    
+    return Response(
+        status_code=200,
+        headers={
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive"
+        },
+        description=event_generator()
+    )
+
+@app.get("/stream/large-file")
+async def stream_large_file():
+    async def file_generator():
+        # Simulate streaming a large file in chunks
+        chunk_size = 1024  # 1KB chunks
+        total_size = 10 * chunk_size  # 10KB total
+        
+        for offset in range(0, total_size, chunk_size):
+            # Simulate reading file chunk
+            chunk = b"X" * min(chunk_size, total_size - offset)
+            yield chunk
+    
+    return Response(
+        status_code=200,
+        headers={
+            "Content-Type": "application/octet-stream",
+            "Content-Disposition": "attachment; filename=large-file.bin"
+        },
+        description=file_generator()
+    )
+
+@app.get("/stream/csv")
+async def stream_csv():
+    async def csv_generator():
+        # CSV header
+        yield "id,name,value\n".encode()
+        
+        import asyncio
+        import random
+        
+        # Generate rows
+        for i in range(5):
+            await asyncio.sleep(0.5)  # Simulate data processing
+            row = f"{i},item-{i},{random.randint(1, 100)}\n"
+            yield row.encode()
+    
+    return Response(
+        status_code=200,
+        headers={
+            "Content-Type": "text/csv",
+            "Content-Disposition": "attachment; filename=data.csv"
+        },
+        description=csv_generator()
+    )
+
 def main():
     app.set_response_header("server", "robyn")
     app.serve_directory(
