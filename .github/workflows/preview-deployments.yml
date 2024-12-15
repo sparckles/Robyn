@@ -16,7 +16,7 @@ env:
 
 jobs:
   macos:
-    runs-on: macos-12
+    runs-on: macos-13
     strategy:
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12"]
@@ -149,4 +149,3 @@ jobs:
             pip install --upgrade pip setuptools wheel
             pip install --force-reinstall dist/robyn*.whl
             cd ~ && python -c 'import robyn'
-
