@@ -1,0 +1,212 @@
+## Streaming Responses
+
+Like Batman's gadgets streaming from the Batcave to his utility belt, Robyn provides built-in support for streaming responses. This allows you to send data in chunks, perfect for large files, real-time updates, and server-sent events.
+
+Streaming responses are perfect for handling large datasets or real-time updates without consuming excessive memory.
+
+## Response
+
+When the Bat-Signal needs to stream continuously through the night sky, you'll want to use a generator or iterator as the `description` parameter:
+
+<Row>
+  <CodeGroup>
+    ```python
+    from robyn import Response
+
+    @app.get("/bat-signal")
+    async def stream_signal():
+        async def signal_generator():
+            while True:
+                yield b"Bat-Signal Active\n"
+                await asyncio.sleep(1)
+        
+        return Response(
+            status_code=200,
+            headers={"Content-Type": "text/plain"},
+            description=signal_generator()
+        )
+    ```
+  </CodeGroup>
+  
+  <CodeGroup>
+    ```bash
+    curl http://localhost:8000/bat-signal
+    ```
+  </CodeGroup>
+</Row>
+
+### Parameters
+
+| Name | Type | Description | Default |
+|------|------|-------------|---------|
+| status_code | int | Response status code | 200 |
+| headers | Dict[str, str] | Response headers | None |
+| description | Union[str, bytes, Generator, AsyncGenerator] | Content to stream | None |
+
+### Supported Types
+
+Like Batman's versatile arsenal, the streaming response system supports multiple data types:
+
+<Row>
+  <CodeGroup>
+    ```python
+    # Raw binary data (like Batcomputer logs)
+    yield b"Batcomputer Log Entry\n"
+    ```
+  </CodeGroup>
+  <CodeGroup>
+    ```python
+    # Text messages (like Alfred's updates)
+    yield "Master Wayne, your tea is ready\n".encode()
+    ```
+  </CodeGroup>
+  <CodeGroup>
+    ```python
+    # Numbers (like Batmobile telemetry)
+    yield str(speed).encode()
+    ```
+  </CodeGroup>
+  <CodeGroup>
+    ```python
+    # JSON data (like Gotham City surveillance)
+    yield json.dumps({"location": "Crime Alley"}).encode()
+    ```
+  </CodeGroup>
+</Row>
+
+## Server-Sent Events
+
+For real-time updates from the Batcomputer:
+
+<Row>
+  <CodeGroup>
+    ```python
+    @app.get("/batcomputer/events")
+    async def batcomputer_feed():
+        async def event_generator():
+            while True:
+                data = {
+                    "time": time.time(),
+                    "alerts": get_gotham_alerts()
+                }
+                yield f"data: {json.dumps(data)}\n\n".encode()
+                await asyncio.sleep(1)
+        
+        return Response(
+            status_code=200,
+            headers={
+                "Content-Type": "text/event-stream",
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive"
+            },
+            description=event_generator()
+        )
+    ```
+  </CodeGroup>
+  <CodeGroup>
+    ```javascript
+    const evtSource = new EventSource("/batcomputer/events");
+    evtSource.onmessage = (event) => {
+        console.log(JSON.parse(event.data));
+    };
+    ```
+  </CodeGroup>
+</Row>
+
+## File Downloads
+
+For streaming large files from the Batcomputer archives:
+
+<Row>
+  <CodeGroup>
+    ```python
+    @app.get("/batcomputer/files")
+    async def download_files():
+        async def file_generator():
+            chunk_size = 8192  # Size of a Batarang
+            with open("case_files.dat", "rb") as f:
+                while chunk := f.read(chunk_size):
+                    yield chunk
+        
+        return Response(
+            status_code=200,
+            headers={
+                "Content-Type": "application/octet-stream",
+                "Content-Disposition": "attachment; filename=evidence.dat"
+            },
+            description=file_generator()
+        )
+    ```
+  </CodeGroup>
+  <CodeGroup>
+    ```bash
+    curl -O http://localhost:8000/batcomputer/files
+    ```
+  </CodeGroup>
+</Row>
+
+## Common Headers
+
+<Steps>
+### Plain Text
+```python
+headers = {"Content-Type": "text/plain"}
+```
+
+### Server-Sent Events
+```python
+headers = {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    "Connection": "keep-alive"
+}
+```
+
+### File Downloads
+```python
+headers = {
+    "Content-Type": "application/octet-stream",
+    "Content-Disposition": "attachment; filename=file.dat"
+}
+```
+</Steps>
+
+## Error Handling
+
+Even Batman needs contingency plans:
+
+<Callout type="warning">
+  Always handle errors gracefully in your streaming responses to prevent connection hangs.
+</Callout>
+
+```python
+async def generator():
+    try:
+        for item in evidence_items:
+            yield process(item)
+    except Exception as e:
+        yield f"Alert: Batcomputer Error - {str(e)}".encode()
+        return
+```
+
+## Testing
+
+Test your streaming responses like Batman testing his equipment:
+
+```python
+@pytest.mark.asyncio
+async def test_bat_signal():
+    async with app.test_client() as client:
+        response = await client.get("/bat-signal")
+        signals = []
+        async for signal in response.content:
+            signals.append(signal)
+        assert len(signals) > 0
+```
+
+## What's next?
+
+Now, Batman wanted to scale his application across multiple cores. Robyn led him to Scaling.
+
+- [Scaling](/documentation/api_reference/scaling)
+
