@@ -156,7 +156,6 @@ For streaming large files from the Batcomputer archives:
 
 ## Common Headers
 
-<Steps>
 ### Plain Text
 ```python
 headers = {"Content-Type": "text/plain"}
@@ -178,7 +177,6 @@ headers = {
     "Content-Disposition": "attachment; filename=file.dat"
 }
 ```
-</Steps>
 
 ## Error Handling
 
@@ -213,7 +211,6 @@ async def test_bat_signal():
 
 ## Best Practices
 
-<Steps>
 ### Encode Data
 Always encode strings to bytes (like encrypting Bat-communications)
 
@@ -228,7 +225,6 @@ Don't accumulate data in memory (keep the Batcomputer running smoothly)
 
 ### Timeouts
 Implement timeouts (even Batman needs sleep)
-</Steps>
 
 ## What's Next?
 
