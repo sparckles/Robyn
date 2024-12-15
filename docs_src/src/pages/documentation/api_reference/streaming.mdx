@@ -11,9 +11,7 @@ If you're coming from [File Handling](/documentation/api_reference/file_handling
 
 Like Batman's gadgets streaming from the Batcave to his utility belt, Robyn provides built-in support for streaming responses. This allows you to send data in chunks, perfect for large files, real-time updates, and server-sent events.
 
-<Callout type="info">
-  Streaming responses are perfect for handling large datasets or real-time updates without consuming excessive memory.
-</Callout>
+Streaming responses are perfect for handling large datasets or real-time updates without consuming excessive memory.
 
 ## Response
 
@@ -186,9 +184,7 @@ headers = {
 
 Even Batman needs contingency plans:
 
-<Callout type="warning">
   Always handle errors gracefully in your streaming responses to prevent connection hangs.
-</Callout>
 
 ```python
 async def generator():
