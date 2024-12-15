@@ -1,15 +1,28 @@
+---
+title: 'Streaming'
+description: 'Stream data efficiently with Robyn'
+---
+
+import { Row, CodeGroup, Steps, Callout } from '@/components/mdx'
+
+## Coming From
+
+If you're coming from [File Handling](/documentation/api_reference/file_handling), you'll find streaming provides a more efficient way to handle large files.
+
 ## Streaming Responses
 
 Like Batman's gadgets streaming from the Batcave to his utility belt, Robyn provides built-in support for streaming responses. This allows you to send data in chunks, perfect for large files, real-time updates, and server-sent events.
 
-Streaming responses are perfect for handling large datasets or real-time updates without consuming excessive memory.
+<Callout type="info">
+  Streaming responses are perfect for handling large datasets or real-time updates without consuming excessive memory.
+</Callout>
 
 ## Response
 
 When the Bat-Signal needs to stream continuously through the night sky, you'll want to use a generator or iterator as the `description` parameter:
 
 <Row>
-  <CodeGroup>
+  <CodeGroup title="Server">
     ```python
     from robyn import Response
 
@@ -28,7 +41,7 @@ When the Bat-Signal needs to stream continuously through the night sky, you'll w
     ```
   </CodeGroup>
   
-  <CodeGroup>
+  <CodeGroup title="Client">
     ```bash
     curl http://localhost:8000/bat-signal
     ```
@@ -48,25 +61,25 @@ When the Bat-Signal needs to stream continuously through the night sky, you'll w
 Like Batman's versatile arsenal, the streaming response system supports multiple data types:
 
 <Row>
-  <CodeGroup>
+  <CodeGroup title="Binary">
     ```python
     # Raw binary data (like Batcomputer logs)
     yield b"Batcomputer Log Entry\n"
     ```
   </CodeGroup>
-  <CodeGroup>
+  <CodeGroup title="Text">
     ```python
     # Text messages (like Alfred's updates)
     yield "Master Wayne, your tea is ready\n".encode()
     ```
   </CodeGroup>
-  <CodeGroup>
+  <CodeGroup title="Numbers">
     ```python
     # Numbers (like Batmobile telemetry)
     yield str(speed).encode()
     ```
   </CodeGroup>
-  <CodeGroup>
+  <CodeGroup title="JSON">
     ```python
     # JSON data (like Gotham City surveillance)
     yield json.dumps({"location": "Crime Alley"}).encode()
@@ -79,7 +92,7 @@ Like Batman's versatile arsenal, the streaming response system supports multiple
 For real-time updates from the Batcomputer:
 
 <Row>
-  <CodeGroup>
+  <CodeGroup title="Server">
     ```python
     @app.get("/batcomputer/events")
     async def batcomputer_feed():
@@ -103,7 +116,7 @@ For real-time updates from the Batcomputer:
         )
     ```
   </CodeGroup>
-  <CodeGroup>
+  <CodeGroup title="Client">
     ```javascript
     const evtSource = new EventSource("/batcomputer/events");
     evtSource.onmessage = (event) => {
@@ -118,7 +131,7 @@ For real-time updates from the Batcomputer:
 For streaming large files from the Batcomputer archives:
 
 <Row>
-  <CodeGroup>
+  <CodeGroup title="Server">
     ```python
     @app.get("/batcomputer/files")
     async def download_files():
@@ -138,7 +151,7 @@ For streaming large files from the Batcomputer archives:
         )
     ```
   </CodeGroup>
-  <CodeGroup>
+  <CodeGroup title="Client">
     ```bash
     curl -O http://localhost:8000/batcomputer/files
     ```
@@ -204,9 +217,29 @@ async def test_bat_signal():
         assert len(signals) > 0
 ```
 
-## What's next?
+## Best Practices
 
-Now, Batman wanted to scale his application across multiple cores. Robyn led him to Scaling.
+<Steps>
+### Encode Data
+Always encode strings to bytes (like encrypting Bat-communications)
 
-- [Scaling](/documentation/api_reference/scaling)
+### Chunk Size
+Use appropriate chunk sizes (8KB-64KB for efficient data transfer)
+
+### Resource Management
+Clean up resources (like Batman cleaning up Gotham)
+
+### Memory Usage
+Don't accumulate data in memory (keep the Batcomputer running smoothly)
+
+### Timeouts
+Implement timeouts (even Batman needs sleep)
+</Steps>
+
+## What's Next?
+
+Now that you've mastered streaming, you might want to explore:
+
+- [WebSockets](/documentation/api_reference/websockets) - For real-time bidirectional communication
+- [Scaling](/documentation/api_reference/scaling) - Scale your streaming applications across multiple cores
 
