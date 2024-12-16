@@ -180,7 +180,7 @@ impl Request {
         Self {
             query_params,
             headers,
-            method: req.method().as_str().to_owned(),
+            method: req.method().as_str().to_string(),
             path_params: HashMap::new(),
             body,
             url,

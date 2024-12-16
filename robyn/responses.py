@@ -1,6 +1,6 @@
 import mimetypes
 import os
-from typing import Optional
+from typing import Optional, Any
 
 from robyn.robyn import Headers, Response
 
@@ -16,6 +16,20 @@ class FileResponse:
         self.description = ""
         self.status_code = status_code or 200
         self.headers = headers or Headers({"Content-Disposition": "attachment"})
+
+
+class StreamingResponse:
+    def __init__(
+        self,
+        status_code: int = 200,
+        description: Optional[Any] = None,
+        headers: Optional[Headers] = None,
+    ):
+        self.status_code = status_code
+        self.description = description or []
+        self.headers = headers or Headers({})
+        self.response_type = "stream"
+        self.file_path = None
 
 
 def html(html: str) -> Response:

@@ -20,7 +20,7 @@ from robyn.openapi import OpenAPI
 from robyn.processpool import run_processes
 from robyn.reloader import compile_rust_files
 from robyn.responses import html, serve_file, serve_html
-from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, WebSocketConnector, get_version
+from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, WebSocketConnector, get_version, StreamingResponse
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory
 from robyn.ws import WebSocket
@@ -673,6 +673,7 @@ __all__ = [
     "Robyn",
     "Request",
     "Response",
+    "StreamingResponse",
     "status_codes",
     "jsonify",
     "serve_file",

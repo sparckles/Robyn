@@ -12,7 +12,7 @@ from robyn.authentication import AuthenticationHandler, AuthenticationNotConfigu
 from robyn.dependency_injection import DependencyMap
 from robyn.jsonify import jsonify
 from robyn.responses import FileResponse
-from robyn.robyn import FunctionInfo, Headers, HttpMethod, Identity, MiddlewareType, QueryParams, Request, Response, Url
+from robyn.robyn import FunctionInfo, Headers, HttpMethod, Identity, MiddlewareType, QueryParams, Request, Response, StreamingResponse, Url
 from robyn.types import Body, Files, FormData, IPAddress, Method, PathParams
 from robyn.ws import WebSocket
 
@@ -47,12 +47,20 @@ class Router(BaseRouter):
         super().__init__()
         self.routes: List[Route] = []
 
-    def _format_tuple_response(self, res: tuple) -> Response:
+    def _format_tuple_response(self, res: tuple) -> Union[Response, StreamingResponse]:
         if len(res) != 3:
             raise ValueError("Tuple should have 3 elements")
 
         description, headers, status_code = res
-        description = self._format_response(description).description
+        formatted_response = self._format_response(description)
+        
+        # Handle StreamingResponse case
+        if isinstance(formatted_response, StreamingResponse):
+            formatted_response.headers.update(headers)
+            formatted_response.status_code = status_code
+            return formatted_response
+            
+        # Regular Response case
         new_headers: Headers = Headers(headers)
         if new_headers.contains("Content-Type"):
             headers.set("Content-Type", new_headers.get("Content-Type"))
@@ -60,14 +68,18 @@ class Router(BaseRouter):
         return Response(
             status_code=status_code,
             headers=headers,
-            description=description,
+            description=formatted_response.description,
         )
 
     def _format_response(
         self,
-        res: Union[Dict, Response, bytes, tuple, str],
-    ) -> Response:
+        res: Union[Dict, Response, StreamingResponse, bytes, tuple, str],
+    ) -> Union[Response, StreamingResponse]:
         if isinstance(res, Response):
+            return res
+
+        # Special handling for StreamingResponse
+        if isinstance(res, StreamingResponse):
             return res
 
         if isinstance(res, dict):

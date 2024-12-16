@@ -1,4 +1,3 @@
-use log::debug;
 use pyo3::{
     exceptions::PyValueError,
     prelude::*,
@@ -79,8 +78,7 @@ pub fn get_body_from_pyobject(body: &PyAny) -> PyResult<Vec<u8>> {
     } else if let Ok(b) = body.downcast::<PyBytes>() {
         Ok(b.as_bytes().to_vec())
     } else {
-        debug!("Could not convert specified body to bytes");
-        Ok(vec![])
+        Err(PyValueError::new_err("Body must be either string or bytes"))
     }
 }
 
@@ -89,26 +87,31 @@ pub fn get_description_from_pyobject(description: &PyAny) -> PyResult<Vec<u8>> {
         Ok(s.to_string().into_bytes())
     } else if let Ok(b) = description.downcast::<PyBytes>() {
         Ok(b.as_bytes().to_vec())
+    } else if let Ok(i) = description.extract::<i64>() {
+        Ok(i.to_string().into_bytes())
     } else {
-        debug!("Could not convert specified response description to bytes");
-        Ok(vec![])
+        Err(PyValueError::new_err("Description must be string, bytes, or integer"))
     }
 }
 
 pub fn check_body_type(py: Python, body: &Py<PyAny>) -> PyResult<()> {
-    if body.downcast::<PyString>(py).is_err() && body.downcast::<PyBytes>(py).is_err() {
+    let body_ref = body.as_ref(py);
+    if !body_ref.is_instance_of::<PyString>() && !body_ref.is_instance_of::<PyBytes>() {
         return Err(PyValueError::new_err(
-            "Could not convert specified body to bytes",
+            "Body must be either string or bytes"
         ));
-    };
+    }
     Ok(())
 }
 
-pub fn check_description_type(py: Python, body: &Py<PyAny>) -> PyResult<()> {
-    if body.downcast::<PyString>(py).is_err() && body.downcast::<PyBytes>(py).is_err() {
+pub fn check_description_type(py: Python, description: &Py<PyAny>) -> PyResult<()> {
+    let desc_ref = description.as_ref(py);
+    if !desc_ref.is_instance_of::<PyString>() && 
+       !desc_ref.is_instance_of::<PyBytes>() && 
+       !desc_ref.is_instance_of::<pyo3::types::PyInt>() {
         return Err(PyValueError::new_err(
-            "Could not convert specified response description to bytes",
+            "Description must be string, bytes, or integer"
         ));
-    };
+    }
     Ok(())
 }

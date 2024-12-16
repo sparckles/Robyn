@@ -5,7 +5,7 @@ from typing import Optional
 
 from integration_tests.subroutes import di_subrouter, sub_router
 from integration_tests.views import AsyncView, SyncView
-from robyn import Headers, Request, Response, Robyn, WebSocket, WebSocketConnector, jsonify, serve_file, serve_html
+from robyn import Headers, Request, Response, Robyn, WebSocket, WebSocketConnector, jsonify, serve_file, serve_html, StreamingResponse
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.robyn import QueryParams, Url
 from robyn.templating import JinjaTemplate
@@ -159,7 +159,10 @@ def sync_before_request(request: Request):
 @app.after_request("/sync/middlewares")
 def sync_after_request(response: Response):
     response.headers.set("after", "sync_after_request")
-    response.description = response.description + " after"
+    if isinstance(response.description, bytes):
+        response.description = response.description + b" after"
+    else:
+        response.description = response.description + " after"
     return response
 
 
@@ -180,7 +183,10 @@ async def async_before_request(request: Request):
 @app.after_request("/async/middlewares")
 async def async_after_request(response: Response):
     response.headers.set("after", "async_after_request")
-    response.description = response.description + " after"
+    if isinstance(response.description, bytes):
+        response.description = response.description + b" after"
+    else:
+        response.description = response.description + " after"
     return response
 
 
@@ -1085,56 +1091,42 @@ def create_item(request, body: CreateItemBody, query: CreateItemQueryParamsParam
 # --- Streaming responses ---
 
 @app.get("/stream/sync")
-def sync_stream():
-    def number_generator():
+async def sync_stream():
+    def generator():
         for i in range(5):
             yield f"Chunk {i}\n".encode()
     
-    return Response(
+    headers = Headers({"Content-Type": "text/plain"})
+    return StreamingResponse(
         status_code=200,
-        headers={"Content-Type": "text/plain"},
-        description=number_generator()
+        description=generator(),
+        headers=headers
     )
 
 @app.get("/stream/async")
 async def async_stream():
-    async def async_generator():
-        import asyncio
+    async def generator():
         for i in range(5):
-            await asyncio.sleep(1)  # Simulate async work
             yield f"Async Chunk {i}\n".encode()
     
-    return Response(
+    return StreamingResponse(
         status_code=200,
         headers={"Content-Type": "text/plain"},
-        description=async_generator()
+        description=generator()
     )
 
 @app.get("/stream/mixed")
 async def mixed_stream():
-    async def mixed_generator():
-        import asyncio
-        # Binary data
+    async def generator():
         yield b"Binary chunk\n"
-        await asyncio.sleep(0.5)
-        
-        # String data
         yield "String chunk\n".encode()
-        await asyncio.sleep(0.5)
-        
-        # Integer data
         yield str(42).encode() + b"\n"
-        await asyncio.sleep(0.5)
-        
-        # JSON data
-        import json
-        data = {"message": "JSON chunk", "number": 123}
-        yield json.dumps(data).encode() + b"\n"
+        yield json.dumps({"message": "JSON chunk", "number": 123}).encode() + b"\n"
     
-    return Response(
+    return StreamingResponse(
         status_code=200,
         headers={"Content-Type": "text/plain"},
-        description=mixed_generator()
+        description=generator()
     )
 
 @app.get("/stream/events")
@@ -1156,7 +1148,7 @@ async def server_sent_events():
         data = json.dumps({'status': 'complete', 'results': [1, 2, 3]}, indent=2)
         yield f"event: complete\ndata: {data}\n\n".encode()
     
-    return Response(
+    return StreamingResponse(
         status_code=200,
         headers={
             "Content-Type": "text/event-stream",
@@ -1178,7 +1170,7 @@ async def stream_large_file():
             chunk = b"X" * min(chunk_size, total_size - offset)
             yield chunk
     
-    return Response(
+    return StreamingResponse(
         status_code=200,
         headers={
             "Content-Type": "application/octet-stream",
@@ -1202,7 +1194,7 @@ async def stream_csv():
             row = f"{i},item-{i},{random.randint(1, 100)}\n"
             yield row.encode()
     
-    return Response(
+    return StreamingResponse(
         status_code=200,
         headers={
             "Content-Type": "text/csv",
