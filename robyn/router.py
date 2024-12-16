@@ -11,6 +11,7 @@ from robyn import status_codes
 from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
 from robyn.dependency_injection import DependencyMap
 from robyn.jsonify import jsonify
+from robyn.openapi import OpenAPI
 from robyn.responses import FileResponse
 from robyn.robyn import FunctionInfo, Headers, HttpMethod, Identity, MiddlewareType, QueryParams, Request, Response, Url
 from robyn.types import Body, Files, FormData, IPAddress, Method, PathParams
@@ -19,11 +20,18 @@ from robyn.ws import WebSocket
 _logger = logging.getLogger(__name__)
 
 
+def lower_http_method(method: HttpMethod):
+    return (str(method))[11:].lower()
+
+
 class Route(NamedTuple):
     route_type: HttpMethod
     route: str
     function: FunctionInfo
     is_const: bool
+    auth_required: bool
+    openapi_name: str
+    openapi_tags: List[str]
 
 
 class RouteMiddleware(NamedTuple):
@@ -108,6 +116,9 @@ class Router(BaseRouter):
         endpoint: str,
         handler: Callable,
         is_const: bool,
+        auth_required: bool,
+        openapi_name: str,
+        openapi_tags: List[str],
         exception_handler: Optional[Callable],
         injected_dependencies: dict,
     ) -> Union[Callable, CoroutineType]:
@@ -226,7 +237,7 @@ class Router(BaseRouter):
                 params,
                 new_injected_dependencies,
             )
-            self.routes.append(Route(route_type, endpoint, function, is_const))
+            self.routes.append(Route(route_type, endpoint, function, is_const, auth_required, openapi_name, openapi_tags))
             return async_inner_handler
         else:
             function = FunctionInfo(
@@ -236,8 +247,17 @@ class Router(BaseRouter):
                 params,
                 new_injected_dependencies,
             )
-            self.routes.append(Route(route_type, endpoint, function, is_const))
+            self.routes.append(Route(route_type, endpoint, function, is_const, auth_required, openapi_name, openapi_tags))
             return inner_handler
+
+    def prepare_routes_openapi(self, openapi: OpenAPI, included_routers: List) -> None:
+        for route in self.routes:
+            openapi.add_openapi_path_obj(lower_http_method(route.route_type), route.route, route.openapi_name, route.openapi_tags, route.function.handler)
+
+        # TODO! after include_routes does not immediatelly merge all the routes
+        # for router in included_routers:
+        #    for route in router:
+        #        openapi.add_openapi_path_obj(lower_http_method(route.route_type), route.route, route.openapi_name, route.openapi_tags, route.function.handler)
 
     def get_routes(self) -> List[Route]:
         return self.routes
