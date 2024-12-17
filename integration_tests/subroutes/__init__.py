@@ -1,12 +1,28 @@
 from robyn import SubRouter, WebSocket, jsonify
 
 from .di_subrouter import di_subrouter
+from .auth_subroutes import (
+    auth_subrouter_endpoint,
+    auth_subrouter_include,
+    auth_subrouter_instance,
+    auth_subrouter_include_false,
+    auth_subrouter_include_true,
+)
 
 sub_router = SubRouter(__name__, prefix="/sub_router")
 
 websocket = WebSocket(sub_router, "/ws")
 
-__all__ = ["sub_router", "websocket", "di_subrouter"]
+__all__ = [
+    "sub_router",
+    "websocket",
+    "di_subrouter",
+    "auth_subrouter_endpoint",
+    "auth_subrouter_include",
+    "auth_subrouter_instance",
+    "auth_subrouter_include_false",
+    "auth_subrouter_include_true",
+]
 
 
 @websocket.on("connect")
