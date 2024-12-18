@@ -1,6 +1,6 @@
 import mimetypes
 import os
-from typing import Optional, Any
+from typing import Optional, Any, Union, Callable, Iterator, AsyncIterator
 
 from robyn.robyn import Headers, Response
 
@@ -18,30 +18,18 @@ class FileResponse:
         self.headers = headers or Headers({"Content-Disposition": "attachment"})
 
 
-class StreamingResponse:
-    def __init__(
-        self,
-        status_code: int = 200,
-        description: Optional[Any] = None,
-        headers: Optional[Headers] = None,
-    ):
-        self.status_code = status_code
-        self.description = description or []
-        self.headers = headers or Headers({})
-        self.response_type = "stream"
-        self.file_path = None
-
-
-def html(html: str) -> Response:
+def html(html: str, streaming: bool = False) -> Response:
     """
-    This function will help in serving a simple html string
+    This function will help in serving a simple html string or stream
 
     :param html str: html to serve as a response
+    :param streaming bool: whether to treat the response as a streaming response
     """
     return Response(
         description=html,
         status_code=200,
         headers=Headers({"Content-Type": "text/html"}),
+        streaming=streaming,
     )
 
 

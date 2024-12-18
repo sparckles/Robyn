@@ -20,7 +20,7 @@ from robyn.openapi import OpenAPI
 from robyn.processpool import run_processes
 from robyn.reloader import compile_rust_files
 from robyn.responses import html, serve_file, serve_html
-from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, WebSocketConnector, get_version, StreamingResponse
+from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, WebSocketConnector, get_version
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory
 from robyn.ws import WebSocket
@@ -97,10 +97,12 @@ class Robyn:
 
     def add_route(
         self,
+        *,
         route_type: Union[HttpMethod, str],
         endpoint: str,
         handler: Callable,
         is_const: bool = False,
+        streaming: bool = False,
         auth_required: bool = False,
     ):
         """
@@ -110,11 +112,10 @@ class Robyn:
         :param endpoint str: endpoint for the route added
         :param handler function: represents the sync or async function passed as a handler for the route
         :param is_const bool: represents if the handler is a const function or not
+        :param streaming bool: represents if the response should be streamed
         :param auth_required bool: represents if the route needs authentication or not
         """
 
-        """ We will add the status code here only
-        """
         injected_dependencies = self.dependencies.get_dependency_map(self)
 
         if auth_required:
@@ -137,6 +138,7 @@ class Robyn:
             endpoint=endpoint,
             handler=handler,
             is_const=is_const,
+            streaming=streaming,
             exception_handler=self.exception_handler,
             injected_dependencies=injected_dependencies,
         )
@@ -336,7 +338,14 @@ class Robyn:
 
         handlers = get_functions(view)
         for route_type, handler in handlers:
-            self.add_route(route_type, endpoint, handler, const)
+            self.add_route(
+                route_type=route_type,
+                endpoint=endpoint,
+                handler=handler,
+                is_const=const,
+                streaming=False,
+                auth_required=False
+            )
 
     def view(self, endpoint: str, const: bool = False):
         """
@@ -354,6 +363,7 @@ class Robyn:
         self,
         endpoint: str,
         const: bool = False,
+        streaming: bool = False,
         auth_required: bool = False,
         openapi_name: str = "",
         openapi_tags: List[str] = ["get"],
@@ -363,6 +373,7 @@ class Robyn:
 
         :param endpoint str: endpoint for the route added
         :param const bool: represents if the handler is a const function or not
+        :param streaming bool: represents if the response should be streamed
         :param auth_required bool: represents if the route needs authentication or not
         :param openapi_name: str -- the name of the endpoint in the openapi spec
         :param openapi_tags: List[str] -- for grouping of endpoints in the openapi spec
@@ -371,13 +382,21 @@ class Robyn:
         def inner(handler):
             self.openapi.add_openapi_path_obj("get", endpoint, openapi_name, openapi_tags, handler)
 
-            return self.add_route(HttpMethod.GET, endpoint, handler, const, auth_required)
+            return self.add_route(
+                route_type=HttpMethod.GET,
+                endpoint=endpoint,
+                handler=handler,
+                is_const=const,
+                streaming=streaming,
+                auth_required=auth_required
+            )
 
         return inner
 
     def post(
         self,
         endpoint: str,
+        streaming: bool = False,
         auth_required: bool = False,
         openapi_name: str = "",
         openapi_tags: List[str] = ["post"],
@@ -386,6 +405,7 @@ class Robyn:
         The @app.post decorator to add a route with POST method
 
         :param endpoint str: endpoint for the route added
+        :param streaming bool: represents if the response should be streamed
         :param auth_required bool: represents if the route needs authentication or not
         :param openapi_name: str -- the name of the endpoint in the openapi spec
         :param openapi_tags: List[str] -- for grouping of endpoints in the openapi spec
@@ -394,13 +414,21 @@ class Robyn:
         def inner(handler):
             self.openapi.add_openapi_path_obj("post", endpoint, openapi_name, openapi_tags, handler)
 
-            return self.add_route(HttpMethod.POST, endpoint, handler, auth_required=auth_required)
+            return self.add_route(
+                route_type=HttpMethod.POST,
+                endpoint=endpoint,
+                handler=handler,
+                is_const=False,
+                streaming=streaming,
+                auth_required=auth_required
+            )
 
         return inner
 
     def put(
         self,
         endpoint: str,
+        streaming: bool = False,
         auth_required: bool = False,
         openapi_name: str = "",
         openapi_tags: List[str] = ["put"],
@@ -409,6 +437,7 @@ class Robyn:
         The @app.put decorator to add a get route with PUT method
 
         :param endpoint str: endpoint for the route added
+        :param streaming bool: represents if the response should be streamed
         :param auth_required bool: represents if the route needs authentication or not
         :param openapi_name: str -- the name of the endpoint in the openapi spec
         :param openapi_tags: List[str] -- for grouping of endpoints in the openapi spec
@@ -417,13 +446,21 @@ class Robyn:
         def inner(handler):
             self.openapi.add_openapi_path_obj("put", endpoint, openapi_name, openapi_tags, handler)
 
-            return self.add_route(HttpMethod.PUT, endpoint, handler, auth_required=auth_required)
+            return self.add_route(
+                route_type=HttpMethod.PUT,
+                endpoint=endpoint,
+                handler=handler,
+                is_const=False,
+                streaming=streaming,
+                auth_required=auth_required
+            )
 
         return inner
 
     def delete(
         self,
         endpoint: str,
+        streaming: bool = False,
         auth_required: bool = False,
         openapi_name: str = "",
         openapi_tags: List[str] = ["delete"],
@@ -432,6 +469,7 @@ class Robyn:
         The @app.delete decorator to add a route with DELETE method
 
         :param endpoint str: endpoint for the route added
+        :param streaming bool: represents if the response should be streamed
         :param auth_required bool: represents if the route needs authentication or not
         :param openapi_name: str -- the name of the endpoint in the openapi spec
         :param openapi_tags: List[str] -- for grouping of endpoints in the openapi spec
@@ -440,13 +478,21 @@ class Robyn:
         def inner(handler):
             self.openapi.add_openapi_path_obj("delete", endpoint, openapi_name, openapi_tags, handler)
 
-            return self.add_route(HttpMethod.DELETE, endpoint, handler, auth_required=auth_required)
+            return self.add_route(
+                route_type=HttpMethod.DELETE,
+                endpoint=endpoint,
+                handler=handler,
+                is_const=False,
+                streaming=streaming,
+                auth_required=auth_required
+            )
 
         return inner
 
     def patch(
         self,
         endpoint: str,
+        streaming: bool = False,
         auth_required: bool = False,
         openapi_name: str = "",
         openapi_tags: List[str] = ["patch"],
@@ -455,6 +501,7 @@ class Robyn:
         The @app.patch decorator to add a route with PATCH method
 
         :param endpoint str: endpoint for the route added
+        :param streaming bool: represents if the response should be streamed
         :param auth_required bool: represents if the route needs authentication or not
         :param openapi_name: str -- the name of the endpoint in the openapi spec
         :param openapi_tags: List[str] -- for grouping of endpoints in the openapi spec
@@ -463,13 +510,21 @@ class Robyn:
         def inner(handler):
             self.openapi.add_openapi_path_obj("patch", endpoint, openapi_name, openapi_tags, handler)
 
-            return self.add_route(HttpMethod.PATCH, endpoint, handler, auth_required=auth_required)
+            return self.add_route(
+                route_type=HttpMethod.PATCH,
+                endpoint=endpoint,
+                handler=handler,
+                is_const=False,
+                streaming=streaming,
+                auth_required=auth_required
+            )
 
         return inner
 
     def head(
         self,
         endpoint: str,
+        streaming: bool = False,
         auth_required: bool = False,
         openapi_name: str = "",
         openapi_tags: List[str] = ["head"],
@@ -478,6 +533,7 @@ class Robyn:
         The @app.head decorator to add a route with HEAD method
 
         :param endpoint str: endpoint for the route added
+        :param streaming bool: represents if the response should be streamed
         :param auth_required bool: represents if the route needs authentication or not
         :param openapi_name: str -- the name of the endpoint in the openapi spec
         :param openapi_tags: List[str] -- for grouping of endpoints in the openapi spec
@@ -486,13 +542,21 @@ class Robyn:
         def inner(handler):
             self.openapi.add_openapi_path_obj("head", endpoint, openapi_name, openapi_tags, handler)
 
-            return self.add_route(HttpMethod.HEAD, endpoint, handler, auth_required=auth_required)
+            return self.add_route(
+                route_type=HttpMethod.HEAD,
+                endpoint=endpoint,
+                handler=handler,
+                is_const=False,
+                streaming=streaming,
+                auth_required=auth_required
+            )
 
         return inner
 
     def options(
         self,
         endpoint: str,
+        streaming: bool = False,
         auth_required: bool = False,
         openapi_name: str = "",
         openapi_tags: List[str] = ["options"],
@@ -501,6 +565,7 @@ class Robyn:
         The @app.options decorator to add a route with OPTIONS method
 
         :param endpoint str: endpoint for the route added
+        :param streaming bool: represents if the response should be streamed
         :param auth_required bool: represents if the route needs authentication or not
         :param openapi_name: str -- the name of the endpoint in the openapi spec
         :param openapi_tags: List[str] -- for grouping of endpoints in the openapi spec
@@ -509,13 +574,21 @@ class Robyn:
         def inner(handler):
             self.openapi.add_openapi_path_obj("options", endpoint, openapi_name, openapi_tags, handler)
 
-            return self.add_route(HttpMethod.OPTIONS, endpoint, handler, auth_required=auth_required)
+            return self.add_route(
+                route_type=HttpMethod.OPTIONS,
+                endpoint=endpoint,
+                handler=handler,
+                is_const=False,
+                streaming=streaming,
+                auth_required=auth_required
+            )
 
         return inner
 
     def connect(
         self,
         endpoint: str,
+        streaming: bool = False,
         auth_required: bool = False,
         openapi_name: str = "",
         openapi_tags: List[str] = ["connect"],
@@ -524,6 +597,7 @@ class Robyn:
         The @app.connect decorator to add a route with CONNECT method
 
         :param endpoint str: endpoint for the route added
+        :param streaming bool: represents if the response should be streamed
         :param auth_required bool: represents if the route needs authentication or not
         :param openapi_name: str -- the name of the endpoint in the openapi spec
         :param openapi_tags: List[str] -- for grouping of endpoints in the openapi spec
@@ -531,13 +605,21 @@ class Robyn:
 
         def inner(handler):
             self.openapi.add_openapi_path_obj("connect", endpoint, openapi_name, openapi_tags, handler)
-            return self.add_route(HttpMethod.CONNECT, endpoint, handler, auth_required=auth_required)
+            return self.add_route(
+                route_type=HttpMethod.CONNECT,
+                endpoint=endpoint,
+                handler=handler,
+                is_const=False,
+                streaming=streaming,
+                auth_required=auth_required
+            )
 
         return inner
 
     def trace(
         self,
         endpoint: str,
+        streaming: bool = False,
         auth_required: bool = False,
         openapi_name: str = "",
         openapi_tags: List[str] = ["trace"],
@@ -546,6 +628,7 @@ class Robyn:
         The @app.trace decorator to add a route with TRACE method
 
         :param endpoint str: endpoint for the route added
+        :param streaming bool: represents if the response should be streamed
         :param auth_required bool: represents if the route needs authentication or not
         :param openapi_name: str -- the name of the endpoint in the openapi spec
         :param openapi_tags: List[str] -- for grouping of endpoints in the openapi spec
@@ -554,7 +637,14 @@ class Robyn:
         def inner(handler):
             self.openapi.add_openapi_path_obj("trace", endpoint, openapi_name, openapi_tags, handler)
 
-            return self.add_route(HttpMethod.TRACE, endpoint, handler, auth_required=auth_required)
+            return self.add_route(
+                route_type=HttpMethod.TRACE,
+                endpoint=endpoint,
+                handler=handler,
+                is_const=False,
+                streaming=streaming,
+                auth_required=auth_required
+            )
 
         return inner
 
@@ -596,29 +686,29 @@ class SubRouter(Robyn):
     def __add_prefix(self, endpoint: str):
         return f"{self.prefix}{endpoint}"
 
-    def get(self, endpoint: str, const: bool = False, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["get"]):
-        return super().get(endpoint=self.__add_prefix(endpoint), const=const, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def get(self, endpoint: str, const: bool = False, streaming: bool = False, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["get"]):
+        return super().get(endpoint=self.__add_prefix(endpoint), const=const, streaming=streaming, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def post(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["post"]):
-        return super().post(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def post(self, endpoint: str, streaming: bool = False, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["post"]):
+        return super().post(endpoint=self.__add_prefix(endpoint), streaming=streaming, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def put(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["put"]):
-        return super().put(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def put(self, endpoint: str, streaming: bool = False, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["put"]):
+        return super().put(endpoint=self.__add_prefix(endpoint), streaming=streaming, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def delete(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["delete"]):
-        return super().delete(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def delete(self, endpoint: str, streaming: bool = False, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["delete"]):
+        return super().delete(endpoint=self.__add_prefix(endpoint), streaming=streaming, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def patch(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["patch"]):
-        return super().patch(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def patch(self, endpoint: str, streaming: bool = False, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["patch"]):
+        return super().patch(endpoint=self.__add_prefix(endpoint), streaming=streaming, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def head(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["head"]):
-        return super().head(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def head(self, endpoint: str, streaming: bool = False, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["head"]):
+        return super().head(endpoint=self.__add_prefix(endpoint), streaming=streaming, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def trace(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["trace"]):
-        return super().trace(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def trace(self, endpoint: str, streaming: bool = False, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["trace"]):
+        return super().trace(endpoint=self.__add_prefix(endpoint), streaming=streaming, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def options(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["options"]):
-        return super().options(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def options(self, endpoint: str, streaming: bool = False, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["options"]):
+        return super().options(endpoint=self.__add_prefix(endpoint), streaming=streaming, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
 
 def ALLOW_CORS(app: Robyn, origins: Union[List[str], str]):
@@ -673,7 +763,6 @@ __all__ = [
     "Robyn",
     "Request",
     "Response",
-    "StreamingResponse",
     "status_codes",
     "jsonify",
     "serve_file",

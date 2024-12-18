@@ -3,7 +3,7 @@ use actix_web::{HttpRequest, HttpResponse, HttpResponseBuilder, Responder, Error
 use pyo3::{
     exceptions::PyIOError,
     prelude::*,
-    types::{PyBytes, PyDict, PyList},
+    types::{PyBytes, PyDict},
 };
 use futures::stream::Stream;
 use std::pin::Pin;
@@ -15,7 +15,7 @@ use super::headers::Headers;
 pub enum ResponseBody {
     Text(String),
     Binary(Vec<u8>),
-    Streaming(Vec<Vec<u8>>),
+    Streaming(Py<PyAny>),
 }
 
 #[derive(Debug, Clone)]
@@ -25,35 +25,33 @@ pub struct Response {
     pub headers: Headers,
     pub body: ResponseBody,
     pub file_path: Option<String>,
-}
-
-#[derive(Debug, Clone)]
-pub struct StreamingResponse {
-    pub status_code: u16,
-    pub headers: Headers,
-    pub description: Py<PyAny>,
-    pub response_type: String,
-    pub file_path: Option<String>,
+    pub streaming: bool,
 }
 
 impl<'a> FromPyObject<'a> for Response {
     fn extract(ob: &'a PyAny) -> PyResult<Self> {
-        // First check if this is a streaming response by checking response_type
-        if let Ok(response_type) = ob.getattr("response_type")?.extract::<String>() {
-            if response_type == "stream" {
-                return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                    "Use StreamingResponse for streaming data"
-                ));
-            }
-        }
-
         let status_code: u16 = ob.getattr("status_code")?.extract()?;
         let headers: Headers = ob.getattr("headers")?.extract()?;
         let description = ob.getattr("description")?;
         let file_path: Option<String> = ob.getattr("file_path")?.extract()?;
+        let streaming: bool = ob.getattr("streaming")?.extract().unwrap_or(false);
 
-        // For non-streaming responses, convert to appropriate type
-        if description.is_none() {
+        // For streaming responses, handle iterator/generator
+        if streaming {
+            if !description.hasattr("__iter__")? && !description.hasattr("__aiter__")? {
+                return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                    "Description must be an iterator or async iterator when streaming=True"
+                ));
+            }
+            Ok(Response {
+                status_code,
+                response_type: "stream".to_string(),
+                headers,
+                body: ResponseBody::Streaming(description.into_py(ob.py())),
+                file_path,
+                streaming,
+            })
+        } else if description.is_none() {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
                 "Description cannot be None"
             ));
@@ -65,6 +63,7 @@ impl<'a> FromPyObject<'a> for Response {
                 headers,
                 body,
                 file_path,
+                streaming: false,
             })
         } else if description.is_instance_of::<pyo3::types::PyString>() {
             let body = ResponseBody::Text(description.extract::<String>()?);
@@ -74,50 +73,23 @@ impl<'a> FromPyObject<'a> for Response {
                 headers,
                 body,
                 file_path,
+                streaming: false,
+            })
+        } else if description.hasattr("__iter__")? || description.hasattr("__aiter__")? {
+            Ok(Response {
+                status_code,
+                response_type: "stream".to_string(),
+                headers,
+                body: ResponseBody::Streaming(description.into_py(ob.py())),
+                file_path,
+                streaming,
             })
         } else {
             // If description is not bytes or str, it might be a streaming response
             Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                "Description must be bytes or str"
+                "Description must be bytes, str, or an iterator"
             ))
         }
-    }
-}
-
-impl<'a> FromPyObject<'a> for StreamingResponse {
-    fn extract(ob: &'a PyAny) -> PyResult<Self> {
-        // First check if this is a streaming response by checking response_type
-        if let Ok(response_type) = ob.getattr("response_type")?.extract::<String>() {
-            if response_type != "stream" {
-                return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                    format!("Not a streaming response (response_type = {})", response_type)
-                ));
-            }
-        } else {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                "Missing response_type attribute"
-            ));
-        }
-
-        let status_code: u16 = ob.getattr("status_code")?.extract()?;
-        let headers: Headers = ob.getattr("headers")?.extract()?;
-        let description = ob.getattr("description")?;
-        let file_path: Option<String> = ob.getattr("file_path")?.extract()?;
-
-        // Check if description is a generator or iterator
-        if !description.hasattr("__iter__")? && !description.hasattr("__aiter__")? {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                "Description must be an iterator or async iterator"
-            ));
-        }
-
-        Ok(StreamingResponse {
-            status_code,
-            headers,
-            description: description.into_py(ob.py()),
-            response_type: "stream".to_string(),
-            file_path,
-        })
     }
 }
 
@@ -138,7 +110,9 @@ impl Responder for Response {
                     response_builder.insert_header(("content-type", "application/octet-stream"));
                 }
                 ResponseBody::Streaming(_) => {
-                    panic!("Use StreamingResponse for streaming data");
+                    if !self.headers.headers.contains_key("content-type") {
+                        response_builder.insert_header(("content-type", "text/plain; charset=utf-8"));
+                    }
                 }
             };
         }
@@ -146,97 +120,91 @@ impl Responder for Response {
         // Apply headers after content-type
         apply_hashmap_headers(&mut response_builder, &self.headers);
         
-        match self.body {
-            ResponseBody::Text(text) => response_builder.body(text),
-            ResponseBody::Binary(data) => response_builder.body(data),
-            ResponseBody::Streaming(_) => {
-                panic!("Use StreamingResponse for streaming data")
-            }
-        }
-    }
-}
-
-impl Responder for StreamingResponse {
-    type Body = BoxBody;
-
-    fn respond_to(self, _req: &HttpRequest) -> HttpResponse<Self::Body> {
-        let mut response_builder =
-            HttpResponseBuilder::new(StatusCode::from_u16(self.status_code).unwrap());
-        
-        // Apply headers
-        apply_hashmap_headers(&mut response_builder, &self.headers);
-        
-        // Create streaming body
-        let description = self.description;
-        let stream = Box::pin(futures::stream::unfold(description, move |description| {
-            Box::pin(async move {
-                let result = Python::with_gil(|py| {
-                    let desc = description.as_ref(py);
-                    
-                    // Handle sync iterator
-                    if desc.hasattr("__iter__").unwrap_or(false) {
-                        if let Ok(mut iter) = desc.iter() {
-                            if let Some(Ok(item)) = iter.next() {
-                                let chunk = if item.is_instance_of::<pyo3::types::PyBytes>() {
-                                    item.extract::<Vec<u8>>().ok()
-                                } else if item.is_instance_of::<pyo3::types::PyString>() {
-                                    item.extract::<String>().ok().map(|s| s.into_bytes())
-                                } else if item.is_instance_of::<pyo3::types::PyInt>() {
-                                    item.extract::<i64>().ok().map(|i| i.to_string().into_bytes())
-                                } else {
-                                    None
-                                };
+        if self.streaming {
+            match self.body {
+                ResponseBody::Streaming(description) => {
+                    // Create streaming body
+                    let stream = Box::pin(futures::stream::unfold(description, move |description| {
+                        Box::pin(async move {
+                            let result = Python::with_gil(|py| {
+                                let desc = description.as_ref(py);
                                 
-                                if let Some(chunk) = chunk {
-                                    return Some((Ok(Bytes::from(chunk)), description));
-                                }
-                            }
-                        }
-                    }
-                    // Handle async generator
-                    else if desc.hasattr("__aiter__").unwrap_or(false) {
-                        if let Ok(agen) = desc.call_method0("__aiter__") {
-                            if let Ok(anext) = agen.call_method0("__anext__") {
-                                // Convert Python awaitable to Rust Future
-                                if let Ok(future) = pyo3_asyncio::tokio::into_future(anext) {
-                                    // Create a new task to handle the async operation
-                                    let handle = tokio::runtime::Handle::current();
-                                    match handle.block_on(future) {
-                                        Ok(item) => {
-                                            let chunk = Python::with_gil(|py| {
-                                                let item = item.as_ref(py);
-                                                if item.is_none() {
-                                                    return None;
-                                                }
-                                                
-                                                if item.is_instance_of::<pyo3::types::PyBytes>() {
-                                                    item.extract::<Vec<u8>>().ok()
-                                                } else if item.is_instance_of::<pyo3::types::PyString>() {
-                                                    item.extract::<String>().ok().map(|s| s.into_bytes())
-                                                } else if item.is_instance_of::<pyo3::types::PyInt>() {
-                                                    item.extract::<i64>().ok().map(|i| i.to_string().into_bytes())
-                                                } else {
-                                                    None
-                                                }
-                                            });
-
+                                // Handle sync iterator
+                                if desc.hasattr("__iter__").unwrap_or(false) {
+                                    if let Ok(mut iter) = desc.iter() {
+                                        if let Some(Ok(item)) = iter.next() {
+                                            let chunk = if item.is_instance_of::<pyo3::types::PyBytes>() {
+                                                item.extract::<Vec<u8>>().ok()
+                                            } else if item.is_instance_of::<pyo3::types::PyString>() {
+                                                item.extract::<String>().ok().map(|s| s.into_bytes())
+                                            } else if item.is_instance_of::<pyo3::types::PyInt>() {
+                                                item.extract::<i64>().ok().map(|i| i.to_string().into_bytes())
+                                            } else {
+                                                None
+                                            };
+                                            
                                             if let Some(chunk) = chunk {
                                                 return Some((Ok(Bytes::from(chunk)), description));
                                             }
                                         }
-                                        Err(_) => return None
                                     }
                                 }
-                            }
-                        }
-                    }
-                    None
-                });
-                result
-            })
-        })) as Pin<Box<dyn Stream<Item = Result<Bytes, Error>>>>;
-        
-        response_builder.streaming(stream)
+                                // Handle async generator
+                                else if desc.hasattr("__aiter__").unwrap_or(false) {
+                                    if let Ok(agen) = desc.call_method0("__aiter__") {
+                                        if let Ok(anext) = agen.call_method0("__anext__") {
+                                            // Convert Python awaitable to Rust Future
+                                            if let Ok(future) = pyo3_asyncio::tokio::into_future(anext) {
+                                                // Create a new task to handle the async operation
+                                                let handle = tokio::runtime::Handle::current();
+                                                match handle.block_on(future) {
+                                                    Ok(item) => {
+                                                        let chunk = Python::with_gil(|py| {
+                                                            let item = item.as_ref(py);
+                                                            if item.is_none() {
+                                                                return None;
+                                                            }
+                                                            
+                                                            if item.is_instance_of::<pyo3::types::PyBytes>() {
+                                                                item.extract::<Vec<u8>>().ok()
+                                                            } else if item.is_instance_of::<pyo3::types::PyString>() {
+                                                                item.extract::<String>().ok().map(|s| s.into_bytes())
+                                                            } else if item.is_instance_of::<pyo3::types::PyInt>() {
+                                                                item.extract::<i64>().ok().map(|i| i.to_string().into_bytes())
+                                                            } else {
+                                                                None
+                                                            }
+                                                        });
+
+                                                        if let Some(chunk) = chunk {
+                                                            return Some((Ok(Bytes::from(chunk)), description));
+                                                        }
+                                                    }
+                                                    Err(_) => return None
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                None
+                            });
+                            result
+                        })
+                    })) as Pin<Box<dyn Stream<Item = Result<Bytes, Error>>>>;
+                    
+                    response_builder.streaming(stream)
+                }
+                _ => panic!("Streaming response without streaming body type")
+            }
+        } else {
+            match self.body {
+                ResponseBody::Text(text) => response_builder.body(text),
+                ResponseBody::Binary(data) => response_builder.body(data),
+                ResponseBody::Streaming(_) => {
+                    panic!("Streaming response without streaming=True")
+                }
+            }
+        }
     }
 }
 
@@ -253,6 +221,7 @@ impl Response {
             headers,
             body: ResponseBody::Text("Not found".to_string()),
             file_path: None,
+            streaming: false,
         }
     }
 
@@ -268,6 +237,7 @@ impl Response {
             headers,
             body: ResponseBody::Text("Internal server error".to_string()),
             file_path: None,
+            streaming: false,
         }
     }
 }
@@ -279,9 +249,7 @@ impl ToPyObject for Response {
         let description = match &self.body {
             ResponseBody::Text(text) => text.clone().into_py(py),
             ResponseBody::Binary(data) => PyBytes::new(py, data).into(),
-            ResponseBody::Streaming(_) => {
-                panic!("Use StreamingResponse for streaming data")
-            }
+            ResponseBody::Streaming(desc) => desc.clone_ref(py),
         };
 
         let response = PyResponse {
@@ -290,21 +258,7 @@ impl ToPyObject for Response {
             headers,
             description,
             file_path: self.file_path.clone(),
-        };
-        Py::new(py, response).unwrap().as_ref(py).into()
-    }
-}
-
-impl ToPyObject for StreamingResponse {
-    fn to_object(&self, py: Python) -> PyObject {
-        let headers = self.headers.clone().into_py(py).extract(py).unwrap();
-        
-        let response = PyStreamingResponse {
-            status_code: self.status_code,
-            headers,
-            description: self.description.clone_ref(py),
-            response_type: self.response_type.clone(),
-            file_path: self.file_path.clone(),
+            streaming: self.streaming,
         };
         Py::new(py, response).unwrap().as_ref(py).into()
     }
@@ -323,57 +277,8 @@ pub struct PyResponse {
     pub description: Py<PyAny>,
     #[pyo3(get)]
     pub file_path: Option<String>,
-}
-
-#[pyclass(name = "StreamingResponse")]
-#[derive(Debug, Clone)]
-pub struct PyStreamingResponse {
-    #[pyo3(get)]
-    pub status_code: u16,
-    #[pyo3(get)]
-    pub headers: Py<Headers>,
-    #[pyo3(get)]
-    pub description: Py<PyAny>,
-    #[pyo3(get)]
-    pub response_type: String,
-    #[pyo3(get)]
-    pub file_path: Option<String>,
-}
-
-#[pymethods]
-impl PyStreamingResponse {
-    #[new]
-    #[pyo3(signature = (status_code=200, description=None, headers=None))]
-    pub fn new(py: Python, status_code: u16, description: Option<Py<PyAny>>, headers: Option<&PyAny>) -> PyResult<Self> {
-        let headers_output: Py<Headers> = if let Some(headers) = headers {
-            if let Ok(headers_dict) = headers.downcast::<PyDict>() {
-                let headers = Headers::new(Some(headers_dict));
-                Py::new(py, headers)?
-            } else if let Ok(headers) = headers.extract::<Py<Headers>>() {
-                headers
-            } else {
-                return Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
-                    "headers must be a Headers instance or a dict",
-                ));
-            }
-        } else {
-            let headers = Headers::new(None);
-            Py::new(py, headers)?
-        };
-
-        let description = match description {
-            Some(d) => d,
-            None => PyList::empty(py).into(),
-        };
-
-        Ok(Self {
-            status_code,
-            headers: headers_output,
-            description,
-            response_type: "stream".to_string(),
-            file_path: None,
-        })
-    }
+    #[pyo3(get, set)]
+    pub streaming: bool,
 }
 
 #[pymethods]
@@ -384,6 +289,7 @@ impl PyResponse {
         status_code: u16,
         headers: &PyAny,
         description: Py<PyAny>,
+        streaming: Option<bool>,
     ) -> PyResult<Self> {
         // Validate description type first
         let desc = description.as_ref(py);
@@ -396,9 +302,11 @@ impl PyResponse {
         // Only allow string or bytes
         if !desc.is_instance_of::<pyo3::types::PyBytes>()
             && !desc.is_instance_of::<pyo3::types::PyString>()
+            && !desc.hasattr("__iter__")?
+            && !desc.hasattr("__aiter__")?
         {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                "Description must be bytes or str"
+                "Description must be bytes, str, or an iterator"
             ));
         }
 
@@ -413,11 +321,13 @@ impl PyResponse {
             ));
         };
 
-        // Default to text response type
-        let response_type = if desc.is_instance_of::<pyo3::types::PyBytes>() {
-            "binary".to_string()
+        // Default to text response type and determine if streaming
+        let (response_type, is_streaming) = if desc.is_instance_of::<pyo3::types::PyBytes>() {
+            ("binary".to_string(), false)
+        } else if desc.hasattr("__iter__")? || desc.hasattr("__aiter__")? {
+            ("stream".to_string(), streaming.unwrap_or(true))
         } else {
-            "text".to_string()
+            ("text".to_string(), false)
         };
 
         Ok(Self {
@@ -426,6 +336,7 @@ impl PyResponse {
             headers: headers_output,
             description,
             file_path: None,
+            streaming: is_streaming,
         })
     }
 
@@ -439,22 +350,28 @@ impl PyResponse {
             ));
         }
         
-        // Only allow string or bytes
+        // Allow string, bytes, or iterators
         if !desc.is_instance_of::<pyo3::types::PyBytes>()
             && !desc.is_instance_of::<pyo3::types::PyString>()
+            && !desc.hasattr("__iter__")?
+            && !desc.hasattr("__aiter__")?
         {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                "Description must be bytes or str"
+                "Description must be bytes, str, or an iterator"
             ));
         }
 
-        // Update response type based on new description
-        self.response_type = if desc.is_instance_of::<pyo3::types::PyBytes>() {
-            "binary".to_string()
+        // Update response type and streaming based on new description
+        let (response_type, streaming) = if desc.is_instance_of::<pyo3::types::PyBytes>() {
+            ("binary".to_string(), false)
+        } else if desc.hasattr("__iter__")? || desc.hasattr("__aiter__")? {
+            ("stream".to_string(), true)
         } else {
-            "text".to_string()
+            ("text".to_string(), false)
         };
 
+        self.response_type = response_type;
+        self.streaming = streaming;
         self.description = description;
         Ok(())
     }
@@ -463,6 +380,7 @@ impl PyResponse {
     pub fn set_file_path(&mut self, py: Python, file_path: &str) -> PyResult<()> {
         self.file_path = Some(file_path.to_string());
         self.response_type = "binary".to_string();
+        self.streaming = false;
 
         match read_file(file_path) {
             Ok(content) => {

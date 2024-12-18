@@ -5,7 +5,7 @@ from typing import Optional
 
 from integration_tests.subroutes import di_subrouter, sub_router
 from integration_tests.views import AsyncView, SyncView
-from robyn import Headers, Request, Response, Robyn, WebSocket, WebSocketConnector, jsonify, serve_file, serve_html, StreamingResponse
+from robyn import Headers, Request, Response, Robyn, WebSocket, WebSocketConnector, jsonify, serve_file, serve_html
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.robyn import QueryParams, Url
 from robyn.templating import JinjaTemplate
@@ -807,12 +807,12 @@ async def async_without_decorator():
     return "Success!"
 
 
-app.add_route("GET", "/sync/get/no_dec", sync_without_decorator)
-app.add_route("PUT", "/sync/put/no_dec", sync_without_decorator)
-app.add_route("POST", "/sync/post/no_dec", sync_without_decorator)
-app.add_route("GET", "/async/get/no_dec", async_without_decorator)
-app.add_route("PUT", "/async/put/no_dec", async_without_decorator)
-app.add_route("POST", "/async/post/no_dec", async_without_decorator)
+app.add_route(route_type="GET", endpoint="/sync/get/no_dec", handler=sync_without_decorator)
+app.add_route(route_type="PUT", endpoint="/sync/put/no_dec", handler=sync_without_decorator)
+app.add_route(route_type="POST", endpoint="/sync/post/no_dec", handler=sync_without_decorator)
+app.add_route(route_type="GET", endpoint="/async/get/no_dec", handler=async_without_decorator)
+app.add_route(route_type="PUT", endpoint="/async/put/no_dec", handler=async_without_decorator)
+app.add_route(route_type="POST", endpoint="/async/post/no_dec", handler=async_without_decorator)
 
 # ===== Dependency Injection =====
 
@@ -1090,32 +1090,32 @@ def create_item(request, body: CreateItemBody, query: CreateItemQueryParamsParam
 
 # --- Streaming responses ---
 
-@app.get("/stream/sync")
+@app.get("/stream/sync", streaming=True)
 async def sync_stream():
     def generator():
         for i in range(5):
             yield f"Chunk {i}\n".encode()
     
     headers = Headers({"Content-Type": "text/plain"})
-    return StreamingResponse(
+    return Response(
         status_code=200,
         description=generator(),
         headers=headers
     )
 
-@app.get("/stream/async")
+@app.get("/stream/async", streaming=True)
 async def async_stream():
     async def generator():
         for i in range(5):
             yield f"Async Chunk {i}\n".encode()
     
-    return StreamingResponse(
+    return Response(
         status_code=200,
         headers={"Content-Type": "text/plain"},
         description=generator()
     )
 
-@app.get("/stream/mixed")
+@app.get("/stream/mixed", streaming=True)
 async def mixed_stream():
     async def generator():
         yield b"Binary chunk\n"
@@ -1123,13 +1123,13 @@ async def mixed_stream():
         yield str(42).encode() + b"\n"
         yield json.dumps({"message": "JSON chunk", "number": 123}).encode() + b"\n"
     
-    return StreamingResponse(
+    return Response(
         status_code=200,
         headers={"Content-Type": "text/plain"},
         description=generator()
     )
 
-@app.get("/stream/events")
+@app.get("/stream/events", streaming=True)
 async def server_sent_events():
     async def event_generator():
         import asyncio
@@ -1148,7 +1148,7 @@ async def server_sent_events():
         data = json.dumps({'status': 'complete', 'results': [1, 2, 3]}, indent=2)
         yield f"event: complete\ndata: {data}\n\n".encode()
     
-    return StreamingResponse(
+    return Response(
         status_code=200,
         headers={
             "Content-Type": "text/event-stream",
@@ -1158,7 +1158,7 @@ async def server_sent_events():
         description=event_generator()
     )
 
-@app.get("/stream/large-file")
+@app.get("/stream/large-file", streaming=True)
 async def stream_large_file():
     async def file_generator():
         # Simulate streaming a large file in chunks
@@ -1170,7 +1170,7 @@ async def stream_large_file():
             chunk = b"X" * min(chunk_size, total_size - offset)
             yield chunk
     
-    return StreamingResponse(
+    return Response(
         status_code=200,
         headers={
             "Content-Type": "application/octet-stream",
@@ -1179,7 +1179,7 @@ async def stream_large_file():
         description=file_generator()
     )
 
-@app.get("/stream/csv")
+@app.get("/stream/csv", streaming=True)
 async def stream_csv():
     async def csv_generator():
         # CSV header
@@ -1194,7 +1194,7 @@ async def stream_csv():
             row = f"{i},item-{i},{random.randint(1, 100)}\n"
             yield row.encode()
     
-    return StreamingResponse(
+    return Response(
         status_code=200,
         headers={
             "Content-Type": "text/csv",

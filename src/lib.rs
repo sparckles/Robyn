@@ -17,7 +17,7 @@ use types::{
     identity::Identity,
     multimap::QueryParams,
     request::PyRequest,
-    response::{PyResponse, PyStreamingResponse},
+    response::PyResponse,
     HttpMethod, Url,
 };
 
@@ -42,7 +42,6 @@ pub fn robyn(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<Identity>()?;
     m.add_class::<PyRequest>()?;
     m.add_class::<PyResponse>()?;
-    m.add_class::<PyStreamingResponse>()?;
     m.add_class::<Url>()?;
     m.add_class::<QueryParams>()?;
     m.add_class::<MiddlewareType>()?;

@@ -5,14 +5,14 @@ from asyncio import iscoroutinefunction
 from functools import wraps
 from inspect import signature
 from types import CoroutineType
-from typing import Callable, Dict, List, NamedTuple, Optional, Union
+from typing import Callable, Dict, List, NamedTuple, Optional, Union, Iterator, AsyncIterator
 
 from robyn import status_codes
 from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
 from robyn.dependency_injection import DependencyMap
 from robyn.jsonify import jsonify
 from robyn.responses import FileResponse
-from robyn.robyn import FunctionInfo, Headers, HttpMethod, Identity, MiddlewareType, QueryParams, Request, Response, StreamingResponse, Url
+from robyn.robyn import FunctionInfo, Headers, HttpMethod, Identity, MiddlewareType, QueryParams, Request, Response, Url
 from robyn.types import Body, Files, FormData, IPAddress, Method, PathParams
 from robyn.ws import WebSocket
 
@@ -24,6 +24,7 @@ class Route(NamedTuple):
     route: str
     function: FunctionInfo
     is_const: bool
+    streaming: bool = False
 
 
 class RouteMiddleware(NamedTuple):
@@ -47,79 +48,82 @@ class Router(BaseRouter):
         super().__init__()
         self.routes: List[Route] = []
 
-    def _format_tuple_response(self, res: tuple) -> Union[Response, StreamingResponse]:
+    def _format_tuple_response(self, res: tuple) -> Response:
         if len(res) != 3:
             raise ValueError("Tuple should have 3 elements")
 
         description, headers, status_code = res
         formatted_response = self._format_response(description)
-        
-        # Handle StreamingResponse case
-        if isinstance(formatted_response, StreamingResponse):
-            formatted_response.headers.update(headers)
-            formatted_response.status_code = status_code
-            return formatted_response
-            
-        # Regular Response case
         new_headers: Headers = Headers(headers)
         if new_headers.contains("Content-Type"):
             headers.set("Content-Type", new_headers.get("Content-Type"))
 
         return Response(
+            description=formatted_response.description,
             status_code=status_code,
             headers=headers,
-            description=formatted_response.description,
+            streaming=formatted_response.streaming,
         )
 
     def _format_response(
         self,
-        res: Union[Dict, Response, StreamingResponse, bytes, tuple, str],
-    ) -> Union[Response, StreamingResponse]:
+        res: Union[Dict, Response, bytes, tuple, str, Iterator, AsyncIterator],
+    ) -> Response:
         if isinstance(res, Response):
-            return res
-
-        # Special handling for StreamingResponse
-        if isinstance(res, StreamingResponse):
             return res
 
         if isinstance(res, dict):
             return Response(
+                description=jsonify(res),
                 status_code=status_codes.HTTP_200_OK,
                 headers=Headers({"Content-Type": "application/json"}),
-                description=jsonify(res),
+                streaming=False,
             )
 
         if isinstance(res, FileResponse):
             response: Response = Response(
+                description=res.file_path,
                 status_code=res.status_code,
                 headers=res.headers,
-                description=res.file_path,
+                streaming=False,
             )
             response.file_path = res.file_path
             return response
 
         if isinstance(res, bytes):
             return Response(
+                description=res,
                 status_code=status_codes.HTTP_200_OK,
                 headers=Headers({"Content-Type": "application/octet-stream"}),
-                description=res,
+                streaming=False,
             )
 
         if isinstance(res, tuple):
             return self._format_tuple_response(tuple(res))
 
+        if isinstance(res, (Iterator, AsyncIterator)):
+            return Response(
+                description=res,
+                status_code=status_codes.HTTP_200_OK,
+                headers=Headers({"Content-Type": "text/plain"}),
+                streaming=True,
+            )
+
         return Response(
+            description=str(res).encode("utf-8"),
             status_code=status_codes.HTTP_200_OK,
             headers=Headers({"Content-Type": "text/plain"}),
-            description=str(res).encode("utf-8"),
+            streaming=False,
         )
 
     def add_route(  # type: ignore
         self,
+        *,
         route_type: HttpMethod,
         endpoint: str,
         handler: Callable,
         is_const: bool,
+        streaming: bool,
         exception_handler: Optional[Callable],
         injected_dependencies: dict,
     ) -> Union[Callable, CoroutineType]:
@@ -197,6 +201,7 @@ class Router(BaseRouter):
                 response = self._format_response(
                     await wrapped_handler(*args, **kwargs),
                 )
+                response.streaming = streaming
             except Exception as err:
                 if exception_handler is None:
                     raise
@@ -211,6 +216,7 @@ class Router(BaseRouter):
                 response = self._format_response(
                     wrapped_handler(*args, **kwargs),
                 )
+                response.streaming = streaming
             except Exception as err:
                 if exception_handler is None:
                     raise
@@ -238,7 +244,7 @@ class Router(BaseRouter):
                 params,
                 new_injected_dependencies,
             )
-            self.routes.append(Route(route_type, endpoint, function, is_const))
+            self.routes.append(Route(route_type, endpoint, function, is_const, streaming))
             return async_inner_handler
         else:
             function = FunctionInfo(
@@ -248,7 +254,7 @@ class Router(BaseRouter):
                 params,
                 new_injected_dependencies,
             )
-            self.routes.append(Route(route_type, endpoint, function, is_const))
+            self.routes.append(Route(route_type, endpoint, function, is_const, streaming))
             return inner_handler
 
     def get_routes(self) -> List[Route]:

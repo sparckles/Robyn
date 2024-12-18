@@ -182,7 +182,8 @@ def spawn_process(
     server.set_response_headers_exclude_paths(excluded_response_headers_paths)
 
     for route in routes:
-        route_type, endpoint, function, is_const = route
+        # Unpack only the first 4 values since streaming is optional
+        route_type, endpoint, function, is_const = route[:4]
         server.add_route(route_type, endpoint, function, is_const)
 
     for middleware_type, middleware_function in global_middlewares:

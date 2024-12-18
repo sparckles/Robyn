@@ -2,7 +2,7 @@ use actix_web::{web, HttpRequest, HttpResponse};
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
-use crate::types::{Headers, Response, StreamingResponse};
+use crate::types::{Headers, Response};
 
 pub async fn handle_request(
     req: HttpRequest,
@@ -36,19 +36,12 @@ pub async fn handle_request(
 
         match result {
             Ok(response) => {
-                // Try to extract as StreamingResponse first
-                match response.extract::<StreamingResponse>(py) {
-                    Ok(streaming_response) => streaming_response.respond_to(&req),
-                    Err(_) => {
-                        // If not a StreamingResponse, try as regular Response
-                        match response.extract::<Response>(py) {
-                            Ok(response) => response.respond_to(&req),
-                            Err(e) => {
-                                // If extraction fails, return 500 error
-                                let headers = Headers::new(None);
-                                Response::internal_server_error(Some(&headers)).respond_to(&req)
-                            }
-                        }
+                match response.extract::<Response>(py) {
+                    Ok(response) => response.respond_to(&req),
+                    Err(e) => {
+                        // If extraction fails, return 500 error
+                        let headers = Headers::new(None);
+                        Response::internal_server_error(Some(&headers)).respond_to(&req)
                     }
                 }
             }
@@ -93,19 +86,12 @@ pub async fn handle_request_with_body(
 
         match result {
             Ok(response) => {
-                // Try to extract as StreamingResponse first
-                match response.extract::<StreamingResponse>(py) {
-                    Ok(streaming_response) => streaming_response.respond_to(&req),
-                    Err(_) => {
-                        // If not a StreamingResponse, try as regular Response
-                        match response.extract::<Response>(py) {
-                            Ok(response) => response.respond_to(&req),
-                            Err(e) => {
-                                // If extraction fails, return 500 error
-                                let headers = Headers::new(None);
-                                Response::internal_server_error(Some(&headers)).respond_to(&req)
-                            }
-                        }
+                match response.extract::<Response>(py) {
+                    Ok(response) => response.respond_to(&req),
+                    Err(e) => {
+                        // If extraction fails, return 500 error
+                        let headers = Headers::new(None);
+                        Response::internal_server_error(Some(&headers)).respond_to(&req)
                     }
                 }
             }
