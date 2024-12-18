@@ -1,28 +1,20 @@
 export const description =
-  'On this page, we’ll dive into the different conversation endpoints you can use to manage conversations programmatically.'
+  'Learn how to use streaming responses in Robyn for real-time data, large files, and server-sent events.'
 
-
-
-## Coming From
-
-If you're coming from [File Handling](/documentation/api_reference/file_handling), you'll find streaming provides a more efficient way to handle large files.
-
-## Streaming Responses
+## Overview
 
 Like Batman's gadgets streaming from the Batcave to his utility belt, Robyn provides built-in support for streaming responses. This allows you to send data in chunks, perfect for large files, real-time updates, and server-sent events.
 
-Streaming responses are perfect for handling large datasets or real-time updates without consuming excessive memory.
+## Creating Streaming Responses
 
-## Response
+There are two ways to create streaming responses in Robyn:
 
-When the Bat-Signal needs to stream continuously through the night sky, you'll want to use a generator or iterator as the `description` parameter:
+### 1. Using the streaming parameter
 
 <Row>
   <CodeGroup title="Server">
     ```python
-    from robyn import Response
-
-    @app.get("/bat-signal")
+    @app.get("/bat-signal", streaming=True)
     async def stream_signal():
         async def signal_generator():
             while True:
@@ -44,13 +36,46 @@ When the Bat-Signal needs to stream continuously through the night sky, you'll w
   </CodeGroup>
 </Row>
 
+### 2. Returning an Iterator/Generator
+
+Robyn automatically detects iterators and generators and treats them as streaming responses:
+
+<Row>
+  <CodeGroup title="Server">
+    ```python
+    @app.get("/bat-signal")
+    async def stream_signal():
+        async def signal_generator():
+            while True:
+                yield b"Bat-Signal Active\n"
+                await asyncio.sleep(1)
+        
+        return signal_generator()  # Automatically detected as streaming
+    ```
+  </CodeGroup>
+</Row>
+
+## Response Object
+
+The Response class supports streaming through its constructor parameters:
+
+```python
+Response(
+    status_code=200,
+    headers={"Content-Type": "text/plain"},
+    description=generator(),  # Can be str, bytes, or iterator/generator
+    streaming=True  # Optional, automatically set for iterators/generators
+)
+```
+
 ### Parameters
 
 | Name | Type | Description | Default |
 |------|------|-------------|---------|
 | status_code | int | Response status code | 200 |
 | headers | Dict[str, str] | Response headers | None |
-| description | Union[str, bytes, Generator, AsyncGenerator] | Content to stream | None |
+| description | Union[str, bytes, Iterator, AsyncIterator] | Content to stream | None |
+| streaming | bool | Whether to treat as streaming response | False |
 
 ### Supported Types
 
@@ -60,25 +85,29 @@ Like Batman's versatile arsenal, the streaming response system supports multiple
   <CodeGroup title="Binary">
     ```python
     # Raw binary data (like Batcomputer logs)
-    yield b"Batcomputer Log Entry\n"
+    async def generator():
+        yield b"Batcomputer Log Entry\n"
     ```
   </CodeGroup>
   <CodeGroup title="Text">
     ```python
     # Text messages (like Alfred's updates)
-    yield "Master Wayne, your tea is ready\n".encode()
+    async def generator():
+        yield "Master Wayne, your tea is ready\n".encode()
     ```
   </CodeGroup>
   <CodeGroup title="Numbers">
     ```python
     # Numbers (like Batmobile telemetry)
-    yield str(speed).encode()
+    async def generator():
+        yield str(speed).encode()
     ```
   </CodeGroup>
   <CodeGroup title="JSON">
     ```python
     # JSON data (like Gotham City surveillance)
-    yield json.dumps({"location": "Crime Alley"}).encode()
+    async def generator():
+        yield json.dumps({"location": "Crime Alley"}).encode()
     ```
   </CodeGroup>
 </Row>
@@ -90,7 +119,7 @@ For real-time updates from the Batcomputer:
 <Row>
   <CodeGroup title="Server">
     ```python
-    @app.get("/batcomputer/events")
+    @app.get("/batcomputer/events", streaming=True)
     async def batcomputer_feed():
         async def event_generator():
             while True:
@@ -129,7 +158,7 @@ For streaming large files from the Batcomputer archives:
 <Row>
   <CodeGroup title="Server">
     ```python
-    @app.get("/batcomputer/files")
+    @app.get("/batcomputer/files", streaming=True)
     async def download_files():
         async def file_generator():
             chunk_size = 8192  # Size of a Batarang
@@ -153,6 +182,25 @@ For streaming large files from the Batcomputer archives:
     ```
   </CodeGroup>
 </Row>
+
+## Helper Functions
+
+Robyn provides helper functions for common streaming scenarios:
+
+```python
+from robyn import html
+
+@app.get("/bat-report", streaming=True)
+async def stream_html():
+    async def generator():
+        yield "<html><body>"
+        for i in range(5):
+            yield f"<p>Bat-Signal sighting {i}</p>"
+            await asyncio.sleep(0.1)
+        yield "</body></html>"
+    
+    return html(generator(), streaming=True)
+```
 
 ## Common Headers
 
@@ -182,8 +230,6 @@ headers = {
 
 Even Batman needs contingency plans:
 
-  Always handle errors gracefully in your streaming responses to prevent connection hangs.
-
 ```python
 async def generator():
     try:
@@ -201,12 +247,12 @@ Test your streaming responses like Batman testing his equipment:
 ```python
 @pytest.mark.asyncio
 async def test_bat_signal():
-    async with app.test_client() as client:
-        response = await client.get("/bat-signal")
-        signals = []
-        async for signal in response.content:
-            signals.append(signal)
-        assert len(signals) > 0
+    async with aiohttp.ClientSession() as client:
+        async with client.get("http://localhost:8080/bat-signal") as response:
+            chunks = []
+            async for chunk in response.content:
+                chunks.append(chunk.decode())
+            assert len(chunks) > 0
 ```
 
 ## Best Practices
@@ -231,5 +277,6 @@ Implement timeouts (even Batman needs sleep)
 Now that you've mastered streaming, you might want to explore:
 
 - [WebSockets](/documentation/api_reference/websockets) - For real-time bidirectional communication
-- [Scaling](/documentation/api_reference/scaling) - Scale your streaming applications across multiple cores
+- [File Handling](/documentation/api_reference/file_handling) - For more file operations
+- [Middleware](/documentation/api_reference/middleware) - For request/response processing
 
