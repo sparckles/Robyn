@@ -2,6 +2,7 @@ import os
 import pathlib
 from collections import defaultdict
 from typing import Optional
+import json
 
 from integration_tests.subroutes import di_subrouter, sub_router
 from integration_tests.views import AsyncView, SyncView

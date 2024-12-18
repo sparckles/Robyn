@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Callable, Optional, Union
+from typing import Callable, Optional, Union, Iterator, AsyncIterator, Generator, AsyncGenerator
 
 def get_version() -> str:
     pass
@@ -287,14 +287,21 @@ class Response:
         status_code (int): The status code of the response. e.g. 200, 404, 500 etc.
         response_type (Optional[str]): The response type of the response. e.g. text, json, html, file etc.
         headers (Union[Headers, dict]): The headers of the response or Headers directly. e.g. {"Content-Type": "application/json"}
-        description (Union[str, bytes, Callable]): The body of the response. Can be a string, bytes, or an iterator/generator for streaming.
+        description (Union[str, bytes, Iterator[bytes], AsyncIterator[bytes], Generator[bytes, None, None], AsyncGenerator[bytes, None]]): 
+            The body of the response. Can be:
+            - str: Plain text response
+            - bytes: Binary response
+            - Iterator[bytes]: Sync iterator yielding bytes
+            - AsyncIterator[bytes]: Async iterator yielding bytes
+            - Generator[bytes, None, None]: Sync generator yielding bytes
+            - AsyncGenerator[bytes, None]: Async generator yielding bytes
         file_path (Optional[str]): The file path of the response. e.g. /home/user/file.txt
         streaming (bool): Whether the response is a streaming response. If True, description should be an iterator/generator.
     """
 
     status_code: int
     headers: Union[Headers, dict]
-    description: Union[str, bytes, Callable]
+    description: Union[str, bytes, Iterator[bytes], AsyncIterator[bytes], Generator[bytes, None, None], AsyncGenerator[bytes, None]]
     streaming: bool = False
     response_type: Optional[str] = None
     file_path: Optional[str] = None
