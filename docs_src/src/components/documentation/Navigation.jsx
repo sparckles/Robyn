@@ -290,6 +290,10 @@ export const navigation = [
         title: 'Exceptions',
       },
       {
+        href: '/documentation/api_reference/streaming',
+        title: 'Streaming',
+      },
+      {
         href: '/documentation/api_reference/scaling',
         title: 'Scaling the Application',
       },

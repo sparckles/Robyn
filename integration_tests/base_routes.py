@@ -2,6 +2,7 @@ import os
 import pathlib
 from collections import defaultdict
 from typing import Optional
+import json
 
 from integration_tests.subroutes import di_subrouter, sub_router
 from integration_tests.views import AsyncView, SyncView
@@ -159,7 +160,10 @@ def sync_before_request(request: Request):
 @app.after_request("/sync/middlewares")
 def sync_after_request(response: Response):
     response.headers.set("after", "sync_after_request")
-    response.description = response.description + " after"
+    if isinstance(response.description, bytes):
+        response.description = response.description + b" after"
+    else:
+        response.description = response.description + " after"
     return response
 
 
@@ -180,7 +184,10 @@ async def async_before_request(request: Request):
 @app.after_request("/async/middlewares")
 async def async_after_request(response: Response):
     response.headers.set("after", "async_after_request")
-    response.description = response.description + " after"
+    if isinstance(response.description, bytes):
+        response.description = response.description + b" after"
+    else:
+        response.description = response.description + " after"
     return response
 
 
@@ -801,12 +808,12 @@ async def async_without_decorator():
     return "Success!"
 
 
-app.add_route("GET", "/sync/get/no_dec", sync_without_decorator)
-app.add_route("PUT", "/sync/put/no_dec", sync_without_decorator)
-app.add_route("POST", "/sync/post/no_dec", sync_without_decorator)
-app.add_route("GET", "/async/get/no_dec", async_without_decorator)
-app.add_route("PUT", "/async/put/no_dec", async_without_decorator)
-app.add_route("POST", "/async/post/no_dec", async_without_decorator)
+app.add_route(route_type="GET", endpoint="/sync/get/no_dec", handler=sync_without_decorator)
+app.add_route(route_type="PUT", endpoint="/sync/put/no_dec", handler=sync_without_decorator)
+app.add_route(route_type="POST", endpoint="/sync/post/no_dec", handler=sync_without_decorator)
+app.add_route(route_type="GET", endpoint="/async/get/no_dec", handler=async_without_decorator)
+app.add_route(route_type="PUT", endpoint="/async/put/no_dec", handler=async_without_decorator)
+app.add_route(route_type="POST", endpoint="/async/post/no_dec", handler=async_without_decorator)
 
 # ===== Dependency Injection =====
 
@@ -1081,6 +1088,121 @@ class CreateItemQueryParamsParams(QueryParams):
 def create_item(request, body: CreateItemBody, query: CreateItemQueryParamsParams) -> CreateItemResponse:
     return CreateItemResponse(success=True, items_changed=2)
 
+
+# --- Streaming responses ---
+
+@app.get("/stream/sync", streaming=True)
+async def sync_stream():
+    def generator():
+        for i in range(5):
+            yield f"Chunk {i}\n".encode()
+    
+    headers = Headers({"Content-Type": "text/plain"})
+    return Response(
+        status_code=200,
+        description=generator(),
+        headers=headers
+    )
+
+@app.get("/stream/async", streaming=True)
+async def async_stream():
+    async def generator():
+        for i in range(5):
+            yield f"Async Chunk {i}\n".encode()
+    
+    return Response(
+        status_code=200,
+        headers={"Content-Type": "text/plain"},
+        description=generator()
+    )
+
+@app.get("/stream/mixed", streaming=True)
+async def mixed_stream():
+    async def generator():
+        yield b"Binary chunk\n"
+        yield "String chunk\n".encode()
+        yield str(42).encode() + b"\n"
+        yield json.dumps({"message": "JSON chunk", "number": 123}).encode() + b"\n"
+    
+    return Response(
+        status_code=200,
+        headers={"Content-Type": "text/plain"},
+        description=generator()
+    )
+
+@app.get("/stream/events", streaming=True)
+async def server_sent_events():
+    async def event_generator():
+        import asyncio
+        import json
+        import time
+        
+        # Regular event
+        yield f"event: message\ndata: {json.dumps({'time': time.time(), 'type': 'start'})}\n\n".encode()
+        await asyncio.sleep(1)
+        
+        # Event with ID
+        yield f"id: 1\nevent: update\ndata: {json.dumps({'progress': 50})}\n\n".encode()
+        await asyncio.sleep(1)
+        
+        # Multiple data lines
+        data = json.dumps({'status': 'complete', 'results': [1, 2, 3]}, indent=2)
+        yield f"event: complete\ndata: {data}\n\n".encode()
+    
+    return Response(
+        status_code=200,
+        headers={
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive"
+        },
+        description=event_generator()
+    )
+
+@app.get("/stream/large-file", streaming=True)
+async def stream_large_file():
+    async def file_generator():
+        # Simulate streaming a large file in chunks
+        chunk_size = 1024  # 1KB chunks
+        total_size = 10 * chunk_size  # 10KB total
+        
+        for offset in range(0, total_size, chunk_size):
+            # Simulate reading file chunk
+            chunk = b"X" * min(chunk_size, total_size - offset)
+            yield chunk
+    
+    return Response(
+        status_code=200,
+        headers={
+            "Content-Type": "application/octet-stream",
+            "Content-Disposition": "attachment; filename=large-file.bin"
+        },
+        description=file_generator()
+    )
+
+@app.get("/stream/csv", streaming=True)
+async def stream_csv():
+    async def csv_generator():
+        # CSV header
+        yield "id,name,value\n".encode()
+        
+        import asyncio
+        import random
+        
+        # Generate rows
+        for i in range(5):
+            await asyncio.sleep(0.5)  # Simulate data processing
+            row = f"{i},item-{i},{random.randint(1, 100)}\n"
+            yield row.encode()
+    
+    return Response(
+        status_code=200,
+        headers={
+            "Content-Type": "text/csv",
+            "Content-Disposition": "attachment; filename=data.csv"
+        },
+        description=csv_generator()
+    )
 
 def main():
     app.set_response_header("server", "robyn")
