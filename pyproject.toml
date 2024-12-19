@@ -15,7 +15,6 @@ classifiers = [
   "Operating System :: OS Independent",
   "Topic :: Internet :: WWW/HTTP",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
@@ -54,7 +53,7 @@ authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 inquirerpy = "0.3.4"
 maturin = "0.14.12"
 watchdog = "4.0.1"
