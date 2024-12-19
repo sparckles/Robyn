@@ -182,7 +182,7 @@ def spawn_process(
     server.set_response_headers_exclude_paths(excluded_response_headers_paths)
 
     for route in routes:
-        route_type, endpoint, function, is_const = route
+        route_type, endpoint, function, is_const, auth_required, openapi_name, openapi_tags = route
         server.add_route(route_type, endpoint, function, is_const)
 
     for middleware_type, middleware_function in global_middlewares:
