@@ -1,6 +1,6 @@
 import mimetypes
 import os
-from typing import Optional, Any, Union, Callable, Iterator, AsyncIterator, Dict
+from typing import Optional, Union, Iterator, AsyncIterator, Dict
 
 from robyn.robyn import Headers, Response
 

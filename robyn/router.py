@@ -317,7 +317,6 @@ class MiddlewareRouter(BaseRouter):
         """
 
         injected_dependencies: dict = {}
-        
 
         def decorator(handler):
             @wraps(handler)
@@ -331,7 +330,7 @@ class MiddlewareRouter(BaseRouter):
                         status_code=401,
                         headers=Headers({"WWW-Authenticate": self.authentication_handler.token_getter.scheme}),
                         description=b"Unauthorized",  # Use bytes to ensure proper type conversion
-                        streaming=False
+                        streaming=False,
                     )
                 request.identity = identity
                 return request

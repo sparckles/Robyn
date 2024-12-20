@@ -19,6 +19,7 @@ import aiohttp
 # Mark all tests in this module as async
 pytestmark = pytest.mark.asyncio
 
+
 async def test_sync_stream():
     """Test basic synchronous streaming response."""
     async with aiohttp.ClientSession() as client:
@@ -33,6 +34,7 @@ async def test_sync_stream():
             assert len(chunks) == 5
             for i, chunk in enumerate(chunks):
                 assert chunk == f"Chunk {i}\n"
+
 
 async def test_async_stream():
     """Test asynchronous streaming response."""
@@ -49,6 +51,7 @@ async def test_async_stream():
             for i, chunk in enumerate(chunks):
                 assert chunk == f"Async Chunk {i}\n"
 
+
 async def test_mixed_stream():
     """Test streaming of mixed content types."""
     async with aiohttp.ClientSession() as client:
@@ -56,12 +59,7 @@ async def test_mixed_stream():
             assert response.status == 200
             assert response.headers["Content-Type"] == "text/plain"
 
-            expected = [
-                b"Binary chunk\n",
-                b"String chunk\n",
-                b"42\n",
-                json.dumps({"message": "JSON chunk", "number": 123}).encode() + b"\n"
-            ]
+            expected = [b"Binary chunk\n", b"String chunk\n", b"42\n", json.dumps({"message": "JSON chunk", "number": 123}).encode() + b"\n"]
 
             chunks = []
             async for chunk in response.content:
@@ -70,6 +68,7 @@ async def test_mixed_stream():
             assert len(chunks) == len(expected)
             for chunk, expected_chunk in zip(chunks, expected):
                 assert chunk == expected_chunk
+
 
 async def test_server_sent_events():
     """Test Server-Sent Events (SSE) streaming."""
@@ -103,6 +102,7 @@ async def test_server_sent_events():
             assert event_data["status"] == "complete"
             assert event_data["results"] == [1, 2, 3]
 
+
 async def test_large_file_stream():
     """Test streaming of large files in chunks."""
     async with aiohttp.ClientSession() as client:
@@ -118,6 +118,7 @@ async def test_large_file_stream():
 
             assert total_size == 10 * 1024  # 10KB total
 
+
 async def test_csv_stream():
     """Test streaming of CSV data."""
     async with aiohttp.ClientSession() as client:
@@ -132,11 +133,11 @@ async def test_csv_stream():
 
             # Verify header
             assert lines[0] == "id,name,value"
-            
+
             # Verify data rows
             assert len(lines) == 6  # Header + 5 data rows
             for i, line in enumerate(lines[1:], 0):
-                id_, name, value = line.split(',')
+                id_, name, value = line.split(",")
                 assert int(id_) == i
                 assert name == f"item-{i}"
                 assert 1 <= int(value) <= 100
