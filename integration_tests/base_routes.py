@@ -747,7 +747,19 @@ def async_decorator_view():
 
 @app.exception
 def handle_exception(error):
-    return Response(status_code=500, description=f"error msg: {error}", headers={})
+    # Create a response with proper error handling
+    response = Response(
+        status_code=500,
+        headers=Headers({
+            "Content-Type": "text/plain",
+            "X-Error-Response": "true",
+            "global_after": "global_after_request",
+            "server": "robyn"
+        }),
+        description=f"error msg: {error}".encode(),
+        streaming=False
+    )
+    return response
 
 
 @app.get("/sync/exception/get")

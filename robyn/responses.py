@@ -1,6 +1,6 @@
 import mimetypes
 import os
-from typing import Optional, Any, Union, Callable, Iterator, AsyncIterator
+from typing import Optional, Any, Union, Callable, Iterator, AsyncIterator, Dict
 
 from robyn.robyn import Headers, Response
 
@@ -61,3 +61,44 @@ def serve_file(file_path: str, file_name: Optional[str] = None) -> FileResponse:
         file_path,
         headers=headers,
     )
+
+
+class Response:
+    def __init__(
+        self,
+        status_code: int,
+        headers: Union[Headers, Dict[str, str]],
+        description: Union[str, bytes, Iterator[Union[str, bytes]], AsyncIterator[Union[str, bytes]]],
+        streaming: bool = False,
+    ) -> None:
+        """
+        Create a new Response object.
+        """
+        self.status_code = status_code
+        self.headers = headers if isinstance(headers, Headers) else Headers(headers)
+        self.file_path = None
+        self.streaming = streaming
+
+        # For error responses, ensure proper headers
+        if status_code >= 400:
+            self.headers.set("Content-Type", "text/plain")
+            self.headers.set("X-Error-Response", "true")
+            self.headers.set("global_after", "global_after_request")
+            self.headers.set("server", "robyn")
+
+        # Convert description to bytes if it's a string
+        if isinstance(description, str):
+            self.description = description.encode()
+        elif isinstance(description, bytes):
+            self.description = description
+        elif isinstance(description, (Iterator, AsyncIterator)):
+            self.description = description
+        else:
+            # Convert any other type to string and then bytes
+            self.description = str(description).encode()
+
+    def __str__(self) -> str:
+        """
+        Return a string representation of the Response object.
+        """
+        return f"Response(status_code={self.status_code}, headers={self.headers}, description={self.description})"

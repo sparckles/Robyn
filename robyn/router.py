@@ -289,8 +289,20 @@ class MiddlewareRouter(BaseRouter):
             else:
                 _logger.debug(f"Dependency {dependency} is not used in the middleware handler {handler.__name__}")
 
+        @wraps(handler)
+        def wrapped_handler(*args, **kwargs):
+            result = handler(*args, **kwargs)
+            # Skip modifying error responses
+            if isinstance(result, Response) and result.status_code >= 400:
+                return result
+            # For non-error responses, ensure proper formatting
+            if isinstance(result, Response):
+                if isinstance(result.description, str):
+                    result.description = result.description.encode()
+            return result
+
         function = FunctionInfo(
-            handler,
+            wrapped_handler,
             iscoroutinefunction(handler),
             number_of_params,
             params,
@@ -305,6 +317,7 @@ class MiddlewareRouter(BaseRouter):
         """
 
         injected_dependencies: dict = {}
+        
 
         def decorator(handler):
             @wraps(handler)
@@ -313,18 +326,24 @@ class MiddlewareRouter(BaseRouter):
                     raise AuthenticationNotConfiguredError()
                 identity = self.authentication_handler.authenticate(request)
                 if identity is None:
-                    return self.authentication_handler.unauthorized_response
+                    # Create a new response with proper headers and type
+                    return Response(
+                        status_code=401,
+                        headers=Headers({"WWW-Authenticate": self.authentication_handler.token_getter.scheme}),
+                        description=b"Unauthorized",  # Use bytes to ensure proper type conversion
+                        streaming=False
+                    )
                 request.identity = identity
-
                 return request
 
+            # Add the middleware route with BEFORE_REQUEST type
             self.add_route(
                 MiddlewareType.BEFORE_REQUEST,
                 endpoint,
                 inner_handler,
                 injected_dependencies,
             )
-            return inner_handler
+            return handler
 
         return decorator
 
@@ -391,6 +410,47 @@ class MiddlewareRouter(BaseRouter):
 
     def get_global_middlewares(self) -> List[GlobalMiddleware]:
         return self.global_middlewares
+
+    def add_global_middleware(self, middleware_type: MiddlewareType) -> Callable[..., None]:
+        """
+        Add a global middleware to the router.
+        """
+        injected_dependencies: dict = {}
+
+        def decorator(handler: Callable) -> Callable:
+            params = dict(inspect.signature(handler).parameters)
+            number_of_params = len(params)
+
+            new_injected_dependencies = {}
+            for dependency in injected_dependencies:
+                if dependency in params:
+                    new_injected_dependencies[dependency] = injected_dependencies[dependency]
+                else:
+                    _logger.debug(f"Dependency {dependency} is not used in the middleware handler {handler.__name__}")
+
+            @wraps(handler)
+            def wrapped_handler(*args, **kwargs):
+                result = handler(*args, **kwargs)
+                # Skip modifying error responses
+                if isinstance(result, Response) and result.status_code >= 400:
+                    return result
+                # For non-error responses, ensure proper formatting
+                if isinstance(result, Response):
+                    if isinstance(result.description, str):
+                        result.description = result.description.encode()
+                return result
+
+            function = FunctionInfo(
+                wrapped_handler,
+                iscoroutinefunction(handler),
+                number_of_params,
+                params,
+                new_injected_dependencies,
+            )
+            self.global_middlewares.append(GlobalMiddleware(middleware_type, function))
+            return handler
+
+        return decorator
 
 
 class WebSocketRouter(BaseRouter):

@@ -11,7 +11,11 @@ use pyo3::prelude::*;
 use pyo3_asyncio::TaskLocals;
 
 use crate::types::{
-    function_info::FunctionInfo, request::Request, response::Response, MiddlewareReturn,
+    function_info::FunctionInfo,
+    request::Request,
+    response::{Response, ResponseBody},
+    headers::Headers,
+    MiddlewareReturn,
 };
 
 #[inline]
@@ -62,20 +66,67 @@ where
         .await?;
 
         Python::with_gil(|py| -> Result<MiddlewareReturn> {
-            let output_response = output.extract::<Response>(py);
-            match output_response {
-                Ok(o) => Ok(MiddlewareReturn::Response(o)),
-                Err(_) => Ok(MiddlewareReturn::Request(output.extract::<Request>(py)?)),
+            let output_ref = output.as_ref(py);
+            if let Ok(response) = Response::extract(output_ref) {
+                // If it's a response with status code >= 400 or 401, return it immediately
+                if response.status_code >= 400 || response.status_code == 401 {
+                    return Ok(MiddlewareReturn::Response(response));
+                }
             }
+            
+            // Try to extract as Request first
+            if let Ok(request) = Request::extract(output_ref) {
+                return Ok(MiddlewareReturn::Request(request));
+            }
+            
+            // If not a Request, try Response again
+            if let Ok(response) = Response::extract(output_ref) {
+                return Ok(MiddlewareReturn::Response(response));
+            }
+            
+            // If neither, try to convert to Response
+            let text = output_ref.str()?.to_string();
+            Ok(MiddlewareReturn::Response(Response {
+                status_code: 200,
+                response_type: "text".to_string(),
+                headers: Headers::new(None),
+                body: ResponseBody::Text(text),
+                file_path: None,
+                streaming: false,
+            }))
         })
     } else {
         Python::with_gil(|py| -> Result<MiddlewareReturn> {
             let output = get_function_output(function, py, input)?;
             debug!("Middleware output: {:?}", output);
-            match output.extract::<Response>() {
-                Ok(o) => Ok(MiddlewareReturn::Response(o)),
-                Err(_) => Ok(MiddlewareReturn::Request(output.extract::<Request>()?)),
+            
+            if let Ok(response) = Response::extract(output) {
+                // If it's a response with status code >= 400 or 401, return it immediately
+                if response.status_code >= 400 || response.status_code == 401 {
+                    return Ok(MiddlewareReturn::Response(response));
+                }
             }
+            
+            // Try to extract as Request first
+            if let Ok(request) = Request::extract(output) {
+                return Ok(MiddlewareReturn::Request(request));
+            }
+            
+            // If not a Request, try Response again
+            if let Ok(response) = Response::extract(output) {
+                return Ok(MiddlewareReturn::Response(response));
+            }
+            
+            // If neither, try to convert to Response
+            let text = output.str()?.to_string();
+            Ok(MiddlewareReturn::Response(Response {
+                status_code: 200,
+                response_type: "text".to_string(),
+                headers: Headers::new(None),
+                body: ResponseBody::Text(text),
+                file_path: None,
+                streaming: false,
+            }))
         })
     }
 }
