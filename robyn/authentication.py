@@ -59,8 +59,9 @@ class AuthenticationHandler(ABC):
     def unauthorized_response(self) -> Response:
         return Response(
             headers=Headers({"WWW-Authenticate": self.token_getter.scheme}),
-            description="Unauthorized",
+            description=b"Unauthorized",
             status_code=HTTP_401_UNAUTHORIZED,
+            streaming=False,
         )
 
     @abstractmethod

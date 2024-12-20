@@ -5,7 +5,7 @@ from asyncio import iscoroutinefunction
 from functools import wraps
 from inspect import signature
 from types import CoroutineType
-from typing import Callable, Dict, List, NamedTuple, Optional, Union
+from typing import Callable, Dict, List, NamedTuple, Optional, Union, Iterator, AsyncIterator
 
 from robyn import status_codes
 from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
@@ -24,6 +24,7 @@ class Route(NamedTuple):
     route: str
     function: FunctionInfo
     is_const: bool
+    streaming: bool = False
 
 
 class RouteMiddleware(NamedTuple):
@@ -52,62 +53,77 @@ class Router(BaseRouter):
             raise ValueError("Tuple should have 3 elements")
 
         description, headers, status_code = res
-        description = self._format_response(description).description
+        formatted_response = self._format_response(description)
         new_headers: Headers = Headers(headers)
         if new_headers.contains("Content-Type"):
             headers.set("Content-Type", new_headers.get("Content-Type"))
 
         return Response(
+            description=formatted_response.description,
             status_code=status_code,
             headers=headers,
-            description=description,
+            streaming=formatted_response.streaming,
         )
 
     def _format_response(
         self,
-        res: Union[Dict, Response, bytes, tuple, str],
+        res: Union[Dict, Response, bytes, tuple, str, Iterator, AsyncIterator],
     ) -> Response:
         if isinstance(res, Response):
             return res
 
         if isinstance(res, dict):
             return Response(
+                description=jsonify(res),
                 status_code=status_codes.HTTP_200_OK,
                 headers=Headers({"Content-Type": "application/json"}),
-                description=jsonify(res),
+                streaming=False,
             )
 
         if isinstance(res, FileResponse):
             response: Response = Response(
+                description=res.file_path,
                 status_code=res.status_code,
                 headers=res.headers,
-                description=res.file_path,
+                streaming=False,
             )
             response.file_path = res.file_path
             return response
 
         if isinstance(res, bytes):
             return Response(
+                description=res,
                 status_code=status_codes.HTTP_200_OK,
                 headers=Headers({"Content-Type": "application/octet-stream"}),
-                description=res,
+                streaming=False,
             )
 
         if isinstance(res, tuple):
             return self._format_tuple_response(tuple(res))
 
+        if isinstance(res, (Iterator, AsyncIterator)):
+            return Response(
+                description=res,
+                status_code=status_codes.HTTP_200_OK,
+                headers=Headers({"Content-Type": "text/plain"}),
+                streaming=True,
+            )
+
         return Response(
+            description=str(res).encode("utf-8"),
             status_code=status_codes.HTTP_200_OK,
             headers=Headers({"Content-Type": "text/plain"}),
-            description=str(res).encode("utf-8"),
+            streaming=False,
         )
 
     def add_route(  # type: ignore
         self,
+        *,
         route_type: HttpMethod,
         endpoint: str,
         handler: Callable,
         is_const: bool,
+        streaming: bool,
         exception_handler: Optional[Callable],
         injected_dependencies: dict,
     ) -> Union[Callable, CoroutineType]:
@@ -185,6 +201,7 @@ class Router(BaseRouter):
                 response = self._format_response(
                     await wrapped_handler(*args, **kwargs),
                 )
+                response.streaming = streaming
             except Exception as err:
                 if exception_handler is None:
                     raise
@@ -199,6 +216,7 @@ class Router(BaseRouter):
                 response = self._format_response(
                     wrapped_handler(*args, **kwargs),
                 )
+                response.streaming = streaming
             except Exception as err:
                 if exception_handler is None:
                     raise
@@ -226,7 +244,7 @@ class Router(BaseRouter):
                 params,
                 new_injected_dependencies,
             )
-            self.routes.append(Route(route_type, endpoint, function, is_const))
+            self.routes.append(Route(route_type, endpoint, function, is_const, streaming))
             return async_inner_handler
         else:
             function = FunctionInfo(
@@ -236,7 +254,7 @@ class Router(BaseRouter):
                 params,
                 new_injected_dependencies,
             )
-            self.routes.append(Route(route_type, endpoint, function, is_const))
+            self.routes.append(Route(route_type, endpoint, function, is_const, streaming))
             return inner_handler
 
     def get_routes(self) -> List[Route]:
@@ -271,8 +289,20 @@ class MiddlewareRouter(BaseRouter):
             else:
                 _logger.debug(f"Dependency {dependency} is not used in the middleware handler {handler.__name__}")
 
+        @wraps(handler)
+        def wrapped_handler(*args, **kwargs):
+            result = handler(*args, **kwargs)
+            # Skip modifying error responses
+            if isinstance(result, Response) and result.status_code >= 400:
+                return result
+            # For non-error responses, ensure proper formatting
+            if isinstance(result, Response):
+                if isinstance(result.description, str):
+                    result.description = result.description.encode()
+            return result
+
         function = FunctionInfo(
-            handler,
+            wrapped_handler,
             iscoroutinefunction(handler),
             number_of_params,
             params,
@@ -295,18 +325,24 @@ class MiddlewareRouter(BaseRouter):
                     raise AuthenticationNotConfiguredError()
                 identity = self.authentication_handler.authenticate(request)
                 if identity is None:
-                    return self.authentication_handler.unauthorized_response
+                    # Create a new response with proper headers and type
+                    return Response(
+                        status_code=401,
+                        headers=Headers({"WWW-Authenticate": self.authentication_handler.token_getter.scheme}),
+                        description=b"Unauthorized",  # Use bytes to ensure proper type conversion
+                        streaming=False,
+                    )
                 request.identity = identity
-
                 return request
 
+            # Add the middleware route with BEFORE_REQUEST type
             self.add_route(
                 MiddlewareType.BEFORE_REQUEST,
                 endpoint,
                 inner_handler,
                 injected_dependencies,
             )
-            return inner_handler
+            return handler
 
         return decorator
 
@@ -373,6 +409,47 @@ class MiddlewareRouter(BaseRouter):
 
     def get_global_middlewares(self) -> List[GlobalMiddleware]:
         return self.global_middlewares
+
+    def add_global_middleware(self, middleware_type: MiddlewareType) -> Callable[..., None]:
+        """
+        Add a global middleware to the router.
+        """
+        injected_dependencies: dict = {}
+
+        def decorator(handler: Callable) -> Callable:
+            params = dict(inspect.signature(handler).parameters)
+            number_of_params = len(params)
+
+            new_injected_dependencies = {}
+            for dependency in injected_dependencies:
+                if dependency in params:
+                    new_injected_dependencies[dependency] = injected_dependencies[dependency]
+                else:
+                    _logger.debug(f"Dependency {dependency} is not used in the middleware handler {handler.__name__}")
+
+            @wraps(handler)
+            def wrapped_handler(*args, **kwargs):
+                result = handler(*args, **kwargs)
+                # Skip modifying error responses
+                if isinstance(result, Response) and result.status_code >= 400:
+                    return result
+                # For non-error responses, ensure proper formatting
+                if isinstance(result, Response):
+                    if isinstance(result.description, str):
+                        result.description = result.description.encode()
+                return result
+
+            function = FunctionInfo(
+                wrapped_handler,
+                iscoroutinefunction(handler),
+                number_of_params,
+                params,
+                new_injected_dependencies,
+            )
+            self.global_middlewares.append(GlobalMiddleware(middleware_type, function))
+            return handler
+
+        return decorator
 
 
 class WebSocketRouter(BaseRouter):
