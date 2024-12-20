@@ -68,7 +68,7 @@ async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
     elif state == 3:
         ws.close()
         # TODO temporary fix to avoid CI failure
-        resp = "Connection Closed"
+        resp = "Connection closed"
 
     websocket_state[websocket_id] = (state + 1) % 4
     return resp
