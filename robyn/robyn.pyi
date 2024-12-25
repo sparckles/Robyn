@@ -287,7 +287,7 @@ class Response:
         status_code (int): The status code of the response. e.g. 200, 404, 500 etc.
         response_type (Optional[str]): The response type of the response. e.g. text, json, html, file etc.
         headers (Union[Headers, dict]): The headers of the response or Headers directly. e.g. {"Content-Type": "application/json"}
-        description (Union[str, bytes, Iterator[bytes], AsyncIterator[bytes], Generator[bytes, None, None], AsyncGenerator[bytes, None]]): 
+        description (Union[str, bytes, Iterator[bytes], AsyncIterator[bytes], Generator[bytes, None, None], AsyncGenerator[bytes, None]]):
             The body of the response. Can be:
             - str: Plain text response
             - bytes: Binary response
