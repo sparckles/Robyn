@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Callable, List, Optional, Tuple, Union
 
 import multiprocess as mp  # type: ignore
-from nestd import get_all_nested  # type: ignore
 
 from robyn import status_codes
 from robyn.argument_parser import Config
