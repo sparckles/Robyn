@@ -710,6 +710,43 @@ def sync_body_patch(request: Request):
 async def async_body_patch(request: Request):
     return request.body
 
+# ==== Exception Handling ====
+
+
+@app.exception
+def handle_exception(error):
+    return Response(status_code=500, description=f"error msg: {error}", headers={})
+
+
+@app.get("/sync/exception/get")
+def sync_exception_get():
+    raise ValueError("value error")
+
+
+@app.get("/async/exception/get")
+async def async_exception_get():
+    raise ValueError("value error")
+
+
+@app.put("/sync/exception/put")
+def sync_exception_put(request: Request):
+    raise ValueError("value error")
+
+
+@app.put("/async/exception/put")
+async def async_exception_put(request: Request):
+    raise ValueError("value error")
+
+
+@app.post("/sync/exception/post")
+def sync_exception_post(request: Request):
+    raise ValueError("value error")
+
+
+@app.post("/async/exception/post")
+async def async_exception_post(request: Request):
+    raise ValueError("value error")
+
 
 # ===== Authentication =====
 
