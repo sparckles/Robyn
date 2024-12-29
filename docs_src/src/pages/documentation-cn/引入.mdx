@@ -1,0 +1,43 @@
+import { Guides } from '@/components/documentation/Guides'
+import { ApiDocs } from '@/components/documentation/ApiDocs'
+import { HeroPattern } from '@/components/documentation/HeroPattern'
+
+export const description =
+  '欢迎阅读 Robyn API 文档。本文档旨在提供全面的指南和参考，帮助您快速上手 Robyn，并在使用过程中解决可能遇到的问题。'
+
+export const sections = [
+  { title: '应用示例', id: 'guides' },
+  { title: 'API 参考', id: 'api_docs' },
+]
+
+<HeroPattern />
+
+<div className="text-white">
+# API 文档
+欢迎阅读 Robyn API 文档。本文档旨在提供全面的指南和参考，帮助您快速上手 Robyn，并在使用过程中解决可能遇到的问题。
+
+本文档分为两个主要部分：[应用示例](#guides)和 [API 参考](#resources).
+
+<div className="not-prose mb-16 mt-6 flex gap-3">
+  <Button
+    href="/documentation/example_app"
+    arrow="right"
+    children="Real World App"
+  />
+  <Button
+    href="/documentation/api_reference"
+    variant="outline"
+    children="Api Docs"
+  />
+</div>
+
+## 快速入门 {{ anchor: false }}
+
+应用示例部分提供了简单的 Web 应用示例，展示如何使用 Robyn API 进行开发。如果您是 Robyn 的新手，建议从这一部分开始。
+
+API 参考部分包含了关于 Robyn API 的详细信息。如果您已经熟悉 Robyn，并希望深入了解 API 的更多细节，可以参考这一部分。
+
+</div>
+<Guides />
+
+<ApiDocs />
