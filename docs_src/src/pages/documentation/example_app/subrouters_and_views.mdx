@@ -27,7 +27,7 @@ suspect_router = SubRouter(__file__, prefix="/suspects")
 def list_suspects():
     return {"suspects": get_all_suspects()}
 
-@suspect_router.get("/{id}")
+@suspect_router.get("/:id")
 def get_suspect(request, path_params):
     suspect_id = path_params.id
     return {"suspect": get_suspect_by_id(suspect_id)}
