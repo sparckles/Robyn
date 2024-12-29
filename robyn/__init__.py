@@ -3,7 +3,7 @@ import logging
 import os
 import socket
 from pathlib import Path
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Callable, List, Optional, Union
 
 import multiprocess as mp  # type: ignore
 
