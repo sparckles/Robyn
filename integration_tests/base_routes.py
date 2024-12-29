@@ -710,6 +710,7 @@ def sync_body_patch(request: Request):
 async def async_body_patch(request: Request):
     return request.body
 
+
 # ==== Exception Handling ====
 
 
