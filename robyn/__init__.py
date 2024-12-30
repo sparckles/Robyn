@@ -3,10 +3,9 @@ import logging
 import os
 import socket
 from pathlib import Path
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Callable, List, Optional, Union
 
 import multiprocess as mp  # type: ignore
-from nestd import get_all_nested  # type: ignore
 
 from robyn import status_codes
 from robyn.argument_parser import Config
@@ -306,49 +305,6 @@ class Robyn:
 
     def exception(self, exception_handler: Callable):
         self.exception_handler = exception_handler
-
-    def add_view(self, endpoint: str, view: Callable, const: bool = False):
-        """
-        This is base handler for the view decorators
-
-        :param endpoint str: endpoint for the route added
-        :param handler function: represents the function passed as a parent handler for single route with different route types
-        """
-        http_methods = {
-            "GET": HttpMethod.GET,
-            "POST": HttpMethod.POST,
-            "PUT": HttpMethod.PUT,
-            "DELETE": HttpMethod.DELETE,
-            "PATCH": HttpMethod.PATCH,
-            "HEAD": HttpMethod.HEAD,
-            "OPTIONS": HttpMethod.OPTIONS,
-        }
-
-        def get_functions(view) -> List[Tuple[HttpMethod, Callable]]:
-            functions = get_all_nested(view)
-            output = []
-            for name, handler in functions:
-                route_type = name.upper()
-                method = http_methods.get(route_type)
-                if method is not None:
-                    output.append((method, handler))
-            return output
-
-        handlers = get_functions(view)
-        for route_type, handler in handlers:
-            self.add_route(route_type, endpoint, handler, const)
-
-    def view(self, endpoint: str, const: bool = False):
-        """
-        The @app.view decorator to add a view with the GET/POST/PUT/DELETE/PATCH/HEAD/OPTIONS method
-
-        :param endpoint str: endpoint to server the route
-        """
-
-        def inner(handler):
-            return self.add_view(endpoint, handler, const)
-
-        return inner
 
     def get(
         self,

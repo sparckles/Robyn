@@ -24,7 +24,6 @@ classifiers = [
 dependencies = [
   'watchdog == 4.0.1',
   'multiprocess == 0.70.14',
-  'nestd == 0.3.1',
   'inquirerpy == 0.3.4',
   'rustimport == 1.3.4',
   'orjson == 3.9.15',

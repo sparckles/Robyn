@@ -216,8 +216,8 @@ export const navigation = [
       },
       { title: 'Templates', href: '/documentation/example_app/templates' },
       {
-        title: 'SubRouters and Views',
-        href: '/documentation/example_app/subrouters_and_views',
+        title: 'SubRouters',
+        href: '/documentation/example_app/subrouters',
       },
     ],
   },
@@ -277,15 +277,6 @@ export const navigation = [
         title: 'Websockets',
       },
       {
-        href: '/documentation/api_reference/views',
-        title: 'Code Organisation',
-      },
-      {
-        href: '/documentation/api_reference/dependency_injection',
-        title: 'Dependency Injection',
-      },
-
-      {
         href: '/documentation/api_reference/exceptions',
         title: 'Exceptions',
       },
@@ -298,21 +289,25 @@ export const navigation = [
         title: 'Advanced Features',
       },
       {
-        title: 'OpenAPI Documentation',
-        href: '/documentation/api_reference/openapi',
-      },
-      {
         href: '/documentation/api_reference/multiprocess_execution',
         title: 'Multiprocess Execution',
       },
       {
         href: '/documentation/api_reference/using_rust_directly',
-        title: 'Using Rust Directly',
+        title: 'Direct Rust Usage',
       },
       {
         href: '/documentation/api_reference/graphql-support',
         title: 'GraphQL Support',
       },
+      {
+        href: '/documentation/api_reference/openapi',
+        title: 'OpenAPI Documentation',
+      },
+      {
+        href: '/documentation/api_reference/dependency_injection',
+        title: 'Dependency Injection',
+      }
     ],
   },
   {
