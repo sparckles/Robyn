@@ -1,0 +1,3 @@
+robyn
+pydantic~=2.7.4
+pydantic-settings~=2.2.1

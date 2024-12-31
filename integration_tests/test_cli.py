@@ -4,11 +4,27 @@ from robyn.cli import create_robyn_app, docs, run, start_app_normally, start_dev
 
 
 # Unit tests
-def test_create_robyn_app():
+def test_create_robyn_app_simple():
     with patch("robyn.cli.prompt") as mock_prompt:
         mock_prompt.return_value = {
             "directory": "test_dir",
             "docker": "N",
+            "scaffold_type": "simple",
+            "project_type": "no-db",
+        }
+        with patch("robyn.cli.os.makedirs") as mock_makedirs:
+            with patch("robyn.cli.shutil.copytree") as mock_copytree, patch("robyn.os.remove") as _mock_remove:
+                create_robyn_app()
+                mock_makedirs.assert_called_once()
+                mock_copytree.assert_called_once()
+
+
+def test_create_robyn_app_structured():
+    with patch("robyn.cli.prompt") as mock_prompt:
+        mock_prompt.return_value = {
+            "directory": "test_dir",
+            "docker": "N",
+            "scaffold_type": "structured",
             "project_type": "no-db",
         }
         with patch("robyn.cli.os.makedirs") as mock_makedirs:
