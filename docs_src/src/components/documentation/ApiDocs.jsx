@@ -69,12 +69,6 @@ const guides = [
     description: 'Learn how to use Websockets in Robyn.',
   },
   {
-    href: '/documentation/api_reference/views',
-    name: 'Code Organisation',
-    description: 'Learn about Views and SubRouters in Robyn.',
-  },
-
-  {
     href: '/documentation/api_reference/exceptions',
     name: 'Exceptions',
     description: 'Learn how to handle exceptions in Robyn.',
@@ -94,8 +88,6 @@ const guides = [
     name: 'Multiprocess Execution',
     description: 'Learn about the behaviour or variables during multithreading',
   },
-  
-
   {
     href: '/documentation/api_reference/using_rust_directly',
     name: 'Direct Rust Usage',

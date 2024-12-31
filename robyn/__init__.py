@@ -3,10 +3,9 @@ import logging
 import os
 import socket
 from pathlib import Path
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Callable, List, Optional, Union
 
 import multiprocess as mp  # type: ignore
-from nestd import get_all_nested  # type: ignore
 
 from robyn import status_codes
 from robyn.argument_parser import Config
@@ -43,7 +42,7 @@ class Robyn:
         file_object: str,
         config: Config = Config(),
         openapi_file_path: Optional[str] = None,
-        openapi: OpenAPI = OpenAPI(),
+        openapi: Optional[OpenAPI] = None,
         dependencies: DependencyMap = DependencyMap(),
     ) -> None:
         directory_path = os.path.dirname(os.path.abspath(file_object))
@@ -53,10 +52,7 @@ class Robyn:
         self.dependencies = dependencies
         self.openapi = openapi
 
-        if openapi_file_path:
-            openapi.override_openapi(Path(self.directory_path).joinpath(openapi_file_path))
-        elif Path(self.directory_path).joinpath("openapi.json").exists():
-            openapi.override_openapi(Path(self.directory_path).joinpath("openapi.json"))
+        self.init_openapi(openapi_file_path)
 
         if not bool(os.environ.get("ROBYN_CLI", False)):
             # the env variables are already set when are running through the cli
@@ -82,6 +78,20 @@ class Robyn:
         self.event_handlers: dict = {}
         self.exception_handler: Optional[Callable] = None
         self.authentication_handler: Optional[AuthenticationHandler] = None
+        self.included_routers: List[Router] = []
+
+    def init_openapi(self, openapi_file_path: Optional[str]) -> None:
+        if self.config.disable_openapi:
+            return
+
+        if self.openapi is None:
+            self.openapi = OpenAPI()
+
+        if openapi_file_path:
+            self.openapi.override_openapi(Path(self.directory_path).joinpath(openapi_file_path))
+        elif Path(self.directory_path).joinpath("openapi.json").exists():
+            self.openapi.override_openapi(Path(self.directory_path).joinpath("openapi.json"))
+        # TODO! what about when the elif fails?
 
     def _handle_dev_mode(self):
         cli_dev_mode = self.config.dev  # --dev
@@ -102,6 +112,8 @@ class Robyn:
         handler: Callable,
         is_const: bool = False,
         auth_required: bool = False,
+        openapi_name: str = "",
+        openapi_tags: Union[List[str], None] = None,
     ):
         """
         Connect a URI to a handler
@@ -116,6 +128,8 @@ class Robyn:
         """ We will add the status code here only
         """
         injected_dependencies = self.dependencies.get_dependency_map(self)
+
+        list_openapi_tags: List[str] = openapi_tags if openapi_tags else []
 
         if auth_required:
             self.middleware_router.add_auth_middleware(endpoint)(handler)
@@ -137,6 +151,9 @@ class Robyn:
             endpoint=endpoint,
             handler=handler,
             is_const=is_const,
+            auth_required=auth_required,
+            openapi_name=openapi_name,
+            openapi_tags=list_openapi_tags,
             exception_handler=self.exception_handler,
             injected_dependencies=injected_dependencies,
         )
@@ -240,6 +257,15 @@ class Robyn:
             raise Exception(f"Invalid port number: {port}")
 
     def _add_openapi_routes(self, auth_required: bool = False):
+        if self.config.disable_openapi:
+            return
+
+        if self.openapi is None:
+            logger.error("No openAPI")
+            return
+
+        self.router.prepare_routes_openapi(self.openapi, self.included_routers)
+
         self.add_route(
             route_type=HttpMethod.GET,
             endpoint="/openapi.json",
@@ -307,49 +333,6 @@ class Robyn:
     def exception(self, exception_handler: Callable):
         self.exception_handler = exception_handler
 
-    def add_view(self, endpoint: str, view: Callable, const: bool = False):
-        """
-        This is base handler for the view decorators
-
-        :param endpoint str: endpoint for the route added
-        :param handler function: represents the function passed as a parent handler for single route with different route types
-        """
-        http_methods = {
-            "GET": HttpMethod.GET,
-            "POST": HttpMethod.POST,
-            "PUT": HttpMethod.PUT,
-            "DELETE": HttpMethod.DELETE,
-            "PATCH": HttpMethod.PATCH,
-            "HEAD": HttpMethod.HEAD,
-            "OPTIONS": HttpMethod.OPTIONS,
-        }
-
-        def get_functions(view) -> List[Tuple[HttpMethod, Callable]]:
-            functions = get_all_nested(view)
-            output = []
-            for name, handler in functions:
-                route_type = name.upper()
-                method = http_methods.get(route_type)
-                if method is not None:
-                    output.append((method, handler))
-            return output
-
-        handlers = get_functions(view)
-        for route_type, handler in handlers:
-            self.add_route(route_type, endpoint, handler, const)
-
-    def view(self, endpoint: str, const: bool = False):
-        """
-        The @app.view decorator to add a view with the GET/POST/PUT/DELETE/PATCH/HEAD/OPTIONS method
-
-        :param endpoint str: endpoint to server the route
-        """
-
-        def inner(handler):
-            return self.add_view(endpoint, handler, const)
-
-        return inner
-
     def get(
         self,
         endpoint: str,
@@ -369,9 +352,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.openapi.add_openapi_path_obj("get", endpoint, openapi_name, openapi_tags, handler)
-
-            return self.add_route(HttpMethod.GET, endpoint, handler, const, auth_required)
+            return self.add_route(HttpMethod.GET, endpoint, handler, const, auth_required, openapi_name, openapi_tags)
 
         return inner
 
@@ -392,9 +373,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.openapi.add_openapi_path_obj("post", endpoint, openapi_name, openapi_tags, handler)
-
-            return self.add_route(HttpMethod.POST, endpoint, handler, auth_required=auth_required)
+            return self.add_route(HttpMethod.POST, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
         return inner
 
@@ -415,9 +394,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.openapi.add_openapi_path_obj("put", endpoint, openapi_name, openapi_tags, handler)
-
-            return self.add_route(HttpMethod.PUT, endpoint, handler, auth_required=auth_required)
+            return self.add_route(HttpMethod.PUT, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
         return inner
 
@@ -438,9 +415,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.openapi.add_openapi_path_obj("delete", endpoint, openapi_name, openapi_tags, handler)
-
-            return self.add_route(HttpMethod.DELETE, endpoint, handler, auth_required=auth_required)
+            return self.add_route(HttpMethod.DELETE, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
         return inner
 
@@ -461,9 +436,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.openapi.add_openapi_path_obj("patch", endpoint, openapi_name, openapi_tags, handler)
-
-            return self.add_route(HttpMethod.PATCH, endpoint, handler, auth_required=auth_required)
+            return self.add_route(HttpMethod.PATCH, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
         return inner
 
@@ -484,9 +457,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.openapi.add_openapi_path_obj("head", endpoint, openapi_name, openapi_tags, handler)
-
-            return self.add_route(HttpMethod.HEAD, endpoint, handler, auth_required=auth_required)
+            return self.add_route(HttpMethod.HEAD, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
         return inner
 
@@ -507,9 +478,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.openapi.add_openapi_path_obj("options", endpoint, openapi_name, openapi_tags, handler)
-
-            return self.add_route(HttpMethod.OPTIONS, endpoint, handler, auth_required=auth_required)
+            return self.add_route(HttpMethod.OPTIONS, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
         return inner
 
@@ -530,8 +499,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.openapi.add_openapi_path_obj("connect", endpoint, openapi_name, openapi_tags, handler)
-            return self.add_route(HttpMethod.CONNECT, endpoint, handler, auth_required=auth_required)
+            return self.add_route(HttpMethod.CONNECT, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
         return inner
 
@@ -552,9 +520,7 @@ class Robyn:
         """
 
         def inner(handler):
-            self.openapi.add_openapi_path_obj("trace", endpoint, openapi_name, openapi_tags, handler)
-
-            return self.add_route(HttpMethod.TRACE, endpoint, handler, auth_required=auth_required)
+            return self.add_route(HttpMethod.TRACE, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
         return inner
 
@@ -564,11 +530,14 @@ class Robyn:
 
         :param router Robyn: the router object to include the routes from
         """
+        self.included_routers.append(router)
+
         self.router.routes.extend(router.router.routes)
         self.middleware_router.global_middlewares.extend(router.middleware_router.global_middlewares)
         self.middleware_router.route_middlewares.extend(router.middleware_router.route_middlewares)
 
-        self.openapi.add_subrouter_paths(router.openapi)
+        if not self.config.disable_openapi and self.openapi is not None:
+            self.openapi.add_subrouter_paths(self.openapi)
 
         # extend the websocket routes
         prefix = router.prefix
