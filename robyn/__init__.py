@@ -560,7 +560,7 @@ class Robyn(BaseRobyn):
         )
 
 
-class SubRouter(Robyn):
+class SubRouter(BaseRobyn):
     def __init__(self, file_object: str, prefix: str = "", config: Config = Config(), openapi: OpenAPI = OpenAPI()) -> None:
         super().__init__(file_object=file_object, config=config, openapi=openapi)
         self.prefix = prefix
