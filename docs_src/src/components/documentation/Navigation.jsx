@@ -8,6 +8,7 @@ import { Button } from '@/components/documentation/Button'
 import { useIsInsideMobileNavigation } from '@/components/documentation/MobileNavigation'
 import { useSectionStore } from '@/components/documentation/SectionProvider'
 import { Tag } from '@/components/documentation/Tag'
+import LanguageSelector from '@/components/documentation/LanguageSelector'
 import { remToPx } from '@/lib/remToPx'
 
 function useInitialValue(value, condition = true) {
@@ -377,6 +378,9 @@ export const navigation = [
 export function Navigation(props) {
   return (
     <nav {...props}>
+      <div className="flex items-center justify-between px-4 py-2">
+        <LanguageSelector />
+      </div>
       <ul role="list">
         <TopLevelNavItem href="/">API</TopLevelNavItem>
         <TopLevelNavItem href="#">Documentation</TopLevelNavItem>
