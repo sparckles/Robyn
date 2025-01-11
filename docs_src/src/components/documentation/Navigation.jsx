@@ -188,37 +188,37 @@ export const navigation = [
   {
     title: 'Example Application',
     links: [
-      { title: 'Getting Started', href: '/documentation/example_app' },
+      { title: 'Getting Started', href: '/documentation/en/example_app' },
       {
         title: 'Modeling Routes',
-        href: '/documentation/example_app/modeling_routes',
+        href: '/documentation/en/example_app/modeling_routes',
       },
 
       {
         title: 'Authentication and Authorization',
-        href: '/documentation/example_app/authentication',
+        href: '/documentation/en/example_app/authentication',
       },
       {
         title: 'Middlewares',
-        href: '/documentation/example_app/authentication-middlewares',
+        href: '/documentation/en/example_app/authentication-middlewares',
       },
       {
         title: 'Real Time Notifications',
-        href: '/documentation/example_app/real_time_notifications',
+        href: '/documentation/en/example_app/real_time_notifications',
       },
       {
         title: 'Monitoring and Logging',
-        href: '/documentation/example_app/monitoring_and_logging',
+        href: '/documentation/en/example_app/monitoring_and_logging',
       },
-      { title: 'Deployment', href: '/documentation/example_app/deployment' },
+      { title: 'Deployment', href: '/documentation/en/example_app/deployment' },
       {
         title: 'OpenAPI Documentation',
-        href: '/documentation/example_app/openapi',
+        href: '/documentation/en/example_app/openapi',
       },
-      { title: 'Templates', href: '/documentation/example_app/templates' },
+      { title: 'Templates', href: '/documentation/en/example_app/templates' },
       {
         title: 'SubRouters',
-        href: '/documentation/example_app/subrouters',
+        href: '/documentation/en/example_app/subrouters',
       },
     ],
   },
@@ -226,87 +226,87 @@ export const navigation = [
     title: 'API Reference',
     links: [
       {
-        href: '/documentation/api_reference/',
+        href: '/documentation/en/api_reference/',
         title: 'Installation',
       },
       {
-        href: '/documentation/api_reference/getting_started',
+        href: '/documentation/en/api_reference/getting_started',
         title: 'Getting Started',
       },
       {
-        href: '/documentation/api_reference/request_object',
+        href: '/documentation/en/api_reference/request_object',
         title: 'The Request Object',
       },
       {
-        href: '/documentation/api_reference/robyn_env',
+        href: '/documentation/en/api_reference/robyn_env',
         title: 'The Robyn Env file',
       },
       {
-        href: '/documentation/api_reference/middlewares',
+        href: '/documentation/en/api_reference/middlewares',
         title: 'Middlewares, Events and Websockets',
       },
       {
-        href: '/documentation/api_reference/authentication',
+        href: '/documentation/en/api_reference/authentication',
         title: 'Authentication',
       },
       {
-        href: '/documentation/api_reference/const_requests',
+        href: '/documentation/en/api_reference/const_requests',
         title: 'Const Requests and Multi Core Scaling',
       },
       {
-        href: '/documentation/api_reference/cors',
+        href: '/documentation/en/api_reference/cors',
         title: 'CORS',
       },
       {
-        href: '/documentation/api_reference/templating',
+        href: '/documentation/en/api_reference/templating',
         title: 'Templating',
       },
       {
         title: 'Redirection',
-        href: '/documentation/api_reference/redirection',
+        href: '/documentation/en/api_reference/redirection',
       },
       {
-        href: '/documentation/api_reference/file-uploads',
+        href: '/documentation/en/api_reference/file-uploads',
         title: 'File Uploads',
       },
       {
-        href: '/documentation/api_reference/form_data',
+        href: '/documentation/en/api_reference/form_data',
         title: 'Form Data',
       },
       {
-        href: '/documentation/api_reference/websockets',
+        href: '/documentation/en/api_reference/websockets',
         title: 'Websockets',
       },
       {
-        href: '/documentation/api_reference/exceptions',
+        href: '/documentation/en/api_reference/exceptions',
         title: 'Exceptions',
       },
       {
-        href: '/documentation/api_reference/scaling',
+        href: '/documentation/en/api_reference/scaling',
         title: 'Scaling the Application',
       },
       {
-        href: '/documentation/api_reference/advanced_features',
+        href: '/documentation/en/api_reference/advanced_features',
         title: 'Advanced Features',
       },
       {
-        href: '/documentation/api_reference/multiprocess_execution',
+        href: '/documentation/en/api_reference/multiprocess_execution',
         title: 'Multiprocess Execution',
       },
       {
-        href: '/documentation/api_reference/using_rust_directly',
+        href: '/documentation/en/api_reference/using_rust_directly',
         title: 'Direct Rust Usage',
       },
       {
-        href: '/documentation/api_reference/graphql-support',
+        href: '/documentation/en/api_reference/graphql-support',
         title: 'GraphQL Support',
       },
       {
-        href: '/documentation/api_reference/openapi',
+        href: '/documentation/en/api_reference/openapi',
         title: 'OpenAPI Documentation',
       },
       {
-        href: '/documentation/api_reference/dependency_injection',
+        href: '/documentation/en/api_reference/dependency_injection',
         title: 'Dependency Injection',
       }
     ],
@@ -315,11 +315,11 @@ export const navigation = [
     title: 'Community Resources',
     links: [
       {
-        href: '/documentation/community-resources#talks',
+        href: '/documentation/en/community-resources#talks',
         title: 'Talks',
       },
       {
-        href: '/documentation/community-resources#blogs',
+        href: '/documentation/en/community-resources#blogs',
         title: 'Blogs',
       },
     ],
@@ -328,7 +328,7 @@ export const navigation = [
     title: 'Architecture',
     links: [
       {
-        href: '/documentation/architecture',
+        href: '/documentation/en/architecture',
         title: 'Architecture',
       },
     ],
@@ -337,7 +337,7 @@ export const navigation = [
     title: 'Framework Comparison',
     links: [
       {
-        href: '/documentation/framework_performance_comparison',
+        href: '/documentation/en/framework_performance_comparison',
         title: 'Performance Comparison',
       },
     ],
@@ -346,11 +346,11 @@ export const navigation = [
     title: 'Hosting',
     links: [
       {
-        href: '/documentation/hosting#railway',
+        href: '/documentation/en/hosting#railway',
         title: 'Railway',
       },
       {
-        href: '/documentation/hosting#exposing-ports',
+        href: '/documentation/en/hosting#exposing-ports',
         title: 'Exposing Ports',
       },
     ],
@@ -359,7 +359,7 @@ export const navigation = [
     title: 'Plugins',
     links: [
       {
-        href: '/documentation/plugins',
+        href: '/documentation/en/plugins',
         title: 'Plugins',
       },
     ],
@@ -368,7 +368,7 @@ export const navigation = [
     title: 'Future Roadmap',
     links: [
       {
-        href: '/documentation/api_reference/future-roadmap',
+        href: '/documentation/en/api_reference/future-roadmap',
         title: 'Upcoming Features',
       },
     ],
@@ -376,6 +376,28 @@ export const navigation = [
 ]
 
 export function Navigation(props) {
+  const router = useRouter()
+  const currentLanguage = router.locale || 'en'
+
+  // Function to transform links based on current language
+  const getLocalizedHref = (href) => {
+    // If it's the root documentation page
+    if (href === '/documentation') {
+      return `/documentation/${currentLanguage}`
+    }
+    // For all other links, replace /en/ with current language
+    return href.replace('/documentation/en/', `/documentation/${currentLanguage}/`)
+  }
+
+  // Create localized navigation
+  const localizedNavigation = navigation.map(group => ({
+    ...group,
+    links: group.links.map(link => ({
+      ...link,
+      href: getLocalizedHref(link.href)
+    }))
+  }))
+
   return (
     <nav {...props}>
       <div className="flex items-center justify-between px-4 py-2">
@@ -385,7 +407,7 @@ export function Navigation(props) {
         <TopLevelNavItem href="/">API</TopLevelNavItem>
         <TopLevelNavItem href="#">Documentation</TopLevelNavItem>
         <TopLevelNavItem href="#">Support</TopLevelNavItem>
-        {navigation.map((group, groupIndex) => (
+        {localizedNavigation.map((group, groupIndex) => (
           <NavigationGroup
             key={group.title}
             group={group}

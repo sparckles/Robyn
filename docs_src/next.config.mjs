@@ -22,7 +22,16 @@ const nextConfig = {
   i18n: {
     locales: ['en', 'zh'],
     defaultLocale: 'en',
-    localeDetection: true,
+    localeDetection: false,
+  },
+  async redirects() {
+    return [
+      {
+        source: '/documentation',
+        destination: '/documentation/en',
+        permanent: false,
+      },
+    ]
   },
 }
 
