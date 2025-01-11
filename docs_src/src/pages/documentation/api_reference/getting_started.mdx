@@ -325,8 +325,7 @@ Batman was curious about how to access path parameters and query parameters from
     <CodeGroup title="Request" tag="GET" label="/split_request_params">
 
     ```python
-    from robyn.robyn import QueryParams, Headers
-    from robyn.types import PathParams, RequestMethod, RequestBody, RequestURL
+    from robyn import QueryParams, Headers, PathParams, Method, Body, URL
     
     @app.get("/untyped/query_params")
     def untyped_basic(query_params):
@@ -346,9 +345,9 @@ Batman was curious about how to access path parameters and query parameters from
     @app.post("/typed_untyped/combined")
     def typed_untyped_combined(
             query_params,
-            method_data: RequestMethod,
-            body_data: RequestBody,
-            url: RequestURL,
+            method_data: Method,
+            body_data: Body,
+            url: URL,
             headers_item: Headers,
     ):
         return {
@@ -364,7 +363,7 @@ Batman was curious about how to access path parameters and query parameters from
   </Col>
 </Row>
 
-Type Aliases: `Request`, `QueryParams`, `Headers`, `PathParams`, `RequestBody`, `RequestMethod`, `RequestURL`, `FormData`, `RequestFiles`, `RequestIP`, `RequestIdentity`
+Type Aliases: `Request`, `QueryParams`, `Headers`, `PathParams`, `Body`, `URL`, `FormData`, `Files`, `IPAddress`, `Identity`
 
 Reserved Names: `r`, `req`, `request`, `query_params`, `headers`, `path_params`, `body`, `method`, `url`, `ip_addr`, `identity`, `form_data`, `files`
 
