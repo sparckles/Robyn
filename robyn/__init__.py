@@ -609,7 +609,7 @@ def ALLOW_CORS(app: Robyn, origins: Union[List[str], str]):
     def cors_middleware(request):
         if request is None:
             return None
-        
+
         origin = request.headers.get("Origin")
 
         # If specific origins are set, validate the request origin
