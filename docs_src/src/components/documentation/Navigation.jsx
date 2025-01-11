@@ -4,7 +4,6 @@ import { useRouter } from 'next/router'
 import clsx from 'clsx'
 import { AnimatePresence, motion, useIsPresent } from 'framer-motion'
 
-import { Button } from '@/components/documentation/Button'
 import { useIsInsideMobileNavigation } from '@/components/documentation/MobileNavigation'
 import { useSectionStore } from '@/components/documentation/SectionProvider'
 import { Tag } from '@/components/documentation/Tag'

@@ -10,7 +10,7 @@ const languages = [
 function LanguageSelector() {
   const router = useRouter()
   const { pathname, asPath, query } = router
-  const currentLanguage = router.locale || 'en'
+  const currentLanguage = asPath.includes('/zh') ? 'zh' : 'en'
 
   const changeLanguage = (locale) => {
     const currentPath = asPath.split('?')[0]
@@ -28,12 +28,10 @@ function LanguageSelector() {
     router.push(newPath)
   }
 
-  const currentLang = languages.find(l => l.code === currentLanguage)
-
   return (
     <Menu as="div" className="relative">
       <Menu.Button className="flex items-center gap-2 rounded-lg bg-zinc-800/40 px-3 py-2 text-sm text-white hover:bg-zinc-800 transition-colors duration-200">
-        {currentLang?.name}
+        {languages.find(l => l.code === currentLanguage)?.name}
         <svg
           width="8"
           height="5"
