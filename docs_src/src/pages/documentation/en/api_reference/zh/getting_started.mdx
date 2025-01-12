@@ -1,0 +1,139 @@
+export const description =
+  '开始使用Robyn构建您的第一个应用程序。'
+
+# 入门指南
+
+## 创建您的第一个Robyn应用程序
+
+让我们从创建一个简单的Robyn应用程序开始。首先，使用pip安装Robyn：
+
+```bash
+pip install robyn
+```
+
+然后，创建一个新的Python文件 `app.py`：
+
+```python
+from robyn import Robyn
+
+app = Robyn(__file__)
+
+@app.get("/")
+async def hello_world():
+    return "Hello, World!"
+
+if __name__ == "__main__":
+    app.start()
+```
+
+现在运行您的应用程序：
+
+```bash
+python app.py
+```
+
+访问 `http://localhost:8080`，您应该能看到 "Hello, World!" 消息。
+
+## 命令行选项
+
+Robyn提供了多个命令行选项来配置您的应用程序：
+
+```bash
+python app.py --help
+```
+
+输出将显示所有可用选项：
+
+```text
+options:
+  -h, --help            显示帮助信息
+  --processes PROCESSES
+                        选择进程数量。[默认值: 1]
+  --workers WORKERS     选择工作线程数量。[默认值: 1]
+  --dev                 开发模式。根据文件更改自动重启服务器。
+  --log-level LOG_LEVEL
+                        设置日志级别
+  --create              创建新项目模板。
+  --docs                打开Robyn文档。
+  --open-browser        成功启动时打开浏览器。
+  --version            显示Robyn版本。
+  --compile-rust-path COMPILE_RUST_PATH
+                        编译指定路径中的rust文件。
+  --create-rust-file CREATE_RUST_FILE
+                        创建指定名称的rust文件。
+  --disable-openapi     禁用OpenAPI文档。
+  --fast               快速模式。设置最优的进程、工作线程和日志级别。但您可以覆盖这些设置。
+```
+
+## 路由装饰器
+
+Robyn支持所有标准的HTTP方法：
+
+```python
+@app.get("/users")
+async def get_users():
+    return {"users": ["user1", "user2"]}
+
+@app.post("/users")
+async def create_user(request):
+    return {"message": "用户已创建"}
+
+@app.put("/users/:id")
+async def update_user(request):
+    return {"message": "用户已更新"}
+
+@app.delete("/users/:id")
+async def delete_user(request):
+    return {"message": "用户已删除"}
+```
+
+## 请求参数
+
+您可以通过多种方式访问请求数据：
+
+```python
+@app.post("/api/data")
+async def handle_data(request):
+    # 访问JSON数据
+    json_data = request.json()
+    
+    # 访问查询参数
+    query_params = request.query_params
+    
+    # 访问路径参数
+    path_params = request.path_params
+    
+    # 访问请求头
+    headers = request.headers
+    
+    return {
+        "json": json_data,
+        "query": query_params,
+        "path": path_params,
+        "headers": headers
+    }
+```
+
+## 响应类型
+
+Robyn支持多种响应类型：
+
+```python
+from robyn import Response, jsonify
+
+@app.get("/text")
+async def text_response():
+    return "纯文本响应"
+
+@app.get("/json")
+async def json_response():
+    return jsonify({"message": "JSON响应"})
+
+@app.get("/custom")
+async def custom_response():
+    return Response(
+        status_code=201,
+        description="自定义响应",
+        headers={"Content-Type": "text/plain"}
+    )
+``` 
