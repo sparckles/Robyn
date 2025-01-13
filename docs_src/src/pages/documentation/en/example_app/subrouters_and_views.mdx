@@ -1,0 +1,52 @@
+export const description =
+  'Welcome to the Robyn API documentation. You will find comprehensive guides and documentation to help you start working with Robyn as quickly as possible, as well as support if you get stuck.'
+
+## Code Organization with SubRouters
+
+As the application grew, Batman needed a way to organize his routes better. He decided to use Robyn's SubRouter feature to group related routes together.
+
+```python
+from robyn import SubRouter
+
+# Create a subrouter for crime-related routes
+crime_router = SubRouter(__file__, prefix="/crimes")
+
+@crime_router.get("/list")
+def list_crimes():
+    return {"crimes": get_all_crimes()}
+
+@crime_router.post("/report")
+def report_crime(request):
+    crime_data = request.json()
+    return {"id": create_crime_report(crime_data)}
+
+# Create a subrouter for suspect-related routes
+suspect_router = SubRouter(__file__, prefix="/suspects")
+
+@suspect_router.get("/list")
+def list_suspects():
+    return {"suspects": get_all_suspects()}
+
+@suspect_router.get("/:id")
+def get_suspect(request, path_params):
+    suspect_id = path_params.id
+    return {"suspect": get_suspect_by_id(suspect_id)}
+
+# Include the subrouters in the main app
+app.include_router(crime_router)
+app.include_router(suspect_router)
+```
+
+SubRouters help organize related routes under a common prefix, making the code more maintainable and easier to understand. In this example:
+
+- All crime-related routes are under `/crimes`
+- All suspect-related routes are under `/suspects`
+
+This organization makes it clear which routes handle what functionality and keeps related code together.
+
+
+
+
+
+
+

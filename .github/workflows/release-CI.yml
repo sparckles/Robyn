@@ -130,27 +130,23 @@ jobs:
         name: Install build wheel
         with:
           arch: ${{ matrix.target }}
-          distro: ubuntu20.04
+          distro: ubuntu22.04
           githubToken: ${{ github.token }}
           # Mount the dist directory as /artifacts in the container
           dockerRunArgs: |
             --volume "${PWD}/dist:/artifacts"
           install: |
             apt update -y
-            apt install -y gcc musl-dev python3-dev # this is needed for psutil
-            apt install -y --no-install-recommends software-properties-common
-            add-apt-repository ppa:deadsnakes/ppa
+            apt install -y software-properties-common
+            add-apt-repository -y ppa:deadsnakes/ppa
             apt update -y
-            PYTHON=python${{ matrix.python.version }}
-            apt install -y $PYTHON $PYTHON-distutils $PYTHON-venv
+            apt install -y gcc musl-dev python3-dev python${{ matrix.python.version }} python${{ matrix.python.version }}-venv
           run: |
             ls -lrth /artifacts
-            PYTHON=python${{ matrix.python.version }}
-            $PYTHON --version
-            $PYTHON -m venv venv
+            python${{ matrix.python.version }} -m venv venv
             source venv/bin/activate
-            pip install --upgrade pip setuptools wheel
-            pip install --force-reinstall dist/robyn*.whl
+            python -m pip install --upgrade pip setuptools wheel
+            python -m pip install --force-reinstall /artifacts/robyn*.whl
             cd ~ && python -c 'import robyn'
       - name: Upload wheels
         uses: actions/upload-artifact@v3
