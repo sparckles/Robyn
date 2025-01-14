@@ -87,8 +87,10 @@ Robyn 支持通过 `*extra` 语法捕获额外的路径参数，这样可以捕�
 例如，如果有这样一个路由：
 
 <CodeGroup>
-  ```python @app.get("/sync/extra/*extra") def sync_param_extra(request:
-  Request): extra = request.path_params["extra"] return extra ```
+  ```python
+   @app.get("/sync/extra/*extra") def sync_param_extra(request: Request):
+           extra = request.path_params["extra"] 
+           return extra 
 </CodeGroup>
 
 在 `/sync/extra/` 后的任何路径段都会被捕获到 `extra` 参数中。例如：
