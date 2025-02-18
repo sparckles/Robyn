@@ -3,7 +3,6 @@ import logging
 from abc import ABC, abstractmethod
 from asyncio import iscoroutinefunction
 from functools import wraps
-from inspect import signature
 from types import CoroutineType
 from typing import Callable, Dict, List, NamedTuple, Optional, Union
 
@@ -126,7 +125,7 @@ class Router(BaseRouter):
             # In the execute functions the request is passed into *args
             request = next(filter(lambda it: isinstance(it, Request), args), None)
 
-            handler_params = signature(handler).parameters
+            handler_params = inspect.signature(handler).parameters
 
             if not request or (len(handler_params) == 1 and next(iter(handler_params)) is Request):
                 return handler(*args, **kwargs)
@@ -218,7 +217,6 @@ class Router(BaseRouter):
                 )
             return response
 
-        number_of_params = len(signature(handler).parameters)
         # these are the arguments
         params = dict(inspect.signature(handler).parameters)
 
@@ -233,7 +231,7 @@ class Router(BaseRouter):
             function = FunctionInfo(
                 async_inner_handler,
                 True,
-                number_of_params,
+                len(params),
                 params,
                 new_injected_dependencies,
             )
@@ -243,7 +241,7 @@ class Router(BaseRouter):
             function = FunctionInfo(
                 inner_handler,
                 False,
-                number_of_params,
+                len(params),
                 params,
                 new_injected_dependencies,
             )
@@ -282,7 +280,6 @@ class MiddlewareRouter(BaseRouter):
         injected_dependencies: dict,
     ) -> Callable:
         params = dict(inspect.signature(handler).parameters)
-        number_of_params = len(params)
 
         new_injected_dependencies = {}
         for dependency in injected_dependencies:
@@ -294,7 +291,7 @@ class MiddlewareRouter(BaseRouter):
         function = FunctionInfo(
             handler,
             iscoroutinefunction(handler),
-            number_of_params,
+            len(params),
             params,
             new_injected_dependencies,
         )
