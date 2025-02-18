@@ -307,7 +307,7 @@ export const navigation = [
       {
         href: '/documentation/en/api_reference/dependency_injection',
         title: 'Dependency Injection',
-      }
+      },
     ],
   },
   {
@@ -377,15 +377,15 @@ export const navigation = [
 // Add translations for navigation titles
 const navigationTitles = {
   en: {
-    'Documentation': 'Documentation',
+    Documentation: 'Documentation',
     'Example Application': 'Example Application',
     'API Reference': 'API Reference',
     'Community Resources': 'Community Resources',
-    'Architecture': 'Architecture',
+    Architecture: 'Architecture',
     'Framework Comparison': 'Framework Comparison',
-    'Hosting': 'Hosting',
-    'Plugins': 'Plugins',
-    'Future Roadmap': 'Future Roadmap'
+    Hosting: 'Hosting',
+    Plugins: 'Plugins',
+    'Future Roadmap': 'Future Roadmap',
   },
   zh: {
     'Documentation': '文档',
@@ -408,39 +408,41 @@ const translations = {
       'Getting Started': 'Getting Started',
       'Modeling Routes': 'Modeling Routes',
       'Authentication and Authorization': 'Authentication and Authorization',
-      'Middlewares': 'Middlewares',
+      Middlewares: 'Middlewares',
       'Real Time Notifications': 'Real Time Notifications',
       'Monitoring and Logging': 'Monitoring and Logging',
-      'Deployment': 'Deployment',
+      Deployment: 'Deployment',
       'OpenAPI Documentation': 'OpenAPI Documentation',
-      'Templates': 'Templates',
-      'SubRouters': 'SubRouters',
-      'Installation': 'Installation',
+      Templates: 'Templates',
+      SubRouters: 'SubRouters',
+      Installation: 'Installation',
       'The Request Object': 'The Request Object',
       'The Robyn Env file': 'The Robyn Env file',
-      'Middlewares, Events and Websockets': 'Middlewares, Events and Websockets',
-      'Authentication': 'Authentication',
-      'Const Requests and Multi Core Scaling': 'Const Requests and Multi Core Scaling',
-      'CORS': 'CORS',
-      'Templating': 'Templating',
-      'Redirection': 'Redirection',
+      'Middlewares, Events and Websockets':
+        'Middlewares, Events and Websockets',
+      Authentication: 'Authentication',
+      'Const Requests and Multi Core Scaling':
+        'Const Requests and Multi Core Scaling',
+      CORS: 'CORS',
+      Templating: 'Templating',
+      Redirection: 'Redirection',
       'File Uploads': 'File Uploads',
       'Form Data': 'Form Data',
-      'Websockets': 'Websockets',
-      'Exceptions': 'Exceptions',
+      Websockets: 'Websockets',
+      Exceptions: 'Exceptions',
       'Scaling the Application': 'Scaling the Application',
       'Advanced Features': 'Advanced Features',
       'Multiprocess Execution': 'Multiprocess Execution',
       'Direct Rust Usage': 'Direct Rust Usage',
       'GraphQL Support': 'GraphQL Support',
       'Dependency Injection': 'Dependency Injection',
-      'Talks': 'Talks',
-      'Blogs': 'Blogs',
-      'Introduction': 'Introduction',
+      Talks: 'Talks',
+      Blogs: 'Blogs',
+      Introduction: 'Introduction',
       'Upcoming Features': 'Upcoming Features',
-      'Railway': 'Railway',
-      'Exposing Ports': 'Exposing Ports'
-    }
+      Railway: 'Railway',
+      'Exposing Ports': 'Exposing Ports',
+    },
   },
   zh: {
     titles: navigationTitles.zh,
@@ -451,19 +453,19 @@ const translations = {
       'Middlewares': '身份验证中间件',
       'Real Time Notifications': '即时通讯',
       'Monitoring and Logging': '监控和日志',
-      'Deployment': '部署',
+      Deployment: '部署',
       'OpenAPI Documentation': 'OpenAPI 文档',
-      'Templates': '模板',
-      'SubRouters': '子路由',
-      'Installation': '安装',
+      Templates: '模板',
+      SubRouters: '子路由',
+      Installation: '安装',
       'The Request Object': '请求对象',
       'The Robyn Env file': 'Robyn 环境文件',
       'Middlewares, Events and Websockets': '中间件、事件和 WebSocket',
-      'Authentication': '身份验证',
+      Authentication: '身份验证',
       'Const Requests and Multi Core Scaling': '常量请求和多核心扩展',
-      'CORS': '跨域资源共享',
-      'Templating': '模板系统',
-      'Redirection': '重定向',
+      CORS: '跨域资源共享',
+      Templating: '模板系统',
+      Redirection: '重定向',
       'File Uploads': '文件上传',
       'Form Data': '表单数据',
       'Websockets': 'WebSocket',
@@ -492,18 +494,21 @@ export function Navigation(props) {
     if (href === '/documentation') {
       return `/documentation/${currentLanguage}`
     }
-    return href.replace('/documentation/en/', `/documentation/${currentLanguage}/`)
+    return href.replace(
+      '/documentation/en/',
+      `/documentation/${currentLanguage}/`
+    )
   }
 
   // Create localized navigation with translated titles and link titles
-  const localizedNavigation = navigation.map(group => ({
+  const localizedNavigation = navigation.map((group) => ({
     ...group,
     title: translations[currentLanguage].titles[group.title] || group.title,
-    links: group.links.map(link => ({
+    links: group.links.map((link) => ({
       ...link,
       title: translations[currentLanguage].links[link.title] || link.title,
-      href: getLocalizedHref(link.href)
-    }))
+      href: getLocalizedHref(link.href),
+    })),
   }))
 
   return (
@@ -513,8 +518,12 @@ export function Navigation(props) {
       </div>
       <ul role="list">
         <TopLevelNavItem href="/">API</TopLevelNavItem>
-        <TopLevelNavItem href="#">{currentLanguage === 'zh' ? '文档' : 'Documentation'}</TopLevelNavItem>
-        <TopLevelNavItem href="#">{currentLanguage === 'zh' ? '支持' : 'Support'}</TopLevelNavItem>
+        <TopLevelNavItem href="#">
+          {currentLanguage === 'zh' ? '文档' : 'Documentation'}
+        </TopLevelNavItem>
+        <TopLevelNavItem href="#">
+          {currentLanguage === 'zh' ? '支持' : 'Support'}
+        </TopLevelNavItem>
         {localizedNavigation.map((group, groupIndex) => (
           <NavigationGroup
             key={group.title}
