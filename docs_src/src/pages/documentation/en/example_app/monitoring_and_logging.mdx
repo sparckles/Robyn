@@ -1,0 +1,31 @@
+
+## Monitoring and Logging
+To keep an eye on the performance of his application and troubleshoot issues, Batman decided to implement monitoring and logging. He used a third-party library to integrate logging middleware, enabling him to track requests, errors, and performance metrics.
+
+```python {{ title: 'Monitoring and Logging' }}
+from robyn import Logger
+
+logger = Logger(app)
+
+@app.before_request()
+async def log_request(request: Request):
+    logger.info(f"Received request: %s", request)
+
+@app.after_request()
+async def log_response(response: Response):
+    logger.info(f"Sending response: %s", response)
+```
+
+With monitoring and logging in place, Batman could now easily detect issues and analyze the performance of his web application, ensuring that it was always running optimally and ready to assist him in his fight against crime.
+
+
+<div className="not-prose">
+  <Button
+    href="/documentation/en/example_app/deployment"
+    variant="text"
+    arrow="right"
+    children="Deploying the application"
+  />
+</div>
+
+

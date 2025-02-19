@@ -1,0 +1,45 @@
+export const description =
+  '欢迎来到Robyn API文档。您将找到全面的指南和文档，帮助您尽快开始使用Robyn，并在遇到困难时获得支持。'
+
+## 使用SubRouters组织代码
+
+随着应用程序的增长，蝙蝠侠需要一种更好的方式来组织他的路由。他决定使用Robyn的SubRouter功能来对相关路由进行分组。
+
+```python
+from robyn import SubRouter
+
+# 创建处理犯罪相关路由的子路由器
+crime_router = SubRouter(__file__, prefix="/crimes")
+
+@crime_router.get("/list")
+def list_crimes():
+    return {"crimes": get_all_crimes()}
+
+@crime_router.post("/report")
+def report_crime(request):
+    crime_data = request.json()
+    return {"id": create_crime_report(crime_data)}
+
+# 创建处理嫌疑人相关路由的子路由器
+suspect_router = SubRouter(__file__, prefix="/suspects")
+
+@suspect_router.get("/list")
+def list_suspects():
+    return {"suspects": get_all_suspects()}
+
+@suspect_router.get("/:id")
+def get_suspect(request, path_params):
+    suspect_id = path_params.id
+    return {"suspect": get_suspect_by_id(suspect_id)}
+
+# 将子路由器包含在主应用程序中
+app.include_router(crime_router)
+app.include_router(suspect_router)
+```
+
+SubRouters帮助在公共前缀下组织相关路由，使代码更易于维护和理解。在这个例子中：
+
+- 所有与犯罪相关的路由都在 `/crimes` 下
+- 所有与嫌疑人相关的路由都在 `/suspects` 下
+
+这种组织方式清晰地表明了哪些路由处理什么功能，并将相关代码保持在一起。 

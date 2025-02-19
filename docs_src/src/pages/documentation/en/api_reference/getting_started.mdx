@@ -1,0 +1,791 @@
+export const description =
+  'On this page, we’ll dive into the different conversation endpoints you can use to manage conversations programmatically.'
+
+
+## Synchronous and Asynchronous Requests
+
+To begin, Robyn taught Batman about its ability to handle both synchronous and asynchronous requests. Batman was excited to learn about these features and started implementing them in the application.
+
+
+<Row>
+<Col>
+For a simple synchronous request, Batman wrote:
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    from robyn import Robyn
+
+    app = Robyn(__file__)
+
+    @app.get("/")
+    def h(request):
+        return "Hello, world"
+
+    app.start(port=8080, host="0.0.0.0") # host is optional, defaults to 127.0.0.1
+    ```
+
+    ```python {{title: 'typed'}}
+    from robyn import Robyn, Request
+
+    app = Robyn(__file__)
+
+    @app.get("/")
+    def h(request: Request):
+        return "Hello, world"
+
+    app.start(port=8080, host="0.0.0.0")
+
+
+
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+<Row>
+
+  <Col>
+    For an asynchronous request, Batman used:
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+      ```python {{ title: 'untyped' }}
+      @app.get("/")
+      async def h(request):
+          return "Hello, world"
+
+      ```
+
+      ```python {{title: 'typed'}}
+      from robyn import Request
+
+      @app.get("/")
+      async def h(request: Request) -> str:
+          return "Hello, world"
+
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+--- 
+
+## Running the Application
+
+Batman was curious about how to run the application. Robyn explained that he could run the application through a simple command `python3 app.py`
+
+
+<Row>
+  <Col>
+    A robyn application exposes certain commands to the user. These commands can be used to run the application, or to generate a new project.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+      ```bash
+      usage: app.py [-h] [--processes PROCESSES] [--workers WORKERS] [--log-level LOG_LEVEL] [--create] [--docs] [--open-browser] [--version]
+
+      Robyn, a fast async web framework with a rust runtime.
+
+      options:
+        -h, --help            show this help message and exit
+        --processes PROCESSES
+                              Choose the number of processes. [Default: 1]
+        --workers WORKERS     Choose the number of workers. [Default: 1]
+        --dev                 Development mode. It restarts the server based on file changes.
+        --log-level LOG_LEVEL
+                              Set the log level name
+        --create              Create a new project template.
+        --docs                Open the Robyn documentation.
+        --open-browser        Open the browser on successful start.
+        --version             Show the Robyn version.
+        --compile-rust-path COMPILE_RUST_PATH
+                              Compile rust files in the given path.
+        --create-rust-file CREATE_RUST_FILE
+                              Create a rust file with the given name.
+        --disable-openapi     Disable the OpenAPI documentation.
+        --fast                Fast mode. It sets the optimal values for processes, workers and log level. However, you can override them.
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+<Row />
+
+<Row>
+  <Col>
+    Or the application can be run using Robyn's CLI, i.e. using `python -m robyn app.py`
+  </Col>
+
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+      ```bash
+
+      usage: python -m robyn app.py [-h] [--processes PROCESSES] [--workers WORKERS] [--dev] [--log-level LOG_LEVEL] [--create] [--docs] [--open-browser] [--version]
+
+
+      Robyn, a fast async web framework with a rust runtime.
+
+      options:
+        -h, --help            show this help message and exit
+        --processes PROCESSES
+                              Choose the number of processes. [Default: 1]
+        --workers WORKERS     Choose the number of workers. [Default: 1]
+        --dev                 Development mode. It restarts the server based on file changes.
+        --log-level LOG_LEVEL
+                              Set the log level name
+        --create              Create a new project template.
+        --docs                Open the Robyn documentation.
+        --open-browser        Open the browser on successful start.
+        --version             Show the Robyn version.
+        --compile-rust-path COMPILE_RUST_PATH
+                              Compile rust files in the given path.
+        --create-rust-file CREATE_RUST_FILE
+                              Create a rust file with the given name.
+        --disable-openapi     Disable the OpenAPI documentation.
+        --fast                Fast mode. It sets the optimal values for processes, workers and log level. However, you can override them.
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+
+
+
+---
+
+## Handling Different HTTP Requests
+Robyn then taught Batman how to handle various HTTP requests like GET, POST, PUT, PATCH, and DELETE. With Robyn's guidance, Batman could create endpoints for each request type, making the application versatile and efficient.
+
+<Row>
+<Col>
+For example, Batman learned to create a POST request like this:
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    @app.post("/")
+    async def h(request):
+        return "Hello World"
+
+    ```
+
+    ```python {{title: 'typed'}}
+    from robyn import Request
+
+    @app.post("/")
+    async def h(request: Request):
+        return "Hello World"
+
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+
+
+## Returning JSON Responses
+Batman was curios about the ability to return JSON responses from the application. Robyn showed him how to do this using the `jsonify` function.
+
+<Row>
+<Col>
+  Batman could now return JSON responses from his application, making it easier to parse the data on the frontend.
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    from robyn import jsonify
+
+    @app.post("/jsonify")
+    async def json(request):
+        return {"hello": "world"}
+
+    ```
+
+    ```python {{title: 'typed'}}
+    from robyn import jsonify, Request
+
+
+    @app.post("/jsonify")
+    async def json(request: Request):
+        return {"hello": "world"}
+
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+
+## Accessing Path Parameters and Query Parameters
+
+Batman was curious about how to access path parameters and query parameters from incoming requests. This allowed Batman to create dynamic routes and gather specific information from the request.
+
+<Row>
+  <Col>
+
+  Robyn also showed Batman how to access path parameters and query parameters from incoming requests.
+
+  For instance, Batman could create a route with a path parameter and access it like this:
+  
+
+  </Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="POST" label="/http_requests">
+
+    ```python {{ title: 'untyped' }}
+    from robyn import jsonify
+
+    @app.post("/jsonify/:id")
+    async def json(request, path_params):
+        print(request.path_params["id"])
+        print(path_params["id"])
+        assert request.path_params["id"] == path_params["id"]
+        return {"hello": "world"}
+
+
+    ```
+
+    ```python {{ title: 'typed' }}
+    from robyn import jsonify
+    from robyn.types import PathParams
+
+    @app.post("/jsonify/:id")
+    async def json(req_obj: Request, path_parameters: PathParams):
+        print(req_obj.path_params["id"])
+        print(path_params["id"])
+        assert req_obj.path_params["id"] == path_parameters["id"]
+        return {"hello": "world"}
+
+    ```
+
+
+    </CodeGroup>
+
+
+  </Col>
+</Row>
+
+
+<Row>
+  <Col>
+
+  And for accessing query parameters, Batman could use the following code snippet:
+  
+
+  </Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="POST" label="/http_requests">
+
+    ```python {{ title: 'untyped' }}
+    @app.get("/query")
+    async def query_get(request, query_params):
+        query_data = query_params.to_dict()
+        assert query_data == request.query_params.to_dict()
+        return jsonify(query_data)
+    ```
+
+    ```python {{ title: 'typed' }}
+    from robyn import Request
+    from robyn.robyn import QueryParams
+
+    @app.get("/query")
+    async def query_get(req_obj: Request, query_params: QueryParams):
+        query_data = query_params.to_dict()
+        assert query_data == req_obj.query_params.to_dict()
+        return jsonify(query_data)
+    ```
+
+    </CodeGroup>
+  </Col>
+</Row>
+
+<Row>
+  <Col>
+
+  Any request param can be used in the handler function either using type annotations or using the reserved names.
+  
+  <b>
+ Do note that the type annotations will take precedence over the reserved names.
+ </b>
+  
+  Robyn showed Batman example syntaxes of accessing the request params:
+
+  </Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/split_request_params">
+
+    ```python
+    from robyn.robyn import QueryParams, Headers
+    from robyn.types import PathParams, RequestMethod, RequestBody, RequestURL
+    
+    @app.get("/untyped/query_params")
+    def untyped_basic(query_params):
+        return query_params.to_dict()
+    
+    
+    @app.get("/typed/query_params")
+    def typed_basic(query_data: QueryParams):
+        return query_data.to_dict()
+    
+    
+    @app.get("/untyped/path_params/:id")
+    def untyped_path_params(query_params: PathParams):
+        return query_params  # contains the path params since the type annotations takes precedence over the reserved names
+    
+    
+    @app.post("/typed_untyped/combined")
+    def typed_untyped_combined(
+            query_params,
+            method_data: RequestMethod,
+            body_data: RequestBody,
+            url: RequestURL,
+            headers_item: Headers,
+    ):
+        return {
+            "body": body_data,
+            "query_params": query_params.to_dict(),
+            "method": method_data,
+            "url": url.path,
+            "headers": headers_item.get("server"),
+        }
+    ```
+
+    </CodeGroup>
+  </Col>
+</Row>
+
+Type Aliases: `Request`, `QueryParams`, `Headers`, `PathParams`, `RequestBody`, `RequestMethod`, `RequestURL`, `FormData`, `RequestFiles`, `RequestIP`, `RequestIdentity`
+
+Reserved Names: `r`, `req`, `request`, `query_params`, `headers`, `path_params`, `body`, `method`, `url`, `ip_addr`, `identity`, `form_data`, `files`
+
+---
+
+As Batman continued to develop his web application with Robyn, he explored more features and implemented them using code samples.
+
+## Customizing Response Formats and Headers
+
+
+After understanding the dynamic nature of Robyn, Batman, now wanted the ability to customize response formats and headers. Robyn showed him how to do this using dictionaries and Robyn's Response object.
+
+### Using Dictionaries
+
+<Row>
+<Col>
+Batman learned to customize response formats by returning dictionaries or using Robyn's Response object. He could also set status codes and headers for each response. For example, Batman created a response with a dictionary like this:
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    @app.post("/dictionary")
+    async def dictionary(request):
+        return {
+            "status_code": 200,
+            "description": "This is a regular response",
+            "type": "text",
+            "headers": {"Header": "header_value"},
+        }
+
+    ```
+
+    ```python {{title: 'typed'}}
+    from robyn import Request
+
+    @app.post("/dictionary")
+    async def dictionary(request: Request):
+        return {
+            "status_code": 200,
+            "description": "This is a regular response",
+            "type": "text",
+            "headers": {"Header": "header_value"},
+        }
+
+
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+
+### Using the Response object
+<Row>
+<Col>
+To use the Response object, he wrote:
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    from robyn.robyn import Response
+
+    @app.get("/response")
+    async def response(request):
+        return Response(status_code=200, headers=Headers({}), description="OK")
+    ```
+
+    ```python {{title: 'typed'}}
+    from robyn.robyn import Response, Request
+
+    @app.get("/response")
+    async def response(request: Request):
+        return Response(status_code=200, headers=Headers({}), description="OK")
+
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+### Returning a Binary Output
+
+<Row>
+<Col>
+Batman then wanted to return a binary output from his application. He could do this by setting the type of the response to "binary" and returning a bytes object. For example, he wrote:
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    @app.get("/binary_output_response_sync")
+    def binary_output_response_sync(request):
+        return Response(
+            status_code=200,
+            headers={"Content-Type": "application/octet-stream"},
+            description="OK",
+        )
+
+
+    @app.get("/binary_output_async")
+    async def binary_output_async(request):
+        return b"OK"
+
+
+    @app.get("/binary_output_response_async")
+    async def binary_output_response_async(request):
+        return Response(
+            status_code=200,
+            headers={"Content-Type": "application/octet-stream"},
+            description="OK",
+        )
+    ```
+
+    ```python {{title: 'typed'}}
+    from robyn import Request, Response
+
+    @app.get("/binary_output_response_sync")
+    def binary_output_response_sync(request: Request):
+        return Response(
+            status_code=200,
+            headers={"Content-Type": "application/octet-stream"},
+            description="OK",
+        )
+
+
+    @app.get("/binary_output_async")
+    async def binary_output_async(request: Request):
+        return b"OK"
+
+
+    @app.get("/binary_output_response_async")
+    async def binary_output_response_async(request: Request):
+        return Response(
+            status_code=200,
+            headers={"Content-Type": "application/octet-stream"},
+            description="OK",
+        )
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+
+
+---
+
+## Response Headers
+
+Batman, being the world's greatest detective, spotted the `headers` field in the `Response` object. He, naturally wanted to know more about it. Robyn explained that he could use the `headers` field to set response headers. For example, he could set the `Content-Type` header to `application/json` by writing:
+
+### Local Response Headers
+
+<Row>
+<Col>
+Either, by using the `headers` field in the `Response` object:
+</Col>
+<Col sticky>
+
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    @app.get("/")
+    def binary_output_response_sync(request):
+        return Response(
+            status_code=200,
+            headers={"Content-Type": "application/octet-stream"},
+            description="OK",
+        )
+    ```
+
+    ```python {{title: 'typed'}}
+    from robyn import Request
+
+    @app.get("/")
+    def binary_output_response_sync(request: Request):
+        return Response(
+            status_code=200,
+            headers={"Content-Type": "application/octet-stream"},
+            description="OK",
+        )
+
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+### Global Response Headers
+
+<Row>
+
+<Col>Or setting the Headers globally *per* router.</Col>
+
+  <Col>
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    app.add_response_header("content-type", "application/json")
+    ```
+
+    ```python {{title: 'typed'}}
+    app.add_response_header("content-type", "application/json")
+    ```
+    </CodeGroup>
+
+  </Col>
+
+<Col>
+`add_response_header` appends the header to the list of headers, while `set_response_header` replaces the header if it exists.
+</Col>
+<Col>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    app.set_response_header("content-type", "application/json")
+    ```
+
+    ```python {{title: 'typed'}}
+    app.set_response_header("content-type", "application/json")
+    ```
+    </CodeGroup>
+
+  </Col>
+  
+<Col>
+To prevent the headers from getting applied to certain endpoints, you can use the `exclude_response_headers_for` function.
+</Col>
+<Col>
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    app.exclude_response_headers_for(["/login", "/signup"])
+    ```
+
+    ```python {{title: 'typed'}}
+    app.exclude_response_headers_for(["/login", "/signup"])
+    ```
+    </CodeGroup>
+
+</Col>
+</Row>
+
+### Cookies
+
+<Row>
+<Col>
+Set cookies using the `set_cookies` function.
+</Col>
+<Col sticky>
+
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    @app.get("/")
+    def binary_output_response_sync(request):
+        response = Response(200, {'type': 'int'}, "desc")
+        response.set_cookie(key="fakesession", value="fake-cookie-session-value")
+        return response
+    ```
+
+    ```python {{title: 'typed'}}
+    from robyn import Request
+
+    @app.get("/")
+    def binary_output_response_sync(request: Request):
+        response = Response(200, {'type': 'int'}, "desc")
+        response.set_cookie(key="fakesession", value="fake-cookie-session-value")
+        return response
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+
+## Request Headers
+
+Batman, now wanted to know how to read request headers. Robyn explained that he could use the `request.headers` field to read request headers. For example, he could read the `Content-Type` header by writing:
+
+### Local Request Headers
+
+<Row>
+<Col>
+Either, by using the `headers` field in the `Request` object:
+</Col>
+<Col sticky>
+
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    @app.get("/")
+    def binary_output_response_sync(request):
+      headers = request.headers
+
+      print("These are the request headers: ", headers)
+      existing_header = headers.get("exisiting_header")
+      existing_header = headers.get("exisiting_header", "default_value")
+      exisiting_header = headers["exisiting_header"] # This syntax is also valid
+
+      headers.set("modified", "modified_value")
+      headers["new_header"] = "new_value" # This syntax is also valid
+
+      print("These are the modified request headers: ", headers)
+      
+      return ""
+    ```
+
+    ```python {{title: 'typed'}}
+    from robyn import Request
+
+    @app.get("/")
+    def binary_output_response_sync(request: Request):
+      headers = request.headers
+
+      print("These are the request headers: ", headers)
+      existing_header = headers.get("exisiting_header")
+      existing_header = headers.get("exisiting_header", "default_value")
+      exisiting_header = headers["exisiting_header"] # This syntax is also valid
+
+      headers.set("modified", "modified_value")
+      headers["new_header"] = "new_value" # This syntax is also valid
+
+      print("These are the modified request headers: ", headers)
+      
+      return ""
+
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+<Row>
+<Col>
+Or by using the global Request Headers:
+</Col>
+<Col sticky>
+
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    app.add_request_header("server", "robyn")
+    ```
+
+    ```python {{title: 'typed'}}
+    app.add_request_header("server", "robyn")
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+<Row>
+<Col>
+`add_request_header` appends the header to the list of headers, while `set_request_header` replaces the header if it exists.
+</Col>
+<Col sticky>
+
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    app.set_request_header("server", "robyn")
+    ```
+
+    ```python {{title: 'typed'}}
+    app.set_request_header("server", "robyn")
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+
+---
+
+## Status Codes
+
+<Row>
+<Col>
+After learning about response formats and headers, Batman learned to set status codes for his responses. 
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    from robyn import status_codes
+
+    @app.get("/response")
+    async def response(request):
+        return Response(status_code=status_codes.HTTP_200_OK, headers=Headers({}), description="OK")
+    ```
+
+    ```python {{title: 'typed'}}
+    from robyn import status_codes, Request
+
+
+    @app.get("/response")
+    async def response(request: Request):
+        return Response(status_code=status_codes.HTTP_200_OK, headers=Headers({}), description="OK")
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+
+---
+
+## What's next?
+
+Great, now Robyn, what is the `Request` Object that you keep talking about?, Batman said. "Next section", said Robyn.
+
+- [The Request Object](/documentation/en/api_reference/request_object)
+
+Batman was also interested to know about the architecture of Robyn. "Next section", said Robyn.
+
+- [Architecture](/documentation/en/architecture)
+
+
+

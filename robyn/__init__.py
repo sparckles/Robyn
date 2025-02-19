@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import socket
+from abc import ABC
 from pathlib import Path
 from typing import Callable, List, Optional, Union
 
@@ -34,7 +35,7 @@ if (compile_path := config.compile_rust_path) is not None:
     print("Compiled rust files")
 
 
-class Robyn:
+class BaseRobyn(ABC):
     """This is the python wrapper for the Robyn binaries."""
 
     def __init__(
@@ -282,54 +283,6 @@ class Robyn:
         )
         self.exclude_response_headers_for(["/docs", "/openapi.json"])
 
-    def start(self, host: str = "127.0.0.1", port: int = 8080, _check_port: bool = True):
-        """
-        Starts the server
-
-        :param host str: represents the host at which the server is listening
-        :param port int: represents the port number at which the server is listening
-        :param _check_port bool: represents if the port should be checked if it is already in use
-        """
-
-        host = os.getenv("ROBYN_HOST", host)
-        port = int(os.getenv("ROBYN_PORT", port))
-        open_browser = bool(os.getenv("ROBYN_BROWSER_OPEN", self.config.open_browser))
-
-        if _check_port:
-            while self.is_port_in_use(port):
-                logger.error("Port %s is already in use. Please use a different port.", port)
-                try:
-                    port = int(input("Enter a different port: "))
-                except Exception:
-                    logger.error("Invalid port number. Please enter a valid port number.")
-                    continue
-
-        if not self.config.disable_openapi:
-            self._add_openapi_routes()
-            logger.info("Docs hosted at http://%s:%s/docs", host, port)
-
-        logger.info("Robyn version: %s", __version__)
-        logger.info("Starting server at http://%s:%s", host, port)
-
-        mp.allow_connection_pickling()
-
-        run_processes(
-            host,
-            port,
-            self.directories,
-            self.request_headers,
-            self.router.get_routes(),
-            self.middleware_router.get_global_middlewares(),
-            self.middleware_router.get_route_middlewares(),
-            self.web_socket_router.get_routes(),
-            self.event_handlers,
-            self.config.workers,
-            self.config.processes,
-            self.response_headers,
-            self.excluded_response_headers_paths,
-            open_browser,
-        )
-
     def exception(self, exception_handler: Callable):
         self.exception_handler = exception_handler
 
@@ -557,7 +510,57 @@ class Robyn:
         self.middleware_router.set_authentication_handler(authentication_handler)
 
 
-class SubRouter(Robyn):
+class Robyn(BaseRobyn):
+    def start(self, host: str = "127.0.0.1", port: int = 8080, _check_port: bool = True):
+        """
+        Starts the server
+
+        :param host str: represents the host at which the server is listening
+        :param port int: represents the port number at which the server is listening
+        :param _check_port bool: represents if the port should be checked if it is already in use
+        """
+
+        host = os.getenv("ROBYN_HOST", host)
+        port = int(os.getenv("ROBYN_PORT", port))
+        open_browser = bool(os.getenv("ROBYN_BROWSER_OPEN", self.config.open_browser))
+
+        if _check_port:
+            while self.is_port_in_use(port):
+                logger.error("Port %s is already in use. Please use a different port.", port)
+                try:
+                    port = int(input("Enter a different port: "))
+                except Exception:
+                    logger.error("Invalid port number. Please enter a valid port number.")
+                    continue
+
+        if not self.config.disable_openapi:
+            self._add_openapi_routes()
+            logger.info("Docs hosted at http://%s:%s/docs", host, port)
+
+        logger.info("Robyn version: %s", __version__)
+        logger.info("Starting server at http://%s:%s", host, port)
+
+        mp.allow_connection_pickling()
+
+        run_processes(
+            host,
+            port,
+            self.directories,
+            self.request_headers,
+            self.router.get_routes(),
+            self.middleware_router.get_global_middlewares(),
+            self.middleware_router.get_route_middlewares(),
+            self.web_socket_router.get_routes(),
+            self.event_handlers,
+            self.config.workers,
+            self.config.processes,
+            self.response_headers,
+            self.excluded_response_headers_paths,
+            open_browser,
+        )
+
+
+class SubRouter(BaseRobyn):
     def __init__(self, file_object: str, prefix: str = "", config: Config = Config(), openapi: OpenAPI = OpenAPI()) -> None:
         super().__init__(file_object=file_object, config=config, openapi=openapi)
         self.prefix = prefix
