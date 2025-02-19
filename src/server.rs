@@ -1,5 +1,6 @@
 use crate::executors::{
-    execute_http_function, execute_middleware_function, execute_startup_handler,
+    execute_http_function, execute_middleware_after_request, execute_middleware_function,
+    execute_startup_handler,
 };
 
 use crate::routers::const_router::ConstRouter;
@@ -518,26 +519,27 @@ async fn index(
         after_middlewares.push(function);
     }
     for after_middleware in after_middlewares {
-        response = match execute_middleware_function(&response, &after_middleware).await {
-            Ok(MiddlewareReturn::Request(_)) => {
-                error!("After middleware returned a request");
-                return Response::internal_server_error(Some(&response.headers));
-            }
-            Ok(MiddlewareReturn::Response(r)) => {
-                let response = r;
+        response =
+            match execute_middleware_after_request(&response, &request, &after_middleware).await {
+                Ok(MiddlewareReturn::Request(_)) => {
+                    error!("After middleware returned a request");
+                    return Response::internal_server_error(Some(&response.headers));
+                }
+                Ok(MiddlewareReturn::Response(r)) => {
+                    let response = r;
 
-                debug!("Response returned: {:?}", response);
-                response
-            }
-            Err(e) => {
-                error!(
-                    "Error while executing after middleware function for endpoint `{}`: {}",
-                    req.uri().path(),
-                    get_traceback(e.downcast_ref::<PyErr>().unwrap())
-                );
-                return Response::internal_server_error(Some(&response.headers));
-            }
-        };
+                    debug!("Response returned: {:?}", response);
+                    response
+                }
+                Err(e) => {
+                    error!(
+                        "Error while executing after middleware function for endpoint `{}`: {}",
+                        req.uri().path(),
+                        get_traceback(e.downcast_ref::<PyErr>().unwrap())
+                    );
+                    return Response::internal_server_error(Some(&response.headers));
+                }
+            };
     }
 
     debug!("Response returned: {:?}", response);

@@ -2,6 +2,7 @@ import os
 import pathlib
 from collections import defaultdict
 from typing import Optional
+import uuid
 
 from integration_tests.subroutes import di_subrouter, sub_router
 from robyn import Headers, Request, Response, Robyn, WebSocket, WebSocketConnector, jsonify, serve_file, serve_html
@@ -126,6 +127,9 @@ def shutdown_handler():
 
 @app.before_request()
 def global_before_request(request: Request):
+
+    if "trace_id" not in request.headers:
+        request.headers["trace_id"] = uuid.uuid4().hex
     request.headers.set("global_before", "global_before_request")
     return request
 
@@ -135,6 +139,31 @@ def global_after_request(response: Response):
     response.headers.set("global_after", "global_after_request")
     return response
 
+@app.after_request()
+def global_after_request(response: Response, request: Request):
+    response.headers.set("global_after", "global_after_request")
+    response.headers["trace_id"] = request.headers["trace_id"]
+    return response
+
+@app.get('/sync/global/middlewares/with_request')
+def sync_global_middlewares_with_request(request: Request):
+    print(request.headers)
+    return "sync global middlewares with request"
+
+@app.after_request("/sync/global/middlewares/with_request")
+def sync_global_middlewares_before_with_request(response: Response, request: Request):
+    response.headers["trace_id"] = request.headers["trace_id"]
+    return response
+
+@app.get('/async/global/middlewares/with_request')
+def sync_global_middlewares_with_request(request: Request):
+    print(request.headers)
+    return "async global middlewares with request"
+
+@app.after_request("/async/global/middlewares/with_request")
+def sync_global_middlewares_before_with_request(response: Response, request: Request):
+    response.headers["trace_id"] = request.headers["trace_id"]
+    return response
 
 @app.get("/sync/global/middlewares")
 def sync_global_middlewares(request: Request):
@@ -175,13 +204,11 @@ async def async_before_request(request: Request):
     request.headers.set("before", "async_before_request")
     return request
 
-
 @app.after_request("/async/middlewares")
 async def async_after_request(response: Response):
     response.headers.set("after", "async_after_request")
     response.description = response.description + " after"
     return response
-
 
 @app.get("/async/middlewares")
 async def async_middlewares(request: Request):
@@ -199,7 +226,6 @@ def sync_before_request_401():
 @app.get("/sync/middlewares/401")
 def sync_middlewares_401():
     pass
-
 
 # ===== Routes =====
 
