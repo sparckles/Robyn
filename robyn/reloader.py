@@ -109,6 +109,7 @@ def setup_reloader(directory_path: str, file_path: str) -> None:
     finally:
         observer.stop()
         observer.join()
+        event_handler.process.wait()
 
 
 class EventHandler(FileSystemEventHandler):
@@ -123,7 +124,6 @@ class EventHandler(FileSystemEventHandler):
     def stop_server(self) -> None:
         if self.process:
             os.kill(self.process.pid, signal.SIGTERM)  # Stop the subprocess using os.kill()
-            self.process.wait()
 
     def reload(self) -> None:
         self.stop_server()
