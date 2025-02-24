@@ -109,6 +109,7 @@ def setup_reloader(directory_path: str, file_path: str) -> None:
     finally:
         observer.stop()
         observer.join()
+        event_handler.process.wait()
 
 
 class EventHandler(FileSystemEventHandler):
