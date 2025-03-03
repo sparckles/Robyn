@@ -40,7 +40,7 @@ jobs:
           uv pip install --force-reinstall dist/robyn*_universal2.whl
           cd ~ && python -c 'import robyn'
       - name: Upload wheels
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: wheels
           path: dist
@@ -70,7 +70,7 @@ jobs:
           uv pip install --force-reinstall dist/robyn*.whl
           cd ~ && python -c 'import robyn'
       - name: Upload wheels
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: wheels
           path: dist
@@ -100,7 +100,7 @@ jobs:
           uv pip install --force-reinstall dist/robyn*.whl
           cd ~ && python -c 'import robyn'
       - name: Upload wheels
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: wheels
           path: dist
@@ -149,7 +149,7 @@ jobs:
             python -m pip install --force-reinstall /artifacts/robyn*.whl
             cd ~ && python -c 'import robyn'
       - name: Upload wheels
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: wheels
           path: dist
