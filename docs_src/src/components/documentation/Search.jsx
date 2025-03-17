@@ -42,7 +42,30 @@ function useAutocomplete() {
             },
             getItemUrl({ item }) {
               let url = new URL(item.url)
-              return `${url.pathname}${url.hash}`
+              const pathname = url.pathname
+              
+              // Get current language from router
+              const currentLanguage = router.asPath.includes('/zh') ? 'zh' : 'en'
+              
+              // Check if the URL already has a language prefix
+              if (pathname.match(/\/documentation\/(en|zh)\//)) {
+                // If it does, ensure it matches the current language
+                const pathWithCorrectLang = pathname.replace(
+                  /\/documentation\/(en|zh)\//,
+                  `/documentation/${currentLanguage}/`
+                )
+                return `${pathWithCorrectLang}${url.hash}`
+              } else if (pathname.includes('/documentation/')) {
+                // If it doesn't have a language prefix but has /documentation/, add the language prefix
+                const pathWithLang = pathname.replace(
+                  '/documentation/',
+                  `/documentation/${currentLanguage}/`
+                )
+                return `${pathWithLang}${url.hash}`
+              }
+              
+              // Return the original URL if it doesn't match any of the above patterns
+              return `${pathname}${url.hash}`
             },
             onSelect({ itemUrl }) {
               router.push(itemUrl)
