@@ -17,6 +17,7 @@ use pyo3_asyncio::TaskLocals;
 use uuid::Uuid;
 
 use registry::{Register, WebSocketRegistry};
+use std::borrow::Cow;
 use std::collections::HashMap;
 
 /// Define HTTP actor
@@ -101,7 +102,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebSocketConnecto
                 let function = self.router.get("message").unwrap();
                 execute_ws_function(
                     function,
-                    Some(WsMsgIn::Bytes(bin.to_vec())),
+                    Some(WsMsgIn::Bytes(Cow::from(bin.to_vec()))),
                     &self.task_locals,
                     ctx,
                     self,

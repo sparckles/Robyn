@@ -14,7 +14,7 @@ name = "robyn"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-pyo3 = { version = "0.20.0", features = ["extension-module",] }
+pyo3 = { version = "0.20.0", features = ["extension-module"] }
 pyo3-asyncio = { version="0.20.0" , features = ["attributes", "tokio-runtime"] }
 pyo3-log = "0.8.4"
 tokio = { version = "1.26.0", features = ["full"] }

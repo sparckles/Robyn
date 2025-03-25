@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use actix::prelude::*;
 use actix::AsyncContext;
 use actix_web_actors::ws;
@@ -8,19 +10,19 @@ use pyo3_asyncio::TaskLocals;
 use crate::types::function_info::FunctionInfo;
 use crate::websockets::WebSocketConnector;
 
-pub enum WsMsgIn {
+pub enum WsMsgIn<'a> {
     String(String),
-    Bytes(Vec<u8>),
+    Bytes(Cow<'a, [u8]>),
 }
 
-impl Default for WsMsgIn {
+impl <'a>Default for WsMsgIn<'a> {
     fn default() -> Self {
-        WsMsgIn::String("".to_owned())
+        WsMsgIn::String(Default::default())
     }
 }
 
 
-impl IntoPy<PyObject> for WsMsgIn {
+impl <'a>IntoPy<PyObject> for WsMsgIn<'a> {
     fn into_py(self, py: Python<'_>) -> PyObject {
         match self {
             WsMsgIn::String(val) => val.into_py(py),
