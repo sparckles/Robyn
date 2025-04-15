@@ -394,6 +394,16 @@ class OpenAPI:
                 properties["type"] = type_mapping[type_name]
                 return properties
 
+        # Check if it's a generic type (like List[Object])
+        if hasattr(param_type, "__origin__"):
+            if param_type.__origin__ is list or param_type.__origin__ is List:
+                properties["type"] = "array"
+                # Handle the element type in the list
+                if hasattr(param_type, "__args__") and param_type.__args__:
+                    item_type = param_type.__args__[0]
+                    properties["items"] = self.get_schema_object(f"{parameter}_item", item_type)
+                return properties
+
         # check for Optional type
         if param_type.__module__ == "typing":
             properties["anyOf"] = [{"type": self.get_openapi_type(param_type.__args__[0])}, {"type": "null"}]
