@@ -180,7 +180,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [macos, windows, linux, linux-cross, merge]
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: wheels
       - name: Install uv
