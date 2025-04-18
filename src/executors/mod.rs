@@ -3,16 +3,16 @@
 /// i.e. the functions that have the responsibility of parsing and executing functions.
 pub mod web_socket_executors;
 
-use std::sync::Arc;
+use crate::types::{
+    function_info::FunctionInfo, request::Request, response::Response, MiddlewareReturn,
+};
 
 use anyhow::Result;
 use log::debug;
 use pyo3::prelude::*;
+use pyo3::types::PyTuple;
 use pyo3_asyncio::TaskLocals;
-
-use crate::types::{
-    function_info::FunctionInfo, request::Request, response::Response, MiddlewareReturn,
-};
+use std::sync::Arc;
 
 #[inline]
 fn get_function_output<'a, T>(
@@ -40,7 +40,13 @@ where
                 handler.call1((function_args,))
             }
         }
-        _ => handler.call((function_args,), Some(kwargs)),
+        _ => {
+            if let Ok(tuple) = function_args.downcast::<PyTuple>(py) {
+                handler.call(tuple, Some(kwargs))
+            } else {
+                handler.call((function_args,), Some(kwargs))
+            }
+        }
     }
 }
 
@@ -71,6 +77,60 @@ where
     } else {
         Python::with_gil(|py| -> Result<MiddlewareReturn> {
             let output = get_function_output(function, py, input)?;
+            debug!("Middleware output: {:?}", output);
+            match output.extract::<Response>() {
+                Ok(o) => Ok(MiddlewareReturn::Response(o)),
+                Err(_) => Ok(MiddlewareReturn::Request(output.extract::<Request>()?)),
+            }
+        })
+    }
+}
+// Execute middleware function after receiving a response
+//
+// This function handles post-request middleware logic that can receive both
+// the response and the original request as parameters.
+// T represents the response type, R represents the request type.
+//
+// The function determines whether to pass just the response or both response and request
+// to the middleware function based on the number of parameters it accepts.
+pub async fn execute_middleware_after_request<T, T2>(
+    response: &T,
+    request: &T2,
+    function: &FunctionInfo,
+) -> Result<MiddlewareReturn>
+where
+    T: for<'a> FromPyObject<'a> + ToPyObject,
+    T2: for<'a> FromPyObject<'a> + ToPyObject,
+{
+    if function.is_async {
+        let output: Py<PyAny> = Python::with_gil(|py| {
+            let result = if function.number_of_params == 2 {
+                pyo3_asyncio::tokio::into_future(get_function_output(
+                    function,
+                    py,
+                    &(response, request),
+                )?)
+            } else {
+                pyo3_asyncio::tokio::into_future(get_function_output(function, py, response)?)
+            };
+            result
+        })?
+        .await?;
+
+        Python::with_gil(|py| -> Result<MiddlewareReturn> {
+            let output_response = output.extract::<Response>(py);
+            match output_response {
+                Ok(o) => Ok(MiddlewareReturn::Response(o)),
+                Err(_) => Ok(MiddlewareReturn::Request(output.extract::<Request>(py)?)),
+            }
+        })
+    } else {
+        Python::with_gil(|py| -> Result<MiddlewareReturn> {
+            let output = if function.number_of_params == 2 {
+                get_function_output(function, py, &(response, request))?
+            } else {
+                get_function_output(function, py, response)?
+            };
             debug!("Middleware output: {:?}", output);
             match output.extract::<Response>() {
                 Ok(o) => Ok(MiddlewareReturn::Response(o)),
