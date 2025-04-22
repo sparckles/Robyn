@@ -27,7 +27,6 @@ from robyn.ws import WebSocket
 
 __version__ = get_version()
 
-
 config = Config()
 
 if (compile_path := config.compile_rust_path) is not None:
@@ -39,12 +38,12 @@ class BaseRobyn(ABC):
     """This is the python wrapper for the Robyn binaries."""
 
     def __init__(
-        self,
-        file_object: str,
-        config: Config = Config(),
-        openapi_file_path: Optional[str] = None,
-        openapi: Optional[OpenAPI] = None,
-        dependencies: DependencyMap = DependencyMap(),
+            self,
+            file_object: str,
+            config: Config = Config(),
+            openapi_file_path: Optional[str] = None,
+            openapi: Optional[OpenAPI] = None,
+            dependencies: DependencyMap = DependencyMap(),
     ) -> None:
         directory_path = os.path.dirname(os.path.abspath(file_object))
         self.file_path = file_object
@@ -100,21 +99,24 @@ class BaseRobyn(ABC):
         is_robyn = os.getenv("ROBYN_CLI", False)
 
         if cli_dev_mode and not is_robyn:
-            raise SystemExit("Dev mode is not supported in the python wrapper. Please use the Robyn CLI. e.g. python3 -m robyn app.py --dev")
+            raise SystemExit(
+                "Dev mode is not supported in the python wrapper. Please use the Robyn CLI. e.g. python3 -m robyn app.py --dev")
 
         if env_dev_mode and not is_robyn:
-            logger.error("Ignoring ROBYN_DEV_MODE environment variable. Dev mode is not supported in the python wrapper.")
-            raise SystemExit("Dev mode is not supported in the python wrapper. Please use the Robyn CLI. e.g. python3 -m robyn app.py")
+            logger.error(
+                "Ignoring ROBYN_DEV_MODE environment variable. Dev mode is not supported in the python wrapper.")
+            raise SystemExit(
+                "Dev mode is not supported in the python wrapper. Please use the Robyn CLI. e.g. python3 -m robyn app.py")
 
     def add_route(
-        self,
-        route_type: Union[HttpMethod, str],
-        endpoint: str,
-        handler: Callable,
-        is_const: bool = False,
-        auth_required: bool = False,
-        openapi_name: str = "",
-        openapi_tags: Union[List[str], None] = None,
+            self,
+            route_type: Union[HttpMethod, str],
+            endpoint: str,
+            handler: Callable,
+            is_const: bool = False,
+            auth_required: bool = False,
+            openapi_name: str = "",
+            openapi_tags: Union[List[str], None] = None,
     ):
         """
         Connect a URI to a handler
@@ -198,11 +200,11 @@ class BaseRobyn(ABC):
         return self.middleware_router.add_middleware(MiddlewareType.AFTER_REQUEST, endpoint)
 
     def serve_directory(
-        self,
-        route: str,
-        directory_path: str,
-        index_file: Optional[str] = None,
-        show_files_listing: bool = False,
+            self,
+            route: str,
+            directory_path: str,
+            index_file: Optional[str] = None,
+            show_files_listing: bool = False,
     ):
         """
         Serves a directory at the given route
@@ -287,12 +289,12 @@ class BaseRobyn(ABC):
         self.exception_handler = exception_handler
 
     def get(
-        self,
-        endpoint: str,
-        const: bool = False,
-        auth_required: bool = False,
-        openapi_name: str = "",
-        openapi_tags: List[str] = ["get"],
+            self,
+            endpoint: str,
+            const: bool = False,
+            auth_required: bool = False,
+            openapi_name: str = "",
+            openapi_tags: List[str] = ["get"],
     ):
         """
         The @app.get decorator to add a route with the GET method
@@ -310,11 +312,11 @@ class BaseRobyn(ABC):
         return inner
 
     def post(
-        self,
-        endpoint: str,
-        auth_required: bool = False,
-        openapi_name: str = "",
-        openapi_tags: List[str] = ["post"],
+            self,
+            endpoint: str,
+            auth_required: bool = False,
+            openapi_name: str = "",
+            openapi_tags: List[str] = ["post"],
     ):
         """
         The @app.post decorator to add a route with POST method
@@ -326,16 +328,17 @@ class BaseRobyn(ABC):
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.POST, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+            return self.add_route(HttpMethod.POST, endpoint, handler, auth_required=auth_required,
+                                  openapi_name=openapi_name, openapi_tags=openapi_tags)
 
         return inner
 
     def put(
-        self,
-        endpoint: str,
-        auth_required: bool = False,
-        openapi_name: str = "",
-        openapi_tags: List[str] = ["put"],
+            self,
+            endpoint: str,
+            auth_required: bool = False,
+            openapi_name: str = "",
+            openapi_tags: List[str] = ["put"],
     ):
         """
         The @app.put decorator to add a get route with PUT method
@@ -347,16 +350,17 @@ class BaseRobyn(ABC):
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.PUT, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+            return self.add_route(HttpMethod.PUT, endpoint, handler, auth_required=auth_required,
+                                  openapi_name=openapi_name, openapi_tags=openapi_tags)
 
         return inner
 
     def delete(
-        self,
-        endpoint: str,
-        auth_required: bool = False,
-        openapi_name: str = "",
-        openapi_tags: List[str] = ["delete"],
+            self,
+            endpoint: str,
+            auth_required: bool = False,
+            openapi_name: str = "",
+            openapi_tags: List[str] = ["delete"],
     ):
         """
         The @app.delete decorator to add a route with DELETE method
@@ -368,16 +372,17 @@ class BaseRobyn(ABC):
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.DELETE, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+            return self.add_route(HttpMethod.DELETE, endpoint, handler, auth_required=auth_required,
+                                  openapi_name=openapi_name, openapi_tags=openapi_tags)
 
         return inner
 
     def patch(
-        self,
-        endpoint: str,
-        auth_required: bool = False,
-        openapi_name: str = "",
-        openapi_tags: List[str] = ["patch"],
+            self,
+            endpoint: str,
+            auth_required: bool = False,
+            openapi_name: str = "",
+            openapi_tags: List[str] = ["patch"],
     ):
         """
         The @app.patch decorator to add a route with PATCH method
@@ -389,16 +394,17 @@ class BaseRobyn(ABC):
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.PATCH, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+            return self.add_route(HttpMethod.PATCH, endpoint, handler, auth_required=auth_required,
+                                  openapi_name=openapi_name, openapi_tags=openapi_tags)
 
         return inner
 
     def head(
-        self,
-        endpoint: str,
-        auth_required: bool = False,
-        openapi_name: str = "",
-        openapi_tags: List[str] = ["head"],
+            self,
+            endpoint: str,
+            auth_required: bool = False,
+            openapi_name: str = "",
+            openapi_tags: List[str] = ["head"],
     ):
         """
         The @app.head decorator to add a route with HEAD method
@@ -410,16 +416,17 @@ class BaseRobyn(ABC):
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.HEAD, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+            return self.add_route(HttpMethod.HEAD, endpoint, handler, auth_required=auth_required,
+                                  openapi_name=openapi_name, openapi_tags=openapi_tags)
 
         return inner
 
     def options(
-        self,
-        endpoint: str,
-        auth_required: bool = False,
-        openapi_name: str = "",
-        openapi_tags: List[str] = ["options"],
+            self,
+            endpoint: str,
+            auth_required: bool = False,
+            openapi_name: str = "",
+            openapi_tags: List[str] = ["options"],
     ):
         """
         The @app.options decorator to add a route with OPTIONS method
@@ -431,16 +438,17 @@ class BaseRobyn(ABC):
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.OPTIONS, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+            return self.add_route(HttpMethod.OPTIONS, endpoint, handler, auth_required=auth_required,
+                                  openapi_name=openapi_name, openapi_tags=openapi_tags)
 
         return inner
 
     def connect(
-        self,
-        endpoint: str,
-        auth_required: bool = False,
-        openapi_name: str = "",
-        openapi_tags: List[str] = ["connect"],
+            self,
+            endpoint: str,
+            auth_required: bool = False,
+            openapi_name: str = "",
+            openapi_tags: List[str] = ["connect"],
     ):
         """
         The @app.connect decorator to add a route with CONNECT method
@@ -452,16 +460,17 @@ class BaseRobyn(ABC):
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.CONNECT, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+            return self.add_route(HttpMethod.CONNECT, endpoint, handler, auth_required=auth_required,
+                                  openapi_name=openapi_name, openapi_tags=openapi_tags)
 
         return inner
 
     def trace(
-        self,
-        endpoint: str,
-        auth_required: bool = False,
-        openapi_name: str = "",
-        openapi_tags: List[str] = ["trace"],
+            self,
+            endpoint: str,
+            auth_required: bool = False,
+            openapi_name: str = "",
+            openapi_tags: List[str] = ["trace"],
     ):
         """
         The @app.trace decorator to add a route with TRACE method
@@ -473,7 +482,8 @@ class BaseRobyn(ABC):
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.TRACE, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+            return self.add_route(HttpMethod.TRACE, endpoint, handler, auth_required=auth_required,
+                                  openapi_name=openapi_name, openapi_tags=openapi_tags)
 
         return inner
 
@@ -561,49 +571,72 @@ class Robyn(BaseRobyn):
 
 
 class SubRouter(BaseRobyn):
-    def __init__(self, file_object: str, prefix: str = "", config: Config = Config(), openapi: OpenAPI = OpenAPI()) -> None:
+    def __init__(self, file_object: str, prefix: str = "", config: Config = Config(),
+                 openapi: OpenAPI = OpenAPI()) -> None:
         super().__init__(file_object=file_object, config=config, openapi=openapi)
         self.prefix = prefix
 
     def __add_prefix(self, endpoint: str):
         return f"{self.prefix}{endpoint}"
 
-    def get(self, endpoint: str, const: bool = False, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["get"]):
-        return super().get(endpoint=self.__add_prefix(endpoint), const=const, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def get(self, endpoint: str, const: bool = False, auth_required: bool = False, openapi_name: str = "",
+            openapi_tags: List[str] = ["get"]):
+        return super().get(endpoint=self.__add_prefix(endpoint), const=const, auth_required=auth_required,
+                           openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def post(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["post"]):
-        return super().post(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def post(self, endpoint: str, auth_required: bool = False, openapi_name: str = "",
+             openapi_tags: List[str] = ["post"]):
+        return super().post(endpoint=self.__add_prefix(endpoint), auth_required=auth_required,
+                            openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def put(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["put"]):
-        return super().put(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def put(self, endpoint: str, auth_required: bool = False, openapi_name: str = "",
+            openapi_tags: List[str] = ["put"]):
+        return super().put(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name,
+                           openapi_tags=openapi_tags)
 
-    def delete(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["delete"]):
-        return super().delete(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def delete(self, endpoint: str, auth_required: bool = False, openapi_name: str = "",
+               openapi_tags: List[str] = ["delete"]):
+        return super().delete(endpoint=self.__add_prefix(endpoint), auth_required=auth_required,
+                              openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def patch(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["patch"]):
-        return super().patch(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def patch(self, endpoint: str, auth_required: bool = False, openapi_name: str = "",
+              openapi_tags: List[str] = ["patch"]):
+        return super().patch(endpoint=self.__add_prefix(endpoint), auth_required=auth_required,
+                             openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def head(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["head"]):
-        return super().head(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def head(self, endpoint: str, auth_required: bool = False, openapi_name: str = "",
+             openapi_tags: List[str] = ["head"]):
+        return super().head(endpoint=self.__add_prefix(endpoint), auth_required=auth_required,
+                            openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def trace(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["trace"]):
-        return super().trace(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def trace(self, endpoint: str, auth_required: bool = False, openapi_name: str = "",
+              openapi_tags: List[str] = ["trace"]):
+        return super().trace(endpoint=self.__add_prefix(endpoint), auth_required=auth_required,
+                             openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def options(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["options"]):
-        return super().options(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def options(self, endpoint: str, auth_required: bool = False, openapi_name: str = "",
+                openapi_tags: List[str] = ["options"]):
+        return super().options(endpoint=self.__add_prefix(endpoint), auth_required=auth_required,
+                               openapi_name=openapi_name, openapi_tags=openapi_tags)
 
 
-def ALLOW_CORS(app: Robyn, origins: Union[List[str], str]):
+def ALLOW_CORS(app: Robyn, origins: Union[List[str], str], headers: Union[List[str], str] = None):
     """
     Configure CORS headers for the application.
 
     Args:
         app: Robyn application instance
         origins: List of allowed origins or "*" for all origins
+        headers: List of allowed headers or "*" for all headers
     """
     # Handle string input for origins
     if isinstance(origins, str):
         origins = [origins]
+
+    default_headers = ["Content-Type", "Authorization"]
+    if isinstance(headers, list):
+        headers = list(set(default_headers + headers))
+        headers = ", ".join(headers)
 
     @app.before_request()
     def cors_middleware(request):
@@ -620,7 +653,7 @@ def ALLOW_CORS(app: Robyn, origins: Union[List[str], str]):
                 headers={
                     "Access-Control-Allow-Origin": origin if origin else (origins[0] if origins else "*"),
                     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS",
-                    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+                    "Access-Control-Allow-Headers": str(headers) if headers else "Content-Type, Authorization",
                     "Access-Control-Allow-Credentials": "true",
                     "Access-Control-Max-Age": "3600",
                 },
@@ -637,7 +670,7 @@ def ALLOW_CORS(app: Robyn, origins: Union[List[str], str]):
         app.set_response_header("Access-Control-Allow-Origin", "*")
 
     app.set_response_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS")
-    app.set_response_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+    app.set_response_header("Access-Control-Allow-Headers", str(headers) if headers else "Content-Type, Authorization")
     app.set_response_header("Access-Control-Allow-Credentials", "true")
 
 
