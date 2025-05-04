@@ -27,7 +27,6 @@ from robyn.ws import WebSocket
 
 __version__ = get_version()
 
-
 config = Config()
 
 if (compile_path := config.compile_rust_path) is not None:
@@ -593,17 +592,23 @@ class SubRouter(BaseRobyn):
         return super().options(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
 
-def ALLOW_CORS(app: Robyn, origins: Union[List[str], str]):
+def ALLOW_CORS(app: Robyn, origins: Union[List[str], str], headers: Union[List[str], str] = None):
     """
     Configure CORS headers for the application.
 
     Args:
         app: Robyn application instance
         origins: List of allowed origins or "*" for all origins
+        headers: List of allowed headers or "*" for all headers
     """
     # Handle string input for origins
     if isinstance(origins, str):
         origins = [origins]
+
+    default_headers = ["Content-Type", "Authorization"]
+    if isinstance(headers, list):
+        headers = list(set(default_headers + headers))
+        headers = ", ".join(headers)
 
     @app.before_request()
     def cors_middleware(request):
@@ -620,7 +625,7 @@ def ALLOW_CORS(app: Robyn, origins: Union[List[str], str]):
                 headers={
                     "Access-Control-Allow-Origin": origin if origin else (origins[0] if origins else "*"),
                     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS",
-                    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+                    "Access-Control-Allow-Headers": str(headers) if headers else "Content-Type, Authorization",
                     "Access-Control-Allow-Credentials": "true",
                     "Access-Control-Max-Age": "3600",
                 },
@@ -637,7 +642,7 @@ def ALLOW_CORS(app: Robyn, origins: Union[List[str], str]):
         app.set_response_header("Access-Control-Allow-Origin", "*")
 
     app.set_response_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS")
-    app.set_response_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+    app.set_response_header("Access-Control-Allow-Headers", str(headers) if headers else "Content-Type, Authorization")
     app.set_response_header("Access-Control-Allow-Credentials", "true")
 
 
