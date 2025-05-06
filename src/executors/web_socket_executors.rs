@@ -1,15 +1,39 @@
+use std::borrow::Cow;
+
 use actix::prelude::*;
 use actix::AsyncContext;
 use actix_web_actors::ws;
 use pyo3::prelude::*;
+use pyo3::types::PyString;
 use pyo3_asyncio::TaskLocals;
 
 use crate::types::function_info::FunctionInfo;
 use crate::websockets::WebSocketConnector;
 
+pub enum WsMsgIn<'a> {
+    String(String),
+    Bytes(Cow<'a, [u8]>),
+}
+
+impl <'a>Default for WsMsgIn<'a> {
+    fn default() -> Self {
+        WsMsgIn::String(Default::default())
+    }
+}
+
+
+impl <'a>IntoPy<PyObject> for WsMsgIn<'a> {
+    fn into_py(self, py: Python<'_>) -> PyObject {
+        match self {
+            WsMsgIn::String(val) => val.into_py(py),
+            WsMsgIn::Bytes(val) => val.into_py(py),
+        }
+    }
+}
+
 fn get_function_output<'a>(
     function: &'a FunctionInfo,
-    fn_msg: Option<String>,
+    fn_msg: Option<WsMsgIn>,
     py: Python<'a>,
     ws: &WebSocketConnector,
 ) -> Result<&'a PyAny, PyErr> {
@@ -57,9 +81,10 @@ fn get_function_output<'a>(
     }
 }
 
+
 pub fn execute_ws_function(
     function: &FunctionInfo,
-    text: Option<String>,
+    text: Option<WsMsgIn>,
     task_locals: &TaskLocals,
     ctx: &mut ws::WebsocketContext<WebSocketConnector>,
     ws: &WebSocketConnector,
