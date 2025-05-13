@@ -23,7 +23,7 @@ class WebSocket:
     def __init__(self, robyn_object: "Robyn", endpoint: str, config: Config = Config(), dependencies: DependencyMap = DependencyMap()) -> None:
         self.robyn_object = robyn_object
         self.endpoint = endpoint
-        self.methods = {}
+        self.methods: dict = {}
         self.config = config
         self.dependencies = dependencies
 
@@ -31,12 +31,12 @@ class WebSocket:
         def inner(handler):
             if type not in ["connect", "close", "message"]:
                 raise Exception(f"Socket method {type} does not exist")
-            else:
-                params = dict(inspect.signature(handler).parameters)
-                num_params = len(params)
-                is_async = asyncio.iscoroutinefunction(handler)
 
-                injected_dependencies = self.dependencies.get_dependency_map(self)
+            params = dict(inspect.signature(handler).parameters)
+            num_params = len(params)
+            is_async = asyncio.iscoroutinefunction(handler)
+
+            injected_dependencies = self.dependencies.get_dependency_map(self)
 
             new_injected_dependencies = {}
             for dependency in injected_dependencies:

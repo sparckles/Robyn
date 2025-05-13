@@ -1,0 +1,67 @@
+export const description =
+  'Welcome to the Robyn API documentation. You will find comprehensive guides and documentation to help you start working with Robyn as quickly as possible, as well as support if you get stuck.'
+
+# Real Life Web Apps with Robyn
+
+Batman was tasked with building a web application to manage the crime data in Gotham City. The application would allow the Gotham police department to store and retrieve data on criminal activities, suspects, and their locations. He decided to use the Robyn web framework to build this application efficiently and quickly.
+
+You can find the source code for this application [here](https://github.com/sparckles/example_robyn_app).
+
+## Installing Robyn
+
+The first step was to install Robyn. Batman created a virtual environment and installed Robyn using pip.
+
+```bash
+$ python3 -m venv venv
+$ source venv/bin/activate
+$ pip install robyn
+```
+
+## Creating a Robyn Application
+
+Batman wanted to create a Robyn app and was about to create an `src/app.py` before he was told that Robyn comes with a CLI tool to create a new application. He ran the following command to create a new Robyn application.
+
+```bash
+$ python -m robyn --create
+```
+
+This, would result in the following output.
+
+```bash
+$ python3 -m robyn --create
+? Directory Path: .
+? Need Docker? (Y/N) Y
+? Please select project type (Mongo/Postgres/Sqlalchemy/Prisma):
+❯ No DB
+  Sqlite
+  Postgres
+  MongoDB
+  SqlAlchemy
+  Prisma
+```
+
+and the following directory structure.
+
+
+Batman was asked a set of questions to configure the application. He chose to use the default values for most of the questions.
+
+And he was done! The Robyn CLI created a new application with the following structure.
+
+```bash
+
+├── src
+│   ├── app.py
+├── Dockerfile
+
+```
+
+
+<div className="not-prose">
+  <Button
+    href="/documentation/en/example_app/modeling_routes"
+    variant="text"
+    arrow="right"
+    children="Modeling Routes"
+  />
+</div>
+

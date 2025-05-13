@@ -1,0 +1,162 @@
+export const description =
+  'Welcome to the Robyn API documentation. You will find comprehensive guides and documentation to help you start working with Robyn as quickly as possible, as well as support if you get stuck.'
+
+
+## Crime Data Model and Database Connection
+
+Batman designed a data model to represent crime data, including information about the crime, suspect, and location. He decided to use a SQLite database to store the data and used an ORM (Object Relational Mapping) library to interact with the database.
+
+
+```python
+# models.py
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Float
+from sqlalchemy.orm import declarative_base, sessionmaker
+
+DATABASE_URL = "sqlite:///./gotham_crime_data.db"
+
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+
+Base = declarative_base()
+
+class Crime(Base):
+    __tablename__ = "crimes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    type = Column(String, index=True)
+    description = Column(String)
+    location = Column(String)
+    suspect_name = Column(String)
+    date_time = Column(DateTime)
+    latitude = Column(Float)
+    longitude = Column(Float)
+
+```
+
+
+## Setting up the Robyn Application
+
+Batman set up a Robyn application and configured it to use the database session to access the SQLite database.
+
+
+Based on the Database model, Batman created a few helper methods to interact with the database. These methods would be used by the endpoints to perform CRUD operations on the database.
+
+```python {{ title: 'crud.py' }}
+# crud.py
+from sqlalchemy.orm import Session
+from .models import  Crime
+
+
+def get_crime(db: Session, crime_id: int):
+    return db.query(Crime).filter(Crime.id == crime_id).first()
+
+def get_crimes(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(Crime).offset(skip).limit(limit).all()
+
+def create_crime(db: Session, crime):
+    db_crime = Crime(**crime)
+    db.add(db_crime)
+    db.commit()
+    db.refresh(db_crime)
+    return db_crime
+
+def update_crime(db: Session, crime_id: int, crime):
+    db_crime = get_crime(db, crime_id)
+    if db_crime is None:
+        return None
+    for key, value in crime.items():
+        setattr(db_crime, key, value)
+    db.commit()
+    db.refresh(db_crime)
+    return db_crime
+
+def delete_crime(db: Session, crime_id: int):
+    db_crime = get_crime(db, crime_id)
+    if db_crime is None:
+        return False
+    db.delete(db_crime)
+    db.commit()
+    return True
+
+```
+
+
+## Crime Data Endpoints
+
+Batman created various endpoints to manage crime data. These endpoints allowed the Gotham City Police Department to add, update, and retrieve crime data.
+
+```python {{ title: 'Setting up Routes' }}
+# __main__.py
+from robyn import Robyn
+from robyn.robyn import Request, Response
+from sqlalchemy.orm import Session
+
+app = Robyn(__file__)
+
+@app.post("/crimes")
+async def add_crime(request):
+    with SessionLocal() as db:
+        crime = request.json()
+        insertion = crud.create_crime(db, crime)
+
+    if insertion is None:
+        raise Exception("Crime not added")
+
+    return {
+        "description": "Crime added successfully",
+        "status_code": 200,
+    }
+
+@app.get("/crimes")
+async def get_crimes(request):
+    with SessionLocal() as db:
+        skip = request.query_params.get("skip", "0")
+        limit = request.query_params.get("limit", "100")
+        crimes = crud.get_crimes(db, skip=skip, limit=limit)
+
+    return crimes
+
+@app.get("/crimes/:crime_id", auth_required=True)
+async def get_crime(request):
+    crime_id = int(request.path_params.get("crime_id"))
+    with SessionLocal() as db:
+        crime = crud.get_crime(db, crime_id=crime_id)
+
+    if crime is None:
+        raise Exception("Crime not found")
+
+    return crime
+
+@app.put("/crimes/:crime_id")
+async def update_crime(request):
+    crime = request.json()
+    crime_id = int(request.path_params.get("crime_id"))
+    with SessionLocal() as db:
+        updated_crime = crud.update_crime(db, crime_id=crime_id, crime=crime)
+    if updated_crime is None:
+        raise Exception("Crime not found")
+    return updated_crime
+
+@app.delete("/crimes/{crime_id}")
+async def delete_crime(request):
+    crime_id = int(request.path_params.get("crime_id"))
+    with SessionLocal() as db:
+        success = crud.delete_crime(db, crime_id=crime_id)
+    if not success:
+        raise Exception("Crime not found")
+    return {"message": "Crime deleted successfully"}
+
+
+```
+
+
+<div className="not-prose">
+  <Button
+    href="/documentation/en/example_app/authentication"
+    variant="text"
+    arrow="right"
+    children="Next: Authentication"
+  />
+</div>
+

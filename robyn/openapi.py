@@ -1,13 +1,20 @@
 import inspect
+import json
 import typing
 from dataclasses import asdict, dataclass, field
 from importlib import resources
 from inspect import Signature
-from typing import Any, Callable, Dict, List, Optional, TypedDict
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Tuple, TypedDict
 
-from robyn.responses import FileResponse, html
+from robyn.responses import html
 from robyn.robyn import QueryParams, Response
 from robyn.types import Body
+
+
+class str_typed_dict(TypedDict):
+    key: str
+    value: str
 
 
 @dataclass
@@ -138,11 +145,15 @@ class OpenAPI:
 
     info: OpenAPIInfo = field(default_factory=OpenAPIInfo)
     openapi_spec: dict = field(init=False)
+    openapi_file_override: bool = False  # denotes whether there is an override or not.
 
     def __post_init__(self):
         """
         Initializes the openapi_spec dict
         """
+        if self.openapi_file_override:
+            return
+
         self.openapi_spec = {
             "openapi": "3.1.0",
             "info": asdict(self.info),
@@ -162,6 +173,9 @@ class OpenAPI:
         @param openapi_tags: List[str] for grouping of endpoints
         @param handler: Callable the handler function for the endpoint
         """
+
+        if self.openapi_file_override:
+            return
 
         query_params = None
         request_body = None
@@ -212,6 +226,10 @@ class OpenAPI:
 
         @param subrouter_openapi: OpenAPI the OpenAPI object of the current subrouter
         """
+
+        if self.openapi_file_override:
+            return
+
         paths = subrouter_openapi.openapi_spec["paths"]
 
         for path in paths:
@@ -223,16 +241,16 @@ class OpenAPI:
         name: str,
         description: str,
         tags: List[str],
-        query_params: Optional[TypedDict],
-        request_body: Optional[TypedDict],
-        return_annotation: Optional[TypedDict],
-    ) -> (str, dict):
+        query_params: Optional[str_typed_dict],
+        request_body: Optional[str_typed_dict],
+        return_annotation: Optional[str_typed_dict],
+    ) -> Tuple[str, dict]:
         """
         Get the "path" openapi object according to spec
 
         @param endpoint: str the endpoint to be added
         @param name: str the name of the endpoint
-        @param description: Optional[str] short description of the endpoint (to be fetched from the endpoint defenition by default)
+        @param description: Optional[str] short description of the endpoint (to be fetched from the endpoint definition by default)
         @param tags: List[str] for grouping of endpoints
         @param query_params: Optional[TypedDict] query params for the function
         @param request_body: Optional[TypedDict] request body for the function
@@ -245,7 +263,7 @@ class OpenAPI:
         if not description:
             description = "No description provided"
 
-        openapi_path_object = {
+        openapi_path_object: dict = {
             "summary": name,
             "description": description,
             "parameters": [],
@@ -280,7 +298,7 @@ class OpenAPI:
                 endpoint_with_path_params_wrapped_in_braces += "/{" + path_param_name + "}"
 
         if query_params:
-            query_param_annotations = query_params.__annotations__ if query_params is TypedDict else typing.get_type_hints(query_params)
+            query_param_annotations = query_params.__annotations__ if query_params is str_typed_dict else typing.get_type_hints(query_params)
 
             for query_param in query_param_annotations:
                 query_param_type = self.get_openapi_type(query_param_annotations[query_param])
@@ -315,7 +333,7 @@ class OpenAPI:
 
             openapi_path_object["requestBody"] = request_body_object
 
-        response_schema = {}
+        response_schema: dict = {}
         response_type = "text/plain"
 
         if return_annotation and return_annotation is not Response:
@@ -326,7 +344,7 @@ class OpenAPI:
 
         return endpoint_with_path_params_wrapped_in_braces, openapi_path_object
 
-    def get_openapi_type(self, typed_dict: TypedDict) -> str:
+    def get_openapi_type(self, typed_dict: str_typed_dict) -> str:
         """
         Get actual type from the TypedDict annotations
 
@@ -358,11 +376,11 @@ class OpenAPI:
         @return: dict the properties object
         """
 
-        properties = {
+        properties: dict = {
             "title": parameter.capitalize(),
         }
 
-        type_mapping = {
+        type_mapping: dict = {
             int: "integer",
             str: "string",
             bool: "boolean",
@@ -374,6 +392,16 @@ class OpenAPI:
         for type_name in type_mapping:
             if param_type is type_name:
                 properties["type"] = type_mapping[type_name]
+                return properties
+
+        # Check if it's a generic type (like List[Object])
+        if hasattr(param_type, "__origin__"):
+            if param_type.__origin__ is list or param_type.__origin__ is List:
+                properties["type"] = "array"
+                # Handle the element type in the list
+                if hasattr(param_type, "__args__") and param_type.__args__:
+                    item_type = param_type.__args__[0]
+                    properties["items"] = self.get_schema_object(f"{parameter}_item", item_type)
                 return properties
 
         # check for Optional type
@@ -393,7 +421,17 @@ class OpenAPI:
 
         return properties
 
-    def get_openapi_docs_page(self) -> FileResponse:
+    def override_openapi(self, openapi_json_spec_path: Path):
+        """
+        Set a pre-configured OpenAPI spec
+        @param openapi_json_spec_path: str the path to the json file
+        """
+        with open(openapi_json_spec_path) as json_file:
+            json_file_content = json.load(json_file)
+            self.openapi_spec = dict(json_file_content)
+            self.openapi_file_override = True
+
+    def get_openapi_docs_page(self) -> Response:
         """
         Handler to the swagger html page to be deployed to the endpoint `/docs`
         @return: FileResponse the swagger html page

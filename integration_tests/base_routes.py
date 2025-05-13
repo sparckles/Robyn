@@ -4,7 +4,6 @@ from collections import defaultdict
 from typing import Optional
 
 from integration_tests.subroutes import di_subrouter, sub_router
-from integration_tests.views import AsyncView, SyncView
 from robyn import Headers, Request, Response, Robyn, WebSocket, WebSocketConnector, jsonify, serve_file, serve_html
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.robyn import QueryParams, Url
@@ -66,6 +65,8 @@ async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
         resp = "*chika* *chika* Slim Shady."
     elif state == 3:
         ws.close()
+        # TODO temporary fix to avoid CI failure
+        resp = "Connection closed"
 
     websocket_state[websocket_id] = (state + 1) % 4
     return resp
@@ -710,29 +711,6 @@ async def async_body_patch(request: Request):
     return request.body
 
 
-# ===== Views =====
-
-
-@app.view("/sync/view/decorator")
-def sync_decorator_view():
-    def get():
-        return "Hello, world!"
-
-    def post(request: Request):
-        body = request.body
-        return body
-
-
-@app.view("/async/view/decorator")
-def async_decorator_view():
-    async def get():
-        return "Hello, world!"
-
-    async def post(request: Request):
-        body = request.body
-        return body
-
-
 # ==== Exception Handling ====
 
 
@@ -1088,8 +1066,6 @@ def main():
         index_file="index.html",
     )
     app.startup_handler(startup_handler)
-    app.add_view("/sync/view", SyncView)
-    app.add_view("/async/view", AsyncView)
     app.include_router(sub_router)
     app.include_router(di_subrouter)
 

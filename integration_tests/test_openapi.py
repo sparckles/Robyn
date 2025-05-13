@@ -1,17 +1,44 @@
 import pytest
 
 from integration_tests.helpers.http_methods_helpers import get
+from robyn import Robyn
+
+
+@pytest.mark.benchmark
+def test_custom_openapi_spec():
+    app = Robyn(__file__, openapi_file_path="openapi_config.json")
+
+    openapi_spec = app.openapi.openapi_spec
+
+    assert isinstance(openapi_spec, dict)
+
+    assert "openapi" in openapi_spec
+    assert "info" in openapi_spec
+    assert "paths" in openapi_spec
+    assert "components" in openapi_spec
+    assert "servers" in openapi_spec
+    assert "externalDocs" in openapi_spec
+
+    assert openapi_spec["info"]["title"] == "Robyn Test API"
+    assert openapi_spec["info"]["version"] == "1.0.0"
 
 
 @pytest.mark.benchmark
 def test_docs_handler():
-    html_response = get("/docs")
+    # should_check_response = False because check_response raises a
+    # failure if the global headers are not present in the response
+    # provided we are excluding headers for /docs and /openapi.json
+    html_response = get("/docs", should_check_response=False)
     assert html_response.status_code == 200
 
 
 @pytest.mark.benchmark
 def test_json_handler():
-    openapi_spec = get("/openapi.json").json()
+    openapi_response = get("/openapi.json", should_check_response=False)
+
+    assert openapi_response.status_code == 200
+
+    openapi_spec = openapi_response.json()
 
     assert isinstance(openapi_spec, dict)
     assert "openapi" in openapi_spec
@@ -24,7 +51,11 @@ def test_json_handler():
 
 @pytest.mark.benchmark
 def test_add_openapi_path():
-    openapi_spec = get("/openapi.json").json()
+    openapi_response = get("/openapi.json", should_check_response=False)
+
+    assert openapi_response.status_code == 200
+
+    openapi_spec = openapi_response.json()
 
     assert isinstance(openapi_spec, dict)
 
@@ -41,7 +72,11 @@ def test_add_openapi_path():
 
 @pytest.mark.benchmark
 def test_add_subrouter_paths():
-    openapi_spec = get("/openapi.json").json()
+    openapi_response = get("/openapi.json", should_check_response=False)
+
+    assert openapi_response.status_code == 200
+
+    openapi_spec = openapi_response.json()
 
     assert isinstance(openapi_spec, dict)
 
@@ -58,7 +93,11 @@ def test_add_subrouter_paths():
 
 @pytest.mark.benchmark
 def test_openapi_request_body():
-    openapi_spec = get("/openapi.json").json()
+    openapi_response = get("/openapi.json", should_check_response=False)
+
+    assert openapi_response.status_code == 200
+
+    openapi_spec = openapi_response.json()
 
     assert isinstance(openapi_spec, dict)
 
@@ -118,7 +157,11 @@ def test_openapi_request_body():
 
 @pytest.mark.benchmark
 def test_openapi_response_body():
-    openapi_spec = get("/openapi.json").json()
+    openapi_response = get("/openapi.json", should_check_response=False)
+
+    assert openapi_response.status_code == 200
+
+    openapi_spec = openapi_response.json()
 
     assert isinstance(openapi_spec, dict)
 
@@ -153,7 +196,11 @@ def test_openapi_response_body():
 
 @pytest.mark.benchmark
 def test_openapi_query_params():
-    openapi_spec = get("/openapi.json").json()
+    openapi_response = get("/openapi.json", should_check_response=False)
+
+    assert openapi_response.status_code == 200
+
+    openapi_spec = openapi_response.json()
 
     assert isinstance(openapi_spec, dict)
 

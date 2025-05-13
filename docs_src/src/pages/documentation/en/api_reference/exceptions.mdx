@@ -1,0 +1,34 @@
+## Custom Exception Handler
+
+Batman learned how to create custom error handlers for different exception types in his application. He wrote the following code to handle exceptions and return a custom error response:
+
+<Row>
+<Col>
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/hello_world">
+
+    ```python {{ title: 'untyped' }}
+    @app.exception
+    def handle_exception(error):
+        return Response(status_code=500, description=f"error msg: {error}", headers={})
+    ```
+
+    ```python {{ title: 'typed' }}
+    @app.exception
+    def handle_exception(error: Exception):
+        return Response(status_code=500, description=f"error msg: {error}", headers={})
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+
+## What's next?
+
+Now, Batman wanted to scale his application across multiple cores. Robyn led him to Scaling.
+
+- [Scaling](/documentation/en/api_reference/scaling)
+

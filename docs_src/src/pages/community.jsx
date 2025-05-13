@@ -83,7 +83,7 @@ export default function Community() {
             </h2>
             <p className="mt-6 text-lg leading-8 text-gray-300">
               Robyn is a community project and is housed under the sparckles
-              orgranisation.
+              organisation.
             </p>
           </div>
         </div>
@@ -136,7 +136,7 @@ export default function Community() {
               Our team
             </h2>
             <p className="mt-6 text-lg leading-8 text-gray-300">
-              Robyn is housed under an open source orgranisation called
+              Robyn is housed under an open source organisation called
               Sparckles. We are a group of developers passionate about the open
               source community. Come join us and help us empower the Python web
               ecosystem.

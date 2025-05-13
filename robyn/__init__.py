@@ -2,10 +2,11 @@ import asyncio
 import logging
 import os
 import socket
-from typing import Callable, List, Optional, Tuple, Union
+from abc import ABC
+from pathlib import Path
+from typing import Callable, List, Optional, Union
 
-import multiprocess as mp
-from nestd import get_all_nested
+import multiprocess as mp  # type: ignore
 
 from robyn import status_codes
 from robyn.argument_parser import Config
@@ -34,14 +35,15 @@ if (compile_path := config.compile_rust_path) is not None:
     print("Compiled rust files")
 
 
-class Robyn:
+class BaseRobyn(ABC):
     """This is the python wrapper for the Robyn binaries."""
 
     def __init__(
         self,
         file_object: str,
         config: Config = Config(),
-        openapi: OpenAPI = OpenAPI(),
+        openapi_file_path: Optional[str] = None,
+        openapi: Optional[OpenAPI] = None,
         dependencies: DependencyMap = DependencyMap(),
     ) -> None:
         directory_path = os.path.dirname(os.path.abspath(file_object))
@@ -50,6 +52,8 @@ class Robyn:
         self.config = config
         self.dependencies = dependencies
         self.openapi = openapi
+
+        self.init_openapi(openapi_file_path)
 
         if not bool(os.environ.get("ROBYN_CLI", False)):
             # the env variables are already set when are running through the cli
@@ -70,10 +74,25 @@ class Robyn:
         self.web_socket_router = WebSocketRouter()
         self.request_headers: Headers = Headers({})
         self.response_headers: Headers = Headers({})
+        self.excluded_response_headers_paths: Optional[List[str]] = None
         self.directories: List[Directory] = []
-        self.event_handlers = {}
+        self.event_handlers: dict = {}
         self.exception_handler: Optional[Callable] = None
         self.authentication_handler: Optional[AuthenticationHandler] = None
+        self.included_routers: List[Router] = []
+
+    def init_openapi(self, openapi_file_path: Optional[str]) -> None:
+        if self.config.disable_openapi:
+            return
+
+        if self.openapi is None:
+            self.openapi = OpenAPI()
+
+        if openapi_file_path:
+            self.openapi.override_openapi(Path(self.directory_path).joinpath(openapi_file_path))
+        elif Path(self.directory_path).joinpath("openapi.json").exists():
+            self.openapi.override_openapi(Path(self.directory_path).joinpath("openapi.json"))
+        # TODO! what about when the elif fails?
 
     def _handle_dev_mode(self):
         cli_dev_mode = self.config.dev  # --dev
@@ -94,6 +113,8 @@ class Robyn:
         handler: Callable,
         is_const: bool = False,
         auth_required: bool = False,
+        openapi_name: str = "",
+        openapi_tags: Union[List[str], None] = None,
     ):
         """
         Connect a URI to a handler
@@ -108,6 +129,8 @@ class Robyn:
         """ We will add the status code here only
         """
         injected_dependencies = self.dependencies.get_dependency_map(self)
+
+        list_openapi_tags: List[str] = openapi_tags if openapi_tags else []
 
         if auth_required:
             self.middleware_router.add_auth_middleware(endpoint, route_type)(handler)
@@ -129,6 +152,9 @@ class Robyn:
             endpoint=endpoint,
             handler=handler,
             is_const=is_const,
+            auth_required=auth_required,
+            openapi_name=openapi_name,
+            openapi_tags=list_openapi_tags,
             exception_handler=self.exception_handler,
             injected_dependencies=injected_dependencies,
         )
@@ -200,6 +226,13 @@ class Robyn:
     def set_response_header(self, key: str, value: str) -> None:
         self.response_headers.set(key, value)
 
+    def exclude_response_headers_for(self, excluded_response_headers_paths: Optional[List[str]]):
+        """
+        To exclude response headers from certain routes
+        @param exclude_paths: the paths to exclude response headers from
+        """
+        self.excluded_response_headers_paths = excluded_response_headers_paths
+
     def add_web_socket(self, endpoint: str, ws: WebSocket) -> None:
         self.web_socket_router.add_route(endpoint, ws)
 
@@ -225,6 +258,15 @@ class Robyn:
             raise Exception(f"Invalid port number: {port}")
 
     def _add_openapi_routes(self, auth_required: bool = False):
+        if self.config.disable_openapi:
+            return
+
+        if self.openapi is None:
+            logger.error("No openAPI")
+            return
+
+        self.router.prepare_routes_openapi(self.openapi, self.included_routers)
+
         self.add_route(
             route_type=HttpMethod.GET,
             endpoint="/openapi.json",
@@ -239,7 +281,236 @@ class Robyn:
             is_const=True,
             auth_required=auth_required,
         )
+        self.exclude_response_headers_for(["/docs", "/openapi.json"])
 
+    def exception(self, exception_handler: Callable):
+        self.exception_handler = exception_handler
+
+    def get(
+        self,
+        endpoint: str,
+        const: bool = False,
+        auth_required: bool = False,
+        openapi_name: str = "",
+        openapi_tags: List[str] = ["get"],
+    ):
+        """
+        The @app.get decorator to add a route with the GET method
+
+        :param endpoint str: endpoint for the route added
+        :param const bool: represents if the handler is a const function or not
+        :param auth_required bool: represents if the route needs authentication or not
+        :param openapi_name: str -- the name of the endpoint in the openapi spec
+        :param openapi_tags: List[str] -- for grouping of endpoints in the openapi spec
+        """
+
+        def inner(handler):
+            return self.add_route(HttpMethod.GET, endpoint, handler, const, auth_required, openapi_name, openapi_tags)
+
+        return inner
+
+    def post(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        openapi_name: str = "",
+        openapi_tags: List[str] = ["post"],
+    ):
+        """
+        The @app.post decorator to add a route with POST method
+
+        :param endpoint str: endpoint for the route added
+        :param auth_required bool: represents if the route needs authentication or not
+        :param openapi_name: str -- the name of the endpoint in the openapi spec
+        :param openapi_tags: List[str] -- for grouping of endpoints in the openapi spec
+        """
+
+        def inner(handler):
+            return self.add_route(HttpMethod.POST, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+
+        return inner
+
+    def put(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        openapi_name: str = "",
+        openapi_tags: List[str] = ["put"],
+    ):
+        """
+        The @app.put decorator to add a get route with PUT method
+
+        :param endpoint str: endpoint for the route added
+        :param auth_required bool: represents if the route needs authentication or not
+        :param openapi_name: str -- the name of the endpoint in the openapi spec
+        :param openapi_tags: List[str] -- for grouping of endpoints in the openapi spec
+        """
+
+        def inner(handler):
+            return self.add_route(HttpMethod.PUT, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+
+        return inner
+
+    def delete(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        openapi_name: str = "",
+        openapi_tags: List[str] = ["delete"],
+    ):
+        """
+        The @app.delete decorator to add a route with DELETE method
+
+        :param endpoint str: endpoint for the route added
+        :param auth_required bool: represents if the route needs authentication or not
+        :param openapi_name: str -- the name of the endpoint in the openapi spec
+        :param openapi_tags: List[str] -- for grouping of endpoints in the openapi spec
+        """
+
+        def inner(handler):
+            return self.add_route(HttpMethod.DELETE, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+
+        return inner
+
+    def patch(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        openapi_name: str = "",
+        openapi_tags: List[str] = ["patch"],
+    ):
+        """
+        The @app.patch decorator to add a route with PATCH method
+
+        :param endpoint str: endpoint for the route added
+        :param auth_required bool: represents if the route needs authentication or not
+        :param openapi_name: str -- the name of the endpoint in the openapi spec
+        :param openapi_tags: List[str] -- for grouping of endpoints in the openapi spec
+        """
+
+        def inner(handler):
+            return self.add_route(HttpMethod.PATCH, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+
+        return inner
+
+    def head(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        openapi_name: str = "",
+        openapi_tags: List[str] = ["head"],
+    ):
+        """
+        The @app.head decorator to add a route with HEAD method
+
+        :param endpoint str: endpoint for the route added
+        :param auth_required bool: represents if the route needs authentication or not
+        :param openapi_name: str -- the name of the endpoint in the openapi spec
+        :param openapi_tags: List[str] -- for grouping of endpoints in the openapi spec
+        """
+
+        def inner(handler):
+            return self.add_route(HttpMethod.HEAD, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+
+        return inner
+
+    def options(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        openapi_name: str = "",
+        openapi_tags: List[str] = ["options"],
+    ):
+        """
+        The @app.options decorator to add a route with OPTIONS method
+
+        :param endpoint str: endpoint for the route added
+        :param auth_required bool: represents if the route needs authentication or not
+        :param openapi_name: str -- the name of the endpoint in the openapi spec
+        :param openapi_tags: List[str] -- for grouping of endpoints in the openapi spec
+        """
+
+        def inner(handler):
+            return self.add_route(HttpMethod.OPTIONS, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+
+        return inner
+
+    def connect(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        openapi_name: str = "",
+        openapi_tags: List[str] = ["connect"],
+    ):
+        """
+        The @app.connect decorator to add a route with CONNECT method
+
+        :param endpoint str: endpoint for the route added
+        :param auth_required bool: represents if the route needs authentication or not
+        :param openapi_name: str -- the name of the endpoint in the openapi spec
+        :param openapi_tags: List[str] -- for grouping of endpoints in the openapi spec
+        """
+
+        def inner(handler):
+            return self.add_route(HttpMethod.CONNECT, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+
+        return inner
+
+    def trace(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        openapi_name: str = "",
+        openapi_tags: List[str] = ["trace"],
+    ):
+        """
+        The @app.trace decorator to add a route with TRACE method
+
+        :param endpoint str: endpoint for the route added
+        :param auth_required bool: represents if the route needs authentication or not
+        :param openapi_name: str -- the name of the endpoint in the openapi spec
+        :param openapi_tags: List[str] -- for grouping of endpoints in the openapi spec
+        """
+
+        def inner(handler):
+            return self.add_route(HttpMethod.TRACE, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
+
+        return inner
+
+    def include_router(self, router):
+        """
+        The method to include the routes from another router
+
+        :param router Robyn: the router object to include the routes from
+        """
+        self.included_routers.append(router)
+
+        self.router.routes.extend(router.router.routes)
+        self.middleware_router.global_middlewares.extend(router.middleware_router.global_middlewares)
+        self.middleware_router.route_middlewares.extend(router.middleware_router.route_middlewares)
+
+        if not self.config.disable_openapi and self.openapi is not None:
+            self.openapi.add_subrouter_paths(self.openapi)
+
+        # extend the websocket routes
+        prefix = router.prefix
+        for route in router.web_socket_router.routes:
+            new_endpoint = f"{prefix}{route}"
+            self.web_socket_router.routes[new_endpoint] = router.web_socket_router.routes[route]
+
+        self.dependencies.merge_dependencies(router)
+
+    def configure_authentication(self, authentication_handler: AuthenticationHandler):
+        """
+        Configures the authentication handler for the application.
+
+        :param authentication_handler: the instance of a class inheriting the AuthenticationHandler base class
+        """
+        self.authentication_handler = authentication_handler
+        self.middleware_router.set_authentication_handler(authentication_handler)
+
+
+class Robyn(BaseRobyn):
     def start(self, host: str = "127.0.0.1", port: int = 8080, _check_port: bool = True):
         """
         Starts the server
@@ -284,336 +555,90 @@ class Robyn:
             self.config.workers,
             self.config.processes,
             self.response_headers,
+            self.excluded_response_headers_paths,
             open_browser,
         )
 
-    def exception(self, exception_handler: Callable):
-        self.exception_handler = exception_handler
 
-    def add_view(self, endpoint: str, view: Callable, const: bool = False):
-        """
-        This is base handler for the view decorators
-
-        :param endpoint str: endpoint for the route added
-        :param handler function: represents the function passed as a parent handler for single route with different route types
-        """
-        http_methods = {
-            "GET": HttpMethod.GET,
-            "POST": HttpMethod.POST,
-            "PUT": HttpMethod.PUT,
-            "DELETE": HttpMethod.DELETE,
-            "PATCH": HttpMethod.PATCH,
-            "HEAD": HttpMethod.HEAD,
-            "OPTIONS": HttpMethod.OPTIONS,
-        }
-
-        def get_functions(view) -> List[Tuple[HttpMethod, Callable]]:
-            functions = get_all_nested(view)
-            output = []
-            for name, handler in functions:
-                route_type = name.upper()
-                method = http_methods.get(route_type)
-                if method is not None:
-                    output.append((method, handler))
-            return output
-
-        handlers = get_functions(view)
-        for route_type, handler in handlers:
-            self.add_route(route_type, endpoint, handler, const)
-
-    def view(self, endpoint: str, const: bool = False):
-        """
-        The @app.view decorator to add a view with the GET/POST/PUT/DELETE/PATCH/HEAD/OPTIONS method
-
-        :param endpoint str: endpoint to server the route
-        """
-
-        def inner(handler):
-            return self.add_view(endpoint, handler, const)
-
-        return inner
-
-    def get(
-        self,
-        endpoint: str,
-        const: bool = False,
-        auth_required: bool = False,
-        openapi_name: str = "",
-        openapi_tags: List[str] = ["get"],
-    ):
-        """
-        The @app.get decorator to add a route with the GET method
-
-        :param endpoint str: endpoint for the route added
-        :param const bool: represents if the handler is a const function or not
-        :param auth_required bool: represents if the route needs authentication or not
-        :param openapi_name: str -- the name of the endpoint in the openapi spec
-        :param openapi_tags: List[str] -- for grouping of endpoints in the openapi spec
-        """
-
-        def inner(handler):
-            self.openapi.add_openapi_path_obj("get", endpoint, openapi_name, openapi_tags, handler)
-
-            return self.add_route(HttpMethod.GET, endpoint, handler, const, auth_required)
-
-        return inner
-
-    def post(
-        self,
-        endpoint: str,
-        auth_required: bool = False,
-        openapi_name: str = "",
-        openapi_tags: List[str] = ["post"],
-    ):
-        """
-        The @app.post decorator to add a route with POST method
-
-        :param endpoint str: endpoint for the route added
-        :param auth_required bool: represents if the route needs authentication or not
-        :param openapi_name: str -- the name of the endpoint in the openapi spec
-        :param openapi_tags: List[str] -- for grouping of endpoints in the openapi spec
-        """
-
-        def inner(handler):
-            self.openapi.add_openapi_path_obj("post", endpoint, openapi_name, openapi_tags, handler)
-
-            return self.add_route(HttpMethod.POST, endpoint, handler, auth_required=auth_required)
-
-        return inner
-
-    def put(
-        self,
-        endpoint: str,
-        auth_required: bool = False,
-        openapi_name: str = "",
-        openapi_tags: List[str] = ["put"],
-    ):
-        """
-        The @app.put decorator to add a get route with PUT method
-
-        :param endpoint str: endpoint for the route added
-        :param auth_required bool: represents if the route needs authentication or not
-        :param openapi_name: str -- the name of the endpoint in the openapi spec
-        :param openapi_tags: List[str] -- for grouping of endpoints in the openapi spec
-        """
-
-        def inner(handler):
-            self.openapi.add_openapi_path_obj("put", endpoint, openapi_name, openapi_tags, handler)
-
-            return self.add_route(HttpMethod.PUT, endpoint, handler, auth_required=auth_required)
-
-        return inner
-
-    def delete(
-        self,
-        endpoint: str,
-        auth_required: bool = False,
-        openapi_name: str = "",
-        openapi_tags: List[str] = ["delete"],
-    ):
-        """
-        The @app.delete decorator to add a route with DELETE method
-
-        :param endpoint str: endpoint for the route added
-        :param auth_required bool: represents if the route needs authentication or not
-        :param openapi_name: str -- the name of the endpoint in the openapi spec
-        :param openapi_tags: List[str] -- for grouping of endpoints in the openapi spec
-        """
-
-        def inner(handler):
-            self.openapi.add_openapi_path_obj("delete", endpoint, openapi_name, openapi_tags, handler)
-
-            return self.add_route(HttpMethod.DELETE, endpoint, handler, auth_required=auth_required)
-
-        return inner
-
-    def patch(
-        self,
-        endpoint: str,
-        auth_required: bool = False,
-        openapi_name: str = "",
-        openapi_tags: List[str] = ["patch"],
-    ):
-        """
-        The @app.patch decorator to add a route with PATCH method
-
-        :param endpoint str: endpoint for the route added
-        :param auth_required bool: represents if the route needs authentication or not
-        :param openapi_name: str -- the name of the endpoint in the openapi spec
-        :param openapi_tags: List[str] -- for grouping of endpoints in the openapi spec
-        """
-
-        def inner(handler):
-            self.openapi.add_openapi_path_obj("patch", endpoint, openapi_name, openapi_tags, handler)
-
-            return self.add_route(HttpMethod.PATCH, endpoint, handler, auth_required=auth_required)
-
-        return inner
-
-    def head(
-        self,
-        endpoint: str,
-        auth_required: bool = False,
-        openapi_name: str = "",
-        openapi_tags: List[str] = ["head"],
-    ):
-        """
-        The @app.head decorator to add a route with HEAD method
-
-        :param endpoint str: endpoint for the route added
-        :param auth_required bool: represents if the route needs authentication or not
-        :param openapi_name: str -- the name of the endpoint in the openapi spec
-        :param openapi_tags: List[str] -- for grouping of endpoints in the openapi spec
-        """
-
-        def inner(handler):
-            self.openapi.add_openapi_path_obj("head", endpoint, openapi_name, openapi_tags, handler)
-
-            return self.add_route(HttpMethod.HEAD, endpoint, handler, auth_required=auth_required)
-
-        return inner
-
-    def options(
-        self,
-        endpoint: str,
-        auth_required: bool = False,
-        openapi_name: str = "",
-        openapi_tags: List[str] = ["options"],
-    ):
-        """
-        The @app.options decorator to add a route with OPTIONS method
-
-        :param endpoint str: endpoint for the route added
-        :param auth_required bool: represents if the route needs authentication or not
-        :param openapi_name: str -- the name of the endpoint in the openapi spec
-        :param openapi_tags: List[str] -- for grouping of endpoints in the openapi spec
-        """
-
-        def inner(handler):
-            self.openapi.add_openapi_path_obj("options", endpoint, openapi_name, openapi_tags, handler)
-
-            return self.add_route(HttpMethod.OPTIONS, endpoint, handler, auth_required=auth_required)
-
-        return inner
-
-    def connect(
-        self,
-        endpoint: str,
-        auth_required: bool = False,
-        openapi_name: str = "",
-        openapi_tags: List[str] = ["connect"],
-    ):
-        """
-        The @app.connect decorator to add a route with CONNECT method
-
-        :param endpoint str: endpoint for the route added
-        :param auth_required bool: represents if the route needs authentication or not
-        :param openapi_name: str -- the name of the endpoint in the openapi spec
-        :param openapi_tags: List[str] -- for grouping of endpoints in the openapi spec
-        """
-
-        def inner(handler):
-            self.openapi.add_openapi_path_obj("connect", endpoint, openapi_name, openapi_tags, handler)
-            return self.add_route(HttpMethod.CONNECT, endpoint, handler, auth_required=auth_required)
-
-        return inner
-
-    def trace(
-        self,
-        endpoint: str,
-        auth_required: bool = False,
-        openapi_name: str = "",
-        openapi_tags: List[str] = ["trace"],
-    ):
-        """
-        The @app.trace decorator to add a route with TRACE method
-
-        :param endpoint str: endpoint for the route added
-        :param auth_required bool: represents if the route needs authentication or not
-        :param openapi_name: str -- the name of the endpoint in the openapi spec
-        :param openapi_tags: List[str] -- for grouping of endpoints in the openapi spec
-        """
-
-        def inner(handler):
-            self.openapi.add_openapi_path_obj("trace", endpoint, openapi_name, openapi_tags, handler)
-
-            return self.add_route(HttpMethod.TRACE, endpoint, handler, auth_required=auth_required)
-
-        return inner
-
-    def include_router(self, router):
-        """
-        The method to include the routes from another router
-
-        :param router Robyn: the router object to include the routes from
-        """
-        self.router.routes.extend(router.router.routes)
-        self.middleware_router.global_middlewares.extend(router.middleware_router.global_middlewares)
-        self.middleware_router.route_middlewares.extend(router.middleware_router.route_middlewares)
-
-        self.openapi.add_subrouter_paths(router.openapi)
-
-        # extend the websocket routes
-        prefix = router.prefix
-        for route in router.web_socket_router.routes:
-            new_endpoint = f"{prefix}{route}"
-            self.web_socket_router.routes[new_endpoint] = router.web_socket_router.routes[route]
-
-        self.dependencies.merge_dependencies(router)
-
-    def configure_authentication(self, authentication_handler: AuthenticationHandler):
-        """
-        Configures the authentication handler for the application.
-
-        :param authentication_handler: the instance of a class inheriting the AuthenticationHandler base class
-        """
-        self.authentication_handler = authentication_handler
-        self.middleware_router.set_authentication_handler(authentication_handler)
-
-
-class SubRouter(Robyn):
+class SubRouter(BaseRobyn):
     def __init__(self, file_object: str, prefix: str = "", config: Config = Config(), openapi: OpenAPI = OpenAPI()) -> None:
-        super().__init__(file_object, config, openapi)
+        super().__init__(file_object=file_object, config=config, openapi=openapi)
         self.prefix = prefix
 
     def __add_prefix(self, endpoint: str):
         return f"{self.prefix}{endpoint}"
 
-    def get(self, endpoint: str, const: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["get"]):
-        return super().get(endpoint=self.__add_prefix(endpoint), const=const, openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def get(self, endpoint: str, const: bool = False, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["get"]):
+        return super().get(endpoint=self.__add_prefix(endpoint), const=const, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def post(self, endpoint: str, openapi_name: str = "", openapi_tags: List[str] = ["post"]):
-        return super().post(endpoint=self.__add_prefix(endpoint), openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def post(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["post"]):
+        return super().post(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def put(self, endpoint: str, openapi_name: str = "", openapi_tags: List[str] = ["put"]):
-        return super().put(endpoint=self.__add_prefix(endpoint), openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def put(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["put"]):
+        return super().put(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def delete(self, endpoint: str, openapi_name: str = "", openapi_tags: List[str] = ["delete"]):
-        return super().delete(endpoint=self.__add_prefix(endpoint), openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def delete(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["delete"]):
+        return super().delete(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def patch(self, endpoint: str, openapi_name: str = "", openapi_tags: List[str] = ["patch"]):
-        return super().patch(endpoint=self.__add_prefix(endpoint), openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def patch(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["patch"]):
+        return super().patch(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def head(self, endpoint: str, openapi_name: str = "", openapi_tags: List[str] = ["head"]):
-        return super().head(endpoint=self.__add_prefix(endpoint), openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def head(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["head"]):
+        return super().head(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def trace(self, endpoint: str, openapi_name: str = "", openapi_tags: List[str] = ["trace"]):
-        return super().trace(endpoint=self.__add_prefix(endpoint), openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def trace(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["trace"]):
+        return super().trace(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
-    def options(self, endpoint: str, openapi_name: str = "", openapi_tags: List[str] = ["options"]):
-        return super().options(endpoint=self.__add_prefix(endpoint), openapi_name=openapi_name, openapi_tags=openapi_tags)
+    def options(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["options"]):
+        return super().options(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
 
-def ALLOW_CORS(app: Robyn, origins: List[str]):
-    """Allows CORS for the given origins for the entire router."""
-    for origin in origins:
-        app.add_response_header("Access-Control-Allow-Origin", origin)
-        app.add_response_header(
-            "Access-Control-Allow-Methods",
-            "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS",
-        )
-        app.add_response_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
-        app.add_response_header("Access-Control-Allow-Credentials", "true")
+def ALLOW_CORS(app: Robyn, origins: Union[List[str], str]):
+    """
+    Configure CORS headers for the application.
+
+    Args:
+        app: Robyn application instance
+        origins: List of allowed origins or "*" for all origins
+    """
+    # Handle string input for origins
+    if isinstance(origins, str):
+        origins = [origins]
+
+    @app.before_request()
+    def cors_middleware(request):
+        origin = request.headers.get("Origin")
+
+        # If specific origins are set, validate the request origin
+        if origin and "*" not in origins and origin not in origins:
+            return Response(status_code=403, description="", headers={})
+
+        # Handle preflight requests
+        if request.method == "OPTIONS":
+            return Response(
+                status_code=204,
+                headers={
+                    "Access-Control-Allow-Origin": origin if origin else (origins[0] if origins else "*"),
+                    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS",
+                    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+                    "Access-Control-Allow-Credentials": "true",
+                    "Access-Control-Max-Age": "3600",
+                },
+                description="",
+            )
+
+        return request
+
+    # Set default CORS headers for all responses
+    if len(origins) == 1:
+        app.set_response_header("Access-Control-Allow-Origin", origins[0])
+    else:
+        # For multiple origins, we'll handle it dynamically in the response
+        app.set_response_header("Access-Control-Allow-Origin", "*")
+
+    app.set_response_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS")
+    app.set_response_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+    app.set_response_header("Access-Control-Allow-Credentials", "true")
 
 
 __all__ = [

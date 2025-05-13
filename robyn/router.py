@@ -3,7 +3,6 @@ import logging
 from abc import ABC, abstractmethod
 from asyncio import iscoroutinefunction
 from functools import wraps
-from inspect import signature
 from types import CoroutineType
 from typing import Callable, Dict, List, NamedTuple, Optional, Union
 
@@ -11,6 +10,7 @@ from robyn import status_codes
 from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
 from robyn.dependency_injection import DependencyMap
 from robyn.jsonify import jsonify
+from robyn.openapi import OpenAPI
 from robyn.responses import FileResponse
 from robyn.robyn import FunctionInfo, Headers, HttpMethod, Identity, MiddlewareType, QueryParams, Request, Response, Url
 from robyn.types import Body, Files, FormData, IPAddress, Method, PathParams
@@ -19,11 +19,18 @@ from robyn.ws import WebSocket
 _logger = logging.getLogger(__name__)
 
 
+def lower_http_method(method: HttpMethod):
+    return (str(method))[11:].lower()
+
+
 class Route(NamedTuple):
     route_type: HttpMethod
     route: str
     function: FunctionInfo
     is_const: bool
+    auth_required: bool
+    openapi_name: str
+    openapi_tags: List[str]
 
 
 class RouteMiddleware(NamedTuple):
@@ -48,72 +55,70 @@ class Router(BaseRouter):
         super().__init__()
         self.routes: List[Route] = []
 
+    def _format_tuple_response(self, res: tuple) -> Response:
+        if len(res) != 3:
+            raise ValueError("Tuple should have 3 elements")
+
+        description, headers, status_code = res
+        description = self._format_response(description).description
+        new_headers: Headers = Headers(headers)
+        if new_headers.contains("Content-Type"):
+            headers.set("Content-Type", new_headers.get("Content-Type"))
+
+        return Response(
+            status_code=status_code,
+            headers=headers,
+            description=description,
+        )
+
     def _format_response(
         self,
         res: Union[Dict, Response, bytes, tuple, str],
     ) -> Response:
-        headers = Headers({"Content-Type": "text/plain"})
+        if isinstance(res, Response):
+            return res
 
-        response = {}
         if isinstance(res, dict):
-            # this should change
-            headers = Headers({})
-            if "Content-Type" not in headers:
-                headers.set("Content-Type", "application/json")
-
-            description = jsonify(res)
-
-            response = Response(
+            return Response(
                 status_code=status_codes.HTTP_200_OK,
-                headers=headers,
-                description=description,
+                headers=Headers({"Content-Type": "application/json"}),
+                description=jsonify(res),
             )
-        elif isinstance(res, Response):
-            response = res
-        elif isinstance(res, FileResponse):
-            response = Response(
+
+        if isinstance(res, FileResponse):
+            response: Response = Response(
                 status_code=res.status_code,
                 headers=res.headers,
                 description=res.file_path,
             )
             response.file_path = res.file_path
+            return response
 
-        elif isinstance(res, bytes):
-            headers = Headers({"Content-Type": "application/octet-stream"})
-            response = Response(
+        if isinstance(res, bytes):
+            return Response(
                 status_code=status_codes.HTTP_200_OK,
-                headers=headers,
+                headers=Headers({"Content-Type": "application/octet-stream"}),
                 description=res,
             )
-        elif isinstance(res, tuple):
-            if len(res) != 3:
-                raise ValueError("Tuple should have 3 elements")
-            else:
-                description, headers, status_code = res
-                description = self._format_response(description).description
-                new_headers = Headers(headers)
-                if "Content-Type" in new_headers:
-                    headers.set("Content-Type", new_headers.get("Content-Type"))
 
-                response = Response(
-                    status_code=status_code,
-                    headers=headers,
-                    description=description,
-                )
-        else:
-            response = Response(
-                status_code=status_codes.HTTP_200_OK,
-                headers=headers,
-                description=str(res).encode("utf-8"),
-            )
-        return response
+        if isinstance(res, tuple):
+            return self._format_tuple_response(tuple(res))
 
-    def add_route(
+        return Response(
+            status_code=status_codes.HTTP_200_OK,
+            headers=Headers({"Content-Type": "text/plain"}),
+            description=str(res).encode("utf-8"),
+        )
+
+    def add_route(  # type: ignore
         self,
         route_type: HttpMethod,
         endpoint: str,
         handler: Callable,
         is_const: bool,
+        auth_required: bool,
+        openapi_name: str,
+        openapi_tags: List[str],
         exception_handler: Optional[Callable],
         injected_dependencies: dict,
     ) -> Union[Callable, CoroutineType]:
@@ -121,7 +126,7 @@ class Router(BaseRouter):
             # In the execute functions the request is passed into *args
             request = next(filter(lambda it: isinstance(it, Request), args), None)
 
-            handler_params = signature(handler).parameters
+            handler_params = inspect.signature(handler).parameters
 
             if not request or (len(handler_params) == 1 and next(iter(handler_params)) is Request):
                 return handler(*args, **kwargs)
@@ -213,7 +218,6 @@ class Router(BaseRouter):
                 )
             return response
 
-        number_of_params = len(signature(handler).parameters)
         # these are the arguments
         params = dict(inspect.signature(handler).parameters)
 
@@ -228,22 +232,31 @@ class Router(BaseRouter):
             function = FunctionInfo(
                 async_inner_handler,
                 True,
-                number_of_params,
+                len(params),
                 params,
                 new_injected_dependencies,
             )
-            self.routes.append(Route(route_type, endpoint, function, is_const))
+            self.routes.append(Route(route_type, endpoint, function, is_const, auth_required, openapi_name, openapi_tags))
             return async_inner_handler
         else:
             function = FunctionInfo(
                 inner_handler,
                 False,
-                number_of_params,
+                len(params),
                 params,
                 new_injected_dependencies,
             )
-            self.routes.append(Route(route_type, endpoint, function, is_const))
+            self.routes.append(Route(route_type, endpoint, function, is_const, auth_required, openapi_name, openapi_tags))
             return inner_handler
+
+    def prepare_routes_openapi(self, openapi: OpenAPI, included_routers: List) -> None:
+        for route in self.routes:
+            openapi.add_openapi_path_obj(lower_http_method(route.route_type), route.route, route.openapi_name, route.openapi_tags, route.function.handler)
+
+        # TODO! after include_routes does not immediatelly merge all the routes
+        # for router in included_routers:
+        #    for route in router:
+        #        openapi.add_openapi_path_obj(lower_http_method(route.route_type), route.route, route.openapi_name, route.openapi_tags, route.function.handler)
 
     def get_routes(self) -> List[Route]:
         return self.routes
@@ -260,7 +273,7 @@ class MiddlewareRouter(BaseRouter):
     def set_authentication_handler(self, authentication_handler: AuthenticationHandler):
         self.authentication_handler = authentication_handler
 
-    def add_route(
+    def add_route(  # type: ignore
         self,
         middleware_type: MiddlewareType,
         endpoint: str,
@@ -269,7 +282,6 @@ class MiddlewareRouter(BaseRouter):
         injected_dependencies: dict,
     ) -> Callable:
         params = dict(inspect.signature(handler).parameters)
-        number_of_params = len(params)
 
         new_injected_dependencies = {}
         for dependency in injected_dependencies:
@@ -281,7 +293,7 @@ class MiddlewareRouter(BaseRouter):
         function = FunctionInfo(
             handler,
             iscoroutinefunction(handler),
-            number_of_params,
+            len(params),
             params,
             new_injected_dependencies,
         )
@@ -293,7 +305,7 @@ class MiddlewareRouter(BaseRouter):
         This method adds an authentication middleware to the specified endpoint.
         """
 
-        injected_dependencies = {}
+        injected_dependencies: dict = {}
 
         def decorator(handler):
             @wraps(handler)
@@ -323,7 +335,7 @@ class MiddlewareRouter(BaseRouter):
     # Arguments are returned as they could be modified by the middlewares.
     def add_middleware(self, middleware_type: MiddlewareType, endpoint: Optional[str]) -> Callable[..., None]:
         # no dependency injection here
-        injected_dependencies = {}
+        injected_dependencies: dict = {}
 
         def inner(handler):
             @wraps(handler)
@@ -387,9 +399,9 @@ class MiddlewareRouter(BaseRouter):
 class WebSocketRouter(BaseRouter):
     def __init__(self) -> None:
         super().__init__()
-        self.routes = {}
+        self.routes: dict = {}
 
-    def add_route(self, endpoint: str, web_socket: WebSocket) -> None:
+    def add_route(self, endpoint: str, web_socket: WebSocket) -> None:  # type: ignore
         self.routes[endpoint] = web_socket
 
     def get_routes(self) -> Dict[str, WebSocket]:

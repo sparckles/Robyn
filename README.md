@@ -6,10 +6,11 @@
 [![Downloads](https://static.pepy.tech/personalized-badge/Robyn?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Downloads)](https://pepy.tech/project/Robyn)
 [![GitHub tag](https://img.shields.io/github/tag/sparckles/Robyn?include_prereleases=&sort=semver&color=black)](https://github.com/sparckles/Robyn/releases/)
 [![License](https://img.shields.io/badge/License-BSD_2.0-black)](https://github.com/sparckles/Robyn/blob/main/LICENSE)
-![Python](https://img.shields.io/badge/Support-Version%20%E2%89%A5%203.8-brightgreen)
+![Python](https://img.shields.io/badge/Support-Version%20%E2%89%A5%203.9-brightgreen)
 
 [![view - Documentation](https://img.shields.io/badge/view-Documentation-blue?style=for-the-badge)](https://robyn.tech/documentation)
 [![Discord](https://img.shields.io/discord/999782964143603713?label=discord&logo=discord&logoColor=white&style=for-the-badge&color=blue)](https://discord.gg/rkERZ5eNU8)
+[![Gurubase](https://img.shields.io/badge/Gurubase-Ask%20Robyn%20Guru-006BFF?style=for-the-badge)](https://gurubase.io/g/robyn)
 
 Robyn is a High-Performance, Community-Driven, and Innovator Friendly Web Framework with a Rust runtime. You can learn more by checking our [community resources](https://robyn.tech/documentation/community-resources)!
 
@@ -101,7 +102,7 @@ You can add more routes to your API. Check out the routes in [this file](https:/
 
 Robyn is compatible with the following Python versions:
 
-> Python >= 3.8
+> Python >= 3.9
 
 It is recommended to use the latest version of Python for the best performances.
 
@@ -119,6 +120,7 @@ python --version
 - Written in Rust, btw xD
 - A multithreaded Runtime
 - Extensible
+- Automatic OpenAPI generation
 - A simple API
 - Sync and Async Function Support
 - Dynamic URL Routing
@@ -144,53 +146,99 @@ If you still need help to get started, feel free to reach out on our [community 
 
 ### ⚙️ To Develop Locally
 
+#### Prerequisites
+
+Before starting, ensure you have the following installed:
+- Python >= 3.9, <= 3.12 , Support for Python 3.13 is coming soon!
+- Rust (latest stable)
+- C compiler (gcc/clang)
+
+#### Setup
+
+- Clone the repository:
+
+  ```
+  git clone https://github.com/sparckles/Robyn.git
+  ```
+
 - Setup a virtual environment:
-```
-python3 -m venv .venv
-source .venv/bin/activate
-```
+  ```
+  python3 -m venv .venv
+  source .venv/bin/activate
+  ```
+
 - Install required packages
 
-```
-pip install pre-commit poetry maturin
-```
+  ```
+  pip install pre-commit poetry maturin
+  ```
 - Install development dependencies
-```
-poetry install --with dev --with test
-```
+  ```
+  poetry install --with dev --with test
+  ```
 - Install pre-commit git hooks
-```
-pre-commit install
-```
+  ```
+  pre-commit install
+  ```
 - Build & install Robyn Rust package
-```
-maturin develop
-```
+  ```
+  maturin develop
+  ```
 - Build & install Robyn Rust package (**experimental**)
-```
-maturin develop --cargo-extra-args="--features=io-uring"
-```
+  ```
+  maturin develop --cargo-extra-args="--features=io-uring"
+  ```
 - Run!
-```
-poetry run test_server
-```
-- Run tests
-```
-pytest integration_tests
-```
+  ```
+  poetry run test_server
+  ```
+- Run all tests
+  ```
+  pytest
+  ```
+- Run only the integration tests
+  ```
+  pytest integration_tests
+  ```
+- Run only the unit tests (you don't need to be running the test_server for these)
+  ```
+  pytest unit_tests
+  ```
 - Test (refer to `integration_tests/base_routes.py` for more endpoints)
-```
-curl http://localhost:8080/sync/str
-```
+  ```
+  curl http://localhost:8080/sync/str
+  ```
 
 - **tip:** One liners for testing changes!
-```
-maturin develop && poetry run test_server
-maturin develop && pytest integration_tests
-```
+  ```
+  maturin develop && poetry run test_server
 
-- Potential errors
+  maturin develop && pytest 
+  ```
+
+- **tip:** For IO-uring support, you can use the following command:
+  ```
+  maturin develop --cargo-extra-args="--features=io-uring"
+  ```
+
+- **tip:** To use your local Robyn version in other projects, you can install it using pip:
+  ```
+  pip install -e path/to/robyn/target/wheels/robyn-<version>-<python_version>-<platform>.whl
+  ```
+e.g.
+  ```
+  pip install -e /repos/Robyn/target/wheels/robyn-0.63.0-cp312-cp312-macosx_10_15_universal2.whl
+  ```
+
+#### Troubleshooting
+If you face any issues, here are some common fixes:
   - install `patchelf` with `pip install patchelf` if you face `patchelf` not found issue during `maturin develop` (esp. on Arch Linux)
+  - If you get Rust compilation errors, ensure you have a C compiler installed:
+    - Ubuntu/Debian: `sudo apt install build-essential`
+    - Fedora: `sudo dnf install gcc`
+    - macOS: Install Xcode Command Line Tools
+    - Windows: Install Visual Studio Build Tools
+
 
 ## ✨ Special thanks
 
@@ -211,7 +259,6 @@ These sponsors help us make the magic happen!
 [![DigitalOcean Referral Badge](https://web-platforms.sfo2.cdn.digitaloceanspaces.com/WWW/Badge%201.svg)](https://www.digitalocean.com/?refcode=3f2b9fd4968d&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge)
 [![Appwrite Logo](https://avatars.githubusercontent.com/u/25003669?s=105&v=1)](https://github.com/appwrite)
 
-- [Shivay Lamba](https://github.com/shivaylamba)
 
 ## Star History
 
