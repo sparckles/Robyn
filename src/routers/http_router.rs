@@ -1,4 +1,5 @@
 use parking_lot::RwLock;
+use pyo3::Bound;
 use std::collections::HashMap;
 
 use matchit::Router as MatchItRouter;
@@ -23,7 +24,7 @@ impl Router<(FunctionInfo, HashMap<String, String>), HttpMethod> for HttpRouter 
         route_type: &HttpMethod,
         route: &str,
         function: FunctionInfo,
-        _event_loop: Option<&PyAny>,
+        _event_loop: Option<Bound<'_, pyo3::PyAny>>,
     ) -> Result<()> {
         let table = self.routes.get(route_type).context("No relevant map")?;
 

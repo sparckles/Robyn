@@ -13,7 +13,7 @@ use log::debug;
 use once_cell::sync::OnceCell;
 use parking_lot::RwLock;
 use pyo3::prelude::*;
-use pyo3_asyncio::TaskLocals;
+use pyo3_async_runtimes::TaskLocals;
 use uuid::Uuid;
 
 use registry::{Register, WebSocketRegistry};
@@ -132,7 +132,7 @@ impl WebSocketConnector {
         let recipient_id = Uuid::parse_str(&recipient_id).unwrap();
         let sender_id = self.id;
 
-        let awaitable = pyo3_asyncio::tokio::future_into_py(py, async move {
+        let awaitable = pyo3_async_runtimes::tokio::future_into_py(py, async move {
             match (registry).try_send(SendText {
                 message: message.to_string(),
                 sender_id,
@@ -162,7 +162,7 @@ impl WebSocketConnector {
         let registry = self.registry_addr.clone();
         let sender_id = self.id;
 
-        let awaitable = pyo3_asyncio::tokio::future_into_py(py, async move {
+        let awaitable = pyo3_async_runtimes::tokio::future_into_py(py, async move {
             match registry.try_send(SendMessageToAll {
                 message: message.to_string(),
                 sender_id,
