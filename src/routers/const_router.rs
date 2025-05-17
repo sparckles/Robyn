@@ -10,7 +10,7 @@ use crate::types::HttpMethod;
 use anyhow::Context;
 use log::debug;
 use matchit::Router as MatchItRouter;
-use pyo3::types::PyAny;
+use pyo3::{types::PyAny, Bound};
 
 use anyhow::{Error, Result};
 
@@ -30,7 +30,7 @@ impl Router<Response, HttpMethod> for ConstRouter {
         route_type: &HttpMethod,
         route: &str,
         function: FunctionInfo,
-        event_loop: Option<&PyAny>,
+        event_loop: Option<Bound<'_, pyo3::PyAny>>,
     ) -> Result<(), Error> {
         let table = self
             .routes
@@ -42,7 +42,7 @@ impl Router<Response, HttpMethod> for ConstRouter {
         let event_loop =
             event_loop.context("Event loop must be provided to add a route to the const router")?;
 
-        pyo3_asyncio::tokio::run_until_complete(event_loop, async move {
+        pyo3_async_runtimes::tokio::run_until_complete(event_loop, async move {
             let output = execute_http_function(&Request::default(), &function)
                 .await
                 .unwrap();

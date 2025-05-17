@@ -8,7 +8,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use log::debug;
 use pyo3::prelude::*;
-use pyo3_asyncio::TaskLocals;
+use pyo3_async_runtimes::TaskLocals;
 
 use crate::types::{
     function_info::FunctionInfo, request::Request, response::Response, MiddlewareReturn,
@@ -19,20 +19,20 @@ fn get_function_output<'a, T>(
     function: &'a FunctionInfo,
     py: Python<'a>,
     function_args: &T,
-) -> Result<&'a PyAny, PyErr>
+) -> Result<pyo3::Bound<'a, pyo3::PyAny>, PyErr>
 where
     T: ToPyObject,
 {
-    let handler = function.handler.as_ref(py);
-    let kwargs = function.kwargs.as_ref(py);
+    let handler = function.handler.bind(py).downcast()?;
+    let kwargs = function.kwargs.bind(py);
     let function_args = function_args.to_object(py);
     debug!("Function args: {:?}", function_args);
 
     match function.number_of_params {
         0 => handler.call0(),
         1 => {
-            if kwargs.get_item("global_dependencies")?.is_some()
-                || kwargs.get_item("router_dependencies")?.is_some()
+            if !kwargs.getattr("global_dependencies")?.is_none()
+                || !kwargs.get_item("router_dependencies")?.is_none()
             // these are reserved keywords
             {
                 handler.call((), Some(kwargs))
@@ -57,7 +57,7 @@ where
 {
     if function.is_async {
         let output: Py<PyAny> = Python::with_gil(|py| {
-            pyo3_asyncio::tokio::into_future(get_function_output(function, py, input)?)
+            pyo3_async_runtimes::tokio::into_future(get_function_output(function, py, input)?)
         })?
         .await?;
 
@@ -88,7 +88,7 @@ pub async fn execute_http_function(
     if function.is_async {
         let output = Python::with_gil(|py| {
             let function_output = get_function_output(function, py, request)?;
-            pyo3_asyncio::tokio::into_future(function_output)
+            pyo3_async_runtimes::tokio::into_future(function_output)
         })?
         .await?;
 
@@ -108,9 +108,9 @@ pub async fn execute_startup_handler(
         if function.is_async {
             debug!("Startup event handler async");
             Python::with_gil(|py| {
-                pyo3_asyncio::into_future_with_locals(
+                pyo3_async_runtimes::into_future_with_locals(
                     task_locals,
-                    function.handler.as_ref(py).call0()?,
+                    function.handler.bind(py).call0()?,
                 )
             })?
             .await?;

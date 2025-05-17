@@ -29,7 +29,7 @@ fn get_version() -> String {
 }
 
 #[pymodule]
-pub fn robyn(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
+pub fn robyn(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     // the pymodule class/function to make the rustPyFunctions available
     m.add_function(wrap_pyfunction!(get_version, m)?)?;
 

@@ -14,7 +14,7 @@ pub struct Headers {
 #[pymethods]
 impl Headers {
     #[new]
-    pub fn new(default_headers: Option<&PyDict>) -> Self {
+    pub fn new(default_headers: Option<&Bound<'_, PyDict, >>) -> Self {
         match default_headers {
             Some(default_headers) => {
                 let headers = DashMap::new();
@@ -56,7 +56,7 @@ impl Headers {
         match self.headers.get(&key.to_lowercase()) {
             Some(values) => {
                 let py_values = PyList::new(py, values.iter().map(|value| value.to_object(py)));
-                py_values.into()
+                py_values.expect("get-all failed").into()
             }
             None => PyList::empty(py).into(),
         }
@@ -79,7 +79,7 @@ impl Headers {
         let dict = PyDict::new(py);
         for iter in self.headers.iter() {
             let (key, values) = iter.pair();
-            let py_values = PyList::new(py, values.iter().map(|value| value.to_object(py)));
+            let py_values : Bound<'_, PyList, > = PyList::new(py, values.iter().map(|value| value.to_object(py))).expect("get-all failed");
             dict.set_item(key, py_values).unwrap();
         }
         dict.into()
@@ -91,8 +91,8 @@ impl Headers {
         self.headers.contains_key(&key.to_lowercase())
     }
 
-    pub fn populate_from_dict(&mut self, headers: &PyDict) {
-        for (key, value) in headers {
+    pub fn populate_from_dict(&mut self, headers: &Bound<PyDict>) {
+        for (key, value) in headers.iter() {
             let key = key.to_string().to_lowercase();
             let new_value = value.downcast::<PyList>();
 
