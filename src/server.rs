@@ -29,9 +29,11 @@ use actix_web::*;
 
 // pyO3 module
 use log::{debug, error};
-use pyo3::exceptions::PyValueError;
+use once_cell::sync::OnceCell;
+use pyo3::exceptions::{asyncio, PyValueError};
 use pyo3::prelude::*;
 use pyo3::pycell::PyRef;
+use pyo3_async_runtimes::TaskLocals;
 
 const MAX_PAYLOAD_SIZE: &str = "ROBYN_MAX_PAYLOAD_SIZE";
 const DEFAULT_MAX_PAYLOAD_SIZE: usize = 1_000_000; // 1Mb
@@ -80,11 +82,13 @@ impl Server {
 
     pub fn start(
         &mut self,
-        py: Python,
+        _py: Python,
         socket: PyRef<SocketHeld>,
         workers: usize,
     ) -> PyResult<()> {
         pyo3_log::init();
+
+        static TASK_LOCALS: OnceCell<TaskLocals> = OnceCell::new();
 
         if STARTED
             .compare_exchange(false, true, SeqCst, Relaxed)
@@ -104,17 +108,18 @@ impl Server {
         let global_response_headers = self.global_response_headers.clone();
         let directories = self.directories.clone();
 
-        let asyncio = py.import("asyncio")?;
+        let asyncio = _py.import("asyncio")?;
         let event_loop = asyncio.call_method0("new_event_loop")?;
-        asyncio.call_method1("set_event_loop", (event_loop,))?;
+        asyncio.call_method1("set_event_loop", (event_loop.clone(),))?;
 
         let startup_handler = self.startup_handler.clone();
         let shutdown_handler = self.shutdown_handler.clone();
 
         let excluded_response_headers_paths = self.excluded_response_headers_paths.clone();
 
-        let task_locals = pyo3_async_runtimes::TaskLocals::new(event_loop).copy_context(py)?;
-        let task_locals_copy = task_locals.clone_ref(py);
+        let _ = TASK_LOCALS.get_or_try_init(|| {
+            Python::with_gil(|py| pyo3_async_runtimes::TaskLocals::new(event_loop.clone().into()).copy_context(py))
+        });
 
         let max_payload_size = env::var(MAX_PAYLOAD_SIZE)
             .unwrap_or(DEFAULT_MAX_PAYLOAD_SIZE.to_string())
@@ -129,14 +134,15 @@ impl Server {
         thread::spawn(move || {
             actix_web::rt::System::new().block_on(async move {
                 debug!("The number of workers is {}", workers);
-                execute_startup_handler(startup_handler, &task_locals_copy)
+
+                let task_locals = Python::with_gil(|py| TASK_LOCALS.get().unwrap().clone_ref(py));
+                execute_startup_handler(startup_handler, &task_locals)
                     .await
                     .unwrap();
 
                 HttpServer::new(move || {
                     let mut app = App::new();
 
-                    let task_locals = task_locals_copy.clone_ref(py);
                     let directories = directories.read().unwrap();
 
                     // this loop matches three types of directory serving
@@ -174,16 +180,16 @@ impl Server {
                     for (elem, value) in (web_socket_map.read()).iter() {
                         let endpoint = elem.clone();
                         let path_params = value.clone();
-                        let task_locals = task_locals.clone_ref(py);
                         app = app.route(
                             &endpoint.clone(),
                             web::get().to(move |stream: web::Payload, req: HttpRequest| {
                                 let endpoint_copy = endpoint.clone();
+                                let task_locals = Python::with_gil(|py| TASK_LOCALS.get().unwrap().clone_ref(py));
                                 start_web_socket(
                                     req,
                                     stream,
                                     path_params.clone(),
-                                    task_locals.clone_ref(py),
+                                    task_locals,
                                     endpoint_copy,
                                 )
                             }),
@@ -202,7 +208,8 @@ impl Server {
                                   global_response_headers,
                                   response_headers_exclude_paths,
                                   req| {
-                                pyo3_async_runtimes::tokio::scope_local(task_locals.clone_ref(py), async move {
+                                let task_locals = Python::with_gil(|py| TASK_LOCALS.get().unwrap().clone_ref(py));
+                                pyo3_async_runtimes::tokio::scope_local(task_locals, async move {
                                     index(
                                         router,
                                         payload,
@@ -250,11 +257,13 @@ impl Server {
                 if function.is_async {
                     debug!("Shutdown event handler async");
 
+                    let task_locals = Python::with_gil(|py| TASK_LOCALS.get().unwrap().clone_ref(py));
+
                     pyo3_async_runtimes::tokio::run_until_complete(
-                        task_locals.event_loop(py),
+                        task_locals.event_loop(_py),
                         pyo3_async_runtimes::into_future_with_locals(
-                            &task_locals.clone_ref(py),
-                            function.handler.bind(py).call0()?,
+                            &task_locals.clone_ref(_py),
+                            function.handler.bind(_py).call0()?,
                         )
                         .unwrap(),
                     )
