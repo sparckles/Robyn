@@ -22,31 +22,31 @@ fn get_function_output<'a>(
     match function.number_of_params {
         0 => handler.call0(),
         1 => {
-            if !args.getattr("ws")?.is_none() {
+            if args.getattr("ws").is_ok() {
                 handler.call1((ws.clone(),))
-            } else if !args.getattr("msg")?.is_none() {
+            } else if args.getattr("msg").is_ok() {
                 handler.call1((fn_msg.unwrap_or_default(),))
             } else {
                 handler.call((), Some(kwargs))
             }
         }
         2 => {
-            if !args.getattr("ws")?.is_none() && !args.getattr("msg")?.is_none() {
+            if args.getattr("ws").is_ok() && args.getattr("msg").is_ok() {
                 handler.call1((ws.clone(), fn_msg.unwrap_or_default()))
-            } else if !args.getattr("ws")?.is_none() {
+            } else if args.getattr("ws").is_ok() {
                 handler.call((ws.clone(),), Some(kwargs))
-            } else if !args.getattr("msg")?.is_none() {
+            } else if args.getattr("msg").is_ok() {
                 handler.call((fn_msg.unwrap_or_default(),), Some(kwargs))
             } else {
                 handler.call((), Some(kwargs))
             }
         }
         3 => {
-            if !args.getattr("ws")?.is_none() && !args.getattr("msg")?.is_none() {
+            if args.getattr("ws").is_ok() && args.getattr("msg").is_ok() {
                 handler.call((ws.clone(), fn_msg.unwrap_or_default()), Some(kwargs))
-            } else if !args.getattr("ws")?.is_none() {
+            } else if args.getattr("ws").is_ok() {
                 handler.call((ws.clone(),), Some(kwargs))
-            } else if !args.getattr("msg")?.is_none() {
+            } else if args.getattr("msg").is_ok() {
                 handler.call((fn_msg.unwrap_or_default(),), Some(kwargs))
             } else {
                 handler.call((), Some(kwargs))

@@ -31,8 +31,8 @@ where
     match function.number_of_params {
         0 => handler.call0(),
         1 => {
-            if !kwargs.getattr("global_dependencies")?.is_none()
-                || !kwargs.get_item("router_dependencies")?.is_none()
+            if kwargs.getattr("global_dependencies").is_ok()
+                || !kwargs.get_item("router_dependencies").is_ok()
             // these are reserved keywords
             {
                 handler.call((), Some(kwargs))
