@@ -1,5 +1,5 @@
 use parking_lot::RwLock;
-use pyo3::Bound;
+use pyo3::{Bound, Python};
 use std::collections::HashMap;
 
 use matchit::Router as MatchItRouter;
@@ -8,7 +8,7 @@ use pyo3::types::PyAny;
 use anyhow::{Context, Result};
 
 use crate::routers::Router;
-use crate::types::function_info::FunctionInfo;
+use crate::types::function_info::{self, FunctionInfo};
 use crate::types::HttpMethod;
 
 type RouteMap = RwLock<MatchItRouter<FunctionInfo>>;
@@ -48,7 +48,9 @@ impl Router<(FunctionInfo, HashMap<String, String>), HttpMethod> for HttpRouter 
             route_params.insert(key.to_string(), value.to_string());
         }
 
-        Some((res.value.to_owned(), route_params))
+        let function_info = Python::with_gil(|_| res.value.to_owned());
+
+        Some((function_info, route_params))
     }
 }
 
