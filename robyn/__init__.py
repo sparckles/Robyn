@@ -133,7 +133,7 @@ class BaseRobyn(ABC):
         list_openapi_tags: List[str] = openapi_tags if openapi_tags else []
 
         if auth_required:
-            self.middleware_router.add_auth_middleware(endpoint)(handler)
+            self.middleware_router.add_auth_middleware(endpoint, route_type)(handler)
 
         if isinstance(route_type, str):
             http_methods = {
