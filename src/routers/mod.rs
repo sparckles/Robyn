@@ -1,5 +1,5 @@
 use anyhow::Result;
-use pyo3::PyAny;
+use pyo3::Bound;
 
 use crate::types::function_info::FunctionInfo;
 
@@ -16,7 +16,7 @@ pub trait Router<T, U> {
         route_type: &U,
         route: &str,
         function: FunctionInfo,
-        event_loop: Option<&PyAny>,
+        event_loop: Option<Bound<'_, pyo3::PyAny>>,
     ) -> Result<()>;
 
     /// Retrieve the correct function from the previously inserted routes

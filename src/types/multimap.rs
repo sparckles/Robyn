@@ -63,7 +63,7 @@ impl QueryParams {
         let dict = PyDict::new(py);
         for (key, values) in self.queries.iter() {
             let values = PyList::new(py, values.iter());
-            dict.set_item(key, values)?;
+            dict.set_item(key, values?)?;
         }
         Ok(dict.into())
     }
@@ -88,9 +88,9 @@ impl QueryParams {
         multimap
     }
 
-    pub fn from_py_dict(dict: &PyDict) -> Self {
+    pub fn from_py_dict(py: Python, dict: Py<PyDict>) -> Self {
         let mut multimap = QueryParams::new();
-        for (key, value) in dict.iter() {
+        for (key, value) in dict.bind(py).iter() {
             let key = key.extract::<String>().unwrap();
             let value = value.extract::<String>().unwrap();
             multimap.set(key, value);

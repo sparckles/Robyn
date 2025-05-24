@@ -16,8 +16,8 @@ pub struct Response {
     pub status_code: u16,
     pub response_type: String,
     pub headers: Headers,
-    // https://pyo3.rs/v0.19.2/function.html?highlight=from_py_#per-argument-options
-    #[pyo3(from_py_with = "get_description_from_pyobject")]
+    // https://pyo3.rs/v0.25.0/function.html#per-argument-options
+    #[pyo3(from_py_with = get_description_from_pyobject)]
     pub description: Vec<u8>,
     pub file_path: Option<String>,
 }
@@ -82,7 +82,7 @@ impl ToPyObject for Response {
             description,
             file_path: self.file_path.clone(),
         };
-        Py::new(py, response).unwrap().as_ref(py).into()
+        Py::new(py, response).unwrap().into()
     }
 }
 
@@ -108,7 +108,7 @@ impl PyResponse {
     pub fn new(
         py: Python,
         status_code: u16,
-        headers: &PyAny,
+        headers: Bound<'_, PyAny>,
         description: Py<PyAny>,
     ) -> PyResult<Self> {
         check_body_type(py, &description)?;
