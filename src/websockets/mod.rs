@@ -1,6 +1,6 @@
 pub mod registry;
 
-use crate::executors::web_socket_executors::execute_ws_function;
+use crate::executors::web_socket_executors::{execute_ws_function, WsMsgIn};
 use crate::types::function_info::FunctionInfo;
 use crate::types::multimap::QueryParams;
 use registry::{Close, SendMessageToAll, SendText};
@@ -17,6 +17,7 @@ use pyo3_asyncio::TaskLocals;
 use uuid::Uuid;
 
 use registry::{Register, WebSocketRegistry};
+use std::borrow::Cow;
 use std::collections::HashMap;
 
 /// Define HTTP actor
@@ -90,13 +91,23 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebSocketConnecto
                 let function = self.router.get("message").unwrap();
                 execute_ws_function(
                     function,
-                    Some(text.to_string()),
+                    Some(WsMsgIn::String(text.to_string())),
                     &self.task_locals,
                     ctx,
                     self,
                 );
             }
-            Ok(ws::Message::Binary(bin)) => ctx.binary(bin),
+            Ok(ws::Message::Binary(bin)) => {
+                debug!("Bin data received");
+                let function = self.router.get("message").unwrap();
+                execute_ws_function(
+                    function,
+                    Some(WsMsgIn::Bytes(Cow::from(bin.to_vec()))),
+                    &self.task_locals,
+                    ctx,
+                    self,
+                );
+            }
             Ok(ws::Message::Close(_close_reason)) => {
                 debug!("Socket was closed");
                 let function = self.router.get("close").unwrap();
