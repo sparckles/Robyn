@@ -32,7 +32,7 @@ where
         0 => handler.call0(),
         1 => {
             if kwargs.getattr("global_dependencies").is_ok()
-                || !kwargs.get_item("router_dependencies").is_ok()
+                || kwargs.getattr("router_dependencies").is_ok()
             // these are reserved keywords
             {
                 handler.call((), Some(kwargs))
