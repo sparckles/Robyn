@@ -1,5 +1,6 @@
 use actix::{ActorFutureExt, AsyncContext, WrapFuture};
 use actix_web_actors::ws::WebsocketContext;
+use log::debug;
 use pyo3::prelude::*;
 use pyo3_async_runtimes::TaskLocals;
 
@@ -22,31 +23,31 @@ fn get_function_output<'a>(
     match function.number_of_params {
         0 => handler.call0(),
         1 => {
-            if args.getattr("ws").is_ok() {
+            if pyo3::types::PyDictMethods::get_item(args, "ws").is_ok() {
                 handler.call1((ws.clone(),))
-            } else if args.getattr("msg").is_ok() {
+            } else if pyo3::types::PyDictMethods::get_item(args, "msg").is_ok() {
                 handler.call1((fn_msg.unwrap_or_default(),))
             } else {
                 handler.call((), Some(kwargs))
             }
         }
         2 => {
-            if args.getattr("ws").is_ok() && args.getattr("msg").is_ok() {
+            if pyo3::types::PyDictMethods::get_item(args, "ws").is_ok() && pyo3::types::PyDictMethods::get_item(args, "msg").is_ok() {
                 handler.call1((ws.clone(), fn_msg.unwrap_or_default()))
-            } else if args.getattr("ws").is_ok() {
+            } else if pyo3::types::PyDictMethods::get_item(args, "ws").is_ok() {
                 handler.call((ws.clone(),), Some(kwargs))
-            } else if args.getattr("msg").is_ok() {
+            } else if pyo3::types::PyDictMethods::get_item(args, "msg").is_ok() {
                 handler.call((fn_msg.unwrap_or_default(),), Some(kwargs))
             } else {
                 handler.call((), Some(kwargs))
             }
         }
         3 => {
-            if args.getattr("ws").is_ok() && args.getattr("msg").is_ok() {
+            if pyo3::types::PyDictMethods::get_item(args, "ws").is_ok() && pyo3::types::PyDictMethods::get_item(args, "msg").is_ok() {
                 handler.call((ws.clone(), fn_msg.unwrap_or_default()), Some(kwargs))
-            } else if args.getattr("ws").is_ok() {
+            } else if pyo3::types::PyDictMethods::get_item(args, "ws").is_ok() {
                 handler.call((ws.clone(),), Some(kwargs))
-            } else if args.getattr("msg").is_ok() {
+            } else if pyo3::types::PyDictMethods::get_item(args, "msg").is_ok() {
                 handler.call((fn_msg.unwrap_or_default(),), Some(kwargs))
             } else {
                 handler.call((), Some(kwargs))
