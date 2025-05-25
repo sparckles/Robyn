@@ -3,7 +3,6 @@ use std::sync::RwLock;
 
 use anyhow::{Context, Error, Result};
 use matchit::Router as MatchItRouter;
-use pyo3::types::PyAny;
 use pyo3::{Bound, Python};
 
 use crate::routers::Router;

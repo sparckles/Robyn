@@ -1,6 +1,5 @@
 use actix::{ActorFutureExt, AsyncContext, WrapFuture};
 use actix_web_actors::ws::WebsocketContext;
-use log::debug;
 use pyo3::prelude::*;
 use pyo3_async_runtimes::TaskLocals;
 

@@ -10,7 +10,7 @@ use crate::types::HttpMethod;
 use anyhow::Context;
 use log::debug;
 use matchit::Router as MatchItRouter;
-use pyo3::{types::PyAny, Bound};
+use pyo3::Bound;
 
 use anyhow::{Error, Result};
 

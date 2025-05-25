@@ -3,12 +3,11 @@ use pyo3::{Bound, Python};
 use std::collections::HashMap;
 
 use matchit::Router as MatchItRouter;
-use pyo3::types::PyAny;
 
 use anyhow::{Context, Result};
 
 use crate::routers::Router;
-use crate::types::function_info::{self, FunctionInfo};
+use crate::types::function_info::{FunctionInfo};
 use crate::types::HttpMethod;
 
 type RouteMap = RwLock<MatchItRouter<FunctionInfo>>;

@@ -30,7 +30,7 @@ use actix_web::*;
 // pyO3 module
 use log::{debug, error};
 use once_cell::sync::OnceCell;
-use pyo3::exceptions::{asyncio, PyValueError};
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::pycell::PyRef;
 use pyo3_async_runtimes::TaskLocals;
