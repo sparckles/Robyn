@@ -20,7 +20,6 @@ use registry::{Register, WebSocketRegistry};
 use std::collections::HashMap;
 
 /// Define HTTP actor
-#[derive(Clone)]
 #[pyclass]
 pub struct WebSocketConnector {
     pub id: Uuid,
@@ -53,6 +52,22 @@ impl Actor for WebSocketConnector {
         execute_ws_function(function, None, &self.task_locals, ctx, self);
         debug!("Actor is dead");
     }
+}
+
+impl Clone for WebSocketConnector {
+    fn clone(&self) -> Self {
+
+        let task_locals_clone = Python::with_gil(|py| self.task_locals.clone_ref(py));
+        
+        Self {
+            id: self.id,
+            router: self.router.clone(),
+            task_locals: task_locals_clone,
+            registry_addr: self.registry_addr.clone(),
+            query_params: self.query_params.clone()
+        }
+
+     }
 }
 
 impl Handler<SendText> for WebSocketConnector {
