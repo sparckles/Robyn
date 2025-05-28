@@ -45,9 +45,9 @@ impl ToPyObject for Request {
                 for (key, value) in data.iter() {
                     dict.set_item(key, value).unwrap();
                 }
-                dict.into_py(py)
+                dict.into()
             }
-            None => PyDict::new(py).into_py(py),
+            None => PyDict::new(py).into(),
         };
 
         let files: Py<PyDict> = match &self.files {
@@ -57,9 +57,9 @@ impl ToPyObject for Request {
                     let bytes = PyBytes::new(py, value);
                     dict.set_item(key, bytes).unwrap();
                 }
-                dict.into_py(py)
+                dict.into()
             }
-            None => PyDict::new(py).into_py(py),
+            None => PyDict::new(py).into(),
         };
 
         let request = PyRequest {
@@ -74,7 +74,7 @@ impl ToPyObject for Request {
             form_data: form_data.clone(),
             files: files.clone(),
         };
-        Py::new(py, request).unwrap().as_ref(py).into()
+        Py::new(py, request).unwrap().into()
     }
 }
 
@@ -255,7 +255,7 @@ impl PyRequest {
     }
 
     pub fn json(&self, py: Python) -> PyResult<PyObject> {
-        match self.body.as_ref(py).downcast::<PyString>() {
+        match self.body.downcast_bound::<PyString>(py) {
             Ok(python_string) => match serde_json::from_str(python_string.extract()?) {
                 Ok(Value::Object(map)) => {
                     let dict = PyDict::new(py);
