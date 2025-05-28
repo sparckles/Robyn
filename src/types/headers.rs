@@ -14,7 +14,7 @@ pub struct Headers {
 #[pymethods]
 impl Headers {
     #[new]
-    pub fn new(default_headers: Option<&Bound<'_, PyDict, >>) -> Self {
+    pub fn new(default_headers: Option<&Bound<'_, PyDict>>) -> Self {
         match default_headers {
             Some(default_headers) => {
                 let headers = DashMap::new();
@@ -79,7 +79,9 @@ impl Headers {
         let dict = PyDict::new(py);
         for iter in self.headers.iter() {
             let (key, values) = iter.pair();
-            let py_values : Bound<'_, PyList, > = PyList::new(py, values.iter().map(|value| value.to_object(py))).expect("get-all failed");
+            let py_values: Bound<'_, PyList> =
+                PyList::new(py, values.iter().map(|value| value.to_object(py)))
+                    .expect("get-all failed");
             dict.set_item(key, py_values).unwrap();
         }
         dict.into()

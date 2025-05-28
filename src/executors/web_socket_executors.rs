@@ -24,19 +24,25 @@ fn get_function_output<'a>(
         1 => {
             if pyo3::types::PyDictMethods::get_item(args, "ws").is_ok_and(|it| !it.is_none()) {
                 handler.call1((ws.clone(),))
-            } else if pyo3::types::PyDictMethods::get_item(args, "msg").is_ok_and(|it| !it.is_none()) {
+            } else if pyo3::types::PyDictMethods::get_item(args, "msg")
+                .is_ok_and(|it| !it.is_none())
+            {
                 handler.call1((fn_msg.unwrap_or_default(),))
             } else {
                 handler.call((), Some(kwargs))
             }
         }
         2 => {
-            if pyo3::types::PyDictMethods::get_item(args, "ws").is_ok_and(|it| !it.is_none()) 
-                && pyo3::types::PyDictMethods::get_item(args, "msg").is_ok_and(|it| !it.is_none()) {
+            if pyo3::types::PyDictMethods::get_item(args, "ws").is_ok_and(|it| !it.is_none())
+                && pyo3::types::PyDictMethods::get_item(args, "msg").is_ok_and(|it| !it.is_none())
+            {
                 handler.call1((ws.clone(), fn_msg.unwrap_or_default()))
-            } else if pyo3::types::PyDictMethods::get_item(args, "ws").is_ok_and(|it| !it.is_none()) {
+            } else if pyo3::types::PyDictMethods::get_item(args, "ws").is_ok_and(|it| !it.is_none())
+            {
                 handler.call((ws.clone(),), Some(kwargs))
-            } else if pyo3::types::PyDictMethods::get_item(args, "msg").is_ok_and(|it| !it.is_none()) {
+            } else if pyo3::types::PyDictMethods::get_item(args, "msg")
+                .is_ok_and(|it| !it.is_none())
+            {
                 handler.call((fn_msg.unwrap_or_default(),), Some(kwargs))
             } else {
                 handler.call((), Some(kwargs))
@@ -44,11 +50,15 @@ fn get_function_output<'a>(
         }
         3 => {
             if pyo3::types::PyDictMethods::get_item(args, "ws").is_ok_and(|it| !it.is_none())
-                && pyo3::types::PyDictMethods::get_item(args, "msg").is_ok_and(|it| !it.is_none()) {
+                && pyo3::types::PyDictMethods::get_item(args, "msg").is_ok_and(|it| !it.is_none())
+            {
                 handler.call((ws.clone(), fn_msg.unwrap_or_default()), Some(kwargs))
-            } else if pyo3::types::PyDictMethods::get_item(args, "ws").is_ok_and(|it| !it.is_none()) {
+            } else if pyo3::types::PyDictMethods::get_item(args, "ws").is_ok_and(|it| !it.is_none())
+            {
                 handler.call((ws.clone(),), Some(kwargs))
-            } else if pyo3::types::PyDictMethods::get_item(args, "msg").is_ok_and(|it| !it.is_none()) {
+            } else if pyo3::types::PyDictMethods::get_item(args, "msg")
+                .is_ok_and(|it| !it.is_none())
+            {
                 handler.call((fn_msg.unwrap_or_default(),), Some(kwargs))
             } else {
                 handler.call((), Some(kwargs))

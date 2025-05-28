@@ -56,18 +56,16 @@ impl Actor for WebSocketConnector {
 
 impl Clone for WebSocketConnector {
     fn clone(&self) -> Self {
-
         let task_locals_clone = Python::with_gil(|py| self.task_locals.clone_ref(py));
-        
+
         Self {
             id: self.id,
             router: self.router.clone(),
             task_locals: task_locals_clone,
             registry_addr: self.registry_addr.clone(),
-            query_params: self.query_params.clone()
+            query_params: self.query_params.clone(),
         }
-
-     }
+    }
 }
 
 impl Handler<SendText> for WebSocketConnector {

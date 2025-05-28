@@ -118,7 +118,9 @@ impl Server {
         let excluded_response_headers_paths = self.excluded_response_headers_paths.clone();
 
         let _ = TASK_LOCALS.get_or_try_init(|| {
-            Python::with_gil(|py| pyo3_async_runtimes::TaskLocals::new(event_loop.clone().into()).copy_context(py))
+            Python::with_gil(|py| {
+                pyo3_async_runtimes::TaskLocals::new(event_loop.clone().into()).copy_context(py)
+            })
         });
 
         let max_payload_size = env::var(MAX_PAYLOAD_SIZE)
@@ -184,7 +186,8 @@ impl Server {
                             &endpoint.clone(),
                             web::get().to(move |stream: web::Payload, req: HttpRequest| {
                                 let endpoint_copy = endpoint.clone();
-                                let task_locals = Python::with_gil(|py| TASK_LOCALS.get().unwrap().clone_ref(py));
+                                let task_locals =
+                                    Python::with_gil(|py| TASK_LOCALS.get().unwrap().clone_ref(py));
                                 start_web_socket(
                                     req,
                                     stream,
@@ -208,7 +211,8 @@ impl Server {
                                   global_response_headers,
                                   response_headers_exclude_paths,
                                   req| {
-                                let task_locals = Python::with_gil(|py| TASK_LOCALS.get().unwrap().clone_ref(py));
+                                let task_locals =
+                                    Python::with_gil(|py| TASK_LOCALS.get().unwrap().clone_ref(py));
                                 pyo3_async_runtimes::tokio::scope_local(task_locals, async move {
                                     index(
                                         router,
@@ -257,7 +261,8 @@ impl Server {
                 if function.is_async {
                     debug!("Shutdown event handler async");
 
-                    let task_locals = Python::with_gil(|py| TASK_LOCALS.get().unwrap().clone_ref(py));
+                    let task_locals =
+                        Python::with_gil(|py| TASK_LOCALS.get().unwrap().clone_ref(py));
 
                     pyo3_async_runtimes::tokio::run_until_complete(
                         task_locals.event_loop(_py),

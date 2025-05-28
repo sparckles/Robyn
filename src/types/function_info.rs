@@ -61,14 +61,12 @@ impl FunctionInfo {
 
 impl Clone for FunctionInfo {
     fn clone(&self) -> Self {
-        Python::with_gil(|py| {
-            Self {
-                handler: self.handler.clone_ref(py),
-                is_async: self.is_async,
-                number_of_params: self.number_of_params,
-                args: self.args.clone_ref(py),
-                kwargs: self.kwargs.clone_ref(py),
-            }
+        Python::with_gil(|py| Self {
+            handler: self.handler.clone_ref(py),
+            is_async: self.is_async,
+            number_of_params: self.number_of_params,
+            args: self.args.clone_ref(py),
+            kwargs: self.kwargs.clone_ref(py),
         })
     }
 }

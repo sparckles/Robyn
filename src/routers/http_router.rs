@@ -7,7 +7,7 @@ use matchit::Router as MatchItRouter;
 use anyhow::{Context, Result};
 
 use crate::routers::Router;
-use crate::types::function_info::{FunctionInfo};
+use crate::types::function_info::FunctionInfo;
 use crate::types::HttpMethod;
 
 type RouteMap = RwLock<MatchItRouter<FunctionInfo>>;
