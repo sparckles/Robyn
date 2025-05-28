@@ -31,8 +31,8 @@ where
     match function.number_of_params {
         0 => handler.call0(),
         1 => {
-            if kwargs.getattr("global_dependencies").is_ok()
-                || kwargs.getattr("router_dependencies").is_ok()
+            if pyo3::types::PyDictMethods::get_item(kwargs, "global_dependencies").is_ok_and(|it| !it.is_none())
+                || pyo3::types::PyDictMethods::get_item(kwargs, "router_dependencies").is_ok_and(|it| !it.is_none())
             // these are reserved keywords
             {
                 handler.call((), Some(kwargs))
