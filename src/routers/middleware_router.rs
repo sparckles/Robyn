@@ -17,12 +17,13 @@ pub struct MiddlewareRouter {
 }
 
 impl Router<(FunctionInfo, HashMap<String, String>), MiddlewareType> for MiddlewareRouter {
-    fn add_route(
+    fn add_route<'py>(
         &self,
+        _py: Python,
         route_type: &MiddlewareType,
         route: &str,
         function: FunctionInfo,
-        _event_loop: Option<Bound<'_, pyo3::PyAny>>,
+        _event_loop: Option<Bound<'py, pyo3::PyAny>>,
     ) -> Result<(), Error> {
         let table = self.routes.get(route_type).context("No relevant map")?;
 

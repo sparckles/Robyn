@@ -10,7 +10,7 @@ use crate::types::HttpMethod;
 use anyhow::Context;
 use log::debug;
 use matchit::Router as MatchItRouter;
-use pyo3::Bound;
+use pyo3::{Bound, Python};
 
 use anyhow::{Error, Result};
 
@@ -25,12 +25,13 @@ pub struct ConstRouter {
 
 impl Router<Response, HttpMethod> for ConstRouter {
     /// Doesn't allow query params/body/etc as variables cannot be "memoized"/"const"ified
-    fn add_route(
+    fn add_route<'py>(
         &self,
+        _py: Python,
         route_type: &HttpMethod,
         route: &str,
         function: FunctionInfo,
-        event_loop: Option<Bound<'_, pyo3::PyAny>>,
+        event_loop: Option<Bound<'py, pyo3::PyAny>>,
     ) -> Result<(), Error> {
         let table = self
             .routes

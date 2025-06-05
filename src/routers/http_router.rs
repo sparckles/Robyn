@@ -18,12 +18,13 @@ pub struct HttpRouter {
 }
 
 impl Router<(FunctionInfo, HashMap<String, String>), HttpMethod> for HttpRouter {
-    fn add_route(
+    fn add_route<'py>(
         &self,
+        _py: Python,
         route_type: &HttpMethod,
         route: &str,
         function: FunctionInfo,
-        _event_loop: Option<Bound<'_, pyo3::PyAny>>,
+        _event_loop: Option<Bound<'py, pyo3::PyAny>>,
     ) -> Result<()> {
         let table = self.routes.get(route_type).context("No relevant map")?;
 

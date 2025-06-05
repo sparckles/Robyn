@@ -362,7 +362,7 @@ impl Server {
         if is_const {
             match self
                 .const_router
-                .add_route(route_type, route, function, Some(event_loop))
+                .add_route(py, route_type, route, function, Some(event_loop))
             {
                 Ok(_) => (),
                 Err(e) => {
@@ -370,7 +370,7 @@ impl Server {
                 }
             }
         } else {
-            match self.router.add_route(route_type, route, function, None) {
+            match self.router.add_route(py, route_type, route, function, None) {
                 Ok(_) => (),
                 Err(e) => {
                     debug!("Error adding route {}", e);
@@ -399,9 +399,11 @@ impl Server {
             "MiddleWare Route added for {:?} {} ",
             middleware_type, route
         );
-        self.middleware_router
-            .add_route(middleware_type, route, function, None)
-            .unwrap();
+        Python::with_gil(|py| {
+            self.middleware_router
+                .add_route(py, middleware_type, route, function, None)
+                .unwrap()
+        });
     }
 
     /// Add a new web socket route to the routing tables
