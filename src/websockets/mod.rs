@@ -13,14 +13,13 @@ use log::debug;
 use once_cell::sync::OnceCell;
 use parking_lot::RwLock;
 use pyo3::prelude::*;
-use pyo3_asyncio::TaskLocals;
+use pyo3_async_runtimes::TaskLocals;
 use uuid::Uuid;
 
 use registry::{Register, WebSocketRegistry};
 use std::collections::HashMap;
 
 /// Define HTTP actor
-#[derive(Clone)]
 #[pyclass]
 pub struct WebSocketConnector {
     pub id: Uuid,
@@ -52,6 +51,20 @@ impl Actor for WebSocketConnector {
         let function = self.router.get("close").unwrap();
         execute_ws_function(function, None, &self.task_locals, ctx, self);
         debug!("Actor is dead");
+    }
+}
+
+impl Clone for WebSocketConnector {
+    fn clone(&self) -> Self {
+        let task_locals_clone = Python::with_gil(|py| self.task_locals.clone_ref(py));
+
+        Self {
+            id: self.id,
+            router: self.router.clone(),
+            task_locals: task_locals_clone,
+            registry_addr: self.registry_addr.clone(),
+            query_params: self.query_params.clone(),
+        }
     }
 }
 
@@ -132,7 +145,7 @@ impl WebSocketConnector {
         let recipient_id = Uuid::parse_str(&recipient_id).unwrap();
         let sender_id = self.id;
 
-        let awaitable = pyo3_asyncio::tokio::future_into_py(py, async move {
+        let awaitable = pyo3_async_runtimes::tokio::future_into_py(py, async move {
             match (registry).try_send(SendText {
                 message: message.to_string(),
                 sender_id,
@@ -162,7 +175,7 @@ impl WebSocketConnector {
         let registry = self.registry_addr.clone();
         let sender_id = self.id;
 
-        let awaitable = pyo3_asyncio::tokio::future_into_py(py, async move {
+        let awaitable = pyo3_async_runtimes::tokio::future_into_py(py, async move {
             match registry.try_send(SendMessageToAll {
                 message: message.to_string(),
                 sender_id,

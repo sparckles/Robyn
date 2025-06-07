@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Benchmark script to get info about Robyn's performances
-# You can use this benchmark when developping on Robyn to test if your changes had a huge
+# You can use this benchmark when developing on Robyn to test if your changes had a huge
 # impact on performances. You cannot compare benchmarks from different machine and even
 # several runs on the same machine can give very different results sometimes.
 # Be aware of this when using this script!
