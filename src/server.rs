@@ -410,13 +410,14 @@ impl Server {
         );
         Python::with_gil(|py| {
             self.middleware_router
-              .add_route(
-                  middleware_type,
-                  &endpoint_prefixed_with_method,
-                  function,
-                  None,
-              )
-              .unwrap()
+                .add_route(
+                    py,
+                    middleware_type,
+                    &endpoint_prefixed_with_method,
+                    function,
+                    None,
+                )
+                .unwrap()
         });
     }
 
