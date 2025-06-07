@@ -23,17 +23,14 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
 ]
 dependencies = [
-  'watchdog == 4.0.1',
-  'multiprocess == 0.70.14',
-  'inquirerpy == 0.3.4',
-  'rustimport == 1.3.4',
-  'orjson == 3.9.15',
-# conditional
-  "uvloop~=0.21.0; sys_platform != 'win32' and platform_python_implementation == 'CPython' and platform_machine != 'armv7l'"
-  ]
-
-[project.scripts]
-robyn = "robyn.cli:run"
+  "inquirerpy == 0.3.4",
+  "multiprocess == 0.70.14",
+  "orjson == 3.9.15",
+  "rustimport == 1.3.4",
+  # conditional
+  "uvloop~=0.21.0; sys_platform != 'win32' and platform_python_implementation == 'CPython' and platform_machine != 'armv7l'",
+  "watchdog == 4.0.1",
+]
 
 [project.optional-dependencies]
 "templating" = ["jinja2 == 3.0.1"]
@@ -43,6 +40,27 @@ Documentation = "https://robyn.tech/"
 Repository = "https://github.com/sparckles/robyn"
 Issues = "https://github.com/sparckles/robyn/issues"
 Changelog = "https://github.com/sparckles/robyn/blob/main/CHANGELOG.md"
+
+[project.scripts]
+robyn = "robyn.cli:run"
+test_server = "integration_tests.base_routes:main"
+
+[dependency-groups]
+dev = [
+  "black==23.1",
+  "commitizen==2.40",
+  "isort==5.11.5",
+  "maturin==0.14.12",
+  "pre-commit==2.21.0",
+  "ruff==0.1.3",
+]
+test = [
+  "nox==2023.4.22",
+  "pytest==7.2.1",
+  "pytest-codspeed==1.2.2",
+  "requests==2.28.2",
+  "websocket-client==1.5.0",
+]
 
 
 [tool.poetry]
@@ -58,7 +76,6 @@ inquirerpy = "0.3.4"
 maturin = "0.14.12"
 watchdog = "4.0.1"
 multiprocess = "0.70.14"
-nestd = "0.3.1"
 uvloop = { version = "0.21.0", markers = "sys_platform != 'win32' and (sys_platform != 'cygwin' and platform_python_implementation != 'PyPy')" }
 jinja2 = { version = "3.0.1", optional = true }
 rustimport = "^1.3.4"

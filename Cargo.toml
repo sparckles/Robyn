@@ -14,7 +14,7 @@ name = "robyn"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-pyo3 = { version = "0.24.2", features = ["extension-module"]}
+pyo3 = { version = "0.24.2", features = ["extension-module", "py-clone"]}
 pyo3-async-runtimes = { version = "0.24", features = ["tokio-runtime"] }
 pyo3-async-runtimes-macros = { version = "0.24" }
 pyo3-log = "0.12.3"
