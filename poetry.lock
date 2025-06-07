@@ -1370,4 +1370,4 @@ templating = ["jinja2"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.9"
-content-hash = "2fcdfc4a1a3343d574af0a909a48d1bba7b96fd6bf28bee8e58a2f4601f9e950"
+content-hash = "6dad915fed1fbe403bcf978c2a91330e2baa48c09fd860f0b58be1c88a4ddec2"

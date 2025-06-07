@@ -7,7 +7,7 @@ name = "robyn"
 version = "0.66.2"
 description = "A Super Fast Async Python Web Framework with a Rust runtime."
 authors = [{ name = "Sanskar Jethi", email = "sansyrox@gmail.com" }]
-license = "OSI Approved :: BSD License"
+license = { file = "LICENSE" }
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Environment :: Web Environment",
