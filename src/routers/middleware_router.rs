@@ -3,7 +3,7 @@ use std::sync::RwLock;
 
 use anyhow::{Context, Error, Result};
 use matchit::Router as MatchItRouter;
-use pyo3::types::PyAny;
+use pyo3::{Bound, Python};
 
 use crate::routers::Router;
 use crate::types::function_info::{FunctionInfo, MiddlewareType};
@@ -17,12 +17,13 @@ pub struct MiddlewareRouter {
 }
 
 impl Router<(FunctionInfo, HashMap<String, String>), MiddlewareType> for MiddlewareRouter {
-    fn add_route(
+    fn add_route<'py>(
         &self,
+        _py: Python,
         route_type: &MiddlewareType,
         route: &str,
         function: FunctionInfo,
-        _event_loop: Option<&PyAny>,
+        _event_loop: Option<Bound<'py, pyo3::PyAny>>,
     ) -> Result<(), Error> {
         let table = self.routes.get(route_type).context("No relevant map")?;
 
@@ -45,7 +46,9 @@ impl Router<(FunctionInfo, HashMap<String, String>), MiddlewareType> for Middlew
             route_params.insert(key.to_string(), value.to_string());
         }
 
-        Some((res.value.to_owned(), route_params))
+        let function_info = Python::with_gil(|_| res.value.to_owned());
+
+        Some((function_info, route_params))
     }
 }
 
