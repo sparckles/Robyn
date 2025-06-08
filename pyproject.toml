@@ -23,6 +23,7 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
 ]
 dependencies = [
+  "cffi>=1.17.0",
   "inquirerpy == 0.3.4",
   "multiprocess == 0.70.18",
   "orjson == 3.9.15",
@@ -72,6 +73,7 @@ authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
+cffi = "^1.17.0"
 inquirerpy = "0.3.4"
 maturin = "0.14.12"
 watchdog = "4.0.1"
