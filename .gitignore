@@ -60,3 +60,6 @@ docs_src/.vercel
 
 # generated files
 docs_src/public/rss/
+
+#https://github.com/PyO3/maturin/issues/2141
+*.pyd
