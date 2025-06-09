@@ -12,7 +12,7 @@
 [![Discord](https://img.shields.io/discord/999782964143603713?label=discord&logo=discord&logoColor=white&style=for-the-badge&color=blue)](https://discord.gg/rkERZ5eNU8)
 [![Gurubase](https://img.shields.io/badge/Gurubase-Ask%20Robyn%20Guru-006BFF?style=for-the-badge)](https://gurubase.io/g/robyn)
 
-Robyn is a High-Performance, Community-Driven, and Innovator Friendly Web Framework with a Rust runtime. You can learn more by checking our [community resources](https://robyn.tech/documentation/community-resources)!
+Robyn is a High-Performance, Community-Driven, and Innovator Friendly Web Framework with a Rust runtime. You can learn more by checking our [community resources](https://robyn.tech/documentation/en/community-resources#talks)!
 
 <img width="652" alt="image" src="https://github.com/sparckles/Robyn/assets/29942790/4a2bba61-24e7-4ee2-8884-19b40204bfcd">
 
