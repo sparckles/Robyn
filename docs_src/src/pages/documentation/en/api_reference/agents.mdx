@@ -1,0 +1,125 @@
+export const description =
+  'Robyn AI Agents provide intelligent functionality for building AI-powered applications using MCP (Model Context Protocol) implementation with file system access, task management, and context-aware capabilities.'
+
+# Agents
+
+This guide demonstrates how to build AI-powered agents using Robyn's MCP (Model Context Protocol) implementation.
+
+## Overview
+
+The agent system connects AI assistants like Claude Desktop to your development environment, providing seamless access to:
+
+- File system operations (read, search, organize)
+- Task and note management
+- System monitoring and git integration
+- Web content fetching and analysis
+- Context-aware code analysis
+
+## Quick Start
+
+1. Run the MCP server:
+   ```bash
+   python examples/agents.py
+   ```
+
+2. Connect your AI assistant to `http://localhost:8080/mcp`
+
+3. Start using natural language commands:
+   - "What files are in my projects directory?"
+   - "Show me my recent git commits"
+   - "Create a note about today's standup meeting"
+   - "What processes are using the most CPU?"
+   - "Add a task to review the quarterly report"
+
+## Configuration
+
+The assistant creates the following structure:
+
+```
+~/Documents/
+├── notes/           # Markdown notes
+└── tasks.json      # Task list
+
+~/projects/          # Development projects
+├── project1/
+└── project2/
+```
+
+## Security
+
+- File access restricted to home directory
+- Safe mathematical expression evaluation
+- Path validation for all file operations
+- Read-only git operations
+
+## Available Resources
+
+### File System
+- `fs://{path}` - Read files in home directory
+- `fs://dir/{path}` - List directory contents
+
+### Git Integration
+- `git://repo/{repo_name}` - Repository status and commits
+
+### System Monitoring
+- `system://processes` - Running processes
+- `system://stats` - System statistics
+
+## Available Tools
+
+- `create_note(title, content, tags)` - Create markdown notes
+- `add_task(task, priority, due_date)` - Add tasks
+- `complete_task(task_id)` - Mark tasks complete
+- `search_files(query, directory)` - Search file contents
+- `fetch_url_content(url, max_length)` - Download web content
+
+## Available Prompts
+
+- `analyze_file_structure(directory)` - Generate project analysis
+- `code_review_request(file_path, focus_area)` - Create code reviews
+- `task_prioritization(context)` - Organize and prioritize work
+
+## Dependencies
+
+Optional enhanced functionality:
+
+```bash
+pip install psutil  # Enhanced system monitoring
+```
+
+## Implementation Examples
+
+### Development Workflow
+"Analyze my projects directory and help prioritize work based on recent activity"
+
+### Project Analysis
+"Review my web-app project structure and suggest improvements"
+
+### Meeting Notes
+"Create a note about today's architecture review with key decisions"
+
+### Code Search
+"Find all files mentioning 'authentication' and summarize approaches"
+
+### Task Management
+"Add high-priority task to refactor user service, due Friday"
+
+## Integration Benefits
+
+Connecting AI assistants to your development environment enables:
+- Native file system browsing
+- Context-aware project conversations
+- Personalized code suggestions
+- Real-time task management
+- Workspace-specific code reviews
+
+## Advanced Features
+
+The MCP implementation includes:
+- URI templates with parameter extraction
+- Auto-generated schemas from type hints
+- Async/sync operation handlers
+- MCP-compliant error handling
+- Type-safe parameter passing
+
+Extend easily with custom resources, tools, and prompts for your specific workflow.

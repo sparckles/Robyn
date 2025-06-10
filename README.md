@@ -131,6 +131,8 @@ python --version
 - Dependency Injection
 - Hot Reloading
 - Direct Rust Integration
+- **🤖 AI Agent Support** - Built-in agent routing and execution
+- **🔌 MCP (Model Context Protocol)** - Connect to AI applications as a server
 - Community First and truly FOSS!
 
 ## 🗒️ How to contribute
