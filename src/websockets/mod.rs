@@ -175,10 +175,7 @@ impl WebSocketConnector {
         let sender_id = self.id;
 
         let awaitable = pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            match registry.try_send(SendMessageToAll {
-                message,
-                sender_id,
-            }) {
+            match registry.try_send(SendMessageToAll { message, sender_id }) {
                 Ok(_) => println!("Message sent successfully"),
                 Err(e) => println!("Failed to send message: {}", e),
             }

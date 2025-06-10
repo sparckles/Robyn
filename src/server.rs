@@ -361,17 +361,23 @@ impl Server {
         let event_loop = asyncio.call_method0("get_event_loop").unwrap();
 
         if is_const {
-            match self
-                .const_router
-                .add_route(py, route_type, route, function.clone(), Some(event_loop))
-            {
+            match self.const_router.add_route(
+                py,
+                route_type,
+                route,
+                function.clone(),
+                Some(event_loop),
+            ) {
                 Ok(_) => (),
                 Err(e) => {
                     debug!("Error adding const route {}", e);
                 }
             }
         } else {
-            match self.router.add_route(py, route_type, route, function.clone(), None) {
+            match self
+                .router
+                .add_route(py, route_type, route, function.clone(), None)
+            {
                 Ok(_) => (),
                 Err(e) => {
                     debug!("Error adding route {}", e);
