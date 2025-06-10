@@ -13,6 +13,7 @@ use log::debug;
 use once_cell::sync::OnceCell;
 use parking_lot::RwLock;
 use pyo3::prelude::*;
+use pyo3::IntoPyObject;
 use pyo3_async_runtimes::TaskLocals;
 use uuid::Uuid;
 
@@ -73,9 +74,8 @@ impl Handler<SendText> for WebSocketConnector {
 
     fn handle(&mut self, msg: SendText, ctx: &mut Self::Context) {
         if self.id == msg.recipient_id {
-            let message = msg.message.clone();
-            ctx.text(msg.message);
-            if message == "Connection closed" {
+            ctx.text(msg.message.clone());
+            if msg.message == "Connection closed" {
                 // Close the WebSocket connection
                 ctx.stop();
             }
@@ -125,8 +125,8 @@ impl WebSocketConnector {
     pub fn sync_send_to(&self, recipient_id: String, message: String) {
         let recipient_id = Uuid::parse_str(&recipient_id).unwrap();
 
-        match (self.registry_addr).try_send(SendText {
-            message: message.to_string(),
+        match self.registry_addr.try_send(SendText {
+            message,
             sender_id: self.id,
             recipient_id,
         }) {
@@ -146,8 +146,8 @@ impl WebSocketConnector {
         let sender_id = self.id;
 
         let awaitable = pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            match (registry).try_send(SendText {
-                message: message.to_string(),
+            match registry.try_send(SendText {
+                message,
                 sender_id,
                 recipient_id,
             }) {
@@ -157,13 +157,13 @@ impl WebSocketConnector {
             Ok(())
         })?;
 
-        Ok(awaitable.into_py(py))
+        Ok(awaitable.into_pyobject(py)?.into_any().into())
     }
 
     pub fn sync_broadcast(&self, message: String) {
         let registry = self.registry_addr.clone();
         match registry.try_send(SendMessageToAll {
-            message: message.to_string(),
+            message,
             sender_id: self.id,
         }) {
             Ok(_) => println!("Message sent successfully"),
@@ -176,17 +176,14 @@ impl WebSocketConnector {
         let sender_id = self.id;
 
         let awaitable = pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            match registry.try_send(SendMessageToAll {
-                message: message.to_string(),
-                sender_id,
-            }) {
+            match registry.try_send(SendMessageToAll { message, sender_id }) {
                 Ok(_) => println!("Message sent successfully"),
                 Err(e) => println!("Failed to send message: {}", e),
             }
             Ok(())
         })?;
 
-        Ok(awaitable.into_py(py))
+        Ok(awaitable.into_pyobject(py)?.into_any().into())
     }
 
     pub fn close(&self) {
@@ -221,7 +218,7 @@ fn get_or_init_registry_for_endpoint(endpoint: String) -> Addr<WebSocketRegistry
 
     {
         let mut map = map_lock.write();
-        map.insert(endpoint.to_string(), new_registry.clone());
+        map.insert(endpoint, new_registry.clone());
     }
 
     new_registry

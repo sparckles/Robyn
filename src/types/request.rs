@@ -6,7 +6,7 @@ use actix_web::{
 use futures_util::StreamExt as _;
 use log::debug;
 use pyo3::types::{PyBytes, PyDict, PyString};
-use pyo3::{exceptions::PyValueError, prelude::*};
+use pyo3::{exceptions::PyValueError, prelude::*, IntoPyObject};
 use serde_json::Value;
 use std::collections::HashMap;
 
@@ -21,7 +21,7 @@ pub struct Request {
     pub method: String,
     pub path_params: HashMap<String, String>,
     // https://pyo3.rs/v0.19.2/function.html?highlight=from_py_#per-argument-options
-    #[pyo3(from_py_with = "get_body_from_pyobject")]
+    #[pyo3(from_py_with = get_body_from_pyobject)]
     pub body: Vec<u8>,
     pub url: Url,
     pub ip_addr: Option<String>,
@@ -30,14 +30,17 @@ pub struct Request {
     pub files: Option<HashMap<String, Vec<u8>>>,
 }
 
-impl ToPyObject for Request {
-    fn to_object(&self, py: Python) -> PyObject {
+impl<'py> IntoPyObject<'py> for Request {
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
         let query_params = self.query_params.clone();
-        let headers: Py<Headers> = self.headers.clone().into_py(py).extract(py).unwrap();
-        let path_params = self.path_params.clone().into_py(py).extract(py).unwrap();
+        let headers: Py<Headers> = self.headers.clone().into_pyobject(py)?.extract()?;
+        let path_params = self.path_params.clone().into_pyobject(py)?.extract()?;
         let body = match String::from_utf8(self.body.clone()) {
-            Ok(s) => s.into_py(py),
-            Err(_) => self.body.clone().into_py(py),
+            Ok(s) => s.into_pyobject(py)?.into_any(),
+            Err(_) => self.body.clone().into_pyobject(py)?.into_any(),
         };
         let form_data: Py<PyDict> = match &self.form_data {
             Some(data) => {
@@ -66,15 +69,15 @@ impl ToPyObject for Request {
             query_params,
             path_params,
             headers,
-            body,
+            body: body.into(),
             method: self.method.clone(),
             url: self.url.clone(),
             ip_addr: self.ip_addr.clone(),
             identity: self.identity.clone(),
-            form_data: form_data.clone(),
-            files: files.clone(),
+            form_data,
+            files,
         };
-        Py::new(py, request).unwrap().into()
+        Ok(Py::new(py, request)?.into_bound(py).into_any())
     }
 }
 
@@ -101,7 +104,7 @@ async fn handle_multipart(
         let field_name = content_disposition.get_name().unwrap_or_default();
         let file_name = content_disposition.get_filename().map(|s| s.to_string());
 
-        body.extend_from_slice(&data.clone());
+        body.extend_from_slice(&data);
 
         if let Some(name) = file_name {
             files.insert(name, data);
@@ -261,16 +264,16 @@ impl PyRequest {
                     let dict = PyDict::new(py);
 
                     for (key, value) in map.iter() {
-                        let py_key = key.to_string().into_py(py);
+                        let py_key = key.to_string().into_pyobject(py)?.into_any();
                         let py_value = match value {
-                            Value::String(s) => s.as_str().into_py(py),
-                            _ => value.to_string().into_py(py),
+                            Value::String(s) => s.as_str().into_pyobject(py)?.into_any(),
+                            _ => value.to_string().into_pyobject(py)?.into_any(),
                         };
 
                         dict.set_item(py_key, py_value)?;
                     }
 
-                    Ok(dict.into_py(py))
+                    Ok(dict.into_pyobject(py)?.into_any().into())
                 }
                 _ => Err(PyValueError::new_err("Invalid JSON object")),
             },

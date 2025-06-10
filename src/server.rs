@@ -100,13 +100,13 @@ impl Server {
 
         let raw_socket = socket.get_socket();
 
-        let router = self.router.clone();
-        let const_router = self.const_router.clone();
-        let middleware_router = self.middleware_router.clone();
-        let web_socket_router = self.websocket_router.clone();
-        let global_request_headers = self.global_request_headers.clone();
-        let global_response_headers = self.global_response_headers.clone();
-        let directories = self.directories.clone();
+        let router = Arc::clone(&self.router);
+        let const_router = Arc::clone(&self.const_router);
+        let middleware_router = Arc::clone(&self.middleware_router);
+        let web_socket_router = Arc::clone(&self.websocket_router);
+        let global_request_headers = Arc::clone(&self.global_request_headers);
+        let global_response_headers = Arc::clone(&self.global_response_headers);
+        let directories = Arc::clone(&self.directories);
 
         let asyncio = _py.import("asyncio")?;
         let event_loop = asyncio.call_method0("new_event_loop")?;
@@ -171,21 +171,22 @@ impl Server {
                     }
 
                     app = app
-                        .app_data(web::Data::new(router.clone()))
-                        .app_data(web::Data::new(const_router.clone()))
-                        .app_data(web::Data::new(middleware_router.clone()))
-                        .app_data(web::Data::new(global_request_headers.clone()))
-                        .app_data(web::Data::new(global_response_headers.clone()))
+                        .app_data(web::Data::new(Arc::clone(&router)))
+                        .app_data(web::Data::new(Arc::clone(&const_router)))
+                        .app_data(web::Data::new(Arc::clone(&middleware_router)))
+                        .app_data(web::Data::new(Arc::clone(&global_request_headers)))
+                        .app_data(web::Data::new(Arc::clone(&global_response_headers)))
                         .app_data(web::Data::new(excluded_response_headers_paths.clone()));
 
                     let web_socket_map = web_socket_router.get_web_socket_map();
                     for (elem, value) in (web_socket_map.read()).iter() {
                         let endpoint = elem.clone();
                         let path_params = value.clone();
+                        let endpoint_for_closure = endpoint.clone();
                         app = app.route(
-                            &endpoint.clone(),
+                            &endpoint,
                             web::get().to(move |stream: web::Payload, req: HttpRequest| {
-                                let endpoint_copy = endpoint.clone();
+                                let endpoint_copy = endpoint_for_closure.clone();
                                 let task_locals =
                                     Python::with_gil(|py| TASK_LOCALS.get().unwrap().clone_ref(py));
                                 start_web_socket(
@@ -193,7 +194,7 @@ impl Server {
                                     stream,
                                     path_params.clone(),
                                     task_locals,
-                                    endpoint_copy,
+                                    endpoint_copy.to_string(),
                                 )
                             }),
                         );
@@ -343,8 +344,8 @@ impl Server {
             format!("{}/", route)
         };
 
-        self._add_route(py, route_type, route, function.clone(), is_const);
-        self._add_route(py, route_type, &second_route, function, is_const);
+        self._add_route(py, route_type, route, &function, is_const);
+        self._add_route(py, route_type, &second_route, &function, is_const);
     }
 
     fn _add_route(
@@ -352,7 +353,7 @@ impl Server {
         py: Python,
         route_type: &HttpMethod,
         route: &str,
-        function: FunctionInfo,
+        function: &FunctionInfo,
         is_const: bool,
     ) {
         debug!("Route added for {:?} {} ", route_type, route);
@@ -360,17 +361,23 @@ impl Server {
         let event_loop = asyncio.call_method0("get_event_loop").unwrap();
 
         if is_const {
-            match self
-                .const_router
-                .add_route(py, route_type, route, function, Some(event_loop))
-            {
+            match self.const_router.add_route(
+                py,
+                route_type,
+                route,
+                function.clone(),
+                Some(event_loop),
+            ) {
                 Ok(_) => (),
                 Err(e) => {
                     debug!("Error adding const route {}", e);
                 }
             }
         } else {
-            match self.router.add_route(py, route_type, route, function, None) {
+            match self
+                .router
+                .add_route(py, route_type, route, function.clone(), None)
+            {
                 Ok(_) => (),
                 Err(e) => {
                     debug!("Error adding route {}", e);

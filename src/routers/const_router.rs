@@ -33,11 +33,7 @@ impl Router<Response, HttpMethod> for ConstRouter {
         function: FunctionInfo,
         event_loop: Option<Bound<'py, pyo3::PyAny>>,
     ) -> Result<(), Error> {
-        let table = self
-            .routes
-            .get(route_type)
-            .context("No relevant map")?
-            .clone();
+        let table = Arc::clone(self.routes.get(route_type).context("No relevant map")?);
 
         let route = route.to_string();
         let event_loop =

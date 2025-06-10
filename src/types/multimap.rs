@@ -53,7 +53,7 @@ impl QueryParams {
 
     pub fn extend(&mut self, other: &mut Self) {
         for (key, values) in other.queries.iter_mut() {
-            for value in values.iter_mut() {
+            for value in values.iter() {
                 self.set(key.clone(), value.clone());
             }
         }
