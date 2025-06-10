@@ -13,6 +13,7 @@ use log::debug;
 use once_cell::sync::OnceCell;
 use parking_lot::RwLock;
 use pyo3::prelude::*;
+use pyo3::IntoPyObject;
 use pyo3_async_runtimes::TaskLocals;
 use uuid::Uuid;
 
@@ -156,7 +157,7 @@ impl WebSocketConnector {
             Ok(())
         })?;
 
-        Ok(awaitable.into_py(py))
+        Ok(awaitable.into_pyobject(py)?.into_any().into())
     }
 
     pub fn sync_broadcast(&self, message: String) {
@@ -182,7 +183,7 @@ impl WebSocketConnector {
             Ok(())
         })?;
 
-        Ok(awaitable.into_py(py))
+        Ok(awaitable.into_pyobject(py)?.into_any().into())
     }
 
     pub fn close(&self) {

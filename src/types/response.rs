@@ -4,6 +4,7 @@ use pyo3::{
     exceptions::PyIOError,
     prelude::*,
     types::{PyBytes, PyDict},
+    IntoPyObject,
 };
 
 use crate::io_helpers::{apply_hashmap_headers, read_file};
@@ -65,24 +66,27 @@ impl Response {
     }
 }
 
-impl ToPyObject for Response {
-    fn to_object(&self, py: Python) -> PyObject {
-        let headers = self.headers.clone().into_py(py).extract(py).unwrap();
+impl<'py> IntoPyObject<'py> for Response {
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        let headers = self.headers.clone().into_pyobject(py)?.extract()?;
         // The description should only be either string or binary.
         // it should raise an exception otherwise
         let description = match String::from_utf8(self.description.to_vec()) {
-            Ok(description) => description.to_object(py),
-            Err(_) => PyBytes::new(py, &self.description.to_vec()).into(),
+            Ok(description) => description.into_pyobject(py)?.into_any(),
+            Err(_) => PyBytes::new(py, &self.description.to_vec()).into_any(),
         };
 
         let response = PyResponse {
             status_code: self.status_code,
             response_type: self.response_type.clone(),
             headers,
-            description,
+            description: description.into(),
             file_path: self.file_path.clone(),
         };
-        Py::new(py, response).unwrap().into()
+        Ok(Py::new(py, response)?.into_bound(py).into_any())
     }
 }
 
