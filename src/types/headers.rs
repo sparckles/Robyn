@@ -168,7 +168,7 @@ impl Headers {
         for iter in headers.headers.iter() {
             let (key, values) = iter.pair();
             let mut entry = self.headers.entry(key.clone()).or_default();
-            entry.extend(values.clone());
+            entry.extend(values.iter().cloned());
         }
     }
 

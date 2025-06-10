@@ -71,8 +71,8 @@ impl ToPyObject for Request {
             url: self.url.clone(),
             ip_addr: self.ip_addr.clone(),
             identity: self.identity.clone(),
-            form_data: form_data.clone(),
-            files: files.clone(),
+            form_data,
+            files,
         };
         Py::new(py, request).unwrap().into()
     }
@@ -101,7 +101,7 @@ async fn handle_multipart(
         let field_name = content_disposition.get_name().unwrap_or_default();
         let file_name = content_disposition.get_filename().map(|s| s.to_string());
 
-        body.extend_from_slice(&data.clone());
+        body.extend_from_slice(&data);
 
         if let Some(name) = file_name {
             files.insert(name, data);
