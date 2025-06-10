@@ -8,7 +8,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use log::debug;
 use pyo3::prelude::*;
-use pyo3::{IntoPyObject, BoundObject};
+use pyo3::{BoundObject, IntoPyObject};
 use pyo3_async_runtimes::TaskLocals;
 
 use crate::types::{
@@ -27,7 +27,12 @@ where
 {
     let handler = function.handler.bind(py).downcast()?;
     let kwargs = function.kwargs.bind(py);
-    let function_args: PyObject = function_args.clone().into_pyobject(py).unwrap().into_any().unbind();
+    let function_args: PyObject = function_args
+        .clone()
+        .into_pyobject(py)
+        .unwrap()
+        .into_any()
+        .unbind();
     debug!("Function args: {:?}", function_args);
 
     match function.number_of_params {
