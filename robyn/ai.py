@@ -6,11 +6,60 @@ Provides agent and memory functionality for building AI-powered applications.
 import asyncio
 import json
 import logging
+import os
 from typing import Any, Dict, Optional, Union, List
 from abc import ABC, abstractmethod
 
 
 logger = logging.getLogger(__name__)
+
+
+class AIConfig:
+    """Configuration class for AI providers and settings"""
+    
+    def __init__(self, **kwargs):
+        self.config = kwargs
+        self._load_from_env()
+    
+    def _load_from_env(self):
+        """Load configuration from environment variables"""
+        env_vars = {
+            'OPENAI_API_KEY': 'openai_api_key',
+            'ANTHROPIC_API_KEY': 'anthropic_api_key',
+            'GOOGLE_API_KEY': 'google_api_key',
+            'MEM0_API_KEY': 'mem0_api_key',
+            'LANGGRAPH_API_KEY': 'langgraph_api_key',
+            'AI_MODEL': 'model',
+            'AI_TEMPERATURE': 'temperature',
+            'AI_MAX_TOKENS': 'max_tokens'
+        }
+        
+        for env_var, config_key in env_vars.items():
+            if env_var in os.environ and config_key not in self.config:
+                value = os.environ[env_var]
+                # Convert numeric values
+                if config_key in ['temperature', 'max_tokens']:
+                    try:
+                        value = float(value) if config_key == 'temperature' else int(value)
+                    except ValueError:
+                        pass
+                self.config[config_key] = value
+    
+    def get(self, key: str, default: Any = None) -> Any:
+        """Get configuration value"""
+        return self.config.get(key, default)
+    
+    def set(self, key: str, value: Any) -> None:
+        """Set configuration value"""
+        self.config[key] = value
+    
+    def update(self, **kwargs) -> None:
+        """Update configuration with new values"""
+        self.config.update(kwargs)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Get configuration as dictionary"""
+        return self.config.copy()
 
 
 class MemoryProvider(ABC):
@@ -71,19 +120,42 @@ class Mem0Provider(MemoryProvider):
     async def store(self, user_id: str, data: Dict[str, Any]) -> None:
         client = self._get_client()
         message = data.get('message', str(data))
-        client.add(message, user_id=user_id)
+        try:
+            client.add(message, user_id=user_id)
+        except Exception as e:
+            logger.warning(f"Failed to store in Mem0: {e}. Falling back to local storage.")
+            # Fallback to simple storage if Mem0 fails
+            if not hasattr(self, '_fallback_storage'):
+                self._fallback_storage = {}
+            if user_id not in self._fallback_storage:
+                self._fallback_storage[user_id] = []
+            self._fallback_storage[user_id].append(data)
     
     async def retrieve(self, user_id: str, query: Optional[str] = None) -> List[Dict[str, Any]]:
-        client = self._get_client()
-        if query:
-            results = client.search(query, user_id=user_id)
-        else:
-            results = client.get_all(user_id=user_id)
-        return results
+        try:
+            client = self._get_client()
+            if query:
+                results = client.search(query, user_id=user_id)
+            else:
+                results = client.get_all(user_id=user_id)
+            return results
+        except Exception as e:
+            logger.warning(f"Failed to retrieve from Mem0: {e}. Using fallback storage.")
+            # Use fallback storage if available
+            if hasattr(self, '_fallback_storage'):
+                return self._fallback_storage.get(user_id, [])
+            return []
     
     async def clear(self, user_id: str) -> None:
-        client = self._get_client()
-        client.delete_all(user_id=user_id)
+        try:
+            client = self._get_client()
+            client.delete_all(user_id=user_id)
+        except Exception as e:
+            logger.warning(f"Failed to clear Mem0: {e}. Clearing fallback storage.")
+        
+        # Also clear fallback storage
+        if hasattr(self, '_fallback_storage') and user_id in self._fallback_storage:
+            del self._fallback_storage[user_id]
 
 
 class Memory:
@@ -192,29 +264,78 @@ class LangGraphRunner(AgentRunner):
 
 
 class SimpleRunner(AgentRunner):
-    """Simple echo runner for testing"""
+    """Simple runner with OpenAI integration and fallback responses"""
     
     def __init__(self, **config):
-        self.config = config
+        self.config = AIConfig(**config)
+        self._client = None
+        
+    def _get_client(self):
+        """Get OpenAI client if API key is available"""
+        if self._client is None and self.config.get("openai_api_key"):
+            try:
+                import openai
+                self._client = openai.OpenAI(api_key=self.config.get("openai_api_key"))
+            except ImportError:
+                raise ImportError("openai package not installed. Install with: pip install openai")
+        return self._client
+    
     
     async def run(self, query: str, **kwargs) -> Dict[str, Any]:
-        # Simple agent that processes the query
-        response = f"AI Agent processed: {query}"
+        """Execute with OpenAI (requires API key)"""
+        client = self._get_client()
         
-        # Add some basic processing based on query
-        if "hello" in query.lower():
-            response = "Hello! How can I help you today?"
-        elif "weather" in query.lower():
-            response = "I'd need to integrate with a weather API to give you current weather information."
-        elif "time" in query.lower():
-            import datetime
-            response = f"The current time is {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        if not client:
+            raise ValueError("OpenAI API key is required. Set 'openai_api_key' in configuration.")
         
-        return {
-            "response": response,
-            "query": query,
-            "kwargs": kwargs
-        }
+        try:
+            # Use OpenAI
+            messages = [{"role": "user", "content": query}]
+            
+            # Add conversation history
+            context = kwargs.get('context', {})
+            history = context.get('history', [])
+            
+            if history:
+                for item in history[-10:]:
+                    msg = item.get('message', str(item))
+                    if msg.startswith('Query: '):
+                        messages.insert(-1, {"role": "user", "content": msg[7:]})
+                    elif msg.startswith('Response: '):
+                        messages.insert(-1, {"role": "assistant", "content": msg[10:]})
+            
+            response = client.chat.completions.create(
+                model=self.config.get("model", "gpt-4o"),
+                messages=messages,
+                temperature=self.config.get("temperature", 0.7),
+                max_tokens=self.config.get("max_tokens", 1000)
+            )
+            
+            content = response.choices[0].message.content
+            metadata = {
+                "runner_type": "simple_openai",
+                "model": self.config.get("model", "gpt-4o"),
+                "usage": {
+                    "prompt_tokens": response.usage.prompt_tokens,
+                    "completion_tokens": response.usage.completion_tokens,
+                    "total_tokens": response.usage.total_tokens
+                }
+            }
+            
+            if self.config.get("debug", False):
+                metadata["debug_info"] = {
+                    "config": self.config.to_dict()
+                }
+            
+            return {
+                "response": content,
+                "query": query,
+                "metadata": metadata
+            }
+            
+        except Exception as e:
+            logger.error(f"Error in SimpleRunner: {e}")
+            raise e
 
 
 class Agent:
@@ -275,16 +396,53 @@ def memory(provider: str = "inmemory", user_id: str = "default", **kwargs) -> Me
     return Memory(provider=provider, user_id=user_id, **kwargs)
 
 
-def agent(runner: str, memory: Optional[Memory] = None, **kwargs) -> Agent:
+def configure(**kwargs) -> AIConfig:
+    """
+    Create and configure AI settings
+    
+    Args:
+        **kwargs: Configuration options including API keys, model settings, etc.
+    
+    Returns:
+        AIConfig instance
+        
+    Example:
+        config = configure(
+            openai_api_key="your-key",
+            model="gpt-4",
+            temperature=0.7
+        )
+    """
+    return AIConfig(**kwargs)
+
+
+def agent(runner: str = "simple", memory: Optional[Memory] = None, config: Optional[AIConfig] = None, **kwargs) -> Agent:
     """
     Create an agent instance with the specified runner
     
     Args:
         runner: Agent runner type ("langgraph:path/to/graph.json", "simple")
         memory: Optional memory instance for context
+        config: Optional AIConfig instance for configuration
         **kwargs: Additional configuration for the runner
     
     Returns:
         Agent instance
+        
+    Example:
+        # Simple usage
+        chat = agent()
+        
+        # With configuration
+        config = configure(openai_api_key="your-key")
+        chat = agent(runner="simple", config=config)
+        
+        # With memory
+        mem = memory(provider="mem0", user_id="user123")
+        chat = agent(runner="simple", memory=mem)
     """
+    # Merge config if provided
+    if config:
+        kwargs.update(config.to_dict())
+    
     return Agent(runner=runner, memory=memory, **kwargs)
