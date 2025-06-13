@@ -31,7 +31,7 @@ async def setup_agent():
     global ai_agent
     
     # Check if OpenAI key is available
-    if AGENT_CONFIG["openai_api_key"] == "your-openai-api-key-here":
+    if bool(AGENT_CONFIG["openai_api_key"]):
         print("✗ No OpenAI API key provided. Agent will not be initialized.")
         print("  Set OPENAI_API_KEY environment variable to use the AI agent.")
         return
@@ -256,7 +256,7 @@ if __name__ == "__main__":
     print("=" * 50)
     
     # Check for OpenAI API key
-    if AGENT_CONFIG["openai_api_key"] == "your-openai-api-key-here":
+    if bool(AGENT_CONFIG["openai_api_key"]):
         print("⚠️  No OpenAI API key found. Set OPENAI_API_KEY environment variable.")
         print("   The system will use a simple fallback agent instead.")
     else:
