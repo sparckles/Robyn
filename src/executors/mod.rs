@@ -72,19 +72,26 @@ where
         .await?;
 
         Python::with_gil(|py| -> Result<MiddlewareReturn> {
-            let output_response = output.extract::<Response>(py);
-            match output_response {
-                Ok(o) => Ok(MiddlewareReturn::Response(o)),
-                Err(_) => Ok(MiddlewareReturn::Request(output.extract::<Request>(py)?)),
+            // Try response extraction first, then request
+            match output.extract::<Response>(py) {
+                Ok(response) => Ok(MiddlewareReturn::Response(response)),
+                Err(_) => match output.extract::<Request>(py) {
+                    Ok(request) => Ok(MiddlewareReturn::Request(request)),
+                    Err(e) => Err(e.into()),
+                },
             }
         })
     } else {
         Python::with_gil(|py| -> Result<MiddlewareReturn> {
             let output = get_function_output(function, py, input)?;
             debug!("Middleware output: {:?}", output);
+
             match output.extract::<Response>() {
-                Ok(o) => Ok(MiddlewareReturn::Response(o)),
-                Err(_) => Ok(MiddlewareReturn::Request(output.extract::<Request>()?)),
+                Ok(response) => Ok(MiddlewareReturn::Response(response)),
+                Err(_) => match output.extract::<Request>() {
+                    Ok(request) => Ok(MiddlewareReturn::Request(request)),
+                    Err(e) => Err(e.into()),
+                },
             }
         })
     }
@@ -102,12 +109,12 @@ pub async fn execute_http_function(
         })?
         .await?;
 
-        return Python::with_gil(|py| -> PyResult<Response> { output.extract(py) });
-    };
-
-    Python::with_gil(|py| -> PyResult<Response> {
-        get_function_output(function, py, request)?.extract()
-    })
+        Python::with_gil(|py| -> PyResult<Response> { output.extract(py) })
+    } else {
+        Python::with_gil(|py| -> PyResult<Response> {
+            get_function_output(function, py, request)?.extract()
+        })
+    }
 }
 
 pub async fn execute_startup_handler(
