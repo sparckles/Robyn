@@ -66,25 +66,36 @@ where
     for<'py> <T as IntoPyObject<'py>>::Error: std::fmt::Debug,
 {
     if function.is_async {
+        // Single GIL acquisition for async functions
         let output: Py<PyAny> = Python::with_gil(|py| {
             pyo3_async_runtimes::tokio::into_future(get_function_output(function, py, input)?)
         })?
         .await?;
 
+        // Reuse the same GIL acquisition for extraction
         Python::with_gil(|py| -> Result<MiddlewareReturn> {
-            let output_response = output.extract::<Response>(py);
-            match output_response {
-                Ok(o) => Ok(MiddlewareReturn::Response(o)),
-                Err(_) => Ok(MiddlewareReturn::Request(output.extract::<Request>(py)?)),
+            // Try response extraction first, then request
+            match output.extract::<Response>(py) {
+                Ok(response) => Ok(MiddlewareReturn::Response(response)),
+                Err(_) => match output.extract::<Request>(py) {
+                    Ok(request) => Ok(MiddlewareReturn::Request(request)),
+                    Err(e) => Err(e.into()),
+                }
             }
         })
     } else {
+        // Single GIL acquisition for sync functions - do everything in one block
         Python::with_gil(|py| -> Result<MiddlewareReturn> {
             let output = get_function_output(function, py, input)?;
             debug!("Middleware output: {:?}", output);
+            
+            // Extract within the same GIL acquisition
             match output.extract::<Response>() {
-                Ok(o) => Ok(MiddlewareReturn::Response(o)),
-                Err(_) => Ok(MiddlewareReturn::Request(output.extract::<Request>()?)),
+                Ok(response) => Ok(MiddlewareReturn::Response(response)),
+                Err(_) => match output.extract::<Request>() {
+                    Ok(request) => Ok(MiddlewareReturn::Request(request)),
+                    Err(e) => Err(e.into()),
+                }
             }
         })
     }
@@ -96,19 +107,23 @@ pub async fn execute_http_function(
     function: &FunctionInfo,
 ) -> PyResult<Response> {
     if function.is_async {
+        // Single GIL acquisition for async setup
         let output = Python::with_gil(|py| {
             let function_output = get_function_output(function, py, request)?;
             pyo3_async_runtimes::tokio::into_future(function_output)
         })?
         .await?;
 
-        return Python::with_gil(|py| -> PyResult<Response> { output.extract(py) });
-    };
-
-    Python::with_gil(|py| -> PyResult<Response> {
-        get_function_output(function, py, request)?.extract()
-    })
+        // Single GIL acquisition for extraction
+        Python::with_gil(|py| -> PyResult<Response> { output.extract(py) })
+    } else {
+        // Single GIL acquisition for entire sync execution
+        Python::with_gil(|py| -> PyResult<Response> {
+            get_function_output(function, py, request)?.extract()
+        })
+    }
 }
+
 
 pub async fn execute_startup_handler(
     event_handler: Option<Arc<FunctionInfo>>,

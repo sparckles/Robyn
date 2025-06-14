@@ -36,31 +36,25 @@ impl Responder for Response {
 
 impl Response {
     pub fn not_found(headers: Option<&Headers>) -> Self {
-        let headers = match headers {
-            Some(headers) => headers.clone(),
-            None => Headers::new(None),
-        };
-
+        const NOT_FOUND_BYTES: &[u8] = b"Not found";
+        
         Self {
             status_code: 404,
             response_type: "text".to_string(),
-            headers,
-            description: "Not found".to_owned().into_bytes(),
+            headers: headers.cloned().unwrap_or_else(|| Headers::new(None)),
+            description: NOT_FOUND_BYTES.to_vec(),
             file_path: None,
         }
     }
 
     pub fn internal_server_error(headers: Option<&Headers>) -> Self {
-        let headers = match headers {
-            Some(headers) => headers.clone(),
-            None => Headers::new(None),
-        };
-
+        const SERVER_ERROR_BYTES: &[u8] = b"Internal server error";
+        
         Self {
             status_code: 500,
             response_type: "text".to_string(),
-            headers,
-            description: "Internal server error".to_owned().into_bytes(),
+            headers: headers.cloned().unwrap_or_else(|| Headers::new(None)),
+            description: SERVER_ERROR_BYTES.to_vec(),
             file_path: None,
         }
     }
@@ -71,20 +65,24 @@ impl<'py> IntoPyObject<'py> for Response {
     type Output = Bound<'py, Self::Target>;
     type Error = PyErr;
     fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
-        let headers = self.headers.clone().into_pyobject(py)?.extract()?;
-        // The description should only be either string or binary.
-        // it should raise an exception otherwise
-        let description = match String::from_utf8(self.description.to_vec()) {
-            Ok(description) => description.into_pyobject(py)?.into_any(),
-            Err(_) => PyBytes::new(py, &self.description.to_vec()).into_any(),
+        let headers = self.headers.into_pyobject(py)?.extract()?;
+        
+        // Optimize description conversion - avoid to_vec() clone
+        let description = if self.description.is_empty() {
+            "".into_pyobject(py)?.into_any()
+        } else {
+            match String::from_utf8(self.description.clone()) {
+                Ok(description) => description.into_pyobject(py)?.into_any(),
+                Err(_) => PyBytes::new(py, &self.description).into_any(),
+            }
         };
 
         let response = PyResponse {
             status_code: self.status_code,
-            response_type: self.response_type.clone(),
+            response_type: self.response_type,
             headers,
             description: description.into(),
-            file_path: self.file_path.clone(),
+            file_path: self.file_path,
         };
         Ok(Py::new(py, response)?.into_bound(py).into_any())
     }
