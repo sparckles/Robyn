@@ -67,7 +67,6 @@ impl<'py> IntoPyObject<'py> for Response {
     fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
         let headers = self.headers.into_pyobject(py)?.extract()?;
 
-        // Optimize description conversion - avoid to_vec() clone
         let description = if self.description.is_empty() {
             "".into_pyobject(py)?.into_any()
         } else {

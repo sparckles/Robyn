@@ -47,7 +47,6 @@ impl<'py> IntoPyObject<'py> for Request {
             }
         };
 
-        // Optimize form_data conversion - pre-allocate dict size
         let form_data: Py<PyDict> = match self.form_data {
             Some(data) if !data.is_empty() => {
                 let dict = PyDict::new(py);
@@ -60,7 +59,6 @@ impl<'py> IntoPyObject<'py> for Request {
             _ => PyDict::new(py).into(),
         };
 
-        // Optimize files conversion - avoid unnecessary bytes allocation
         let files: Py<PyDict> = match self.files {
             Some(data) if !data.is_empty() => {
                 let dict = PyDict::new(py);
