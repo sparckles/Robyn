@@ -37,7 +37,7 @@ impl Responder for Response {
 impl Response {
     pub fn not_found(headers: Option<&Headers>) -> Self {
         const NOT_FOUND_BYTES: &[u8] = b"Not found";
-        
+
         Self {
             status_code: 404,
             response_type: "text".to_string(),
@@ -49,7 +49,7 @@ impl Response {
 
     pub fn internal_server_error(headers: Option<&Headers>) -> Self {
         const SERVER_ERROR_BYTES: &[u8] = b"Internal server error";
-        
+
         Self {
             status_code: 500,
             response_type: "text".to_string(),
@@ -66,7 +66,7 @@ impl<'py> IntoPyObject<'py> for Response {
     type Error = PyErr;
     fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
         let headers = self.headers.into_pyobject(py)?.extract()?;
-        
+
         // Optimize description conversion - avoid to_vec() clone
         let description = if self.description.is_empty() {
             "".into_pyobject(py)?.into_any()

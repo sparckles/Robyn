@@ -35,11 +35,9 @@ impl<'py> IntoPyObject<'py> for Request {
     type Output = Bound<'py, Self::Target>;
     type Error = PyErr;
     fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
-        // Optimize by avoiding unnecessary clones and allocations
         let headers: Py<Headers> = self.headers.into_pyobject(py)?.extract()?;
         let path_params = self.path_params.into_pyobject(py)?.extract()?;
-        
-        // Optimize body conversion - avoid string conversion unless necessary
+
         let body = if self.body.is_empty() {
             PyString::new(py, "").into_any()
         } else {
@@ -48,7 +46,7 @@ impl<'py> IntoPyObject<'py> for Request {
                 Err(_) => self.body.into_pyobject(py)?.into_any(),
             }
         };
-        
+
         // Optimize form_data conversion - pre-allocate dict size
         let form_data: Py<PyDict> = match self.form_data {
             Some(data) if !data.is_empty() => {

@@ -80,7 +80,7 @@ where
                 Err(_) => match output.extract::<Request>(py) {
                     Ok(request) => Ok(MiddlewareReturn::Request(request)),
                     Err(e) => Err(e.into()),
-                }
+                },
             }
         })
     } else {
@@ -88,14 +88,14 @@ where
         Python::with_gil(|py| -> Result<MiddlewareReturn> {
             let output = get_function_output(function, py, input)?;
             debug!("Middleware output: {:?}", output);
-            
+
             // Extract within the same GIL acquisition
             match output.extract::<Response>() {
                 Ok(response) => Ok(MiddlewareReturn::Response(response)),
                 Err(_) => match output.extract::<Request>() {
                     Ok(request) => Ok(MiddlewareReturn::Request(request)),
                     Err(e) => Err(e.into()),
-                }
+                },
             }
         })
     }
@@ -123,7 +123,6 @@ pub async fn execute_http_function(
         })
     }
 }
-
 
 pub async fn execute_startup_handler(
     event_handler: Option<Arc<FunctionInfo>>,
