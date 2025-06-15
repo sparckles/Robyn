@@ -44,9 +44,13 @@ io-uring = ["actix-web/experimental-io-uring"]
 
 [profile.release]
 codegen-units = 1
-lto = true
+lto = "fat"
 panic = "abort"
 strip = true
+opt-level = 3
+
+[profile.release.build-override]
+opt-level = 3
 
 [package.metadata.maturin]
 name = "robyn"

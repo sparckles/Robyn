@@ -545,13 +545,11 @@ async fn index(
         response = match execute_middleware_function(&response, &after_middleware).await {
             Ok(MiddlewareReturn::Request(_)) => {
                 error!("After middleware returned a request");
-                return Response::internal_server_error(Some(&response.headers));
+                return Response::internal_server_error(None);
             }
             Ok(MiddlewareReturn::Response(r)) => {
-                let response = r;
-
-                debug!("Response returned: {:?}", response);
-                response
+                debug!("Response returned: {:?}", r);
+                r
             }
             Err(e) => {
                 error!(

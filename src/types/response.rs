@@ -27,8 +27,9 @@ impl Responder for Response {
     type Body = BoxBody;
 
     fn respond_to(self, _req: &HttpRequest) -> HttpResponse<Self::Body> {
-        let mut response_builder =
-            HttpResponseBuilder::new(StatusCode::from_u16(self.status_code).unwrap());
+        let mut response_builder = HttpResponseBuilder::new(
+            StatusCode::from_u16(self.status_code).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR),
+        );
         apply_hashmap_headers(&mut response_builder, &self.headers);
         response_builder.body(self.description)
     }
