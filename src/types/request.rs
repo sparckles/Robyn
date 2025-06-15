@@ -35,45 +35,51 @@ impl<'py> IntoPyObject<'py> for Request {
     type Output = Bound<'py, Self::Target>;
     type Error = PyErr;
     fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
-        let query_params = self.query_params.clone();
-        let headers: Py<Headers> = self.headers.clone().into_pyobject(py)?.extract()?;
-        let path_params = self.path_params.clone().into_pyobject(py)?.extract()?;
-        let body = match String::from_utf8(self.body.clone()) {
-            Ok(s) => s.into_pyobject(py)?.into_any(),
-            Err(_) => self.body.clone().into_pyobject(py)?.into_any(),
-        };
-        let form_data: Py<PyDict> = match &self.form_data {
-            Some(data) => {
-                let dict = PyDict::new(py);
-                for (key, value) in data.iter() {
-                    dict.set_item(key, value).unwrap();
-                }
-                dict.into()
+        let headers: Py<Headers> = self.headers.into_pyobject(py)?.extract()?;
+        let path_params = self.path_params.into_pyobject(py)?.extract()?;
+
+        let body = if self.body.is_empty() {
+            PyString::new(py, "").into_any()
+        } else {
+            match String::from_utf8(self.body.clone()) {
+                Ok(s) => s.into_pyobject(py)?.into_any(),
+                Err(_) => self.body.into_pyobject(py)?.into_any(),
             }
-            None => PyDict::new(py).into(),
         };
 
-        let files: Py<PyDict> = match &self.files {
-            Some(data) => {
+        let form_data: Py<PyDict> = match self.form_data {
+            Some(data) if !data.is_empty() => {
                 let dict = PyDict::new(py);
-                for (key, value) in data.iter() {
-                    let bytes = PyBytes::new(py, value);
-                    dict.set_item(key, bytes).unwrap();
+                // Use with_capacity equivalent by setting items directly
+                for (key, value) in data {
+                    dict.set_item(key, value)?;
                 }
                 dict.into()
             }
-            None => PyDict::new(py).into(),
+            _ => PyDict::new(py).into(),
+        };
+
+        let files: Py<PyDict> = match self.files {
+            Some(data) if !data.is_empty() => {
+                let dict = PyDict::new(py);
+                for (key, value) in data {
+                    let bytes = PyBytes::new(py, &value);
+                    dict.set_item(key, bytes)?;
+                }
+                dict.into()
+            }
+            _ => PyDict::new(py).into(),
         };
 
         let request = PyRequest {
-            query_params,
+            query_params: self.query_params,
             path_params,
             headers,
             body: body.into(),
-            method: self.method.clone(),
-            url: self.url.clone(),
-            ip_addr: self.ip_addr.clone(),
-            identity: self.identity.clone(),
+            method: self.method,
+            url: self.url,
+            ip_addr: self.ip_addr,
+            identity: self.identity,
             form_data,
             files,
         };
