@@ -41,9 +41,9 @@ impl<'py> IntoPyObject<'py> for Request {
         let body = if self.body.is_empty() {
             PyString::new(py, "").into_any()
         } else {
-            match String::from_utf8(self.body.clone()) {
-                Ok(s) => s.into_pyobject(py)?.into_any(),
-                Err(_) => self.body.into_pyobject(py)?.into_any(),
+            match std::str::from_utf8(&self.body) {
+                Ok(s) => PyString::new(py, s).into_any(),
+                Err(_) => PyBytes::new(py, &self.body).into_any(),
             }
         };
 

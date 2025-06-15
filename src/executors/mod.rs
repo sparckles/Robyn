@@ -30,7 +30,7 @@ where
     let function_args: PyObject = function_args
         .clone()
         .into_pyobject(py)
-        .unwrap()
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to convert args: {:?}", e)))?
         .into_any()
         .unbind();
     debug!("Function args: {:?}", function_args);
