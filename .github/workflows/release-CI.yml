@@ -195,7 +195,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           command: sdist
-          args: --out dist
+          args: -i python --out dist
       - name: Publish to PyPi
         env:
           TWINE_USERNAME: __token__
