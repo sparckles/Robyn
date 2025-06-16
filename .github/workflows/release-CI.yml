@@ -164,12 +164,15 @@ jobs:
       - name: Downloading all Artifacts
         uses: actions/download-artifact@v4
         with:
-          path: artifacts
+          path: tempDir
           pattern: wheels-*
-          merge-multiple: true
       - run: |
-          echo "Listing directories"
+          echo "Listing directories & files"
           ls -R
+          mkdir artifacts
+          # Move all files from each artifact directory into the artifacts directory
+          find tempDir -mindepth 2 -type f -exec mv -t artifacts {} +
+
       - name: Uploading Artifact's Bundle
         uses: actions/upload-artifact@v4
         with:
@@ -181,25 +184,19 @@ jobs:
     runs-on: ubuntu-latest
     needs: [macos, windows, linux, linux-cross, merge]
     steps:
-      - uses: actions/checkout@v3
       - uses: actions/download-artifact@v4
         with:
+          path: dist
           name: wheels
       - name: Install uv
         uses: astral-sh/setup-uv@v3
       - uses: actions/setup-python@v5
         with:
           python-version: 3.x
-      - uses: dtolnay/rust-toolchain@stable
-      - name: Build source distribution
-        uses: PyO3/maturin-action@v1
-        with:
-          command: sdist
-          args: --out dist
       - name: Publish to PyPi
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: |
           uv pip install --upgrade twine
-          twine upload --skip-existing * dist/*
+          twine upload --skip-existing dist/*
