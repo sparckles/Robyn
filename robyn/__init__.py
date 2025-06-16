@@ -24,6 +24,7 @@ from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, We
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory
 from robyn.ws import WebSocket
+from robyn.mcp import MCPApp
 
 __version__ = get_version()
 
@@ -79,6 +80,7 @@ class BaseRobyn(ABC):
         self.exception_handler: Optional[Callable] = None
         self.authentication_handler: Optional[AuthenticationHandler] = None
         self.included_routers: List[Router] = []
+        self._mcp_app: Optional[MCPApp] = None
 
     def init_openapi(self, openapi_file_path: Optional[str]) -> None:
         if self.config.disable_openapi:
@@ -508,6 +510,36 @@ class BaseRobyn(ABC):
         self.authentication_handler = authentication_handler
         self.middleware_router.set_authentication_handler(authentication_handler)
 
+    @property
+    def mcp(self):
+        """
+        Get the MCP (Model Context Protocol) interface for this app.
+        
+        Enables registering MCP resources, tools, and prompts that can be accessed
+        by MCP clients like Claude Desktop or other AI applications.
+        
+        Returns:
+            MCPApp: MCP interface for registering handlers
+            
+        Example:
+            @app.mcp.resource("file://documents", "Documents", "Access to document files")
+            def get_documents(params):
+                return "Document content here"
+                
+            @app.mcp.tool("calculate", "Perform calculations", {
+                "type": "object",
+                "properties": {
+                    "expression": {"type": "string", "description": "Math expression to evaluate"}
+                },
+                "required": ["expression"]
+            })
+            def calculate_tool(args):
+                return eval(args["expression"])
+        """
+        if self._mcp_app is None:
+            self._mcp_app = MCPApp(self)
+        return self._mcp_app
+
 
 class Robyn(BaseRobyn):
     def start(self, host: str = "127.0.0.1", port: int = 8080, _check_port: bool = True):
@@ -661,4 +693,5 @@ __all__ = [
     "Headers",
     "WebSocketConnector",
     "WebSocket",
+    "MCPApp",
 ]
