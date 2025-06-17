@@ -1,0 +1,528 @@
+export const description =
+  'Master Robyn\'s advanced routing features including parameter injection, route optimization, and complex URL patterns.'
+
+# Advanced Routing and Parameter Injection
+
+Robyn's routing system goes far beyond simple URL matching. It includes sophisticated parameter injection, route optimization, and flexible pattern matching that makes building complex APIs effortless.
+
+## Understanding Parameter Injection
+
+Robyn automatically analyzes your function signatures and injects the appropriate request components. This eliminates boilerplate code and makes handlers cleaner.
+
+### The Injection Engine
+
+The parameter injection system works in two phases:
+
+1. **Function Introspection**: Robyn analyzes your function signature at registration time
+2. **Runtime Injection**: For each request, Robyn provides the exact parameters your function needs
+
+<Row>
+  <Col>
+    **Type-Based Injection**: Uses type annotations to determine what to inject
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Type-Based Parameter Injection">
+    ```python
+    from robyn import Request, QueryParams, Headers
+    from robyn.types import PathParams, RequestBody, RequestMethod
+    
+    @app.post("/users/:user_id/posts/:post_id")
+    async def update_post(
+        # Robyn automatically injects these based on type annotations
+        request: Request,           # Complete request object
+        path_params: PathParams,    # {"user_id": "123", "post_id": "456"}
+        query_params: QueryParams,  # ?draft=true&tags=python,web
+        headers: Headers,           # All request headers
+        body: RequestBody,         # Raw request body
+        method: RequestMethod      # "POST"
+    ):
+        user_id = path_params["user_id"]
+        post_id = path_params["post_id"]
+        is_draft = query_params.get("draft") == "true"
+        content_type = headers.get("content-type")
+        
+        return {
+            "user_id": user_id,
+            "post_id": post_id,
+            "is_draft": is_draft,
+            "body_size": len(body),
+            "method": method
+        }
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+<Row>
+  <Col>
+    **Name-Based Injection**: Uses parameter names to inject components when type annotations aren't available
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Name-Based Parameter Injection">
+    ```python
+    # Reserved parameter names that Robyn recognizes
+    @app.get("/search/:category")
+    def search_handler(
+        query_params,      # Injected by name
+        path_params,       # Injected by name
+        headers,           # Injected by name
+        request           # Injected by name (full request object)
+    ):
+        category = path_params["category"]
+        search_term = query_params.get("q", "")
+        user_agent = headers.get("user-agent", "")
+        
+        return {
+            "category": category,
+            "search": search_term,
+            "user_agent": user_agent
+        }
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+### Complete List of Injectable Types
+
+| Type Annotation | Reserved Name | Description |
+|-----------------|---------------|-------------|
+| `Request` | `request`, `req`, `r` | Complete request object |
+| `QueryParams` | `query_params` | URL query parameters |
+| `Headers` | `headers` | Request headers |
+| `PathParams` | `path_params` | URL path parameters |
+| `RequestBody` | `body` | Raw request body |
+| `RequestMethod` | `method` | HTTP method (GET, POST, etc.) |
+| `RequestURL` | `url` | Request URL information |
+| `FormData` | `form_data` | Form-encoded data |
+| `RequestFiles` | `files` | Uploaded files |
+| `RequestIP` | `ip_addr` | Client IP address |
+| `RequestIdentity` | `identity` | Authentication identity |
+
+## Advanced URL Patterns
+
+### Dynamic Route Parameters
+
+<Row>
+  <Col>
+    Robyn supports multiple types of path parameters with flexible matching patterns.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Dynamic Route Patterns">
+    ```python
+    # Simple parameter
+    @app.get("/users/:id")
+    def get_user(path_params):
+        return {"user_id": path_params["id"]}
+    
+    # Multiple parameters
+    @app.get("/users/:user_id/posts/:post_id")
+    def get_user_post(path_params):
+        return {
+            "user_id": path_params["user_id"],
+            "post_id": path_params["post_id"]
+        }
+    
+    # Optional parameters with defaults
+    @app.get("/posts/:id/:slug?")
+    def get_post(path_params):
+        post_id = path_params["id"]
+        slug = path_params.get("slug", f"post-{post_id}")
+        return {"id": post_id, "slug": slug}
+    
+    # Wildcard matching
+    @app.get("/files/*filepath")
+    def serve_file(path_params):
+        filepath = path_params["filepath"]
+        return {"serving": filepath}
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+### Route Constraints and Validation
+
+<Row>
+  <Col>
+    While Robyn doesn't have built-in parameter validation, you can implement it in your handlers for type safety.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Parameter Validation">
+    ```python
+    import re
+    from robyn import HTTPException
+    
+    @app.get("/users/:user_id")
+    def get_user(path_params):
+        user_id = path_params["user_id"]
+        
+        # Validate that user_id is numeric
+        if not user_id.isdigit():
+            raise HTTPException(400, "user_id must be numeric")
+        
+        user_id = int(user_id)
+        if user_id <= 0:
+            raise HTTPException(400, "user_id must be positive")
+        
+        return {"user_id": user_id}
+    
+    @app.get("/posts/:slug")
+    def get_post_by_slug(path_params):
+        slug = path_params["slug"]
+        
+        # Validate slug format
+        if not re.match(r'^[a-z0-9-]+$', slug):
+            raise HTTPException(400, "Invalid slug format")
+        
+        return {"slug": slug}
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+## Route Optimization
+
+### Const Routes for Static Responses
+
+<Row>
+  <Col>
+    Use `const=True` for responses that never change. These are cached in Rust memory and served without Python execution.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Const Route Optimization">
+    ```python
+    # Perfect for health checks, static configuration
+    @app.get("/health", const=True)
+    def health_check():
+        return {"status": "healthy", "version": "1.0"}
+    
+    # API metadata that rarely changes
+    @app.get("/api/info", const=True)  
+    def api_info():
+        return {
+            "name": "My API",
+            "version": "2.1.0",
+            "documentation": "/docs"
+        }
+    
+    # Static configuration endpoints
+    @app.get("/config/public", const=True)
+    def public_config():
+        return {
+            "max_upload_size": "10MB",
+            "allowed_origins": ["https://myapp.com"]
+        }
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+### Route Priority and Ordering
+
+<Row>
+  <Col>
+    Routes are matched in the order they're registered. More specific routes should be registered before general ones.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Route Ordering Best Practices">
+    ```python
+    # GOOD: Specific routes first
+    @app.get("/users/profile")
+    def get_current_user_profile():
+        return {"profile": "current_user"}
+    
+    @app.get("/users/settings")
+    def get_user_settings():
+        return {"settings": "user_settings"}
+    
+    @app.get("/users/:id")
+    def get_user(path_params):
+        return {"user_id": path_params["id"]}
+    
+    # BAD: This would never be reached
+    # @app.get("/users/:id")  # Registered first
+    # @app.get("/users/profile")  # Never matched!
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+## Advanced Query Parameter Handling
+
+### Query Parameter Parsing
+
+<Row>
+  <Col>
+    Robyn provides rich query parameter handling with automatic type conversion helpers.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Advanced Query Parameters">
+    ```python
+    @app.get("/search")
+    def search(query_params):
+        # Basic parameter access
+        q = query_params.get("q", "")
+        
+        # Parameters with defaults
+        page = int(query_params.get("page", "1"))
+        limit = int(query_params.get("limit", "10"))
+        
+        # Boolean parameters
+        include_deleted = query_params.get("include_deleted", "false").lower() == "true"
+        
+        # Array parameters (?tags=python&tags=web&tags=api)
+        tags = query_params.get_list("tags") or []
+        
+        # Convert to dict for easier processing
+        all_params = query_params.to_dict()
+        
+        return {
+            "query": q,
+            "page": page,
+            "limit": limit,
+            "include_deleted": include_deleted,
+            "tags": tags,
+            "all_params": all_params
+        }
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+### Complex Query String Patterns
+
+<Row>
+  <Col>
+    Handle complex query patterns like filtering, sorting, and nested parameters.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Complex Query Patterns">
+    ```python
+    @app.get("/api/products")
+    def get_products(query_params):
+        # Filtering: ?filter[category]=electronics&filter[price_min]=100
+        filters = {}
+        for key, value in query_params.to_dict().items():
+            if key.startswith("filter[") and key.endswith("]"):
+                filter_key = key[7:-1]  # Remove "filter[" and "]"
+                filters[filter_key] = value
+        
+        # Sorting: ?sort=price&order=desc
+        sort_field = query_params.get("sort", "created_at")
+        sort_order = query_params.get("order", "asc")
+        
+        # Pagination: ?page=2&per_page=20
+        page = int(query_params.get("page", "1"))
+        per_page = min(int(query_params.get("per_page", "10")), 100)  # Cap at 100
+        
+        # Field selection: ?fields=id,name,price
+        fields = query_params.get("fields", "").split(",") if query_params.get("fields") else None
+        
+        return {
+            "filters": filters,
+            "sort": {"field": sort_field, "order": sort_order},
+            "pagination": {"page": page, "per_page": per_page},
+            "fields": fields
+        }
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+## SubRouters and Modular Routing
+
+### Creating SubRouters
+
+<Row>
+  <Col>
+    SubRouters help organize large applications by grouping related routes with common prefixes.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="SubRouter Organization">
+    ```python
+    from robyn import Robyn, SubRouter
+    
+    app = Robyn(__file__)
+    
+    # API v1 routes
+    api_v1 = SubRouter(__file__, prefix="/api/v1")
+    
+    @api_v1.get("/users")
+    def list_users():
+        return {"users": []}
+    
+    @api_v1.get("/users/:id")
+    def get_user(path_params):
+        return {"user_id": path_params["id"]}
+    
+    @api_v1.post("/users")
+    def create_user(body):
+        return {"created": True, "data": body}
+    
+    # Admin routes
+    admin = SubRouter(__file__, prefix="/admin")
+    
+    @admin.get("/dashboard")
+    def admin_dashboard():
+        return {"dashboard": "admin"}
+    
+    @admin.get("/users")
+    def admin_users():
+        return {"admin_users": []}
+    
+    # Register subrouters
+    app.include_router(api_v1)
+    app.include_router(admin)
+    
+    # Routes are now available at:
+    # /api/v1/users, /api/v1/users/:id, /admin/dashboard, etc.
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+### SubRouter Middleware
+
+<Row>
+  <Col>
+    Apply middleware to entire SubRouter groups for common functionality like authentication.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="SubRouter Middleware">
+    ```python
+    from robyn import SubRouter
+    from robyn.authentication import AuthenticationHandler
+    
+    # Admin routes with authentication
+    admin = SubRouter(__file__, prefix="/admin")
+    
+    class AdminAuth(AuthenticationHandler):
+        def authenticate(self, request):
+            auth_header = request.headers.get("authorization", "")
+            if not auth_header.startswith("Bearer "):
+                return False
+            
+            token = auth_header[7:]  # Remove "Bearer "
+            return self.validate_admin_token(token)
+        
+        def validate_admin_token(self, token):
+            # Your token validation logic
+            return token == "admin-secret-token"
+    
+    # Apply authentication to all admin routes
+    admin.add_auth_handler(AdminAuth())
+    
+    @admin.get("/users")
+    def admin_users():
+        return {"admin_users": ["user1", "user2"]}
+    
+    @admin.delete("/users/:id")
+    def delete_user(path_params):
+        return {"deleted": path_params["id"]}
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+## Route Testing and Debugging
+
+### Route Inspection
+
+<Row>
+  <Col>
+    Debug your routes by inspecting the registered route table.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Route Debugging">
+    ```python
+    from robyn import Robyn
+    
+    app = Robyn(__file__)
+    
+    @app.get("/users/:id")
+    def get_user(path_params):
+        return {"user": path_params["id"]}
+    
+    @app.post("/users")
+    def create_user(body):
+        return {"created": True}
+    
+    # Debug: Print all registered routes
+    if __name__ == "__main__":
+        print("Registered routes:")
+        for route in app.get_routes():
+            print(f"{route.method} {route.path}")
+        
+        app.start(port=8080)
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+### Route Performance Monitoring
+
+<Row>
+  <Col>
+    Add timing middleware to monitor route performance.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Performance Monitoring">
+    ```python
+    import time
+    from robyn import Robyn
+    
+    app = Robyn(__file__)
+    
+    @app.before_request
+    def timing_middleware(request):
+        request.start_time = time.time()
+        return request
+    
+    @app.after_request
+    def timing_after_middleware(request, response):
+        duration = time.time() - request.start_time
+        print(f"{request.method} {request.url.path} - {duration:.3f}s")
+        response.headers["X-Response-Time"] = f"{duration:.3f}s"
+        return response
+    
+    @app.get("/slow")
+    def slow_endpoint():
+        time.sleep(0.1)  # Simulate work
+        return {"message": "slow response"}
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+## Best Practices
+
+### 1. Parameter Injection Patterns
+
+- **Use type annotations** for better IDE support and self-documenting code
+- **Inject only what you need** to keep handlers focused
+- **Validate parameters early** to provide clear error messages
+
+### 2. Route Organization
+
+- **Group related routes** using SubRouters
+- **Order routes from specific to general** to avoid matching issues
+- **Use consistent naming conventions** for path parameters
+
+### 3. Performance Optimization
+
+- **Use const routes** for static responses
+- **Minimize parameter injection** in high-traffic endpoints
+- **Cache expensive computations** rather than repeating them
+
+### 4. Error Handling
+
+- **Validate path parameters** early in handlers
+- **Provide meaningful error messages** for invalid input
+- **Use consistent error response formats** across your API
+
+## What's Next?
+
+Now that you've mastered advanced routing, explore other Robyn features:
+
+- [Middleware Development Guide](/documentation/en/api_reference/middlewares_advanced)
+- [Performance Optimization](/documentation/en/api_reference/performance_optimization)
+- [WebSocket Advanced Features](/documentation/en/api_reference/websockets_advanced)
