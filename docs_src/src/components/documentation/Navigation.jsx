@@ -289,6 +289,14 @@ export const navigation = [
         title: 'Advanced Features',
       },
       {
+        href: '/documentation/en/api_reference/advanced_routing',
+        title: 'Advanced Routing',
+      },
+      {
+        href: '/documentation/en/api_reference/architecture_deep_dive',
+        title: 'Architecture Deep Dive',
+      },
+      {
         href: '/documentation/en/api_reference/multiprocess_execution',
         title: 'Multiprocess Execution',
       },
@@ -432,6 +440,8 @@ const translations = {
       Exceptions: 'Exceptions',
       'Scaling the Application': 'Scaling the Application',
       'Advanced Features': 'Advanced Features',
+      'Advanced Routing': 'Advanced Routing',
+      'Architecture Deep Dive': 'Architecture Deep Dive',
       'Multiprocess Execution': 'Multiprocess Execution',
       'Direct Rust Usage': 'Direct Rust Usage',
       'GraphQL Support': 'GraphQL Support',
@@ -472,6 +482,8 @@ const translations = {
       'Exceptions': '异常处理',
       'Scaling the Application': '多核扩展',
       'Advanced Features': '高级特性',
+      'Advanced Routing': '高级路由',
+      'Architecture Deep Dive': '架构深度剖析',
       'Multiprocess Execution': '多进程执行',
       'Direct Rust Usage': '直接使用 Rust',
       'GraphQL Support': 'GraphQL 支持',
