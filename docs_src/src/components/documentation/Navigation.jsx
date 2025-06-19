@@ -316,6 +316,10 @@ export const navigation = [
         href: '/documentation/en/api_reference/dependency_injection',
         title: 'Dependency Injection',
       },
+      {
+        href: '/documentation/en/api_reference/mcps',
+        title: 'MCPs',
+      },
     ],
   },
   {
