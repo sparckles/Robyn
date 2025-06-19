@@ -97,6 +97,21 @@ impl Headers {
         dict.into()
     }
 
+    pub fn to_dict(&self, py: Python) -> Py<PyDict> {
+        // return as a flattened dict, joining duplicate headers with commas (Flask-style)
+        let dict = PyDict::new(py);
+        for iter in self.headers.iter() {
+            let (key, values) = iter.pair();
+            let joined_value = if values.len() == 1 {
+                values[0].clone()
+            } else {
+                values.join(",")
+            };
+            dict.set_item(key, joined_value).unwrap();
+        }
+        dict.into()
+    }
+
     pub fn contains(&self, key: String) -> bool {
         debug!("Checking if header {} exists", key);
         debug!("Headers: {:?}", self.headers);

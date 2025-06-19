@@ -242,6 +242,25 @@ class Headers:
         """
         pass
 
+    def get_headers(self) -> dict[str, list[str]]:
+        """
+        Returns all headers as a dictionary where keys are header names and values are lists of all values for that header.
+
+        Returns:
+            dict[str, list[str]]: Dictionary mapping header names to lists of values
+        """
+        pass
+
+    def to_dict(self) -> dict[str, str]:
+        """
+        Returns headers as a flattened dictionary, joining duplicate headers with commas (Flask-style).
+        This allows using dict.get() with default values for headers.
+
+        Returns:
+            dict[str, str]: Dictionary mapping header names to comma-separated values
+        """
+        pass
+
 @dataclass
 class Request:
     """

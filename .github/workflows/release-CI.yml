@@ -190,6 +190,7 @@ jobs:
     needs: [macos, windows, linux, linux-cross, merge]
     if: always() && needs.merge.result == 'success'
     steps:
+      - uses: actions/checkout@v3
       - uses: actions/download-artifact@v4
         with:
           name: wheels
@@ -198,10 +199,16 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: 3.x
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build source distribution
+        uses: PyO3/maturin-action@v1
+        with:
+          command: sdist
+          args: -i python --out dist
       - name: Publish to PyPi
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: |
           uv pip install --upgrade twine
-          twine upload --skip-existing *
+          twine upload --skip-existing * dist/*
