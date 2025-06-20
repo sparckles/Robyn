@@ -37,6 +37,7 @@ class RouteMiddleware(NamedTuple):
     middleware_type: MiddlewareType
     route: str
     function: FunctionInfo
+    route_type: HttpMethod
 
 
 class GlobalMiddleware(NamedTuple):
@@ -276,6 +277,7 @@ class MiddlewareRouter(BaseRouter):
         self,
         middleware_type: MiddlewareType,
         endpoint: str,
+        route_type: HttpMethod,
         handler: Callable,
         injected_dependencies: dict,
     ) -> Callable:
@@ -295,10 +297,10 @@ class MiddlewareRouter(BaseRouter):
             params,
             new_injected_dependencies,
         )
-        self.route_middlewares.append(RouteMiddleware(middleware_type, endpoint, function))
+        self.route_middlewares.append(RouteMiddleware(middleware_type, endpoint, function, route_type))
         return handler
 
-    def add_auth_middleware(self, endpoint: str):
+    def add_auth_middleware(self, endpoint: str, route_type: HttpMethod):
         """
         This method adds an authentication middleware to the specified endpoint.
         """
@@ -320,6 +322,7 @@ class MiddlewareRouter(BaseRouter):
             self.add_route(
                 MiddlewareType.BEFORE_REQUEST,
                 endpoint,
+                route_type,
                 inner_handler,
                 injected_dependencies,
             )
@@ -348,11 +351,12 @@ class MiddlewareRouter(BaseRouter):
                     self.add_route(
                         middleware_type,
                         endpoint,
+                        HttpMethod.GET,
                         async_inner_handler,
                         injected_dependencies,
                     )
                 else:
-                    self.add_route(middleware_type, endpoint, inner_handler, injected_dependencies)
+                    self.add_route(middleware_type, endpoint, HttpMethod.GET, inner_handler, injected_dependencies)
             else:
                 params = dict(inspect.signature(handler).parameters)
 
