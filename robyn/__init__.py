@@ -16,6 +16,7 @@ from robyn.env_populator import load_vars
 from robyn.events import Events
 from robyn.jsonify import jsonify
 from robyn.logger import Colors, logger
+from robyn.mcp import MCPApp
 from robyn.openapi import OpenAPI
 from robyn.processpool import run_processes
 from robyn.reloader import compile_rust_files
@@ -24,7 +25,6 @@ from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, We
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory
 from robyn.ws import WebSocket
-from robyn.mcp import MCPApp
 
 __version__ = get_version()
 
