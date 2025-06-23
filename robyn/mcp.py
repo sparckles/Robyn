@@ -286,17 +286,34 @@ class MCPHandler:
         template_uri, uri_params = match_result
         handler = self.resources[template_uri]
         
-        # Call the handler with extracted parameters
-        if asyncio.iscoroutinefunction(handler):
-            if uri_params:
-                content = await handler(**uri_params)
+        # Call the handler with appropriate parameters based on its signature
+        try:
+            sig = inspect.signature(handler)
+            handler_params = list(sig.parameters.keys())
+            
+            if asyncio.iscoroutinefunction(handler):
+                if uri_params:
+                    # Use URI parameters for templated resources
+                    content = await handler(**uri_params)
+                elif handler_params:
+                    # Handler expects parameters, pass the full params dict
+                    content = await handler(params)
+                else:
+                    # Handler expects no parameters
+                    content = await handler()
             else:
-                content = await handler(params)
-        else:
-            if uri_params:
-                content = handler(**uri_params)
-            else:
-                content = handler(params)
+                if uri_params:
+                    # Use URI parameters for templated resources
+                    content = handler(**uri_params)
+                elif handler_params:
+                    # Handler expects parameters, pass the full params dict
+                    content = handler(params)
+                else:
+                    # Handler expects no parameters
+                    content = handler()
+        except TypeError as e:
+            # Handle parameter mismatch errors
+            raise MCPError(-32603, f"Handler parameter error: {str(e)}")
         
         # Determine content type
         metadata = self.resource_metadata[template_uri]
@@ -392,8 +409,20 @@ class MCPApp:
         async def handle_mcp_request(request):
             """Handle MCP JSON-RPC requests"""
             try:
-                # Parse JSON request
-                request_data = request.json()
+                # Parse JSON request - try multiple approaches
+                try:
+                    request_data = request.json()
+                except:
+                    # Fallback to parsing body as string
+                    body = request.body
+                    if isinstance(body, str):
+                        request_data = json.loads(body)
+                    else:
+                        request_data = json.loads(body.decode('utf-8'))
+                
+                # Handle case where request.json() returns a string instead of dict
+                if isinstance(request_data, str):
+                    request_data = json.loads(request_data)
                 
                 # Handle the request
                 response = await self.handler.handle_request(request_data)
