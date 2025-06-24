@@ -2,8 +2,9 @@
 """Simple Robyn AI Agents Example"""
 
 import os
+
 from robyn import Robyn
-from robyn.ai import agent, memory, configure
+from robyn.ai import agent, configure, memory
 
 app = Robyn(__file__)
 ai_agent = None
