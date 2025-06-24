@@ -97,6 +97,6 @@ def home():
 
 if __name__ == "__main__":
     print("Robyn MCP Server Example")
-    print(f"Server: http://localhost:8080")
-    print(f"MCP Endpoint: http://localhost:8080/mcp")
+    print("Server: http://localhost:8080")
+    print("MCP Endpoint: http://localhost:8080/mcp")
     app.start(port=8080)

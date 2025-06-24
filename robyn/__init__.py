@@ -514,18 +514,18 @@ class BaseRobyn(ABC):
     def mcp(self):
         """
         Get the MCP (Model Context Protocol) interface for this app.
-        
+
         Enables registering MCP resources, tools, and prompts that can be accessed
         by MCP clients like Claude Desktop or other AI applications.
-        
+
         Returns:
             MCPApp: MCP interface for registering handlers
-            
+
         Example:
             @app.mcp.resource("file://documents", "Documents", "Access to document files")
             def get_documents(params):
                 return "Document content here"
-                
+
             @app.mcp.tool("calculate", "Perform calculations", {
                 "type": "object",
                 "properties": {
