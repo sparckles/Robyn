@@ -1,0 +1,264 @@
+export const description =
+  'Robyn AI provides agent and memory functionality for building intelligent applications with conversation history, context awareness, and pluggable AI runners.'
+
+# AI Agent and Memory
+
+Robyn includes built-in AI capabilities that allow you to create intelligent applications with conversation memory, context awareness, and pluggable agent runners. The AI module provides abstractions for memory storage and agent execution that can be easily integrated into your Robyn applications.
+
+## Installation
+
+The AI features are included with the base Robyn installation:
+
+```bash
+pip install robyn
+```
+
+
+## Quick Start
+
+Here's a simple example of using Robyn's AI features:
+
+```python
+from robyn import Robyn
+from robyn.ai import agent, memory
+
+app = Robyn(__file__)
+
+# Create memory instance
+mem = memory(provider="inmemory", user_id="user123")
+
+# Create agent with memory
+chat_agent = agent(runner="simple", memory=mem)
+
+@app.get("/chat")
+async def chat_endpoint(request):
+    query = request.query_params.get("q", [""])[0]
+    if not query:
+        return {"error": "Query required"}
+    
+    # Run agent with conversation history
+    result = await chat_agent.run(query, history=True)
+    return result
+```
+
+## Memory System
+
+The memory system provides persistent storage for conversation history and context. It supports multiple providers and offers a consistent interface for storing and retrieving conversation data.
+
+### Memory Providers
+
+#### InMemory Provider
+
+The simplest provider that stores data in memory. Data is lost when the application restarts.
+
+```python
+from robyn.ai import memory
+
+# Create in-memory storage
+mem = memory(provider="inmemory", user_id="user123")
+
+# Add messages
+await mem.add("Hello, how are you?")
+await mem.add("I'm doing great, thanks!")
+
+# Retrieve all messages
+messages = await mem.get()
+
+# Clear memory
+await mem.clear()
+```
+
+
+### Memory API
+
+The Memory class provides these key methods:
+
+- `add(message, metadata=None)` - Store a message with optional metadata
+- `get(query=None)` - Retrieve messages, optionally filtered by query
+- `clear()` - Clear all stored messages for the user
+
+## Agent System
+
+Agents provide the execution layer for AI functionality. They can use different runners and integrate with memory for context-aware responses.
+
+### Agent Runners
+
+#### Simple Runner
+
+A runner with OpenAI integration that provides intelligent responses:
+
+```python
+from robyn.ai import agent
+
+# Create simple agent with OpenAI
+from robyn.ai import configure
+
+config = configure(openai_api_key="your-openai-key")
+simple_agent = agent(runner="simple", config=config)
+
+# Use the agent
+result = await simple_agent.run("What's the weather like?")
+# Returns structured response with AI-generated content
+```
+
+
+### Agent API
+
+The Agent class provides:
+
+- `run(query, history=False, **kwargs)` - Execute the agent with optional history context
+- Automatic memory integration when provided
+- Support for custom runners and configuration
+
+## Complete Example
+
+Here's a comprehensive example showing all features:
+
+```python
+from robyn import Robyn
+from robyn.ai import agent, memory
+
+app = Robyn(__file__)
+
+# Create memory with InMemory provider
+mem = memory(
+    provider="inmemory",
+    user_id="guest"
+)
+
+# Create agent with memory
+chat_agent = agent(runner="simple", memory=mem)
+
+@app.get("/")
+async def home():
+    return {"message": "Robyn AI Chat API"}
+
+@app.post("/chat")  
+async def chat(request):
+    """Chat with AI agent"""
+    data = request.json()
+    query = data.get("query", "")
+    include_history = data.get("history", True)
+    
+    if not query:
+        return {"error": "Query is required"}
+    
+    try:
+        result = await chat_agent.run(query, history=include_history)
+        return {
+            "query": query,
+            "response": result.get("response"),
+            "history_included": include_history
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/memory")
+async def get_memory():
+    """Retrieve conversation history"""
+    try:
+        memories = await mem.get()
+        return {"memories": memories, "count": len(memories)}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.delete("/memory")
+async def clear_memory():
+    """Clear conversation history"""
+    try:
+        await mem.clear()
+        return {"message": "Memory cleared"}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/memory")
+async def add_memory(request):
+    """Add message to memory"""
+    data = request.json()
+    message = data.get("message", "")
+    metadata = data.get("metadata", {})
+    
+    if not message:
+        return {"error": "Message is required"}
+    
+    try:
+        await mem.add(message, metadata)
+        return {"message": "Added to memory"}
+    except Exception as e:
+        return {"error": str(e)}
+
+if __name__ == "__main__":
+    app.start(host="127.0.0.1", port=8080)
+```
+
+## Advanced Usage
+
+### Custom Memory Providers
+
+You can create custom memory providers by extending the `MemoryProvider` abstract base class:
+
+```python
+from robyn.ai import MemoryProvider
+from typing import Dict, List, Any, Optional
+
+class CustomMemoryProvider(MemoryProvider):
+    async def store(self, user_id: str, data: Dict[str, Any]) -> None:
+        # Implement custom storage logic
+        pass
+    
+    async def retrieve(self, user_id: str, query: Optional[str] = None) -> List[Dict[str, Any]]:
+        # Implement custom retrieval logic
+        return []
+    
+    async def clear(self, user_id: str) -> None:
+        # Implement custom clearing logic
+        pass
+
+# Use custom provider
+from robyn.ai import Memory
+custom_mem = Memory(provider=CustomMemoryProvider(), user_id="user123")
+```
+
+### Custom Agent Runners
+
+Similarly, you can create custom agent runners:
+
+```python
+from robyn.ai import AgentRunner
+from typing import Dict, Any
+
+class CustomAgentRunner(AgentRunner):
+    async def run(self, query: str, **kwargs) -> Dict[str, Any]:
+        # Implement custom agent logic
+        return {
+            "response": f"Custom response to: {query}",
+            "processed": True
+        }
+
+# Use custom runner
+from robyn.ai import Agent
+custom_agent = Agent(runner=CustomAgentRunner())
+```
+
+## Best Practices
+
+1. **User Isolation**: Always use unique user IDs to isolate memory between different users
+2. **Error Handling**: Wrap AI operations in try-catch blocks as external services may fail
+3. **Memory Management**: Regularly clear or archive old memories to prevent unbounded growth
+4. **Configuration**: Store sensitive configuration (API keys, etc.) in environment variables
+5. **Testing**: Use the simple runner for development and testing before deploying complex agents
+
+## Troubleshooting
+
+### Common Issues
+
+**ImportError for openai**: Install the required package:
+```bash
+pip install openai
+```
+
+**Memory not persisting**: Note that the in-memory provider loses data when the application restarts. Consider implementing a custom persistent provider for production use.
+
+**Agent timeouts**: Complex operations may take time. Consider implementing timeout handling in your endpoints.
+
+**Memory growing too large**: Implement periodic cleanup or use providers with built-in retention policies.

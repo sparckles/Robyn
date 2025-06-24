@@ -316,6 +316,18 @@ export const navigation = [
         href: '/documentation/en/api_reference/dependency_injection',
         title: 'Dependency Injection',
       },
+      {
+        href: '/documentation/en/api_reference/mcps',
+        title: 'MCPs',
+      },
+      {
+        href: '/documentation/en/api_reference/ai',
+        title: 'AI',
+      },
+      {
+        href: '/documentation/en/api_reference/agents',
+        title: 'AI Agents',
+      },
     ],
   },
   {
@@ -446,6 +458,8 @@ const translations = {
       'Direct Rust Usage': 'Direct Rust Usage',
       'GraphQL Support': 'GraphQL Support',
       'Dependency Injection': 'Dependency Injection',
+      'AI': 'AI',
+      'AI Agents': 'AI Agents',
       Talks: 'Talks',
       Blogs: 'Blogs',
       Introduction: 'Introduction',
@@ -488,6 +502,8 @@ const translations = {
       'Direct Rust Usage': '直接使用 Rust',
       'GraphQL Support': 'GraphQL 支持',
       'Dependency Injection': '依赖注入',
+      'AI': 'AI',
+      'AI Agents': 'AI 代理',
       'Talks': '演讲',
       'Blogs': '博客',
       'Introduction': '引入',
