@@ -412,7 +412,7 @@ class MCPApp:
                 # Parse JSON request - try multiple approaches
                 try:
                     request_data = request.json()
-                except:
+                except (ValueError, TypeError, AttributeError):
                     # Fallback to parsing body as string
                     body = request.body
                     if isinstance(body, str):
