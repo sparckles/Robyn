@@ -11,7 +11,7 @@ use crate::shared_socket::SocketHeld;
 use crate::types::function_info::{FunctionInfo, MiddlewareType};
 use crate::types::headers::Headers;
 use crate::types::request::Request;
-use crate::types::response::Response;
+use crate::types::response::{Response, ResponseType};
 use crate::types::HttpMethod;
 use crate::types::MiddlewareReturn;
 use crate::websockets::start_web_socket;
@@ -457,7 +457,7 @@ async fn index(
     global_response_headers: web::Data<Arc<Headers>>,
     excluded_response_headers_paths: web::Data<Option<Vec<String>>>,
     req: HttpRequest,
-) -> impl Responder {
+) -> ResponseType {
     let mut request = Request::from_actix_request(&req, payload, &global_request_headers).await;
 
     // Before middleware
@@ -476,7 +476,7 @@ async fn index(
             Ok(MiddlewareReturn::Request(r)) => r,
             Ok(MiddlewareReturn::Response(r)) => {
                 // If a before middleware returns a response, we abort the request and return the response
-                return r;
+                return ResponseType::Standard(r);
             }
             Err(e) => {
                 error!(
@@ -484,7 +484,7 @@ async fn index(
                     req.uri().path(),
                     get_traceback(e.downcast_ref::<PyErr>().unwrap())
                 );
-                return Response::internal_server_error(None);
+                return ResponseType::Standard(Response::internal_server_error(None));
             }
         };
     }
@@ -494,7 +494,7 @@ async fn index(
         &HttpMethod::from_actix_method(req.method()),
         req.uri().path(),
     ) {
-        res
+        ResponseType::Standard(res)
     } else if let Some((function, route_params)) = router.get_route(
         &HttpMethod::from_actix_method(req.method()),
         req.uri().path(),
@@ -509,22 +509,22 @@ async fn index(
                     get_traceback(&e)
                 );
 
-                Response::internal_server_error(None)
+                ResponseType::Standard(Response::internal_server_error(None))
             }
         }
     } else {
-        Response::not_found(None)
+        ResponseType::Standard(Response::not_found(None))
     };
 
     debug!("OG Response : {:?}", response);
 
-    response.headers.extend(&global_response_headers);
+    response.headers_mut().extend(&global_response_headers);
 
     match &excluded_response_headers_paths.get_ref() {
         None => {}
         Some(excluded_response_headers_paths) => {
             if excluded_response_headers_paths.contains(&req.uri().path().to_owned()) {
-                response.headers.clear();
+                response.headers_mut().clear();
             }
         }
     }
@@ -542,24 +542,30 @@ async fn index(
         after_middlewares.push(function);
     }
     for after_middleware in after_middlewares {
-        response = match execute_middleware_function(&response, &after_middleware).await {
-            Ok(MiddlewareReturn::Request(_)) => {
-                error!("After middleware returned a request");
-                return Response::internal_server_error(None);
-            }
-            Ok(MiddlewareReturn::Response(r)) => {
-                debug!("Response returned: {:?}", r);
-                r
-            }
-            Err(e) => {
-                error!(
-                    "Error while executing after middleware function for endpoint `{}`: {}",
-                    req.uri().path(),
-                    get_traceback(e.downcast_ref::<PyErr>().unwrap())
-                );
-                return Response::internal_server_error(Some(&response.headers));
-            }
-        };
+        // Middleware only works with standard responses
+        if let ResponseType::Standard(std_response) = response {
+            response = match execute_middleware_function(&std_response, &after_middleware).await {
+                Ok(MiddlewareReturn::Request(_)) => {
+                    error!("After middleware returned a request");
+                    return ResponseType::Standard(Response::internal_server_error(None));
+                }
+                Ok(MiddlewareReturn::Response(r)) => {
+                    debug!("Response returned: {:?}", r);
+                    ResponseType::Standard(r)
+                }
+                Err(e) => {
+                    error!(
+                        "Error while executing after middleware function for endpoint `{}`: {}",
+                        req.uri().path(),
+                        get_traceback(e.downcast_ref::<PyErr>().unwrap())
+                    );
+                    return ResponseType::Standard(Response::internal_server_error(Some(&std_response.headers)));
+                }
+            };
+        } else {
+            // Skip middleware for streaming responses
+            debug!("Skipping after middleware for streaming response");
+        }
     }
 
     debug!("Response returned: {:?}", response);
