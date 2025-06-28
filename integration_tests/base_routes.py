@@ -4,7 +4,7 @@ from collections import defaultdict
 from typing import Optional
 
 from integration_tests.subroutes import di_subrouter, sub_router
-from robyn import Headers, Request, Response, Robyn, WebSocket, WebSocketConnector, jsonify, serve_file, serve_html
+from robyn import Headers, Request, Response, Robyn, WebSocket, WebSocketConnector, jsonify, serve_file, serve_html, sse_response, sse_message
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.robyn import QueryParams, Url
 from robyn.templating import JinjaTemplate
@@ -1056,6 +1056,96 @@ class CreateItemQueryParamsParams(QueryParams):
 @app.post("/openapi_request_body")
 def create_item(request, body: CreateItemBody, query: CreateItemQueryParamsParams) -> CreateItemResponse:
     return CreateItemResponse(success=True, items_changed=2)
+
+
+# ===== Server-Sent Events (SSE) Routes =====
+
+@app.get("/sse/basic")
+def sse_basic(request):
+    """Basic SSE endpoint that sends 3 messages"""
+    def event_generator():
+        for i in range(3):
+            yield f"data: Test message {i}\n\n"
+    return sse_response(event_generator())
+
+
+@app.get("/sse/formatted")
+def sse_formatted(request):
+    """SSE endpoint using sse_message formatter"""
+    def event_generator():
+        for i in range(3):
+            yield sse_message(f"Formatted message {i}", event="test", id=str(i))
+    return sse_response(event_generator())
+
+
+@app.get("/sse/json")
+def sse_json(request):
+    """SSE endpoint that sends JSON data"""
+    import json
+    def event_generator():
+        for i in range(3):
+            data = {"id": i, "message": f"JSON message {i}", "type": "test"}
+            yield f"data: {json.dumps(data)}\n\n"
+    return sse_response(event_generator())
+
+
+@app.get("/sse/named_events")
+def sse_named_events(request):
+    """SSE endpoint with different event types"""
+    def event_generator():
+        events = [
+            ("start", "Test started"),
+            ("progress", "Test in progress"),
+            ("end", "Test completed")
+        ]
+        for event_type, message in events:
+            yield sse_message(message, event=event_type)
+    return sse_response(event_generator())
+
+
+@app.get("/sse/async")
+async def sse_async(request):
+    """Async SSE endpoint"""
+    import asyncio
+    async def async_event_generator():
+        for i in range(3):
+            await asyncio.sleep(0.1)  # Small delay for testing
+            yield f"data: Async message {i}\n\n"
+    return sse_response(async_event_generator())
+
+
+@app.get("/sse/single")
+def sse_single(request):
+    """SSE endpoint that sends a single message and closes"""
+    def event_generator():
+        yield "data: Single message\n\n"
+    return sse_response(event_generator())
+
+
+@app.get("/sse/empty")
+def sse_empty(request):
+    """SSE endpoint that sends no messages"""
+    def event_generator():
+        return
+        yield  # This will never be reached
+    return sse_response(event_generator())
+
+
+@app.get("/sse/with_headers")
+def sse_with_headers(request):
+    """SSE endpoint with custom headers"""
+    headers = Headers({"X-Custom-Header": "custom-value"})
+    def event_generator():
+        yield "data: Message with custom headers\n\n"
+    return sse_response(event_generator(), headers=headers)
+
+
+@app.get("/sse/status_code")
+def sse_status_code(request):
+    """SSE endpoint with custom status code"""
+    def event_generator():
+        yield "data: Message with custom status\n\n"
+    return sse_response(event_generator(), status_code=201)
 
 
 def main():

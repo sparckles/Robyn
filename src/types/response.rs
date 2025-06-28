@@ -1,11 +1,13 @@
 use actix_http::{body::BoxBody, StatusCode};
-use actix_web::{HttpRequest, HttpResponse, HttpResponseBuilder, Responder};
+use actix_web::{HttpRequest, HttpResponse, HttpResponseBuilder, Responder, web::Bytes};
+use futures::Stream;
 use pyo3::{
     exceptions::PyIOError,
     prelude::*,
     types::{PyBytes, PyDict},
-    IntoPyObject,
+    IntoPyObject, Bound,
 };
+use std::pin::Pin;
 
 use crate::io_helpers::{apply_hashmap_headers, read_file};
 use crate::types::{check_body_type, check_description_type, get_description_from_pyobject};
@@ -23,6 +25,46 @@ pub struct Response {
     pub file_path: Option<String>,
 }
 
+#[derive(Debug, Clone)]
+pub struct StreamingResponse {
+    pub status_code: u16,
+    pub headers: Headers,
+    pub content_generator: PyObject,
+}
+
+#[derive(Debug)]
+pub enum ResponseType {
+    Standard(Response),
+    Streaming(StreamingResponse),
+}
+
+impl ResponseType {
+    pub fn headers(&self) -> &Headers {
+        match self {
+            ResponseType::Standard(response) => &response.headers,
+            ResponseType::Streaming(streaming_response) => &streaming_response.headers,
+        }
+    }
+
+    pub fn headers_mut(&mut self) -> &mut Headers {
+        match self {
+            ResponseType::Standard(response) => &mut response.headers,
+            ResponseType::Streaming(streaming_response) => &mut streaming_response.headers,
+        }
+    }
+}
+
+impl Responder for ResponseType {
+    type Body = BoxBody;
+
+    fn respond_to(self, req: &HttpRequest) -> HttpResponse<Self::Body> {
+        match self {
+            ResponseType::Standard(response) => response.respond_to(req),
+            ResponseType::Streaming(streaming_response) => streaming_response.respond_to(req),
+        }
+    }
+}
+
 impl Responder for Response {
     type Body = BoxBody;
 
@@ -33,6 +75,57 @@ impl Responder for Response {
         apply_hashmap_headers(&mut response_builder, &self.headers);
         response_builder.body(self.description)
     }
+}
+
+impl StreamingResponse {
+    pub fn new(status_code: u16, headers: Headers, content_generator: PyObject) -> Self {
+        Self {
+            status_code,
+            headers,
+            content_generator,
+        }
+    }
+}
+
+impl Responder for StreamingResponse {
+    type Body = BoxBody;
+
+    fn respond_to(self, _req: &HttpRequest) -> HttpResponse<Self::Body> {
+        let mut response_builder = HttpResponseBuilder::new(
+            StatusCode::from_u16(self.status_code).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR),
+        );
+        apply_hashmap_headers(&mut response_builder, &self.headers);
+        
+        // Create the stream from the Python generator
+        let stream = create_python_stream(self.content_generator);
+        
+        response_builder.streaming(stream)
+    }
+}
+
+fn create_python_stream(
+    generator: PyObject,
+) -> Pin<Box<dyn Stream<Item = Result<Bytes, actix_web::Error>> + Send>> {
+    Box::pin(futures::stream::unfold(
+        generator,
+        |generator| async move {
+            Python::with_gil(|py| {
+                let gen = generator.bind(py);
+                
+                // Try to get the next value from the generator
+                match gen.call_method0("__next__") {
+                    Ok(value) => {
+                        if let Ok(string_value) = value.extract::<String>() {
+                            Some((Ok(Bytes::from(string_value)), generator))
+                        } else {
+                            None // End of stream
+                        }
+                    }
+                    Err(_) => None, // StopIteration or other error
+                }
+            })
+        },
+    ))
 }
 
 impl Response {
@@ -166,5 +259,15 @@ impl PyResponse {
             .expect("value already borrowed")
             .append(key.to_string(), value.to_string());
         Ok(())
+    }
+}
+
+impl FromPyObject<'_> for StreamingResponse {
+    fn extract_bound(obj: &Bound<'_, PyAny>) -> PyResult<Self> {
+        let status_code: u16 = obj.getattr("status_code")?.extract()?;
+        let headers: Headers = obj.getattr("headers")?.extract()?;
+        let content: PyObject = obj.getattr("content")?.unbind();
+        
+        Ok(StreamingResponse::new(status_code, headers, content))
     }
 }

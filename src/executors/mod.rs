@@ -12,7 +12,7 @@ use pyo3::{BoundObject, IntoPyObject};
 use pyo3_async_runtimes::TaskLocals;
 
 use crate::types::{
-    function_info::FunctionInfo, request::Request, response::Response, MiddlewareReturn,
+    function_info::FunctionInfo, request::Request, response::{Response, StreamingResponse, ResponseType}, MiddlewareReturn,
 };
 
 #[inline]
@@ -106,7 +106,7 @@ where
 pub async fn execute_http_function(
     request: &Request,
     function: &FunctionInfo,
-) -> PyResult<Response> {
+) -> PyResult<ResponseType> {
     if function.is_async {
         let output = Python::with_gil(|py| {
             let function_output = get_function_output(function, py, request)?;
@@ -114,10 +114,31 @@ pub async fn execute_http_function(
         })?
         .await?;
 
-        Python::with_gil(|py| -> PyResult<Response> { output.extract(py) })
+        Python::with_gil(|py| -> PyResult<ResponseType> { 
+            // Try to extract as StreamingResponse first, then as Response
+            if let Ok(streaming_response) = output.extract::<StreamingResponse>(py) {
+                Ok(ResponseType::Streaming(streaming_response))
+            } else if let Ok(response) = output.extract::<Response>(py) {
+                Ok(ResponseType::Standard(response))
+            } else {
+                Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+                    "Function must return a Response or StreamingResponse"
+                ))
+            }
+        })
     } else {
-        Python::with_gil(|py| -> PyResult<Response> {
-            get_function_output(function, py, request)?.extract()
+        Python::with_gil(|py| -> PyResult<ResponseType> {
+            let output = get_function_output(function, py, request)?;
+            // Try to extract as StreamingResponse first, then as Response
+            if let Ok(streaming_response) = output.extract::<StreamingResponse>() {
+                Ok(ResponseType::Streaming(streaming_response))
+            } else if let Ok(response) = output.extract::<Response>() {
+                Ok(ResponseType::Standard(response))
+            } else {
+                Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+                    "Function must return a Response or StreamingResponse"
+                ))
+            }
         })
     }
 }
