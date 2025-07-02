@@ -559,7 +559,9 @@ async fn index(
                         req.uri().path(),
                         get_traceback(e.downcast_ref::<PyErr>().unwrap())
                     );
-                    return ResponseType::Standard(Response::internal_server_error(Some(&std_response.headers)));
+                    return ResponseType::Standard(Response::internal_server_error(Some(
+                        &std_response.headers,
+                    )));
                 }
             };
         } else {

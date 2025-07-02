@@ -10,7 +10,7 @@ use crate::types::HttpMethod;
 use anyhow::Context;
 use log::debug;
 use matchit::Router as MatchItRouter;
-use pyo3::{Bound, Python, PyErr};
+use pyo3::{Bound, PyErr, Python};
 
 use anyhow::{Error, Result};
 
@@ -50,7 +50,10 @@ impl Router<Response, HttpMethod> for ConstRouter {
                     table.write().insert(route, response).unwrap();
                 }
                 crate::types::response::ResponseType::Streaming(_) => {
-                    return Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("Streaming responses are not supported for const routes").into());
+                    return Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
+                        "Streaming responses are not supported for const routes",
+                    )
+                    .into());
                 }
             }
             Ok(())

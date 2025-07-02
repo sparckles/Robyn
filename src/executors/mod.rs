@@ -12,7 +12,10 @@ use pyo3::{BoundObject, IntoPyObject};
 use pyo3_async_runtimes::TaskLocals;
 
 use crate::types::{
-    function_info::FunctionInfo, request::Request, response::{Response, StreamingResponse, ResponseType}, MiddlewareReturn,
+    function_info::FunctionInfo,
+    request::Request,
+    response::{Response, ResponseType, StreamingResponse},
+    MiddlewareReturn,
 };
 
 #[inline]
@@ -114,25 +117,33 @@ pub async fn execute_http_function(
         })?
         .await?;
 
-        Python::with_gil(|py| -> PyResult<ResponseType> { 
-            debug!("Output object type: {}", output.bind(py).get_type().name().map(|n| n.to_string()).unwrap_or_else(|_| "unknown".to_string()));
+        Python::with_gil(|py| -> PyResult<ResponseType> {
+            debug!(
+                "Output object type: {}",
+                output
+                    .bind(py)
+                    .get_type()
+                    .name()
+                    .map(|n| n.to_string())
+                    .unwrap_or_else(|_| "unknown".to_string())
+            );
             // Try to extract as StreamingResponse first, then as Response
             match output.extract::<StreamingResponse>(py) {
                 Ok(streaming_response) => {
                     debug!("Successfully extracted as StreamingResponse");
                     Ok(ResponseType::Streaming(streaming_response))
-                },
+                }
                 Err(streaming_err) => {
                     debug!("Failed to extract as StreamingResponse: {}", streaming_err);
                     match output.extract::<Response>(py) {
                         Ok(response) => {
                             debug!("Successfully extracted as Response");
                             Ok(ResponseType::Standard(response))
-                        },
+                        }
                         Err(response_err) => {
                             debug!("Failed to extract as Response: {}", response_err);
                             Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
-                                "Function must return a Response or StreamingResponse"
+                                "Function must return a Response or StreamingResponse",
                             ))
                         }
                     }
@@ -142,24 +153,31 @@ pub async fn execute_http_function(
     } else {
         Python::with_gil(|py| -> PyResult<ResponseType> {
             let output = get_function_output(function, py, request)?;
-            debug!("Output object type: {}", output.get_type().name().map(|n| n.to_string()).unwrap_or_else(|_| "unknown".to_string()));
+            debug!(
+                "Output object type: {}",
+                output
+                    .get_type()
+                    .name()
+                    .map(|n| n.to_string())
+                    .unwrap_or_else(|_| "unknown".to_string())
+            );
             // Try to extract as StreamingResponse first, then as Response
             match output.extract::<StreamingResponse>() {
                 Ok(streaming_response) => {
                     debug!("Successfully extracted as StreamingResponse");
                     Ok(ResponseType::Streaming(streaming_response))
-                },
+                }
                 Err(streaming_err) => {
                     debug!("Failed to extract as StreamingResponse: {}", streaming_err);
                     match output.extract::<Response>() {
                         Ok(response) => {
                             debug!("Successfully extracted as Response");
                             Ok(ResponseType::Standard(response))
-                        },
+                        }
                         Err(response_err) => {
                             debug!("Failed to extract as Response: {}", response_err);
                             Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
-                                "Function must return a Response or StreamingResponse"
+                                "Function must return a Response or StreamingResponse",
                             ))
                         }
                     }
