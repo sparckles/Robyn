@@ -4,10 +4,9 @@ SSE Debugging and Edge Case Tests
 Consolidates debug scenarios into proper test cases for SSE functionality
 """
 
-import sys
 import pytest
 import requests
-from robyn import Robyn, Headers
+from robyn import Headers
 from robyn.responses import StreamingResponse, sse_response, sse_message
 from integration_tests.helpers.http_methods_helpers import BASE_URL
 

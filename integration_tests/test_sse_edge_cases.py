@@ -1,12 +1,7 @@
 # Test SSE edge cases and error conditions
 # Tests error handling, edge cases, and boundary conditions for SSE
 
-import pytest
-import time
-import threading
 from robyn import Headers, sse_response, sse_message, StreamingResponse
-from integration_tests.helpers.http_methods_helpers import get, BASE_URL
-
 
 class TestSSEEdgeCases:
     """Test edge cases and error conditions for SSE"""
