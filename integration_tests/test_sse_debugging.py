@@ -313,8 +313,6 @@ class TestSSEServerIntegration:
             assert response.headers.get('Cache-Control') == 'no-cache'
             
             # Check for any custom debug headers
-            debug_headers = [k for k in response.headers.keys() if 'debug' in k.lower() or 'x-' in k.lower()]
-            # Just verify we can access headers (debug headers are optional)
             
         except requests.exceptions.RequestException:
             pytest.skip("Could not connect to debug SSE endpoint")

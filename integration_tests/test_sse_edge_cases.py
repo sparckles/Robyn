@@ -101,7 +101,7 @@ class TestSSEEdgeCases:
                 call_count += 1
                 yield f"data: {i}\n\n"
         
-        response = sse_response(counting_generator())
+        _response = sse_response(counting_generator())
         
         # The generator shouldn't be consumed during response creation
         assert call_count == 0
