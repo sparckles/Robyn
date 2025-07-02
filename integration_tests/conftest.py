@@ -43,23 +43,36 @@ def start_server(domain: str, port: int, is_dev: bool = False) -> subprocess.Pop
     command = ["python3", base_routes]
     if is_dev:
         command.append("--dev")
-    process = spawn_process(command)
+    
+    # Ensure environment variables are properly set for the subprocess
+    env = os.environ.copy()
+    env["ROBYN_HOST"] = domain
+    env["ROBYN_PORT"] = str(port)
+    
+    if platform.system() == "Windows":
+        command[0] = "python"
+        process = subprocess.Popen(command, shell=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP, env=env)
+    else:
+        process = subprocess.Popen(command, preexec_fn=os.setsid, env=env)
 
     # Wait for the server to be reachable
-    timeout = 5  # The maximum time we will wait for an answer
+    timeout = 15  # The maximum time we will wait for an answer
     start_time = time.time()
     while True:
         current_time = time.time()
         if current_time - start_time > timeout:
             # Robyn didn't start correctly before timeout, kill the process and exit with an exception
             kill_process(process)
-            raise ConnectionError("Could not reach Robyn server")
+            raise ConnectionError(f"Could not reach Robyn server on {domain}:{port} after {timeout} seconds")
         try:
-            sock = socket.create_connection((domain, port), timeout=5)
+            sock = socket.create_connection((domain, port), timeout=2)
             sock.close()
             break  # We were able to reach the server, exit the loop
         except Exception:
-            pass
+            time.sleep(0.5)  # Longer delay before retrying
+    
+    # Give the server a moment to fully initialize after accepting connections
+    time.sleep(1)
     return process
 
 

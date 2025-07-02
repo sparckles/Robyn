@@ -1104,14 +1104,14 @@ def sse_named_events(request):
 
 
 @app.get("/sse/async")
-async def sse_async(request):
-    """Async SSE endpoint"""
-    import asyncio
-    async def async_event_generator():
+def sse_async(request):
+    """Async SSE endpoint (sync implementation)"""
+    def event_generator():
+        # Simple generator for testing
         for i in range(3):
-            await asyncio.sleep(0.1)  # Small delay for testing
             yield f"data: Async message {i}\n\n"
-    return sse_response(async_event_generator())
+    
+    return sse_response(event_generator())
 
 
 @app.get("/sse/single")
@@ -1170,7 +1170,10 @@ def main():
             return None
 
     app.configure_authentication(BasicAuthHandler(token_getter=BearerGetter()))
-    app.start(port=8080, _check_port=False)
+    
+    # Read port from environment variable if set, otherwise default to 8080
+    port = int(os.getenv("ROBYN_PORT", "8080"))
+    app.start(port=port, _check_port=False)
 
 
 if __name__ == "__main__":

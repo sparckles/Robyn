@@ -11,7 +11,7 @@ from robyn.authentication import AuthenticationHandler, AuthenticationNotConfigu
 from robyn.dependency_injection import DependencyMap
 from robyn.jsonify import jsonify
 from robyn.openapi import OpenAPI
-from robyn.responses import FileResponse
+from robyn.responses import FileResponse, StreamingResponse
 from robyn.robyn import FunctionInfo, Headers, HttpMethod, Identity, MiddlewareType, QueryParams, Request, Response, Url
 from robyn.types import Body, Files, FormData, IPAddress, Method, PathParams
 from robyn.ws import WebSocket
@@ -72,9 +72,12 @@ class Router(BaseRouter):
 
     def _format_response(
         self,
-        res: Union[Dict, Response, bytes, tuple, str],
-    ) -> Response:
+        res: Union[Dict, Response, StreamingResponse, bytes, tuple, str],
+    ) -> Union[Response, StreamingResponse]:
         if isinstance(res, Response):
+            return res
+        
+        if isinstance(res, StreamingResponse):
             return res
 
         if isinstance(res, dict):

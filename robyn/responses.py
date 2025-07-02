@@ -124,7 +124,10 @@ def sse_message(data: str, event: Optional[str] = None, id: Optional[str] = None
         lines.append(f"retry: {retry}")
     
     # Handle multi-line data
-    for line in data.split('\n'):
+    data_str = str(data) if data is not None else ""
+    # Normalize line endings to \n only
+    data_str = data_str.replace('\r\n', '\n').replace('\r', '\n')
+    for line in data_str.split('\n'):
         lines.append(f"data: {line}")
     
     # SSE messages end with double newline
