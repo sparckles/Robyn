@@ -49,11 +49,7 @@ def start_server(domain: str, port: int, is_dev: bool = False) -> subprocess.Pop
     env["ROBYN_HOST"] = domain
     env["ROBYN_PORT"] = str(port)
     
-    if platform.system() == "Windows":
-        command[0] = "python"
-        process = subprocess.Popen(command, shell=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP, env=env)
-    else:
-        process = subprocess.Popen(command, preexec_fn=os.setsid, env=env)
+    process = spawn_process(command)
 
     # Wait for the server to be reachable
     timeout = 15  # The maximum time we will wait for an answer
