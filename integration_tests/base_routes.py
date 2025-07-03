@@ -1137,7 +1137,7 @@ def sse_with_headers(request):
     headers = Headers({"X-Custom-Header": "custom-value"})
     def event_generator():
         yield "data: Message with custom headers\n\n"
-    return sse_response(event_generator(), headers=headers)
+    return SSE_Response(event_generator(), headers=headers)
 
 
 @app.get("/sse/status_code")
@@ -1145,7 +1145,7 @@ def sse_status_code(request):
     """SSE endpoint with custom status code"""
     def event_generator():
         yield "data: Message with custom status\n\n"
-    return sse_response(event_generator(), status_code=201)
+    return SSE_Response(event_generator(), status_code=201)
 
 
 def main():
