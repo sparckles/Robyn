@@ -4,7 +4,7 @@ from collections import defaultdict
 from typing import Optional
 
 from integration_tests.subroutes import di_subrouter, sub_router
-from robyn import Headers, Request, Response, Robyn, WebSocket, WebSocketConnector, jsonify, serve_file, serve_html, sse_response, sse_message
+from robyn import Headers, Request, Response, Robyn, WebSocket, WebSocketConnector, jsonify, serve_file, serve_html, SSE_Response, SSE_Message
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.robyn import QueryParams, Url
 from robyn.templating import JinjaTemplate
@@ -1066,16 +1066,16 @@ def sse_basic(request):
     def event_generator():
         for i in range(3):
             yield f"data: Test message {i}\n\n"
-    return sse_response(event_generator())
+    return SSE_Response(event_generator())
 
 
 @app.get("/sse/formatted")
 def sse_formatted(request):
-    """SSE endpoint using sse_message formatter"""
+    """SSE endpoint using SSE_Message formatter"""
     def event_generator():
         for i in range(3):
-            yield sse_message(f"Formatted message {i}", event="test", id=str(i))
-    return sse_response(event_generator())
+            yield SSE_Message(f"Formatted message {i}", event="test", id=str(i))
+    return SSE_Response(event_generator())
 
 
 @app.get("/sse/json")
@@ -1086,7 +1086,7 @@ def sse_json(request):
         for i in range(3):
             data = {"id": i, "message": f"JSON message {i}", "type": "test"}
             yield f"data: {json.dumps(data)}\n\n"
-    return sse_response(event_generator())
+    return SSE_Response(event_generator())
 
 
 @app.get("/sse/named_events")
@@ -1099,8 +1099,8 @@ def sse_named_events(request):
             ("end", "Test completed")
         ]
         for event_type, message in events:
-            yield sse_message(message, event=event_type)
-    return sse_response(event_generator())
+            yield SSE_Message(message, event=event_type)
+    return SSE_Response(event_generator())
 
 
 @app.get("/sse/async")
@@ -1111,7 +1111,7 @@ def sse_async(request):
         for i in range(3):
             yield f"data: Async message {i}\n\n"
     
-    return sse_response(event_generator())
+    return SSE_Response(event_generator())
 
 
 @app.get("/sse/single")
@@ -1119,7 +1119,7 @@ def sse_single(request):
     """SSE endpoint that sends a single message and closes"""
     def event_generator():
         yield "data: Single message\n\n"
-    return sse_response(event_generator())
+    return SSE_Response(event_generator())
 
 
 @app.get("/sse/empty")
@@ -1128,7 +1128,7 @@ def sse_empty(request):
     def event_generator():
         return
         yield  # This will never be reached
-    return sse_response(event_generator())
+    return SSE_Response(event_generator())
 
 
 @app.get("/sse/with_headers")

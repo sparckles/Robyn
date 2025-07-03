@@ -12,7 +12,7 @@ import re
 import pytest
 import requests
 
-from robyn import Headers, sse_response, sse_message, StreamingResponse
+from robyn import Headers, SSE_Response, SSE_Message, StreamingResponse
 from integration_tests.helpers.http_methods_helpers import BASE_URL
 
 # Try to import sseclient, but don't fail if it's not available
@@ -100,7 +100,7 @@ def get_sse_stream(endpoint: str, timeout: int = 5) -> List[Dict[str, Any]]:
     return events
 
 
-def get_sse_response_quickly(endpoint: str, timeout: float = 3.0) -> str:
+def get_SSE_Response_quickly(endpoint: str, timeout: float = 3.0) -> str:
     """Get SSE response content with a timeout"""
     url = f"{BASE_URL}/{endpoint.strip('/')}"
     try:
@@ -123,7 +123,7 @@ def get_sse_response_quickly(endpoint: str, timeout: float = 3.0) -> str:
         pytest.fail(f"Failed to get SSE response from {endpoint}: {e}")
 
 
-def debug_sse_response(response):
+def debug_SSE_Response(response):
     """Debug utility to print SSE response details"""
     print(f"Response type: {type(response)}")
     print(f"Status code: {getattr(response, 'status_code', 'NOT SET')}")
@@ -185,7 +185,7 @@ class TestServerSentEvents:
             assert event['data'] == f"Test message {i}"
 
     def test_sse_formatted_messages(self):
-        """Test SSE messages formatted with sse_message helper"""
+        """Test SSE messages formatted with SSE_Message helper"""
         events = get_sse_stream("/sse/formatted")
         
         assert len(events) == 3
@@ -271,48 +271,48 @@ class TestServerSentEvents:
         assert len(events) == 1
         assert events[0]['data'] == "Message with custom status"
 
-    def test_sse_response_class_import(self):
+    def test_SSE_Response_class_import(self):
         """Test that SSE classes can be imported correctly"""
         try:
-            from robyn import sse_response, sse_message, StreamingResponse
-            assert sse_response is not None
-            assert sse_message is not None
+            from robyn import SSE_Response, SSE_Message, StreamingResponse
+            assert SSE_Response is not None
+            assert SSE_Message is not None
             assert StreamingResponse is not None
         except ImportError as e:
             pytest.fail(f"Failed to import SSE classes: {e}")
 
-    def test_sse_message_formatter(self):
-        """Test the sse_message formatter utility function"""
-        from robyn import sse_message
+    def test_SSE_Message_formatter(self):
+        """Test the SSE_Message formatter utility function"""
+        from robyn import SSE_Message
         
         # Test basic message
-        result = sse_message("Hello world")
+        result = SSE_Message("Hello world")
         assert "data: Hello world\n\n" in result
         
         # Test with event type
-        result = sse_message("Hello", event="greeting")
+        result = SSE_Message("Hello", event="greeting")
         assert "event: greeting\n" in result
         assert "data: Hello\n\n" in result
         
         # Test with ID
-        result = sse_message("Hello", id="123")
+        result = SSE_Message("Hello", id="123")
         assert "id: 123\n" in result
         assert "data: Hello\n\n" in result
         
         # Test with retry
-        result = sse_message("Hello", retry=5000)
+        result = SSE_Message("Hello", retry=5000)
         assert "retry: 5000\n" in result
         assert "data: Hello\n\n" in result
         
         # Test with all parameters
-        result = sse_message("Hello", event="test", id="456", retry=3000)
+        result = SSE_Message("Hello", event="test", id="456", retry=3000)
         assert "event: test\n" in result
         assert "id: 456\n" in result
         assert "retry: 3000\n" in result
         assert "data: Hello\n\n" in result
         
         # Test multiline data
-        result = sse_message("Line 1\nLine 2")
+        result = SSE_Message("Line 1\nLine 2")
         assert "data: Line 1\ndata: Line 2\n\n" in result
 
     def test_sse_concurrent_connections(self):
@@ -372,38 +372,38 @@ class TestServerSentEvents:
 class TestSSEResponseClasses:
     """Test SSE response classes and utility functions"""
 
-    def test_sse_message_basic(self):
-        """Test basic sse_message formatting"""
-        result = sse_message("Hello world")
+    def test_SSE_Message_basic(self):
+        """Test basic SSE_Message formatting"""
+        result = SSE_Message("Hello world")
         expected = "data: Hello world\n\n"
         assert result == expected
 
-    def test_sse_message_with_event(self):
-        """Test sse_message with event type"""
-        result = sse_message("Hello", event="greeting")
+    def test_SSE_Message_with_event(self):
+        """Test SSE_Message with event type"""
+        result = SSE_Message("Hello", event="greeting")
         lines = result.split('\n')
         assert "event: greeting" in lines
         assert "data: Hello" in lines
         assert lines[-1] == ""  # Should end with empty line
         assert lines[-2] == ""  # Double newline
 
-    def test_sse_message_with_id(self):
-        """Test sse_message with ID"""
-        result = sse_message("Hello", id="123")
+    def test_SSE_Message_with_id(self):
+        """Test SSE_Message with ID"""
+        result = SSE_Message("Hello", id="123")
         lines = result.split('\n')
         assert "id: 123" in lines
         assert "data: Hello" in lines
 
-    def test_sse_message_with_retry(self):
-        """Test sse_message with retry time"""
-        result = sse_message("Hello", retry=5000)
+    def test_SSE_Message_with_retry(self):
+        """Test SSE_Message with retry time"""
+        result = SSE_Message("Hello", retry=5000)
         lines = result.split('\n')
         assert "retry: 5000" in lines
         assert "data: Hello" in lines
 
-    def test_sse_message_all_fields(self):
-        """Test sse_message with all fields"""
-        result = sse_message("Test message", event="test", id="456", retry=3000)
+    def test_SSE_Message_all_fields(self):
+        """Test SSE_Message with all fields"""
+        result = SSE_Message("Test message", event="test", id="456", retry=3000)
         lines = result.split('\n')
         assert "event: test" in lines
         assert "id: 456" in lines
@@ -411,17 +411,17 @@ class TestSSEResponseClasses:
         assert "data: Test message" in lines
         assert result.endswith("\n\n")
 
-    def test_sse_message_multiline_data(self):
-        """Test sse_message with multiline data"""
-        result = sse_message("Line 1\nLine 2\nLine 3")
+    def test_SSE_Message_multiline_data(self):
+        """Test SSE_Message with multiline data"""
+        result = SSE_Message("Line 1\nLine 2\nLine 3")
         lines = result.split('\n')
         assert "data: Line 1" in lines
         assert "data: Line 2" in lines
         assert "data: Line 3" in lines
 
-    def test_sse_message_empty_data(self):
-        """Test sse_message with empty data"""
-        result = sse_message("")
+    def test_SSE_Message_empty_data(self):
+        """Test SSE_Message with empty data"""
+        result = SSE_Message("")
         expected = "data: \n\n"
         assert result == expected
 
@@ -458,34 +458,34 @@ class TestSSEResponseClasses:
         assert response.headers.get("Connection") == "keep-alive"
         assert response.headers.get("Access-Control-Allow-Origin") == "*"
 
-    def test_sse_response_function(self):
-        """Test sse_response convenience function"""
+    def test_SSE_Response_function(self):
+        """Test SSE_Response convenience function"""
         def simple_generator():
             yield "data: test\n\n"
         
-        response = sse_response(simple_generator())
+        response = SSE_Response(simple_generator())
         
         assert isinstance(response, StreamingResponse)
         assert response.media_type == "text/event-stream"
         assert response.status_code == 200
 
-    def test_sse_response_with_custom_status(self):
-        """Test sse_response with custom status code"""
+    def test_SSE_Response_with_custom_status(self):
+        """Test SSE_Response with custom status code"""
         def simple_generator():
             yield "data: test\n\n"
         
-        response = sse_response(simple_generator(), status_code=201)
+        response = SSE_Response(simple_generator(), status_code=201)
         
         assert response.status_code == 201
         assert response.media_type == "text/event-stream"
 
-    def test_sse_response_with_custom_headers(self):
-        """Test sse_response with custom headers"""
+    def test_SSE_Response_with_custom_headers(self):
+        """Test SSE_Response with custom headers"""
         def simple_generator():
             yield "data: test\n\n"
         
         custom_headers = Headers({"X-Custom": "value"})
-        response = sse_response(simple_generator(), headers=custom_headers)
+        response = SSE_Response(simple_generator(), headers=custom_headers)
         
         assert response.headers.get("X-Custom") == "value"
         # Should still have default SSE headers
@@ -504,16 +504,16 @@ class TestSSEResponseClasses:
                 yield f"data: {i}\n\n"
         
         # Test with sync generator
-        response1 = sse_response(sync_generator())
+        response1 = SSE_Response(sync_generator())
         assert isinstance(response1, StreamingResponse)
         
         # Test with async generator
-        response2 = sse_response(async_generator())
+        response2 = SSE_Response(async_generator())
         assert isinstance(response2, StreamingResponse)
 
-    def test_sse_message_field_order(self):
+    def test_SSE_Message_field_order(self):
         """Test that SSE message fields are in correct order"""
-        result = sse_message("data", event="test", id="123", retry=1000)
+        result = SSE_Message("data", event="test", id="123", retry=1000)
         lines = result.split('\n')
         
         # Find the positions of each field
@@ -525,10 +525,10 @@ class TestSSEResponseClasses:
         # Order should be: event, id, retry, data
         assert event_pos < id_pos < retry_pos < data_pos
 
-    def test_sse_message_special_characters(self):
-        """Test sse_message with special characters"""
+    def test_SSE_Message_special_characters(self):
+        """Test SSE_Message with special characters"""
         # Test with newlines, unicode, etc.
-        result = sse_message("Hello 🌍\nWorld 💫", event="unicode")
+        result = SSE_Message("Hello 🌍\nWorld 💫", event="unicode")
         lines = result.split('\n')
         assert "event: unicode" in lines
         assert "data: Hello 🌍" in lines
@@ -558,7 +558,7 @@ class TestSSEResponseClasses:
         def simple_generator():
             yield "data: test\n\n"
         
-        response = sse_response(simple_generator(), headers=headers)
+        response = SSE_Response(simple_generator(), headers=headers)
         
         assert response.headers.get("X-Custom-1") == "value1"
         assert response.headers.get("X-Custom-2") == "value2"
@@ -569,12 +569,12 @@ class TestSSEResponseClasses:
 class TestSSEDebugging:
     """Test SSE debugging scenarios and edge cases"""
 
-    def test_sse_response_attributes(self):
+    def test_SSE_Response_attributes(self):
         """Test SSE response object attributes and types"""
         def simple_generator():
             yield "data: Test message\n\n"
         
-        response = sse_response(simple_generator())
+        response = SSE_Response(simple_generator())
         
         # Verify response attributes exist and have correct types
         assert hasattr(response, 'status_code')
@@ -619,7 +619,7 @@ class TestSSEDebugging:
         def simple_gen():
             yield "data: Simple\n\n"
         
-        response1 = sse_response(simple_gen())
+        response1 = SSE_Response(simple_gen())
         assert response1.media_type == 'text/event-stream'
         
         # Test generator with multiple yields
@@ -627,14 +627,14 @@ class TestSSEDebugging:
             for i in range(3):
                 yield f"data: Message {i}\n\n"
         
-        response2 = sse_response(multi_gen())
+        response2 = SSE_Response(multi_gen())
         assert response2.media_type == 'text/event-stream'
         
-        # Test generator with sse_message formatting
+        # Test generator with SSE_Message formatting
         def formatted_gen():
-            yield sse_message("Formatted message", event="test", id="1")
+            yield SSE_Message("Formatted message", event="test", id="1")
         
-        response3 = sse_response(formatted_gen())
+        response3 = SSE_Response(formatted_gen())
         assert response3.media_type == 'text/event-stream'
 
     def test_sse_error_scenarios(self):
@@ -645,7 +645,7 @@ class TestSSEDebugging:
             return
             yield "never reached"  # This line should never execute
         
-        response = sse_response(empty_gen())
+        response = SSE_Response(empty_gen())
         assert response.status_code == 200
         assert response.media_type == 'text/event-stream'
         
@@ -656,7 +656,7 @@ class TestSSEDebugging:
             yield "data: After error\n\n"  # Should not be reached
         
         # Creating the response should work, error occurs during iteration
-        response = sse_response(error_gen())
+        response = SSE_Response(error_gen())
         assert response.status_code == 200
 
     def test_sse_content_validation(self):
@@ -668,7 +668,7 @@ class TestSSEDebugging:
             yield "event: test\ndata: Event message\n\n"
             yield "id: 123\ndata: ID message\n\n"
         
-        response = sse_response(proper_gen())
+        response = SSE_Response(proper_gen())
         assert response.media_type == 'text/event-stream'
         
         # Test improperly formatted SSE (missing newlines)
@@ -676,7 +676,7 @@ class TestSSEDebugging:
             yield "data: Missing newlines"
             yield "event: test"
         
-        response = sse_response(improper_gen())
+        response = SSE_Response(improper_gen())
         assert response.media_type == 'text/event-stream'  # Should still work
 
     def test_sse_custom_status_and_headers(self):
@@ -709,16 +709,16 @@ class TestSSEDebugging:
         assert response.headers.get('X-Debug') == 'true'
         assert response.headers.get('Cache-Control') == 'no-cache'
 
-    def test_sse_message_formatting_edge_cases(self):
-        """Test sse_message formatter with edge cases"""
+    def test_SSE_Message_formatting_edge_cases(self):
+        """Test SSE_Message formatter with edge cases"""
         
         # Test empty message
-        result = sse_message("")
+        result = SSE_Message("")
         assert result == "data: \n\n"
         
         # Test None message (should handle gracefully)
         try:
-            result = sse_message(None)
+            result = SSE_Message(None)
             assert "data:" in result
         except TypeError:
             # This is acceptable behavior
@@ -726,35 +726,35 @@ class TestSSEDebugging:
         
         # Test very long message
         long_message = "x" * 1000
-        result = sse_message(long_message)
+        result = SSE_Message(long_message)
         assert f"data: {long_message}\n\n" in result
         
         # Test message with special characters
         special_message = "Hello\nWorld\r\nWith\tTabs"
-        result = sse_message(special_message)
+        result = SSE_Message(special_message)
         assert "data: Hello\ndata: World\ndata: With\tTabs\n\n" in result
         
         # Test unicode message
         unicode_message = "Hello 世界 🌍"
-        result = sse_message(unicode_message)
+        result = SSE_Message(unicode_message)
         assert f"data: {unicode_message}\n\n" in result
 
     def test_sse_import_validation(self):
         """Test that all SSE-related imports work correctly"""
         
         # Test direct imports
-        from robyn import sse_response, sse_message
+        from robyn import SSE_Response, SSE_Message
         from robyn.responses import StreamingResponse
         
-        assert callable(sse_response)
-        assert callable(sse_message)
+        assert callable(SSE_Response)
+        assert callable(SSE_Message)
         assert StreamingResponse is not None
         
         # Test that they work together
         def test_gen():
-            yield sse_message("Test import")
+            yield SSE_Message("Test import")
         
-        response = sse_response(test_gen())
+        response = SSE_Response(test_gen())
         assert response.media_type == 'text/event-stream'
 
     def test_sse_concurrent_generator_creation(self):
@@ -765,12 +765,12 @@ class TestSSEDebugging:
         responses = []
         errors = []
         
-        def create_sse_response(index):
+        def create_SSE_Response(index):
             try:
                 def gen():
                     yield f"data: Response {index}\n\n"
                 
-                response = sse_response(gen())
+                response = SSE_Response(gen())
                 responses.append((index, response))
             except Exception as e:
                 errors.append((index, e))
@@ -778,7 +778,7 @@ class TestSSEDebugging:
         # Create multiple threads
         threads = []
         for i in range(5):
-            thread = threading.Thread(target=create_sse_response, args=(i,))
+            thread = threading.Thread(target=create_SSE_Response, args=(i,))
             threads.append(thread)
             thread.start()
         
@@ -802,7 +802,7 @@ class TestSSEDebugging:
                 yield f"data: Message {i}\n\n"
         
         # Creating the response should not consume excessive memory
-        response = sse_response(large_generator())
+        response = SSE_Response(large_generator())
         assert response.media_type == 'text/event-stream'
         
         # The generator should be lazy (not pre-computed)
@@ -845,7 +845,7 @@ class TestSSEEdgeCases:
             return
             yield  # This will never be reached
         
-        response = sse_response(empty_generator())
+        response = SSE_Response(empty_generator())
         assert isinstance(response, StreamingResponse)
 
     def test_sse_generator_with_none_values(self):
@@ -855,39 +855,39 @@ class TestSSEEdgeCases:
             yield None  # This should be handled gracefully
             yield "data: second\n\n"
         
-        response = sse_response(none_generator())
+        response = SSE_Response(none_generator())
         assert isinstance(response, StreamingResponse)
 
     def test_sse_very_long_message(self):
         """Test SSE with very long messages"""
         long_message = "x" * 10000  # 10KB message
-        result = sse_message(long_message)
+        result = SSE_Message(long_message)
         
         assert f"data: {long_message}" in result
         assert result.endswith("\n\n")
 
-    def test_sse_message_with_colon_in_data(self):
-        """Test sse_message with colons in the data"""
+    def test_SSE_Message_with_colon_in_data(self):
+        """Test SSE_Message with colons in the data"""
         data_with_colon = "key: value, another: value"
-        result = sse_message(data_with_colon)
+        result = SSE_Message(data_with_colon)
         
         assert f"data: {data_with_colon}" in result
 
-    def test_sse_message_with_newlines_in_fields(self):
-        """Test sse_message with newlines in event/id fields"""
+    def test_SSE_Message_with_newlines_in_fields(self):
+        """Test SSE_Message with newlines in event/id fields"""
         # SSE spec says fields should not contain newlines, but we should handle it
-        result = sse_message("data", event="test\nevent", id="id\nwith\nnewlines")
+        result = SSE_Message("data", event="test\nevent", id="id\nwith\nnewlines")
         
         # The function should handle this gracefully
         assert "data: data" in result
 
-    def test_sse_response_zero_status_code(self):
+    def test_SSE_Response_zero_status_code(self):
         """Test SSE response with zero status code"""
         def simple_generator():
             yield "data: test\n\n"
         
         # Status code 0 might be normalized to default
-        response = sse_response(simple_generator(), status_code=0)
+        response = SSE_Response(simple_generator(), status_code=0)
         # The response should handle this - either keep 0 or default to 200
         assert response.status_code in [0, 200]
 
@@ -896,7 +896,7 @@ class TestSSEEdgeCases:
         def simple_generator():
             yield "data: test\n\n"
         
-        response = sse_response(simple_generator())
+        response = SSE_Response(simple_generator())
         
         # Should be able to modify headers
         response.headers.set("X-Modified", "yes")
@@ -908,7 +908,7 @@ class TestSSEEdgeCases:
     def test_sse_unicode_and_special_chars(self):
         """Test SSE with various unicode and special characters"""
         special_chars = "🚀 Special chars: \n\t\r\"'\\áéíóú"
-        result = sse_message(special_chars)
+        result = SSE_Message(special_chars)
         
         # Should handle unicode properly
         assert "🚀" in result
@@ -927,35 +927,35 @@ class TestSSEEdgeCases:
                 call_count += 1
                 yield f"data: {i}\n\n"
         
-        _response = sse_response(counting_generator())
+        _response = SSE_Response(counting_generator())
         
         # The generator shouldn't be consumed during response creation
         assert call_count == 0
 
-    def test_sse_message_numeric_values(self):
-        """Test sse_message with numeric values for fields"""
-        result = sse_message("test", id=123, retry=5000)
+    def test_SSE_Message_numeric_values(self):
+        """Test SSE_Message with numeric values for fields"""
+        result = SSE_Message("test", id=123, retry=5000)
         
         assert "id: 123" in result
         assert "retry: 5000" in result
 
-    def test_sse_response_headers_type_validation(self):
+    def test_SSE_Response_headers_type_validation(self):
         """Test that SSE response validates headers type"""
         def simple_generator():
             yield "data: test\n\n"
         
         # Should work with Headers object
         headers = Headers({"X-Test": "value"})
-        response = sse_response(simple_generator(), headers=headers)
+        response = SSE_Response(simple_generator(), headers=headers)
         assert response.headers.get("X-Test") == "value"
         
         # Should work with None
-        response2 = sse_response(simple_generator(), headers=None)
+        response2 = SSE_Response(simple_generator(), headers=None)
         assert response2.headers.get("Content-Type") == "text/event-stream"
 
-    def test_sse_message_empty_fields(self):
-        """Test sse_message with empty field values"""
-        result = sse_message("data", event="", id="", retry=None)
+    def test_SSE_Message_empty_fields(self):
+        """Test SSE_Message with empty field values"""
+        result = SSE_Message("data", event="", id="", retry=None)
         lines = result.split('\n')
         
         # Empty strings are falsy, so they won't appear in output
@@ -975,7 +975,7 @@ class TestSSEEdgeCases:
             yield "data: second\n\n"  # This should never be reached
         
         # The response should be created successfully
-        response = sse_response(error_generator())
+        response = SSE_Response(error_generator())
         assert isinstance(response, StreamingResponse)
         
         # The actual error would be handled at stream consumption time
@@ -988,18 +988,18 @@ class TestSSEEdgeCases:
             await asyncio.sleep(0.001)  # Very short sleep
             yield "data: end\n\n"
         
-        response = sse_response(async_gen_with_sleep())
+        response = SSE_Response(async_gen_with_sleep())
         assert isinstance(response, StreamingResponse)
 
-    def test_sse_message_formatting_consistency(self):
-        """Test that sse_message formatting is consistent"""
+    def test_SSE_Message_formatting_consistency(self):
+        """Test that SSE_Message formatting is consistent"""
         # Same message should always produce same output
-        msg1 = sse_message("test", event="e", id="1")
-        msg2 = sse_message("test", event="e", id="1")
+        msg1 = SSE_Message("test", event="e", id="1")
+        msg2 = SSE_Message("test", event="e", id="1")
         assert msg1 == msg2
         
         # Different order of parameters should produce same output
-        msg3 = sse_message("test", id="1", event="e")
+        msg3 = SSE_Message("test", id="1", event="e")
         assert msg1 == msg3
 
     def test_streaming_response_content_access(self):
@@ -1019,7 +1019,7 @@ class TestSSEEdgeCases:
             yield "data: test\n\n"
         
         # Headers should be case-insensitive for retrieval
-        response = sse_response(simple_generator())
+        response = SSE_Response(simple_generator())
         
         # These should all work (depending on Headers implementation)
         content_type = (response.headers.get("Content-Type") or 
@@ -1027,12 +1027,12 @@ class TestSSEEdgeCases:
                        response.headers.get("CONTENT-TYPE"))
         assert content_type == "text/event-stream"
 
-    def test_sse_response_immutability(self):
+    def test_SSE_Response_immutability(self):
         """Test that SSE response properties can be modified if needed"""
         def simple_generator():
             yield "data: test\n\n"
         
-        response = sse_response(simple_generator())
+        response = SSE_Response(simple_generator())
         original_status = response.status_code
         
         # Should be able to modify status code
@@ -1056,7 +1056,7 @@ class TestSSELiveEndpoints:
 
     def test_sse_basic_content(self):
         """Test SSE basic endpoint content"""
-        content = get_sse_response_quickly("/sse/basic")
+        content = get_SSE_Response_quickly("/sse/basic")
         data_lines = parse_sse_data(content)
         
         # Should have 3 test messages
@@ -1065,8 +1065,8 @@ class TestSSELiveEndpoints:
             assert f"Test message {i}" in data_lines
 
     def test_sse_formatted_content(self):
-        """Test SSE formatted endpoint with sse_message"""
-        content = get_sse_response_quickly("/sse/formatted")
+        """Test SSE formatted endpoint with SSE_Message"""
+        content = get_SSE_Response_quickly("/sse/formatted")
         
         # Should contain event and id fields
         assert "event: test" in content
@@ -1081,7 +1081,7 @@ class TestSSELiveEndpoints:
 
     def test_sse_json_content(self):
         """Test SSE JSON endpoint"""
-        content = get_sse_response_quickly("/sse/json")
+        content = get_SSE_Response_quickly("/sse/json")
         data_lines = parse_sse_data(content)
         
         assert len(data_lines) >= 3
@@ -1095,7 +1095,7 @@ class TestSSELiveEndpoints:
 
     def test_sse_named_events_content(self):
         """Test SSE named events endpoint"""
-        content = get_sse_response_quickly("/sse/named_events")
+        content = get_SSE_Response_quickly("/sse/named_events")
         
         # Should contain different event types
         assert "event: start" in content
@@ -1109,7 +1109,7 @@ class TestSSELiveEndpoints:
 
     def test_sse_async_endpoint(self):
         """Test async SSE endpoint"""
-        content = get_sse_response_quickly("/sse/async", timeout=5.0)
+        content = get_SSE_Response_quickly("/sse/async", timeout=5.0)
         data_lines = parse_sse_data(content)
         
         assert len(data_lines) >= 3
@@ -1118,7 +1118,7 @@ class TestSSELiveEndpoints:
 
     def test_sse_single_message(self):
         """Test SSE endpoint with single message"""
-        content = get_sse_response_quickly("/sse/single")
+        content = get_SSE_Response_quickly("/sse/single")
         data_lines = parse_sse_data(content)
         
         assert len(data_lines) == 1
@@ -1126,7 +1126,7 @@ class TestSSELiveEndpoints:
 
     def test_sse_empty_endpoint(self):
         """Test SSE endpoint that sends no messages"""
-        content = get_sse_response_quickly("/sse/empty", timeout=1.0)
+        content = get_SSE_Response_quickly("/sse/empty", timeout=1.0)
         data_lines = parse_sse_data(content)
         
         # Should have no data lines
@@ -1152,7 +1152,7 @@ class TestSSELiveEndpoints:
         import concurrent.futures
         
         def get_basic_sse():
-            content = get_sse_response_quickly("/sse/basic")
+            content = get_SSE_Response_quickly("/sse/basic")
             return parse_sse_data(content)
         
         # Make 3 concurrent requests
@@ -1183,7 +1183,7 @@ class TestSSELiveEndpoints:
     def test_sse_performance_timing(self):
         """Test SSE response timing"""
         start_time = time.time()
-        content = get_sse_response_quickly("/sse/basic")
+        content = get_SSE_Response_quickly("/sse/basic")
         end_time = time.time()
         
         # Should complete reasonably quickly
@@ -1213,7 +1213,7 @@ class TestSSELiveEndpoints:
 
     def test_sse_content_encoding(self):
         """Test SSE content encoding and format"""
-        content = get_sse_response_quickly("/sse/basic")
+        content = get_SSE_Response_quickly("/sse/basic")
         
         # Should be properly formatted SSE
         lines = content.split('\n')

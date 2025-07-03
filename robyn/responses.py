@@ -83,7 +83,7 @@ class StreamingResponse:
             self.headers.set("Access-Control-Allow-Headers", "Cache-Control")
 
 
-def sse_response(
+def SSE_Response(
     content: Union[Generator[str, None, None], AsyncGenerator[str, None]],
     status_code: Optional[int] = None,
     headers: Optional[Headers] = None,
@@ -104,7 +104,7 @@ def sse_response(
     )
 
 
-def sse_message(data: str, event: Optional[str] = None, id: Optional[str] = None, retry: Optional[int] = None) -> str:
+def SSE_Message(data: str, event: Optional[str] = None, id: Optional[str] = None, retry: Optional[int] = None) -> str:
     """
     Format a message according to the SSE specification.
     
