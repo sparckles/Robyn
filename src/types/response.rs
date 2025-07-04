@@ -407,10 +407,7 @@ impl FromPyObject<'_> for StreamingResponse {
 
         debug!(
             "Attribute check: content={}, status_code={}, headers={}, media_type={}",
-            has_content,
-            has_status_code,
-            has_headers,
-            has_media_type
+            has_content, has_status_code, has_headers, has_media_type
         );
 
         // For StreamingResponse, we need content and media_type specifically
@@ -515,8 +512,7 @@ impl FromPyObject<'_> for StreamingResponse {
         debug!("=== STREAMING RESPONSE EXTRACTION SUCCESS ===");
         debug!(
             "Successfully extracted StreamingResponse with status {} from type {}",
-            status_code,
-            type_name
+            status_code, type_name
         );
         Ok(StreamingResponse::new(status_code, headers, content))
     }
