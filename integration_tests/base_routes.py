@@ -1104,14 +1104,17 @@ def sse_named_events(request):
 
 
 @app.get("/sse/async")
-def sse_async(request):
-    """Async SSE endpoint (sync implementation)"""
-    def event_generator():
-        # Simple generator for testing
-        for i in range(3):
-            yield f"data: Async message {i}\n\n"
+async def sse_async(request):
+    """Async SSE endpoint with true async generator support"""
+    import asyncio
     
-    return SSE_Response(event_generator())
+    async def async_event_generator():
+        """True async generator for SSE events"""
+        for i in range(3):
+            await asyncio.sleep(0.1)  # Simulate async work
+            yield SSE_Message(f"Async message {i}", event="async", id=str(i))
+    
+    return SSE_Response(async_event_generator())
 
 
 @app.get("/sse/single")

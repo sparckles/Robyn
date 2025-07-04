@@ -1,3 +1,4 @@
+import asyncio
 import mimetypes
 import os
 from typing import AsyncGenerator, Generator, Optional, Union
@@ -61,6 +62,57 @@ def serve_file(file_path: str, file_name: Optional[str] = None) -> FileResponse:
     )
 
 
+class AsyncGeneratorWrapper:
+    """Optimized wrapper to convert async generator to sync generator for Rust interop"""
+    
+    def __init__(self, async_gen: AsyncGenerator[str, None]):
+        self.async_gen = async_gen
+        self._loop = None
+        self._values = []
+        self._index = 0
+        self._consumed = False
+    
+    def __iter__(self):
+        return self
+    
+    def __next__(self):
+        # If we haven't consumed the async generator yet, do it now
+        if not self._consumed:
+            self._consume_async_generator()
+        
+        # Return next value from pre-consumed list
+        if self._index < len(self._values):
+            value = self._values[self._index]
+            self._index += 1
+            return value
+        else:
+            raise StopIteration
+    
+    def _consume_async_generator(self):
+        """Consume the entire async generator upfront"""
+        try:
+            # Get or create event loop
+            try:
+                self._loop = asyncio.get_running_loop()
+            except RuntimeError:
+                self._loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(self._loop)
+            
+            # Consume all values from async generator
+            async def consume_all():
+                async for value in self.async_gen:
+                    self._values.append(value)
+            
+            # Run the consumption
+            self._loop.run_until_complete(consume_all())
+            self._consumed = True
+            
+        except Exception as e:
+            # On error, mark as consumed to avoid infinite loops
+            self._consumed = True
+            print(f"Error consuming async generator: {e}")
+
+
 class StreamingResponse:
     def __init__(
         self,
@@ -69,7 +121,15 @@ class StreamingResponse:
         headers: Optional[Headers] = None,
         media_type: str = "text/event-stream",
     ):
-        self.content = content
+        # Convert async generator to sync generator if needed
+        # The Rust implementation detects async generators but falls back to Python wrapper
+        if hasattr(content, '__anext__'):
+            # This is an async generator - wrap it with optimized wrapper
+            self.content = AsyncGeneratorWrapper(content)
+        else:
+            # This is a sync generator - use as is
+            self.content = content
+            
         self.status_code = status_code or 200
         self.headers = headers or Headers({})
         self.media_type = media_type
