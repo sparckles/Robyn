@@ -30,7 +30,7 @@ def test_env_population(env_file):
         del os.environ["ROBYN_PORT"]
     if "ROBYN_HOST" in os.environ:
         del os.environ["ROBYN_HOST"]
-    
+
     path = pathlib.Path(__file__).parent
     env_path = path / "robyn.env"
     load_vars(variables=parser(config_path=env_path))

@@ -55,16 +55,16 @@ def index(request):
 @app.get("/events")
 def stream_events(request):
     """Basic SSE endpoint that sends a message every second"""
-    
+
     def event_generator():
         """Generator function that yields SSE-formatted messages"""
         for i in range(10):
             yield SSE_Message(f"Message {i} - {time.strftime('%H:%M:%S')}", id=str(i))
             time.sleep(1)
-        
+
         # Send a final message
         yield SSE_Message("Stream ended", event="end")
-    
+
     return SSE_Response(event_generator())
 
 
@@ -72,26 +72,21 @@ def stream_events(request):
 def stream_json_events(request):
     """SSE endpoint that sends JSON data"""
     import json
-    
+
     def json_event_generator():
         """Generator that yields JSON data as SSE"""
         for i in range(5):
-            data = {
-                "id": i,
-                "message": f"JSON message {i}",
-                "timestamp": time.time(),
-                "type": "notification"
-            }
+            data = {"id": i, "message": f"JSON message {i}", "timestamp": time.time(), "type": "notification"}
             yield SSE_Message(json.dumps(data), event="notification", id=str(i))
             time.sleep(2)
-    
+
     return SSE_Response(json_event_generator())
 
 
 @app.get("/events/named")
 def stream_named_events(request):
     """SSE endpoint with named events"""
-    
+
     def named_event_generator():
         """Generator that yields named SSE events"""
         events = [
@@ -99,34 +94,34 @@ def stream_named_events(request):
             ("message", "Hello everyone!"),
             ("user_left", "Bob left the chat"),
             ("message", "How is everyone doing?"),
-            ("user_joined", "Charlie joined the chat")
+            ("user_joined", "Charlie joined the chat"),
         ]
-        
+
         for i, (event_type, message) in enumerate(events):
             yield SSE_Message(message, event=event_type, id=str(i))
             time.sleep(1.5)
-    
+
     return SSE_Response(named_event_generator())
 
 
 @app.get("/events/async")
 async def stream_async_events(request):
     """Async SSE endpoint demonstrating async generators"""
-    
+
     async def async_event_generator():
         """Async generator for SSE events"""
         for i in range(8):
             # Simulate async work
             await asyncio.sleep(0.5)
             yield SSE_Message(f"Async message {i} - {time.strftime('%H:%M:%S')}", event="async", id=str(i))
-    
+
     return SSE_Response(async_event_generator())
 
 
 @app.get("/events/heartbeat")
 def stream_heartbeat(request):
     """SSE endpoint that sends heartbeat messages"""
-    
+
     def heartbeat_generator():
         """Generator that sends heartbeat pings"""
         counter = 0
@@ -134,9 +129,9 @@ def stream_heartbeat(request):
             yield SSE_Message(f"heartbeat {counter}", event="heartbeat", id=str(counter))
             counter += 1
             time.sleep(0.5)
-        
+
         yield SSE_Message("heartbeat ended", event="end")
-    
+
     return SSE_Response(heartbeat_generator())
 
 

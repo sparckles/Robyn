@@ -76,7 +76,7 @@ class Router(BaseRouter):
     ) -> Union[Response, StreamingResponse]:
         if isinstance(res, Response):
             return res
-        
+
         if isinstance(res, StreamingResponse):
             return res
 

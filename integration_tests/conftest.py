@@ -43,12 +43,12 @@ def start_server(domain: str, port: int, is_dev: bool = False) -> subprocess.Pop
     command = ["python3", base_routes]
     if is_dev:
         command.append("--dev")
-    
+
     # Ensure environment variables are properly set for the subprocess
     env = os.environ.copy()
     env["ROBYN_HOST"] = domain
     env["ROBYN_PORT"] = str(port)
-    
+
     process = spawn_process(command)
 
     # Wait for the server to be reachable
@@ -66,7 +66,7 @@ def start_server(domain: str, port: int, is_dev: bool = False) -> subprocess.Pop
             break  # We were able to reach the server, exit the loop
         except Exception:
             time.sleep(0.5)  # Longer delay before retrying
-    
+
     # Give the server a moment to fully initialize after accepting connections
     time.sleep(1)
     return process

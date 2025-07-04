@@ -1060,21 +1060,26 @@ def create_item(request, body: CreateItemBody, query: CreateItemQueryParamsParam
 
 # ===== Server-Sent Events (SSE) Routes =====
 
+
 @app.get("/sse/basic")
 def sse_basic(request):
     """Basic SSE endpoint that sends 3 messages"""
+
     def event_generator():
         for i in range(3):
             yield f"data: Test message {i}\n\n"
+
     return SSE_Response(event_generator())
 
 
 @app.get("/sse/formatted")
 def sse_formatted(request):
     """SSE endpoint using SSE_Message formatter"""
+
     def event_generator():
         for i in range(3):
             yield SSE_Message(f"Formatted message {i}", event="test", id=str(i))
+
     return SSE_Response(event_generator())
 
 
@@ -1082,24 +1087,24 @@ def sse_formatted(request):
 def sse_json(request):
     """SSE endpoint that sends JSON data"""
     import json
+
     def event_generator():
         for i in range(3):
             data = {"id": i, "message": f"JSON message {i}", "type": "test"}
             yield f"data: {json.dumps(data)}\n\n"
+
     return SSE_Response(event_generator())
 
 
 @app.get("/sse/named_events")
 def sse_named_events(request):
     """SSE endpoint with different event types"""
+
     def event_generator():
-        events = [
-            ("start", "Test started"),
-            ("progress", "Test in progress"),
-            ("end", "Test completed")
-        ]
+        events = [("start", "Test started"), ("progress", "Test in progress"), ("end", "Test completed")]
         for event_type, message in events:
             yield SSE_Message(message, event=event_type)
+
     return SSE_Response(event_generator())
 
 
@@ -1107,30 +1112,34 @@ def sse_named_events(request):
 async def sse_async(request):
     """Async SSE endpoint with true async generator support"""
     import asyncio
-    
+
     async def async_event_generator():
         """True async generator for SSE events"""
         for i in range(3):
             await asyncio.sleep(0.1)  # Simulate async work
             yield SSE_Message(f"Async message {i}", event="async", id=str(i))
-    
+
     return SSE_Response(async_event_generator())
 
 
 @app.get("/sse/single")
 def sse_single(request):
     """SSE endpoint that sends a single message and closes"""
+
     def event_generator():
         yield "data: Single message\n\n"
+
     return SSE_Response(event_generator())
 
 
 @app.get("/sse/empty")
 def sse_empty(request):
     """SSE endpoint that sends no messages"""
+
     def event_generator():
         return
         yield  # This will never be reached
+
     return SSE_Response(event_generator())
 
 
@@ -1138,16 +1147,20 @@ def sse_empty(request):
 def sse_with_headers(request):
     """SSE endpoint with custom headers"""
     headers = Headers({"X-Custom-Header": "custom-value"})
+
     def event_generator():
         yield "data: Message with custom headers\n\n"
+
     return SSE_Response(event_generator(), headers=headers)
 
 
 @app.get("/sse/status_code")
 def sse_status_code(request):
     """SSE endpoint with custom status code"""
+
     def event_generator():
         yield "data: Message with custom status\n\n"
+
     return SSE_Response(event_generator(), status_code=201)
 
 
@@ -1173,7 +1186,7 @@ def main():
             return None
 
     app.configure_authentication(BasicAuthHandler(token_getter=BearerGetter()))
-    
+
     # Read port from environment variable if set, otherwise default to 8080
     port = int(os.getenv("ROBYN_PORT", "8080"))
     app.start(port=port, _check_port=False)

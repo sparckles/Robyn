@@ -28,4 +28,3 @@ def test_global_index_request(global_session):
     res = requests.get(f"{BASE_URL}")
     assert os.getenv("ROBYN_HOST") == f"{host}"
     assert res.status_code == 200
-
