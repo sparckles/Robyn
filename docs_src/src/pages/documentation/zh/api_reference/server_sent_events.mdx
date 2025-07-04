@@ -17,10 +17,15 @@ export const description =
 - 仪表板更新
 - 日志流式传输
 
+## 如何工作？
+
 <Row>
 <Col>
 
-蝙蝠侠可以使用 `SSE_Response` 和 `SSE_Message` 类创建服务器发送事件流：
+蝙蝠侠可以使用 `SSE_Response` 和 `SSE_Message` 类创建服务器发送事件流。他可以根据需要使用常规生成器和异步生成器：
+
+- **常规生成器**：非常适合简单的数据流或使用同步操作时
+- **异步生成器**：当蝙蝠侠需要在流中执行异步操作（如数据库查询或 API 调用）时的理想选择
 
 </Col>
 <Col sticky>
@@ -67,6 +72,116 @@ def stream_json_events(request):
             time.sleep(2)
     
     return SSE_Response(json_event_generator())
+```
+
+```python {{ title: '异步生成器流' }}
+from robyn import Robyn, SSE_Response, SSE_Message
+import asyncio
+import time
+
+app = Robyn(__file__)
+
+@app.get("/events/async")
+async def stream_async_events(request):
+    async def async_event_generator():
+        for i in range(8):
+            # 模拟异步工作，如数据库调用
+            await asyncio.sleep(0.5)
+            yield SSE_Message(
+                f"异步消息 {i} - {time.strftime('%H:%M:%S')}", 
+                event="async", 
+                id=str(i)
+            )
+    
+    return SSE_Response(async_event_generator())
+```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
+## 异步生成器
+
+<Row>
+<Col>
+
+当蝙蝠侠需要在他的 SSE 流中执行异步操作时（如从数据库获取数据或进行 API 调用），他使用带有 `async def` 和 `await` 的异步生成器。这使他能够并发处理多个流，而不会阻塞其他操作。
+
+关键区别是为生成器函数使用 `async def`，并在生成器内部为异步操作使用 `await`：
+
+</Col>
+
+<Col sticky>
+
+<CodeGroup title="高级异步 SSE" tag="GET" label="/events/database">
+
+```python {{ title: '数据库流' }}
+from robyn import Robyn, SSE_Response, SSE_Message
+import asyncio
+import json
+import time
+
+app = Robyn(__file__)
+
+@app.get("/events/database")
+async def stream_database_events(request):
+    async def database_event_generator():
+        for i in range(10):
+            # 模拟异步数据库查询
+            await asyncio.sleep(0.3)
+            
+            # 模拟从数据库获取数据
+            data = {
+                "crime_id": i,
+                "location": f"哥谭市第{i}区",
+                "severity": "高" if i % 2 == 0 else "低",
+                "timestamp": time.time()
+            }
+            
+            yield SSE_Message(
+                json.dumps(data),
+                event="crime_alert",
+                id=str(i)
+            )
+    
+    return SSE_Response(database_event_generator())
+```
+
+```python {{ title: 'API 集成流' }}
+from robyn import Robyn, SSE_Response, SSE_Message
+import asyncio
+import aiohttp
+import json
+
+app = Robyn(__file__)
+
+@app.get("/events/api")
+async def stream_api_events(request):
+    async def api_event_generator():
+        async with aiohttp.ClientSession() as session:
+            for i in range(5):
+                try:
+                    # 进行异步 API 调用
+                    async with session.get(f"https://api.example.com/data/{i}") as response:
+                        data = await response.json()
+                        
+                        yield SSE_Message(
+                            json.dumps(data),
+                            event="api_update",
+                            id=str(i)
+                        )
+                except Exception as e:
+                    yield SSE_Message(
+                        f"获取数据错误: {str(e)}",
+                        event="error",
+                        id=f"error_{i}"
+                    )
+                
+                await asyncio.sleep(1)
+    
+    return SSE_Response(api_event_generator())
 ```
 
 </CodeGroup>
