@@ -6,8 +6,6 @@ import threading
 import time
 import concurrent.futures
 from typing import List, Dict, Any
-from unittest.mock import patch
-import re
 
 import pytest
 import requests
@@ -317,7 +315,6 @@ class TestServerSentEvents:
 
     def test_sse_concurrent_connections(self):
         """Test multiple concurrent SSE connections"""
-        import concurrent.futures
         
         def get_events():
             return get_sse_stream("/sse/basic")
@@ -759,8 +756,6 @@ class TestSSEDebugging:
 
     def test_sse_concurrent_generator_creation(self):
         """Test creating multiple SSE responses concurrently"""
-        import threading
-        import time
         
         responses = []
         errors = []
@@ -1149,7 +1144,6 @@ class TestSSELiveEndpoints:
 
     def test_sse_concurrent_requests(self):
         """Test multiple concurrent SSE requests"""
-        import concurrent.futures
         
         def get_basic_sse():
             content = get_SSE_Response_quickly("/sse/basic")
