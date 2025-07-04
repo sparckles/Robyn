@@ -1,10 +1,11 @@
 import json
+
 import pytest
 import requests
 from requests import Response
 
-from integration_tests.helpers.http_methods_helpers import get, BASE_URL
-from robyn.responses import SSE_Response, SSE_Message, StreamingResponse
+from integration_tests.helpers.http_methods_helpers import BASE_URL, get
+from robyn.responses import SSE_Message, SSE_Response, StreamingResponse
 
 
 @pytest.mark.benchmark

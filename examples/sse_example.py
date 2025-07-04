@@ -6,9 +6,10 @@ similar to FastAPI's implementation. SSE allows real-time server-to-client
 communication over a single HTTP connection.
 """
 
-import time
 import asyncio
-from robyn import Robyn, SSE_Response, SSE_Message, html
+import time
+
+from robyn import Robyn, SSE_Message, SSE_Response, html
 
 app = Robyn(__file__)
 
