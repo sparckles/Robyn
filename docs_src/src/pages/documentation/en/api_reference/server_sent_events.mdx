@@ -22,7 +22,10 @@ Server-Sent Events are ideal for:
 <Row>
 <Col>
 
-Batman can create Server-Sent Events streams by using the `SSE_Response` and `SSE_Message` classes:
+Batman can create Server-Sent Events streams by using the `SSE_Response` and `SSE_Message` classes. He can use both regular generators and async generators depending on his needs:
+
+- **Regular generators**: Perfect for simple data streams or when working with synchronous operations
+- **Async generators**: Ideal when Batman needs to perform async operations like database queries or API calls within the stream
 
 </Col>
 
@@ -68,6 +71,116 @@ def stream_json_events(request):
             )
             time.sleep(2)
     return SSE_Response(json_event_generator())
+```
+
+```python {{ title: 'Async Generator Stream' }}
+from robyn import Robyn, SSE_Response, SSE_Message
+import asyncio
+import time
+
+app = Robyn(__file__)
+
+@app.get("/events/async")
+async def stream_async_events(request):
+    async def async_event_generator():
+        for i in range(8):
+            # Simulate async work like database calls
+            await asyncio.sleep(0.5)
+            yield SSE_Message(
+                f"Async message {i} - {time.strftime('%H:%M:%S')}", 
+                event="async", 
+                id=str(i)
+            )
+    
+    return SSE_Response(async_event_generator())
+```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
+## Async Generators
+
+<Row>
+<Col>
+
+When Batman needs to perform async operations during his SSE streams - like fetching data from databases or making API calls - he uses async generators with `async def` and `await`. This allows him to handle multiple streams concurrently without blocking other operations.
+
+The key difference is using `async def` for the generator function and `await` for async operations inside the generator:
+
+</Col>
+
+<Col sticky>
+
+<CodeGroup title="Advanced Async SSE" tag="GET" label="/events/database">
+
+```python {{ title: 'Database Stream' }}
+from robyn import Robyn, SSE_Response, SSE_Message
+import asyncio
+import json
+import time
+
+app = Robyn(__file__)
+
+@app.get("/events/database")
+async def stream_database_events(request):
+    async def database_event_generator():
+        for i in range(10):
+            # Simulate async database query
+            await asyncio.sleep(0.3)
+            
+            # Simulate fetching data from database
+            data = {
+                "crime_id": i,
+                "location": f"Gotham District {i}",
+                "severity": "high" if i % 2 == 0 else "low",
+                "timestamp": time.time()
+            }
+            
+            yield SSE_Message(
+                json.dumps(data),
+                event="crime_alert",
+                id=str(i)
+            )
+    
+    return SSE_Response(database_event_generator())
+```
+
+```python {{ title: 'API Integration Stream' }}
+from robyn import Robyn, SSE_Response, SSE_Message
+import asyncio
+import aiohttp
+import json
+
+app = Robyn(__file__)
+
+@app.get("/events/api")
+async def stream_api_events(request):
+    async def api_event_generator():
+        async with aiohttp.ClientSession() as session:
+            for i in range(5):
+                try:
+                    # Make async API call
+                    async with session.get(f"https://api.example.com/data/{i}") as response:
+                        data = await response.json()
+                        
+                        yield SSE_Message(
+                            json.dumps(data),
+                            event="api_update",
+                            id=str(i)
+                        )
+                except Exception as e:
+                    yield SSE_Message(
+                        f"Error fetching data: {str(e)}",
+                        event="error",
+                        id=f"error_{i}"
+                    )
+                
+                await asyncio.sleep(1)
+    
+    return SSE_Response(api_event_generator())
 ```
 
 </CodeGroup>
