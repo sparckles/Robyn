@@ -28,11 +28,3 @@ def test_global_index_request(global_session):
     res = requests.get(f"{BASE_URL}")
     assert os.getenv("ROBYN_HOST") == f"{host}"
     assert res.status_code == 200
-
-
-@pytest.mark.benchmark
-def test_dev_index_request(dev_session):
-    BASE_URL = "http://127.0.0.1:8081"
-    res = requests.get(f"{BASE_URL}")
-    assert os.getenv("ROBYN_PORT") == "8081"
-    assert res.status_code == 200

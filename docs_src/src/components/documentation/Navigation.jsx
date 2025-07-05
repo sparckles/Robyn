@@ -277,6 +277,10 @@ export const navigation = [
         title: 'Websockets',
       },
       {
+        href: '/documentation/en/api_reference/server_sent_events',
+        title: 'Server-Sent Events',
+      },
+      {
         href: '/documentation/en/api_reference/exceptions',
         title: 'Exceptions',
       },
@@ -493,6 +497,7 @@ const translations = {
       'File Uploads': '文件上传',
       'Form Data': '表单数据',
       'Websockets': 'WebSocket',
+      'Server-Sent Events': '服务器发送事件',
       'Exceptions': '异常处理',
       'Scaling the Application': '多核扩展',
       'Advanced Features': '高级特性',

@@ -37,13 +37,13 @@ def _generate_schema_from_function(func: Callable) -> Dict[str, Any]:
 
         # Try to infer type from annotation
         if param.annotation != inspect.Parameter.empty:
-            if param.annotation == str:
+            if param.annotation is str:
                 param_schema["type"] = "string"
-            elif param.annotation == int:
+            elif param.annotation is int:
                 param_schema["type"] = "integer"
-            elif param.annotation == float:
+            elif param.annotation is float:
                 param_schema["type"] = "number"
-            elif param.annotation == bool:
+            elif param.annotation is bool:
                 param_schema["type"] = "boolean"
             elif hasattr(param.annotation, "__origin__"):
                 # Handle generic types like List, Dict, etc.

@@ -69,6 +69,11 @@ const guides = [
     description: 'Learn how to use Websockets in Robyn.',
   },
   {
+    href: '/documentation/en/api_reference/server_sent_events',
+    name: 'Server-Sent Events',
+    description: 'Learn how to implement Server-Sent Events for real-time communication.',
+  },
+  {
     href: '/documentation/en/api_reference/exceptions',
     name: 'Exceptions',
     description: 'Learn how to handle exceptions in Robyn.',
