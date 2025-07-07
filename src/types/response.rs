@@ -1,6 +1,6 @@
 use actix_http::{body::BoxBody, StatusCode};
 use actix_web::{web::Bytes, HttpRequest, HttpResponse, HttpResponseBuilder, Responder};
-use futures::Stream;
+use futures::{Stream, StreamExt};
 use log::debug;
 use pyo3::{
     exceptions::PyIOError,
@@ -8,7 +8,8 @@ use pyo3::{
     types::{PyBytes, PyDict},
     Bound, IntoPyObject,
 };
-use std::pin::Pin;
+use std::{pin::Pin, sync::Arc, time::Duration};
+use tokio;
 
 use crate::io_helpers::{apply_hashmap_headers, read_file};
 use crate::types::{check_body_type, check_description_type, get_description_from_pyobject};
@@ -96,13 +97,18 @@ impl Responder for StreamingResponse {
 
         apply_hashmap_headers(&mut response_builder, &self.headers);
 
-        // Force Connection: keep-alive for streaming responses
-        response_builder.append_header(("Connection", "keep-alive"));
+        // Optimized headers for SSE streaming
+        response_builder
+            .append_header(("Connection", "keep-alive"))
+            .append_header(("X-Accel-Buffering", "no")) // Disable nginx buffering
+            .append_header(("Cache-Control", "no-cache, no-store, must-revalidate"))
+            .append_header(("Pragma", "no-cache"))
+            .append_header(("Expires", "0"));
 
-        // Create the stream from the Python generator
+        // Create the optimized stream from the Python generator
         let stream = create_python_stream(self.content_generator);
 
-        // Build streaming response
+        // Build streaming response with optimized settings
         response_builder.streaming(stream)
     }
 }
@@ -111,46 +117,62 @@ fn create_python_stream(
     generator: PyObject,
 ) -> Pin<Box<dyn Stream<Item = Result<Bytes, actix_web::Error>> + Send>> {
     Box::pin(futures::stream::unfold(generator, |generator| async move {
-        Python::with_gil(|py| {
-            let gen = generator.bind(py);
+        // Use spawn_blocking to execute the Python generator call in a separate thread
+        // This prevents blocking the async runtime when the generator contains blocking operations
+        match tokio::task::spawn_blocking(move || {
+            Python::with_gil(|py| {
+                let gen = generator.bind(py);
 
-            // Check if this is an async generator first
-            let is_async_gen = gen.hasattr("__anext__").unwrap_or(false);
+                // Check if this is an async generator first
+                let is_async_gen = gen.hasattr("__anext__").unwrap_or(false);
 
-            if is_async_gen {
-                // For async generators, we expect them to be converted to sync generators in Python
-                debug!("Detected async generator - this should be handled in Python layer");
-                None
-            } else {
-                // Try to get the next value from the generator (sync)
-                match gen.call_method0("__next__") {
-                    Ok(value) => {
-                        match value.extract::<String>() {
-                            Ok(string_value) => {
-                                debug!("Generator yielded: {}", string_value);
-                                Some((Ok(Bytes::from(string_value)), generator))
-                            }
-                            Err(extract_err) => {
-                                debug!(
-                                    "Failed to extract string from generator value: {}",
-                                    extract_err
-                                );
-                                None // End of stream
+                if is_async_gen {
+                    // For async generators, we expect them to be converted to sync generators in Python
+                    debug!("Detected async generator - this should be handled in Python layer");
+                    None
+                } else {
+                    // Try to get the next value from the generator (sync)
+                    match gen.call_method0("__next__") {
+                        Ok(value) => {
+                            match value.extract::<String>() {
+                                Ok(string_value) => {
+                                    debug!("Generator yielded: {}", string_value);
+                                    Some((string_value, generator))
+                                }
+                                Err(extract_err) => {
+                                    debug!(
+                                        "Failed to extract string from generator value: {}",
+                                        extract_err
+                                    );
+                                    None // End of stream
+                                }
                             }
                         }
-                    }
-                    Err(call_err) => {
-                        // Check if this is a StopIteration (normal end) or actual error
-                        if call_err.is_instance_of::<pyo3::exceptions::PyStopIteration>(py) {
-                            debug!("Generator exhausted (StopIteration)");
-                        } else {
-                            debug!("Generator call error: {}", call_err);
+                        Err(call_err) => {
+                            // Check if this is a StopIteration (normal end) or actual error
+                            if call_err.is_instance_of::<pyo3::exceptions::PyStopIteration>(py) {
+                                debug!("Generator exhausted (StopIteration)");
+                            } else {
+                                debug!("Generator call error: {}", call_err);
+                            }
+                            None // End of stream
                         }
-                        None // End of stream
                     }
                 }
-            }
+            })
         })
+        .await
+        {
+            Ok(Some((string_value, generator))) => Some((Ok(Bytes::from(string_value)), generator)),
+            Ok(None) => None,
+            Err(join_err) => {
+                debug!(
+                    "Failed to execute generator call in spawn_blocking: {}",
+                    join_err
+                );
+                None
+            }
+        }
     }))
 }
 

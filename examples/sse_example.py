@@ -9,7 +9,7 @@ communication over a single HTTP connection.
 import asyncio
 import time
 
-from robyn import Robyn, SSE_Message, SSE_Response, html
+from robyn import Robyn, SSEMessage, SSEResponse, html
 
 app = Robyn(__file__)
 
@@ -59,13 +59,13 @@ def stream_events(request):
     def event_generator():
         """Generator function that yields SSE-formatted messages"""
         for i in range(10):
-            yield SSE_Message(f"Message {i} - {time.strftime('%H:%M:%S')}", id=str(i))
+            yield SSEMessage(f"Message {i} - {time.strftime('%H:%M:%S')}", id=str(i))
             time.sleep(1)
 
         # Send a final message
-        yield SSE_Message("Stream ended", event="end")
+        yield SSEMessage("Stream ended", event="end")
 
-    return SSE_Response(event_generator())
+    return SSEResponse(event_generator())
 
 
 @app.get("/events/json")
@@ -77,10 +77,10 @@ def stream_json_events(request):
         """Generator that yields JSON data as SSE"""
         for i in range(5):
             data = {"id": i, "message": f"JSON message {i}", "timestamp": time.time(), "type": "notification"}
-            yield SSE_Message(json.dumps(data), event="notification", id=str(i))
+            yield SSEMessage(json.dumps(data), event="notification", id=str(i))
             time.sleep(2)
 
-    return SSE_Response(json_event_generator())
+    return SSEResponse(json_event_generator())
 
 
 @app.get("/events/named")
@@ -98,10 +98,10 @@ def stream_named_events(request):
         ]
 
         for i, (event_type, message) in enumerate(events):
-            yield SSE_Message(message, event=event_type, id=str(i))
+            yield SSEMessage(message, event=event_type, id=str(i))
             time.sleep(1.5)
 
-    return SSE_Response(named_event_generator())
+    return SSEResponse(named_event_generator())
 
 
 @app.get("/events/async")
@@ -113,9 +113,9 @@ async def stream_async_events(request):
         for i in range(8):
             # Simulate async work
             await asyncio.sleep(0.5)
-            yield SSE_Message(f"Async message {i} - {time.strftime('%H:%M:%S')}", event="async", id=str(i))
+            yield SSEMessage(f"Async message {i} - {time.strftime('%H:%M:%S')}", event="async", id=str(i))
 
-    return SSE_Response(async_event_generator())
+    return SSEResponse(async_event_generator())
 
 
 @app.get("/events/heartbeat")
@@ -126,13 +126,13 @@ def stream_heartbeat(request):
         """Generator that sends heartbeat pings"""
         counter = 0
         while counter < 20:  # Send 20 heartbeats
-            yield SSE_Message(f"heartbeat {counter}", event="heartbeat", id=str(counter))
+            yield SSEMessage(f"heartbeat {counter}", event="heartbeat", id=str(counter))
             counter += 1
             time.sleep(0.5)
 
-        yield SSE_Message("heartbeat ended", event="end")
+        yield SSEMessage("heartbeat ended", event="end")
 
-    return SSE_Response(heartbeat_generator())
+    return SSEResponse(heartbeat_generator())
 
 
 @app.get("/help")

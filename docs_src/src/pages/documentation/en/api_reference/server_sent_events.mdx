@@ -22,7 +22,7 @@ Server-Sent Events are ideal for:
 <Row>
 <Col>
 
-Batman can create Server-Sent Events streams by using the `SSE_Response` and `SSE_Message` classes. He can use both regular generators and async generators depending on his needs:
+Batman can create Server-Sent Events streams by using the `SSEResponse` and `SSEMessage` classes. He can use both regular generators and async generators depending on his needs:
 
 - **Regular generators**: Perfect for simple data streams or when working with synchronous operations
 - **Async generators**: Ideal when Batman needs to perform async operations like database queries or API calls within the stream
@@ -34,7 +34,7 @@ Batman can create Server-Sent Events streams by using the `SSE_Response` and `SS
 <CodeGroup title="SSE Response" tag="GET" label="/events">
 
 ```python {{ title: 'Basic SSE Stream' }}
-from robyn import Robyn, SSE_Response, SSE_Message
+from robyn import Robyn, SSEResponse, SSEMessage
 import time
 
 app = Robyn(__file__)
@@ -43,13 +43,13 @@ app = Robyn(__file__)
 def stream_events(request):
     def event_generator():
         for i in range(10):
-            yield SSE_Message(f"Event {i}", id=str(i))
+            yield SSEMessage(f"Event {i}", id=str(i))
             time.sleep(1)
     
-    return SSE_Response(event_generator())
+    return SSEResponse(event_generator())
 ```
 ```python {{ title: 'JSON Data Stream' }}
-from robyn import Robyn, SSE_Response, SSE_Message
+from robyn import Robyn, SSEResponse, SSEMessage
 import json
 import time
 
@@ -64,17 +64,17 @@ def stream_json_events(request):
                 "message": f"Update {i}",
                 "timestamp": time.time()
             }
-            yield SSE_Message(
+            yield SSEMessage(
                 json.dumps(data), 
                 event="update", 
                 id=str(i)
             )
             time.sleep(2)
-    return SSE_Response(json_event_generator())
+    return SSEResponse(json_event_generator())
 ```
 
 ```python {{ title: 'Async Generator Stream' }}
-from robyn import Robyn, SSE_Response, SSE_Message
+from robyn import Robyn, SSEResponse, SSEMessage
 import asyncio
 import time
 
@@ -86,13 +86,13 @@ async def stream_async_events(request):
         for i in range(8):
             # Simulate async work like database calls
             await asyncio.sleep(0.5)
-            yield SSE_Message(
+            yield SSEMessage(
                 f"Async message {i} - {time.strftime('%H:%M:%S')}", 
                 event="async", 
                 id=str(i)
             )
     
-    return SSE_Response(async_event_generator())
+    return SSEResponse(async_event_generator())
 ```
 
 </CodeGroup>
@@ -117,7 +117,7 @@ The key difference is using `async def` for the generator function and `await` f
 <CodeGroup title="Advanced Async SSE" tag="GET" label="/events/database">
 
 ```python {{ title: 'Database Stream' }}
-from robyn import Robyn, SSE_Response, SSE_Message
+from robyn import Robyn, SSEResponse, SSEMessage
 import asyncio
 import json
 import time
@@ -139,17 +139,17 @@ async def stream_database_events(request):
                 "timestamp": time.time()
             }
             
-            yield SSE_Message(
+            yield SSEMessage(
                 json.dumps(data),
                 event="crime_alert",
                 id=str(i)
             )
     
-    return SSE_Response(database_event_generator())
+    return SSEResponse(database_event_generator())
 ```
 
 ```python {{ title: 'API Integration Stream' }}
-from robyn import Robyn, SSE_Response, SSE_Message
+from robyn import Robyn, SSEResponse, SSEMessage
 import asyncio
 import aiohttp
 import json
@@ -166,13 +166,13 @@ async def stream_api_events(request):
                     async with session.get(f"https://api.example.com/data/{i}") as response:
                         data = await response.json()
                         
-                        yield SSE_Message(
+                        yield SSEMessage(
                             json.dumps(data),
                             event="api_update",
                             id=str(i)
                         )
                 except Exception as e:
-                    yield SSE_Message(
+                    yield SSEMessage(
                         f"Error fetching data: {str(e)}",
                         event="error",
                         id=f"error_{i}"
@@ -180,7 +180,7 @@ async def stream_api_events(request):
                 
                 await asyncio.sleep(1)
     
-    return SSE_Response(api_event_generator())
+    return SSEResponse(api_event_generator())
 ```
 
 </CodeGroup>
