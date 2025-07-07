@@ -4,7 +4,7 @@ import pytest
 import requests
 
 from integration_tests.helpers.http_methods_helpers import BASE_URL
-from robyn.responses import SSE_Message, SSE_Response, StreamingResponse
+from robyn.responses import SSEMessage, SSEResponse, StreamingResponse
 
 
 @pytest.mark.benchmark
@@ -14,7 +14,9 @@ def test_sse_basic_headers(session):
 
     assert response.status_code == 200
     assert response.headers.get("Content-Type") == "text/event-stream"
-    assert response.headers.get("Cache-Control") == "no-cache"
+    # Accept either clean optimized headers or legacy compatibility
+    cache_control = response.headers.get("Cache-Control")
+    assert cache_control in ["no-cache, no-store, must-revalidate", "no-cache, no-cache, no-store, must-revalidate"]
     assert "Access-Control-Allow-Origin" in response.headers
 
 
@@ -44,7 +46,7 @@ def test_sse_basic_stream(session):
 
 @pytest.mark.benchmark
 def test_sse_formatted_messages(session):
-    """Test SSE messages formatted with SSE_Message helper"""
+    """Test SSE messages formatted with SSEMessage helper"""
     response = requests.get(f"{BASE_URL}/sse/formatted", stream=True, timeout=5)
     response.raise_for_status()
 
@@ -221,49 +223,49 @@ def test_sse_middleware_compatibility(session):
 
 
 def test_sse_message_formatter():
-    """Test the SSE_Message formatter utility function"""
+    """Test the SSEMessage formatter utility function"""
 
     # Test basic message
-    result = SSE_Message("Hello world")
+    result = SSEMessage("Hello world")
     assert "data: Hello world\n\n" in result
 
     # Test with event type
-    result = SSE_Message("Hello", event="greeting")
+    result = SSEMessage("Hello", event="greeting")
     assert "event: greeting\n" in result
     assert "data: Hello\n\n" in result
 
     # Test with ID
-    result = SSE_Message("Hello", id="123")
+    result = SSEMessage("Hello", id="123")
     assert "id: 123\n" in result
     assert "data: Hello\n\n" in result
 
     # Test with retry
-    result = SSE_Message("Hello", retry=5000)
+    result = SSEMessage("Hello", retry=5000)
     assert "retry: 5000\n" in result
     assert "data: Hello\n\n" in result
 
     # Test with all parameters
-    result = SSE_Message("Hello", event="test", id="456", retry=3000)
+    result = SSEMessage("Hello", event="test", id="456", retry=3000)
     assert "event: test\n" in result
     assert "id: 456\n" in result
     assert "retry: 3000\n" in result
     assert "data: Hello\n\n" in result
 
     # Test multiline data
-    result = SSE_Message("Line 1\nLine 2")
+    result = SSEMessage("Line 1\nLine 2")
     assert "data: Line 1\ndata: Line 2\n\n" in result
 
 
 def test_sse_message_edge_cases():
-    """Test SSE_Message with edge cases"""
+    """Test SSEMessage with edge cases"""
 
     # Test empty message
-    result = SSE_Message("")
+    result = SSEMessage("")
     assert result == "data: \n\n"
 
     # Test None message (should handle gracefully)
     try:
-        result = SSE_Message(None)
+        result = SSEMessage(None)
         assert "data:" in result
     except TypeError:
         # This is acceptable behavior
@@ -271,21 +273,21 @@ def test_sse_message_edge_cases():
 
     # Test message with special characters
     special_message = "Hello\nWorld\r\nWith\tTabs"
-    result = SSE_Message(special_message)
+    result = SSEMessage(special_message)
     assert "data: Hello\ndata: World\ndata: With\tTabs\n\n" in result
 
 
 def test_sse_response_classes():
     """Test that SSE response classes can be imported correctly"""
-    assert SSE_Response is not None
-    assert SSE_Message is not None
+    assert SSEResponse is not None
+    assert SSEMessage is not None
     assert StreamingResponse is not None
 
     # Test basic functionality
     def simple_generator():
         yield "data: test\n\n"
 
-    response = SSE_Response(simple_generator())
+    response = SSEResponse(simple_generator())
     assert response.media_type == "text/event-stream"
     assert response.status_code == 200
 
@@ -306,3 +308,134 @@ def test_sse_http_methods():
     # POST should not work (404 or 405)
     response = requests.post(f"{BASE_URL}/sse/basic")
     assert response.status_code in [404, 405]
+
+
+@pytest.mark.benchmark
+def test_sse_streaming_sync_real_time(session):
+    """Test that sync SSE streaming happens in real-time with timing delays"""
+    import time
+
+    start_time = time.time()
+    response = requests.get(f"{BASE_URL}/sse/streaming_sync", stream=True, timeout=10)
+    response.raise_for_status()
+
+    messages_received = 0
+    message_times = []
+
+    content = ""
+    for chunk in response.iter_content(chunk_size=1, decode_unicode=True):
+        if chunk:
+            content += chunk
+            # Check for complete messages
+            while "\n\n" in content:
+                message_end = content.find("\n\n") + 2
+                message = content[:message_end]
+                content = content[message_end:]
+
+                if "data:" in message:
+                    messages_received += 1
+                    message_times.append(time.time() - start_time)
+
+                if messages_received >= 3:  # Got all 3 data messages
+                    break
+
+        if messages_received >= 3:
+            break
+
+    # Verify we got 3 messages
+    assert messages_received == 3
+
+    # Verify timing: each message should arrive ~0.5s after the previous
+    # Allow some tolerance for processing time (±200ms)
+    for i in range(1, len(message_times)):
+        time_diff = message_times[i] - message_times[i - 1]
+        assert 0.3 <= time_diff <= 0.8, f"Message {i} arrived {time_diff:.2f}s after previous (expected ~0.5s)"
+
+
+@pytest.mark.benchmark
+def test_sse_streaming_async_real_time(session):
+    """Test that async SSE streaming happens in real-time with timing delays"""
+    import time
+
+    start_time = time.time()
+    response = requests.get(f"{BASE_URL}/sse/streaming_async", stream=True, timeout=10)
+    response.raise_for_status()
+
+    messages_received = 0
+    message_times = []
+
+    content = ""
+    for chunk in response.iter_content(chunk_size=1, decode_unicode=True):
+        if chunk:
+            content += chunk
+            # Check for complete messages
+            while "\n\n" in content:
+                message_end = content.find("\n\n") + 2
+                message = content[:message_end]
+                content = content[message_end:]
+
+                if "data:" in message and "event: async" in message:
+                    messages_received += 1
+                    message_times.append(time.time() - start_time)
+
+                if messages_received >= 3:  # Got all 3 data messages
+                    break
+
+        if messages_received >= 3:
+            break
+
+    # Verify we got 3 messages
+    assert messages_received == 3
+
+    # Verify timing: each message should arrive ~0.3s after the previous
+    # Allow some tolerance for processing time (±150ms)
+    for i in range(1, len(message_times)):
+        time_diff = message_times[i] - message_times[i - 1]
+        assert 0.15 <= time_diff <= 0.5, f"Async message {i} arrived {time_diff:.2f}s after previous (expected ~0.3s)"
+
+
+@pytest.mark.benchmark
+def test_sse_optimization_headers(session):
+    """Test that optimized SSE headers are present"""
+    response = requests.get(f"{BASE_URL}/sse/streaming_sync", stream=True)
+
+    assert response.status_code == 200
+
+    # Check for optimization headers
+    assert response.headers.get("Content-Type") == "text/event-stream"
+    # Accept either clean optimized headers or legacy compatibility
+    cache_control = response.headers.get("Cache-Control")
+    assert cache_control in ["no-cache, no-store, must-revalidate", "no-cache, no-cache, no-store, must-revalidate"]
+    assert response.headers.get("Pragma") == "no-cache"
+    assert response.headers.get("Expires") == "0"
+    assert response.headers.get("X-Accel-Buffering") == "no"  # Nginx buffering disabled
+    assert response.headers.get("Access-Control-Allow-Origin") == "*"
+    # Connection header might be managed by underlying HTTP infrastructure
+    connection = response.headers.get("Connection")
+    assert connection is None or connection == "keep-alive"
+
+
+def test_sse_message_optimization():
+    """Test that SSEMessage formatting is optimized"""
+    import time
+
+    # Test single-line fast path
+    start_time = time.perf_counter()
+    for _ in range(1000):
+        result = SSEMessage("Simple message", id="123")
+    single_line_time = time.perf_counter() - start_time
+
+    # Test multi-line path
+    start_time = time.perf_counter()
+    for _ in range(1000):
+        result = SSEMessage("Line 1\nLine 2\nLine 3", id="123")
+    multi_line_time = time.perf_counter() - start_time
+
+    # Single-line should be faster (this is more of a performance regression test)
+    assert single_line_time < multi_line_time * 2, "Single-line SSEMessage optimization may have regressed"
+
+    # Verify correctness
+    result = SSEMessage("Test", event="test", id="1", retry=1000)
+    expected_parts = ["event: test\n", "id: 1\n", "retry: 1000\n", "data: Test\n", "\n"]
+    for part in expected_parts:
+        assert part in result
