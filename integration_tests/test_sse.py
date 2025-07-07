@@ -314,14 +314,14 @@ def test_sse_http_methods():
 def test_sse_streaming_sync_real_time(session):
     """Test that sync SSE streaming happens in real-time with timing delays"""
     import time
-    
+
     start_time = time.time()
     response = requests.get(f"{BASE_URL}/sse/streaming_sync", stream=True, timeout=10)
     response.raise_for_status()
 
     messages_received = 0
     message_times = []
-    
+
     content = ""
     for chunk in response.iter_content(chunk_size=1, decode_unicode=True):
         if chunk:
@@ -331,39 +331,39 @@ def test_sse_streaming_sync_real_time(session):
                 message_end = content.find("\n\n") + 2
                 message = content[:message_end]
                 content = content[message_end:]
-                
+
                 if "data:" in message:
                     messages_received += 1
                     message_times.append(time.time() - start_time)
-                    
+
                 if messages_received >= 3:  # Got all 3 data messages
                     break
-        
+
         if messages_received >= 3:
             break
-    
+
     # Verify we got 3 messages
     assert messages_received == 3
-    
+
     # Verify timing: each message should arrive ~0.5s after the previous
     # Allow some tolerance for processing time (±200ms)
     for i in range(1, len(message_times)):
-        time_diff = message_times[i] - message_times[i-1]
+        time_diff = message_times[i] - message_times[i - 1]
         assert 0.3 <= time_diff <= 0.8, f"Message {i} arrived {time_diff:.2f}s after previous (expected ~0.5s)"
 
 
-@pytest.mark.benchmark 
+@pytest.mark.benchmark
 def test_sse_streaming_async_real_time(session):
     """Test that async SSE streaming happens in real-time with timing delays"""
     import time
-    
+
     start_time = time.time()
     response = requests.get(f"{BASE_URL}/sse/streaming_async", stream=True, timeout=10)
     response.raise_for_status()
 
     messages_received = 0
     message_times = []
-    
+
     content = ""
     for chunk in response.iter_content(chunk_size=1, decode_unicode=True):
         if chunk:
@@ -373,35 +373,34 @@ def test_sse_streaming_async_real_time(session):
                 message_end = content.find("\n\n") + 2
                 message = content[:message_end]
                 content = content[message_end:]
-                
+
                 if "data:" in message and "event: async" in message:
                     messages_received += 1
                     message_times.append(time.time() - start_time)
-                    
+
                 if messages_received >= 3:  # Got all 3 data messages
                     break
-        
+
         if messages_received >= 3:
             break
-    
+
     # Verify we got 3 messages
     assert messages_received == 3
-    
+
     # Verify timing: each message should arrive ~0.3s after the previous
     # Allow some tolerance for processing time (±150ms)
     for i in range(1, len(message_times)):
-        time_diff = message_times[i] - message_times[i-1]
+        time_diff = message_times[i] - message_times[i - 1]
         assert 0.15 <= time_diff <= 0.5, f"Async message {i} arrived {time_diff:.2f}s after previous (expected ~0.3s)"
-
 
 
 @pytest.mark.benchmark
 def test_sse_optimization_headers(session):
     """Test that optimized SSE headers are present"""
     response = requests.get(f"{BASE_URL}/sse/streaming_sync", stream=True)
-    
+
     assert response.status_code == 200
-    
+
     # Check for optimization headers
     assert response.headers.get("Content-Type") == "text/event-stream"
     # Accept either clean optimized headers or legacy compatibility
@@ -419,22 +418,22 @@ def test_sse_optimization_headers(session):
 def test_sse_message_optimization():
     """Test that SSEMessage formatting is optimized"""
     import time
-    
+
     # Test single-line fast path
     start_time = time.perf_counter()
     for _ in range(1000):
         result = SSEMessage("Simple message", id="123")
     single_line_time = time.perf_counter() - start_time
-    
+
     # Test multi-line path
     start_time = time.perf_counter()
     for _ in range(1000):
         result = SSEMessage("Line 1\nLine 2\nLine 3", id="123")
     multi_line_time = time.perf_counter() - start_time
-    
+
     # Single-line should be faster (this is more of a performance regression test)
     assert single_line_time < multi_line_time * 2, "Single-line SSEMessage optimization may have regressed"
-    
+
     # Verify correctness
     result = SSEMessage("Test", event="test", id="1", retry=1000)
     expected_parts = ["event: test\n", "id: 1\n", "retry: 1000\n", "data: Test\n", "\n"]

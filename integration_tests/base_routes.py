@@ -1089,6 +1089,7 @@ def sse_formatted(request):
 @app.get("/sse/json")
 def sse_json(request):
     """SSE endpoint that sends JSON data"""
+
     def event_generator():
         for i in range(3):
             data = {"id": i, "message": f"JSON message {i}", "type": "test"}
@@ -1125,6 +1126,7 @@ async def sse_async(request):
 @app.get("/sse/streaming_sync")
 def sse_streaming_sync(request):
     """SSE endpoint to test real-time sync streaming"""
+
     def streaming_generator():
         for i in range(3):
             yield SSEMessage(f"Streaming sync message {i} at {time.strftime('%H:%M:%S')}", id=str(i))
@@ -1137,6 +1139,7 @@ def sse_streaming_sync(request):
 @app.get("/sse/streaming_async")
 async def sse_streaming_async(request):
     """SSE endpoint to test real-time async streaming"""
+
     async def streaming_async_generator():
         for i in range(3):
             await asyncio.sleep(0.3)  # 300ms delay
@@ -1149,6 +1152,7 @@ async def sse_streaming_async(request):
 @app.get("/sse/high_frequency")
 def sse_high_frequency(request):
     """SSE endpoint to test high frequency streaming"""
+
     def high_freq_generator():
         for i in range(20):
             yield SSEMessage(f"Fast message {i}", id=str(i))

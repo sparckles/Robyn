@@ -99,7 +99,7 @@ class AsyncGeneratorWrapper:
             # No running loop, create a new one
             self._loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self._loop)
-        
+
         # Create the async iterator
         self._iterator = self.async_gen.__aiter__()
 
@@ -109,7 +109,7 @@ class AsyncGeneratorWrapper:
             # Create a coroutine to get the next value
             async def get_next():
                 return await self._iterator.__anext__()
-            
+
             # Run the coroutine to get the next value
             return self._loop.run_until_complete(get_next())
         except StopAsyncIteration:
@@ -178,7 +178,7 @@ def SSEMessage(data: str, event: Optional[str] = None, id: Optional[str] = None,
     """
     # Pre-calculate size to avoid multiple string concatenations
     parts = []
-    
+
     # Add optional fields first
     if event:
         parts.append(f"event: {event}\n")
@@ -191,7 +191,7 @@ def SSEMessage(data: str, event: Optional[str] = None, id: Optional[str] = None,
     if data:
         data_str = str(data)
         # Fast path for single-line data (most common case)
-        if '\n' not in data_str and '\r' not in data_str:
+        if "\n" not in data_str and "\r" not in data_str:
             parts.append(f"data: {data_str}\n")
         else:
             # Multi-line data handling
@@ -203,8 +203,6 @@ def SSEMessage(data: str, event: Optional[str] = None, id: Optional[str] = None,
 
     # Add the required double newline terminator
     parts.append("\n")
-    
+
     # Single join operation for optimal performance
     return "".join(parts)
-
-
