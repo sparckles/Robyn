@@ -50,10 +50,20 @@ impl HttpMethod {
     }
 }
 
-// for: https://stackoverflow.com/a/32712140/9652621
+// https://github.com/sparckles/Robyn/pull/987#discussion_r2191722539
 impl std::fmt::Display for HttpMethod {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        match self {
+            HttpMethod::GET => write!(f, "GET"),
+            HttpMethod::POST => write!(f, "POST"),
+            HttpMethod::PUT => write!(f, "PUT"),
+            HttpMethod::DELETE => write!(f, "DELETE"),
+            HttpMethod::PATCH => write!(f, "PATCH"),
+            HttpMethod::HEAD => write!(f, "HEAD"),
+            HttpMethod::OPTIONS => write!(f, "OPTIONS"),
+            HttpMethod::CONNECT => write!(f, "CONNECT"),
+            HttpMethod::TRACE => write!(f, "TRACE"),
+        }
     }
 }
 
