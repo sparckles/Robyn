@@ -6,7 +6,7 @@ use actix_web::{
 use futures_util::StreamExt as _;
 use log::debug;
 use pyo3::types::{PyBytes, PyDict, PyString};
-use pyo3::{exceptions::PyValueError, prelude::*};
+use pyo3::{exceptions::PyValueError, prelude::*, IntoPyObject};
 use serde_json::Value;
 use std::collections::HashMap;
 
@@ -21,7 +21,7 @@ pub struct Request {
     pub method: String,
     pub path_params: HashMap<String, String>,
     // https://pyo3.rs/v0.19.2/function.html?highlight=from_py_#per-argument-options
-    #[pyo3(from_py_with = "get_body_from_pyobject")]
+    #[pyo3(from_py_with = get_body_from_pyobject)]
     pub body: Vec<u8>,
     pub url: Url,
     pub ip_addr: Option<String>,
@@ -30,51 +30,60 @@ pub struct Request {
     pub files: Option<HashMap<String, Vec<u8>>>,
 }
 
-impl ToPyObject for Request {
-    fn to_object(&self, py: Python) -> PyObject {
-        let query_params = self.query_params.clone();
-        let headers: Py<Headers> = self.headers.clone().into_py(py).extract(py).unwrap();
-        let path_params = self.path_params.clone().into_py(py).extract(py).unwrap();
-        let body = match String::from_utf8(self.body.clone()) {
-            Ok(s) => s.into_py(py),
-            Err(_) => self.body.clone().into_py(py),
-        };
-        let form_data: Py<PyDict> = match &self.form_data {
-            Some(data) => {
-                let dict = PyDict::new(py);
-                for (key, value) in data.iter() {
-                    dict.set_item(key, value).unwrap();
-                }
-                dict.into()
+impl<'py> IntoPyObject<'py> for Request {
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        let headers: Py<Headers> = self.headers.into_pyobject(py)?.extract()?;
+        let path_params = self.path_params.into_pyobject(py)?.extract()?;
+
+        let body = if self.body.is_empty() {
+            PyString::new(py, "").into_any()
+        } else {
+            match std::str::from_utf8(&self.body) {
+                Ok(s) => PyString::new(py, s).into_any(),
+                Err(_) => PyBytes::new(py, &self.body).into_any(),
             }
-            None => PyDict::new(py).into(),
         };
 
-        let files: Py<PyDict> = match &self.files {
-            Some(data) => {
+        let form_data: Py<PyDict> = match self.form_data {
+            Some(data) if !data.is_empty() => {
                 let dict = PyDict::new(py);
-                for (key, value) in data.iter() {
-                    let bytes = PyBytes::new(py, value);
-                    dict.set_item(key, bytes).unwrap();
+                // Use with_capacity equivalent by setting items directly
+                for (key, value) in data {
+                    dict.set_item(key, value)?;
                 }
                 dict.into()
             }
-            None => PyDict::new(py).into(),
+            _ => PyDict::new(py).into(),
+        };
+
+        let files: Py<PyDict> = match self.files {
+            Some(data) if !data.is_empty() => {
+                let dict = PyDict::new(py);
+                for (key, value) in data {
+                    let bytes = PyBytes::new(py, &value);
+                    dict.set_item(key, bytes)?;
+                }
+                dict.into()
+            }
+            _ => PyDict::new(py).into(),
         };
 
         let request = PyRequest {
-            query_params,
+            query_params: self.query_params,
             path_params,
             headers,
-            body,
-            method: self.method.clone(),
-            url: self.url.clone(),
-            ip_addr: self.ip_addr.clone(),
-            identity: self.identity.clone(),
-            form_data: form_data.clone(),
-            files: files.clone(),
+            body: body.into(),
+            method: self.method,
+            url: self.url,
+            ip_addr: self.ip_addr,
+            identity: self.identity,
+            form_data,
+            files,
         };
-        Py::new(py, request).unwrap().into()
+        Ok(Py::new(py, request)?.into_bound(py).into_any())
     }
 }
 
@@ -101,7 +110,7 @@ async fn handle_multipart(
         let field_name = content_disposition.get_name().unwrap_or_default();
         let file_name = content_disposition.get_filename().map(|s| s.to_string());
 
-        body.extend_from_slice(&data.clone());
+        body.extend_from_slice(&data);
 
         if let Some(name) = file_name {
             files.insert(name, data);
@@ -261,16 +270,16 @@ impl PyRequest {
                     let dict = PyDict::new(py);
 
                     for (key, value) in map.iter() {
-                        let py_key = key.to_string().into_py(py);
+                        let py_key = key.to_string().into_pyobject(py)?.into_any();
                         let py_value = match value {
-                            Value::String(s) => s.as_str().into_py(py),
-                            _ => value.to_string().into_py(py),
+                            Value::String(s) => s.as_str().into_pyobject(py)?.into_any(),
+                            _ => value.to_string().into_pyobject(py)?.into_any(),
                         };
 
                         dict.set_item(py_key, py_value)?;
                     }
 
-                    Ok(dict.into_py(py))
+                    Ok(dict.into_pyobject(py)?.into_any().into())
                 }
                 _ => Err(PyValueError::new_err("Invalid JSON object")),
             },

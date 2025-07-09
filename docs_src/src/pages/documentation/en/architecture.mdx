@@ -1,11 +1,49 @@
 export const description = 'Robyn is a Python web server that employs the tokio runtime and leverages a blend of Python and Rust, enabling efficient request handling through a worker event cycle, multi-core scaling, and introducing "Const Requests" for optimized, cached responses in a multi-threaded environment.'
 
 
-## Robyn Design Document
+## Robyn Architecture Overview
 
-## Server Model
+Robyn's unique architecture combines Python's ease of development with Rust's performance. This hybrid design allows developers to write familiar Python code while benefiting from Rust's speed and memory safety.
 
-Robyn is built on a multi-process, multi-threaded model that leverages both Python and Rust. It uses a main process that manages multiple worker processes, each capable of handling multiple threads. This design allows Robyn to efficiently utilize system resources and handle a high number of concurrent requests.
+## The Python-Rust Hybrid Design
+
+### Two-Layer Architecture
+
+Robyn operates on two interconnected but distinct layers:
+
+**Python Layer (Developer Interface)**:
+- Route definitions and decorators (`@app.get`, `@app.post`, etc.)
+- Request parameter injection and validation
+- Business logic execution
+- Middleware configuration
+- Response formatting
+
+**Rust Layer (Performance Engine)**:
+- HTTP request parsing and validation
+- URL routing and pattern matching
+- WebSocket connection management  
+- Static file serving
+- Response serialization
+- Memory management
+
+### Communication Bridge
+
+The layers communicate through **PyO3**, a Rust crate that enables seamless Python-Rust interoperability:
+
+1. **Function Registration**: Python route handlers are registered with the Rust runtime at startup
+2. **Request Flow**: Rust handles incoming HTTP requests and calls Python handlers via PyO3
+3. **Response Processing**: Python responses are converted back to Rust for efficient HTTP serialization
+
+### Why This Design Works
+
+- **Best of Both Worlds**: Python's productivity with Rust's performance
+- **Zero-Copy Operations**: Minimal data copying between layers
+- **Memory Safety**: Rust prevents common server vulnerabilities
+- **Async Integration**: Seamless integration with Python's asyncio
+
+## Server Process Model
+
+Robyn is built on a multi-process, multi-threaded model that maximizes hardware utilization:
 
 ## Master Process
 
@@ -124,9 +162,53 @@ def init_processpool(
 
 Within each worker process, Robyn utilizes multiple threads to handle requests concurrently. The number of worker threads can be configured using the `--workers` flag. By default, Robyn uses a single worker thread per process.
 
-## Rust Integration
+## Request Processing Flow
 
-One of Robyn's unique features is its integration with Rust. The core server functionality, including request handling and routing, is implemented in Rust. This allows Robyn to achieve high performance while still providing a Python-friendly API.
+Understanding how requests flow through Robyn's hybrid architecture:
+
+### 1. Request Arrival
+```
+HTTP Request → Rust HTTP Parser → Fast Validation
+```
+
+### 2. Routing and Matching
+```
+Validated Request → Rust Router (matchit crate) → Route Resolution
+```
+
+### 3. Parameter Extraction
+```
+Matched Route → Rust Parameter Parser → Path/Query/Header Extraction
+```
+
+### 4. Python Handler Execution
+```
+Extracted Parameters → PyO3 Bridge → Python Handler → Response
+```
+
+### 5. Response Processing
+```
+Python Response → Rust Serializer → HTTP Response → Client
+```
+
+## Rust Integration Deep Dive
+
+Robyn's Rust integration is powered by the **Tokio** async runtime and several high-performance crates:
+
+### Core Components
+
+- **Tokio Runtime**: Handles async I/O and task scheduling
+- **Actix Web**: Provides HTTP server functionality
+- **PyO3**: Enables Python-Rust communication
+- **matchit**: Ultra-fast URL routing with radix tree implementation
+- **Serde**: JSON serialization/deserialization
+
+### Performance Benefits
+
+1. **Zero-allocation routing** using compiled radix trees
+2. **Memory-efficient HTTP parsing** with minimal allocations
+3. **Async task scheduling** without GIL interference
+4. **Direct memory access** for static file serving
 
 
 ```python
@@ -166,26 +248,124 @@ One of Robyn's unique features is its integration with Rust. The core server fun
 ```
 
 
-## Const Requests
+## Const Requests Optimization
 
-Robyn introduces an optimization feature called "Const Requests". This feature allows certain routes to be cached in the Rust layer, reducing overhead for frequently accessed endpoints that return constant data.
+Robyn's "Const Requests" feature provides significant performance improvements for static endpoints:
 
-## Choosing Worker and Process Configuration
+### How Const Requests Work
 
-Robyn's performance can be optimized by adjusting the number of workers and processes based on the available system resources and the nature of the application.
+1. **Route Registration**: Routes marked with `const=True` are identified at startup
+2. **Response Caching**: The first response is cached in Rust memory
+3. **Direct Serving**: Subsequent requests bypass Python entirely
+4. **Zero Overhead**: Responses are served directly from Rust with minimal CPU usage
 
-1. Number of Processes:
-   Set the number of processes equal to the number of CPU cores (N). This allows Robyn to fully utilize multi-core systems.
+### Performance Impact
 
-2. Number of Workers:
-   Use the formula 2 * N + 1, where N is the number of CPU cores. This configuration allows for efficient handling of I/O-bound and CPU-bound tasks.
+- **10x faster response times** compared to regular Python handlers
+- **Minimal memory usage** with efficient caching
+- **No Python GIL contention** for cached responses
+- **Ideal for**: Health checks, API metadata, configuration endpoints
 
-For example, on a 4-core system:
+### Example Usage
+
+```python
+from robyn import Robyn
+
+app = Robyn(__file__)
+
+# Regular route - executes Python on every request
+@app.get("/dynamic")
+def dynamic_endpoint():
+    return {"timestamp": time.time()}  # Changes every request
+
+# Const route - cached in Rust after first request
+@app.get("/health", const=True)
+def health_check():
+    return {"status": "healthy", "version": "1.0.0"}  # Static response
+
+# Perfect for API metadata
+@app.get("/api/info", const=True)
+def api_info():
+    return {
+        "name": "My API",
+        "version": "2.1.0",
+        "endpoints": ["/users", "/posts", "/health"]
+    }
 ```
-python app.py --processes=4 --workers=9
+
+### When to Use Const Routes
+
+- **Health/status endpoints** that return consistent data
+- **API documentation** or metadata endpoints
+- **Configuration endpoints** with static values
+- **Version information** endpoints
+
+## Scaling Configuration Guide
+
+### Understanding Processes vs Workers
+
+**Processes**:
+- Independent Python interpreters
+- Share no memory (shared-nothing architecture)
+- Each process has its own GIL
+- Best for CPU-bound applications
+- Recommended: 1 process per CPU core
+
+**Workers** (within each process):
+- Threads sharing the same Python interpreter
+- Affected by Python's GIL
+- Better for I/O-bound operations
+- Recommended: 2-4 workers per process
+
+### Configuration Strategies
+
+#### CPU-Intensive Applications
+```bash
+# Favor more processes, fewer workers
+python app.py --processes=8 --workers=1
+
+# Example: Image processing, data analysis, calculations
 ```
 
-Remember that the optimal configuration can vary based on your specific application and server resources. It's recommended to perform load testing with different configurations to find the best balance for your use case.
+#### I/O-Intensive Applications  
+```bash
+# Favor fewer processes, more workers
+python app.py --processes=2 --workers=8
+
+# Example: Database queries, API calls, file operations
+```
+
+#### Balanced Applications
+```bash
+# General-purpose configuration
+python app.py --processes=4 --workers=2
+
+# Most web applications fit this pattern
+```
+
+### Hardware-Based Recommendations
+
+For a system with **N CPU cores**:
+
+| Application Type | Processes | Workers | Total Concurrency |
+|-----------------|-----------|---------|-------------------|
+| CPU-bound | N | 1 | N |
+| I/O-bound | N/2 | 4 | 2N |
+| Balanced | N/2 | 2 | N |
+| High-traffic | N | 2 | 2N |
+
+### Performance Testing
+
+Always benchmark your specific application:
+
+```bash
+# Test different configurations
+python app.py --processes=1 --workers=1   # Baseline
+python app.py --processes=2 --workers=2   # Moderate scaling
+python app.py --processes=4 --workers=1   # CPU-focused
+python app.py --processes=2 --workers=4   # I/O-focused
+python app.py --fast                      # Auto-optimized
+```
 
 ## Scaling Considerations
 

@@ -1,0 +1,344 @@
+export const description =
+  'Deep dive into Robyn\'s unique hybrid Python-Rust architecture and how it delivers exceptional performance while maintaining Python\'s ease of use.'
+
+# Architecture Deep Dive
+
+Robyn's architecture is unique in the Python web framework landscape. It combines Python's expressiveness with Rust's performance through a carefully designed hybrid system. This deep dive explains how Robyn works under the hood and why it's so fast.
+
+## The Hybrid Python-Rust Design
+
+### Two-Layer Architecture
+
+Robyn operates on two distinct but interconnected layers:
+
+1. **Python Layer**: Provides the developer-facing API, routing configuration, and business logic
+2. **Rust Layer**: Handles HTTP parsing, request routing, response generation, and I/O operations
+
+<Row>
+  <Col>
+    The Python layer is where you write your application code. It handles:
+    - Route definitions and decorators
+    - Request parameter injection
+    - Middleware configuration
+    - Business logic execution
+    - Response formatting
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Python Layer Example">
+    ```python
+    from robyn import Robyn, Request
+    
+    app = Robyn(__file__)
+    
+    @app.get("/users/:id")
+    async def get_user(request: Request, user_id: str):
+        # Business logic runs in Python
+        user = await fetch_user_from_db(user_id)
+        return {"user": user.to_dict()}
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+<Row>
+  <Col>
+    The Rust layer handles all performance-critical operations:
+    - HTTP request parsing
+    - URL routing and matching
+    - WebSocket connections
+    - Static file serving
+    - Response serialization
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Rust Layer (Internal)">
+    ```rust
+    // This happens internally in Robyn's Rust core
+    impl HttpRouter {
+        pub fn route_request(&self, method: &str, path: &str) -> Option<RouteInfo> {
+            // High-performance routing using matchit crate
+            self.router.at(path).ok().map(|matched| {
+                RouteInfo {
+                    handler: matched.value.clone(),
+                    params: matched.params.clone(),
+                }
+            })
+        }
+    }
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+### PyO3 Bridge: Connecting Python and Rust
+
+The magic happens through PyO3, which enables seamless communication between Python and Rust:
+
+<Row>
+  <Col>
+    **Function Registration**: When you define a route handler in Python, Robyn registers it with the Rust runtime through PyO3 bindings.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Function Registration Flow">
+    ```python
+    # Python side - route registration
+    @app.get("/api/data")
+    def handler(request):
+        return {"data": "example"}
+    
+    # Internally, this creates a FunctionInfo object
+    # that's passed to the Rust runtime
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+<Row>
+  <Col>
+    **Request Execution Flow**: When a request arrives, the Rust layer routes it and then calls back into Python to execute your handler.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request Execution">
+    ```
+    1. HTTP Request arrives → Rust HTTP parser
+    2. Route matching → Rust router (matchit crate)
+    3. Parameter extraction → Rust
+    4. Handler execution → Python (via PyO3)
+    5. Response processing → Rust
+    6. HTTP Response → Client
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+## Performance Optimizations
+
+### Fast Path for Static Responses
+
+Robyn includes a "const routes" optimization for static responses:
+
+<Row>
+  <Col>
+    When you mark a route as `const`, Robyn can serve the response directly from the Rust layer without invoking Python at all.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Const Routes">
+    ```python
+    # This response is cached in Rust memory
+    @app.get("/health", const=True)
+    def health_check():
+        return {"status": "healthy"}
+    
+    # Subsequent requests are served directly from Rust
+    # bypassing Python entirely
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+### Zero-Copy Request Handling
+
+The Rust layer uses zero-copy techniques wherever possible:
+
+- Request bodies are parsed once and shared between layers
+- String data is referenced rather than copied
+- Response buffers are reused across requests
+
+### Async Runtime Integration
+
+Robyn integrates with Python's asyncio while maintaining Rust's async runtime:
+
+<Row>
+  <Col>
+    **Sync Handlers**: Executed in a thread pool to avoid blocking the async runtime
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Sync Handler Execution">
+    ```python
+    @app.get("/sync")
+    def sync_handler(request):
+        # Runs in thread pool
+        time.sleep(1)  # Won't block other requests
+        return "Done"
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+<Row>
+  <Col>
+    **Async Handlers**: Executed directly in the async runtime for maximum performance
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Async Handler Execution">
+    ```python
+    @app.get("/async")
+    async def async_handler(request):
+        # Runs in main async runtime
+        await asyncio.sleep(1)
+        return "Done"
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+## Advanced Parameter Injection
+
+One of Robyn's most sophisticated features is its parameter injection system:
+
+### Type-Based Injection
+
+<Row>
+  <Col>
+    Robyn analyzes your function signatures and automatically injects the appropriate request components based on type annotations.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Type-Based Injection">
+    ```python
+    from robyn import Request, QueryParams, Headers
+    from robyn.types import PathParams, RequestBody
+    
+    @app.post("/complex/:id")
+    async def complex_handler(
+        request: Request,           # Full request object
+        query_params: QueryParams,  # ?param=value
+        headers: Headers,           # Request headers
+        path_params: PathParams,    # :id from URL
+        body: RequestBody          # Request body
+    ):
+        return {
+            "id": path_params["id"],
+            "query": query_params.to_dict(),
+            "user_agent": headers.get("user-agent"),
+            "body_length": len(body)
+        }
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+### Name-Based Injection
+
+<Row>
+  <Col>
+    You can also use reserved parameter names without type annotations.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Name-Based Injection">
+    ```python
+    @app.get("/simple/:id")
+    def simple_handler(query_params, path_params, headers):
+        # Parameters injected based on names
+        return {
+            "id": path_params["id"],
+            "search": query_params.get("q", ""),
+            "auth": headers.get("authorization")
+        }
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+## Memory Management
+
+### Python Object Lifecycle
+
+Robyn carefully manages Python objects across the Python-Rust boundary:
+
+1. **Request Objects**: Created once per request and reused
+2. **Response Objects**: Efficiently serialized and passed to Rust
+3. **Handler References**: Stored in Rust and called via PyO3
+
+### Rust Memory Safety
+
+The Rust layer benefits from Rust's ownership system:
+
+- No memory leaks from HTTP parsing
+- Safe concurrent access to shared data
+- Automatic cleanup of connection resources
+
+## Scaling Architecture
+
+### Multi-Process Mode
+
+<Row>
+  <Col>
+    Robyn can spawn multiple processes to utilize all CPU cores.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Multi-Process Scaling">
+    ```bash
+    # Spawn 4 worker processes
+    python app.py --processes 4 --workers 2
+    
+    # Each process runs independently with shared-nothing architecture
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+### Multi-Worker Mode
+
+<Row>
+  <Col>
+    Within each process, multiple worker threads handle requests concurrently.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Worker Thread Model">
+    ```python
+    # Workers share the same Python interpreter
+    # but handle requests concurrently
+    app.start(port=8080, workers=4)
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+## WebSocket Architecture
+
+### Persistent Connections
+
+Robyn's WebSocket implementation maintains persistent connections in the Rust layer while allowing Python handlers to process messages:
+
+<Row>
+  <Col>
+    **Connection Management**: Handled entirely in Rust for efficiency
+    
+    **Message Processing**: Python handlers process individual messages
+    
+    **Broadcasting**: Rust-based message distribution for high throughput
+  </Col>
+  <Col sticky>
+    <CodeGroup title="WebSocket Flow">
+    ```python
+    from robyn import WebSocket
+    
+    @app.websocket("/chat")
+    async def websocket_handler(websocket: WebSocket):
+        # Connection established in Rust
+        # Message handling in Python
+        async for message in websocket:
+            # Process message
+            response = process_chat_message(message)
+            await websocket.send_text(response)
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+## Why This Architecture Works
+
+1. **Best of Both Worlds**: Python's productivity with Rust's performance
+2. **Gradual Optimization**: Hot paths can be moved to Rust incrementally  
+3. **Memory Efficiency**: Minimal copying between layers
+4. **Async Integration**: Seamless integration with Python's async/await
+5. **Safety**: Rust's memory safety prevents common server vulnerabilities
+
+This architecture allows Robyn to achieve performance comparable to pure Rust web frameworks while maintaining the ease of development that Python developers expect.
+
+## What's Next?
+
+Now that you understand Robyn's architecture, explore how to leverage its advanced features:
+
+- [Advanced Routing and Parameter Injection](/documentation/en/api_reference/advanced_routing)
+- [Performance Optimization Guide](/documentation/en/api_reference/performance_optimization)
+- [WebSocket Deep Dive](/documentation/en/api_reference/websockets_advanced)

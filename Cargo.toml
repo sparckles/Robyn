@@ -1,6 +1,6 @@
 [package]
 name = "robyn"
-version = "0.67.0"
+version = "0.71.1"
 authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 edition = "2021"
 description = "Robyn is a Super Fast Async Python Web Framework with a Rust runtime."
@@ -44,9 +44,13 @@ io-uring = ["actix-web/experimental-io-uring"]
 
 [profile.release]
 codegen-units = 1
-lto = true
+lto = "fat"
 panic = "abort"
 strip = true
+opt-level = 3
+
+[profile.release.build-override]
+opt-level = 3
 
 [package.metadata.maturin]
 name = "robyn"

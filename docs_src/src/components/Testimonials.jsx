@@ -6,8 +6,7 @@ let testimonials = [
     author: {
       name: 'Kunal Kushwaha',
       handle: 'kunalstwt',
-      imageUrl:
-        'https://pbs.twimg.com/profile_images/1661046102756323329/4fmGAMnN_400x400.jpg',
+      imageUrl: '/testimonials/kunalstwt.jpg',
       title: 'DevRel manager at Civo',
     },
   },
@@ -17,8 +16,7 @@ let testimonials = [
     author: {
       name: 'Shivay Lamba',
       handle: 'howdevelop',
-      imageUrl:
-        'https://pbs.twimg.com/profile_images/1589996761086500865/IBdsm4RZ_400x400.jpg',
+      imageUrl: '/testimonials/howdevelop.jpg',
       title: 'Developer Experience Engineer at MeiliSearch',
     },
   },
@@ -27,8 +25,7 @@ let testimonials = [
     author: {
       name: 'Carlos A. Marcano Vargas',
       handle: 'carlos_marcv',
-      imageUrl:
-        'https://pbs.twimg.com/profile_images/1418988844347793410/SHKOyqB3_400x400.jpg',
+      imageUrl: '/testimonials/carlos_marcv.jpg',
       title: 'Technical Writer',
     },
   },
@@ -38,8 +35,7 @@ let testimonials = [
     author: {
       name: 'Eddie Jaoude',
       handle: 'eddiejaoude',
-      imageUrl:
-        'https://pbs.twimg.com/profile_images/1640177590601416704/_Gs3eest_400x400.jpg',
+      imageUrl: '/testimonials/eddiejaoude.jpg',
       title: 'Creator of EddieHub',
     },
   },
@@ -49,8 +45,7 @@ let testimonials = [
     author: {
       name: 'GrahamTheDev',
       handle: 'GrahamTheDev',
-      imageUrl:
-        'https://pbs.twimg.com/profile_images/1674010320057032706/NKa0EtQ8_400x400.jpg',
+      imageUrl: '/testimonials/GrahamTheDev.jpg',
       title: 'The Accessibility First DevRel ',
     },
   },
@@ -59,8 +54,7 @@ let testimonials = [
     author: {
       name: 'Daniel Bodky',
       handle: 'd_bodky',
-      imageUrl:
-        'https://pbs.twimg.com/profile_images/1665625007299391489/tsPgVWW2_400x400.jpg',
+      imageUrl: '/testimonials/d_bodky.jpg',
       title: 'Consultant, Trainer, Speaker @NETWAYS',
     },
   },
@@ -70,8 +64,7 @@ let testimonials = [
     author: {
       name: 'Julia Furst Morgado',
       handle: 'juliafmorgado',
-      imageUrl:
-        'https://pbs.twimg.com/profile_images/1140975948096868352/HJN-bkyS_400x400.jpg',
+      imageUrl: '/testimonials/juliafmorgado.jpg',
       title: 'Global technologist @Veeam',
     },
   },
@@ -81,8 +74,7 @@ let testimonials = [
     author: {
       name: 'Giovanni Barillari',
       handle: 'gi0baro',
-      imageUrl:
-        'https://pbs.twimg.com/profile_images/492996183439052800/zVEX94M__400x400.jpeg',
+      imageUrl: '/testimonials/gi0baro.jpeg',
       title: 'Author of Granian and Emmett',
     },
   },
@@ -92,8 +84,7 @@ let testimonials = [
     author: {
       name: 'Jyoti Bisht',
       handle: 'joeyousss',
-      imageUrl:
-        'https://pbs.twimg.com/profile_images/1712848642271264768/1X_ygyTq_400x400.jpg',
+      imageUrl: '/testimonials/joeyousss.jpg',
       title: 'Open Source Developer',
     },
   },
@@ -103,8 +94,7 @@ let testimonials = [
     author: {
       name: 'Francesco Ciulla',
       handle: 'FrancescoCiull4',
-      imageUrl:
-        'https://pbs.twimg.com/profile_images/1617044903636123650/pYUcGGOu_400x400.jpg',
+      imageUrl: '/testimonials/FrancescoCiull4.jpg',
       title: 'DevRel at daily.dev',
     },
   },
@@ -176,7 +166,7 @@ export default function Testimonials() {
                   className="rounded-2xl bg-white/5 p-6 shadow-lg ring-1 ring-gray-900/5 duration-200 hover:bg-white/10"
                 >
                   <blockquote className="text-white">
-                    <p>{`“${testimonial.body}”`}</p>
+                    <p>{`"${testimonial.body}"`}</p>
                   </blockquote>
                   <figcaption className="mt-6 flex items-center gap-x-4">
                     <img

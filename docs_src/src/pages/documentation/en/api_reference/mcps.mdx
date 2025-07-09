@@ -1,0 +1,140 @@
+# Model Context Protocol (MCP)
+
+> **⚠️ Experimental**: MCP support is experimental and may change.
+
+Robyn supports MCP, allowing AI applications like Claude Desktop to connect to your application's resources and tools.
+
+## Quick Start
+
+```python
+from robyn import Robyn
+
+app = Robyn(__file__)
+
+@app.mcp.resource("echo://{message}")
+def echo_resource(message: str) -> str:
+    return f"Resource echo: {message}"
+
+@app.mcp.tool()
+def echo_tool(message: str) -> str:
+    return f"Tool echo: {message}"
+
+@app.mcp.prompt()
+def echo_prompt(message: str) -> str:
+    return f"Please process: {message}"
+
+app.start()
+```
+
+## Features
+
+- Auto-generated JSON schemas from function signatures
+- URI templates with parameter extraction
+- JSON-RPC 2.0 protocol compliance
+- Type-aware parameter handling
+
+## Decorator Reference
+
+### `@app.mcp.resource(uri, name=None, description=None, mime_type=None)`
+
+Register a resource that can be read by clients.
+
+```python
+@app.mcp.resource("user://{user_id}/profile")
+def user_profile(user_id: str) -> str:
+    return f"Profile for user {user_id}"
+```
+
+### `@app.mcp.tool(name=None, description=None, input_schema=None)`
+
+Register a tool that can be executed by AI models.
+
+```python
+@app.mcp.tool()
+def greet(name: str, formal: bool = False) -> str:
+    if formal:
+        return f"Good day, {name}."
+    return f"Hi {name}!"
+```
+
+### `@app.mcp.prompt(name=None, description=None, arguments=None)`
+
+Register a prompt template for AI workflows.
+
+```python
+@app.mcp.prompt()
+def code_review(code: str, language: str = "python") -> str:
+    return f"Please review this {language} code: {code}"
+```
+
+## Type Support
+
+Supported types: `str`, `int`, `float`, `bool`, `List`, `Dict`
+
+## URI Templates
+
+Extract parameters from URIs:
+
+```python
+@app.mcp.resource("user://{user_id}/posts/{post_id}")
+def get_user_post(user_id: str, post_id: str) -> str:
+    return f"Post {post_id} from user {user_id}"
+```
+
+## Client Usage
+
+Test with curl:
+
+```bash
+# List resources
+curl -X POST http://localhost:8080/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc": "2.0", "id": 1, "method": "resources/list", "params": {}}'
+```
+
+## Integration with Claude Desktop
+
+To connect your Robyn MCP server to Claude Desktop:
+
+1. Start your Robyn app with MCP endpoints
+2. Configure Claude Desktop to connect to `http://localhost:8080/mcp`
+3. Use the registered resources, tools, and prompts in your conversations
+
+## Error Handling
+
+```python
+@app.mcp.tool()
+def divide(a: float, b: float) -> str:
+    if b == 0:
+        raise ValueError("Division by zero")
+    return str(a / b)
+```
+
+## Testing
+
+```bash
+# Unit tests
+python examples/mcp.py test-unit
+
+# Live tests
+python examples/mcp.py test-live
+
+# All tests
+python examples/mcp.py test-all
+```
+
+## Configuration
+
+MCP runs at `/mcp` endpoint using JSON-RPC 2.0 over HTTP. No additional setup required.
+
+## Claude Desktop Integration
+
+1. Start your Robyn server
+2. Configure Claude Desktop to connect to `http://localhost:8080/mcp`
+3. Use resources, tools, and prompts in conversations
+
+
+
+See `examples/mcp.py` for a complete example.
+
+For more information: https://modelcontextprotocol.io/

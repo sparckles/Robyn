@@ -277,6 +277,10 @@ export const navigation = [
         title: 'Websockets',
       },
       {
+        href: '/documentation/en/api_reference/server_sent_events',
+        title: 'Server-Sent Events',
+      },
+      {
         href: '/documentation/en/api_reference/exceptions',
         title: 'Exceptions',
       },
@@ -287,6 +291,14 @@ export const navigation = [
       {
         href: '/documentation/en/api_reference/advanced_features',
         title: 'Advanced Features',
+      },
+      {
+        href: '/documentation/en/api_reference/advanced_routing',
+        title: 'Advanced Routing',
+      },
+      {
+        href: '/documentation/en/api_reference/architecture_deep_dive',
+        title: 'Architecture Deep Dive',
       },
       {
         href: '/documentation/en/api_reference/multiprocess_execution',
@@ -307,6 +319,18 @@ export const navigation = [
       {
         href: '/documentation/en/api_reference/dependency_injection',
         title: 'Dependency Injection',
+      },
+      {
+        href: '/documentation/en/api_reference/mcps',
+        title: 'MCPs',
+      },
+      {
+        href: '/documentation/en/api_reference/ai',
+        title: 'AI',
+      },
+      {
+        href: '/documentation/en/api_reference/agents',
+        title: 'AI Agents',
       },
     ],
   },
@@ -432,10 +456,14 @@ const translations = {
       Exceptions: 'Exceptions',
       'Scaling the Application': 'Scaling the Application',
       'Advanced Features': 'Advanced Features',
+      'Advanced Routing': 'Advanced Routing',
+      'Architecture Deep Dive': 'Architecture Deep Dive',
       'Multiprocess Execution': 'Multiprocess Execution',
       'Direct Rust Usage': 'Direct Rust Usage',
       'GraphQL Support': 'GraphQL Support',
       'Dependency Injection': 'Dependency Injection',
+      'AI': 'AI',
+      'AI Agents': 'AI Agents',
       Talks: 'Talks',
       Blogs: 'Blogs',
       Introduction: 'Introduction',
@@ -469,13 +497,18 @@ const translations = {
       'File Uploads': '文件上传',
       'Form Data': '表单数据',
       'Websockets': 'WebSocket',
+      'Server-Sent Events': '服务器发送事件',
       'Exceptions': '异常处理',
       'Scaling the Application': '多核扩展',
       'Advanced Features': '高级特性',
+      'Advanced Routing': '高级路由',
+      'Architecture Deep Dive': '架构深度剖析',
       'Multiprocess Execution': '多进程执行',
       'Direct Rust Usage': '直接使用 Rust',
       'GraphQL Support': 'GraphQL 支持',
       'Dependency Injection': '依赖注入',
+      'AI': 'AI',
+      'AI Agents': 'AI 代理',
       'Talks': '演讲',
       'Blogs': '博客',
       'Introduction': '引入',
