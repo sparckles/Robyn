@@ -10,6 +10,7 @@ def test_create_robyn_app():
             "directory": "test_dir",
             "docker": "N",
             "project_type": "no-db",
+            "db_migration": "N"
         }
         with patch("robyn.cli.os.makedirs") as mock_makedirs:
             with patch("robyn.cli.shutil.copytree") as mock_copytree, patch("robyn.os.remove") as _mock_remove:
