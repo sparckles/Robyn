@@ -87,8 +87,7 @@ def create_robyn_app():
     if db_migration == "Y":
         print("Installing the latest version of alembic...")
         try:
-            subprocess.run([sys.executable, "-m", "pip", "install", "alembic", "-q"], check=True,
-                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.run([sys.executable, "-m", "pip", "install", "alembic", "-q"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         except subprocess.CalledProcessError:
             print("Failed to install alembic. Please install it manually using 'pip install alembic'.")
 
@@ -129,6 +128,7 @@ def handle_db_command():
     except ImportError:
         try:
             import importlib.util
+
             if importlib.util.find_spec("alembic") is None:
                 print("ERROR: Alembic has not been installed. Please run 'pip install alembic' to install it.")
                 sys.exit(1)
@@ -140,16 +140,16 @@ def handle_db_command():
             sys.exit(1)
     parser = argparse.ArgumentParser(
         usage=argparse.SUPPRESS,  # omit usage hint
-        description='Robyn database migration commands.'
+        description="Robyn database migration commands.",
     )
     parser = configure_parser(parser)
 
-    if len(sys.argv) == 2 and sys.argv[1] == 'db':
+    if len(sys.argv) == 2 and sys.argv[1] == "db":
         parser.print_help()
         sys.exit(1)
     # Remove the first two arguments (robyn and db)
-    if len(sys.argv) > 2 and sys.argv[1] == 'db':
-        if sys.argv[2] == '--help' or sys.argv[2] == '-h' or sys.argv[2] == '-H':
+    if len(sys.argv) > 2 and sys.argv[1] == "db":
+        if sys.argv[2] == "--help" or sys.argv[2] == "-h" or sys.argv[2] == "-H":
             parser.print_help()
             sys.exit(1)
         db_args = parser.parse_args(sys.argv[2:])
@@ -172,7 +172,7 @@ def run():
         config.dev = os.getenv("ROBYN_DEV_MODE", False) == "True"
 
     # Handle db command
-    if config.db == 'db' and len(sys.argv) > 1 and sys.argv[1] == 'db':
+    if config.db == "db" and len(sys.argv) > 1 and sys.argv[1] == "db":
         handle_db_command()
         return
 

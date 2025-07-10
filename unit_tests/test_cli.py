@@ -6,12 +6,7 @@ from robyn.cli import create_robyn_app, docs, run, start_app_normally, start_dev
 # Unit tests
 def test_create_robyn_app():
     with patch("robyn.cli.prompt") as mock_prompt:
-        mock_prompt.return_value = {
-            "directory": "test_dir",
-            "docker": "N",
-            "project_type": "no-db",
-            "db_migration": "N"
-        }
+        mock_prompt.return_value = {"directory": "test_dir", "docker": "N", "project_type": "no-db", "db_migration": "N"}
         with patch("robyn.cli.os.makedirs") as mock_makedirs:
             with patch("robyn.cli.shutil.copytree") as mock_copytree, patch("robyn.os.remove") as _mock_remove:
                 create_robyn_app()

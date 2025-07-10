@@ -13,7 +13,7 @@ config = context.config
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 fileConfig(config.config_file_name)
-logger = logging.getLogger('alembic.env')
+logger = logging.getLogger("alembic.env")
 
 # add your model's MetaData object here
 # for 'autogenerate' support
@@ -30,10 +30,10 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 # Since we can't know the exact structure of the user's app,
 # we'll try to get the metadata from the config
-target_metadata = config.attributes.get('sqlalchemy.metadata', None)
+target_metadata = config.attributes.get("sqlalchemy.metadata", None)
 
 # Get the database URL from environment or config
-database_url = os.environ.get('DATABASE_URL', config.get_main_option('sqlalchemy.url'))
+database_url = os.environ.get("DATABASE_URL", config.get_main_option("sqlalchemy.url"))
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -77,11 +77,11 @@ def run_migrations_online():
     # when there are no changes to the schema
     # reference: http://alembic.zzzcomputing.com/en/latest/cookbook.html
     def process_revision_directives(context, revision, directives):
-        if getattr(config.cmd_opts, 'autogenerate', False):
+        if getattr(config.cmd_opts, "autogenerate", False):
             script = directives[0]
             if script.upgrade_ops.is_empty():
                 directives[:] = []
-                logger.info('No changes in schema detected.')
+                logger.info("No changes in schema detected.")
 
     connectable = engine_from_config(
         config.get_section(config.config_ini_section),
