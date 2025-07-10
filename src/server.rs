@@ -23,6 +23,15 @@ use std::sync::{Arc, RwLock};
 use std::process::exit;
 use std::{env, thread};
 
+/// Normalize a path by removing trailing slash (except for root "/")
+fn normalize_path(path: &str) -> &str {
+    if path.len() > 1 && path.ends_with('/') {
+        &path[0..path.len() - 1]
+    } else {
+        path
+    }
+}
+
 use actix_files::Files;
 use actix_http::KeepAlive;
 use actix_web::*;
@@ -338,14 +347,8 @@ impl Server {
         function: FunctionInfo,
         is_const: bool,
     ) {
-        let second_route: String = if route.ends_with('/') {
-            route[0..route.len() - 1].to_string()
-        } else {
-            format!("{}/", route)
-        };
-
+        // Route should already be normalized by Python layer
         self._add_route(py, route_type, route, &function, is_const);
-        self._add_route(py, route_type, &second_route, &function, is_const);
     }
 
     fn _add_route(
@@ -475,7 +478,8 @@ async fn index(
 ) -> ResponseType {
     let mut request = Request::from_actix_request(&req, payload, &global_request_headers).await;
 
-    let route = format!("{}{}", req.method(), req.uri().path());
+    let normalized_path = normalize_path(req.uri().path());
+    let route = format!("{}{}", req.method(), normalized_path);
 
     // Before middleware
     // Global
@@ -509,12 +513,12 @@ async fn index(
     // Route execution
     let mut response = if let Some(res) = const_router.get_route(
         &HttpMethod::from_actix_method(req.method()),
-        req.uri().path(),
+        normalized_path,
     ) {
         ResponseType::Standard(res)
     } else if let Some((function, route_params)) = router.get_route(
         &HttpMethod::from_actix_method(req.method()),
-        req.uri().path(),
+        normalized_path,
     ) {
         request.path_params = route_params;
         match execute_http_function(&request, &function).await {
