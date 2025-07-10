@@ -8,12 +8,16 @@ from pathlib import Path
 from typing import Optional, List, Dict, Any, Union, Callable
 
 # Ensure alembic is installed
-try:
-    import alembic
-    from alembic import command
-    from alembic.config import Config as AlembicConfig
-except ImportError:
-    raise ImportError("Alembic has not been installed. Please run 'pip install alembic' to install it.")
+import importlib.util
+
+spec = importlib.util.find_spec('alembic')
+if spec is None or spec.loader is None:
+    print("Alembic has not been installed. Please run 'pip install alembic' to install it.")
+    exit(1)
+    
+import alembic
+from alembic import command
+from alembic.config import Config as AlembicConfig
 
 
 class _RobynMigrateConfig:
@@ -214,36 +218,36 @@ def init(directory: str = 'migrations', multidb: bool = False, template: Optiona
                 db_url = str(engine.url)
             except ImportError:
                 # Try to import models module dynamically
-                import importlib.util
                 spec = importlib.util.find_spec('models')
                 if spec is not None:
                     models_module = importlib.util.module_from_spec(spec)
                     spec.loader.exec_module(models_module)
                     db_url = str(models_module.engine.url)
                 else:
-                    raise ImportError("Cannot find models module")
+                    print(
+                        "Cannot find models module.\nPlease provide your database URL with \"--db-url=<YOUR_DB_URL>\".")
+                    return
         except Exception as e:
             print("Please provide your database URL with \"--db-url=<YOUR_DB_URL>\".")
             return
+
     if not model_path:
         try:
-            # Try to import models from current working directory
-            try:
-                from models import Base
-                model_path = 'models.Base'
-            except ImportError:
-                # Try to import models module dynamically
-                import importlib.util
-                spec = importlib.util.find_spec('models')
-                if spec is not None:
-                    models_module = importlib.util.module_from_spec(spec)
-                    spec.loader.exec_module(models_module)
-                    if hasattr(models_module, 'Base'):
-                        model_path = 'models.Base'
-                    else:
-                        raise AttributeError("models module does not have Base attribute")
+            # Try to import models dynamically from current working directory
+            spec = importlib.util.find_spec('models')
+            if spec is not None:
+                models_module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(models_module)
+                if hasattr(models_module, 'Base'):
+                    model_path = 'models.Base'
                 else:
-                    raise ImportError("Cannot find models module")
+                    print(
+                        "Models module does not have Base attribute.\nPlease provide your model path with \"--model-path=<YOUR_MODEL_PATH>\".")
+                    return
+            else:
+                print(
+                    "Cannot find models module.\nPlease provide your model path with \"--model-path=<YOUR_MODEL_PATH>\".")
+                return
         except Exception as e:
             print("Please provide your model path with \"--model-path=<YOUR_MODEL_PATH>\".")
             return
@@ -707,4 +711,3 @@ def execute_command(args: argparse.Namespace) -> None:
     else:
         print(f"Unknown command: {args.command}")
         sys.exit(1)
-        

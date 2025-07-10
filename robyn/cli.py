@@ -52,10 +52,21 @@ def create_robyn_app():
             "default": Choice("no-db", name="No DB"),
             "name": "project_type",
         },
+        {
+            "type": "list",
+            "message": "Need Database Migration? (Y/N)",
+            "choices": [
+                Choice("Y", name="Y"),
+                Choice("N", name="N"),
+            ],
+            "default": Choice("N", name="N"),
+            "name": "db_migration",
+        },
     ]
     result = prompt(questions=questions)
     project_dir_path = Path(str(result["directory"])).resolve()
     docker = result["docker"]
+    db_migration = result["db_migration"]
     project_type = str(result["project_type"])
 
     final_project_dir_path = (CURRENT_WORKING_DIR / project_dir_path).resolve()
@@ -71,6 +82,15 @@ def create_robyn_app():
     # If docker is not needed, delete the docker file
     if docker == "N":
         os.remove(f"{final_project_dir_path}/Dockerfile")
+
+    # If database migration is needed, install the latest version of alembic
+    if db_migration == "Y":
+        print("Installing the latest version of alembic...")
+        try:
+            subprocess.run([sys.executable, "-m", "pip", "install", "alembic", "-q"], check=True,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except subprocess.CalledProcessError:
+            print("Failed to install alembic. Please install it manually using 'pip install alembic'.")
 
     print(f"New Robyn project created in '{final_project_dir_path}' ")
 
@@ -119,7 +139,7 @@ def handle_db_command():
             print("ERROR: Fail to import migrate module.")
             sys.exit(1)
     parser = argparse.ArgumentParser(
-        usage=argparse.SUPPRESS,        # omit usage hint
+        usage=argparse.SUPPRESS,  # omit usage hint
         description='Robyn database migration commands.'
     )
     parser = configure_parser(parser)
