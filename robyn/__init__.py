@@ -150,20 +150,20 @@ class BaseRobyn(ABC):
 
         # Normalize endpoint before adding (except for root "/")
         normalized_endpoint = endpoint if endpoint == "/" or not endpoint.endswith("/") else endpoint.rstrip("/")
-        
+
         # Check if this exact route (method + normalized_endpoint) already exists
         route_key = f"{route_type}:{normalized_endpoint}"
-        if not hasattr(self, '_added_routes'):
+        if not hasattr(self, "_added_routes"):
             self._added_routes = set()
-        
+
         if route_key in self._added_routes:
             # Route already exists, skip adding but return success
             logger.debug("Route %s %s already exists, skipping duplicate", route_type, normalized_endpoint)
             return None
-        
+
         # Add to our tracking set
         self._added_routes.add(route_key)
-        
+
         add_route_response = self.router.add_route(
             route_type=route_type,
             endpoint=normalized_endpoint,
@@ -615,16 +615,16 @@ class SubRouter(BaseRobyn):
     def __add_prefix(self, endpoint: str):
         # Normalize both prefix and endpoint to ensure consistent routing
         # Remove trailing slash from prefix if it exists
-        normalized_prefix = self.prefix.rstrip('/')
-        
+        normalized_prefix = self.prefix.rstrip("/")
+
         # Handle empty endpoint - should just be the prefix
-        if endpoint == '':
+        if endpoint == "":
             return normalized_prefix
-            
+
         # Ensure endpoint starts with '/' if it's not empty
-        if not endpoint.startswith('/'):
-            endpoint = '/' + endpoint
-            
+        if not endpoint.startswith("/"):
+            endpoint = "/" + endpoint
+
         return f"{normalized_prefix}{endpoint}"
 
     def get(self, endpoint: str, const: bool = False, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["get"]):
