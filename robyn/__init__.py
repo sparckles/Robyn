@@ -17,6 +17,7 @@ from robyn.events import Events
 from robyn.jsonify import jsonify
 from robyn.logger import Colors, logger
 from robyn.mcp import MCPApp
+from robyn.migrate import Migrate
 from robyn.openapi import OpenAPI
 from robyn.processpool import run_processes
 from robyn.reloader import compile_rust_files
@@ -697,4 +698,5 @@ __all__ = [
     "WebSocketConnector",
     "WebSocket",
     "MCPApp",
+    "Migrate",
 ]

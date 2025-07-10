@@ -1,5 +1,6 @@
 import argparse
 import os
+import sys
 
 
 class Config:
@@ -84,6 +85,12 @@ class Config:
             default=False,
             help="Fast mode. It sets the optimal values for processes, workers and log level. However, you can override them.",
         )
+        parser.add_argument(
+            "db",
+            nargs="?",
+            default=None,
+            help="Database migration commands. Use 'robyn db' to see more information.",
+        )
 
         args, unknown_args = parser.parse_known_args()
         self.fast = args.fast
@@ -99,6 +106,7 @@ class Config:
         self.file_path = None
         self.disable_openapi = args.disable_openapi
         self.log_level = args.log_level
+        self.db = args.db
 
         if self.fast:
             # doing this here before every other check

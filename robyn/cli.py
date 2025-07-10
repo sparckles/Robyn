@@ -3,6 +3,7 @@ import shutil
 import subprocess
 import sys
 import webbrowser
+import argparse
 from pathlib import Path
 from typing import Optional
 
@@ -101,6 +102,43 @@ def start_app_normally(config: Config):
     subprocess.run(command, start_new_session=False)
 
 
+def handle_db_command():
+    """Handle database migration commands."""
+    try:
+        from robyn.migrate import configure_parser, execute_command
+    except ImportError:
+        try:
+            import importlib.util
+            if importlib.util.find_spec("alembic") is None:
+                print("ERROR: Alembic has not been installed. Please run 'pip install alembic' to install it.")
+                sys.exit(1)
+            else:
+                print("ERROR: Failed to import migrate module.")
+                sys.exit(1)
+        except ImportError:
+            print("ERROR: Fail to import migrate module.")
+            sys.exit(1)
+    parser = argparse.ArgumentParser(
+        usage=argparse.SUPPRESS,        # omit usage hint
+        description='Robyn database migration commands.'
+    )
+    parser = configure_parser(parser)
+
+    if len(sys.argv) == 2 and sys.argv[1] == 'db':
+        parser.print_help()
+        sys.exit(1)
+    # Remove the first two arguments (robyn and db)
+    if len(sys.argv) > 2 and sys.argv[1] == 'db':
+        if sys.argv[2] == '--help' or sys.argv[2] == '-h' or sys.argv[2] == '-H':
+            parser.print_help()
+            sys.exit(1)
+        db_args = parser.parse_args(sys.argv[2:])
+        execute_command(db_args)
+    else:
+        print("ERROR: Invalid command. Please run 'robyn db' to see more information.")
+        sys.exit(1)
+
+
 def run():
     config = Config()
 
@@ -112,6 +150,11 @@ def run():
 
     if config.dev is None:
         config.dev = os.getenv("ROBYN_DEV_MODE", False) == "True"
+
+    # Handle db command
+    if config.db == 'db' and len(sys.argv) > 1 and sys.argv[1] == 'db':
+        handle_db_command()
+        return
 
     if config.create:
         create_robyn_app()
