@@ -3,6 +3,7 @@ import shutil
 import subprocess
 import sys
 import webbrowser
+import argparse
 from pathlib import Path
 from typing import Optional
 
@@ -51,10 +52,21 @@ def create_robyn_app():
             "default": Choice("no-db", name="No DB"),
             "name": "project_type",
         },
+        {
+            "type": "list",
+            "message": "Need Database Migration? (Y/N)",
+            "choices": [
+                Choice("Y", name="Y"),
+                Choice("N", name="N"),
+            ],
+            "default": Choice("N", name="N"),
+            "name": "db_migration",
+        },
     ]
     result = prompt(questions=questions)
     project_dir_path = Path(str(result["directory"])).resolve()
     docker = result["docker"]
+    db_migration = result["db_migration"]
     project_type = str(result["project_type"])
 
     final_project_dir_path = (CURRENT_WORKING_DIR / project_dir_path).resolve()
@@ -70,6 +82,14 @@ def create_robyn_app():
     # If docker is not needed, delete the docker file
     if docker == "N":
         os.remove(f"{final_project_dir_path}/Dockerfile")
+
+    # If database migration is needed, install the latest version of alembic
+    if db_migration == "Y":
+        print("Installing the latest version of alembic...")
+        try:
+            subprocess.run([sys.executable, "-m", "pip", "install", "alembic", "-q"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except subprocess.CalledProcessError:
+            print("Failed to install alembic. Please install it manually using 'pip install alembic'.")
 
     print(f"New Robyn project created in '{final_project_dir_path}' ")
 
@@ -101,6 +121,44 @@ def start_app_normally(config: Config):
     subprocess.run(command, start_new_session=False)
 
 
+def handle_db_command():
+    """Handle database migration commands."""
+    try:
+        from robyn.migrate import configure_parser, execute_command
+    except ImportError:
+        try:
+            import importlib.util
+
+            if importlib.util.find_spec("alembic") is None:
+                print("ERROR: Alembic has not been installed. Please run 'pip install alembic' to install it.")
+                sys.exit(1)
+            else:
+                print("ERROR: Failed to import migrate module.")
+                sys.exit(1)
+        except ImportError:
+            print("ERROR: Fail to import migrate module.")
+            sys.exit(1)
+    parser = argparse.ArgumentParser(
+        usage=argparse.SUPPRESS,  # omit usage hint
+        description="Robyn database migration commands.",
+    )
+    parser = configure_parser(parser)
+
+    if len(sys.argv) == 2 and sys.argv[1] == "db":
+        parser.print_help()
+        sys.exit(1)
+    # Remove the first two arguments (robyn and db)
+    if len(sys.argv) > 2 and sys.argv[1] == "db":
+        if sys.argv[2] == "--help" or sys.argv[2] == "-h" or sys.argv[2] == "-H":
+            parser.print_help()
+            sys.exit(1)
+        db_args = parser.parse_args(sys.argv[2:])
+        execute_command(db_args)
+    else:
+        print("ERROR: Invalid command. Please run 'robyn db' to see more information.")
+        sys.exit(1)
+
+
 def run():
     config = Config()
 
@@ -112,6 +170,11 @@ def run():
 
     if config.dev is None:
         config.dev = os.getenv("ROBYN_DEV_MODE", False) == "True"
+
+    # Handle db command
+    if config.db == "db" and len(sys.argv) > 1 and sys.argv[1] == "db":
+        handle_db_command()
+        return
 
     if config.create:
         create_robyn_app()
