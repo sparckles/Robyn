@@ -148,9 +148,25 @@ class BaseRobyn(ABC):
         if auth_required:
             self.middleware_router.add_auth_middleware(endpoint, route_type)(handler)
 
+        # Normalize endpoint before adding (except for root "/")
+        normalized_endpoint = endpoint if endpoint == "/" or not endpoint.endswith("/") else endpoint.rstrip("/")
+        
+        # Check if this exact route (method + normalized_endpoint) already exists
+        route_key = f"{route_type}:{normalized_endpoint}"
+        if not hasattr(self, '_added_routes'):
+            self._added_routes = set()
+        
+        if route_key in self._added_routes:
+            # Route already exists, skip adding but return success
+            logger.debug("Route %s %s already exists, skipping duplicate", route_type, normalized_endpoint)
+            return None
+        
+        # Add to our tracking set
+        self._added_routes.add(route_key)
+        
         add_route_response = self.router.add_route(
             route_type=route_type,
-            endpoint=endpoint,
+            endpoint=normalized_endpoint,
             handler=handler,
             is_const=is_const,
             auth_required=auth_required,
@@ -160,7 +176,7 @@ class BaseRobyn(ABC):
             injected_dependencies=injected_dependencies,
         )
 
-        logger.info("Added route %s %s", route_type, endpoint)
+        logger.info("Added route %s %s", route_type, normalized_endpoint)
 
         return add_route_response
 
@@ -597,7 +613,19 @@ class SubRouter(BaseRobyn):
         self.prefix = prefix
 
     def __add_prefix(self, endpoint: str):
-        return f"{self.prefix}{endpoint}"
+        # Normalize both prefix and endpoint to ensure consistent routing
+        # Remove trailing slash from prefix if it exists
+        normalized_prefix = self.prefix.rstrip('/')
+        
+        # Handle empty endpoint - should just be the prefix
+        if endpoint == '':
+            return normalized_prefix
+            
+        # Ensure endpoint starts with '/' if it's not empty
+        if not endpoint.startswith('/'):
+            endpoint = '/' + endpoint
+            
+        return f"{normalized_prefix}{endpoint}"
 
     def get(self, endpoint: str, const: bool = False, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["get"]):
         return super().get(endpoint=self.__add_prefix(endpoint), const=const, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
