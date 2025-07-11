@@ -105,6 +105,89 @@ where
     }
 }
 
+// Execute a chain of before middleware functions with batched GIL acquisition
+#[inline]
+pub async fn execute_before_middleware_chain(
+    input: &Request,
+    middlewares: &[FunctionInfo],
+) -> Result<MiddlewareReturn> {
+    let mut current_request = input.clone();
+    
+    // Check if all middlewares are sync to optimize GIL usage
+    let all_sync = middlewares.iter().all(|m| !m.is_async);
+    
+    if all_sync {
+        // Execute all sync middlewares in a single GIL acquisition
+        Python::with_gil(|py| -> Result<MiddlewareReturn> {
+            for middleware in middlewares {
+                let output = get_function_output(middleware, py, &current_request)?;
+                
+                // Try response extraction first, then request
+                match output.extract::<Response>() {
+                    Ok(response) => return Ok(MiddlewareReturn::Response(response)),
+                    Err(_) => match output.extract::<Request>() {
+                        Ok(request) => current_request = request,
+                        Err(e) => return Err(e.into()),
+                    },
+                }
+            }
+            
+            Ok(MiddlewareReturn::Request(current_request))
+        })
+    } else {
+        // Fall back to individual execution for mixed sync/async middlewares
+        for middleware in middlewares {
+            current_request = match execute_middleware_function(&current_request, middleware).await? {
+                MiddlewareReturn::Request(r) => r,
+                MiddlewareReturn::Response(r) => return Ok(MiddlewareReturn::Response(r)),
+            };
+        }
+        
+        Ok(MiddlewareReturn::Request(current_request))
+    }
+}
+
+// Execute a chain of after middleware functions with batched GIL acquisition
+#[inline]
+pub async fn execute_after_middleware_chain(
+    input: &Response,
+    middlewares: &[FunctionInfo],
+) -> Result<MiddlewareReturn> {
+    let mut current_response = input.clone();
+    
+    // Check if all middlewares are sync to optimize GIL usage
+    let all_sync = middlewares.iter().all(|m| !m.is_async);
+    
+    if all_sync {
+        // Execute all sync middlewares in a single GIL acquisition
+        Python::with_gil(|py| -> Result<MiddlewareReturn> {
+            for middleware in middlewares {
+                let output = get_function_output(middleware, py, &current_response)?;
+                
+                // After middleware should return Response
+                match output.extract::<Response>() {
+                    Ok(response) => current_response = response,
+                    Err(e) => return Err(e.into()),
+                }
+            }
+            
+            Ok(MiddlewareReturn::Response(current_response))
+        })
+    } else {
+        // Fall back to individual execution for mixed sync/async middlewares
+        for middleware in middlewares {
+            current_response = match execute_middleware_function(&current_response, middleware).await? {
+                MiddlewareReturn::Response(r) => r,
+                MiddlewareReturn::Request(_) => {
+                    return Err(anyhow::anyhow!("After middleware returned a request"))
+                }
+            };
+        }
+        
+        Ok(MiddlewareReturn::Response(current_response))
+    }
+}
+
 #[inline]
 pub async fn execute_http_function(
     request: &Request,
