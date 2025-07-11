@@ -1,5 +1,5 @@
 use crate::executors::{
-    execute_http_function, execute_middleware_function, execute_startup_handler,
+    execute_http_function, execute_before_middleware_chain, execute_after_middleware_chain, execute_startup_handler,
 };
 
 use crate::routers::const_router::ConstRouter;
@@ -488,8 +488,10 @@ async fn index(
         before_middlewares.push(function);
         request.path_params = route_params;
     }
-    for before_middleware in before_middlewares {
-        request = match execute_middleware_function(&request, &before_middleware).await {
+    
+    // Execute all before middlewares with batched GIL acquisition
+    if !before_middlewares.is_empty() {
+        request = match execute_before_middleware_chain(&request, &before_middlewares).await {
             Ok(MiddlewareReturn::Request(r)) => r,
             Ok(MiddlewareReturn::Response(r)) => {
                 // If a before middleware returns a response, we abort the request and return the response
@@ -557,10 +559,12 @@ async fn index(
     {
         after_middlewares.push(function);
     }
-    for after_middleware in after_middlewares {
+    
+    // Execute all after middlewares with batched GIL acquisition
+    if !after_middlewares.is_empty() {
         // Middleware only works with standard responses
         if let ResponseType::Standard(std_response) = response {
-            response = match execute_middleware_function(&std_response, &after_middleware).await {
+            response = match execute_after_middleware_chain(&std_response, &after_middlewares).await {
                 Ok(MiddlewareReturn::Request(_)) => {
                     error!("After middleware returned a request");
                     return ResponseType::Standard(Response::internal_server_error(None));
