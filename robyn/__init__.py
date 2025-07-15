@@ -26,14 +26,6 @@ from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRout
 from robyn.types import Directory
 from robyn.ws import WebSocket
 
-import importlib.util
-
-spec = importlib.util.find_spec("alembic")
-if spec is not None and spec.loader is not None:
-    from robyn.migrate import Migrate
-else:
-    Migrate = None
-
 __version__ = get_version()
 
 config = Config()
@@ -733,5 +725,4 @@ __all__ = [
     "WebSocketConnector",
     "WebSocket",
     "MCPApp",
-    "Migrate",
 ]

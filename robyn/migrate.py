@@ -14,18 +14,10 @@ spec = importlib.util.find_spec('alembic')
 if spec is None or spec.loader is None:
     print("Alembic has not been installed. Please run 'pip install alembic' to install it.")
     exit(1)
-    
+
 import alembic
 from alembic import command
 from alembic.config import Config as AlembicConfig
-
-
-class _RobynMigrateConfig:
-    """Robyn migration configuration."""
-
-    def __init__(self, directory: str = 'migrations', **kwargs):
-        self.directory = directory
-        self.kwargs = kwargs
 
 
 class Config(AlembicConfig):
@@ -50,54 +42,6 @@ class Config(AlembicConfig):
         if template is None:
             return Path(__file__).parent / "templates" / "robyn"
         return Path(template)
-
-
-class Migrate:
-    """Robyn extension for database migrations using Alembic."""
-
-    def __init__(self, app=None, db=None, directory='migrations', **kwargs):
-        """Initialize the extension.
-
-        Args:
-            app: The Robyn application instance
-            db: The SQLAlchemy database instance
-            directory: Directory where migration files will be stored
-            **kwargs: Additional arguments to pass to Alembic
-        """
-        self.app = app
-        self.db = db
-        self.directory = directory
-        self.kwargs = kwargs
-
-        if app is not None and db is not None:
-            self.init_app(app, db, directory, **kwargs)
-
-    def init_app(self, app, db=None, directory=None, **kwargs):
-        """Initialize the application with this extension.
-
-        Args:
-            app: The Robyn application instance
-            db: The SQLAlchemy database instance
-            directory: Directory where migration files will be stored
-            **kwargs: Additional arguments to pass to Alembic
-        """
-        self.app = app
-        self.db = db
-        self.directory = directory or self.directory
-        self.kwargs = kwargs or self.kwargs
-
-        # Register before_request handler to ensure database connection
-        @app.before_request()
-        async def ensure_db_connection(request):
-            # This could be used to ensure database connection is established
-            # or perform any pre-request database setup
-            pass
-
-        # Register after_request handler to clean up database resources
-        @app.after_request()
-        async def cleanup_db_resources(response):
-            # This could be used to clean up database resources after request
-            return response
 
 
 def catch_errors(f):
@@ -163,7 +107,7 @@ def _auto_configure_migrations(directory: str, db_url: Optional[str] = None, mod
                 f.write(content)
             print(f"Successfully configured the database URL: {db_url}")
 
-    # 配置 env.py
+    # Configure env.py
     if model_path:
         env_py_path = os.path.join(directory, 'env.py')
         if os.path.exists(env_py_path):
@@ -194,6 +138,28 @@ def _auto_configure_migrations(directory: str, db_url: Optional[str] = None, mod
                 print(f"Successfully configured the model path: {model_path}")
             except ValueError:
                 print(f"Warning: Could not parse the model path {model_path}, please manually configure env.py")
+
+
+def _special_configure_for_sqlite(directory: str, model_path: Optional[str] = None):
+    # If the database is SQLite, must add render_as_batch=True in run_migrations_online() to avoid migration errors caused by SQLite's limited support for ALTER TABLE.
+    if model_path:
+        env_py_path = os.path.join(directory, 'env.py')
+        if os.path.exists(env_py_path):
+            with open(env_py_path, 'r') as f:
+                content = f.read()
+            try:
+                content = content.replace(
+                    "        context.configure(\n            connection=connection,\n            target_metadata=target_metadata,\n            process_revision_directives=process_revision_directives,\n        )",
+                    "        from sqlalchemy.engine import Connection\n        def is_sqlite(conn: Connection) -> bool:\n            return conn.dialect.name == \"sqlite\"\n        context.configure(\n            connection=connection,\n            target_metadata=target_metadata,\n            process_revision_directives=process_revision_directives,\n            render_as_batch=is_sqlite(connection),\n        )"
+                )
+                with open(env_py_path, 'w') as f:
+                    f.write(content)
+            except ValueError:
+                print(
+                    "Warning: If your database is SQLite, you need to manually add `render_as_batch=True` in run_migrations_online() to avoid migration errors caused by SQLite's limited support for ALTER TABLE.")
+    else:
+        print(
+            "Warning: If your database is SQLite, you need to manually add `render_as_batch=True` in run_migrations_online() to avoid migration errors caused by SQLite's limited support for ALTER TABLE.")
 
 
 @catch_errors
@@ -260,6 +226,7 @@ def init(directory: str = 'migrations', multidb: bool = False, template: Optiona
     command.init(config, directory, template=template_path, package=package)
 
     _auto_configure_migrations(directory, db_url, model_path)
+    _special_configure_for_sqlite(directory, model_path)
 
 
 @catch_errors
