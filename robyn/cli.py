@@ -83,14 +83,33 @@ def create_robyn_app():
     if docker == "N":
         os.remove(f"{final_project_dir_path}/Dockerfile")
 
-    # If database migration is needed, install the latest version of alembic
+    # If database migration is needed, install alembic
     if db_migration == "Y":
-        print("Installing the latest version of alembic...")
+        print("Installing alembic...")
         try:
-            subprocess.run([sys.executable, "-m", "pip", "install", "alembic", "-q"], check=True,
-                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        except subprocess.CalledProcessError:
-            print("Failed to install alembic. Please install it manually using 'pip install alembic'.")
+            # Check if alembic is already installed
+            import importlib.util
+            alembic_spec = importlib.util.find_spec('alembic')
+            
+            if alembic_spec is None:
+                # Install alembic using pip API
+                try:
+                    import pip
+                    print("Installing alembic using pip API...")
+                    from pip._internal.cli.main import main as pip_main
+                    pip_main(['install', 'alembic', '--quiet'])
+                    print("Successfully installed alembic.")
+                except ImportError:
+                    # If pip API is not available, use subprocess
+                    print("Installing alembic using subprocess...")
+                    subprocess.run([sys.executable, "-m", "pip", "install", "alembic", "-q"], check=True,
+                                  stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    print("Successfully installed alembic.")
+            else:
+                print("Alembic is already installed.")
+        except (subprocess.CalledProcessError, ImportError) as e:
+            print(f"Failed to install alembic: {str(e)}")
+            print("Please install it manually using 'pip install alembic'.")
 
     print(f"New Robyn project created in '{final_project_dir_path}' ")
 
@@ -124,20 +143,45 @@ def start_app_normally(config: Config):
 
 def handle_db_command():
     """Handle database migration commands."""
+    import importlib.util
+    alembic_spec = importlib.util.find_spec("alembic")
+    
+    if alembic_spec is None:
+        print("ERROR: Alembic has not been installed.")
+        install_choice = input("Would you like to install alembic now? (y/n): ").strip().lower()
+        
+        if install_choice == 'y':
+            try:
+                try:
+                    from pip._internal.cli.main import main as pip_main
+                    print("Installing alembic...")
+                    pip_main(['install', 'alembic', '--quiet'])
+                    print("Successfully installed alembic.")
+                except ImportError:
+                    print("Installing alembic using subprocess...")
+                    subprocess.run([sys.executable, "-m", "pip", "install", "alembic", "-q"], check=True)
+                    print("Successfully installed alembic.")
+                
+                importlib.invalidate_caches()
+                alembic_spec = importlib.util.find_spec("alembic")
+                if alembic_spec is None:
+                    print("ERROR: Failed to install alembic. Please install it manually using 'pip install alembic'.")
+                    sys.exit(1)
+            except Exception as e:
+                print(f"ERROR: Failed to install alembic: {str(e)}")
+                print("Please install it manually using 'pip install alembic'.")
+                sys.exit(1)
+        else:
+            print("Please install alembic manually using 'pip install alembic' before using database commands.")
+            sys.exit(1)
+    
     try:
         from robyn.migrate import configure_parser, execute_command
-    except ImportError:
-        try:
-            import importlib.util
-            if importlib.util.find_spec("alembic") is None:
-                print("ERROR: Alembic has not been installed. Please run 'pip install alembic' to install it.")
-                sys.exit(1)
-            else:
-                print("ERROR: Failed to import migrate module.")
-                sys.exit(1)
-        except ImportError:
-            print("ERROR: Fail to import migrate module.")
-            sys.exit(1)
+    except ImportError as e:
+        print(f"ERROR: Failed to import migrate module: {str(e)}")
+        print("This might be due to an incomplete installation or a version mismatch.")
+        print("Try reinstalling Robyn or updating your dependencies.")
+        sys.exit(1)
     parser = argparse.ArgumentParser(
         usage=argparse.SUPPRESS,  # omit usage hint
         description='Robyn database migration commands.'

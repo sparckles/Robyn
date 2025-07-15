@@ -4,6 +4,7 @@ import inspect
 import logging
 from functools import wraps
 import argparse
+import re
 from pathlib import Path
 from typing import Optional, List, Dict, Any, Union, Callable
 
@@ -85,57 +86,64 @@ def list_templates() -> None:
 
 
 def _auto_configure_migrations(directory: str, db_url: Optional[str] = None, model_path: Optional[str] = None) -> None:
-    """自动配置 alembic.ini 和 env.py 文件
+    """Automatically configure alembic.ini and env.py
 
     Args:
-        directory: 迁移文件目录
-        db_url: 数据库 URL
-        model_path: 模型文件路径
+        directory: Directory where migration files are stored
+        db_url: Database URL
+        model_path: Path to the model file
     """
     # Configure alembic.ini
     if db_url:
         alembic_ini_path = os.path.join(directory, 'alembic.ini')
         if os.path.exists(alembic_ini_path):
+
             with open(alembic_ini_path, 'r') as f:
                 content = f.read()
 
-            # Replace the database URL
-            content = content.replace('sqlalchemy.url = driver://user:pass@localhost/dbname',
-                                      f'sqlalchemy.url = {db_url}')
+            # Replace the database URL using regex pattern for more flexibility
+            pattern = r'sqlalchemy\.url\s*=\s*[^\n]+'
+            replacement = f'sqlalchemy.url = {db_url}'
+            new_content = re.sub(pattern, replacement, content)
 
-            with open(alembic_ini_path, 'w') as f:
-                f.write(content)
-            print(f"Successfully configured the database URL: {db_url}")
+            if new_content != content:
+                with open(alembic_ini_path, 'w') as f:
+                    f.write(new_content)
+                print(f"Successfully configured the database URL: {db_url}")
+            else:
+                print("Warning: Could not find database URL configuration in alembic.ini")
 
     # Configure env.py
     if model_path:
         env_py_path = os.path.join(directory, 'env.py')
         if os.path.exists(env_py_path):
+
             with open(env_py_path, 'r') as f:
                 content = f.read()
 
             try:
                 module_path, class_name = model_path.rsplit('.', 1)
-
-                # Replace the import statement and target_metadata setting
                 # Allow importing from the parent directory
                 import_statement = f"sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))\nfrom {module_path} import {class_name}\ntarget_metadata = {class_name}.metadata"
 
-                # Replace the import statement
-                content = content.replace(
-                    "# add your model's MetaData object here\n# for 'autogenerate' support\n# from myapp import mymodel\n# target_metadata = mymodel.Base.metadata",
-                    f"# add your model's MetaData object here\n# for 'autogenerate' support\n{import_statement}"
-                )
+                # Replace the import statement using regex for more robustness
+                import_pattern = r"# add your model's MetaData object here\s*\n# for 'autogenerate' support\s*\n# from myapp import mymodel\s*\n# target_metadata = mymodel\.Base\.metadata"
+                import_replacement = f"# add your model's MetaData object here\n# for 'autogenerate' support\n{import_statement}"
+
+                new_content = re.sub(import_pattern, import_replacement, content)
 
                 # Replace the target_metadata setting
-                content = content.replace(
-                    "target_metadata = config.attributes.get('sqlalchemy.metadata', None)",
-                    f"# target_metadata = config.attributes.get('sqlalchemy.metadata', None)\n# Already set by the import above"
-                )
+                metadata_pattern = r"target_metadata = config\.attributes\.get\('sqlalchemy\.metadata', None\)"
+                metadata_replacement = f"# target_metadata = config.attributes.get('sqlalchemy.metadata', None)\n# Already set by the import above"
 
-                with open(env_py_path, 'w') as f:
-                    f.write(content)
-                print(f"Successfully configured the model path: {model_path}")
+                new_content = re.sub(metadata_pattern, metadata_replacement, new_content)
+
+                if new_content != content:
+                    with open(env_py_path, 'w') as f:
+                        f.write(new_content)
+                    print(f"Successfully configured the model path: {model_path}")
+                else:
+                    print("Warning: Could not find expected patterns in env.py, please manually configure it")
             except ValueError:
                 print(f"Warning: Could not parse the model path {model_path}, please manually configure env.py")
 
@@ -148,15 +156,21 @@ def _special_configure_for_sqlite(directory: str, model_path: Optional[str] = No
             with open(env_py_path, 'r') as f:
                 content = f.read()
             try:
-                content = content.replace(
-                    "        context.configure(\n            connection=connection,\n            target_metadata=target_metadata,\n            process_revision_directives=process_revision_directives,\n        )",
-                    "        from sqlalchemy.engine import Connection\n        def is_sqlite(conn: Connection) -> bool:\n            return conn.dialect.name == \"sqlite\"\n        context.configure(\n            connection=connection,\n            target_metadata=target_metadata,\n            process_revision_directives=process_revision_directives,\n            render_as_batch=is_sqlite(connection),\n        )"
-                )
-                with open(env_py_path, 'w') as f:
-                    f.write(content)
-            except ValueError:
+                # Use regex pattern to match the context.configure block more flexibly
+                pattern = r'\s+context\.configure\(\s*\n\s+connection=connection,\s*\n\s+target_metadata=target_metadata,\s*\n\s+process_revision_directives=process_revision_directives,\s*\n\s+\)'
+                replacement = "\n        from sqlalchemy.engine import Connection\n        def is_sqlite(conn: Connection) -> bool:\n            return conn.dialect.name == \"sqlite\"\n        context.configure(\n            connection=connection,\n            target_metadata=target_metadata,\n            process_revision_directives=process_revision_directives,\n            render_as_batch=is_sqlite(connection),\n        )"
+
+                new_content = re.sub(pattern, replacement, content)
+
+                if new_content != content:
+                    with open(env_py_path, 'w') as f:
+                        f.write(new_content)
+                else:
+                    print(
+                        "Warning: Could not find context.configure block in env.py, please manually add render_as_batch=True for SQLite support")
+            except Exception as e:
                 print(
-                    "Warning: If your database is SQLite, you need to manually add `render_as_batch=True` in run_migrations_online() to avoid migration errors caused by SQLite's limited support for ALTER TABLE.")
+                    f"Warning: Could not configure SQLite support: {str(e)}. If your database is SQLite, you need to manually add `render_as_batch=True` in run_migrations_online() to avoid migration errors caused by SQLite's limited support for ALTER TABLE.")
     else:
         print(
             "Warning: If your database is SQLite, you need to manually add `render_as_batch=True` in run_migrations_online() to avoid migration errors caused by SQLite's limited support for ALTER TABLE.")
@@ -193,8 +207,8 @@ def init(directory: str = 'migrations', multidb: bool = False, template: Optiona
                     print(
                         "Cannot find models module.\nPlease provide your database URL with \"--db-url=<YOUR_DB_URL>\".")
                     return
-        except Exception as e:
-            print("Please provide your database URL with \"--db-url=<YOUR_DB_URL>\".")
+        except ImportError:
+            print("Cannot find models module.\nPlease provide your database URL with \"--db-url=<YOUR_DB_URL>\".")
             return
 
     if not model_path:
@@ -214,8 +228,8 @@ def init(directory: str = 'migrations', multidb: bool = False, template: Optiona
                 print(
                     "Cannot find models module.\nPlease provide your model path with \"--model-path=<YOUR_MODEL_PATH>\".")
                 return
-        except Exception as e:
-            print("Please provide your model path with \"--model-path=<YOUR_MODEL_PATH>\".")
+        except ImportError:
+            print("Cannot find models module.\nPlease provide your model path with \"--model-path=<YOUR_MODEL_PATH>\".")
             return
 
     # Ensure the directory exists
@@ -223,6 +237,7 @@ def init(directory: str = 'migrations', multidb: bool = False, template: Optiona
 
     config = Config(directory)
     template_path = config._get_template_path(template) if template is not None else config._get_template_path()
+    print(template_path)
     command.init(config, directory, template=template_path, package=package)
 
     _auto_configure_migrations(directory, db_url, model_path)
