@@ -207,8 +207,8 @@ def init(directory: str = 'migrations', multidb: bool = False, template: Optiona
                     print(
                         "Cannot find models module.\nPlease provide your database URL with \"--db-url=<YOUR_DB_URL>\".")
                     return
-        except ImportError:
-            print("Cannot find models module.\nPlease provide your database URL with \"--db-url=<YOUR_DB_URL>\".")
+        except ImportError as e:
+            print(f"{e}. Please fix first.")
             return
 
     if not model_path:
