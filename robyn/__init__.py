@@ -32,27 +32,28 @@ __version__ = get_version()
 def _normalize_endpoint(endpoint: str) -> str:
     """
     Normalize an endpoint to ensure consistent routing.
-    
+
     Rules:
     - Root "/" remains unchanged
     - All other endpoints get leading slash added if missing
     - Trailing slashes are removed from all endpoints except root
-    
+
     Args:
         endpoint: The endpoint path to normalize
-        
+
     Returns:
         Normalized endpoint path
     """
     if endpoint == "/":
         return "/"
-    
+
     # Add leading slash if missing
     if not endpoint.startswith("/"):
         endpoint = "/" + endpoint
-    
+
     # Remove trailing slash
     return endpoint.rstrip("/")
+
 
 config = Config()
 
@@ -176,19 +177,19 @@ class BaseRobyn(ABC):
 
         # Normalize endpoint before adding
         normalized_endpoint = _normalize_endpoint(endpoint)
-        
+
         # Check if this exact route (method + normalized_endpoint) already exists
         route_key = f"{route_type}:{normalized_endpoint}"
-        if not hasattr(self, '_added_routes'):
+        if not hasattr(self, "_added_routes"):
             self._added_routes = set()
-        
+
         if route_key in self._added_routes:
             # Route already exists, raise an error
             raise ValueError(f"Route {route_type} {normalized_endpoint} already exists")
-        
+
         # Add to our tracking set
         self._added_routes.add(route_key)
-        
+
         add_route_response = self.router.add_route(
             route_type=route_type,
             endpoint=normalized_endpoint,
@@ -640,11 +641,11 @@ class SubRouter(BaseRobyn):
     def __add_prefix(self, endpoint: str):
         # Normalize both prefix and endpoint to ensure consistent routing
         normalized_prefix = _normalize_endpoint(self.prefix)
-        
+
         # Handle empty endpoint - should just be the prefix
-        if endpoint == '':
+        if endpoint == "":
             return normalized_prefix
-            
+
         # Normalize the endpoint and combine with prefix
         normalized_endpoint = _normalize_endpoint(endpoint)
         return f"{normalized_prefix}{normalized_endpoint}"
