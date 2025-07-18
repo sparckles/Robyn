@@ -1,6 +1,6 @@
 ---
 description: Effective Code Comments
-globs: "**/*.{js,ts,py,go,java,rb,cs}"
+globs: "*"
 alwaysApply: true
 ---
 
