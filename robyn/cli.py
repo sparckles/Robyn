@@ -108,22 +108,22 @@ def start_app_normally(config: Config):
 def handle_db_command():
     """Handle database migration commands."""
     alembic_spec = importlib.util.find_spec("alembic")
-    
+
     if alembic_spec is None:
         print("ERROR: Alembic has not been installed.")
         install_choice = input("Would you like to install alembic now? (y/n): ").strip().lower()
-        
-        if install_choice == 'y':
+
+        if install_choice == "y":
             try:
                 try:
                     print("Installing alembic...")
-                    pip_main(['install', 'alembic', '--quiet'])
+                    pip_main(["install", "alembic", "--quiet"])
                     print("Successfully installed alembic.")
                 except ImportError:
                     print("Installing alembic using subprocess...")
                     subprocess.run([sys.executable, "-m", "pip", "install", "alembic", "-q"], check=True)
                     print("Successfully installed alembic.")
-                
+
                 importlib.invalidate_caches()
                 alembic_spec = importlib.util.find_spec("alembic")
                 if alembic_spec is None:
@@ -136,19 +136,19 @@ def handle_db_command():
         else:
             print("Please install alembic manually using 'pip install alembic' before using database commands.")
             sys.exit(1)
-    
+
     parser = argparse.ArgumentParser(
         usage=argparse.SUPPRESS,  # omit usage hint
-        description='Robyn database migration commands.'
+        description="Robyn database migration commands.",
     )
     parser = configure_parser(parser)
 
-    if len(sys.argv) == 2 and sys.argv[1] == 'db':
+    if len(sys.argv) == 2 and sys.argv[1] == "db":
         parser.print_help()
         sys.exit(1)
     # Remove the first two arguments (robyn and db)
-    if len(sys.argv) > 2 and sys.argv[1] == 'db':
-        if sys.argv[2] == '--help' or sys.argv[2] == '-h' or sys.argv[2] == '-H':
+    if len(sys.argv) > 2 and sys.argv[1] == "db":
+        if sys.argv[2] == "--help" or sys.argv[2] == "-h" or sys.argv[2] == "-H":
             parser.print_help()
             sys.exit(1)
         db_args = parser.parse_args(sys.argv[2:])
@@ -171,7 +171,7 @@ def run():
         config.dev = os.getenv("ROBYN_DEV_MODE", False) == "True"
 
     # Handle db command
-    if config.db == 'db' and len(sys.argv) > 1 and sys.argv[1] == 'db':
+    if config.db == "db" and len(sys.argv) > 1 and sys.argv[1] == "db":
         handle_db_command()
         return
 
