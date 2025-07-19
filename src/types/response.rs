@@ -1,6 +1,6 @@
 use actix_http::{body::BoxBody, StatusCode};
 use actix_web::{web::Bytes, HttpRequest, HttpResponse, HttpResponseBuilder, Responder};
-use futures::{Stream, StreamExt};
+use futures::Stream;
 use log::debug;
 use pyo3::{
     exceptions::PyIOError,
@@ -8,7 +8,7 @@ use pyo3::{
     types::{PyBytes, PyDict},
     Bound, IntoPyObject,
 };
-use std::{pin::Pin, sync::Arc, time::Duration};
+use std::pin::Pin;
 use tokio;
 
 use crate::io_helpers::{apply_hashmap_headers, read_file};
@@ -39,13 +39,6 @@ pub enum ResponseType {
 }
 
 impl ResponseType {
-    pub fn headers(&self) -> &Headers {
-        match self {
-            ResponseType::Standard(response) => &response.headers,
-            ResponseType::Streaming(streaming_response) => &streaming_response.headers,
-        }
-    }
-
     pub fn headers_mut(&mut self) -> &mut Headers {
         match self {
             ResponseType::Standard(response) => &mut response.headers,
