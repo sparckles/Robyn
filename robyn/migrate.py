@@ -6,7 +6,7 @@ from functools import wraps
 import argparse
 import re
 from pathlib import Path
-from typing import Optional, List, Dict, Any, Union, Callable
+from typing import Optional, List, Dict, Any, Union, Callable, TypeVar, cast
 
 # Ensure alembic is installed
 import importlib.util
@@ -45,18 +45,58 @@ class Config(AlembicConfig):
         return Path(template)
 
 
-def catch_errors(f):
-    """Decorator to catch and handle errors."""
+# Define specific exception types for migration operations
+class MigrationError(Exception):
+    """Base exception for migration errors."""
+    pass
 
+class ConfigurationError(MigrationError):
+    """Exception raised for configuration errors."""
+    pass
+
+class DatabaseConnectionError(MigrationError):
+    """Exception raised for database connection errors."""
+    pass
+
+class RevisionError(MigrationError):
+    """Exception raised for revision-related errors."""
+    pass
+
+class TemplateError(MigrationError):
+    """Exception raised for template-related errors."""
+    pass
+
+# Type variable for function return type
+T = TypeVar('T')
+
+def handle_migration_errors(f: Callable[..., T]) -> Callable[..., T]:
+    """Decorator to catch and handle specific migration errors."""
     @wraps(f)
-    def wrapped(*args, **kwargs):
+    def wrapped(*args: Any, **kwargs: Any) -> T:
         try:
             return f(*args, **kwargs)
+        except MigrationError as e:
+            # Handle our specific migration errors
+            print(f"Migration Error: {str(e)}")
+            sys.exit(1)
+        except ImportError as e:
+            # Handle import errors separately
+            print(f"Import Error: {str(e)}")
+            print("Please ensure all required packages are installed.")
+            sys.exit(1)
+        except alembic.util.exc.CommandError as e:
+            # Handle Alembic command errors
+            print(f"Alembic Command Error: {str(e)}")
+            sys.exit(1)
         except Exception as e:
-            print(f"ERROR: {str(e)}")
+            # Fallback for unexpected errors
+            print(f"Unexpected Error: {str(e)}")
+            print("Please report this issue with the full traceback.")
+            import traceback
+            traceback.print_exc()
             sys.exit(1)
 
-    return wrapped
+    return cast(Callable[..., T], wrapped)
 
 
 def _get_config(directory: str, x_arg: Optional[str] = None, opts: Optional[Dict[str, Any]] = None) -> Config:
@@ -69,14 +109,24 @@ def _get_config(directory: str, x_arg: Optional[str] = None, opts: Optional[Dict
 
     Returns:
         Config: Robyn migration configuration
+        
+    Raises:
+        ConfigurationError: If the configuration directory doesn't exist or is invalid
     """
-    config = Config(directory)
-    if x_arg is not None:
-        config.cmd_opts = argparse.Namespace(x=x_arg)
-    return config
+    if not os.path.exists(directory):
+        raise ConfigurationError(f"Migration directory '{directory}' does not exist. Run 'init' command first.")
+        
+    try:
+        config = Config(directory)
+        if x_arg is not None:
+            config.cmd_opts = argparse.Namespace(x=x_arg)
+        return config
+    except Exception as e:
+        raise ConfigurationError(f"Failed to create Alembic configuration: {str(e)}")
 
 
-@catch_errors
+
+@handle_migration_errors
 def list_templates() -> None:
     """List available migration templates."""
     templates_dir = os.path.join(os.path.dirname(__file__), 'templates')
@@ -92,12 +142,18 @@ def _auto_configure_migrations(directory: str, db_url: Optional[str] = None, mod
         directory: Directory where migration files are stored
         db_url: Database URL
         model_path: Path to the model file
+        
+    Raises:
+        ConfigurationError: If configuration files cannot be found or modified
+        DatabaseConnectionError: If database URL is invalid
     """
     # Configure alembic.ini
     if db_url:
         alembic_ini_path = os.path.join(directory, 'alembic.ini')
-        if os.path.exists(alembic_ini_path):
+        if not os.path.exists(alembic_ini_path):
+            raise ConfigurationError(f"alembic.ini not found at {alembic_ini_path}. Initialization may have failed.")
 
+        try:
             with open(alembic_ini_path, 'r') as f:
                 content = f.read()
 
@@ -111,13 +167,17 @@ def _auto_configure_migrations(directory: str, db_url: Optional[str] = None, mod
                     f.write(new_content)
                 print(f"Successfully configured the database URL: {db_url}")
             else:
-                print("Warning: Could not find database URL configuration in alembic.ini")
+                logging.warning("Could not find database URL configuration in alembic.ini")
+        except Exception as e:
+            raise DatabaseConnectionError(f"Failed to configure database URL: {str(e)}")
 
     # Configure env.py
     if model_path:
         env_py_path = os.path.join(directory, 'env.py')
-        if os.path.exists(env_py_path):
+        if not os.path.exists(env_py_path):
+            raise ConfigurationError(f"env.py not found at {env_py_path}. Initialization may have failed.")
 
+        try:
             with open(env_py_path, 'r') as f:
                 content = f.read()
 
@@ -143,40 +203,57 @@ def _auto_configure_migrations(directory: str, db_url: Optional[str] = None, mod
                         f.write(new_content)
                     print(f"Successfully configured the model path: {model_path}")
                 else:
-                    print("Warning: Could not find expected patterns in env.py, please manually configure it")
+                    logging.warning("Could not find expected patterns in env.py, please manually configure it")
             except ValueError:
-                print(f"Warning: Could not parse the model path {model_path}, please manually configure env.py")
+                raise ConfigurationError(f"Could not parse the model path {model_path}. Format should be 'module.Class'")
+        except Exception as e:
+            if not isinstance(e, MigrationError):
+                raise ConfigurationError(f"Failed to configure model path: {str(e)}")
+            raise
 
 
-def _special_configure_for_sqlite(directory: str, model_path: Optional[str] = None):
+def _special_configure_for_sqlite(directory: str, model_path: Optional[str] = None) -> None:
+    """Configure SQLite-specific settings in env.py.
+    
+    Args:
+        directory: Directory where migration files are stored
+        model_path: Path to the model file
+        
+    Raises:
+        ConfigurationError: If configuration files cannot be found or modified
+    """
     # If the database is SQLite, must add render_as_batch=True in run_migrations_online() to avoid migration errors caused by SQLite's limited support for ALTER TABLE.
     if model_path:
         env_py_path = os.path.join(directory, 'env.py')
-        if os.path.exists(env_py_path):
+        if not os.path.exists(env_py_path):
+            raise ConfigurationError(f"env.py not found at {env_py_path}. Initialization may have failed.")
+            
+        try:
             with open(env_py_path, 'r') as f:
                 content = f.read()
-            try:
-                # Use regex pattern to match the context.configure block more flexibly
-                pattern = r'\s+context\.configure\(\s*\n\s+connection=connection,\s*\n\s+target_metadata=target_metadata,\s*\n\s+process_revision_directives=process_revision_directives,\s*\n\s+\)'
-                replacement = "\n        from sqlalchemy.engine import Connection\n        def is_sqlite(conn: Connection) -> bool:\n            return conn.dialect.name == \"sqlite\"\n        context.configure(\n            connection=connection,\n            target_metadata=target_metadata,\n            process_revision_directives=process_revision_directives,\n            render_as_batch=is_sqlite(connection),\n        )"
+                
+            # Use regex pattern to match the context.configure block more flexibly
+            pattern = r'\s+context\.configure\(\s*\n\s+connection=connection,\s*\n\s+target_metadata=target_metadata,\s*\n\s+process_revision_directives=process_revision_directives,\s*\n\s+\)'
+            replacement = "\n        from sqlalchemy.engine import Connection\n        def is_sqlite(conn: Connection) -> bool:\n            return conn.dialect.name == \"sqlite\"\n        context.configure(\n            connection=connection,\n            target_metadata=target_metadata,\n            process_revision_directives=process_revision_directives,\n            render_as_batch=is_sqlite(connection),\n        )"
 
-                new_content = re.sub(pattern, replacement, content)
+            new_content = re.sub(pattern, replacement, content)
 
-                if new_content != content:
-                    with open(env_py_path, 'w') as f:
-                        f.write(new_content)
-                else:
-                    print(
-                        "Warning: Could not find context.configure block in env.py, please manually add render_as_batch=True for SQLite support")
-            except Exception as e:
-                print(
-                    f"Warning: Could not configure SQLite support: {str(e)}. If your database is SQLite, you need to manually add `render_as_batch=True` in run_migrations_online() to avoid migration errors caused by SQLite's limited support for ALTER TABLE.")
+            if new_content != content:
+                with open(env_py_path, 'w') as f:
+                    f.write(new_content)
+                print("Successfully configured SQLite support with render_as_batch=True")
+            else:
+                logging.warning(
+                    "Could not find context.configure block in env.py, please manually add render_as_batch=True for SQLite support")
+        except Exception as e:
+            logging.warning(
+                f"Could not configure SQLite support: {str(e)}. If your database is SQLite, you need to manually add `render_as_batch=True` in run_migrations_online() to avoid migration errors caused by SQLite's limited support for ALTER TABLE.")
     else:
-        print(
-            "Warning: If your database is SQLite, you need to manually add `render_as_batch=True` in run_migrations_online() to avoid migration errors caused by SQLite's limited support for ALTER TABLE.")
+        logging.warning(
+            "If your database is SQLite, you need to manually add `render_as_batch=True` in run_migrations_online() to avoid migration errors caused by SQLite's limited support for ALTER TABLE.")
 
 
-@catch_errors
+@handle_migration_errors
 def init(directory: str = 'migrations', multidb: bool = False, template: Optional[str] = None, package: bool = False,
          db_url: Optional[str] = None, model_path: Optional[str] = None) -> None:
     """Initialize a new migration repository.
@@ -188,6 +265,11 @@ def init(directory: str = 'migrations', multidb: bool = False, template: Optiona
         package: Whether to create a package
         db_url: Database URL to use for migrations
         model_path: Path to the model file containing the Base class
+        
+    Raises:
+        DatabaseConnectionError: If database URL cannot be determined
+        ConfigurationError: If model path cannot be determined or configuration fails
+        TemplateError: If the specified template cannot be found
     """
     if not db_url:
         try:
@@ -202,14 +284,15 @@ def init(directory: str = 'migrations', multidb: bool = False, template: Optiona
                 if spec is not None:
                     models_module = importlib.util.module_from_spec(spec)
                     spec.loader.exec_module(models_module)
-                    db_url = str(models_module.engine.url)
+                    if hasattr(models_module, 'engine'):
+                        db_url = str(models_module.engine.url)
+                    else:
+                        raise DatabaseConnectionError("Models module does not have 'engine' attribute.")
                 else:
-                    print(
-                        "Cannot find models module.\nPlease provide your database URL with \"--db-url=<YOUR_DB_URL>\".")
-                    return
+                    raise DatabaseConnectionError(
+                        "Cannot find models module. Please provide your database URL with \"--db-url=<YOUR_DB_URL>\".")
         except ImportError as e:
-            print(f"{e}. Please fix first.")
-            return
+            raise DatabaseConnectionError(f"Import error: {e}. Please fix before proceeding.")
 
     if not model_path:
         try:
@@ -221,30 +304,41 @@ def init(directory: str = 'migrations', multidb: bool = False, template: Optiona
                 if hasattr(models_module, 'Base'):
                     model_path = 'models.Base'
                 else:
-                    print(
-                        "Models module does not have Base attribute.\nPlease provide your model path with \"--model-path=<YOUR_MODEL_PATH>\".")
-                    return
+                    raise ConfigurationError(
+                        "Models module does not have Base attribute. Please provide your model path with \"--model-path=<YOUR_MODEL_PATH>\".")
             else:
-                print(
-                    "Cannot find models module.\nPlease provide your model path with \"--model-path=<YOUR_MODEL_PATH>\".")
-                return
-        except ImportError:
-            print("Cannot find models module.\nPlease provide your model path with \"--model-path=<YOUR_MODEL_PATH>\".")
-            return
+                raise ConfigurationError(
+                    "Cannot find models module. Please provide your model path with \"--model-path=<YOUR_MODEL_PATH>\".")
+        except ImportError as e:
+            raise ConfigurationError(
+                f"Import error: {e}. Cannot find models module. Please provide your model path with \"--model-path=<YOUR_MODEL_PATH>\".")
 
     # Ensure the directory exists
     os.makedirs(directory, exist_ok=True)
 
-    config = Config(directory)
-    template_path = config._get_template_path(template) if template is not None else config._get_template_path()
-    print(template_path)
-    command.init(config, directory, template=template_path, package=package)
+    try:
+        config = Config(directory)
+        if template is not None:
+            template_path = config._get_template_path(template)
+            if not os.path.exists(template_path):
+                raise TemplateError(f"Template '{template}' not found at path: {template_path}")
+        else:
+            template_path = config._get_template_path()
+            if not os.path.exists(template_path):
+                raise TemplateError(f"Default template not found at path: {template_path}")
+                
+        print(f"Using template: {template_path}")
+        command.init(config, directory, template=template_path, package=package)
 
-    _auto_configure_migrations(directory, db_url, model_path)
-    _special_configure_for_sqlite(directory, model_path)
+        _auto_configure_migrations(directory, db_url, model_path)
+        _special_configure_for_sqlite(directory, model_path)
+    except Exception as e:
+        if not isinstance(e, MigrationError):
+            raise ConfigurationError(f"Failed to initialize migration repository: {str(e)}")
+        raise
 
 
-@catch_errors
+@handle_migration_errors
 def revision(directory: str = 'migrations', message: Optional[str] = None, autogenerate: bool = False,
              sql: bool = False, head: str = 'head', splice: bool = False, branch_label: Optional[str] = None,
              version_path: Optional[str] = None, rev_id: Optional[str] = None) -> None:
@@ -260,21 +354,36 @@ def revision(directory: str = 'migrations', message: Optional[str] = None, autog
         branch_label: Label to apply to the branch
         version_path: Path to the version directory
         rev_id: Revision ID to use
+        
+    Raises:
+        ConfigurationError: If the migration directory is not properly configured
+        RevisionError: If there's an error creating the revision
     """
-    command.revision(
-        _get_config(directory),
-        message,
-        autogenerate=autogenerate,
-        sql=sql,
-        head=head,
-        splice=splice,
-        branch_label=branch_label,
-        version_path=version_path,
-        rev_id=rev_id
-    )
+    if not message and not rev_id:
+        raise RevisionError("A revision message (-m) or revision id (--rev-id) is required")
+        
+    try:
+        config = _get_config(directory)
+        command.revision(
+            config,
+            message,
+            autogenerate=autogenerate,
+            sql=sql,
+            head=head,
+            splice=splice,
+            branch_label=branch_label,
+            version_path=version_path,
+            rev_id=rev_id
+        )
+    except alembic.util.exc.CommandError as e:
+        raise RevisionError(f"Failed to create revision: {str(e)}")
+    except Exception as e:
+        if not isinstance(e, MigrationError):
+            raise RevisionError(f"Unexpected error creating revision: {str(e)}")
+        raise
 
 
-@catch_errors
+@handle_migration_errors
 def migrate(directory: str = 'migrations', message: Optional[str] = None, sql: bool = False,
             head: str = 'head', splice: bool = False, branch_label: Optional[str] = None,
             version_path: Optional[str] = None, rev_id: Optional[str] = None, x_arg: Optional[str] = None) -> None:
@@ -290,21 +399,39 @@ def migrate(directory: str = 'migrations', message: Optional[str] = None, sql: b
         version_path: Path to the version directory
         rev_id: Revision ID to use
         x_arg: Extra arguments to pass to Alembic
+        
+    Raises:
+        ConfigurationError: If the migration directory is not properly configured
+        RevisionError: If there's an error creating the revision
+        DatabaseConnectionError: If there's an error connecting to the database
     """
-    command.revision(
-        _get_config(directory, x_arg),
-        message,
-        autogenerate=True,
-        sql=sql,
-        head=head,
-        splice=splice,
-        branch_label=branch_label,
-        version_path=version_path,
-        rev_id=rev_id
-    )
+    if not message and not rev_id:
+        raise RevisionError("A revision message (-m) or revision id (--rev-id) is required")
+        
+    try:
+        config = _get_config(directory, x_arg)
+        command.revision(
+            config,
+            message,
+            autogenerate=True,
+            sql=sql,
+            head=head,
+            splice=splice,
+            branch_label=branch_label,
+            version_path=version_path,
+            rev_id=rev_id
+        )
+    except alembic.util.exc.CommandError as e:
+        if "No connection could be established" in str(e):
+            raise DatabaseConnectionError(f"Database connection error: {str(e)}")
+        raise RevisionError(f"Failed to create migration: {str(e)}")
+    except Exception as e:
+        if not isinstance(e, MigrationError):
+            raise RevisionError(f"Unexpected error creating migration: {str(e)}")
+        raise
 
 
-@catch_errors
+@handle_migration_errors
 def edit(directory: str = 'migrations', revision: str = 'current') -> None:
     """Edit the revision file.
 
@@ -315,7 +442,7 @@ def edit(directory: str = 'migrations', revision: str = 'current') -> None:
     command.edit(_get_config(directory), revision)
 
 
-@catch_errors
+@handle_migration_errors
 def merge(directory: str = 'migrations', revisions: str = '', message: Optional[str] = None,
           branch_label: Optional[str] = None, rev_id: Optional[str] = None) -> None:
     """Merge two revisions.
@@ -336,7 +463,7 @@ def merge(directory: str = 'migrations', revisions: str = '', message: Optional[
     )
 
 
-@catch_errors
+@handle_migration_errors
 def upgrade(directory: str = 'migrations', revision: str = 'head', sql: bool = False,
             tag: Optional[str] = None, x_arg: Optional[str] = None) -> None:
     """Upgrade to a later revision.
@@ -347,11 +474,29 @@ def upgrade(directory: str = 'migrations', revision: str = 'head', sql: bool = F
         sql: Whether to generate SQL
         tag: Tag to apply to the revision
         x_arg: Extra arguments to pass to Alembic
+        
+    Raises:
+        ConfigurationError: If the migration directory is not properly configured
+        RevisionError: If there's an error with the revision
+        DatabaseConnectionError: If there's an error connecting to the database
     """
-    command.upgrade(_get_config(directory, x_arg), revision, sql=sql, tag=tag)
+    try:
+        config = _get_config(directory, x_arg)
+        command.upgrade(config, revision, sql=sql, tag=tag)
+    except alembic.util.exc.CommandError as e:
+        if "No connection could be established" in str(e):
+            raise DatabaseConnectionError(f"Database connection error: {str(e)}")
+        elif "Can't locate revision" in str(e):
+            raise RevisionError(f"Revision error: {str(e)}")
+        else:
+            raise RevisionError(f"Failed to upgrade: {str(e)}")
+    except Exception as e:
+        if not isinstance(e, MigrationError):
+            raise RevisionError(f"Unexpected error during upgrade: {str(e)}")
+        raise
 
 
-@catch_errors
+@handle_migration_errors
 def downgrade(directory: str = 'migrations', revision: str = '-1', sql: bool = False,
               tag: Optional[str] = None, x_arg: Optional[str] = None) -> None:
     """Revert to a previous revision.
@@ -362,11 +507,29 @@ def downgrade(directory: str = 'migrations', revision: str = '-1', sql: bool = F
         sql: Whether to generate SQL
         tag: Tag to apply to the revision
         x_arg: Extra arguments to pass to Alembic
+        
+    Raises:
+        ConfigurationError: If the migration directory is not properly configured
+        RevisionError: If there's an error with the revision
+        DatabaseConnectionError: If there's an error connecting to the database
     """
-    command.downgrade(_get_config(directory, x_arg), revision, sql=sql, tag=tag)
+    try:
+        config = _get_config(directory, x_arg)
+        command.downgrade(config, revision, sql=sql, tag=tag)
+    except alembic.util.exc.CommandError as e:
+        if "No connection could be established" in str(e):
+            raise DatabaseConnectionError(f"Database connection error: {str(e)}")
+        elif "Can't locate revision" in str(e):
+            raise RevisionError(f"Revision error: {str(e)}")
+        else:
+            raise RevisionError(f"Failed to downgrade: {str(e)}")
+    except Exception as e:
+        if not isinstance(e, MigrationError):
+            raise RevisionError(f"Unexpected error during downgrade: {str(e)}")
+        raise
 
 
-@catch_errors
+@handle_migration_errors
 def show(directory: str = 'migrations', revision: str = 'head') -> None:
     """Show the revision(s).
 
@@ -377,7 +540,7 @@ def show(directory: str = 'migrations', revision: str = 'head') -> None:
     command.show(_get_config(directory), revision)
 
 
-@catch_errors
+@handle_migration_errors
 def history(directory: str = 'migrations', rev_range: Optional[str] = None,
             verbose: bool = False, indicate_current: bool = False) -> None:
     """List revision history.
@@ -396,7 +559,7 @@ def history(directory: str = 'migrations', rev_range: Optional[str] = None,
     )
 
 
-@catch_errors
+@handle_migration_errors
 def heads(directory: str = 'migrations', verbose: bool = False,
           resolve_dependencies: bool = False) -> None:
     """Show current available heads.
@@ -413,7 +576,7 @@ def heads(directory: str = 'migrations', verbose: bool = False,
     )
 
 
-@catch_errors
+@handle_migration_errors
 def branches(directory: str = 'migrations', verbose: bool = False) -> None:
     """Show current branch points.
 
@@ -424,7 +587,7 @@ def branches(directory: str = 'migrations', verbose: bool = False) -> None:
     command.branches(_get_config(directory), verbose=verbose)
 
 
-@catch_errors
+@handle_migration_errors
 def current(directory: str = 'migrations', verbose: bool = False) -> None:
     """Display the current revision.
 
@@ -435,7 +598,7 @@ def current(directory: str = 'migrations', verbose: bool = False) -> None:
     command.current(_get_config(directory), verbose=verbose)
 
 
-@catch_errors
+@handle_migration_errors
 def stamp(directory: str = 'migrations', revision: str = 'head', sql: bool = False,
           tag: Optional[str] = None, purge: bool = False) -> None:
     """'stamp' the revision table.
@@ -450,7 +613,7 @@ def stamp(directory: str = 'migrations', revision: str = 'head', sql: bool = Fal
     command.stamp(_get_config(directory), revision, sql=sql, tag=tag, purge=purge)
 
 
-@catch_errors
+@handle_migration_errors
 def check(directory: str = 'migrations') -> None:
     """Check if database is up to date.
 

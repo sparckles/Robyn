@@ -35,7 +35,7 @@ dependencies = [
 
 [project.optional-dependencies]
 "templating" = ["jinja2 == 3.0.1"]
-"database" = ["alembic >= 1.16.3"]
+"db" = ["alembic >= 1.16.3"]
 
 [project.urls]
 Documentation = "https://robyn.tech/"
@@ -86,7 +86,7 @@ orjson = "^3.9.15"
 
 [tool.poetry.extras]
 templating = ["jinja2"]
-database = ["alembic"]
+db = ["alembic"]
 
 [tool.poetry.group.dev]
 optional = true
