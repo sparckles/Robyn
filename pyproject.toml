@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "robyn"
-version = "0.71.3"
+version = "0.71.4"
 description = "A Super Fast Async Python Web Framework with a Rust runtime."
 authors = [{ name = "Sanskar Jethi", email = "sansyrox@gmail.com" }]
 license = { file = "LICENSE" }
@@ -66,7 +66,7 @@ test = [
 
 [tool.poetry]
 name = "robyn"
-version = "0.71.3"
+version = "0.71.4"
 description = "A Super Fast Async Python Web Framework with a Rust runtime."
 authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 
