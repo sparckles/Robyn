@@ -29,8 +29,11 @@ def run_processes(
     response_headers: Headers,
     excluded_response_headers_paths: Optional[List[str]],
     open_browser: bool,
+    client_timeout: int = 30,
+    keep_alive_timeout: int = 20,
+    max_connections: int = 1000,
 ) -> List[Process]:
-    socket = SocketHeld(url, port)
+    socket = SocketHeld(url, port, max_connections)
 
     process_pool = init_processpool(
         directories,
@@ -45,6 +48,9 @@ def run_processes(
         processes,
         response_headers,
         excluded_response_headers_paths,
+        client_timeout,
+        keep_alive_timeout,
+        max_connections,
     )
 
     def terminating_signal_handler(_sig, _frame):
@@ -79,6 +85,9 @@ def init_processpool(
     processes: int,
     response_headers: Headers,
     excluded_response_headers_paths: Optional[List[str]],
+    client_timeout: int = 30,
+    keep_alive_timeout: int = 20,
+    max_connections: int = 1000,
 ) -> List[Process]:
     process_pool: List = []
     if sys.platform.startswith("win32") or processes == 1:
@@ -94,6 +103,9 @@ def init_processpool(
             workers,
             response_headers,
             excluded_response_headers_paths,
+            client_timeout,
+            keep_alive_timeout,
+            max_connections,
         )
 
         return process_pool
@@ -114,6 +126,9 @@ def init_processpool(
                 workers,
                 response_headers,
                 excluded_response_headers_paths,
+                client_timeout,
+                keep_alive_timeout,
+                max_connections,
             ),
         )
         process.start()
@@ -150,6 +165,9 @@ def spawn_process(
     workers: int,
     response_headers: Headers,
     excluded_response_headers_paths: Optional[List[str]],
+    client_timeout: int = 30,
+    keep_alive_timeout: int = 20,
+    max_connections: int = 1000,
 ):
     """
     This function is called by the main process handler to create a server runtime.
@@ -207,7 +225,7 @@ def spawn_process(
         )
 
     try:
-        server.start(socket, workers)
+        server.start(socket, workers, client_timeout, keep_alive_timeout, max_connections)
         loop = asyncio.get_event_loop()
         loop.run_forever()
     except KeyboardInterrupt:
