@@ -1,0 +1,189 @@
+export const description =
+  '配置超时设置以处理高并发场景并防止资源耗尽。'
+
+# 超时配置
+
+Robyn 支持全面的超时配置，以处理高并发场景并防止资源耗尽，如"打开文件过多"错误。 {{ className: 'lead' }}
+
+## 配置选项
+
+### 方法参数
+
+直接在 `app.start()` 方法中配置超时：
+
+```python
+from robyn import Robyn
+
+app = Robyn(__file__)
+
+@app.get("/")
+async def hello(request):
+    return "Hello, world!"
+
+# 配置超时设置
+app.start(
+    host="0.0.0.0", 
+    port=8080,
+    client_timeout=30,          # 客户端连接超时（秒）
+    keep_alive_timeout=20,      # 保持连接超时（秒）  
+    max_connections=1000        # 最大并发连接数
+)
+```
+
+### 环境变量
+
+使用环境变量覆盖配置：
+
+```bash
+# 设置超时配置
+export ROBYN_CLIENT_TIMEOUT=45
+export ROBYN_KEEP_ALIVE_TIMEOUT=30
+export ROBYN_MAX_CONNECTIONS=2000
+
+# 启动应用程序
+python app.py
+```
+
+## 配置参数
+
+| 参数 | 默认值 | 描述 | 环境变量 |
+|------|-------|------|---------|
+| `client_timeout` | 30 | 客户端请求处理的最大时间（秒） | `ROBYN_CLIENT_TIMEOUT` |
+| `keep_alive_timeout` | 20 | 保持空闲连接的时间（秒） | `ROBYN_KEEP_ALIVE_TIMEOUT` |
+| `max_connections` | 1000 | 最大并发连接数 | `ROBYN_MAX_CONNECTIONS` |
+
+## 使用示例
+
+### 基本配置
+
+```python
+# 最小超时配置
+app.start(client_timeout=30)
+```
+
+### 高流量生产设置
+
+```python
+# 针对高流量场景优化
+app.start(
+    host="0.0.0.0",
+    port=8080,
+    client_timeout=60,      # 允许更长的处理时间
+    keep_alive_timeout=15,  # 更短的保持连接以加快周转
+    max_connections=5000    # 支持更多并发连接
+)
+```
+
+### 开发设置
+
+```python
+# 开发友好设置
+app.start(
+    client_timeout=300,     # 调试的长超时
+    keep_alive_timeout=60,  # 测试的长保持连接
+    max_connections=100     # 本地开发的有限连接
+)
+```
+
+### 负载测试配置
+
+```python
+# 针对 wrk 等工具的负载测试优化
+app.start(
+    client_timeout=10,      # 快速超时
+    keep_alive_timeout=5,   # 快速连接周转
+    max_connections=10000   # 高连接限制
+)
+```
+
+## 环境变量优先级
+
+环境变量优先于方法参数：
+
+```python
+# 如果设置了 ROBYN_CLIENT_TIMEOUT=60，将使用 60，否则使用 30
+app.start(client_timeout=30)
+```
+
+## 故障排除
+
+### "打开文件过多"错误
+
+如果遇到文件描述符耗尽：
+
+1. **增加系统限制：**
+   ```bash
+   ulimit -n 65536
+   ```
+
+2. **优化超时设置：**
+   ```python
+   app.start(
+       client_timeout=15,      # 更短的超时
+       keep_alive_timeout=5,   # 更快的连接清理
+       max_connections=2000    # 合理的连接限制
+   )
+   ```
+
+3. **在部署中使用环境变量：**
+   ```bash
+   export ROBYN_CLIENT_TIMEOUT=15
+   export ROBYN_KEEP_ALIVE_TIMEOUT=5
+   export ROBYN_MAX_CONNECTIONS=2000
+   ```
+
+### 性能调优
+
+**对于高吞吐量 API：**
+- 较低的 `keep_alive_timeout` (5-15秒)
+- 中等的 `client_timeout` (15-30秒)
+- 较高的 `max_connections` (2000-10000)
+
+**对于长时间运行的操作：**
+- 较高的 `client_timeout` (60-300秒)
+- 标准的 `keep_alive_timeout` (20-30秒)
+- 中等的 `max_connections` (500-2000)
+
+## 与其他框架的比较
+
+| 框架 | 默认客户端超时 | 默认保持连接 | 配置方式 |
+|-----|--------------|-------------|----------|
+| **Robyn** | 30秒 | 20秒 | 方法参数 + 环境变量 |
+| Uvicorn | 无 | 20秒 | 构造函数参数 |
+| Express.js | 120秒 | 5秒 | 方法链式调用 |
+| Django/Gunicorn | 30秒 | 不适用 | 配置文件 |
+| Flask/Gunicorn | 30秒 | 2秒 | 命令行选项 |
+
+## 最佳实践
+
+1. **在生产环境中始终设置明确的超时**
+2. **使用环境变量进行特定部署的配置**
+3. **在负载下监控文件描述符使用**
+4. **用现实负载模式测试超时设置**
+5. **从保守值开始，根据指标进行调优**
+
+## 迁移指南
+
+### 从早期版本
+
+如果从早期 Robyn 版本升级，默认行为会改变：
+
+**之前（无限超时）：**
+```python
+# 以前：无超时（可能导致资源耗尽）
+app.start(host="0.0.0.0", port=8080)
+```
+
+**之后（合理默认值）：**
+```python
+# 现在：自动 30秒 客户端超时，20秒 保持连接
+app.start(host="0.0.0.0", port=8080)
+# 等价于：
+app.start(
+    host="0.0.0.0", 
+    port=8080,
+    client_timeout=30,
+    keep_alive_timeout=20,
+    max_connections=1000
+)
+```
