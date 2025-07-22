@@ -219,7 +219,7 @@ def spawn_process(
         )
 
     try:
-        server.start(socket, workers, client_timeout, keep_alive_timeout)
+        server.start(socket, workers)
         loop = asyncio.get_event_loop()
         loop.run_forever()
     except KeyboardInterrupt:
