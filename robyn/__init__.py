@@ -590,8 +590,7 @@ class Robyn(BaseRobyn):
         port: int = 8080, 
         _check_port: bool = True,
         client_timeout: int = 30,
-        keep_alive_timeout: int = 20,
-        max_connections: int = 1000
+        keep_alive_timeout: int = 20
     ):
         """
         Starts the server
@@ -601,14 +600,12 @@ class Robyn(BaseRobyn):
         :param _check_port bool: represents if the port should be checked if it is already in use
         :param client_timeout int: timeout for client connections in seconds (default: 30)
         :param keep_alive_timeout int: timeout for keep-alive connections in seconds (default: 20)
-        :param max_connections int: maximum number of concurrent connections (default: 1000)
         """
 
         host = os.getenv("ROBYN_HOST", host)
         port = int(os.getenv("ROBYN_PORT", port))
         client_timeout = int(os.getenv("ROBYN_CLIENT_TIMEOUT", client_timeout))
         keep_alive_timeout = int(os.getenv("ROBYN_KEEP_ALIVE_TIMEOUT", keep_alive_timeout))
-        max_connections = int(os.getenv("ROBYN_MAX_CONNECTIONS", max_connections))
         open_browser = bool(os.getenv("ROBYN_BROWSER_OPEN", self.config.open_browser))
 
         if _check_port:
@@ -646,7 +643,6 @@ class Robyn(BaseRobyn):
             open_browser,
             client_timeout,
             keep_alive_timeout,
-            max_connections,
         )
 
 

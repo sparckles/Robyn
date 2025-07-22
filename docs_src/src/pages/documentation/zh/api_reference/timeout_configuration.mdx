@@ -25,8 +25,7 @@ app.start(
     host="0.0.0.0", 
     port=8080,
     client_timeout=30,          # 客户端连接超时（秒）
-    keep_alive_timeout=20,      # 保持连接超时（秒）  
-    max_connections=1000        # 最大并发连接数
+    keep_alive_timeout=20,      # 保持连接超时（秒）
 )
 ```
 
@@ -38,7 +37,6 @@ app.start(
 # 设置超时配置
 export ROBYN_CLIENT_TIMEOUT=45
 export ROBYN_KEEP_ALIVE_TIMEOUT=30
-export ROBYN_MAX_CONNECTIONS=2000
 
 # 启动应用程序
 python app.py
@@ -50,7 +48,6 @@ python app.py
 |------|-------|------|---------|
 | `client_timeout` | 30 | 客户端请求处理的最大时间（秒） | `ROBYN_CLIENT_TIMEOUT` |
 | `keep_alive_timeout` | 20 | 保持空闲连接的时间（秒） | `ROBYN_KEEP_ALIVE_TIMEOUT` |
-| `max_connections` | 1000 | 最大并发连接数 | `ROBYN_MAX_CONNECTIONS` |
 
 ## 使用示例
 
@@ -70,7 +67,6 @@ app.start(
     port=8080,
     client_timeout=60,      # 允许更长的处理时间
     keep_alive_timeout=15,  # 更短的保持连接以加快周转
-    max_connections=5000    # 支持更多并发连接
 )
 ```
 
@@ -81,7 +77,6 @@ app.start(
 app.start(
     client_timeout=300,     # 调试的长超时
     keep_alive_timeout=60,  # 测试的长保持连接
-    max_connections=100     # 本地开发的有限连接
 )
 ```
 
@@ -92,7 +87,6 @@ app.start(
 app.start(
     client_timeout=10,      # 快速超时
     keep_alive_timeout=5,   # 快速连接周转
-    max_connections=10000   # 高连接限制
 )
 ```
 
@@ -121,7 +115,6 @@ app.start(client_timeout=30)
    app.start(
        client_timeout=15,      # 更短的超时
        keep_alive_timeout=5,   # 更快的连接清理
-       max_connections=2000    # 合理的连接限制
    )
    ```
 
@@ -129,20 +122,17 @@ app.start(client_timeout=30)
    ```bash
    export ROBYN_CLIENT_TIMEOUT=15
    export ROBYN_KEEP_ALIVE_TIMEOUT=5
-   export ROBYN_MAX_CONNECTIONS=2000
-   ```
+      ```
 
 ### 性能调优
 
 **对于高吞吐量 API：**
 - 较低的 `keep_alive_timeout` (5-15秒)
 - 中等的 `client_timeout` (15-30秒)
-- 较高的 `max_connections` (2000-10000)
 
 **对于长时间运行的操作：**
 - 较高的 `client_timeout` (60-300秒)
 - 标准的 `keep_alive_timeout` (20-30秒)
-- 中等的 `max_connections` (500-2000)
 
 ## 与其他框架的比较
 
@@ -184,6 +174,5 @@ app.start(
     port=8080,
     client_timeout=30,
     keep_alive_timeout=20,
-    max_connections=1000
 )
 ```
