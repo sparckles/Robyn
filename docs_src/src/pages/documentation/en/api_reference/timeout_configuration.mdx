@@ -25,8 +25,7 @@ app.start(
     host="0.0.0.0", 
     port=8080,
     client_timeout=30,          # Client connection timeout (seconds)
-    keep_alive_timeout=20,      # Keep-alive timeout (seconds)  
-    max_connections=1000        # Maximum concurrent connections
+    keep_alive_timeout=20       # Keep-alive timeout (seconds)
 )
 ```
 
@@ -38,7 +37,6 @@ Override configuration using environment variables:
 # Set timeout configurations
 export ROBYN_CLIENT_TIMEOUT=45
 export ROBYN_KEEP_ALIVE_TIMEOUT=30
-export ROBYN_MAX_CONNECTIONS=2000
 
 # Start your application
 python app.py
@@ -50,7 +48,6 @@ python app.py
 |-----------|---------|-------------|---------------------|
 | `client_timeout` | 30 | Maximum time (seconds) for client request processing | `ROBYN_CLIENT_TIMEOUT` |
 | `keep_alive_timeout` | 20 | Time (seconds) to keep idle connections alive | `ROBYN_KEEP_ALIVE_TIMEOUT` |
-| `max_connections` | 1000 | Maximum number of concurrent connections | `ROBYN_MAX_CONNECTIONS` |
 
 ## Usage Examples
 
@@ -69,8 +66,7 @@ app.start(
     host="0.0.0.0",
     port=8080,
     client_timeout=60,      # Allow longer processing time
-    keep_alive_timeout=15,  # Shorter keep-alive for faster turnover
-    max_connections=5000    # Support more concurrent connections
+    keep_alive_timeout=15   # Shorter keep-alive for faster turnover
 )
 ```
 
@@ -80,8 +76,7 @@ app.start(
 # Development-friendly settings
 app.start(
     client_timeout=300,     # Long timeout for debugging
-    keep_alive_timeout=60,  # Longer keep-alive for testing
-    max_connections=100     # Limited connections for local dev
+    keep_alive_timeout=60   # Longer keep-alive for testing
 )
 ```
 
@@ -91,8 +86,7 @@ app.start(
 # Optimized for load testing with tools like wrk
 app.start(
     client_timeout=10,      # Quick timeouts
-    keep_alive_timeout=5,   # Fast connection turnover
-    max_connections=10000   # High connection limit
+    keep_alive_timeout=5    # Fast connection turnover
 )
 ```
 
@@ -120,8 +114,7 @@ If you encounter file descriptor exhaustion:
    ```python
    app.start(
        client_timeout=15,      # Shorter timeouts
-       keep_alive_timeout=5,   # Faster connection cleanup
-       max_connections=2000    # Reasonable connection limit
+       keep_alive_timeout=5    # Faster connection cleanup
    )
    ```
 
@@ -129,7 +122,6 @@ If you encounter file descriptor exhaustion:
    ```bash
    export ROBYN_CLIENT_TIMEOUT=15
    export ROBYN_KEEP_ALIVE_TIMEOUT=5
-   export ROBYN_MAX_CONNECTIONS=2000
    ```
 
 ### Performance Tuning
@@ -137,30 +129,18 @@ If you encounter file descriptor exhaustion:
 **For high-throughput APIs:**
 - Lower `keep_alive_timeout` (5-15s)
 - Moderate `client_timeout` (15-30s)
-- Higher `max_connections` (2000-10000)
 
 **For long-running operations:**
 - Higher `client_timeout` (60-300s)
 - Standard `keep_alive_timeout` (20-30s)
-- Moderate `max_connections` (500-2000)
 
-## Comparison with Other Frameworks
-
-| Framework | Default Client Timeout | Default Keep-Alive | Configuration Style |
-|-----------|------------------------|-------------------|-------------------|
-| **Robyn** | 30s | 20s | Method parameters + env vars |
-| Uvicorn | None | 20s | Constructor parameters |
-| Express.js | 120s | 5s | Method chaining |
-| Django/Gunicorn | 30s | N/A | Configuration files |
-| Flask/Gunicorn | 30s | 2s | Command-line options |
 
 ## Best Practices
 
 1. **Always set explicit timeouts** in production
 2. **Use environment variables** for deployment-specific configuration
-3. **Monitor file descriptor usage** under load
-4. **Test timeout settings** with realistic load patterns
-5. **Start with conservative values** and tune based on metrics
+3. **Test timeout settings** with realistic load patterns
+4. **Start with conservative values** and tune based on metrics
 
 ## Migration Guide
 
@@ -183,7 +163,6 @@ app.start(
     host="0.0.0.0", 
     port=8080,
     client_timeout=30,
-    keep_alive_timeout=20,
-    max_connections=1000
+    keep_alive_timeout=20
 )
 ```
