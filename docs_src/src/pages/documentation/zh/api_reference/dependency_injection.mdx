@@ -96,6 +96,97 @@ Robyn 提供了两种依赖注入方式：
   </Col>
 </Row>
 
+### WebSocket 依赖注入
+
+<Row>
+<Col>
+WebSocket 支持与 HTTP 路由相同的依赖注入系统。相同的 `global_dependencies` 和 `router_dependencies` 参数在 WebSocket 处理程序中的工作方式完全一致。
+</Col>
+  <Col>
+
+    <CodeGroup title="WebSocket 依赖注入" tag="WebSocket" label="/chat">
+
+    ```python {{ title: 'WebSocket DI' }}
+      from robyn import Robyn
+      import logging
+
+      app = Robyn(__file__)
+      
+      # 与 HTTP 路由相同的依赖配置
+      app.inject_global(
+          logger=logging.getLogger(__name__),
+          database=DatabaseConnection()
+      )
+      app.inject(
+          cache=RedisCache(),
+          auth_service=JWTAuthService()
+      )
+
+      @app.websocket("/chat")
+      async def chat_handler(websocket, global_dependencies=None, router_dependencies=None):
+          # 访问依赖的方式与 HTTP 路由相同
+          logger = global_dependencies.get("logger")
+          database = global_dependencies.get("database")
+          cache = router_dependencies.get("cache")
+          auth = router_dependencies.get("auth_service")
+          
+          await websocket.accept()
+          logger.info(f"新的聊天连接: {websocket.id}")
+          
+          while True:
+              message = await websocket.receive_text()
+              # 使用注入的依赖
+              database.save_message(message, websocket.id)
+              await websocket.broadcast(f"用户 {websocket.id}: {message}")
+
+      @chat_handler.on_connect
+      async def on_connect(websocket, global_dependencies=None, router_dependencies=None):
+          # 连接和关闭处理程序也支持依赖注入
+          logger = global_dependencies.get("logger")
+          auth = router_dependencies.get("auth_service")
+          
+          if not auth.verify_token(websocket.query_params.get("token")):
+              await websocket.close()
+              return "未授权"
+              
+          logger.info(f"已认证连接: {websocket.id}")
+          return "已连接"
+    ```
+
+    ```python {{ title: '类型化 WebSocket DI' }}
+      from robyn import Robyn, WebSocketAdapter
+      from typing import Optional, Dict, Any
+
+      app = Robyn(__file__)
+      
+      app.inject_global(logger=logging.getLogger(__name__))
+      app.inject(cache=RedisCache())
+
+      @app.websocket("/api/ws")
+      async def api_handler(
+          websocket: WebSocketAdapter, 
+          global_dependencies: Optional[Dict[str, Any]] = None,
+          router_dependencies: Optional[Dict[str, Any]] = None
+      ):
+          logger = global_dependencies.get("logger") if global_dependencies else None
+          cache = router_dependencies.get("cache") if router_dependencies else None
+          
+          await websocket.accept()
+          
+          while True:
+              data = await websocket.receive_json()
+              # 使用类型化依赖
+              if logger:
+                  logger.info(f"接收到数据: {data}")
+              if cache:
+                  cache.set(f"ws_{websocket.id}", data)
+              
+              await websocket.send_json({"echo": data, "id": websocket.id})
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
 ---
 
 ## 下一步

@@ -3,6 +3,8 @@ import inspect
 import logging
 from typing import TYPE_CHECKING, Callable
 
+import orjson
+
 from robyn.argument_parser import Config
 from robyn.dependency_injection import DependencyMap
 from robyn.robyn import FunctionInfo, WebSocketConnector
@@ -66,14 +68,12 @@ class WebSocketAdapter:
     
     async def send_json(self, data):
         """Send JSON data to the WebSocket"""
-        import json
-        await self.send_text(json.dumps(data))
+        await self.send_text(orjson.dumps(data).decode())
     
     async def receive_json(self):
         """Receive JSON data from the WebSocket"""
-        import json
         text = await self.receive_text()
-        return json.loads(text) if text else None
+        return orjson.loads(text) if text else None
     
     async def broadcast(self, data: str):
         """Broadcast data to all connected WebSocket clients"""

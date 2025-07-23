@@ -97,6 +97,97 @@ Note: `router_dependencies`, `global_dependencies` are reserved parameters and *
 </Col>
 </Row>
 
+### WebSocket Dependency Injection
+
+<Row>
+<Col>
+WebSockets support the same dependency injection system as HTTP routes. The same `global_dependencies` and `router_dependencies` parameters work identically in WebSocket handlers.
+</Col>
+  <Col>
+
+    <CodeGroup title="WebSocket DI" tag="WebSocket" label="/chat">
+
+    ```python {{ title: 'WebSocket with DI' }}
+      from robyn import Robyn
+      import logging
+
+      app = Robyn(__file__)
+      
+      # Same dependency setup as HTTP routes
+      app.inject_global(
+          logger=logging.getLogger(__name__),
+          database=DatabaseConnection()
+      )
+      app.inject(
+          cache=RedisCache(),
+          auth_service=JWTAuthService()
+      )
+
+      @app.websocket("/chat")
+      async def chat_handler(websocket, global_dependencies=None, router_dependencies=None):
+          # Access dependencies same as HTTP routes
+          logger = global_dependencies.get("logger")
+          database = global_dependencies.get("database")
+          cache = router_dependencies.get("cache")
+          auth = router_dependencies.get("auth_service")
+          
+          await websocket.accept()
+          logger.info(f"New chat connection: {websocket.id}")
+          
+          while True:
+              message = await websocket.receive_text()
+              # Use injected dependencies
+              database.save_message(message, websocket.id)
+              await websocket.broadcast(f"User {websocket.id}: {message}")
+
+      @chat_handler.on_connect
+      async def on_connect(websocket, global_dependencies=None, router_dependencies=None):
+          # Connect and close handlers also support DI
+          logger = global_dependencies.get("logger")
+          auth = router_dependencies.get("auth_service")
+          
+          if not auth.verify_token(websocket.query_params.get("token")):
+              await websocket.close()
+              return "Unauthorized"
+              
+          logger.info(f"Authenticated connection: {websocket.id}")
+          return "Connected"
+    ```
+
+    ```python {{ title: 'Typed WebSocket DI' }}
+      from robyn import Robyn, WebSocketAdapter
+      from typing import Optional, Dict, Any
+
+      app = Robyn(__file__)
+      
+      app.inject_global(logger=logging.getLogger(__name__))
+      app.inject(cache=RedisCache())
+
+      @app.websocket("/api/ws")
+      async def api_handler(
+          websocket: WebSocketAdapter, 
+          global_dependencies: Optional[Dict[str, Any]] = None,
+          router_dependencies: Optional[Dict[str, Any]] = None
+      ):
+          logger = global_dependencies.get("logger") if global_dependencies else None
+          cache = router_dependencies.get("cache") if router_dependencies else None
+          
+          await websocket.accept()
+          
+          while True:
+              data = await websocket.receive_json()
+              # Use typed dependencies
+              if logger:
+                  logger.info(f"Received data: {data}")
+              if cache:
+                  cache.set(f"ws_{websocket.id}", data)
+              
+              await websocket.send_json({"echo": data, "id": websocket.id})
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
 ---
 
 
