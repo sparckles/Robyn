@@ -1,5 +1,5 @@
 export const description =
-  'On this page, we’ll dive into the different conversation endpoints you can use to manage conversations programmatically.'
+  'Learn how to implement real-time bidirectional communication using WebSockets with Robyn\'s modern, clean API and dependency injection support.'
 
 
 ## WebSockets {{ tag: 'WebSockets', label: 'WebSockets' }}
@@ -10,246 +10,412 @@ After mastering [Server-Sent Events](/documentation/en/api_reference/server_sent
 
 "SSE is great for pushing updates to my dashboard," Batman thought, "but I need two-way communication for coordinating with my allies!"
 
-To handle real-time bidirectional communication, Batman learned how to work with WebSockets. He created a WebSocket class and wrapped it around his Robyn app:
+To handle real-time bidirectional communication, Batman learned how to work with WebSockets using Robyn's modern decorator-based API:
 </Col>
   <Col sticky>
 
-    <CodeGroup title="Request" tag="GET" label="/hello_world">
+    <CodeGroup title="Request" tag="WebSocket" label="/web_socket">
 
-    ```python {{ title: 'untyped' }}
-    from robyn import Robyn, jsonify, WebSocket
-
-    app = Robyn(__file__)
-    websocket = WebSocket(app, "/web_socket")
-
-    @websocket.on("message")
-    def connect():
-        return "Hello world, from ws"
-
-    @websocket.on("close")
-    def close():
-        return "Goodbye world, from ws"
-
-    @websocket.on("connect")
-    def message():
-        return "Connected to ws"
-
-
-    ```
-
-    ```python {{title: 'typed'}}
-    from robyn import Robyn, jsonify, WebSocket
+    ```python {{ title: 'Basic WebSocket' }}
+    from robyn import Robyn
 
     app = Robyn(__file__)
-    websocket = WebSocket(app, "/web_socket")
 
-    @websocket.on("message")
-    def connect():
-        return "Hello world, from ws"
+    @app.websocket("/web_socket")
+    async def websocket_endpoint(websocket):
+        await websocket.accept()
+        
+        try:
+            while True:
+                message = await websocket.receive_text()
+                websocket_id = websocket.id
+                await websocket.send_text(f"Echo from {websocket_id}: {message}")
+        except Exception as e:
+            print(f"WebSocket {websocket.id} error: {e}")
 
-    @websocket.on("close")
-    def close():
-        return "Goodbye world, from ws"
+    @websocket_endpoint.on_connect
+    async def on_connect(websocket):
+        await websocket.send_text("Connected!")
+        return "Connection established"
 
-    @websocket.on("connect")
-    def message():
-        return "Connected to ws"
+    @websocket_endpoint.on_close
+    async def on_close(websocket):
+        print(f"WebSocket {websocket.id} disconnected")
+        return "Disconnected"
+    ```
 
+    ```python {{title: 'With Type Hints'}}
+    from robyn import Robyn, WebSocketAdapter
 
+    app = Robyn(__file__)
+
+    @app.websocket("/web_socket")
+    async def websocket_endpoint(websocket: WebSocketAdapter):
+        await websocket.accept()
+        
+        try:
+            while True:
+                message: str = await websocket.receive_text()
+                websocket_id: str = websocket.id
+                await websocket.send_text(f"Echo from {websocket_id}: {message}")
+        except Exception as e:
+            print(f"WebSocket {websocket.id} error: {e}")
+
+    @websocket_endpoint.on_connect
+    async def on_connect(websocket: WebSocketAdapter) -> str:
+        await websocket.send_text("Connected!")
+        return "Connection established"
+
+    @websocket_endpoint.on_close
+    async def on_close(websocket: WebSocketAdapter) -> str:
+        print(f"WebSocket {websocket.id} disconnected")
+        return "Disconnected"
     ```
     </CodeGroup>
   </Col>
 </Row>
-<Row>
-
-  <Col>
-    For sending a message to the client, Batman used the `sync_send_to` method. 
-  </Col>
-  <Col sticky>
-    <CodeGroup title="Request" tag="GET" label="/hello_world">
-
-      ```python {{ title: 'untyped' }}
-
-        @websocket.on("message")
-        def message(ws, msg, global_dependencies) -> str:
-            websocket_id = ws.id
-            ws.sync_send_to(websocket_id, "This is a message to self")
-            return ""
-
-      ```
-
-      ```python {{title: 'typed'}}
-
-        @websocket.on("message")
-        def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
-            websocket_id = ws.id
-            state = websocket_state[websocket_id]
-            ws.sync_send_to(websocket_id, "This is a message to self")
-            return ""
-
-      ```
-    </CodeGroup>
-  </Col>
-</Row>
-
 
 <Row>
+<Col>
+### WebSocket Methods
 
-  <Col>
-    For sending a message to the client in async manner, Batman used the `async_send_to` method. 
-  </Col>
+The modern WebSocket API provides clean, intuitive methods for handling real-time communication:
+
+- **`websocket.id`** - Get the unique connection ID
+- **`websocket.send_text(data)`** - Send text messages
+- **`websocket.send_json(data)`** - Send JSON messages
+- **`websocket.receive_text()`** - Receive text messages
+- **`websocket.receive_json()`** - Receive JSON messages
+- **`websocket.broadcast(data)`** - Broadcast to all connected clients
+- **`websocket.close()`** - Close the connection
+</Col>
   <Col sticky>
-    <CodeGroup title="Request" tag="GET" label="/hello_world">
+    <CodeGroup title="WebSocket Methods" tag="Methods">
 
-      ```python {{ title: 'untyped' }}
-
-        @websocket.on("message")
-        async def message(ws, msg, global_dependencies) -> str:
-            websocket_id = ws.id
-            await ws.async_send_to(websocket_id, "This is a message to self")
-            return ""
-
+      ```python {{ title: 'Text Messages' }}
+      @app.websocket("/chat")
+      async def chat_handler(websocket):
+          await websocket.accept()
+          
+          while True:
+              message = await websocket.receive_text()
+              websocket_id = websocket.id
+              
+              # Send to this client
+              await websocket.send_text(f"You said: {message}")
+              
+              # Broadcast to all clients
+              await websocket.broadcast(f"User {websocket_id}: {message}")
       ```
 
-      ```python {{title: 'typed'}}
-
-        @websocket.on("message")
-        async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
-            websocket_id = ws.id
-            state = websocket_state[websocket_id]
-            await ws.async_send_to(websocket_id, "This is a message to self")
-            return ""
-
-      ```
-    </CodeGroup>
-  </Col>
-</Row>
-
-
-<Row>
-  <Col>
-    For sending broadcast messages, Batman used the `sync_broadcast` method.
-  </Col>
-  <Col sticky>
-    <CodeGroup title="Request" tag="GET" label="/hello_world">
-
-      ```python {{ title: 'untyped' }}
-
-        @websocket.on("message")
-        def message(ws, msg, global_dependencies) -> str:
-            websocket_id = ws.id
-            ws.sync_broadcast("This is a message to self")
-            return ""
-
-      ```
-
-      ```python {{title: 'typed'}}
-
-        @websocket.on("message")
-        def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
-            websocket_id = ws.id
-            ws.sync_broadcast("This is a message to self")
-            return ""
-
+      ```python {{title: 'JSON Messages'}}
+      @app.websocket("/api/ws")
+      async def api_handler(websocket):
+          await websocket.accept()
+          
+          while True:
+              data = await websocket.receive_json()
+              
+              response = {
+                  "id": websocket.id,
+                  "echo": data,
+                  "timestamp": time.time()
+              }
+              
+              await websocket.send_json(response)
       ```
     </CodeGroup>
   </Col>
 </Row>
 
 <Row>
-  <Col>
-    For sending broadcast messages in async style, Batman used the `async_broadcast` method.
-  </Col>
+<Col>
+### Dependency Injection
+
+WebSockets support the same dependency injection system as HTTP routes, using `global_dependencies` and `router_dependencies` parameters:
+</Col>
   <Col sticky>
-    <CodeGroup title="Request" tag="GET" label="/hello_world">
+    <CodeGroup title="Dependency Injection" tag="DI">
 
-      ```python {{ title: 'untyped' }}
+      ```python {{ title: 'Setup Dependencies' }}
+      from robyn import Robyn
+      import logging
 
-        @websocket.on("message")
-        async def message(ws, msg, global_dependencies) -> str:
-            websocket_id = ws.id
-            await ws.async_broadcast("This is a message to self")
-            return ""
+      app = Robyn(__file__)
 
+      # Configure dependencies
+      app.inject_global(
+          logger=logging.getLogger(__name__),
+          database=DatabaseConnection(),
+          metrics=MetricsCollector()
+      )
+
+      app.inject(
+          cache=RedisCache(),
+          auth_service=JWTAuthService()
+      )
       ```
 
-      ```python {{title: 'typed'}}
+      ```python {{title: 'Use in WebSocket'}}
+      @app.websocket("/chat")
+      async def chat_handler(websocket, global_dependencies=None, router_dependencies=None):
+          # Access injected dependencies
+          logger = global_dependencies.get("logger")
+          database = global_dependencies.get("database")
+          cache = router_dependencies.get("cache")
+          auth = router_dependencies.get("auth_service")
+          
+          await websocket.accept()
+          logger.info(f"New chat connection: {websocket.id}")
+          
+          try:
+              while True:
+                  message = await websocket.receive_text()
+                  
+                  # Use dependencies
+                  saved_msg = database.save_message(message, websocket.id)
+                  cache.invalidate(f"chat_history_{websocket.id}")
+                  
+                  await websocket.broadcast(f"User {websocket.id}: {message}")
+          except Exception as e:
+              logger.error(f"Chat error: {e}")
 
-        @websocket.on("message")
-        async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
-            websocket_id = ws.id
-            await ws.async_broadcast("This is a message to self")
-            return ""
-
+      @chat_handler.on_connect
+      async def chat_connect(websocket, global_dependencies=None, router_dependencies=None):
+          logger = global_dependencies.get("logger")
+          auth = router_dependencies.get("auth_service")
+          
+          # Authenticate connection
+          if not auth.verify_websocket_token(websocket.query_params.get("token")):
+              await websocket.close()
+              return "Unauthorized"
+          
+          logger.info(f"Authenticated connection: {websocket.id}")
+          await websocket.send_text("Welcome to the chat!")
+          return "Connected"
       ```
     </CodeGroup>
   </Col>
 </Row>
 
 <Row>
-  <Col>
-    Robyn also showed Batman to work with query params.
-  </Col>
+<Col>
+### Broadcasting Messages
+
+Batman learned to send messages to all connected clients using the clean `broadcast()` method:
+</Col>
   <Col sticky>
-    <CodeGroup title="Request" tag="GET" label="/hello_world?name=gordon&desg=commissioner">
+    <CodeGroup title="Broadcasting" tag="Broadcast">
 
-      ```python {{ title: 'untyped' }}
-
-        @websocket.on("message")
-        async def message(ws, msg, global_dependencies) -> str:
-            websocket_id = ws.id
-            if (ws.query_params.get("name") == "gordon" and ws.query_params.get("desg") == "commissioner"):
-              ws.sync_broadcast("Gordon authorized to login!")
-            return ""
-
+      ```python {{ title: 'Simple Broadcast' }}
+      @app.websocket("/notifications")
+      async def notification_handler(websocket):
+          await websocket.accept()
+          
+          while True:
+              message = await websocket.receive_text()
+              
+              # Broadcast to all connected clients
+              await websocket.broadcast(f"Notification: {message}")
+              
+              # Confirm to sender
+              await websocket.send_text("Notification sent!")
       ```
 
-      ```python {{title: 'typed'}}
-
-        @websocket.on("message")
-        async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
-            websocket_id = ws.id
-            if (ws.query_params.get("name") == "gordon" and ws.query_params.get("desg") == "commissioner"):
-              ws.sync_broadcast("Gordon authorized to login!")
-            return ""
-
+      ```python {{title: 'Advanced Broadcasting'}}
+      @app.websocket("/game")
+      async def game_handler(websocket):
+          await websocket.accept()
+          
+          while True:
+              action = await websocket.receive_json()
+              
+              if action["type"] == "move":
+                  # Broadcast player movement to all players
+                  await websocket.broadcast(json.dumps({
+                      "type": "player_moved",
+                      "player_id": websocket.id,
+                      "position": action["position"]
+                  }))
+              elif action["type"] == "chat":
+                  # Broadcast chat message
+                  await websocket.broadcast(json.dumps({
+                      "type": "chat_message",
+                      "player_id": websocket.id,
+                      "message": action["message"]
+                  }))
       ```
     </CodeGroup>
   </Col>
 </Row>
 
-
-
 <Row>
-  <Col>
-    To programmatically close a WebSocket connection from the server side, Batman learned to use the `close()` method:
-    The `close()` method does the following:
-1. Sends a close message to the client.
-2. Removes the client from the WebSocket registry.
-3. Closes the WebSocket connection.
+<Col>
+### Query Parameters and Headers
 
-This method is useful for scenarios where you need to programmatically end a WebSocket connection based on certain conditions or events on the server side.
+WebSockets can access query parameters and headers for authentication and configuration:
+</Col>
+  <Col sticky>
+    <CodeGroup title="Query Params" tag="Params">
 
-  </Col>
-  <Col>
-    <CodeGroup title="Request" tag="GET" label="/hello_world">
-
-      ```python {{ title: 'untyped' }}
-      @websocket.on("message")
-      def message(ws, msg):
-          if msg == "disconnect":
-              ws.close()
-              return "Closing connection"
-          return "Message received"
+      ```python {{ title: 'Query Parameters' }}
+      @app.websocket("/secure_chat")
+      async def secure_chat(websocket):
+          # Access query parameters
+          token = websocket.query_params.get("token")
+          room_id = websocket.query_params.get("room")
+          
+          if not token or not authenticate_token(token):
+              await websocket.close()
+              return
+              
+          await websocket.accept()
+          await websocket.send_text(f"Joined room: {room_id}")
+          
+          while True:
+              message = await websocket.receive_text()
+              # Broadcast only to users in the same room
+              await websocket.broadcast(f"Room {room_id} - {websocket.id}: {message}")
       ```
 
-      ```python {{title: 'typed'}}
-      @websocket.on("message")
-      def message(ws: WebSocketConnector, msg: str) -> str:
-          if msg == "disconnect":
-              ws.close()
-              return "Closing connection"
-          return "Message received"
+      ```python {{title: 'Headers Access'}}
+      @app.websocket("/api/stream")
+      async def stream_handler(websocket):
+          # Access headers
+          user_agent = websocket.headers.get("User-Agent")
+          api_key = websocket.headers.get("X-API-Key")
+          
+          if not validate_api_key(api_key):
+              await websocket.close()
+              return
+              
+          await websocket.accept()
+          print(f"Client connected: {user_agent}")
+          
+          # Stream data based on client info
+          while True:
+              data = await get_stream_data()
+              await websocket.send_json(data)
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+<Row>
+<Col>
+### Connection Management
+
+Batman learned to programmatically manage WebSocket connections with the `close()` method. This is useful for enforcing business rules, handling authentication failures, or managing resource limits:
+</Col>
+  <Col>
+    <CodeGroup title="Connection Management" tag="Management">
+
+      ```python {{ title: 'Conditional Close' }}
+      @app.websocket("/admin_panel")
+      async def admin_handler(websocket):
+          await websocket.accept()
+          
+          while True:
+              command = await websocket.receive_text()
+              
+              if command == "shutdown":
+                  await websocket.send_text("Shutting down connection...")
+                  await websocket.close()
+                  break
+              elif command.startswith("kick_user"):
+                  user_id = command.split(":")[1]
+                  await websocket.broadcast(f"User {user_id} has been kicked")
+                  # Close specific user's connection (implementation depends on your user tracking)
+              else:
+                  await websocket.send_text(f"Command executed: {command}")
+      ```
+
+      ```python {{title: 'Rate Limiting'}}
+      connection_counts = {}
+
+      @app.websocket("/limited_service")
+      async def limited_handler(websocket):
+          client_ip = websocket.client.get("ip", "unknown")
+          
+          # Check connection limit
+          if connection_counts.get(client_ip, 0) >= 5:
+              await websocket.send_text("Connection limit exceeded")
+              await websocket.close()
+              return
+              
+          connection_counts[client_ip] = connection_counts.get(client_ip, 0) + 1
+          await websocket.accept()
+          
+          try:
+              while True:
+                  message = await websocket.receive_text()
+                  await websocket.send_text(f"Processed: {message}")
+          finally:
+              # Clean up on disconnect
+              connection_counts[client_ip] -= 1
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+<Row>
+<Col>
+### Error Handling
+
+Robust WebSocket applications need proper error handling for network issues, client disconnections, and application errors:
+</Col>
+  <Col>
+    <CodeGroup title="Error Handling" tag="Errors">
+
+      ```python {{ title: 'Basic Error Handling' }}
+      from robyn import WebSocketDisconnect
+
+      @app.websocket("/robust_chat")
+      async def robust_chat(websocket):
+          await websocket.accept()
+          
+          try:
+              while True:
+                  message = await websocket.receive_text()
+                  await websocket.send_text(f"Echo: {message}")
+                  
+          except WebSocketDisconnect:
+              print(f"Client {websocket.id} disconnected gracefully")
+          except Exception as e:
+              print(f"Unexpected error for {websocket.id}: {e}")
+              await websocket.close()
+      ```
+
+      ```python {{title: 'Advanced Error Handling'}}
+      import asyncio
+
+      @app.websocket("/monitored_service")
+      async def monitored_service(websocket, global_dependencies=None):
+          logger = global_dependencies.get("logger")
+          await websocket.accept()
+          
+          try:
+              while True:
+                  # Set timeout for receive
+                  try:
+                      message = await asyncio.wait_for(
+                          websocket.receive_text(), 
+                          timeout=30.0
+                      )
+                      await websocket.send_text(f"Processed: {message}")
+                      
+                  except asyncio.TimeoutError:
+                      await websocket.send_text("Keep-alive ping")
+                      
+          except WebSocketDisconnect:
+              logger.info(f"Client {websocket.id} disconnected")
+          except Exception as e:
+              logger.error(f"Error in {websocket.id}: {e}")
+              try:
+                  await websocket.send_text("Service error occurred")
+                  await websocket.close()
+              except:
+                  pass  # Connection might already be closed
       ```
     </CodeGroup>
   </Col>
@@ -259,13 +425,7 @@ This method is useful for scenarios where you need to programmatically end a Web
 
 ## What's next?
 
-As the codebase grew, Batman wanted to onboard the justice league to help him manage the application. 
-
-Robyn told him about the different ways he could scale his application, and how to use views and subrouters to make his code more readable. 
-
+With real-time communication mastered, Batman was ready to scale his application. He learned about organizing his growing codebase with views and subrouters to keep everything maintainable as the Justice League joined his mission.
 
 - [Views and SubRouters](/documentation/en/api_reference/views)
-
-
-
-
+- [Dependency Injection](/documentation/en/api_reference/dependency_injection)

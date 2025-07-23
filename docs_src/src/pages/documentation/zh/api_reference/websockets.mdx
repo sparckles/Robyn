@@ -1,5 +1,5 @@
 export const description =
-  '在此页面中，我们将深入探讨如何通过不同的接口实现符合预期的交互。'
+  '学习如何使用 Robyn 的现代化、简洁的 API 和依赖注入支持来实现实时双向通信的 WebSocket。'
 
 ## WebSockets {{ tag: 'WebSockets', label: 'WebSockets' }}
 
@@ -9,259 +9,250 @@ export const description =
 
 "SSE 很适合向我的仪表板推送更新，"蝙蝠侠想道，"但我需要双向通信来与我的盟友协调！"
 
-为了实现双向实时通信，蝙蝠侠学习了如何使用 WebSocket。他创建了一个 WebSocket 类，并将其集成到他的 Robyn 应用中：
+为了实现双向实时通信，蝙蝠侠学习了如何使用 Robyn 的现代装饰器式 API 来处理 WebSocket：
 </Col>
   <Col sticky>
 
-    <CodeGroup title="Request" tag="GET" label="/hello_world">
+    <CodeGroup title="请求" tag="WebSocket" label="/web_socket">
 
-    ```python {{ title: 'untyped' }}
-    from robyn import Robyn, jsonify, WebSocket
-
-    app = Robyn(__file__)
-    websocket = WebSocket(app, "/web_socket")
-
-    @websocket.on("message")
-    def connect():
-        return "Hello world, from ws"
-
-    @websocket.on("close")
-    def close():
-        return "Goodbye world, from ws"
-
-    @websocket.on("connect")
-    def message():
-        return "Connected to ws"
-
-
-    ```
-
-    ```python {{title: 'typed'}}
-    from robyn import Robyn, jsonify, WebSocket
+    ```python {{ title: '基础 WebSocket' }}
+    from robyn import Robyn
 
     app = Robyn(__file__)
-    websocket = WebSocket(app, "/web_socket")
 
-    @websocket.on("message")
-    def connect():
-        return "Hello world, from ws"
+    @app.websocket("/web_socket")
+    async def websocket_endpoint(websocket):
+        await websocket.accept()
+        
+        try:
+            while True:
+                message = await websocket.receive_text()
+                websocket_id = websocket.id
+                await websocket.send_text(f"来自 {websocket_id} 的回显: {message}")
+        except Exception as e:
+            print(f"WebSocket {websocket.id} 错误: {e}")
 
-    @websocket.on("close")
-    def close():
-        return "Goodbye world, from ws"
+    @websocket_endpoint.on_connect
+    async def on_connect(websocket):
+        await websocket.send_text("已连接！")
+        return "连接已建立"
 
-    @websocket.on("connect")
-    def message():
-        return "Connected to ws"
+    @websocket_endpoint.on_close
+    async def on_close(websocket):
+        print(f"WebSocket {websocket.id} 已断开连接")
+        return "已断开连接"
+    ```
 
+    ```python {{title: '使用类型提示'}}
+    from robyn import Robyn, WebSocketAdapter
 
+    app = Robyn(__file__)
+
+    @app.websocket("/web_socket")
+    async def websocket_endpoint(websocket: WebSocketAdapter):
+        await websocket.accept()
+        
+        try:
+            while True:
+                message: str = await websocket.receive_text()
+                websocket_id: str = websocket.id
+                await websocket.send_text(f"来自 {websocket_id} 的回显: {message}")
+        except Exception as e:
+            print(f"WebSocket {websocket.id} 错误: {e}")
+
+    @websocket_endpoint.on_connect
+    async def on_connect(websocket: WebSocketAdapter) -> str:
+        await websocket.send_text("已连接！")
+        return "连接已建立"
+
+    @websocket_endpoint.on_close
+    async def on_close(websocket: WebSocketAdapter) -> str:
+        print(f"WebSocket {websocket.id} 已断开连接")
+        return "已断开连接"
     ```
     </CodeGroup>
-
   </Col>
 </Row>
-<Row>
 
-  <Col>
-    为了向客户端发送消息，蝙蝠侠使用了 `sync_send_to` 方法。
-  </Col>
+<Row>
+<Col>
+### WebSocket 方法
+
+现代 WebSocket API 提供了简洁、直观的方法来处理实时通信：
+
+- **`websocket.id`** - 获取唯一连接 ID
+- **`websocket.send_text(data)`** - 发送文本消息
+- **`websocket.send_json(data)`** - 发送 JSON 消息
+- **`websocket.receive_text()`** - 接收文本消息
+- **`websocket.receive_json()`** - 接收 JSON 消息
+- **`websocket.broadcast(data)`** - 向所有连接的客户端广播
+- **`websocket.close()`** - 关闭连接
+</Col>
   <Col sticky>
-    <CodeGroup title="Request" tag="GET" label="/hello_world">
+    <CodeGroup title="WebSocket 方法" tag="方法">
 
-      ```python {{ title: 'untyped' }}
-
-        @websocket.on("message")
-        def message(ws, msg, global_dependencies) -> str:
-            websocket_id = ws.id
-            ws.sync_send_to(websocket_id, "This is a message to self")
-            return ""
-
+      ```python {{ title: '文本消息' }}
+      @app.websocket("/chat")
+      async def chat_handler(websocket):
+          await websocket.accept()
+          
+          while True:
+              message = await websocket.receive_text()
+              websocket_id = websocket.id
+              
+              # 发送给此客户端
+              await websocket.send_text(f"你说: {message}")
+              
+              # 广播给所有客户端
+              await websocket.broadcast(f"用户 {websocket_id}: {message}")
       ```
 
-      ```python {{title: 'typed'}}
-
-        @websocket.on("message")
-        def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
-            websocket_id = ws.id
-            state = websocket_state[websocket_id]
-            ws.sync_send_to(websocket_id, "This is a message to self")
-            return ""
-
+      ```python {{title: 'JSON 消息'}}
+      @app.websocket("/api/ws")
+      async def api_handler(websocket):
+          await websocket.accept()
+          
+          while True:
+              data = await websocket.receive_json()
+              
+              response = {
+                  "id": websocket.id,
+                  "echo": data,
+                  "timestamp": time.time()
+              }
+              
+              await websocket.send_json(response)
       ```
     </CodeGroup>
-
   </Col>
 </Row>
 
 <Row>
+<Col>
+### 依赖注入
 
-  <Col>
-    为了异步向客户端发送消息，蝙蝠侠使用了 `async_send_to` 方法。
-  </Col>
+WebSocket 支持与 HTTP 路由相同的依赖注入系统，使用 `global_dependencies` 和 `router_dependencies` 参数：
+</Col>
   <Col sticky>
-    <CodeGroup title="Request" tag="GET" label="/hello_world">
+    <CodeGroup title="依赖注入" tag="DI">
 
-      ```python {{ title: 'untyped' }}
+      ```python {{ title: '配置依赖' }}
+      from robyn import Robyn
+      import logging
 
-        @websocket.on("message")
-        async def message(ws, msg, global_dependencies) -> str:
-            websocket_id = ws.id
-            await ws.async_send_to(websocket_id, "This is a message to self")
-            return ""
+      app = Robyn(__file__)
 
+      # 配置依赖
+      app.inject_global(
+          logger=logging.getLogger(__name__),
+          database=DatabaseConnection(),
+          metrics=MetricsCollector()
+      )
+
+      app.inject(
+          cache=RedisCache(),
+          auth_service=JWTAuthService()
+      )
       ```
 
-      ```python {{title: 'typed'}}
+      ```python {{title: '在 WebSocket 中使用'}}
+      @app.websocket("/chat")
+      async def chat_handler(websocket, global_dependencies=None, router_dependencies=None):
+          # 访问注入的依赖
+          logger = global_dependencies.get("logger")
+          database = global_dependencies.get("database")
+          cache = router_dependencies.get("cache")
+          auth = router_dependencies.get("auth_service")
+          
+          await websocket.accept()
+          logger.info(f"新的聊天连接: {websocket.id}")
+          
+          try:
+              while True:
+                  message = await websocket.receive_text()
+                  
+                  # 使用依赖
+                  saved_msg = database.save_message(message, websocket.id)
+                  cache.invalidate(f"chat_history_{websocket.id}")
+                  
+                  await websocket.broadcast(f"用户 {websocket.id}: {message}")
+          except Exception as e:
+              logger.error(f"聊天错误: {e}")
 
-        @websocket.on("message")
-        async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
-            websocket_id = ws.id
-            state = websocket_state[websocket_id]
-            await ws.async_send_to(websocket_id, "This is a message to self")
-            return ""
-
+      @chat_handler.on_connect
+      async def chat_connect(websocket, global_dependencies=None, router_dependencies=None):
+          logger = global_dependencies.get("logger")
+          auth = router_dependencies.get("auth_service")
+          
+          # 认证连接
+          if not auth.verify_websocket_token(websocket.query_params.get("token")):
+              await websocket.close()
+              return "未授权"
+          
+          logger.info(f"已认证连接: {websocket.id}")
+          await websocket.send_text("欢迎来到聊天室！")
+          return "已连接"
       ```
     </CodeGroup>
-
   </Col>
 </Row>
 
 <Row>
-  <Col>
-    为了向所有客户端发送广播，蝙蝠侠使用了 `sync_broadcast` 方法。
-  </Col>
+<Col>
+### 广播消息
+
+蝙蝠侠学会了使用简洁的 `broadcast()` 方法向所有连接的客户端发送消息：
+</Col>
   <Col sticky>
-    <CodeGroup title="Request" tag="GET" label="/hello_world">
+    <CodeGroup title="广播" tag="广播">
 
-      ```python {{ title: 'untyped' }}
-
-        @websocket.on("message")
-        def message(ws, msg, global_dependencies) -> str:
-            websocket_id = ws.id
-            ws.sync_broadcast("This is a message to self")
-            return ""
-
+      ```python {{ title: '简单广播' }}
+      @app.websocket("/notifications")
+      async def notification_handler(websocket):
+          await websocket.accept()
+          
+          while True:
+              message = await websocket.receive_text()
+              
+              # 广播给所有连接的客户端
+              await websocket.broadcast(f"通知: {message}")
+              
+              # 确认给发送者
+              await websocket.send_text("通知已发送！")
       ```
 
-      ```python {{title: 'typed'}}
-
-        @websocket.on("message")
-        def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
-            websocket_id = ws.id
-            ws.sync_broadcast("This is a message to self")
-            return ""
-
-      ```
-    </CodeGroup>
-
-  </Col>
-</Row>
-
-<Row>
-  <Col>
-    为了异步发送广播，蝙蝠侠使用了 `async_broadcast` 方法。
-  </Col>
-  <Col sticky>
-    <CodeGroup title="Request" tag="GET" label="/hello_world">
-
-      ```python {{ title: 'untyped' }}
-
-        @websocket.on("message")
-        async def message(ws, msg, global_dependencies) -> str:
-            websocket_id = ws.id
-            await ws.async_broadcast("This is a message to self")
-            return ""
-
-      ```
-
-      ```python {{title: 'typed'}}
-
-        @websocket.on("message")
-        async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
-            websocket_id = ws.id
-            await ws.async_broadcast("This is a message to self")
-            return ""
-
+      ```python {{title: '高级广播'}}
+      @app.websocket("/game")
+      async def game_handler(websocket):
+          await websocket.accept()
+          
+          while True:
+              action = await websocket.receive_json()
+              
+              if action["type"] == "move":
+                  # 向所有玩家广播玩家移动
+                  await websocket.broadcast(json.dumps({
+                      "type": "player_moved",
+                      "player_id": websocket.id,
+                      "position": action["position"]
+                  }))
+              elif action["type"] == "chat":
+                  # 广播聊天消息
+                  await websocket.broadcast(json.dumps({
+                      "type": "chat_message",
+                      "player_id": websocket.id,
+                      "message": action["message"]
+                  }))
       ```
     </CodeGroup>
-
-  </Col>
-</Row>
-
-<Row>
-  <Col>
-    此外，Robyn 还向蝙蝠侠展示了如何处理 WebSocket 查询参数。
-  </Col>
-  <Col sticky>
-    <CodeGroup title="Request" tag="GET" label="/hello_world?name=gordon&desg=commissioner">
-
-      ```python {{ title: 'untyped' }}
-
-        @websocket.on("message")
-        async def message(ws, msg, global_dependencies) -> str:
-            websocket_id = ws.id
-            if (ws.query_params.get("name") == "gordon" and ws.query_params.get("desg") == "commissioner"):
-              ws.sync_broadcast("Gordon authorized to login!")
-            return ""
-
-      ```
-
-      ```python {{title: 'typed'}}
-
-        @websocket.on("message")
-        async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
-            websocket_id = ws.id
-            if (ws.query_params.get("name") == "gordon" and ws.query_params.get("desg") == "commissioner"):
-              ws.sync_broadcast("Gordon authorized to login!")
-            return ""
-
-      ```
-    </CodeGroup>
-
-  </Col>
-</Row>
-
-<Row>
-  <Col>
-    蝙蝠侠还学习了如何通过 `close()` 方法从服务端关闭 WebSocket 连接。`close()` 方法将执行以下操作：
-1. 向客户端发送关闭消息
-2. 从 WebSocket 注册表中移除客户端
-3. 关闭 WebSocket 连接
-
-这种方法适用于需要根据服务端某些条件或事件来结束 WebSocket 连接的场景。
-
-  </Col>
-  <Col>
-    <CodeGroup title="Request" tag="GET" label="/hello_world">
-
-      ```python {{ title: 'untyped' }}
-      @websocket.on("message")
-      def message(ws, msg):
-          if msg == "disconnect":
-              ws.close()
-              return "Closing connection"
-          return "Message received"
-      ```
-
-      ```python {{title: 'typed'}}
-      @websocket.on("message")
-      def message(ws: WebSocketConnector, msg: str) -> str:
-          if msg == "disconnect":
-              ws.close()
-              return "Closing connection"
-          return "Message received"
-      ```
-    </CodeGroup>
-
   </Col>
 </Row>
 
 ---
 
-## 下一步
+## 下一步是什么？
 
-随着代码库的扩展，蝙蝠侠希望正义联盟的成员能够参与管理应用程序。
-
-Robyn 向他介绍了应用扩展的最佳实践，并展示了如何通过视图和子路由器来提升代码的可读性和可维护性。
+掌握了实时通信后，蝙蝠侠准备扩展他的应用程序。他学习了如何使用视图和子路由器来组织不断增长的代码库，以便在正义联盟加入他的任务时保持代码的可维护性。
 
 - [视图和子路由器](/documentation/zh/api_reference/views)
+- [依赖注入](/documentation/zh/api_reference/dependency_injection)
