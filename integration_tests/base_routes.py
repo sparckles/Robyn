@@ -32,18 +32,18 @@ async def websocket_endpoint(websocket):
     try:
         while True:
             msg = await websocket.receive_text()
-            websocket_id = websocket._connector.id
+            websocket_id = websocket.id
             global websocket_state
             state = websocket_state[websocket_id]
             
             if state == 0:
-                await websocket._connector.async_broadcast("This is a broadcast message")
+                await websocket.broadcast("This is a broadcast message")
                 await websocket.send_text("This is a message to self")
                 await websocket.send_text("Whaaat??")
             elif state == 1:
                 await websocket.send_text("Whooo??")
             elif state == 2:
-                await websocket._connector.async_broadcast(websocket.query_params.get("one", ""))
+                await websocket.broadcast(websocket.query_params.get("one", ""))
                 await websocket.send_text(websocket.query_params.get("two", ""))
                 await websocket.send_text("*chika* *chika* Slim Shady.")
             elif state == 3:
@@ -75,7 +75,7 @@ async def json_websocket_endpoint(websocket):
     try:
         while True:
             msg = await websocket.receive_text()
-            websocket_id = websocket._connector.id
+            websocket_id = websocket.id
             response = {"ws_id": websocket_id, "resp": "", "msg": msg}
             global websocket_state
             state = websocket_state[websocket_id]
@@ -120,10 +120,10 @@ async def di_websocket_endpoint(websocket):
 
 
 @di_websocket_endpoint.on_connect
-async def di_websocket_on_connect(websocket):
-    # Simulating dependency injection
-    global_dep = "GLOBAL DEPENDENCY"
-    router_dep = "ROUTER DEPENDENCY"
+async def di_websocket_on_connect(websocket, global_dependencies=None, router_dependencies=None):
+    # Using actual dependency injection
+    global_dep = global_dependencies.get("GLOBAL_DEPENDENCY") if global_dependencies else "MISSING GLOBAL"
+    router_dep = router_dependencies.get("ROUTER_DEPENDENCY") if router_dependencies else "MISSING ROUTER"
     return f"{global_dep} {router_dep}"
 
 

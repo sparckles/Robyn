@@ -75,6 +75,10 @@ class WebSocketAdapter:
         text = await self.receive_text()
         return json.loads(text) if text else None
     
+    async def broadcast(self, data: str):
+        """Broadcast data to all connected WebSocket clients"""
+        await self._connector.async_broadcast(data)
+    
     @property
     def query_params(self):
         """Access query parameters"""
