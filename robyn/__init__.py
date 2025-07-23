@@ -25,92 +25,11 @@ from robyn.responses import SSEMessage, SSEResponse, StreamingResponse, html, se
 from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, WebSocketConnector, get_version
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory
-# WebSocket functionality is now handled directly in this module
+from robyn.ws import WebSocketDisconnect, WebSocketAdapter, create_websocket_decorator
 
 __version__ = get_version()
 
 
-class WebSocketDisconnect(Exception):
-    """Exception raised when a WebSocket connection is disconnected."""
-    
-    def __init__(self, code: int = 1000, reason: str = ""):
-        self.code = code
-        self.reason = reason
-        super().__init__(f"WebSocket disconnected with code {code}: {reason}")
-
-
-class WebSocketAdapter:
-    """
-    Adapter class that provides a modern WebSocket interface
-    wrapping Robyn's WebSocketConnector for compatibility.
-    """
-    
-    def __init__(self, websocket_connector: WebSocketConnector, message: str = None):
-        self._connector = websocket_connector
-        self._message = message
-        self._accepted = False
-    
-    async def accept(self):
-        """Accept the WebSocket connection (no-op in Robyn as it's auto-accepted)"""
-        self._accepted = True
-    
-    async def close(self, code: int = 1000):
-        """Close the WebSocket connection"""
-        self._connector.close()
-    
-    async def send_text(self, data: str):
-        """Send text data to the WebSocket"""
-        await self._connector.async_send_to(self._connector.id, data)
-    
-    async def send_bytes(self, data: bytes):
-        """Send binary data to the WebSocket"""
-        await self._connector.async_send_to(self._connector.id, data.decode('utf-8'))
-    
-    async def receive_text(self) -> str:
-        """Receive text data from the WebSocket"""
-        if self._message is not None:
-            msg = self._message
-            self._message = None  # Consume the message
-            return msg
-        # Note: In a real implementation, this would need to handle the message queue
-        # For now, we return the current message if available
-        return ""
-    
-    async def receive_bytes(self) -> bytes:
-        """Receive binary data from the WebSocket"""
-        text = await self.receive_text()
-        return text.encode('utf-8')
-    
-    async def send_json(self, data):
-        """Send JSON data to the WebSocket"""
-        import json
-        await self.send_text(json.dumps(data))
-    
-    async def receive_json(self):
-        """Receive JSON data from the WebSocket"""
-        import json
-        text = await self.receive_text()
-        return json.loads(text) if text else None
-    
-    @property
-    def query_params(self):
-        """Access query parameters"""
-        return self._connector.query_params
-    
-    @property
-    def path_params(self):
-        """Access path parameters"""
-        return getattr(self._connector, 'path_params', {})
-    
-    @property
-    def headers(self):
-        """Access request headers"""
-        return getattr(self._connector, 'headers', {})
-    
-    @property
-    def client(self):
-        """Client information"""
-        return getattr(self._connector, 'client', None)
 
 
 def _normalize_endpoint(endpoint: str) -> str:
@@ -385,74 +304,7 @@ class BaseRobyn(ABC):
         async def on_close(websocket):
             print("Disconnected")
         """
-        def decorator(handler):
-            # Dictionary to store handlers for this WebSocket endpoint
-            handlers = {}
-            
-            # Create the main message handler
-            async def message_handler(websocket_connector, msg, *args, **kwargs):
-                # Convert WebSocketConnector to modern WebSocket interface
-                websocket_adapter = WebSocketAdapter(websocket_connector, msg)
-                try:
-                    # Call the user's handler
-                    result = await handler(websocket_adapter)
-                    return result if result is not None else ""
-                except WebSocketDisconnect:
-                    # Handle disconnections gracefully
-                    return ""
-                except Exception as e:
-                    # Handle other connection errors gracefully
-                    if "connection closed" in str(e).lower() or "websocket" in str(e).lower():
-                        return ""
-                    raise e
-            
-            # Create FunctionInfo for the message handler
-            params = dict(inspect.signature(message_handler).parameters)
-            num_params = len(params)
-            is_async = asyncio.iscoroutinefunction(message_handler)
-            injected_dependencies = self.dependencies.get_dependency_map(self)
-            
-            handlers["message"] = FunctionInfo(message_handler, is_async, num_params, params, kwargs=injected_dependencies)
-            
-            # Add methods to the handler to allow attaching on_connect and on_close
-            def add_on_connect(connect_handler):
-                def connect_wrapper(websocket_connector, *args, **kwargs):
-                    websocket_adapter = WebSocketAdapter(websocket_connector)
-                    if asyncio.iscoroutinefunction(connect_handler):
-                        return asyncio.create_task(connect_handler(websocket_adapter))
-                    return connect_handler(websocket_adapter)
-                
-                # Create FunctionInfo for connect handler
-                connect_params = dict(inspect.signature(connect_wrapper).parameters)
-                connect_num_params = len(connect_params)
-                connect_is_async = asyncio.iscoroutinefunction(connect_wrapper)
-                handlers["connect"] = FunctionInfo(connect_wrapper, connect_is_async, connect_num_params, connect_params, kwargs=injected_dependencies)
-                return connect_handler
-            
-            def add_on_close(close_handler):
-                def close_wrapper(websocket_connector, *args, **kwargs):
-                    websocket_adapter = WebSocketAdapter(websocket_connector)
-                    if asyncio.iscoroutinefunction(close_handler):
-                        return asyncio.create_task(close_handler(websocket_adapter))
-                    return close_handler(websocket_adapter)
-                
-                # Create FunctionInfo for close handler
-                close_params = dict(inspect.signature(close_wrapper).parameters)
-                close_num_params = len(close_params)
-                close_is_async = asyncio.iscoroutinefunction(close_wrapper)
-                handlers["close"] = FunctionInfo(close_wrapper, close_is_async, close_num_params, close_params, kwargs=injected_dependencies)
-                return close_handler
-            
-            # Attach methods to the handler function
-            handler.on_connect = add_on_connect
-            handler.on_close = add_on_close
-            handler._ws_handlers = handlers  # Store reference to handlers dict
-            
-            # Add the WebSocket to the router
-            self.add_web_socket(endpoint, handlers)
-            return handler
-        
-        return decorator
+        return create_websocket_decorator(self)(endpoint)
 
     def _add_event_handler(self, event_type: Events, handler: Callable) -> None:
         logger.info("Added event %s handler", event_type)
@@ -874,7 +726,7 @@ class SubRouter(BaseRobyn):
             await websocket.send_text("Connected!")
         """
         prefixed_endpoint = self.__add_prefix(endpoint)
-        return super().websocket(prefixed_endpoint)
+        return create_websocket_decorator(self)(prefixed_endpoint)
 
 
 def ALLOW_CORS(app: Robyn, origins: Union[List[str], str], headers: Union[List[str], str] = None):
