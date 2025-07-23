@@ -289,6 +289,10 @@ export const navigation = [
         title: 'Scaling the Application',
       },
       {
+        href: '/documentation/en/api_reference/timeout_configuration',
+        title: 'Timeout Configuration',
+      },
+      {
         href: '/documentation/en/api_reference/advanced_features',
         title: 'Advanced Features',
       },
@@ -455,6 +459,7 @@ const translations = {
       Websockets: 'Websockets',
       Exceptions: 'Exceptions',
       'Scaling the Application': 'Scaling the Application',
+      'Timeout Configuration': 'Timeout Configuration',
       'Advanced Features': 'Advanced Features',
       'Advanced Routing': 'Advanced Routing',
       'Architecture Deep Dive': 'Architecture Deep Dive',
@@ -500,6 +505,7 @@ const translations = {
       'Server-Sent Events': '服务器发送事件',
       'Exceptions': '异常处理',
       'Scaling the Application': '多核扩展',
+      'Timeout Configuration': '超时配置',
       'Advanced Features': '高级特性',
       'Advanced Routing': '高级路由',
       'Architecture Deep Dive': '架构深度剖析',

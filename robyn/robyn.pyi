@@ -360,7 +360,7 @@ class Server:
         message_route: FunctionInfo,
     ) -> None:
         pass
-    def start(self, socket: SocketHeld, workers: int) -> None:
+    def start(self, socket: SocketHeld, workers: int, client_timeout: int, keep_alive_timeout: int) -> None:
         pass
 
 class WebSocketConnector:

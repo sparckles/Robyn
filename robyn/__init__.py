@@ -584,17 +584,21 @@ class BaseRobyn(ABC):
 
 
 class Robyn(BaseRobyn):
-    def start(self, host: str = "127.0.0.1", port: int = 8080, _check_port: bool = True):
+    def start(self, host: str = "127.0.0.1", port: int = 8080, _check_port: bool = True, client_timeout: int = 30, keep_alive_timeout: int = 20):
         """
         Starts the server
 
         :param host str: represents the host at which the server is listening
         :param port int: represents the port number at which the server is listening
         :param _check_port bool: represents if the port should be checked if it is already in use
+        :param client_timeout int: timeout for client connections in seconds (default: 30)
+        :param keep_alive_timeout int: timeout for keep-alive connections in seconds (default: 20)
         """
 
         host = os.getenv("ROBYN_HOST", host)
         port = int(os.getenv("ROBYN_PORT", port))
+        client_timeout = int(os.getenv("ROBYN_CLIENT_TIMEOUT", client_timeout))
+        keep_alive_timeout = int(os.getenv("ROBYN_KEEP_ALIVE_TIMEOUT", keep_alive_timeout))
         open_browser = bool(os.getenv("ROBYN_BROWSER_OPEN", self.config.open_browser))
 
         if _check_port:
@@ -630,6 +634,8 @@ class Robyn(BaseRobyn):
             self.response_headers,
             self.excluded_response_headers_paths,
             open_browser,
+            client_timeout,
+            keep_alive_timeout,
         )
 
 
