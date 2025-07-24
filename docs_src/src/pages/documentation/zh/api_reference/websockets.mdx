@@ -22,7 +22,6 @@ export const description =
 
     @app.websocket("/web_socket")
     async def websocket_endpoint(websocket):
-        await websocket.accept()
         
         try:
             while True:
@@ -50,7 +49,6 @@ export const description =
 
     @app.websocket("/web_socket")
     async def websocket_endpoint(websocket: WebSocketAdapter):
-        await websocket.accept()
         
         try:
             while True:
@@ -80,6 +78,8 @@ export const description =
 
 现代 WebSocket API 提供了简洁、直观的方法来处理实时通信：
 
+**注意：在 Robyn 中 WebSocket 连接会自动接受 - 无需调用 `accept()`！**
+
 - **`websocket.id`** - 获取唯一连接 ID
 - **`websocket.send_text(data)`** - 发送文本消息
 - **`websocket.send_json(data)`** - 发送 JSON 消息
@@ -94,8 +94,7 @@ export const description =
       ```python {{ title: '文本消息' }}
       @app.websocket("/chat")
       async def chat_handler(websocket):
-          await websocket.accept()
-          
+            
           while True:
               message = await websocket.receive_text()
               websocket_id = websocket.id
@@ -110,8 +109,7 @@ export const description =
       ```python {{title: 'JSON 消息'}}
       @app.websocket("/api/ws")
       async def api_handler(websocket):
-          await websocket.accept()
-          
+            
           while True:
               data = await websocket.receive_json()
               
@@ -164,8 +162,7 @@ WebSocket 支持与 HTTP 路由相同的依赖注入系统，使用 `global_depe
           cache = router_dependencies.get("cache")
           auth = router_dependencies.get("auth_service")
           
-          await websocket.accept()
-          logger.info(f"新的聊天连接: {websocket.id}")
+            logger.info(f"新的聊天连接: {websocket.id}")
           
           try:
               while True:
@@ -209,8 +206,7 @@ WebSocket 支持与 HTTP 路由相同的依赖注入系统，使用 `global_depe
       ```python {{ title: '简单广播' }}
       @app.websocket("/notifications")
       async def notification_handler(websocket):
-          await websocket.accept()
-          
+            
           while True:
               message = await websocket.receive_text()
               
@@ -224,8 +220,7 @@ WebSocket 支持与 HTTP 路由相同的依赖注入系统，使用 `global_depe
       ```python {{title: '高级广播'}}
       @app.websocket("/game")
       async def game_handler(websocket):
-          await websocket.accept()
-          
+            
           while True:
               action = await websocket.receive_json()
               

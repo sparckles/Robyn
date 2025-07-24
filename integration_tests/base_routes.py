@@ -27,7 +27,6 @@ websocket_state = defaultdict(int)
 # Regular WebSocket endpoint
 @app.websocket("/web_socket")
 async def websocket_endpoint(websocket):
-    await websocket.accept()
     
     try:
         while True:
@@ -70,7 +69,6 @@ def websocket_on_close(websocket):
 # JSON WebSocket endpoint
 @app.websocket("/web_socket_json")
 async def json_websocket_endpoint(websocket):
-    await websocket.accept()
     
     try:
         while True:
@@ -107,7 +105,6 @@ def json_websocket_on_close(websocket):
 # WebSocket with dependency injection
 @app.websocket("/web_socket_di")
 async def di_websocket_endpoint(websocket):
-    await websocket.accept()
     
     try:
         while True:

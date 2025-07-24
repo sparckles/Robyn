@@ -33,11 +33,6 @@ class WebSocketAdapter:
     def __init__(self, websocket_connector: WebSocketConnector, message: str = None):
         self._connector = websocket_connector
         self._message = message
-        self._accepted = False
-    
-    async def accept(self):
-        """Accept the WebSocket connection (no-op in Robyn as it's auto-accepted)"""
-        self._accepted = True
     
     async def close(self, code: int = 1000):
         """Close the WebSocket connection"""

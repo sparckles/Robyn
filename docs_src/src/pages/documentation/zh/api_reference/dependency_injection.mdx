@@ -130,7 +130,6 @@ WebSocket 支持与 HTTP 路由相同的依赖注入系统。相同的 `global_d
           cache = router_dependencies.get("cache")
           auth = router_dependencies.get("auth_service")
           
-          await websocket.accept()
           logger.info(f"新的聊天连接: {websocket.id}")
           
           while True:
@@ -171,7 +170,6 @@ WebSocket 支持与 HTTP 路由相同的依赖注入系统。相同的 `global_d
           logger = global_dependencies.get("logger") if global_dependencies else None
           cache = router_dependencies.get("cache") if router_dependencies else None
           
-          await websocket.accept()
           
           while True:
               data = await websocket.receive_json()

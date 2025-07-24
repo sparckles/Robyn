@@ -23,8 +23,7 @@ To handle real-time bidirectional communication, Batman learned how to work with
 
     @app.websocket("/web_socket")
     async def websocket_endpoint(websocket):
-        await websocket.accept()
-        
+        # Connections are auto-accepted in Robyn - no need to call accept()!
         try:
             while True:
                 message = await websocket.receive_text()
@@ -51,8 +50,7 @@ To handle real-time bidirectional communication, Batman learned how to work with
 
     @app.websocket("/web_socket")
     async def websocket_endpoint(websocket: WebSocketAdapter):
-        await websocket.accept()
-        
+        # Connections are auto-accepted - ready to use immediately!
         try:
             while True:
                 message: str = await websocket.receive_text()
@@ -81,6 +79,8 @@ To handle real-time bidirectional communication, Batman learned how to work with
 
 The modern WebSocket API provides clean, intuitive methods for handling real-time communication:
 
+**Note: WebSocket connections are automatically accepted in Robyn - no need to call `accept()`!**
+
 - **`websocket.id`** - Get the unique connection ID
 - **`websocket.send_text(data)`** - Send text messages
 - **`websocket.send_json(data)`** - Send JSON messages
@@ -95,8 +95,7 @@ The modern WebSocket API provides clean, intuitive methods for handling real-tim
       ```python {{ title: 'Text Messages' }}
       @app.websocket("/chat")
       async def chat_handler(websocket):
-          await websocket.accept()
-          
+            
           while True:
               message = await websocket.receive_text()
               websocket_id = websocket.id
@@ -111,8 +110,7 @@ The modern WebSocket API provides clean, intuitive methods for handling real-tim
       ```python {{title: 'JSON Messages'}}
       @app.websocket("/api/ws")
       async def api_handler(websocket):
-          await websocket.accept()
-          
+            
           while True:
               data = await websocket.receive_json()
               
@@ -165,8 +163,7 @@ WebSockets support the same dependency injection system as HTTP routes, using `g
           cache = router_dependencies.get("cache")
           auth = router_dependencies.get("auth_service")
           
-          await websocket.accept()
-          logger.info(f"New chat connection: {websocket.id}")
+            logger.info(f"New chat connection: {websocket.id}")
           
           try:
               while True:
@@ -210,8 +207,7 @@ Batman learned to send messages to all connected clients using the clean `broadc
       ```python {{ title: 'Simple Broadcast' }}
       @app.websocket("/notifications")
       async def notification_handler(websocket):
-          await websocket.accept()
-          
+            
           while True:
               message = await websocket.receive_text()
               
@@ -225,8 +221,7 @@ Batman learned to send messages to all connected clients using the clean `broadc
       ```python {{title: 'Advanced Broadcasting'}}
       @app.websocket("/game")
       async def game_handler(websocket):
-          await websocket.accept()
-          
+            
           while True:
               action = await websocket.receive_json()
               
@@ -269,8 +264,7 @@ WebSockets can access query parameters and headers for authentication and config
               await websocket.close()
               return
               
-          await websocket.accept()
-          await websocket.send_text(f"Joined room: {room_id}")
+            await websocket.send_text(f"Joined room: {room_id}")
           
           while True:
               message = await websocket.receive_text()
@@ -289,8 +283,7 @@ WebSockets can access query parameters and headers for authentication and config
               await websocket.close()
               return
               
-          await websocket.accept()
-          print(f"Client connected: {user_agent}")
+            print(f"Client connected: {user_agent}")
           
           # Stream data based on client info
           while True:
@@ -313,8 +306,7 @@ Batman learned to programmatically manage WebSocket connections with the `close(
       ```python {{ title: 'Conditional Close' }}
       @app.websocket("/admin_panel")
       async def admin_handler(websocket):
-          await websocket.accept()
-          
+            
           while True:
               command = await websocket.receive_text()
               
@@ -344,8 +336,7 @@ Batman learned to programmatically manage WebSocket connections with the `close(
               return
               
           connection_counts[client_ip] = connection_counts.get(client_ip, 0) + 1
-          await websocket.accept()
-          
+            
           try:
               while True:
                   message = await websocket.receive_text()
@@ -372,8 +363,7 @@ Robust WebSocket applications need proper error handling for network issues, cli
 
       @app.websocket("/robust_chat")
       async def robust_chat(websocket):
-          await websocket.accept()
-          
+            
           try:
               while True:
                   message = await websocket.receive_text()
@@ -392,8 +382,7 @@ Robust WebSocket applications need proper error handling for network issues, cli
       @app.websocket("/monitored_service")
       async def monitored_service(websocket, global_dependencies=None):
           logger = global_dependencies.get("logger")
-          await websocket.accept()
-          
+            
           try:
               while True:
                   # Set timeout for receive

@@ -131,7 +131,6 @@ WebSockets support the same dependency injection system as HTTP routes. The same
           cache = router_dependencies.get("cache")
           auth = router_dependencies.get("auth_service")
           
-          await websocket.accept()
           logger.info(f"New chat connection: {websocket.id}")
           
           while True:
@@ -172,7 +171,6 @@ WebSockets support the same dependency injection system as HTTP routes. The same
           logger = global_dependencies.get("logger") if global_dependencies else None
           cache = router_dependencies.get("cache") if router_dependencies else None
           
-          await websocket.accept()
           
           while True:
               data = await websocket.receive_json()
