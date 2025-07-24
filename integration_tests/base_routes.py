@@ -7,7 +7,7 @@ from collections import defaultdict
 from typing import Optional
 
 from integration_tests.subroutes import di_subrouter, sub_router
-from robyn import Headers, Request, Response, Robyn, SSEMessage, SSEResponse, WebSocketConnector, WebSocketDisconnect, jsonify, serve_file, serve_html
+from robyn import Headers, Request, Response, Robyn, SSEMessage, SSEResponse, WebSocketDisconnect, jsonify, serve_file, serve_html
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.robyn import QueryParams, Url
 from robyn.templating import JinjaTemplate
@@ -27,14 +27,13 @@ websocket_state = defaultdict(int)
 # Regular WebSocket endpoint
 @app.websocket("/web_socket")
 async def websocket_endpoint(websocket):
-    
     try:
         while True:
             msg = await websocket.receive_text()
             websocket_id = websocket.id
             global websocket_state
             state = websocket_state[websocket_id]
-            
+
             if state == 0:
                 await websocket.broadcast("This is a broadcast message")
                 await websocket.send_text("This is a message to self")
@@ -49,9 +48,9 @@ async def websocket_endpoint(websocket):
                 await websocket.send_text("Connection closed")
                 await websocket.close()
                 break
-                
+
             websocket_state[websocket_id] = (state + 1) % 4
-            
+
     except WebSocketDisconnect:
         pass
 
@@ -61,7 +60,7 @@ def websocket_on_connect(websocket):
     return "Hello world, from ws"
 
 
-@websocket_endpoint.on_close  
+@websocket_endpoint.on_close
 def websocket_on_close(websocket):
     return "GoodBye world, from ws"
 
@@ -69,7 +68,6 @@ def websocket_on_close(websocket):
 # JSON WebSocket endpoint
 @app.websocket("/web_socket_json")
 async def json_websocket_endpoint(websocket):
-    
     try:
         while True:
             msg = await websocket.receive_text()
@@ -77,17 +75,17 @@ async def json_websocket_endpoint(websocket):
             response = {"ws_id": websocket_id, "resp": "", "msg": msg}
             global websocket_state
             state = websocket_state[websocket_id]
-            
+
             if state == 0:
                 response["resp"] = "Whaaat??"
             elif state == 1:
                 response["resp"] = "Whooo??"
             elif state == 2:
                 response["resp"] = "*chika* *chika* Slim Shady."
-                
+
             websocket_state[websocket_id] = (state + 1) % 3
             await websocket.send_json(response)
-            
+
     except WebSocketDisconnect:
         pass
 
@@ -105,13 +103,12 @@ def json_websocket_on_close(websocket):
 # WebSocket with dependency injection
 @app.websocket("/web_socket_di")
 async def di_websocket_endpoint(websocket):
-    
     try:
         while True:
             await websocket.receive_text()
             # Just echo back an empty response for DI test
             await websocket.send_text("")
-            
+
     except WebSocketDisconnect:
         pass
 

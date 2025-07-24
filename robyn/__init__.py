@@ -29,8 +29,6 @@ from robyn.ws import WebSocketDisconnect, WebSocketAdapter, create_websocket_dec
 __version__ = get_version()
 
 
-
-
 def _normalize_endpoint(endpoint: str) -> str:
     """
     Normalize an endpoint to ensure consistent routing.
@@ -285,7 +283,7 @@ class BaseRobyn(ABC):
         """
         Modern WebSocket decorator that accepts a single handler function.
         The handler function receives a WebSocket object and can optionally have on_connect and on_close callbacks.
-        
+
         Usage:
         @app.websocket("/ws")
         async def websocket_endpoint(websocket):
@@ -293,13 +291,13 @@ class BaseRobyn(ABC):
             while True:
                 data = await websocket.receive_text()
                 await websocket.send_text(f"Echo: {data}")
-        
+
         # With optional callbacks:
         @websocket_endpoint.on_connect
         async def on_connect(websocket):
             await websocket.send_text("Connected!")
-            
-        @websocket_endpoint.on_close  
+
+        @websocket_endpoint.on_close
         async def on_close(websocket):
             print("Disconnected")
         """
@@ -710,7 +708,7 @@ class SubRouter(BaseRobyn):
         """
         Modern WebSocket decorator for SubRouter that accepts a single handler function.
         Works the same as the main Robyn websocket decorator but with prefix support.
-        
+
         Usage:
         @subrouter.websocket("/ws")
         async def websocket_endpoint(websocket):
@@ -718,7 +716,7 @@ class SubRouter(BaseRobyn):
             while True:
                 data = await websocket.receive_text()
                 await websocket.send_text(f"Echo: {data}")
-        
+
         # With optional callbacks:
         @websocket_endpoint.on_connect
         async def on_connect(websocket):
