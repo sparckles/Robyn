@@ -161,7 +161,17 @@ class OpenAPI:
             "components": asdict(self.info.components),
             "servers": [asdict(server) for server in self.info.servers],
             "externalDocs": asdict(self.info.externalDocs) if self.info.externalDocs.url else None,
+            "security": [],
         }
+
+    def add_global_security_scheme(self, name: str, scheme: dict):
+        """
+        Adds a security scheme to the OpenAPI spec.
+        @param name: str The name of the security scheme.
+        @param scheme: dict The security scheme object to be added.
+        """
+        self.openapi_spec["components"]["securitySchemes"][name] = scheme
+        self.openapi_spec["security"].append({name: []})
 
     def add_openapi_path_obj(self, route_type: str, endpoint: str, openapi_name: str, openapi_tags: List[str], handler: Callable):
         """
