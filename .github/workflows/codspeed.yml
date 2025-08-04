@@ -53,7 +53,7 @@ jobs:
           echo "::endgroup::"
 
       - name: Run benchmarks
-        uses: CodSpeedHQ/action@v3.5.0
+        uses: CodSpeedHQ/action@v3.8.0
         with:
           token: ${{ secrets.CODSPEED_TOKEN }}
           run: pytest integration_tests --codspeed
