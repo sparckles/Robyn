@@ -9,8 +9,6 @@ on:
   # performance analysis in order to generate initial data.
   workflow_dispatch:
 
-env:
-  UV_SYSTEM_PYTHON: 1
 
 jobs:
   benchmarks:
@@ -18,43 +16,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
       - name: Install uv
         uses: astral-sh/setup-uv@v6
         with:
           version: "0.7.5"
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.9"
-
-      - name: Install dependencies with uv
+      - name: Install the project + deps.
         run: |
-          echo "# Installing Dependencies"
-          uv pip install -r pyproject.toml --group dev --group test
-          echo "# Installing Project"
-          uv pip install -e .
-
-      - name: Add macos target
-        if: matrix.os == 'macos'
-        run: rustup target add aarch64-apple-darwin
-
-      - name: Setup Rust part of the project
-        run: |
-          echo "::group::Checking dependencies"
-          echo "# Checking dependencies, If not found any then it will stop the job."
-          which uv python pip maturin pytest
-          echo "# Checking pip list"
-          pip list
-          echo "::endgroup::"
-          
-          echo "::group::Running & Installing build"
-          maturin build -i python --universal2 --out dist
-          uv pip install --no-index --find-links=dist/ robyn
-          echo "::endgroup::"
+          echo "# Syncing Project + Installing project."
+          uv sync --dev --group test --verbose
 
       - name: Run benchmarks
         uses: CodSpeedHQ/action@v3.5.0
         with:
           token: ${{ secrets.CODSPEED_TOKEN }}
-          run: pytest integration_tests --codspeed
+          run: uv run pytest integration_tests --codspeed
 
