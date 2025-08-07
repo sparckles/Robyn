@@ -5,6 +5,7 @@ build-backend = "maturin"
 [project]
 name = "robyn"
 version = "0.82.1"
+requires-python = ">=3.10"
 description = "A Super Fast Async Python Web Framework with a Rust runtime."
 readme = "README.md"
 authors = [{ name = "Sanskar Jethi", email = "sansyrox@gmail.com" }]
