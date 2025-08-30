@@ -1,0 +1,64 @@
+---
+description: Proper Error Handling with Result and ? Operator
+globs: "**/*.rs"
+alwaysApply: true
+---
+
+For more context read: https://doc.rust-lang.org/book/ch09-00-error-handling.html
+
+- NEVER use `unwrap()` or `expect()` in production code without clear justification
+- Use the `?` operator for error propagation in functions returning `Result`
+- Handle `Result` and `Option` types explicitly with `match` or combinators
+- Create custom error types for domain-specific errors in Robyn
+- Use `map_err()` to transform errors when interfacing with PyO3
+- Log errors at appropriate levels before returning them
+- Return meaningful error messages for HTTP endpoints
+
+WHY THIS MATTERS IN ROBYN:
+Robyn is a high-performance web framework that interfaces between Python and Rust. Poor error handling can:
+- Crash the entire web server with a single panic
+- Lose critical error information when interfacing with Python
+- Provide unhelpful error messages to API consumers
+- Make debugging production issues nearly impossible
+- Break the Python-Rust bridge unexpectedly
+
+SCOPE: This applies to all Rust error handling, especially PyO3 integration, file I/O, and HTTP request processing in the Robyn codebase.
+
+# Solution
+
+Replace unwrap() with proper error handling:
+
+```rust
+// Instead of:
+let value = some_operation().unwrap();
+
+// Use:
+let value = some_operation()?;
+// Or handle explicitly:
+let value = match some_operation() {
+    Ok(val) => val,
+    Err(e) => {
+        log::error!("Operation failed: {}", e);
+        return Err(format!("Operation failed: {}", e));
+    }
+};
+```
+
+Use map_err for PyO3 integration:
+
+```rust
+// Transform errors when interfacing with Python
+let result = python_operation()
+    .map_err(|e| format!("Python operation failed: {}", e))?;
+```
+
+Handle file operations safely:
+
+```rust
+// Instead of:
+let content = std::fs::read_to_string(path).unwrap();
+
+// Use:
+let content = std::fs::read_to_string(path)
+    .map_err(|e| format!("Failed to read file {}: {}", path, e))?;
+```
