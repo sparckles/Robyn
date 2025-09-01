@@ -193,6 +193,18 @@ impl Response {
             file_path: None,
         }
     }
+
+    pub fn method_not_allowed(headers: Option<&Headers>) -> Self {
+        const METHOD_NOT_ALLOWED_BYTES: &[u8] = b"Method not allowed";
+
+        Self {
+            status_code: 405,
+            response_type: "text".to_string(),
+            headers: headers.cloned().unwrap_or_else(|| Headers::new(None)),
+            description: METHOD_NOT_ALLOWED_BYTES.to_vec(),
+            file_path: None,
+        }
+    }
 }
 
 impl<'py> IntoPyObject<'py> for Response {

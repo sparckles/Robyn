@@ -466,6 +466,11 @@ async fn index(
     excluded_response_headers_paths: web::Data<Option<Vec<String>>>,
     req: HttpRequest,
 ) -> ResponseType {
+    // Check if the HTTP method is supported
+    if !HttpMethod::is_supported(req.method()) {
+        return ResponseType::Standard(Response::method_not_allowed(None));
+    }
+
     let mut request = Request::from_actix_request(&req, payload, &global_request_headers).await;
 
     let route = format!("{}{}", req.method(), req.uri().path());

@@ -34,6 +34,21 @@ pub enum HttpMethod {
 }
 
 impl HttpMethod {
+    pub fn is_supported(method: &actix_web::http::Method) -> bool {
+        matches!(
+            *method,
+            actix_web::http::Method::GET
+                | actix_web::http::Method::POST
+                | actix_web::http::Method::PUT
+                | actix_web::http::Method::DELETE
+                | actix_web::http::Method::PATCH
+                | actix_web::http::Method::HEAD
+                | actix_web::http::Method::OPTIONS
+                | actix_web::http::Method::CONNECT
+                | actix_web::http::Method::TRACE
+        )
+    }
+
     pub fn from_actix_method(method: &actix_web::http::Method) -> Self {
         match *method {
             actix_web::http::Method::GET => Self::GET,
