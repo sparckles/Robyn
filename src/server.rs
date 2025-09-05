@@ -466,6 +466,11 @@ async fn index(
     excluded_response_headers_paths: web::Data<Option<Vec<String>>>,
     req: HttpRequest,
 ) -> ResponseType {
+    // Check if the HTTP method is supported
+    if !HttpMethod::is_supported(req.method()) {
+        return ResponseType::Standard(Response::method_not_allowed(None));
+    }
+
     let mut request = Request::from_actix_request(&req, payload, &global_request_headers).await;
 
     let route = format!("{}{}", req.method(), req.uri().path());
@@ -500,15 +505,15 @@ async fn index(
     }
 
     // Route execution
-    let mut response = if let Some(res) = const_router.get_route(
-        &HttpMethod::from_actix_method(req.method()),
-        req.uri().path(),
-    ) {
+    let http_method = match HttpMethod::from_actix_method(req.method()) {
+        Ok(method) => method,
+        Err(_) => return ResponseType::Standard(Response::method_not_allowed(None)),
+    };
+
+    let mut response = if let Some(res) = const_router.get_route(&http_method, req.uri().path()) {
         ResponseType::Standard(res)
-    } else if let Some((function, route_params)) = router.get_route(
-        &HttpMethod::from_actix_method(req.method()),
-        req.uri().path(),
-    ) {
+    } else if let Some((function, route_params)) = router.get_route(&http_method, req.uri().path())
+    {
         request.path_params = route_params;
         match execute_http_function(&request, &function).await {
             Ok(r) => r,
