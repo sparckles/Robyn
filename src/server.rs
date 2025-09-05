@@ -509,16 +509,11 @@ async fn index(
         Ok(method) => method,
         Err(_) => return ResponseType::Standard(Response::method_not_allowed(None)),
     };
-    
-    let mut response = if let Some(res) = const_router.get_route(
-        &http_method,
-        req.uri().path(),
-    ) {
+
+    let mut response = if let Some(res) = const_router.get_route(&http_method, req.uri().path()) {
         ResponseType::Standard(res)
-    } else if let Some((function, route_params)) = router.get_route(
-        &http_method,
-        req.uri().path(),
-    ) {
+    } else if let Some((function, route_params)) = router.get_route(&http_method, req.uri().path())
+    {
         request.path_params = route_params;
         match execute_http_function(&request, &function).await {
             Ok(r) => r,
