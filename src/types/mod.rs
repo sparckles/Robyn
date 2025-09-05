@@ -49,18 +49,18 @@ impl HttpMethod {
         )
     }
 
-    pub fn from_actix_method(method: &actix_web::http::Method) -> Self {
+    pub fn from_actix_method(method: &actix_web::http::Method) -> Result<Self, &'static str> {
         match *method {
-            actix_web::http::Method::GET => Self::GET,
-            actix_web::http::Method::POST => Self::POST,
-            actix_web::http::Method::PUT => Self::PUT,
-            actix_web::http::Method::DELETE => Self::DELETE,
-            actix_web::http::Method::PATCH => Self::PATCH,
-            actix_web::http::Method::HEAD => Self::HEAD,
-            actix_web::http::Method::OPTIONS => Self::OPTIONS,
-            actix_web::http::Method::CONNECT => Self::CONNECT,
-            actix_web::http::Method::TRACE => Self::TRACE,
-            _ => panic!("Unsupported HTTP method"),
+            actix_web::http::Method::GET => Ok(Self::GET),
+            actix_web::http::Method::POST => Ok(Self::POST),
+            actix_web::http::Method::PUT => Ok(Self::PUT),
+            actix_web::http::Method::DELETE => Ok(Self::DELETE),
+            actix_web::http::Method::PATCH => Ok(Self::PATCH),
+            actix_web::http::Method::HEAD => Ok(Self::HEAD),
+            actix_web::http::Method::OPTIONS => Ok(Self::OPTIONS),
+            actix_web::http::Method::CONNECT => Ok(Self::CONNECT),
+            actix_web::http::Method::TRACE => Ok(Self::TRACE),
+            _ => Err("Method Not Allowed"),
         }
     }
 }

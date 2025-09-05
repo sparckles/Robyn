@@ -505,13 +505,18 @@ async fn index(
     }
 
     // Route execution
+    let http_method = match HttpMethod::from_actix_method(req.method()) {
+        Ok(method) => method,
+        Err(_) => return ResponseType::Standard(Response::method_not_allowed(None)),
+    };
+    
     let mut response = if let Some(res) = const_router.get_route(
-        &HttpMethod::from_actix_method(req.method()),
+        &http_method,
         req.uri().path(),
     ) {
         ResponseType::Standard(res)
     } else if let Some((function, route_params)) = router.get_route(
-        &HttpMethod::from_actix_method(req.method()),
+        &http_method,
         req.uri().path(),
     ) {
         request.path_params = route_params;
