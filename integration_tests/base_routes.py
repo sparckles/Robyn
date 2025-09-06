@@ -604,6 +604,68 @@ async def request_json(request: Request):
     return json["key"]
 
 
+@app.post("/sync/request_json_array")
+def sync_json_array_post(request: Request):
+    try:
+        json_data = request.json()
+        return {
+            "type": str(type(json_data).__name__),
+            "length": len(json_data) if hasattr(json_data, '__len__') else None,
+            "data": json_data
+        }
+    except ValueError as e:
+        return {"error": str(e)}
+
+
+@app.post("/async/request_json_array")
+async def async_json_array_post(request: Request):
+    try:
+        json_data = request.json()
+        return {
+            "type": str(type(json_data).__name__),
+            "length": len(json_data) if hasattr(json_data, '__len__') else None,
+            "data": json_data
+        }
+    except ValueError as e:
+        return {"error": str(e)}
+
+
+@app.post("/sync/request_json_types")
+def sync_json_types_post(request: Request):
+    try:
+        json_data = request.json()
+        return {
+            "type": str(type(json_data).__name__),
+            "data": json_data,
+            "is_list": isinstance(json_data, list),
+            "is_dict": isinstance(json_data, dict),
+            "is_string": isinstance(json_data, str),
+            "is_number": isinstance(json_data, (int, float)),
+            "is_bool": isinstance(json_data, bool),
+            "is_none": json_data is None
+        }
+    except ValueError as e:
+        return {"error": str(e)}
+
+
+@app.post("/async/request_json_types")
+async def async_json_types_post(request: Request):
+    try:
+        json_data = request.json()
+        return {
+            "type": str(type(json_data).__name__),
+            "data": json_data,
+            "is_list": isinstance(json_data, list),
+            "is_dict": isinstance(json_data, dict),
+            "is_string": isinstance(json_data, str),
+            "is_number": isinstance(json_data, (int, float)),
+            "is_bool": isinstance(json_data, bool),
+            "is_none": json_data is None
+        }
+    except ValueError as e:
+        return {"error": str(e)}
+
+
 # --- PUT ---
 
 # dict
