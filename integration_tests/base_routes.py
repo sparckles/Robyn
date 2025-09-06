@@ -608,11 +608,7 @@ async def request_json(request: Request):
 def sync_json_array_post(request: Request):
     try:
         json_data = request.json()
-        return {
-            "type": str(type(json_data).__name__),
-            "length": len(json_data) if hasattr(json_data, '__len__') else None,
-            "data": json_data
-        }
+        return {"type": str(type(json_data).__name__), "length": len(json_data) if hasattr(json_data, "__len__") else None, "data": json_data}
     except ValueError as e:
         return {"error": str(e)}
 
@@ -621,11 +617,7 @@ def sync_json_array_post(request: Request):
 async def async_json_array_post(request: Request):
     try:
         json_data = request.json()
-        return {
-            "type": str(type(json_data).__name__),
-            "length": len(json_data) if hasattr(json_data, '__len__') else None,
-            "data": json_data
-        }
+        return {"type": str(type(json_data).__name__), "length": len(json_data) if hasattr(json_data, "__len__") else None, "data": json_data}
     except ValueError as e:
         return {"error": str(e)}
 
@@ -642,7 +634,7 @@ def sync_json_types_post(request: Request):
             "is_string": isinstance(json_data, str),
             "is_number": isinstance(json_data, (int, float)),
             "is_bool": isinstance(json_data, bool),
-            "is_none": json_data is None
+            "is_none": json_data is None,
         }
     except ValueError as e:
         return {"error": str(e)}
@@ -660,7 +652,7 @@ async def async_json_types_post(request: Request):
             "is_string": isinstance(json_data, str),
             "is_number": isinstance(json_data, (int, float)),
             "is_bool": isinstance(json_data, bool),
-            "is_none": json_data is None
+            "is_none": json_data is None,
         }
     except ValueError as e:
         return {"error": str(e)}
