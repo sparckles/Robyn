@@ -9,6 +9,7 @@ from typing import Callable, Dict, List, NamedTuple, Optional, Union
 from robyn import status_codes
 from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
 from robyn.dependency_injection import DependencyMap
+from robyn.advanced_params import parse_advanced_params, Query, Path, Header, Form
 from robyn.jsonify import jsonify
 from robyn.openapi import OpenAPI
 from robyn.responses import FileResponse, StreamingResponse
@@ -134,6 +135,17 @@ class Router(BaseRouter):
             if not request or (len(handler_params) == 1 and next(iter(handler_params)) is Request):
                 return handler(*args, **kwargs)
 
+            # First try advanced parameter parsing
+            try:
+                advanced_params = parse_advanced_params(handler, request)
+                # If advanced parsing succeeds and covers all parameters, use it
+                if len(advanced_params) == len(handler_params):
+                    return handler(**advanced_params)
+            except Exception as e:
+                # If advanced parsing fails, fall back to original Robyn logic
+                _logger.debug(f"Advanced parameter parsing failed, falling back to Robyn logic: {e}")
+
+            # Original Robyn parameter parsing logic as fallback
             type_mapping = {
                 "request": Request,
                 "query_params": QueryParams,
