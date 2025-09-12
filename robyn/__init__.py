@@ -756,7 +756,7 @@ __all__ = [
     "WebSocket",
     "MCPApp",
     "Query",
-    "Path", 
+    "Path",
     "Header",
     "Form",
 ]
