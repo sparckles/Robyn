@@ -11,6 +11,7 @@
 [![view - Documentation](https://img.shields.io/badge/view-Documentation-blue?style=for-the-badge)](https://robyn.tech/documentation)
 [![Discord](https://img.shields.io/discord/999782964143603713?label=discord&logo=discord&logoColor=white&style=for-the-badge&color=blue)](https://discord.gg/rkERZ5eNU8)
 [![Gurubase](https://img.shields.io/badge/Gurubase-Ask%20Robyn%20Guru-006BFF?style=for-the-badge)](https://gurubase.io/g/robyn)
+<a href="https://deepwiki.com/sparckles/Robyn"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki" height="27"></a>
 
 Robyn is a High-Performance, Community-Driven, and Innovator Friendly Web Framework with a Rust runtime. You can learn more by checking our [community resources](https://robyn.tech/documentation/en/community-resources#talks)!
 
