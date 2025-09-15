@@ -21,10 +21,10 @@ jobs:
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
-      - uses: actions/setup-python@v5
+        uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - uses: dtolnay/rust-toolchain@stable
@@ -59,10 +59,10 @@ jobs:
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
         target: [x64, x86]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
-      - uses: actions/setup-python@v5
+        uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.target }}
@@ -89,11 +89,11 @@ jobs:
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
         target: [x86_64, i686]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
-      - uses: actions/setup-python@v5
+        uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Build Wheels
@@ -127,7 +127,7 @@ jobs:
           ]
         target: [aarch64, armv7]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - name: Build Wheels
         uses: PyO3/maturin-action@v1
         env:
@@ -136,7 +136,7 @@ jobs:
           target: ${{ matrix.target }}
           manylinux: auto
           args: -i python${{matrix.python.version}} --release --out dist
-      - uses: uraimo/run-on-arch-action@v2
+      - uses: uraimo/run-on-arch-action@v3
         name: Install build wheel
         with:
           arch: ${{ matrix.target }}
@@ -170,7 +170,7 @@ jobs:
     if: always() && needs.macos.result == 'success' && needs.windows.result == 'success' && needs.linux.result == 'success' && (needs.linux-cross.result == 'success' || needs.linux-cross.result == 'skipped')
     steps:
       - name: Downloading all Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: artifacts
           pattern: wheels-*
@@ -190,12 +190,12 @@ jobs:
     needs: [macos, windows, linux, linux-cross, merge]
     if: always() && needs.merge.result == 'success'
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: wheels
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
-      - uses: actions/setup-python@v5
+        uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: 3.x
       - name: Publish to PyPi
