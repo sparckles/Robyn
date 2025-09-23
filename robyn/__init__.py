@@ -55,28 +55,25 @@ def _normalize_endpoint(endpoint: str) -> str:
     return endpoint.rstrip("/")
 
 
-config = Config()
-
-if (compile_path := config.compile_rust_path) is not None:
-    compile_rust_files(compile_path)
-    print("Compiled rust files")
-
-
 class BaseRobyn(ABC):
     """This is the python wrapper for the Robyn binaries."""
 
     def __init__(
         self,
         file_object: str,
-        config: Config = Config(),
+        config: Optional[Config] = None,
         openapi_file_path: Optional[str] = None,
         openapi: Optional[OpenAPI] = None,
         dependencies: DependencyMap = DependencyMap(),
     ) -> None:
+        self.config = Config() if config is None else config
+        if (compile_path := self.config.compile_rust_path) is not None:
+            compile_rust_files(compile_path)
+            self.config.compile_rust_path = None
+
         directory_path = os.path.dirname(os.path.abspath(file_object))
         self.file_path = file_object
         self.directory_path = directory_path
-        self.config = config
         self.dependencies = dependencies
         self.openapi = openapi
 
@@ -640,7 +637,7 @@ class Robyn(BaseRobyn):
 
 
 class SubRouter(BaseRobyn):
-    def __init__(self, file_object: str, prefix: str = "", config: Config = Config(), openapi: OpenAPI = OpenAPI()) -> None:
+    def __init__(self, file_object: str, prefix: str = "", config: Optional[Config] = None, openapi: OpenAPI = OpenAPI()) -> None:
         super().__init__(file_object=file_object, config=config, openapi=openapi)
         self.prefix = prefix
 
