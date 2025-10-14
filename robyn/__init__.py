@@ -520,7 +520,7 @@ class BaseRobyn(ABC):
 
         return inner
 
-    def include_router(self, router):
+    def include_router(self, router: "SubRouter"):
         """
         The method to include the routes from another router
 
