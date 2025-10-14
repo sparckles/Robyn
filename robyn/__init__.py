@@ -522,9 +522,18 @@ class BaseRobyn(ABC):
 
     def include_router(self, router: "SubRouter"):
         """
-        The method to include the routes from another router
+        Include routes from another router into this router.
 
-        :param router Robyn: the router object to include the routes from
+        Args:
+            router (SubRouter): Router instance whose routes will be mounted on
+                this router. The routes' path patterns and handlers are registered
+                on the current router.
+
+        Raises:
+            TypeError: If `router` is not an instance of SubRouter.
+
+        Example:
+            >>> app.include_router(other_router)
         """
         self.included_routers.append(router)
 
