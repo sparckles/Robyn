@@ -14,13 +14,13 @@ jobs:
     name: ${{ matrix.os }} tests with python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set up Nox
-        uses: wntrblm/nox@2024.03.02
+        uses: wntrblm/nox@2025.10.16
         with:
           python-versions: ${{ matrix.python-version }}
       - name: Test with Nox
