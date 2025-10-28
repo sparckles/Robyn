@@ -155,18 +155,22 @@ impl Server {
                         if let Some(index_file) = &directory.index_file {
                             app = app.service(
                                 Files::new(&directory.route, &directory.directory_path)
+                                    .method_guard(guard::fn_guard(|_| true))
                                     .index_file(index_file)
                                     .redirect_to_slash_directory(),
                             );
                         } else if directory.show_files_listing {
                             app = app.service(
                                 Files::new(&directory.route, &directory.directory_path)
+                                    .method_guard(guard::fn_guard(|_| true))
                                     .redirect_to_slash_directory()
                                     .show_files_listing(),
                             );
                         } else {
-                            app = app
-                                .service(Files::new(&directory.route, &directory.directory_path));
+                            app = app.service(
+                                Files::new(&directory.route, &directory.directory_path)
+                                    .method_guard(guard::fn_guard(|_| true)),
+                            );
                         }
                     }
 
