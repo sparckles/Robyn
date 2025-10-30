@@ -6,7 +6,7 @@ import time
 from collections import defaultdict
 from typing import Optional
 
-from integration_tests.subroutes import di_subrouter, sub_router, static_router
+from integration_tests.subroutes import di_subrouter, static_router, sub_router
 from robyn import Headers, Request, Response, Robyn, SSEMessage, SSEResponse, WebSocket, WebSocketConnector, jsonify, serve_file, serve_html
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.robyn import QueryParams, Url

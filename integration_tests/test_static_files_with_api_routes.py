@@ -7,8 +7,8 @@ to API handlers when a static file service is mounted at the same route.
 """
 
 import pytest
-from integration_tests.helpers.http_methods_helpers import get, post
 
+from integration_tests.helpers.http_methods_helpers import get, post
 
 # Notes:
 # 1. The /static route serves the integration_tests having files & directories.

@@ -10,7 +10,6 @@ Notes:
 
 from robyn import Request, SubRouter
 
-
 static_router = SubRouter(__name__, "/static")
 
 
