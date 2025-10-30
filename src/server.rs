@@ -152,26 +152,32 @@ impl Server {
                     // 2. Shows file listing
                     // 3. Just serves the file without any redirection to sub links
                     for directory in directories.iter() {
+                        let mut files = Files::new(&directory.route, &directory.directory_path)
+                            .method_guard(guard::fn_guard(|_| true))
+                            .redirect_to_slash_directory();
                         if let Some(index_file) = &directory.index_file {
-                            app = app.service(
-                                Files::new(&directory.route, &directory.directory_path)
-                                    .method_guard(guard::fn_guard(|_| true))
-                                    .index_file(index_file)
-                                    .redirect_to_slash_directory(),
-                            );
+                            files = files.index_file(index_file);
                         } else if directory.show_files_listing {
-                            app = app.service(
-                                Files::new(&directory.route, &directory.directory_path)
-                                    .method_guard(guard::fn_guard(|_| true))
-                                    .redirect_to_slash_directory()
-                                    .show_files_listing(),
-                            );
+                            files = files.show_files_listing();
                         } else {
-                            app = app.service(
-                                Files::new(&directory.route, &directory.directory_path)
-                                    .method_guard(guard::fn_guard(|_| true)),
-                            );
+                            // To serve regular files only, nothing else.
+                            let directory_path = directory.directory_path.clone();
+                            let directory_route = directory.route.clone();
+                            // This guard allows request if it corresponds to a regular file.
+                            files = files.guard(guard::fn_guard(move |ctx| {
+                                let route = ctx.head().uri.path();
+                                // Resolve the path by combining directory path and requested path
+                                let full_path = std::path::Path::new(&directory_path)
+                                    .join(route.trim_start_matches(&directory_route));
+                                // Check if the path exists and is a regular file (not dir/symlink)
+                                if let Ok(metadata) = std::fs::metadata(&full_path) {
+                                    metadata.is_file()
+                                } else {
+                                    false
+                                }
+                            }));
                         }
+                        app = app.service(files);
                     }
 
                     app = app
