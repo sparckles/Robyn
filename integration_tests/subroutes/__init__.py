@@ -1,12 +1,13 @@
 from robyn import SubRouter, WebSocket, jsonify
 
 from .di_subrouter import di_subrouter
+from .file_api import static_router
 
 sub_router = SubRouter(__name__, prefix="/sub_router")
 
 websocket = WebSocket(sub_router, "/ws")
 
-__all__ = ["sub_router", "websocket", "di_subrouter"]
+__all__ = ["sub_router", "websocket", "di_subrouter", "static_router"]
 
 
 @websocket.on("connect")

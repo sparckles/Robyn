@@ -167,8 +167,11 @@ impl Server {
                             files = files.guard(guard::fn_guard(move |ctx| {
                                 let route = ctx.head().uri.path();
                                 // Resolve the path by combining directory path and requested path
-                                let full_path = std::path::Path::new(&directory_path)
-                                    .join(route.trim_start_matches(&directory_route));
+                                let full_path = std::path::Path::new(&directory_path).join(
+                                    route
+                                        .trim_start_matches(&directory_route)
+                                        .trim_start_matches("/"),
+                                );
                                 // Check if the path exists and is a regular file (not dir/symlink)
                                 if let Ok(metadata) = std::fs::metadata(&full_path) {
                                     metadata.is_file()
