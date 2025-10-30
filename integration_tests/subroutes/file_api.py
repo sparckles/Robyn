@@ -15,10 +15,11 @@ static_router = SubRouter(__name__, "/static")
 
 @static_router.get("/build")
 @static_router.post("/build")
-async def file_serve(request: Request):
+async def build_handler(request: Request):
     """
-    - Test route to ensure no conflict with static file serving at /static
-    - Though static files are served at /static, it should serve this api route, coz build is
-        not a file, so fallback to api to serve the request.
+    Test route ensuring no conflict with static file serving at /static.
+
+    Although static files are served at /static, this API route should be reached
+    because /build is not a file, so the request falls through to the API handler.
     """
     return f"{request.method}:{request.url.path} works"
