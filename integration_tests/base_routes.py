@@ -1204,19 +1204,17 @@ def sse_status_code(request):
     return SSEResponse(event_generator(), status_code=201)
 
 
-# Serving static files at /static from ./integration_tests.
-app.serve_directory(
-    route="/static",
-    directory_path=str(current_file_path),
-)
-
-
 def main():
     app.set_response_header("server", "robyn")
     app.serve_directory(
         route="/test_dir",
         directory_path=os.path.join(current_file_path, "build"),
         index_file="index.html",
+    )
+    # Serving static files at /static from ./integration_tests.
+    app.serve_directory(
+        route="/static",
+        directory_path=str(current_file_path),
     )
     app.startup_handler(startup_handler)
     app.include_router(sub_router)
