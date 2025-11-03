@@ -179,10 +179,20 @@ impl Request {
         debug!("Request form data: {:?}", form_data);
         debug!("Request files: {:?}", files);
 
+        // Normalizing Path.
+        let route_path = {
+            let mut path = req.path();
+            if path.ends_with("/") && path.len() > 1 {
+                path = &path[..path.len() - 1]
+            }
+            path
+        };
+
+
         let url = Url::new(
             req.connection_info().scheme(),
             req.connection_info().host(),
-            req.path(),
+            route_path,
         );
         let ip_addr = req.peer_addr().map(|val| val.ip().to_string());
 
