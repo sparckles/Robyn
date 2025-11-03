@@ -172,11 +172,11 @@ class BaseRobyn(ABC):
             }
             route_type = http_methods[route_type]
 
-        if auth_required:
-            self.middleware_router.add_auth_middleware(endpoint, route_type)(handler)
-
         # Normalize endpoint before adding
         normalized_endpoint = _normalize_endpoint(endpoint)
+
+        if auth_required:
+            self.middleware_router.add_auth_middleware(normalized_endpoint, route_type)(handler)
 
         # Check if this exact route (method + normalized_endpoint) already exists
         route_key = f"{route_type}:{normalized_endpoint}"
@@ -230,7 +230,7 @@ class BaseRobyn(ABC):
         :param endpoint str|None: endpoint to server the route. If None, the middleware will be applied to all the routes.
         """
 
-        return self.middleware_router.add_middleware(MiddlewareType.BEFORE_REQUEST, endpoint)
+        return self.middleware_router.add_middleware(MiddlewareType.BEFORE_REQUEST, _normalize_endpoint(endpoint))
 
     def after_request(self, endpoint: Optional[str] = None) -> Callable[..., None]:
         """
@@ -238,7 +238,7 @@ class BaseRobyn(ABC):
 
         :param endpoint str|None: endpoint to server the route. If None, the middleware will be applied to all the routes.
         """
-        return self.middleware_router.add_middleware(MiddlewareType.AFTER_REQUEST, endpoint)
+        return self.middleware_router.add_middleware(MiddlewareType.AFTER_REQUEST, _normalize_endpoint(endpoint))
 
     def serve_directory(
         self,
