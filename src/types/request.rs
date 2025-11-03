@@ -180,6 +180,8 @@ impl Request {
         debug!("Request files: {:?}", files);
 
         // Normalizing Path.
+        // Rules:
+        // 1. Other than Root("/"), "/endpoint/" will be routed to "/endpoint" internally, without any client redirection.
         let route_path = {
             let mut path = req.path();
             if path.ends_with("/") && path.len() > 1 {
