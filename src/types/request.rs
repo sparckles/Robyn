@@ -188,7 +188,6 @@ impl Request {
             path
         };
 
-
         let url = Url::new(
             req.connection_info().scheme(),
             req.connection_info().host(),

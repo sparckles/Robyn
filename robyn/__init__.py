@@ -29,7 +29,7 @@ from robyn.ws import WebSocket
 __version__ = get_version()
 
 
-def _normalize_endpoint(endpoint: str) -> str:
+def _normalize_endpoint(endpoint: Optional[str]) -> Optional[str]:
     """
     Normalize an endpoint to ensure consistent routing.
 
@@ -44,6 +44,9 @@ def _normalize_endpoint(endpoint: str) -> str:
     Returns:
         Normalized endpoint path
     """
+    if endpoint is None or endpoint == "":
+        return None
+
     if endpoint == "/":
         return "/"
 
@@ -174,6 +177,9 @@ class BaseRobyn(ABC):
 
         # Normalize endpoint before adding
         normalized_endpoint = _normalize_endpoint(endpoint)
+
+        if normalized_endpoint is None:
+            raise ValueError("Endpoint cannot be blank, do specify '/' for root endpoint")
 
         if auth_required:
             self.middleware_router.add_auth_middleware(normalized_endpoint, route_type)(handler)

@@ -485,10 +485,10 @@ async fn index(
         return ResponseType::Standard(Response::method_not_allowed(None));
     }
 
-    let mut request: Request = Request::from_actix_request(&req, payload, &global_request_headers).await;
+    let mut request: Request =
+        Request::from_actix_request(&req, payload, &global_request_headers).await;
 
     let route = format!("{}{}", req.method(), request.url.path);
-
 
     // Before middleware
     // Global
