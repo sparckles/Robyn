@@ -43,36 +43,8 @@ impl Router<(FunctionInfo, HashMap<String, String>), HttpMethod> for HttpRouter 
 
         let table_lock = table.read();
 
-        // First try the original route
+        // Trying route matching just once.
         if let Ok(res) = table_lock.at(route) {
-            let mut route_params = HashMap::new();
-            for (key, value) in res.params.iter() {
-                route_params.insert(key.to_string(), value.to_string());
-            }
-
-            let function_info = Python::with_gil(|_| res.value.to_owned());
-            return Some((function_info, route_params));
-        }
-
-        // If original route fails, try normalized version (add/remove trailing slash)
-        let normalized_route = if route.ends_with('/') && route.len() > 1 {
-            // Remove trailing slash (except for root "/")
-            &route[..route.len() - 1]
-        } else {
-            // Add trailing slash
-            return table_lock.at(&format!("{}/", route)).ok().map(|res| {
-                let mut route_params = HashMap::new();
-                for (key, value) in res.params.iter() {
-                    route_params.insert(key.to_string(), value.to_string());
-                }
-
-                let function_info = Python::with_gil(|_| res.value.to_owned());
-                (function_info, route_params)
-            });
-        };
-
-        // Try the normalized route
-        if let Ok(res) = table_lock.at(normalized_route) {
             let mut route_params = HashMap::new();
             for (key, value) in res.params.iter() {
                 route_params.insert(key.to_string(), value.to_string());
