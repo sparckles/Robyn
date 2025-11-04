@@ -29,7 +29,7 @@ from robyn.ws import WebSocket
 __version__ = get_version()
 
 
-def _normalize_endpoint(endpoint: Optional[str]) -> Optional[str]:
+def _normalize_endpoint(endpoint: Optional[str], allow_empty=False) -> Optional[str]:
     """
     Normalize an endpoint to ensure consistent routing.
 
@@ -44,7 +44,8 @@ def _normalize_endpoint(endpoint: Optional[str]) -> Optional[str]:
     Returns:
         Normalized endpoint path
     """
-    if endpoint is None or endpoint == "":
+    # allow_empty is used for prefixes where empty string is valid
+    if endpoint is None or (not allow_empty and endpoint == ""):
         return None
 
     if endpoint == "/":
@@ -656,7 +657,7 @@ class SubRouter(BaseRobyn):
 
     def __add_prefix(self, endpoint: str):
         # Normalize both prefix and endpoint to ensure consistent routing
-        normalized_prefix = _normalize_endpoint(self.prefix)
+        normalized_prefix = _normalize_endpoint(self.prefix, allow_empty=True)
 
         # Handle empty endpoint - should just be the prefix
         if endpoint == "":
@@ -664,6 +665,10 @@ class SubRouter(BaseRobyn):
 
         # Normalize the endpoint and combine with prefix
         normalized_endpoint = _normalize_endpoint(endpoint)
+
+        if normalized_endpoint is None:
+            raise ValueError("Endpoint cannot be blank, do specify '/' for root endpoint")
+
         return f"{normalized_prefix}{normalized_endpoint}"
 
     def get(self, endpoint: str, const: bool = False, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["get"]):
