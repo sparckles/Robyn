@@ -48,7 +48,7 @@ def _normalize_endpoint(endpoint: Optional[str], allow_empty=False) -> Optional[
     if endpoint is None or (not allow_empty and endpoint == ""):
         return None
 
-    if endpoint == "/":
+    if endpoint == "" or endpoint == "/":
         return "/"
 
     # Add leading slash if missing
@@ -660,8 +660,11 @@ class SubRouter(BaseRobyn):
         normalized_prefix = _normalize_endpoint(self.prefix, allow_empty=True)
 
         # Handle empty endpoint - should just be the prefix
-        if endpoint == "":
+        if endpoint == "" or endpoint == "/":
             return normalized_prefix
+
+        if normalized_prefix == "/":
+            normalized_prefix = ""
 
         # Normalize the endpoint and combine with prefix
         normalized_endpoint = _normalize_endpoint(endpoint)

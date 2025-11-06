@@ -30,7 +30,7 @@ def get(
     headers dict: The headers to send with the request.
     should_check_response bool: A boolean to indicate if the status code and headers should be checked.
     """
-    endpoint = endpoint.strip("/")
+    endpoint = endpoint.lstrip("/")
     response = requests.get(f"{BASE_URL}/{endpoint}", headers=headers)
     if should_check_response:
         check_response(response, expected_status_code)
@@ -54,7 +54,7 @@ def post(
     should_check_response bool: A boolean to indicate if the status code and headers should be checked.
     """
 
-    endpoint = endpoint.strip("/")
+    endpoint = endpoint.lstrip("/")
     response = requests.post(f"{BASE_URL}/{endpoint}", data=data, headers=headers)
     if should_check_response:
         check_response(response, expected_status_code)
@@ -100,7 +100,7 @@ def multipart_post(
     should_check_response bool: A boolean to indicate if the status code and headers should be checked.
     """
 
-    endpoint = endpoint.strip("/")
+    endpoint = endpoint.lstrip("/")
     response = requests.post(f"{BASE_URL}/{endpoint}", files=files)
     if should_check_response:
         check_response(response, expected_status_code)
@@ -123,7 +123,7 @@ def put(
     should_check_response bool: A boolean to indicate if the status code and headers should be checked.
     """
 
-    endpoint = endpoint.strip("/")
+    endpoint = endpoint.lstrip("/")
     response = requests.put(f"{BASE_URL}/{endpoint}", data=data, headers=headers)
     if should_check_response:
         check_response(response, expected_status_code)
@@ -146,7 +146,7 @@ def patch(
     should_check_response bool: A boolean to indicate if the status code and headers should be checked.
     """
 
-    endpoint = endpoint.strip("/")
+    endpoint = endpoint.lstrip("/")
     response = requests.patch(f"{BASE_URL}/{endpoint}", data=data, headers=headers)
     if should_check_response:
         check_response(response, expected_status_code)
@@ -169,7 +169,7 @@ def delete(
     should_check_response bool: A boolean to indicate if the status code and headers should be checked.
     """
 
-    endpoint = endpoint.strip("/")
+    endpoint = endpoint.lstrip("/")
     response = requests.delete(f"{BASE_URL}/{endpoint}", data=data, headers=headers)
     if should_check_response:
         check_response(response, expected_status_code)
@@ -192,7 +192,7 @@ def head(
     should_check_response bool: A boolean to indicate if the status code and headers should be checked.
     """
 
-    endpoint = endpoint.strip("/")
+    endpoint = endpoint.lstrip("/")
     response = requests.head(f"{BASE_URL}/{endpoint}", data=data, headers=headers)
     if should_check_response:
         check_response(response, expected_status_code)
@@ -218,7 +218,7 @@ def generic_http_helper(
     should_check_response bool: A boolean to indicate if the status code and headers should be checked.
     """
 
-    endpoint = endpoint.strip("/")
+    endpoint = endpoint.lstrip("/")
     if method not in ["get", "post", "put", "patch", "delete", "options", "trace"]:
         raise ValueError(f"{method} method must be one of get, post, put, patch, delete")
     if method == "get":
