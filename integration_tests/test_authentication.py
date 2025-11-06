@@ -1,6 +1,7 @@
 import pytest
 
 from integration_tests.helpers.http_methods_helpers import get
+from urllib.parse import urlparse
 
 
 @pytest.mark.benchmark
@@ -8,8 +9,9 @@ from integration_tests.helpers.http_methods_helpers import get
 def test_valid_authentication(session, function_type: str):
     r = get(f"/{function_type}/auth", headers={"Authorization": "Bearer valid"})
     assert r.text == "authenticated"
-
+    # Checks whether request is being sent to exact /trailing/ route and internal routing works.
     r = get(f"/{function_type}/auth/", headers={"Authorization": "Bearer valid"})
+    assert urlparse(r.url).path == f"/{function_type}/auth/"
     assert r.text == "authenticated"
 
 
@@ -29,6 +31,7 @@ def test_invalid_authentication_token(session, function_type: str):
         headers={"Authorization": "Bearer invalid"},
         should_check_response=False,
     )
+    assert urlparse(r.url).path == f"/{function_type}/auth/"
     assert r.status_code == 401
     assert r.headers.get("WWW-Authenticate") == "BearerGetter"
 
