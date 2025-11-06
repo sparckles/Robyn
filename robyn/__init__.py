@@ -29,7 +29,7 @@ from robyn.ws import WebSocket
 __version__ = get_version()
 
 
-def _normalize_endpoint(endpoint: Optional[str], allow_empty=False) -> Optional[str]:
+def _normalize_endpoint(endpoint: Optional[str], allow_empty: bool = False) -> Optional[str]:
     """
     Normalize an endpoint to ensure consistent routing.
 
@@ -40,6 +40,7 @@ def _normalize_endpoint(endpoint: Optional[str], allow_empty=False) -> Optional[
 
     Args:
         endpoint: The endpoint path to normalize
+        allow_empty: If True, empty string is considered valid (used for prefixes).
 
     Returns:
         Normalized endpoint path
@@ -48,15 +49,17 @@ def _normalize_endpoint(endpoint: Optional[str], allow_empty=False) -> Optional[
     if endpoint is None or (not allow_empty and endpoint == ""):
         return None
 
-    if endpoint == "" or endpoint == "/":
+    # Remove trailing slash
+    endpoint = endpoint.rstrip("/")
+
+    if endpoint == "":
         return "/"
 
     # Add leading slash if missing
     if not endpoint.startswith("/"):
         endpoint = "/" + endpoint
 
-    # Remove trailing slash
-    return endpoint.rstrip("/")
+    return endpoint
 
 
 config = Config()
@@ -124,7 +127,8 @@ class BaseRobyn(ABC):
             self.openapi.override_openapi(Path(self.directory_path).joinpath(openapi_file_path))
         elif Path(self.directory_path).joinpath("openapi.json").exists():
             self.openapi.override_openapi(Path(self.directory_path).joinpath("openapi.json"))
-        # TODO! what about when the elif fails?
+        else:
+            logger.warn("Unable to found configuration file for OpenAPI.")
 
     def _handle_dev_mode(self):
         cli_dev_mode = self.config.dev  # --dev
@@ -236,7 +240,6 @@ class BaseRobyn(ABC):
 
         :param endpoint str|None: endpoint to server the route. If None, the middleware will be applied to all the routes.
         """
-
         return self.middleware_router.add_middleware(MiddlewareType.BEFORE_REQUEST, _normalize_endpoint(endpoint))
 
     def after_request(self, endpoint: Optional[str] = None) -> Callable[..., None]:
@@ -663,6 +666,7 @@ class SubRouter(BaseRobyn):
         if endpoint == "" or endpoint == "/":
             return normalized_prefix
 
+        # Convert root prefix to empty to avoid double slashes when concatenating
         if normalized_prefix == "/":
             normalized_prefix = ""
 

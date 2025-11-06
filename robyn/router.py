@@ -336,6 +336,22 @@ class MiddlewareRouter(BaseRouter):
     # They take a handler, convert it into a closure and return the arguments.
     # Arguments are returned as they could be modified by the middlewares.
     def add_middleware(self, middleware_type: MiddlewareType, endpoint: Optional[str]) -> Callable[..., None]:
+        """
+        This method adds a middleware to the router.
+
+        Rules:
+            If endpoint is None, the middleware is added as a global middleware.
+            If endpoint is provided, the middleware is added to that specific endpoint.
+            Only None is supported for global middleware, empty string is not supported.
+            empty string or "/" is considered as root endpoint.
+
+        Args:
+            middleware_type: The type of middleware to add (before_request, after_request).
+            endpoint: The endpoint to add the middleware to. If None, the middleware is added as a global middleware.
+
+        Returns:
+            A decorator that takes a handler and adds it as a middleware.
+        """
         # no dependency injection here
         injected_dependencies: dict = {}
 
