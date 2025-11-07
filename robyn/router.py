@@ -14,7 +14,6 @@ from robyn.openapi import OpenAPI
 from robyn.responses import FileResponse, StreamingResponse
 from robyn.robyn import FunctionInfo, Headers, HttpMethod, Identity, MiddlewareType, QueryParams, Request, Response, Url
 from robyn.types import Body, Files, FormData, IPAddress, Method, PathParams
-from robyn.ws import WebSocket
 
 _logger = logging.getLogger(__name__)
 
@@ -47,7 +46,7 @@ class GlobalMiddleware(NamedTuple):
 
 class BaseRouter(ABC):
     @abstractmethod
-    def add_route(*args) -> Union[Callable, CoroutineType, WebSocket]: ...
+    def add_route(*args) -> Union[Callable, CoroutineType, Dict]: ...
 
 
 class Router(BaseRouter):
@@ -402,10 +401,10 @@ class MiddlewareRouter(BaseRouter):
 class WebSocketRouter(BaseRouter):
     def __init__(self) -> None:
         super().__init__()
-        self.routes: dict = {}
+        self.routes: Dict[str, Dict[str, FunctionInfo]] = {}
 
-    def add_route(self, endpoint: str, web_socket: WebSocket) -> None:  # type: ignore
-        self.routes[endpoint] = web_socket
+    def add_route(self, endpoint: str, handlers: Dict[str, FunctionInfo]) -> None:  # type: ignore
+        self.routes[endpoint] = handlers
 
-    def get_routes(self) -> Dict[str, WebSocket]:
+    def get_routes(self) -> Dict[str, Dict[str, FunctionInfo]]:
         return self.routes
