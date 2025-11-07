@@ -29,7 +29,7 @@ from robyn.ws import WebSocket
 __version__ = get_version()
 
 
-def _normalize_endpoint(endpoint: Optional[str], allow_empty: bool = False) -> Optional[str]:
+def _normalize_endpoint(endpoint: Optional[str], treat_empty_as_root: bool = False) -> Optional[str]:
     """
     Normalize an endpoint to ensure consistent routing.
 
@@ -37,22 +37,26 @@ def _normalize_endpoint(endpoint: Optional[str], allow_empty: bool = False) -> O
     - Root "/" remains unchanged
     - All other endpoints get leading slash added if missing
     - Trailing slashes are removed from all endpoints except root
+    - Empty or blank strings are handled based on treat_empty_as_root flag
+    - treat_empty_as_root is used for prefixes where empty/blank strings are valid
 
     Args:
-        endpoint: The endpoint path to normalize
-        allow_empty: If True, empty string is considered valid (used for prefixes).
+        endpoint: The endpoint path to normalize.
+        treat_empty_as_root (used for prefixes):
+            If True, empty/blank strings are converted to "/" (root).
+            If False, empty/blank strings return None (invalid endpoint).
 
     Returns:
-        Normalized endpoint path
+        Normalized endpoint path or None if invalid.
     """
-    # allow_empty is used for prefixes where empty string is valid
-    if endpoint is None or (not allow_empty and endpoint == ""):
+    if endpoint is None or (not endpoint and not treat_empty_as_root):
         return None
 
-    # Remove trailing slash
-    endpoint = endpoint.rstrip("/")
+    # Remove trailing slashes
+    endpoint = endpoint.strip().rstrip("/")
 
-    if endpoint == "":
+    # Handle empty result
+    if not endpoint:
         return "/"
 
     # Add leading slash if missing
@@ -128,7 +132,7 @@ class BaseRobyn(ABC):
         elif Path(self.directory_path).joinpath("openapi.json").exists():
             self.openapi.override_openapi(Path(self.directory_path).joinpath("openapi.json"))
         else:
-            logger.warn("Unable to found configuration file for OpenAPI.")
+            logger.debug("No OpenAPI spec file found; using auto-generated documentation only.", color=Colors.YELLOW)
 
     def _handle_dev_mode(self):
         cli_dev_mode = self.config.dev  # --dev
@@ -659,20 +663,19 @@ class SubRouter(BaseRobyn):
         self.prefix = prefix
 
     def __add_prefix(self, endpoint: str):
-        # Normalize both prefix and endpoint to ensure consistent routing
-        normalized_prefix = _normalize_endpoint(self.prefix, allow_empty=True)
+        # Normalize prefix, treating empty as empty (not root)
+        normalized_prefix = _normalize_endpoint(self.prefix, treat_empty_as_root=True)
 
         # Handle empty endpoint - should just be the prefix
-        if endpoint == "" or endpoint == "/":
-            return normalized_prefix
+        if endpoint in ("", "/"):
+            return normalized_prefix if normalized_prefix else "/"
 
-        # Convert root prefix to empty to avoid double slashes when concatenating
+        # Convert root prefix to empty to avoid double slashes when making endpoint
         if normalized_prefix == "/":
-            normalized_prefix = ""
+            normalized_prefix = ""  # Empty prefix for root
 
-        # Normalize the endpoint and combine with prefix
+        # Normalize and validate endpoint
         normalized_endpoint = _normalize_endpoint(endpoint)
-
         if normalized_endpoint is None:
             raise ValueError("Endpoint cannot be blank, do specify '/' for root endpoint")
 
