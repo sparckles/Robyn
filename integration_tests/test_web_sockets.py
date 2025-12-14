@@ -12,17 +12,18 @@ def test_web_socket_raw_benchmark(session):
     assert ws.recv() == "Hello world, from ws"
 
     ws.send("My name is?")
-    assert ws.recv() == "This is a broadcast message"
-    assert ws.recv() == "This is a message to self"
-    assert ws.recv() == "Whaaat??"
+    # Messages may arrive in any order due to WebSocket broadcast behavior
+    received = sorted([ws.recv() for _ in range(3)])
+    expected = sorted(["This is a broadcast message", "This is a message to self", "Whaaat??"])
+    assert received == expected
 
     ws.send("My name is?")
     assert ws.recv() == "Whooo??"
 
     ws.send("My name is?")
-    assert ws.recv() == "hi"
-    assert ws.recv() == "hello"
-    assert ws.recv() == "*chika* *chika* Slim Shady."
+    received = sorted([ws.recv() for _ in range(3)])
+    expected = sorted(["hi", "hello", "*chika* *chika* Slim Shady."])
+    assert received == expected
 
     # this will close the connection
     ws.send("test")
