@@ -3,7 +3,7 @@ import logging
 import os
 import socket
 from abc import ABC
-from pathlib import Path
+from pathlib import Path as PathLibPath
 from typing import Callable, List, Optional, Union
 
 import multiprocess as mp  # type: ignore
@@ -21,6 +21,7 @@ from robyn.openapi import OpenAPI
 from robyn.processpool import run_processes
 from robyn.reloader import compile_rust_files
 from robyn.responses import SSEMessage, SSEResponse, StreamingResponse, html, serve_file, serve_html
+from robyn.advanced_params import Query, Path, Header, Form
 from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, WebSocketConnector, get_version
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory
@@ -117,9 +118,9 @@ class BaseRobyn(ABC):
             self.openapi = OpenAPI()
 
         if openapi_file_path:
-            self.openapi.override_openapi(Path(self.directory_path).joinpath(openapi_file_path))
-        elif Path(self.directory_path).joinpath("openapi.json").exists():
-            self.openapi.override_openapi(Path(self.directory_path).joinpath("openapi.json"))
+            self.openapi.override_openapi(PathLibPath(self.directory_path).joinpath(openapi_file_path))
+        elif PathLibPath(self.directory_path).joinpath("openapi.json").exists():
+            self.openapi.override_openapi(PathLibPath(self.directory_path).joinpath("openapi.json"))
         # TODO! what about when the elif fails?
 
     def _handle_dev_mode(self):
@@ -754,4 +755,8 @@ __all__ = [
     "WebSocketConnector",
     "WebSocket",
     "MCPApp",
+    "Query",
+    "Path",
+    "Header",
+    "Form",
 ]
