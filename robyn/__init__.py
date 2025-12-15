@@ -520,14 +520,18 @@ class BaseRobyn(ABC):
 
         return inner
 
-    def include_router(self, router):
+    def include_router(self, router: "SubRouter"):
         """
-        The method to include the routes from another router
+        The method to include the routes from another router.
+
+        Merge another SubRouter's routes, middlewares, websocket routes, and dependencies into this router.
+        Note: This operation mutates the current router's internal collections (route list, middleware lists,
+        websocket routes, and dependencies) and does not deep-copy the included router. Callers should ensure
+        there are no path or name conflicts before including a router.
 
         :param router Robyn: the router object to include the routes from
         """
         self.included_routers.append(router)
-
         self.router.routes.extend(router.router.routes)
         self.middleware_router.global_middlewares.extend(router.middleware_router.global_middlewares)
         self.middleware_router.route_middlewares.extend(router.middleware_router.route_middlewares)
