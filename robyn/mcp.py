@@ -251,7 +251,7 @@ class MCPHandler:
             sig = inspect.signature(handler)
             handler_params = list(sig.parameters.keys())
 
-            if asyncio.iscoroutinefunction(handler):
+            if inspect.iscoroutinefunction(handler):
                 if uri_params:
                     # Use URI parameters for templated resources
                     content = await handler(**uri_params)
@@ -299,7 +299,7 @@ class MCPHandler:
         handler = self.tools[name]
 
         # Call the tool handler
-        if asyncio.iscoroutinefunction(handler):
+        if inspect.iscoroutinefunction(handler):
             result = await handler(**arguments)
         else:
             result = handler(**arguments)
@@ -324,7 +324,7 @@ class MCPHandler:
         handler = self.prompts[name]
 
         # Call the prompt handler
-        if asyncio.iscoroutinefunction(handler):
+        if inspect.iscoroutinefunction(handler):
             result = await handler(**arguments)
         else:
             result = handler(**arguments)
