@@ -152,7 +152,7 @@ If you still need help to get started, feel free to reach out on our [community 
 #### Prerequisites
 
 Before starting, ensure you have the following installed:
-- Python >= 3.9, <= 3.13
+- Python >= 3.9, <= 3.14
 - Rust (latest stable)
 - C compiler (gcc/clang)
 

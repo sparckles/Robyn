@@ -19,7 +19,7 @@ jobs:
     runs-on: macos-13
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v4
       - name: Install uv
@@ -52,7 +52,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
         target: [x64, x86]
     steps:
       - uses: actions/checkout@v4
@@ -78,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
         target: [x86_64, i686]
     steps:
       - uses: actions/checkout@v4
@@ -112,6 +112,7 @@ jobs:
             { version: "3.11", abi: "cp311-cp311" },
             { version: "3.12", abi: "cp312-cp312" },
             { version: "3.13", abi: "cp313-cp313" },
+            { version: "3.14", abi: "cp314-cp314" },
           ]
         target: [aarch64, armv7]
     steps:

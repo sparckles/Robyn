@@ -30,7 +30,7 @@ where
 {
     let handler = function.handler.bind(py).downcast()?;
     let kwargs = function.kwargs.bind(py);
-    let function_args: PyObject = function_args
+    let function_args: Py<PyAny> = function_args
         .clone()
         .into_pyobject(py)
         .map_err(|e| {
@@ -70,7 +70,7 @@ pub async fn execute_middleware_function<T>(
     function: &FunctionInfo,
 ) -> Result<MiddlewareReturn>
 where
-    T: Clone + for<'a> FromPyObject<'a> + for<'py> IntoPyObject<'py>,
+    T: Clone + for<'a, 'py> FromPyObject<'a, 'py> + for<'py> IntoPyObject<'py>,
     for<'py> <T as IntoPyObject<'py>>::Error: std::fmt::Debug,
 {
     if function.is_async {
