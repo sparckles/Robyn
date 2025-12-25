@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: Install uv
         uses: astral-sh/setup-uv@v3
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - uses: dtolnay/rust-toolchain@stable
@@ -62,7 +62,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: Install uv
         uses: astral-sh/setup-uv@v3
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.target }}
@@ -93,7 +93,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - name: Install uv
         uses: astral-sh/setup-uv@v3
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Build Wheels
@@ -196,7 +196,7 @@ jobs:
           name: wheels
       - name: Install uv
         uses: astral-sh/setup-uv@v3
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: 3.x
       - name: Publish to PyPi
