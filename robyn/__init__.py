@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 import logging
 import os
 import socket
@@ -284,7 +285,7 @@ class BaseRobyn(ABC):
         if event_type not in {Events.STARTUP, Events.SHUTDOWN}:
             return
 
-        is_async = asyncio.iscoroutinefunction(handler)
+        is_async = inspect.iscoroutinefunction(handler)
         self.event_handlers[event_type] = FunctionInfo(handler, is_async, 0, {}, {})
 
     def startup_handler(self, handler: Callable) -> None:
