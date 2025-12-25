@@ -113,7 +113,7 @@ test_server = { callable = "integration_tests.base_routes:main" }
 line-length = 160
 exclude = ["src/*", ".git", "docs"]
 
-[tool.ruff.mccabe]
+[tool.ruff.lint.mccabe]
 max-complexity = 10
 
 [tool.isort]
