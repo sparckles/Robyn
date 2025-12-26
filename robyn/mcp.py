@@ -6,7 +6,6 @@ It allows Robyn applications to serve as MCP servers, exposing resources, tools,
 to MCP clients like Claude Desktop or other AI applications.
 """
 
-import asyncio
 import inspect
 import json
 import logging
