@@ -1,7 +1,6 @@
 import inspect
 import logging
 from abc import ABC, abstractmethod
-from asyncio import iscoroutinefunction
 from functools import wraps
 from types import CoroutineType
 from typing import Callable, Dict, List, NamedTuple, Optional, Union
@@ -231,7 +230,7 @@ class Router(BaseRouter):
             else:
                 _logger.debug(f"Dependency {dependency} is not used in the handler {handler.__name__}")
 
-        if iscoroutinefunction(handler):
+        if inspect.iscoroutinefunction(handler):
             function = FunctionInfo(
                 async_inner_handler,
                 True,
@@ -295,7 +294,7 @@ class MiddlewareRouter(BaseRouter):
 
         function = FunctionInfo(
             handler,
-            iscoroutinefunction(handler),
+            inspect.iscoroutinefunction(handler),
             len(params),
             params,
             new_injected_dependencies,
@@ -350,7 +349,7 @@ class MiddlewareRouter(BaseRouter):
                 return handler(*args, **kwargs)
 
             if endpoint is not None:
-                if iscoroutinefunction(handler):
+                if inspect.iscoroutinefunction(handler):
                     self.add_route(
                         middleware_type,
                         endpoint,
@@ -363,7 +362,7 @@ class MiddlewareRouter(BaseRouter):
             else:
                 params = dict(inspect.signature(handler).parameters)
 
-                if iscoroutinefunction(handler):
+                if inspect.iscoroutinefunction(handler):
                     self.global_middlewares.append(
                         GlobalMiddleware(
                             middleware_type,

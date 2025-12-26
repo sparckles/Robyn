@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import inspect
 from typing import TYPE_CHECKING, Callable
 
@@ -34,7 +33,7 @@ class WebSocket:
 
             params = dict(inspect.signature(handler).parameters)
             num_params = len(params)
-            is_async = asyncio.iscoroutinefunction(handler)
+            is_async = inspect.iscoroutinefunction(handler)
 
             injected_dependencies = self.dependencies.get_dependency_map(self)
 
