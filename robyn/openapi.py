@@ -1,5 +1,6 @@
 import inspect
-import json, re
+import json
+import re
 import typing
 from dataclasses import asdict, dataclass, field
 from importlib import resources
@@ -275,11 +276,11 @@ class OpenAPI:
         # initialized with endpoint for handling endpoints without path params
         endpoint_with_path_params_wrapped_in_braces = endpoint
 
-        path_param_names = re.findall(r':(\w+)', endpoint)
-        
+        path_param_names = re.findall(r":(\w+)", endpoint)
+
         if path_param_names:
             # Convert param syntax to OpenAPI's {param} syntax
-            endpoint_with_path_params_wrapped_in_braces = re.sub(r':(\w+)', r'{\1}', endpoint)
+            endpoint_with_path_params_wrapped_in_braces = re.sub(r":(\w+)", r"{\1}", endpoint)
 
             for name in path_param_names:
                 openapi_path_object["parameters"].append(
