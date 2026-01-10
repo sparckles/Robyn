@@ -53,12 +53,12 @@ dev = [
   "isort==5.11.5",
   "maturin==1.7.4",
   "pre-commit==2.21.0",
-  "ruff==0.8.5",
+  "ruff>=0.9.0",
 ]
 test = [
   "nox==2023.4.22",
   "pytest>=9.0.2",
-  "pytest-codspeed>=3.2.0",
+  "pytest-codspeed>=4.2.0",
   "requests==2.28.2",
   "websocket-client==1.5.0",
 ]
@@ -89,7 +89,7 @@ templating = ["jinja2"]
 optional = true
 
 [tool.poetry.group.dev.dependencies]
-ruff = "0.8.5"
+ruff = ">=0.9.0"
 black = "23.1"
 isort = "5.11.5"
 pre-commit = "2.21.0"
@@ -100,7 +100,7 @@ optional = true
 
 [tool.poetry.group.test.dependencies]
 pytest = "^9.0.2"
-pytest-codspeed = "^3.2.0"
+pytest-codspeed = "^4.2.0"
 requests = "2.28.2"
 nox = "2023.4.22"
 websocket-client = "1.5.0"
