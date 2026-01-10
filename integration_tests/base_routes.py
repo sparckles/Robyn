@@ -6,7 +6,7 @@ import time
 from collections import defaultdict
 from typing import Optional
 
-from integration_tests.subroutes import di_subrouter, sub_router
+from integration_tests.subroutes import di_subrouter, static_router, sub_router
 from robyn import Headers, Request, Response, Robyn, SSEMessage, SSEResponse, WebSocket, WebSocketConnector, jsonify, serve_file, serve_html
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.robyn import QueryParams, Url
@@ -1211,9 +1211,15 @@ def main():
         directory_path=os.path.join(current_file_path, "build"),
         index_file="index.html",
     )
+    # Serving static files at /static from ./integration_tests.
+    app.serve_directory(
+        route="/static",
+        directory_path=str(current_file_path),
+    )
     app.startup_handler(startup_handler)
     app.include_router(sub_router)
     app.include_router(di_subrouter)
+    app.include_router(static_router)
 
     class BasicAuthHandler(AuthenticationHandler):
         def authenticate(self, request: Request) -> Optional[Identity]:
