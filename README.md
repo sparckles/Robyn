@@ -6,7 +6,7 @@
 [![Downloads](https://static.pepy.tech/personalized-badge/Robyn?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Downloads)](https://pepy.tech/project/Robyn)
 [![GitHub tag](https://img.shields.io/github/tag/sparckles/Robyn?include_prereleases=&sort=semver&color=black)](https://github.com/sparckles/Robyn/releases/)
 [![License](https://img.shields.io/badge/License-BSD_2.0-black)](https://github.com/sparckles/Robyn/blob/main/LICENSE)
-![Python](https://img.shields.io/badge/Support-Version%20%E2%89%A5%203.9-brightgreen)
+![Python](https://img.shields.io/badge/Support-Version%20%E2%89%A5%203.10-brightgreen)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/sparckles/Robyn)
 
 [![view - Documentation](https://img.shields.io/badge/view-Documentation-blue?style=for-the-badge)](https://robyn.tech/documentation)
@@ -99,11 +99,11 @@ $ python3 app.py --open-browser
 
 You can add more routes to your API. Check out the routes in [this file](https://github.com/sparckles/Robyn/blob/main/integration_tests/base_routes.py) as examples.
 
-## 🐍 Python Version Support
+### 🐍 Python Version Support
 
 Robyn is compatible with the following Python versions:
 
-> Python >= 3.9
+> Python >= 3.10
 
 It is recommended to use the latest version of Python for the best performances.
 
@@ -152,7 +152,7 @@ If you still need help to get started, feel free to reach out on our [community 
 #### Prerequisites
 
 Before starting, ensure you have the following installed:
-- Python >= 3.9, <= 3.14
+- Python >= 3.10, <= 3.14
 - Rust (latest stable)
 - C compiler (gcc/clang)
 
