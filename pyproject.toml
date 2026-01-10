@@ -137,5 +137,10 @@ extend-exclude = '''
 )/
 '''
 
+[tool.pytest.ini_options]
+markers = [
+  "benchmark: marks tests as benchmarks for performance measurement (deselect with '-m \"not benchmark\"')",
+]
+
 [tool.maturin]
 module-name = "robyn"
