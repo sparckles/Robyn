@@ -38,7 +38,8 @@ jobs:
       - name: Build wheels - universal2
         uses: PyO3/maturin-action@v1
         with:
-          args: -i python --release --universal2 --out dist
+          target: universal2-apple-darwin
+          args: -i python --release --out dist
       - name: Install build wheel - universal2
         run: |
           uv pip install --force-reinstall dist/robyn*_universal2.whl
