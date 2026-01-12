@@ -21,10 +21,10 @@ jobs:
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
-      - uses: actions/setup-python@v5
+        uses: astral-sh/setup-uv@v7
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - uses: dtolnay/rust-toolchain@stable
@@ -48,7 +48,7 @@ jobs:
           uv pip install --force-reinstall dist/robyn*_universal2.whl
           cd ~ && python -c 'import robyn'
       - name: Upload wheels
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: wheels-${{ github.job }}-universal-${{ matrix.python-version }}
           path: dist
@@ -59,10 +59,10 @@ jobs:
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
         target: [x64, x86]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
-      - uses: actions/setup-python@v5
+        uses: astral-sh/setup-uv@v7
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.target }}
@@ -78,7 +78,7 @@ jobs:
           uv pip install --force-reinstall dist/robyn*.whl
           cd ~ && python -c 'import robyn'
       - name: Upload wheels
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: wheels-${{ github.job }}-${{ matrix.target }}-${{ matrix.python-version }}
           path: dist
@@ -89,11 +89,11 @@ jobs:
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
         target: [x86_64, i686]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
-      - uses: actions/setup-python@v5
+        uses: astral-sh/setup-uv@v7
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Build Wheels
@@ -108,7 +108,7 @@ jobs:
           uv pip install --force-reinstall dist/robyn*.whl
           cd ~ && python -c 'import robyn'
       - name: Upload wheels
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: wheels-${{ github.job }}-${{ matrix.target }}-${{ matrix.python-version }}
           path: dist
@@ -127,7 +127,7 @@ jobs:
           ]
         target: [aarch64, armv7]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - name: Build Wheels
         uses: PyO3/maturin-action@v1
         env:
@@ -136,7 +136,7 @@ jobs:
           target: ${{ matrix.target }}
           manylinux: auto
           args: -i python${{matrix.python.version}} --release --out dist
-      - uses: uraimo/run-on-arch-action@v2
+      - uses: uraimo/run-on-arch-action@v3
         name: Install build wheel
         with:
           arch: ${{ matrix.target }}
@@ -159,7 +159,7 @@ jobs:
             python -m pip install --force-reinstall /artifacts/robyn*.whl
             cd ~ && python -c 'import robyn'
       - name: Upload wheels
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: wheels-${{ github.job }}-${{ matrix.target }}-${{ matrix.python.version }}-${{ matrix.python.abi }}
           path: dist
@@ -170,7 +170,7 @@ jobs:
     if: always() && needs.macos.result == 'success' && needs.windows.result == 'success' && needs.linux.result == 'success' && (needs.linux-cross.result == 'success' || needs.linux-cross.result == 'skipped')
     steps:
       - name: Downloading all Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: artifacts
           pattern: wheels-*
@@ -179,7 +179,7 @@ jobs:
           echo "Listing directories"
           ls -R
       - name: Uploading Artifact's Bundle
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: wheels
           path: artifacts
@@ -190,12 +190,12 @@ jobs:
     needs: [macos, windows, linux, linux-cross, merge]
     if: always() && needs.merge.result == 'success'
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           name: wheels
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
-      - uses: actions/setup-python@v5
+        uses: astral-sh/setup-uv@v7
+      - uses: actions/setup-python@v6
         with:
           python-version: 3.x
       - name: Publish to PyPi
