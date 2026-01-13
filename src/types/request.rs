@@ -263,7 +263,7 @@ impl PyRequest {
         Ok(())
     }
 
-    pub fn json(&self, py: Python) -> PyResult<PyObject> {
+    pub fn json(&self, py: Python) -> PyResult<Py<PyAny>> {
         match self.body.downcast_bound::<PyString>(py) {
             Ok(python_string) => match serde_json::from_str(python_string.extract()?) {
                 Ok(Value::Object(map)) => {

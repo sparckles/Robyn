@@ -16,15 +16,15 @@ env:
 
 jobs:
   macos:
-    runs-on: macos-13
+    runs-on: macos-latest
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v4
       - name: Install uv
         uses: astral-sh/setup-uv@v3
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - uses: dtolnay/rust-toolchain@stable
@@ -34,15 +34,12 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: x86_64
-          args: -i python --release --out dist --no-sdist
-      - name: Install build wheel - x86_64
-        run: |
-          uv pip install --force-reinstall dist/robyn*.whl
-          cd ~ && python -c 'import robyn'
+          args: -i python --release --out dist
       - name: Build wheels - universal2
         uses: PyO3/maturin-action@v1
         with:
-          args: -i python --release --universal2 --out dist --no-sdist
+          target: universal2-apple-darwin
+          args: -i python --release --out dist
       - name: Install build wheel - universal2
         run: |
           uv pip install --force-reinstall dist/robyn*_universal2.whl
@@ -52,13 +49,13 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         target: [x64, x86]
     steps:
       - uses: actions/checkout@v4
       - name: Install uv
         uses: astral-sh/setup-uv@v3
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.target }}
@@ -67,7 +64,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: -i python --release --out dist --no-sdist
+          args: -i python --release --out dist
       - name: Install build wheel
         shell: bash
         run: |
@@ -78,14 +75,14 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         target: [x86_64, i686]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - name: Install uv
         uses: astral-sh/setup-uv@v3
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Build Wheels
@@ -93,7 +90,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           manylinux: auto
-          args: -i python${{ matrix.python-version }} --release --out dist --no-sdist
+          args: -i python${{ matrix.python-version }} --release --out dist
       - name: Install build wheel
         if: matrix.target == 'x86_64'
         run: |
@@ -107,11 +104,11 @@ jobs:
       matrix:
         python:
           [
-            { version: "3.9", abi: "cp39-cp39" },
             { version: "3.10", abi: "cp310-cp310" },
             { version: "3.11", abi: "cp311-cp311" },
             { version: "3.12", abi: "cp312-cp312" },
             { version: "3.13", abi: "cp313-cp313" },
+            { version: "3.14", abi: "cp314-cp314" },
           ]
         target: [aarch64, armv7]
     steps:
@@ -123,30 +120,26 @@ jobs:
         with:
           target: ${{ matrix.target }}
           manylinux: auto
-          args: -i python${{matrix.python.version}} --release --out dist --no-sdist
+          args: -i python${{matrix.python.version}} --release --out dist
       - uses: uraimo/run-on-arch-action@v2
         name: Install build wheel
         with:
           arch: ${{ matrix.target }}
-          distro: ubuntu20.04
+          distro: ubuntu22.04
           githubToken: ${{ github.token }}
           # Mount the dist directory as /artifacts in the container
           dockerRunArgs: |
             --volume "${PWD}/dist:/artifacts"
           install: |
             apt update -y
-            apt install -y gcc musl-dev python3-dev # this is needed for psutil
-            apt install -y --no-install-recommends software-properties-common
-            add-apt-repository ppa:deadsnakes/ppa
+            apt install -y software-properties-common
+            add-apt-repository -y ppa:deadsnakes/ppa
             apt update -y
-            PYTHON=python${{ matrix.python.version }}
-            apt install -y $PYTHON $PYTHON-venv
+            apt install -y gcc musl-dev python3-dev python${{ matrix.python.version }} python${{ matrix.python.version }}-venv
           run: |
             ls -lrth /artifacts
-            PYTHON=python${{ matrix.python.version }}
-            $PYTHON --version
-            $PYTHON -m venv venv
+            python${{ matrix.python.version }} -m venv venv
             source venv/bin/activate
-            pip install --upgrade pip setuptools wheel
-            pip install --force-reinstall dist/robyn*.whl
+            python -m pip install --upgrade pip setuptools wheel
+            python -m pip install --force-reinstall /artifacts/robyn*.whl
             cd ~ && python -c 'import robyn'

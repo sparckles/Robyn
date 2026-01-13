@@ -16,15 +16,15 @@ env:
   UV_SYSTEM_PYTHON: 1
 jobs:
   macos:
-    runs-on: macos-13
+    runs-on: macos-latest
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v3
       - name: Install uv
         uses: astral-sh/setup-uv@v3
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - uses: dtolnay/rust-toolchain@stable
@@ -35,14 +35,11 @@ jobs:
         with:
           target: x86_64
           args: -i python --release --out dist
-      - name: Install build wheel - x86_64
-        run: |
-          uv pip install --force-reinstall dist/robyn*.whl
-          cd ~ && python -c 'import robyn'
       - name: Build wheels - universal2
         uses: PyO3/maturin-action@v1
         with:
-          args: -i python --release --universal2 --out dist
+          target: universal2-apple-darwin
+          args: -i python --release --out dist
       - name: Install build wheel - universal2
         run: |
           uv pip install --force-reinstall dist/robyn*_universal2.whl
@@ -56,13 +53,13 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         target: [x64, x86]
     steps:
       - uses: actions/checkout@v3
       - name: Install uv
         uses: astral-sh/setup-uv@v3
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.target }}
@@ -86,14 +83,14 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         target: [x86_64, i686]
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
       - name: Install uv
         uses: astral-sh/setup-uv@v3
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Build Wheels
@@ -119,11 +116,11 @@ jobs:
       matrix:
         python:
           [
-            { version: "3.9", abi: "cp39-cp39" },
             { version: "3.10", abi: "cp310-cp310" },
             { version: "3.11", abi: "cp311-cp311" },
             { version: "3.12", abi: "cp312-cp312" },
             { version: "3.13", abi: "cp313-cp313" },
+            { version: "3.14", abi: "cp314-cp314" },
           ]
         target: [aarch64, armv7]
     steps:
@@ -195,7 +192,7 @@ jobs:
           name: wheels
       - name: Install uv
         uses: astral-sh/setup-uv@v3
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: 3.x
       - name: Publish to PyPi

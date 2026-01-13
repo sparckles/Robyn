@@ -29,7 +29,7 @@ pub struct Response {
 pub struct StreamingResponse {
     pub status_code: u16,
     pub headers: Headers,
-    pub content_generator: PyObject,
+    pub content_generator: Py<PyAny>,
 }
 
 #[derive(Debug)]
@@ -71,7 +71,7 @@ impl Responder for Response {
 }
 
 impl StreamingResponse {
-    pub fn new(status_code: u16, headers: Headers, content_generator: PyObject) -> Self {
+    pub fn new(status_code: u16, headers: Headers, content_generator: Py<PyAny>) -> Self {
         Self {
             status_code,
             headers,
@@ -107,7 +107,7 @@ impl Responder for StreamingResponse {
 }
 
 fn create_python_stream(
-    generator: PyObject,
+    generator: Py<PyAny>,
 ) -> Pin<Box<dyn Stream<Item = Result<Bytes, actix_web::Error>> + Send>> {
     Box::pin(futures::stream::unfold(generator, |generator| async move {
         // Use spawn_blocking to execute the Python generator call in a separate thread
@@ -257,7 +257,7 @@ pub struct PyStreamingResponse {
     #[pyo3(get, set)]
     pub headers: Py<Headers>,
     #[pyo3(get)]
-    pub content: PyObject,
+    pub content: Py<PyAny>,
     #[pyo3(get)]
     pub media_type: String,
 }
@@ -267,7 +267,7 @@ impl PyStreamingResponse {
     #[new]
     pub fn new(
         py: Python,
-        content: PyObject,
+        content: Py<PyAny>,
         status_code: Option<u16>,
         headers: Option<Bound<'_, PyAny>>,
         media_type: Option<String>,
@@ -379,8 +379,10 @@ impl PyResponse {
     }
 }
 
-impl FromPyObject<'_> for Response {
-    fn extract_bound(obj: &Bound<'_, PyAny>) -> PyResult<Self> {
+impl FromPyObject<'_, '_> for Response {
+    type Error = PyErr;
+
+    fn extract(obj: pyo3::Borrowed<'_, '_, PyAny>) -> Result<Self, Self::Error> {
         // Only extract from actual Response objects, not StreamingResponse
         let type_name = obj.get_type().name()?;
         debug!("Attempting to extract Response from type: {}", type_name);
@@ -412,8 +414,10 @@ impl FromPyObject<'_> for Response {
     }
 }
 
-impl FromPyObject<'_> for StreamingResponse {
-    fn extract_bound(obj: &Bound<'_, PyAny>) -> PyResult<Self> {
+impl FromPyObject<'_, '_> for StreamingResponse {
+    type Error = PyErr;
+
+    fn extract(obj: pyo3::Borrowed<'_, '_, PyAny>) -> Result<Self, Self::Error> {
         // Check if it's a StreamingResponse by checking attributes rather than strict type name
         let type_name = obj
             .get_type()
@@ -472,7 +476,7 @@ impl FromPyObject<'_> for StreamingResponse {
                 }
                 Err(e) => {
                     debug!("Failed to extract headers: {}", e);
-                    return Err(e);
+                    return Err(e.into());
                 }
             },
             Err(e) => {
@@ -525,7 +529,7 @@ impl FromPyObject<'_> for StreamingResponse {
             }
         }
 
-        let content: PyObject = match obj.getattr("content") {
+        let content: pyo3::Py<PyAny> = match obj.getattr("content") {
             Ok(attr) => {
                 debug!("Successfully got content attribute");
                 attr.unbind()
