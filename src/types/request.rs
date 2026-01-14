@@ -14,6 +14,40 @@ use crate::types::{check_body_type, get_body_from_pyobject, Url};
 
 use super::{headers::Headers, identity::Identity, multimap::QueryParams};
 
+fn json_value_to_python(py: Python, value: &Value) -> PyResult<PyObject> {
+    match value {
+        Value::Null => Ok(py.None()),
+        Value::Bool(b) => Ok(b.to_object(py)),
+        Value::Number(n) => {
+            if let Some(i) = n.as_i64() {
+                Ok(i.to_object(py))
+            } else if let Some(u) = n.as_u64() {
+                Ok(u.to_object(py))
+            } else if let Some(f) = n.as_f64() {
+                Ok(f.to_object(py))
+            } else {
+                Err(PyValueError::new_err("Invalid number in JSON"))
+            }
+        }
+        Value::String(s) => Ok(s.to_object(py)),
+        Value::Array(arr) => {
+            let mut items = Vec::with_capacity(arr.len());
+            for item in arr {
+                items.push(json_value_to_python(py, item)?);
+            }
+            Ok(items.to_object(py))
+        }
+        Value::Object(obj) => {
+            let dict = PyDict::new(py);
+            for (key, val) in obj {
+                let py_val = json_value_to_python(py, val)?;
+                dict.set_item(key, py_val)?;
+            }
+            Ok(dict.to_object(py))
+        }
+    }
+}
+
 #[derive(Default, Debug, Clone, FromPyObject)]
 pub struct Request {
     pub query_params: QueryParams,
@@ -265,23 +299,9 @@ impl PyRequest {
 
     pub fn json(&self, py: Python) -> PyResult<Py<PyAny>> {
         match self.body.downcast_bound::<PyString>(py) {
-            Ok(python_string) => match serde_json::from_str(python_string.extract()?) {
-                Ok(Value::Object(map)) => {
-                    let dict = PyDict::new(py);
-
-                    for (key, value) in map.iter() {
-                        let py_key = key.to_string().into_pyobject(py)?.into_any();
-                        let py_value = match value {
-                            Value::String(s) => s.as_str().into_pyobject(py)?.into_any(),
-                            _ => value.to_string().into_pyobject(py)?.into_any(),
-                        };
-
-                        dict.set_item(py_key, py_value)?;
-                    }
-
-                    Ok(dict.into_pyobject(py)?.into_any().into())
-                }
-                _ => Err(PyValueError::new_err("Invalid JSON object")),
+            Ok(python_string) => match serde_json::from_str::<Value>(python_string.extract()?) {
+                Ok(json_value) => json_value_to_python(py, &json_value),
+                Err(e) => Err(PyValueError::new_err(format!("Invalid JSON: {}", e))),
             },
             Err(e) => Err(e.into()),
         }
