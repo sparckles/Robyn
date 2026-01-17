@@ -61,6 +61,30 @@ def post(
     return response
 
 
+def json_post(
+    endpoint: str,
+    json_data: Optional[dict] = None,
+    expected_status_code: int = 200,
+    headers: dict = {},
+    should_check_response: bool = True,
+) -> requests.Response:
+    """
+    Makes a POST request with JSON body to the given endpoint and checks the response.
+
+    endpoint str: The endpoint to make the request to.
+    json_data Optional[dict]: The JSON data to send with the request.
+    expected_status_code int: The expected status code of the response.
+    headers dict: The headers to send with the request.
+    should_check_response bool: A boolean to indicate if the status code and headers should be checked.
+    """
+
+    endpoint = endpoint.strip("/")
+    response = requests.post(f"{BASE_URL}/{endpoint}", json=json_data, headers=headers)
+    if should_check_response:
+        check_response(response, expected_status_code)
+    return response
+
+
 def multipart_post(
     endpoint: str,
     files: Optional[dict] = None,
