@@ -76,7 +76,7 @@ Batman was excited to learn that he could add events as functions as well as dec
   A before request middleware is a function that executes before each request. It can modify the request object or perform any other operation before the request is processed.
   An after request middleware is a function that executes after each request. It can modify the response object or perform any other operation after the request is processed.
 
-  Every before request middleware should accept a request object and return a request object. Every after request middleware should accept a response object and return a response object on happy case scenario. After request middlewares can also optionally accept the request object as the first parameter to access request data.
+  Every before request middleware should accept a request object and return a request object. Every after-request middleware should accept a response object and return a response object on happy case scenario. After-request middlewares can also optionally accept the request object as the first parameter to access request data.
 
   The execution of the before request middleware is stopped if any of the before request middleware returns a response object. The response object is returned to the client without executing the after request middleware or the main entry point code.
 

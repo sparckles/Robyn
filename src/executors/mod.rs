@@ -186,9 +186,9 @@ pub async fn execute_after_middleware_function(
 ) -> Result<MiddlewareReturn> {
     if function.is_async {
         let output: Py<PyAny> = Python::with_gil(|py| {
-            pyo3_async_runtimes::tokio::into_future(
-                get_function_output_with_two_args(function, py, request, response)?,
-            )
+            pyo3_async_runtimes::tokio::into_future(get_function_output_with_two_args(
+                function, py, request, response,
+            )?)
         })?
         .await?;
 
