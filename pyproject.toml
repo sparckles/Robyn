@@ -6,6 +6,7 @@ build-backend = "maturin"
 name = "robyn"
 version = "0.74.0"
 description = "A Super Fast Async Python Web Framework with a Rust runtime."
+readme = "README.md"
 authors = [{ name = "Sanskar Jethi", email = "sansyrox@gmail.com" }]
 license = { file = "LICENSE" }
 classifiers = [
