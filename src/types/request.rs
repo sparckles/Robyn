@@ -284,8 +284,23 @@ impl PyRequest {
     }
 }
 
+/// Maximum allowed recursion depth for JSON parsing to prevent stack overflow attacks.
+const MAX_JSON_DEPTH: usize = 128;
+
 /// Converts a serde_json::Value to a Python object with proper type preservation.
+/// This is a convenience wrapper that starts recursion with MAX_JSON_DEPTH.
 fn json_value_to_py(py: Python, value: &Value) -> PyResult<Py<PyAny>> {
+    json_value_to_py_with_depth(py, value, MAX_JSON_DEPTH)
+}
+
+/// Converts a serde_json::Value to a Python object with recursion depth limiting.
+fn json_value_to_py_with_depth(py: Python, value: &Value, depth: usize) -> PyResult<Py<PyAny>> {
+    if depth == 0 {
+        return Err(PyValueError::new_err(
+            "JSON nesting depth exceeds maximum allowed limit",
+        ));
+    }
+
     match value {
         Value::Null => Ok(py.None()),
         Value::Bool(b) => Ok(b.into_pyobject(py)?.to_owned().into_any().unbind()),
@@ -304,14 +319,14 @@ fn json_value_to_py(py: Python, value: &Value) -> PyResult<Py<PyAny>> {
         Value::Array(arr) => {
             let list = PyList::empty(py);
             for item in arr {
-                list.append(json_value_to_py(py, item)?)?;
+                list.append(json_value_to_py_with_depth(py, item, depth - 1)?)?;
             }
             Ok(list.into_pyobject(py)?.into_any().unbind())
         }
         Value::Object(map) => {
             let dict = PyDict::new(py);
             for (k, v) in map {
-                dict.set_item(k, json_value_to_py(py, v)?)?;
+                dict.set_item(k, json_value_to_py_with_depth(py, v, depth - 1)?)?;
             }
             Ok(dict.into_pyobject(py)?.into_any().unbind())
         }
