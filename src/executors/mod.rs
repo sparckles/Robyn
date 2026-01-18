@@ -105,6 +105,119 @@ where
     }
 }
 
+// Execute the after_request middleware function with both request and response
+// This allows after_request callbacks to access the request object
+#[inline]
+fn get_function_output_with_two_args<'a, T, U>(
+    function: &'a FunctionInfo,
+    py: Python<'a>,
+    first_arg: &T,
+    second_arg: &U,
+) -> Result<pyo3::Bound<'a, pyo3::PyAny>, PyErr>
+where
+    T: Clone + for<'py> IntoPyObject<'py>,
+    U: Clone + for<'py> IntoPyObject<'py>,
+    for<'py> <T as IntoPyObject<'py>>::Error: std::fmt::Debug,
+    for<'py> <U as IntoPyObject<'py>>::Error: std::fmt::Debug,
+{
+    let handler = function.handler.bind(py).downcast()?;
+    let kwargs = function.kwargs.bind(py);
+    let first_arg: Py<PyAny> = first_arg
+        .clone()
+        .into_pyobject(py)
+        .map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
+                "Failed to convert first arg: {:?}",
+                e
+            ))
+        })?
+        .into_any()
+        .unbind();
+    let second_arg: Py<PyAny> = second_arg
+        .clone()
+        .into_pyobject(py)
+        .map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
+                "Failed to convert second arg: {:?}",
+                e
+            ))
+        })?
+        .into_any()
+        .unbind();
+    debug!("Function args: {:?}, {:?}", first_arg, second_arg);
+
+    match function.number_of_params {
+        0 => handler.call0(),
+        1 => {
+            // If function only has 1 parameter, pass only the response (second_arg) for backward compatibility
+            if pyo3::types::PyDictMethods::get_item(kwargs, "global_dependencies")
+                .is_ok_and(|it| !it.is_none())
+                || pyo3::types::PyDictMethods::get_item(kwargs, "router_dependencies")
+                    .is_ok_and(|it| !it.is_none())
+            {
+                handler.call((), Some(kwargs))
+            } else {
+                handler.call1((second_arg,))
+            }
+        }
+        2 => {
+            // If function has 2 parameters, pass both request and response
+            // Check if there are dependencies to pass via kwargs
+            if pyo3::types::PyDictMethods::get_item(kwargs, "global_dependencies")
+                .is_ok_and(|it| !it.is_none())
+                || pyo3::types::PyDictMethods::get_item(kwargs, "router_dependencies")
+                    .is_ok_and(|it| !it.is_none())
+            {
+                handler.call((first_arg, second_arg), Some(kwargs))
+            } else {
+                handler.call1((first_arg, second_arg))
+            }
+        }
+        _ => handler.call((first_arg, second_arg), Some(kwargs)),
+    }
+}
+
+// Execute the after_request middleware function with both request and response
+#[inline]
+pub async fn execute_after_middleware_function(
+    request: &Request,
+    response: &Response,
+    function: &FunctionInfo,
+) -> Result<MiddlewareReturn> {
+    if function.is_async {
+        let output: Py<PyAny> = Python::with_gil(|py| {
+            pyo3_async_runtimes::tokio::into_future(get_function_output_with_two_args(
+                function, py, request, response,
+            )?)
+        })?
+        .await?;
+
+        Python::with_gil(|py| -> Result<MiddlewareReturn> {
+            // Try response extraction first, then request
+            match output.extract::<Response>(py) {
+                Ok(response) => Ok(MiddlewareReturn::Response(response)),
+                Err(_) => match output.extract::<Request>(py) {
+                    Ok(request) => Ok(MiddlewareReturn::Request(request)),
+                    Err(e) => Err(e.into()),
+                },
+            }
+        })
+    } else {
+        Python::with_gil(|py| -> Result<MiddlewareReturn> {
+            let output = get_function_output_with_two_args(function, py, request, response)?;
+            debug!("After middleware output: {:?}", output);
+
+            match output.extract::<Response>() {
+                Ok(response) => Ok(MiddlewareReturn::Response(response)),
+                Err(_) => match output.extract::<Request>() {
+                    Ok(request) => Ok(MiddlewareReturn::Request(request)),
+                    Err(e) => Err(e.into()),
+                },
+            }
+        })
+    }
+}
+
 #[inline]
 pub async fn execute_http_function(
     request: &Request,

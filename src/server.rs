@@ -1,5 +1,6 @@
 use crate::executors::{
-    execute_http_function, execute_middleware_function, execute_startup_handler,
+    execute_after_middleware_function, execute_http_function, execute_middleware_function,
+    execute_startup_handler,
 };
 
 use crate::routers::const_router::ConstRouter;
@@ -571,26 +572,29 @@ async fn index(
     for after_middleware in after_middlewares {
         // Middleware only works with standard responses
         if let ResponseType::Standard(std_response) = response {
-            response = match execute_middleware_function(&std_response, &after_middleware).await {
-                Ok(MiddlewareReturn::Request(_)) => {
-                    error!("After middleware returned a request");
-                    return ResponseType::Standard(Response::internal_server_error(None));
-                }
-                Ok(MiddlewareReturn::Response(r)) => {
-                    debug!("Response returned: {:?}", r);
-                    ResponseType::Standard(r)
-                }
-                Err(e) => {
-                    error!(
-                        "Error while executing after middleware function for endpoint `{}`: {}",
-                        req.uri().path(),
-                        get_traceback(e.downcast_ref::<PyErr>().unwrap())
-                    );
-                    return ResponseType::Standard(Response::internal_server_error(Some(
-                        &std_response.headers,
-                    )));
-                }
-            };
+            response =
+                match execute_after_middleware_function(&request, &std_response, &after_middleware)
+                    .await
+                {
+                    Ok(MiddlewareReturn::Request(_)) => {
+                        error!("After middleware returned a request");
+                        return ResponseType::Standard(Response::internal_server_error(None));
+                    }
+                    Ok(MiddlewareReturn::Response(r)) => {
+                        debug!("Response returned: {:?}", r);
+                        ResponseType::Standard(r)
+                    }
+                    Err(e) => {
+                        error!(
+                            "Error while executing after middleware function for endpoint `{}`: {}",
+                            req.uri().path(),
+                            get_traceback(e.downcast_ref::<PyErr>().unwrap())
+                        );
+                        return ResponseType::Standard(Response::internal_server_error(Some(
+                            &std_response.headers,
+                        )));
+                    }
+                };
         } else {
             // Skip middleware for streaming responses
             debug!("Skipping after middleware for streaming response");

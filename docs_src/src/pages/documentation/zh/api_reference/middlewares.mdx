@@ -78,7 +78,7 @@ export const description =
 该函数在每个请求处理之前执行，可以修改请求对象或执行其他操作。
 请求后中间件：该函数在每个请求处理之后执行，可以修改响应对象或执行其他操作。
 
-每个请求前中间件都应接收并返回一个请求对象；每个请求后中间件都应接收并返回一个响应对象。
+每个请求前中间件都应接收并返回一个请求对象；每个请求后中间件都应接收并返回一个响应对象。请求后中间件也可以选择性地接收请求对象作为第一个参数，以便访问请求数据。
 
 如果某个请求前中间件返回了响应对象，执行将被中止，响应对象直接返回给客户端，后续的请求后中间件和主处理函数将不再执行。
 
@@ -95,21 +95,32 @@ export const description =
 
     @app.after_request("/")
     def hello_after_request(response: Response):
-        response.headers.set("after", "sync_after_request"")
+        response.headers.set("after", "sync_after_request")
         return response
     ```
 
     ```python {{ title: 'typed' }}
-    from request import Request, Response
+    from robyn import Request, Response
 
     @app.before_request("/")
-    async def hello_before_request(request):
+    async def hello_before_request(request: Request):
         request.headers.set("before", "sync_before_request")
         return request
 
     @app.after_request("/")
-    def hello_after_request(response):
-        response.headers.set("after", "sync_after_request"")
+    def hello_after_request(response: Response):
+        response.headers.set("after", "sync_after_request")
+        return response
+    ```
+
+    ```python {{ title: '在 after_request 中访问请求对象' }}
+    from robyn import Request, Response
+
+    @app.after_request("/")
+    def hello_after_request(request: Request, response: Response):
+        # 在 after_request 中访问请求数据
+        response.headers.set("request_path", request.url.path)
+        response.headers.set("after", "sync_after_request")
         return response
     ```
 
