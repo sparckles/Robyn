@@ -86,10 +86,14 @@ pub fn execute_ws_function(
         });
         let f = async {
             let output = fut.await.unwrap();
-            Python::with_gil(|py| output.extract::<&str>(py).unwrap().to_string())
+            Python::with_gil(|py| output.extract::<Option<String>>(py).unwrap())
         }
         .into_actor(ws)
-        .map(|res, _, ctx| ctx.text(res));
+        .map(|res, _, ctx| {
+            if let Some(msg) = res {
+                ctx.text(msg);
+            }
+        });
         ctx.spawn(f);
     } else {
         Python::with_gil(|py| {
