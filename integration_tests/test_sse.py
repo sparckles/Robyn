@@ -17,7 +17,6 @@ def test_sse_basic_headers(session):
     # Accept either clean optimized headers or legacy compatibility
     cache_control = response.headers.get("Cache-Control")
     assert cache_control in ["no-cache, no-store, must-revalidate", "no-cache, no-cache, no-store, must-revalidate"]
-    assert "Access-Control-Allow-Origin" in response.headers
 
 
 @pytest.mark.benchmark
@@ -409,7 +408,6 @@ def test_sse_optimization_headers(session):
     assert response.headers.get("Pragma") == "no-cache"
     assert response.headers.get("Expires") == "0"
     assert response.headers.get("X-Accel-Buffering") == "no"  # Nginx buffering disabled
-    assert response.headers.get("Access-Control-Allow-Origin") == "*"
     # Connection header might be managed by underlying HTTP infrastructure
     connection = response.headers.get("Connection")
     assert connection is None or connection == "keep-alive"
@@ -439,3 +437,15 @@ def test_sse_message_optimization():
     expected_parts = ["event: test\n", "id: 1\n", "retry: 1000\n", "data: Test\n", "\n"]
     for part in expected_parts:
         assert part in result
+
+
+@pytest.mark.benchmark
+def test_sse_custom_cors_headers(session):
+    """Test that CORS headers can be set explicitly via custom headers"""
+    response = requests.get(f"{BASE_URL}/sse/with_headers", stream=True)
+
+    # The endpoint has custom headers but no CORS headers set by default
+    assert response.status_code == 200
+    assert response.headers.get("X-Custom-Header") == "custom-value"
+    # CORS header should not be present by default
+    # Users should use ALLOW_CORS or pass custom headers to set CORS
