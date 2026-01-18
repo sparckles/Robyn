@@ -146,8 +146,6 @@ class StreamingResponse:
         if media_type == "text/event-stream":
             self.headers.set("Content-Type", "text/event-stream")
             # Cache-Control and Connection headers are set by Rust layer with optimized headers
-            self.headers.set("Access-Control-Allow-Origin", "*")
-            self.headers.set("Access-Control-Allow-Headers", "Cache-Control")
 
 
 def SSEResponse(
