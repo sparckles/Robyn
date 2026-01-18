@@ -117,4 +117,3 @@ def test_json_mixed_types_preserved(function_type: str, session):
     assert result["field_name"]["type"] == "str"
     assert result["field_value"]["value"] == "111000111"
     assert result["field_value"]["type"] == "str"
-
