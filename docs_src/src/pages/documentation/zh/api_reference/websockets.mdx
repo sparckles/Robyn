@@ -60,6 +60,75 @@ export const description =
 
   </Col>
 </Row>
+
+---
+
+## 可选返回值 {{ tag: '可选返回值', label: '可选返回值' }}
+
+<Row>
+  <Col>
+    蝙蝠侠发现 WebSocket 处理程序并不总是需要返回值。有时，他只是想处理消息或执行某个操作，而不需要向客户端发送响应。
+
+    "并非每条消息都需要回复，"蝙蝠侠意识到，"有时我只需要记录数据或触发某个操作。"
+
+    WebSocket 处理程序（`connect`、`message` 和 `close`）可以选择性地返回字符串。如果不返回值（或返回 `None`），则不会向客户端发送任何消息。
+  </Col>
+  <Col sticky>
+    <CodeGroup title="可选返回值" tag="WebSocket" label="/web_socket">
+
+      ```python {{ title: 'untyped' }}
+      from robyn import Robyn, WebSocket
+
+      app = Robyn(__file__)
+      websocket = WebSocket(app, "/web_socket")
+
+      @websocket.on("connect")
+      async def connect():
+          # 无需返回 - 仅记录连接
+          print("客户端已连接")
+
+      @websocket.on("message")
+      def message(ws, msg):
+          # 处理消息但不响应
+          process_analytics(msg)
+          # 无需返回语句
+
+      @websocket.on("close")
+      async def close():
+          # 显式返回 None - 不发送消息
+          cleanup_resources()
+          return None
+      ```
+
+      ```python {{title: 'typed'}}
+      from robyn import Robyn, WebSocket, WebSocketConnector
+
+      app = Robyn(__file__)
+      websocket = WebSocket(app, "/web_socket")
+
+      @websocket.on("connect")
+      async def connect() -> None:
+          # 无需返回 - 仅记录连接
+          print("客户端已连接")
+
+      @websocket.on("message")
+      def message(ws: WebSocketConnector, msg: str) -> None:
+          # 处理消息但不响应
+          process_analytics(msg)
+          # 无需返回语句
+
+      @websocket.on("close")
+      async def close() -> None:
+          # 显式返回 None - 不发送消息
+          cleanup_resources()
+          return None
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+
 <Row>
 
   <Col>

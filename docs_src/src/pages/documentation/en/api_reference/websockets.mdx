@@ -60,6 +60,75 @@ To handle real-time bidirectional communication, Batman learned how to work with
     </CodeGroup>
   </Col>
 </Row>
+
+---
+
+## Optional Return Values {{ tag: 'Optional Returns', label: 'Optional Returns' }}
+
+<Row>
+  <Col>
+    Batman discovered that WebSocket handlers don't always need to return a value. Sometimes, he just wanted to process a message or perform an action without sending a response back to the client.
+
+    "Not every message needs a reply," Batman realized. "Sometimes I just need to log data or trigger an action."
+
+    WebSocket handlers (`connect`, `message`, and `close`) can optionally return a string. If no value is returned (or `None` is returned), no message will be sent to the client.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Optional Returns" tag="WebSocket" label="/web_socket">
+
+      ```python {{ title: 'untyped' }}
+      from robyn import Robyn, WebSocket
+
+      app = Robyn(__file__)
+      websocket = WebSocket(app, "/web_socket")
+
+      @websocket.on("connect")
+      async def connect():
+          # No return needed - just log the connection
+          print("Client connected")
+
+      @websocket.on("message")
+      def message(ws, msg):
+          # Process message without responding
+          process_analytics(msg)
+          # No return statement needed
+
+      @websocket.on("close")
+      async def close():
+          # Explicitly return None - no message sent
+          cleanup_resources()
+          return None
+      ```
+
+      ```python {{title: 'typed'}}
+      from robyn import Robyn, WebSocket, WebSocketConnector
+
+      app = Robyn(__file__)
+      websocket = WebSocket(app, "/web_socket")
+
+      @websocket.on("connect")
+      async def connect() -> None:
+          # No return needed - just log the connection
+          print("Client connected")
+
+      @websocket.on("message")
+      def message(ws: WebSocketConnector, msg: str) -> None:
+          # Process message without responding
+          process_analytics(msg)
+          # No return statement needed
+
+      @websocket.on("close")
+      async def close() -> None:
+          # Explicitly return None - no message sent
+          cleanup_resources()
+          return None
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+
 <Row>
 
   <Col>

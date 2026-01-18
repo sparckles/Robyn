@@ -25,6 +25,8 @@ websocket_di = WebSocket(app, "/web_socket_di")
 websocket_di.inject_global(GLOBAL_DEPENDENCY="GLOBAL DEPENDENCY")
 websocket_di.inject(ROUTER_DEPENDENCY="ROUTER DEPENDENCY")
 
+websocket_empty_returns = WebSocket(app, "/web_socket_empty_returns")
+
 current_file_path = pathlib.Path(__file__).parent.resolve()
 jinja_template = JinjaTemplate(os.path.join(current_file_path, "templates"))
 
@@ -102,12 +104,34 @@ async def di_message_connect(global_dependencies, router_dependencies):
 
 @websocket_di.on("message")
 async def di_message():
-    return ""
+    # Test empty return - should not send anything
+    pass
 
 
 @websocket_di.on("close")
 async def di_message_close():
-    return ""
+    # Test empty return - should not send anything
+    pass
+
+
+@websocket_empty_returns.on("connect")
+async def empty_connect():
+    """Test async handler with no return"""
+    # No return statement - should not send anything
+    pass
+
+
+@websocket_empty_returns.on("message")
+def empty_message_sync():
+    """Test sync handler with no return"""
+    # No return statement - should not send anything
+    pass
+
+
+@websocket_empty_returns.on("close")
+async def empty_close():
+    """Test async handler with explicit None return"""
+    return None
 
 
 # ===== Lifecycle handlers =====

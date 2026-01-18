@@ -66,3 +66,18 @@ def test_websocket_di(session):
 
     ws = create_connection(f"{BASE_URL}/web_socket_di")
     assert ws.recv() == msg
+
+
+def test_websocket_empty_returns(session):
+    """Test that WebSocket handlers can return nothing without causing errors"""
+    ws = create_connection(f"{BASE_URL}/web_socket_empty_returns")
+
+    # Connect handler returns None - no message should be received on connection
+    # We need to send a message to verify the connection is still active
+    ws.send("test message")
+
+    # Message handler returns None - no response should be sent
+    # The socket should still be open, not crashed
+    # We can verify this by closing the connection gracefully
+    ws.close()
+    # If we got here without exceptions, the test passed

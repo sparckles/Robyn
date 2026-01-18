@@ -4,6 +4,10 @@
 
 [Full Changelog](https://github.com/sparckles/robyn/compare/v0.26.1...HEAD)
 
+**Implemented enhancements:**
+
+- Allow empty returns on websocket handling [\#1263](https://github.com/sparckles/robyn/issues/1263)
+
 **Closed issues:**
 
 - Payload reached size limit. [\#463](https://github.com/sparckles/robyn/issues/463)
