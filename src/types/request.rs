@@ -5,7 +5,7 @@ use actix_web::{
 };
 use futures_util::StreamExt as _;
 use log::debug;
-use pyo3::types::{PyBytes, PyDict, PyString};
+use pyo3::types::{PyBytes, PyDict, PyList, PyString};
 use pyo3::{exceptions::PyValueError, prelude::*, IntoPyObject};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -271,11 +271,7 @@ impl PyRequest {
 
                     for (key, value) in map.iter() {
                         let py_key = key.to_string().into_pyobject(py)?.into_any();
-                        let py_value = match value {
-                            Value::String(s) => s.as_str().into_pyobject(py)?.into_any(),
-                            _ => value.to_string().into_pyobject(py)?.into_any(),
-                        };
-
+                        let py_value = json_value_to_py(py, value)?;
                         dict.set_item(py_key, py_value)?;
                     }
 
@@ -284,6 +280,55 @@ impl PyRequest {
                 _ => Err(PyValueError::new_err("Invalid JSON object")),
             },
             Err(e) => Err(e.into()),
+        }
+    }
+}
+
+/// Maximum allowed recursion depth for JSON parsing to prevent stack overflow attacks.
+const MAX_JSON_DEPTH: usize = 128;
+
+/// Converts a serde_json::Value to a Python object with proper type preservation.
+/// This is a convenience wrapper that starts recursion with MAX_JSON_DEPTH.
+fn json_value_to_py(py: Python, value: &Value) -> PyResult<Py<PyAny>> {
+    json_value_to_py_with_depth(py, value, MAX_JSON_DEPTH)
+}
+
+/// Converts a serde_json::Value to a Python object with recursion depth limiting.
+fn json_value_to_py_with_depth(py: Python, value: &Value, depth: usize) -> PyResult<Py<PyAny>> {
+    if depth == 0 {
+        return Err(PyValueError::new_err(
+            "JSON nesting depth exceeds maximum allowed limit",
+        ));
+    }
+
+    match value {
+        Value::Null => Ok(py.None()),
+        Value::Bool(b) => Ok(b.into_pyobject(py)?.to_owned().into_any().unbind()),
+        Value::Number(n) => {
+            if let Some(i) = n.as_i64() {
+                Ok(i.into_pyobject(py)?.into_any().unbind())
+            } else if let Some(u) = n.as_u64() {
+                Ok(u.into_pyobject(py)?.into_any().unbind())
+            } else if let Some(f) = n.as_f64() {
+                Ok(f.into_pyobject(py)?.into_any().unbind())
+            } else {
+                Err(PyValueError::new_err("Invalid number in JSON"))
+            }
+        }
+        Value::String(s) => Ok(s.as_str().into_pyobject(py)?.into_any().unbind()),
+        Value::Array(arr) => {
+            let list = PyList::empty(py);
+            for item in arr {
+                list.append(json_value_to_py_with_depth(py, item, depth - 1)?)?;
+            }
+            Ok(list.into_pyobject(py)?.into_any().unbind())
+        }
+        Value::Object(map) => {
+            let dict = PyDict::new(py);
+            for (k, v) in map {
+                dict.set_item(k, json_value_to_py_with_depth(py, v, depth - 1)?)?;
+            }
+            Ok(dict.into_pyobject(py)?.into_any().unbind())
         }
     }
 }

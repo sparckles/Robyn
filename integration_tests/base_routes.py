@@ -604,6 +604,33 @@ async def request_json(request: Request):
     return json["key"]
 
 
+# JSON type preservation test
+@app.post("/sync/request_json/types")
+def sync_json_types(request: Request):
+    """Returns the JSON data with Python type names for verification"""
+    data = request.json()
+    result = {}
+    for key, value in data.items():
+        result[key] = {
+            "value": value,
+            "type": type(value).__name__,
+        }
+    return result
+
+
+@app.post("/async/request_json/types")
+async def async_json_types(request: Request):
+    """Returns the JSON data with Python type names for verification"""
+    data = request.json()
+    result = {}
+    for key, value in data.items():
+        result[key] = {
+            "value": value,
+            "type": type(value).__name__,
+        }
+    return result
+
+
 # --- PUT ---
 
 # dict
