@@ -280,6 +280,7 @@ class OpenAPI:
 
         if path_param_names:
             # Convert param syntax to OpenAPI's {param} syntax
+            # Using non-greedy regex ensures we don't swallow slashes between params
             endpoint_with_path_params_wrapped_in_braces = re.sub(r":(\w+)", r"{\1}", endpoint)
 
             for name in path_param_names:
