@@ -68,4 +68,38 @@ def test_trailing_slash(session):
 def test_cookies(session, key, value):
     response = get("/cookie", 200)
 
-    assert response.headers[key] == value
+    # Cookies should be sent via Set-Cookie header, accessible via response.cookies
+    assert response.cookies[key] == value
+
+
+@pytest.mark.benchmark
+def test_multiple_cookies(session):
+    response = get("/cookie/multiple", 200)
+
+    assert response.cookies["session"] == "abc123"
+    assert response.cookies["theme"] == "dark"
+
+
+@pytest.mark.benchmark
+def test_cookie_with_attributes(session):
+    response = get("/cookie/attributes", 200)
+
+    # Check the cookie value
+    assert response.cookies["secure_session"] == "secret123"
+
+    # Check the Set-Cookie header for attributes
+    set_cookie_header = response.headers.get("Set-Cookie", "")
+    assert "secure_session=secret123" in set_cookie_header
+    assert "Path=/" in set_cookie_header
+    assert "HttpOnly" in set_cookie_header
+    assert "Secure" in set_cookie_header
+    assert "SameSite=Strict" in set_cookie_header
+    assert "Max-Age=3600" in set_cookie_header
+
+
+@pytest.mark.benchmark
+def test_cookie_overwrite(session):
+    response = get("/cookie/overwrite", 200)
+
+    # Same-name cookies should be overwritten, final value should be used
+    assert response.cookies["session"] == "final-value"
