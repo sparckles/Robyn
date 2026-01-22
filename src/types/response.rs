@@ -71,7 +71,14 @@ impl Responder for Response {
 
         // Apply cookies as Set-Cookie headers
         for (name, cookie) in &self.cookies.cookies {
-            response_builder.append_header(("Set-Cookie", cookie.to_header_value(name)));
+            match cookie.to_header_value(name) {
+                Ok(header_value) => {
+                    response_builder.append_header(("Set-Cookie", header_value));
+                }
+                Err(e) => {
+                    debug!("Skipping invalid cookie '{}': {}", name, e);
+                }
+            }
         }
 
         response_builder.body(self.description)
