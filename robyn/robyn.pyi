@@ -186,10 +186,10 @@ class Cookie:
         path (Optional[str]): Cookie path (e.g. "/")
         domain (Optional[str]): Cookie domain
         max_age (Optional[int]): Max age in seconds
-        expires (Optional[str]): Expiry date (RFC 7231 format)
+        expires (Optional[str]): Expiry date (deprecated, use max_age instead)
         secure (bool): Only send over HTTPS
         http_only (bool): Not accessible via JavaScript
-        same_site (Optional[str]): "Strict", "Lax", or "None"
+        same_site (Optional[str]): "Strict", "Lax", or "None" (case-insensitive)
     """
 
     value: str
@@ -200,6 +200,17 @@ class Cookie:
     secure: bool = False
     http_only: bool = False
     same_site: Optional[str] = None
+
+    @staticmethod
+    def deleted() -> "Cookie":
+        """
+        Create a cookie configured for deletion (expires immediately with max_age=0).
+
+        Returns:
+            Cookie: A cookie that will be deleted by the browser
+        """
+        pass
+
 
 class Cookies:
     """A collection of cookies keyed by name."""
@@ -228,10 +239,20 @@ class Cookies:
 
     def remove(self, name: str) -> None:
         """
-        Removes the cookie with the given name.
+        Removes the cookie from the collection (does not delete it from the browser).
 
         Args:
             name (str): The name of the cookie
+        """
+        pass
+
+    def delete(self, name: str) -> None:
+        """
+        Mark a cookie for deletion by setting it to expire immediately.
+        This sets max_age=0 which tells the browser to delete the cookie.
+
+        Args:
+            name (str): The name of the cookie to delete
         """
         pass
 
@@ -239,6 +260,13 @@ class Cookies:
         """
         Returns:
             True if there are no cookies, False otherwise
+        """
+        pass
+
+    def keys(self) -> list[str]:
+        """
+        Returns:
+            A list of all cookie names
         """
         pass
 
@@ -254,8 +282,22 @@ class Cookies:
     def __len__(self) -> int:
         pass
 
+    def __iter__(self) -> "CookiesIter":
+        pass
+
     def __repr__(self) -> str:
         pass
+
+
+class CookiesIter:
+    """Iterator for Cookies collection."""
+
+    def __iter__(self) -> "CookiesIter":
+        pass
+
+    def __next__(self) -> str:
+        pass
+
 
 class Headers:
     def __init__(self, default_headers: Optional[dict]) -> None:
