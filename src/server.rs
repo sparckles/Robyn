@@ -485,9 +485,10 @@ async fn index(
         return ResponseType::Standard(Response::method_not_allowed(None));
     }
 
-    let mut request = Request::from_actix_request(&req, payload, &global_request_headers).await;
+    let mut request: Request =
+        Request::from_actix_request(&req, payload, &global_request_headers).await;
 
-    let route = format!("{}{}", req.method(), req.uri().path());
+    let route = format!("{}{}", req.method(), request.url.path);
 
     // Before middleware
     // Global
@@ -510,7 +511,7 @@ async fn index(
             Err(e) => {
                 error!(
                     "Error while executing before middleware function for endpoint `{}`: {}",
-                    req.uri().path(),
+                    request.url.path,
                     get_traceback(e.downcast_ref::<PyErr>().unwrap())
                 );
                 return ResponseType::Standard(Response::internal_server_error(None));
@@ -524,9 +525,9 @@ async fn index(
         Err(_) => return ResponseType::Standard(Response::method_not_allowed(None)),
     };
 
-    let mut response = if let Some(res) = const_router.get_route(&http_method, req.uri().path()) {
+    let mut response = if let Some(res) = const_router.get_route(&http_method, &request.url.path) {
         ResponseType::Standard(res)
-    } else if let Some((function, route_params)) = router.get_route(&http_method, req.uri().path())
+    } else if let Some((function, route_params)) = router.get_route(&http_method, &request.url.path)
     {
         request.path_params = route_params;
         match execute_http_function(&request, &function).await {
@@ -534,7 +535,7 @@ async fn index(
             Err(e) => {
                 error!(
                     "Error while executing route function for endpoint `{}`: {}",
-                    req.uri().path(),
+                    request.url.path,
                     get_traceback(&e)
                 );
 
@@ -552,7 +553,7 @@ async fn index(
     match &excluded_response_headers_paths.get_ref() {
         None => {}
         Some(excluded_response_headers_paths) => {
-            if excluded_response_headers_paths.contains(&req.uri().path().to_owned()) {
+            if excluded_response_headers_paths.contains(&request.url.path.to_owned()) {
                 response.headers_mut().clear();
             }
         }
@@ -587,7 +588,7 @@ async fn index(
                     Err(e) => {
                         error!(
                             "Error while executing after middleware function for endpoint `{}`: {}",
-                            req.uri().path(),
+                            request.url.path,
                             get_traceback(e.downcast_ref::<PyErr>().unwrap())
                         );
                         return ResponseType::Standard(Response::internal_server_error(Some(

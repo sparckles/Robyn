@@ -29,7 +29,7 @@ from robyn.ws import WebSocket
 __version__ = get_version()
 
 
-def _normalize_endpoint(endpoint: str) -> str:
+def _normalize_endpoint(endpoint: Optional[str], treat_empty_as_root: bool = False) -> Optional[str]:
     """
     Normalize an endpoint to ensure consistent routing.
 
@@ -37,22 +37,33 @@ def _normalize_endpoint(endpoint: str) -> str:
     - Root "/" remains unchanged
     - All other endpoints get leading slash added if missing
     - Trailing slashes are removed from all endpoints except root
+    - Empty or blank strings are handled based on treat_empty_as_root flag
+    - treat_empty_as_root is used for prefixes where empty/blank strings are valid
 
     Args:
-        endpoint: The endpoint path to normalize
+        endpoint: The endpoint path to normalize.
+        treat_empty_as_root (used for prefixes):
+            If True, empty/blank strings are converted to "/" (root).
+            If False, empty/blank strings return None (invalid endpoint).
 
     Returns:
-        Normalized endpoint path
+        Normalized endpoint path or None if invalid.
     """
-    if endpoint == "/":
+    if endpoint is None or (not endpoint and not treat_empty_as_root):
+        return None
+
+    # Remove trailing slashes
+    endpoint = endpoint.strip().rstrip("/")
+
+    # Handle empty result
+    if not endpoint:
         return "/"
 
     # Add leading slash if missing
     if not endpoint.startswith("/"):
         endpoint = "/" + endpoint
 
-    # Remove trailing slash
-    return endpoint.rstrip("/")
+    return endpoint
 
 
 config = Config()
@@ -120,7 +131,8 @@ class BaseRobyn(ABC):
             self.openapi.override_openapi(Path(self.directory_path).joinpath(openapi_file_path))
         elif Path(self.directory_path).joinpath("openapi.json").exists():
             self.openapi.override_openapi(Path(self.directory_path).joinpath("openapi.json"))
-        # TODO! what about when the elif fails?
+        else:
+            logger.debug("No OpenAPI spec file found; using auto-generated documentation only.", color=Colors.YELLOW)
 
     def _handle_dev_mode(self):
         cli_dev_mode = self.config.dev  # --dev
@@ -172,11 +184,14 @@ class BaseRobyn(ABC):
             }
             route_type = http_methods[route_type]
 
-        if auth_required:
-            self.middleware_router.add_auth_middleware(endpoint, route_type)(handler)
-
         # Normalize endpoint before adding
         normalized_endpoint = _normalize_endpoint(endpoint)
+
+        if normalized_endpoint is None:
+            raise ValueError("Endpoint cannot be blank, do specify '/' for root endpoint")
+
+        if auth_required:
+            self.middleware_router.add_auth_middleware(normalized_endpoint, route_type)(handler)
 
         # Check if this exact route (method + normalized_endpoint) already exists
         route_key = f"{route_type}:{normalized_endpoint}"
@@ -229,8 +244,7 @@ class BaseRobyn(ABC):
 
         :param endpoint str|None: endpoint to server the route. If None, the middleware will be applied to all the routes.
         """
-
-        return self.middleware_router.add_middleware(MiddlewareType.BEFORE_REQUEST, endpoint)
+        return self.middleware_router.add_middleware(MiddlewareType.BEFORE_REQUEST, _normalize_endpoint(endpoint))
 
     def after_request(self, endpoint: Optional[str] = None) -> Callable[..., None]:
         """
@@ -238,7 +252,7 @@ class BaseRobyn(ABC):
 
         :param endpoint str|None: endpoint to server the route. If None, the middleware will be applied to all the routes.
         """
-        return self.middleware_router.add_middleware(MiddlewareType.AFTER_REQUEST, endpoint)
+        return self.middleware_router.add_middleware(MiddlewareType.AFTER_REQUEST, _normalize_endpoint(endpoint))
 
     def serve_directory(
         self,
@@ -649,15 +663,22 @@ class SubRouter(BaseRobyn):
         self.prefix = prefix
 
     def __add_prefix(self, endpoint: str):
-        # Normalize both prefix and endpoint to ensure consistent routing
-        normalized_prefix = _normalize_endpoint(self.prefix)
+        # Normalize prefix, treating empty as empty (not root)
+        normalized_prefix = _normalize_endpoint(self.prefix, treat_empty_as_root=True)
 
         # Handle empty endpoint - should just be the prefix
-        if endpoint == "":
-            return normalized_prefix
+        if endpoint in ("", "/"):
+            return normalized_prefix if normalized_prefix else "/"
 
-        # Normalize the endpoint and combine with prefix
+        # Convert root prefix to empty to avoid double slashes when making endpoint
+        if normalized_prefix == "/":
+            normalized_prefix = ""  # Empty prefix for root
+
+        # Normalize and validate endpoint
         normalized_endpoint = _normalize_endpoint(endpoint)
+        if normalized_endpoint is None:
+            raise ValueError("Endpoint cannot be blank, do specify '/' for root endpoint")
+
         return f"{normalized_prefix}{normalized_endpoint}"
 
     def get(self, endpoint: str, const: bool = False, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["get"]):
