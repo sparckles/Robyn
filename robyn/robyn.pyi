@@ -211,7 +211,6 @@ class Cookie:
         """
         pass
 
-
 class Cookies:
     """A collection of cookies keyed by name."""
 
@@ -288,7 +287,6 @@ class Cookies:
     def __repr__(self) -> str:
         pass
 
-
 class CookiesIter:
     """Iterator for Cookies collection."""
 
@@ -297,7 +295,6 @@ class CookiesIter:
 
     def __next__(self) -> str:
         pass
-
 
 class Headers:
     def __init__(self, default_headers: Optional[dict]) -> None:
