@@ -984,28 +984,171 @@ To prevent the headers from getting applied to certain endpoints, you can use th
 
 <Row>
 <Col>
-Set cookies using the `set_cookies` function.
+Robyn provides a complete cookie API following RFC 6265. Set cookies using the `set_cookie` method on the Response object.
 </Col>
 <Col sticky>
-
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
     ```python {{ title: 'untyped' }}
+    from robyn import Response, Headers
+
     @app.get("/")
-    def binary_output_response_sync(request):
-        response = Response(200, {'type': 'int'}, "desc")
-        response.set_cookie(key="fakesession", value="fake-cookie-session-value")
+    def set_session(request):
+        response = Response(200, Headers({}), "Welcome!")
+        response.set_cookie(key="session", value="abc123")
         return response
     ```
 
-    ```python {{title: 'typed'}}
-    from robyn import Request
+    ```python {{ title: 'typed' }}
+    from robyn import Request, Response, Headers
 
     @app.get("/")
-    def binary_output_response_sync(request: Request):
-        response = Response(200, {'type': 'int'}, "desc")
-        response.set_cookie(key="fakesession", value="fake-cookie-session-value")
+    def set_session(request: Request):
+        response = Response(200, Headers({}), "Welcome!")
+        response.set_cookie(key="session", value="abc123")
+        return response
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+#### Cookie Attributes
+
+<Row>
+<Col>
+You can set additional cookie attributes for security and control:
+
+- **path**: Cookie path (default: "/")
+- **domain**: Cookie domain
+- **max_age**: Cookie lifetime in seconds
+- **secure**: Only send over HTTPS
+- **http_only**: Not accessible via JavaScript
+- **same_site**: CSRF protection ("Strict", "Lax", or "None" - case insensitive)
+</Col>
+<Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/secure-cookie">
+
+    ```python {{ title: 'untyped' }}
+    @app.get("/login")
+    def login(request):
+        response = Response(200, Headers({}), "Logged in")
+        response.set_cookie(
+            key="auth_token",
+            value="secret123",
+            path="/",
+            max_age=3600,        # 1 hour
+            secure=True,         # HTTPS only
+            http_only=True,      # No JavaScript access
+            same_site="Strict",  # CSRF protection
+        )
+        return response
+    ```
+
+    ```python {{ title: 'typed' }}
+    from robyn import Request, Response, Headers
+
+    @app.get("/login")
+    def login(request: Request):
+        response = Response(200, Headers({}), "Logged in")
+        response.set_cookie(
+            key="auth_token",
+            value="secret123",
+            path="/",
+            max_age=3600,        # 1 hour
+            secure=True,         # HTTPS only
+            http_only=True,      # No JavaScript access
+            same_site="Strict",  # CSRF protection
+        )
+        return response
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+#### Deleting Cookies
+
+<Row>
+<Col>
+To delete a cookie from the browser, use the `delete` method on the cookies collection. This sets `max_age=0` which tells the browser to remove the cookie.
+</Col>
+<Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/logout">
+
+    ```python {{ title: 'untyped' }}
+    @app.get("/logout")
+    def logout(request):
+        response = Response(200, Headers({}), "Logged out")
+        response.cookies.delete("auth_token")
+        return response
+    ```
+
+    ```python {{ title: 'typed' }}
+    from robyn import Request, Response, Headers
+
+    @app.get("/logout")
+    def logout(request: Request):
+        response = Response(200, Headers({}), "Logged out")
+        response.cookies.delete("auth_token")
+        return response
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+#### Accessing Cookies
+
+<Row>
+<Col>
+You can iterate over cookies or access them by name:
+</Col>
+<Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/cookies">
+
+    ```python {{ title: 'untyped' }}
+    @app.get("/debug")
+    def debug_cookies(request):
+        response = Response(200, Headers({}), "Cookies set")
+        response.set_cookie("a", "1")
+        response.set_cookie("b", "2")
+        
+        # Get all cookie names
+        names = response.cookies.keys()
+        
+        # Iterate over cookies
+        for name in response.cookies:
+            print(f"Cookie: {name}")
+        
+        # Check if cookie exists
+        if "a" in response.cookies:
+            print("Cookie 'a' exists")
+            
+        return response
+    ```
+
+    ```python {{ title: 'typed' }}
+    from robyn import Request, Response, Headers
+
+    @app.get("/debug")
+    def debug_cookies(request: Request):
+        response = Response(200, Headers({}), "Cookies set")
+        response.set_cookie("a", "1")
+        response.set_cookie("b", "2")
+        
+        # Get all cookie names
+        names = response.cookies.keys()
+        
+        # Iterate over cookies
+        for name in response.cookies:
+            print(f"Cookie: {name}")
+        
+        # Check if cookie exists
+        if "a" in response.cookies:
+            print("Cookie 'a' exists")
+            
         return response
     ```
     </CodeGroup>

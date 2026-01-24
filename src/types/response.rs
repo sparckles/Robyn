@@ -14,6 +14,7 @@ use tokio;
 use crate::io_helpers::{apply_hashmap_headers, read_file};
 use crate::types::{check_body_type, check_description_type, get_description_from_pyobject};
 
+use super::cookie::{Cookie, Cookies};
 use super::headers::Headers;
 
 #[derive(Debug, Clone)]
@@ -23,6 +24,7 @@ pub struct Response {
     pub headers: Headers,
     pub description: Vec<u8>,
     pub file_path: Option<String>,
+    pub cookies: Cookies,
 }
 
 #[derive(Debug, Clone)]
@@ -66,6 +68,19 @@ impl Responder for Response {
             StatusCode::from_u16(self.status_code).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR),
         );
         apply_hashmap_headers(&mut response_builder, &self.headers);
+
+        // Apply cookies as Set-Cookie headers
+        for (name, cookie) in &self.cookies.cookies {
+            match cookie.to_header_value(name) {
+                Ok(header_value) => {
+                    response_builder.append_header(("Set-Cookie", header_value));
+                }
+                Err(e) => {
+                    debug!("Skipping invalid cookie '{}': {}", name, e);
+                }
+            }
+        }
+
         response_builder.body(self.description)
     }
 }
@@ -179,6 +194,7 @@ impl Response {
             headers: headers.cloned().unwrap_or_else(|| Headers::new(None)),
             description: NOT_FOUND_BYTES.to_vec(),
             file_path: None,
+            cookies: Cookies::new(),
         }
     }
 
@@ -191,6 +207,7 @@ impl Response {
             headers: headers.cloned().unwrap_or_else(|| Headers::new(None)),
             description: SERVER_ERROR_BYTES.to_vec(),
             file_path: None,
+            cookies: Cookies::new(),
         }
     }
 
@@ -203,6 +220,7 @@ impl Response {
             headers: headers.cloned().unwrap_or_else(|| Headers::new(None)),
             description: METHOD_NOT_ALLOWED_BYTES.to_vec(),
             file_path: None,
+            cookies: Cookies::new(),
         }
     }
 }
@@ -223,12 +241,15 @@ impl<'py> IntoPyObject<'py> for Response {
             }
         };
 
+        let cookies: Py<Cookies> = Py::new(py, self.cookies)?;
+
         let response = PyResponse {
             status_code: self.status_code,
             response_type: self.response_type,
             headers,
             description: description.into(),
             file_path: self.file_path,
+            cookies,
         };
         Ok(Py::new(py, response)?.into_bound(py).into_any())
     }
@@ -247,6 +268,8 @@ pub struct PyResponse {
     pub description: Py<PyAny>,
     #[pyo3(get)]
     pub file_path: Option<String>,
+    #[pyo3(get)]
+    pub cookies: Py<Cookies>,
 }
 
 #[pyclass(name = "StreamingResponse")]
@@ -339,6 +362,8 @@ impl PyResponse {
             ));
         };
 
+        let cookies: Py<Cookies> = Py::new(py, Cookies::new())?;
+
         Ok(Self {
             status_code,
             // we should be handling based on headers but works for now
@@ -346,6 +371,7 @@ impl PyResponse {
             headers: headers_output,
             description,
             file_path: None,
+            cookies,
         })
     }
 
@@ -370,11 +396,35 @@ impl PyResponse {
         }
     }
 
-    pub fn set_cookie(&mut self, py: Python, key: &str, value: &str) -> PyResult<()> {
-        self.headers
+    #[pyo3(signature = (key, value, path=None, domain=None, max_age=None, expires=None, secure=false, http_only=false, same_site=None))]
+    pub fn set_cookie(
+        &mut self,
+        py: Python,
+        key: &str,
+        value: &str,
+        path: Option<String>,
+        domain: Option<String>,
+        max_age: Option<i64>,
+        expires: Option<String>,
+        secure: bool,
+        http_only: bool,
+        same_site: Option<String>,
+    ) -> PyResult<()> {
+        let cookie = Cookie::new(
+            value.to_string(),
+            path,
+            domain,
+            max_age,
+            expires,
+            secure,
+            http_only,
+            same_site,
+        );
+
+        self.cookies
             .try_borrow_mut(py)
             .expect("value already borrowed")
-            .append(key.to_string(), value.to_string());
+            .set(key.to_string(), cookie);
         Ok(())
     }
 }
@@ -399,6 +449,7 @@ impl FromPyObject<'_, '_> for Response {
         let headers: Headers = obj.getattr("headers")?.extract()?;
         let description: Vec<u8> = get_description_from_pyobject(&obj.getattr("description")?)?;
         let file_path: Option<String> = obj.getattr("file_path")?.extract()?;
+        let cookies: Cookies = obj.getattr("cookies")?.extract()?;
 
         debug!(
             "Successfully extracted Response with status {}",
@@ -410,6 +461,7 @@ impl FromPyObject<'_, '_> for Response {
             headers,
             description,
             file_path,
+            cookies,
         })
     }
 }

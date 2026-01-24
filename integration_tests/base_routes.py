@@ -562,6 +562,37 @@ def cookie():
     return response
 
 
+@app.get("/cookie/multiple")
+def multiple_cookies():
+    response = Response(status_code=200, headers=Headers({}), description="test multiple cookies")
+    response.set_cookie(key="session", value="abc123")
+    response.set_cookie(key="theme", value="dark")
+    return response
+
+
+@app.get("/cookie/attributes")
+def cookie_with_attributes():
+    response = Response(status_code=200, headers=Headers({}), description="test cookie attributes")
+    response.set_cookie(
+        key="secure_session",
+        value="secret123",
+        path="/",
+        http_only=True,
+        secure=True,
+        same_site="Strict",
+        max_age=3600,
+    )
+    return response
+
+
+@app.get("/cookie/overwrite")
+def cookie_overwrite():
+    response = Response(status_code=200, headers=Headers({}), description="test cookie overwrite")
+    response.set_cookie(key="session", value="first-value")
+    response.set_cookie(key="session", value="final-value")  # Should overwrite
+    return response
+
+
 # --- POST ---
 
 # dict

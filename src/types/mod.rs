@@ -5,6 +5,7 @@ use pyo3::{
     types::{PyBytes, PyString},
 };
 
+pub mod cookie;
 pub mod function_info;
 pub mod headers;
 pub mod identity;

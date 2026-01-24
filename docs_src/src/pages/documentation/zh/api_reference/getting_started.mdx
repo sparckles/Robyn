@@ -612,31 +612,174 @@ Robyn 向蝙蝠侠演示了访问请求参数的不同语法示例：
 
 <Row>
 <Col>
-使用 `set_cookies` 功能设置 Cookies：
+Robyn 提供了符合 RFC 6265 标准的完整 Cookie API。使用 Response 对象上的 `set_cookie` 方法来设置 Cookie。
 </Col>
 <Col sticky>
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
     ```python {{ title: 'untyped' }}
+    from robyn import Response, Headers
+
     @app.get("/")
-    def binary_output_response_sync(request):
-        response = Response(200, {'type': 'int'}, "desc")
-        response.set_cookie(key="fakesession", value="fake-cookie-session-value")
+    def set_session(request):
+        response = Response(200, Headers({}), "Welcome!")
+        response.set_cookie(key="session", value="abc123")
         return response
     ```
 
-    ```python {{title: 'typed'}}
-    from robyn import Request
+    ```python {{ title: 'typed' }}
+    from robyn import Request, Response, Headers
 
     @app.get("/")
-    def binary_output_response_sync(request: Request):
-        response = Response(200, {'type': 'int'}, "desc")
-        response.set_cookie(key="fakesession", value="fake-cookie-session-value")
+    def set_session(request: Request):
+        response = Response(200, Headers({}), "Welcome!")
+        response.set_cookie(key="session", value="abc123")
         return response
     ```
     </CodeGroup>
+  </Col>
+</Row>
 
+#### Cookie 属性
+
+<Row>
+<Col>
+您可以设置额外的 Cookie 属性以增强安全性和控制：
+
+- **path**: Cookie 路径（默认："/"）
+- **domain**: Cookie 域名
+- **max_age**: Cookie 有效期（秒）
+- **secure**: 仅通过 HTTPS 发送
+- **http_only**: JavaScript 无法访问
+- **same_site**: CSRF 保护（"Strict"、"Lax" 或 "None" - 不区分大小写）
+</Col>
+<Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/secure-cookie">
+
+    ```python {{ title: 'untyped' }}
+    @app.get("/login")
+    def login(request):
+        response = Response(200, Headers({}), "Logged in")
+        response.set_cookie(
+            key="auth_token",
+            value="secret123",
+            path="/",
+            max_age=3600,        # 1 小时
+            secure=True,         # 仅 HTTPS
+            http_only=True,      # 禁止 JavaScript 访问
+            same_site="Strict",  # CSRF 保护
+        )
+        return response
+    ```
+
+    ```python {{ title: 'typed' }}
+    from robyn import Request, Response, Headers
+
+    @app.get("/login")
+    def login(request: Request):
+        response = Response(200, Headers({}), "Logged in")
+        response.set_cookie(
+            key="auth_token",
+            value="secret123",
+            path="/",
+            max_age=3600,        # 1 小时
+            secure=True,         # 仅 HTTPS
+            http_only=True,      # 禁止 JavaScript 访问
+            same_site="Strict",  # CSRF 保护
+        )
+        return response
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+#### 删除 Cookie
+
+<Row>
+<Col>
+要从浏览器删除 Cookie，请使用 cookies 集合上的 `delete` 方法。这会设置 `max_age=0`，告诉浏览器删除该 Cookie。
+</Col>
+<Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/logout">
+
+    ```python {{ title: 'untyped' }}
+    @app.get("/logout")
+    def logout(request):
+        response = Response(200, Headers({}), "Logged out")
+        response.cookies.delete("auth_token")
+        return response
+    ```
+
+    ```python {{ title: 'typed' }}
+    from robyn import Request, Response, Headers
+
+    @app.get("/logout")
+    def logout(request: Request):
+        response = Response(200, Headers({}), "Logged out")
+        response.cookies.delete("auth_token")
+        return response
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+#### 访问 Cookie
+
+<Row>
+<Col>
+您可以遍历 Cookie 或按名称访问它们：
+</Col>
+<Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/cookies">
+
+    ```python {{ title: 'untyped' }}
+    @app.get("/debug")
+    def debug_cookies(request):
+        response = Response(200, Headers({}), "Cookies set")
+        response.set_cookie("a", "1")
+        response.set_cookie("b", "2")
+        
+        # 获取所有 Cookie 名称
+        names = response.cookies.keys()
+        
+        # 遍历 Cookie
+        for name in response.cookies:
+            print(f"Cookie: {name}")
+        
+        # 检查 Cookie 是否存在
+        if "a" in response.cookies:
+            print("Cookie 'a' exists")
+            
+        return response
+    ```
+
+    ```python {{ title: 'typed' }}
+    from robyn import Request, Response, Headers
+
+    @app.get("/debug")
+    def debug_cookies(request: Request):
+        response = Response(200, Headers({}), "Cookies set")
+        response.set_cookie("a", "1")
+        response.set_cookie("b", "2")
+        
+        # 获取所有 Cookie 名称
+        names = response.cookies.keys()
+        
+        # 遍历 Cookie
+        for name in response.cookies:
+            print(f"Cookie: {name}")
+        
+        # 检查 Cookie 是否存在
+        if "a" in response.cookies:
+            print("Cookie 'a' exists")
+            
+        return response
+    ```
+    </CodeGroup>
   </Col>
 </Row>
 

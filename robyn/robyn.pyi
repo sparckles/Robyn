@@ -176,6 +176,126 @@ class QueryParams:
     def __repr__(self) -> str:
         pass
 
+@dataclass
+class Cookie:
+    """
+    A cookie with optional attributes following RFC 6265.
+
+    Attributes:
+        value (str): The cookie value
+        path (Optional[str]): Cookie path (e.g. "/")
+        domain (Optional[str]): Cookie domain
+        max_age (Optional[int]): Max age in seconds
+        expires (Optional[str]): Expiry date (deprecated, use max_age instead)
+        secure (bool): Only send over HTTPS
+        http_only (bool): Not accessible via JavaScript
+        same_site (Optional[str]): "Strict", "Lax", or "None" (case-insensitive)
+    """
+
+    value: str
+    path: Optional[str] = None
+    domain: Optional[str] = None
+    max_age: Optional[int] = None
+    expires: Optional[str] = None
+    secure: bool = False
+    http_only: bool = False
+    same_site: Optional[str] = None
+
+    @staticmethod
+    def deleted() -> "Cookie":
+        """
+        Create a cookie configured for deletion (expires immediately with max_age=0).
+
+        Returns:
+            Cookie: A cookie that will be deleted by the browser
+        """
+        pass
+
+class Cookies:
+    """A collection of cookies keyed by name."""
+
+    def __init__(self) -> None:
+        pass
+
+    def set(self, name: str, cookie: Cookie) -> None:
+        """
+        Sets a cookie with the given name.
+
+        Args:
+            name (str): The name of the cookie
+            cookie (Cookie): The cookie object
+        """
+        pass
+
+    def get(self, name: str) -> Optional[Cookie]:
+        """
+        Gets the cookie with the given name.
+
+        Args:
+            name (str): The name of the cookie
+        """
+        pass
+
+    def remove(self, name: str) -> None:
+        """
+        Removes the cookie from the collection (does not delete it from the browser).
+
+        Args:
+            name (str): The name of the cookie
+        """
+        pass
+
+    def delete(self, name: str) -> None:
+        """
+        Mark a cookie for deletion by setting it to expire immediately.
+        This sets max_age=0 which tells the browser to delete the cookie.
+
+        Args:
+            name (str): The name of the cookie to delete
+        """
+        pass
+
+    def is_empty(self) -> bool:
+        """
+        Returns:
+            True if there are no cookies, False otherwise
+        """
+        pass
+
+    def keys(self) -> list[str]:
+        """
+        Returns:
+            A list of all cookie names
+        """
+        pass
+
+    def __setitem__(self, name: str, cookie: Cookie) -> None:
+        pass
+
+    def __getitem__(self, name: str) -> Optional[Cookie]:
+        pass
+
+    def __contains__(self, name: str) -> bool:
+        pass
+
+    def __len__(self) -> int:
+        pass
+
+    def __iter__(self) -> "CookiesIter":
+        pass
+
+    def __repr__(self) -> str:
+        pass
+
+class CookiesIter:
+    """Iterator for Cookies collection."""
+
+    def __iter__(self) -> "CookiesIter":
+        pass
+
+    def __next__(self) -> str:
+        pass
+
 class Headers:
     def __init__(self, default_headers: Optional[dict]) -> None:
         pass
@@ -289,6 +409,7 @@ class Response:
         headers (Union[Headers, dict]): The headers of the response or Headers directly. e.g. {"Content-Type": "application/json"}
         description (Union[str, bytes]): The body of the response. If the response is a JSON, it will be a dict.
         file_path (Optional[str]): The file path of the response. e.g. /home/user/file.txt
+        cookies (Cookies): The cookies to set in the response.
     """
 
     status_code: int
@@ -296,14 +417,34 @@ class Response:
     description: Union[str, bytes]
     response_type: Optional[str] = None
     file_path: Optional[str] = None
+    cookies: Cookies = None  # Initialized automatically
 
-    def set_cookie(self, key: str, value: str) -> None:
+    def set_cookie(
+        self,
+        key: str,
+        value: str,
+        path: Optional[str] = None,
+        domain: Optional[str] = None,
+        max_age: Optional[int] = None,
+        expires: Optional[str] = None,
+        secure: bool = False,
+        http_only: bool = False,
+        same_site: Optional[str] = None,
+    ) -> None:
         """
-        Sets the cookie in the response.
+        Sets a cookie in the response. If a cookie with the same key exists,
+        it will be overwritten.
 
         Args:
-            key (str): The key of the cookie
+            key (str): The name of the cookie
             value (str): The value of the cookie
+            path (Optional[str]): Cookie path (e.g. "/")
+            domain (Optional[str]): Cookie domain
+            max_age (Optional[int]): Max age in seconds
+            expires (Optional[str]): Expiry date (RFC 7231 format)
+            secure (bool): Only send over HTTPS
+            http_only (bool): Not accessible via JavaScript
+            same_site (Optional[str]): "Strict", "Lax", or "None"
         """
         pass
 

@@ -12,6 +12,7 @@ use shared_socket::SocketHeld;
 // pyO3 module
 use pyo3::prelude::*;
 use types::{
+    cookie::{Cookie, Cookies, CookiesIter},
     function_info::{FunctionInfo, MiddlewareType},
     headers::Headers,
     identity::Identity,
@@ -35,6 +36,9 @@ pub fn robyn(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     m.add_class::<Server>()?;
     m.add_class::<Headers>()?;
+    m.add_class::<Cookie>()?;
+    m.add_class::<Cookies>()?;
+    m.add_class::<CookiesIter>()?;
     m.add_class::<WebSocketRegistry>()?;
     m.add_class::<WebSocketConnector>()?;
     m.add_class::<SocketHeld>()?;
