@@ -14,7 +14,7 @@ jobs:
   benchmarks:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -22,7 +22,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
         with:
           version: "0.7.5"
 
@@ -32,7 +32,7 @@ jobs:
           uv sync --dev --group test --verbose
 
       - name: Run benchmarks
-        uses: CodSpeedHQ/action@v3.5.0
+        uses: CodSpeedHQ/action@v4.8.2
         with:
           token: ${{ secrets.CODSPEED_TOKEN }}
           run: uv run pytest integration_tests --codspeed
