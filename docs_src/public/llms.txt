@@ -1,0 +1,242 @@
+# Robyn
+
+> Robyn is a high-performance, community-driven, and innovator-friendly async web framework for Python with a Rust runtime. It combines Python's ease of use with Rust's performance.
+
+## Quick Facts
+
+- Version: 0.76.0
+- Python: >= 3.10
+- License: BSD 2.0
+- Repository: https://github.com/sparckles/robyn
+- Documentation: https://robyn.tech/documentation
+- Discord: https://discord.gg/rkERZ5eNU8
+
+## Installation
+
+```bash
+pip install robyn
+```
+
+## Basic Usage
+
+```python
+from robyn import Robyn
+
+app = Robyn(__file__)
+
+@app.get("/")
+async def index(request):
+    return "Hello, World!"
+
+app.start(port=8080)
+```
+
+## Key Features
+
+- **Rust Runtime**: Core server written in Rust using actix-web for high performance
+- **Async/Sync Support**: Both async and sync route handlers supported
+- **Multi-Process Scaling**: Built-in multiprocess execution via `--processes` and `--workers`
+- **WebSockets**: Native WebSocket support
+- **Middlewares**: Before/after request middlewares
+- **Dependency Injection**: Built-in DI system
+- **OpenAPI/Swagger**: Automatic OpenAPI documentation generation
+- **Hot Reloading**: Development mode with `--dev` flag
+- **AI Agents**: Built-in AI agent routing via `robyn.ai`
+- **MCP Support**: Model Context Protocol server capabilities via `app.mcp`
+- **Templating**: Jinja2 templating support (optional)
+- **CORS**: Built-in CORS helper via `ALLOW_CORS()`
+- **Authentication**: AuthenticationHandler base class for custom auth
+- **Static Files**: Directory serving via `app.serve_directory()`
+- **SSE**: Server-Sent Events support via `SSEResponse`
+- **Direct Rust Integration**: Embed Rust code directly in routes
+
+## Project Structure
+
+```
+robyn/
+├── src/                    # Rust source code
+│   ├── lib.rs              # PyO3 module entry point
+│   ├── server.rs           # Main HTTP server implementation
+│   ├── types/              # Request, Response, Headers, Cookie types
+│   ├── routers/            # HTTP, WebSocket, middleware routers
+│   ├── executors/          # Route execution handlers
+│   └── websockets/         # WebSocket implementation
+├── robyn/                  # Python package
+│   ├── __init__.py         # Main Robyn and SubRouter classes
+│   ├── router.py           # Python router implementation
+│   ├── authentication.py   # AuthenticationHandler
+│   ├── dependency_injection.py
+│   ├── openapi.py          # OpenAPI generation
+│   ├── mcp.py              # MCP protocol support
+│   ├── ai.py               # AI agent support
+│   ├── responses.py        # Response helpers (serve_file, html, SSE)
+│   ├── ws.py               # WebSocket class
+│   └── robyn.pyi           # Type stubs
+├── integration_tests/      # Integration test suite
+├── unit_tests/             # Unit test suite
+├── docs_src/               # Documentation (Next.js)
+├── granian/                # Bundled Granian server (fork)
+└── examples/               # Example applications
+```
+
+## Core Classes
+
+### Robyn / SubRouter
+Main application class and sub-router for modular routes.
+
+```python
+from robyn import Robyn, SubRouter
+
+app = Robyn(__file__)
+api = SubRouter(__file__, prefix="/api")
+
+@api.get("/users")
+def get_users(request):
+    return {"users": []}
+
+app.include_router(api)
+```
+
+### Request Object
+```python
+request.method      # HTTP method
+request.url         # Url object (scheme, host, path)
+request.headers     # Headers dict-like
+request.query_params # QueryParams
+request.path_params  # Dict of URL params
+request.body        # Raw bytes
+request.json()      # Parse JSON body
+request.form_data   # Multipart form data
+request.ip_addr     # Client IP
+request.identity    # Identity (if authenticated)
+```
+
+### Response Object
+```python
+from robyn import Response
+
+Response(
+    status_code=200,
+    headers={"Content-Type": "application/json"},
+    description="body content"  # or body bytes
+)
+```
+
+### Decorators
+```python
+@app.get("/path")
+@app.post("/path")
+@app.put("/path")
+@app.delete("/path")
+@app.patch("/path")
+@app.head("/path")
+@app.options("/path")
+
+@app.before_request("/path")  # Middleware before
+@app.after_request("/path")   # Middleware after
+
+@app.startup_handler         # Server startup
+@app.shutdown_handler        # Server shutdown
+```
+
+### WebSockets
+```python
+from robyn import WebSocket
+
+ws = WebSocket(app, "/ws")
+
+@ws.on("connect")
+def on_connect(ws, msg):
+    return "Connected"
+
+@ws.on("message")
+def on_message(ws, msg):
+    return f"Echo: {msg}"
+
+@ws.on("close")
+def on_close(ws, msg):
+    return "Closed"
+```
+
+### MCP (Model Context Protocol)
+```python
+@app.mcp.resource("time://current")
+def get_time():
+    return datetime.now().isoformat()
+
+@app.mcp.tool(name="calc", description="Calculate", input_schema={...})
+def calculate(args):
+    return eval(args["expression"])
+
+@app.mcp.prompt(name="explain", description="Explain code", arguments=[...])
+def explain_prompt(args):
+    return f"Please explain: {args['code']}"
+```
+
+## CLI Commands
+
+```bash
+python app.py                     # Start server
+python app.py --dev               # Development mode (hot reload)
+python app.py --processes 4       # Multi-process
+python app.py --workers 2         # Workers per process
+python app.py --log-level DEBUG   # Log level
+python app.py --open-browser      # Open browser on start
+python app.py --create            # Create new project scaffold
+python app.py --docs              # Open documentation
+```
+
+## Development Setup
+
+```bash
+# Clone
+git clone https://github.com/sparckles/robyn.git
+cd robyn
+
+# Virtual environment
+python3 -m venv .venv && source .venv/bin/activate
+
+# Install tools
+pip install pre-commit poetry maturin
+
+# Install dependencies
+poetry install --with dev --with test
+
+# Build Rust extension
+maturin develop
+
+# Run tests
+pytest
+```
+
+## Key Dependencies
+
+- **PyO3**: Rust-Python bindings
+- **actix-web**: Rust HTTP server (via cookie crate)
+- **orjson**: Fast JSON serialization
+- **multiprocess**: Multi-process support
+- **uvloop**: Fast event loop (non-Windows)
+- **watchdog**: File watching for hot reload
+
+## Configuration
+
+Environment variables:
+- `ROBYN_HOST`: Server host (default: 127.0.0.1)
+- `ROBYN_PORT`: Server port (default: 8080)
+- `ROBYN_DEV_MODE`: Enable dev mode
+- `ROBYN_BROWSER_OPEN`: Open browser on start
+- `ROBYN_CLIENT_TIMEOUT`: Client timeout seconds
+- `ROBYN_KEEP_ALIVE_TIMEOUT`: Keep-alive timeout
+
+## Documentation Structure
+
+Main docs at `docs_src/src/pages/documentation/`:
+- `api_reference/getting_started.mdx` - Quick start guide
+- `api_reference/request_object.mdx` - Request handling
+- `api_reference/middlewares.mdx` - Middleware usage
+- `api_reference/websockets.mdx` - WebSocket guide
+- `api_reference/authentication.mdx` - Auth patterns
+- `api_reference/openapi.mdx` - OpenAPI docs
+- `api_reference/agents.mdx` - AI agent integration
+- `api_reference/mcps.mdx` - MCP server guide
+- `example_app/` - Full example application tutorial
