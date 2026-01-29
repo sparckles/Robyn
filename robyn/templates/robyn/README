@@ -1,0 +1,4 @@
+Generic single-database configuration for Robyn with Alembic.
+
+This is a modified version of the default Alembic template for use with the
+Robyn web framework and the robyn_migrate extension.
