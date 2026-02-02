@@ -3,4 +3,4 @@
 set -x
 
 maturin develop
-poetry lock 
+uv lock 

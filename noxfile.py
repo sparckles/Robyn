@@ -5,17 +5,17 @@ import nox
 
 @nox.session(python=["3.10", "3.11", "3.12", "3.13", "3.14"])
 def tests(session):
-    session.run("pip", "install", "poetry==1.3.0")
+    session.run("pip", "install", "uv")
     session.run("pip", "install", "maturin")
     session.run(
-        "poetry",
+        "uv",
         "export",
-        "--with",
+        "--group",
         "test",
-        "--with",
+        "--group",
         "dev",
-        "--without-hashes",
-        "--output",
+        "--no-hashes",
+        "--output-file",
         "requirements.txt",
     )
     session.run("pip", "install", "-r", "requirements.txt")
