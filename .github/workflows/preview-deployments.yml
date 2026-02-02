@@ -21,9 +21,9 @@ jobs:
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v7
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
@@ -52,9 +52,9 @@ jobs:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         target: [x64, x86]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v7
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
@@ -78,10 +78,10 @@ jobs:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         target: [x86_64, i686]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v7
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
@@ -112,7 +112,7 @@ jobs:
           ]
         target: [aarch64, armv7]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - name: Build Wheels
         uses: PyO3/maturin-action@v1
         env:
@@ -121,7 +121,7 @@ jobs:
           target: ${{ matrix.target }}
           manylinux: auto
           args: -i python${{matrix.python.version}} --release --out dist
-      - uses: uraimo/run-on-arch-action@v2
+      - uses: uraimo/run-on-arch-action@v3
         name: Install build wheel
         with:
           arch: ${{ matrix.target }}
