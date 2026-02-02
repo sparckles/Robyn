@@ -43,5 +43,6 @@ def tests(session):
 
 @nox.session(python=["3.11"])
 def lint(session):
-    session.run("pip", "install", "black", "ruff")
-    session.run("black", "robyn/", "integration_tests/")
+    session.run("pip", "install", "ruff")
+    session.run("ruff", "check", ".")
+    session.run("ruff", "format", ".")

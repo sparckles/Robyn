@@ -50,9 +50,7 @@ test_server = "integration_tests.base_routes:main"
 
 [dependency-groups]
 dev = [
-  "black==23.1",
   "commitizen==2.40",
-  "isort==5.11.5",
   "maturin==1.7.4",
   "pre-commit==2.21.0",
   "ruff>=0.9.0",
@@ -65,36 +63,12 @@ test = [
   "websocket-client==1.5.0",
 ]
 
-
-
 [tool.ruff]
 line-length = 160
 exclude = ["src/*", ".git", "docs"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 10
-
-[tool.isort]
-profile = "black"
-line_length = 160
-
-[tool.black]
-line-length = 160
-target-version = ['py39']
-include = '\.pyi?$'
-extend-exclude = '''
-/(
-  # directories
-  \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | build
-  | dist
-)/
-'''
 
 [tool.pytest.ini_options]
 markers = [
