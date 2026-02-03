@@ -195,20 +195,16 @@ def test_sse_empty_stream(session):
 
 @pytest.mark.benchmark
 def test_sse_custom_headers(session):
-    """Test SSE endpoint with custom headers and verify no default CORS headers"""
+    """Test SSE endpoint with custom headers and default CORS headers"""
     response = requests.get(f"{BASE_URL}/sse/with_headers", stream=True)
 
     assert response.status_code == 200
     assert response.headers.get("X-Custom-Header") == "custom-value"
     assert response.headers.get("Content-Type") == "text/event-stream"
 
-    # Verify no default CORS headers are present
-    # Users should use ALLOW_CORS or pass custom headers to set CORS
-    assert response.headers.get("Access-Control-Allow-Origin") is None
-    assert response.headers.get("Access-Control-Allow-Methods") is None
-    assert response.headers.get("Access-Control-Allow-Headers") is None
-    assert response.headers.get("Access-Control-Expose-Headers") is None
-    assert response.headers.get("Access-Control-Allow-Credentials") is None
+    # SSE responses include default CORS headers for cross-origin EventSource support
+    assert response.headers.get("Access-Control-Allow-Origin") == "*"
+    assert response.headers.get("Access-Control-Allow-Headers") == "Cache-Control"
 
 
 @pytest.mark.benchmark
