@@ -69,7 +69,7 @@ class Logger:
         self,
         msg: str,
         *args,
-        color: Colors = Colors.BLUE,
+        color: Colors | None = Colors.BLUE,
         bold: bool = False,
         underline: bool = False,
     ):

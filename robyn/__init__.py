@@ -124,6 +124,7 @@ class BaseRobyn(ABC):
         self.authentication_handler: AuthenticationHandler | None = None
         self.included_routers: list[SubRouter] = []
         self._mcp_app: MCPApp | None = None
+        self._added_routes: set[str] = set()
 
     def init_openapi(self, openapi_file_path: str | None) -> None:
         if self.config.disable_openapi:
@@ -196,9 +197,6 @@ class BaseRobyn(ABC):
 
         # Check if this exact route (method + normalized_endpoint) already exists
         route_key = f"{route_type}:{normalized_endpoint}"
-        if not hasattr(self, "_added_routes"):
-            self._added_routes = set()
-
         if route_key in self._added_routes:
             # Route already exists, raise an error
             raise ValueError(f"Route {route_type} {normalized_endpoint} already exists")

@@ -8,8 +8,8 @@ from .robyn import Headers, Response
 
 
 class TemplateInterface(ABC):
-    @abstractmethod
-    def __init__(self, *args, **kwargs) -> None: ...
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__()
 
     @abstractmethod
     def render_template(self, *args, **kwargs) -> Response: ...

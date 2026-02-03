@@ -1,12 +1,13 @@
 import inspect
 import json
+import types
 import typing
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from importlib import resources
 from inspect import Signature
 from pathlib import Path
-from typing import Any, Protocol, TypeAlias, TypedDict
+from typing import Any, Protocol, TypeAlias, TypedDict, get_args, get_origin
 
 from robyn.responses import html
 from robyn.robyn import QueryParams, Response
@@ -94,26 +95,26 @@ class Components:
     Additional external documentation for this operation.
     (https://swagger.io/specification/#components-object)
 
-    @param schemas: Optional[Dict[str, Dict]] An object to hold reusable Schema Objects.
-    @param responses: Optional[Dict[str, Dict]] An object to hold reusable Response Objects.
-    @param parameters: Optional[Dict[str, Dict]] An object to hold reusable Parameter Objects.
-    @param examples: Optional[Dict[str, Dict]] An object to hold reusable Example Objects.
-    @param requestBodies: Optional[Dict[str, Dict]] An object to hold reusable Request Body Objects.
-    @param securitySchemes: Optional[Dict[str, Dict]] An object to hold reusable Security Scheme Objects.
-    @param links: Optional[Dict[str, Dict]] An object to hold reusable Link Objects.
-    @param callbacks: Optional[Dict[str, Dict]] An object to hold reusable Callback Objects.
-    @param pathItems: Optional[Dict[str, Dict]] An object to hold reusable Callback Objects.
+    @param schemas: Dict[str, Dict] An object to hold reusable Schema Objects.
+    @param responses: Dict[str, Dict] An object to hold reusable Response Objects.
+    @param parameters: Dict[str, Dict] An object to hold reusable Parameter Objects.
+    @param examples: Dict[str, Dict] An object to hold reusable Example Objects.
+    @param requestBodies: Dict[str, Dict] An object to hold reusable Request Body Objects.
+    @param securitySchemes: Dict[str, Dict] An object to hold reusable Security Scheme Objects.
+    @param links: Dict[str, Dict] An object to hold reusable Link Objects.
+    @param callbacks: Dict[str, Dict] An object to hold reusable Callback Objects.
+    @param pathItems: Dict[str, Dict] An object to hold reusable Callback Objects.
     """
 
-    schemas: dict[str, dict] | None = field(default_factory=dict)
-    responses: dict[str, dict] | None = field(default_factory=dict)
-    parameters: dict[str, dict] | None = field(default_factory=dict)
-    examples: dict[str, dict] | None = field(default_factory=dict)
-    requestBodies: dict[str, dict] | None = field(default_factory=dict)
-    securitySchemes: dict[str, dict] | None = field(default_factory=dict)
-    links: dict[str, dict] | None = field(default_factory=dict)
-    callbacks: dict[str, dict] | None = field(default_factory=dict)
-    pathItems: dict[str, dict] | None = field(default_factory=dict)
+    schemas: dict[str, dict] = field(default_factory=dict)
+    responses: dict[str, dict] = field(default_factory=dict)
+    parameters: dict[str, dict] = field(default_factory=dict)
+    examples: dict[str, dict] = field(default_factory=dict)
+    requestBodies: dict[str, dict] = field(default_factory=dict)
+    securitySchemes: dict[str, dict] = field(default_factory=dict)
+    links: dict[str, dict] = field(default_factory=dict)
+    callbacks: dict[str, dict] = field(default_factory=dict)
+    pathItems: dict[str, dict] = field(default_factory=dict)
 
 
 @dataclass
@@ -404,19 +405,20 @@ class OpenAPI:
                 properties["type"] = type_mapping[type_name]
                 return properties
 
-        # Check if it's a generic type (like List[Object])
-        if hasattr(param_type, "__origin__"):
-            if param_type.__origin__ is list:
-                properties["type"] = "array"
-                # Handle the element type in the list
-                if hasattr(param_type, "__args__") and param_type.__args__:
-                    item_type = param_type.__args__[0]
-                    properties["items"] = self.get_schema_object(f"{parameter}_item", item_type)
-                return properties
+        origin = get_origin(param_type)
+        args = get_args(param_type)
 
-        # check for Optional type
-        if param_type.__module__ == "typing":
-            properties["anyOf"] = [{"type": self.get_openapi_type(param_type.__args__[0])}, {"type": "null"}]
+        # Check if it's a generic type (like list[Object])
+        if origin is list:
+            properties["type"] = "array"
+            if args:
+                item_type = args[0]
+                properties["items"] = self.get_schema_object(f"{parameter}_item", item_type)
+            return properties
+
+        # check for Optional/Union types
+        if origin in (typing.Union, types.UnionType):
+            properties["anyOf"] = [{"type": "null"} if arg is type(None) else {"type": self.get_openapi_type(arg)} for arg in args]
             return properties
         # check for custom classes and TypedDicts
         elif inspect.isclass(param_type):
