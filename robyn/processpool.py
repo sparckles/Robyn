@@ -2,7 +2,6 @@ import asyncio
 import signal
 import sys
 import webbrowser
-from typing import Dict, List, Optional
 
 from multiprocess import Process  # type: ignore
 
@@ -17,21 +16,21 @@ from robyn.ws import WebSocket
 def run_processes(
     url: str,
     port: int,
-    directories: List[Directory],
+    directories: list[Directory],
     request_headers: Headers,
-    routes: List[Route],
-    global_middlewares: List[GlobalMiddleware],
-    route_middlewares: List[RouteMiddleware],
-    web_sockets: Dict[str, WebSocket],
-    event_handlers: Dict[Events, FunctionInfo],
+    routes: list[Route],
+    global_middlewares: list[GlobalMiddleware],
+    route_middlewares: list[RouteMiddleware],
+    web_sockets: dict[str, WebSocket],
+    event_handlers: dict[Events, FunctionInfo],
     workers: int,
     processes: int,
     response_headers: Headers,
-    excluded_response_headers_paths: Optional[List[str]],
+    excluded_response_headers_paths: list[str] | None,
     open_browser: bool,
     client_timeout: int = 30,
     keep_alive_timeout: int = 20,
-) -> List[Process]:
+) -> list[Process]:
     socket = SocketHeld(url, port)
 
     process_pool = init_processpool(
@@ -71,22 +70,22 @@ def run_processes(
 
 
 def init_processpool(
-    directories: List[Directory],
+    directories: list[Directory],
     request_headers: Headers,
-    routes: List[Route],
-    global_middlewares: List[GlobalMiddleware],
-    route_middlewares: List[RouteMiddleware],
-    web_sockets: Dict[str, WebSocket],
-    event_handlers: Dict[Events, FunctionInfo],
+    routes: list[Route],
+    global_middlewares: list[GlobalMiddleware],
+    route_middlewares: list[RouteMiddleware],
+    web_sockets: dict[str, WebSocket],
+    event_handlers: dict[Events, FunctionInfo],
     socket: SocketHeld,
     workers: int,
     processes: int,
     response_headers: Headers,
-    excluded_response_headers_paths: Optional[List[str]],
+    excluded_response_headers_paths: list[str] | None,
     client_timeout: int = 30,
     keep_alive_timeout: int = 20,
-) -> List[Process]:
-    process_pool: List = []
+) -> list[Process]:
+    process_pool: list[Process] = []
     if sys.platform.startswith("win32") or processes == 1:
         spawn_process(
             directories,
@@ -149,17 +148,17 @@ def initialize_event_loop():
 
 
 def spawn_process(
-    directories: List[Directory],
+    directories: list[Directory],
     request_headers: Headers,
-    routes: List[Route],
-    global_middlewares: List[GlobalMiddleware],
-    route_middlewares: List[RouteMiddleware],
-    web_sockets: Dict[str, WebSocket],
-    event_handlers: Dict[Events, FunctionInfo],
+    routes: list[Route],
+    global_middlewares: list[GlobalMiddleware],
+    route_middlewares: list[RouteMiddleware],
+    web_sockets: dict[str, WebSocket],
+    event_handlers: dict[Events, FunctionInfo],
     socket: SocketHeld,
     workers: int,
     response_headers: Headers,
-    excluded_response_headers_paths: Optional[List[str]],
+    excluded_response_headers_paths: list[str] | None,
     client_timeout: int = 30,
     keep_alive_timeout: int = 20,
 ):

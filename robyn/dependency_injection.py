@@ -56,13 +56,11 @@ class DependencyMap:
         Args:
             target_router: The router with which to merge dependencies.
 
-        This method iterates through the dependencies of this DependencyMap and adds any dependencies
-        that are not already present in the target router's DependencyMap.
+        This method iterates through the dependencies of this DependencyMap and applies them to the
+        target router's DependencyMap, overriding any existing keys.
         """
-        for dep_key in self.get_global_dependencies():
-            if dep_key in target_router.dependencies.get_global_dependencies():
-                continue
-            target_router.dependencies.get_global_dependencies()[dep_key] = self.get_global_dependencies()[dep_key]
+        for dep_key, dep_value in self.get_global_dependencies().items():
+            target_router.dependencies.get_global_dependencies()[dep_key] = dep_value
 
     def get_dependency_map(self, router) -> dict:
         return {

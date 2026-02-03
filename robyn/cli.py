@@ -4,7 +4,6 @@ import subprocess
 import sys
 import webbrowser
 from pathlib import Path
-from typing import Optional
 
 from InquirerPy.base.control import Choice
 from InquirerPy.resolver import prompt
@@ -79,7 +78,7 @@ def docs():
     webbrowser.open("https://robyn.tech")
 
 
-def start_dev_server(config: Config, file_path: Optional[str] = None):
+def start_dev_server(config: Config, file_path: str | None = None):
     if file_path is None:
         return
 

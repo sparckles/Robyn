@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Optional
 
 from robyn.robyn import Headers, Identity, Request, Response
 from robyn.status_codes import HTTP_401_UNAUTHORIZED
@@ -25,7 +24,7 @@ class TokenGetter(ABC):
 
     @classmethod
     @abstractmethod
-    def get_token(cls, request: Request) -> Optional[str]:
+    def get_token(cls, request: Request) -> str | None:
         """
         Gets the token from the request.
         This method should not decode the token. Decoding is the role of the authentication handler.
@@ -64,7 +63,7 @@ class AuthenticationHandler(ABC):
         )
 
     @abstractmethod
-    def authenticate(self, request: Request) -> Optional[Identity]:
+    def authenticate(self, request: Request) -> Identity | None:
         """
         Authenticates the user.
         :param request: The request object.
@@ -80,7 +79,7 @@ class BearerGetter(TokenGetter):
     """
 
     @classmethod
-    def get_token(cls, request: Request) -> Optional[str]:
+    def get_token(cls, request: Request) -> str | None:
         if request.headers.contains("authorization"):
             authorization_header = request.headers.get("authorization")
         else:

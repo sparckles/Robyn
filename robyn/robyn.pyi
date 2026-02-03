@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from enum import Enum
-from typing import Callable, Optional, Union
+from enum import StrEnum
 
 def get_version() -> str:
     pass
@@ -13,7 +13,7 @@ class SocketHeld:
     def try_clone(self) -> SocketHeld:
         pass
 
-class MiddlewareType(Enum):
+class MiddlewareType(StrEnum):
     """
     The middleware types supported by Robyn.
 
@@ -22,10 +22,10 @@ class MiddlewareType(Enum):
         AFTER_REQUEST: str
     """
 
-    BEFORE_REQUEST: str
-    AFTER_REQUEST: str
+    BEFORE_REQUEST = "BEFORE_REQUEST"
+    AFTER_REQUEST = "AFTER_REQUEST"
 
-class HttpMethod(Enum):
+class HttpMethod(StrEnum):
     """
     The HTTP methods supported by Robyn.
 
@@ -41,15 +41,15 @@ class HttpMethod(Enum):
         CONNECT: str
     """
 
-    GET: str
-    POST: str
-    PUT: str
-    DELETE: str
-    PATCH: str
-    OPTIONS: str
-    HEAD: str
-    TRACE: str
-    CONNECT: str
+    GET = "GET"
+    POST = "POST"
+    PUT = "PUT"
+    DELETE = "DELETE"
+    PATCH = "PATCH"
+    OPTIONS = "OPTIONS"
+    HEAD = "HEAD"
+    TRACE = "TRACE"
+    CONNECT = "CONNECT"
 
 @dataclass
 class FunctionInfo:
@@ -108,7 +108,7 @@ class QueryParams:
         """
         pass
 
-    def get(self, key: str, default: Optional[str] = None) -> Optional[str]:
+    def get(self, key: str, default: str | None = None) -> str | None:
         """
         Gets the last value of the query parameter with the given key.
 
@@ -135,7 +135,7 @@ class QueryParams:
         """
         pass
 
-    def get_first(self, key: str) -> Optional[str]:
+    def get_first(self, key: str) -> str | None:
         """
         Gets the first value of the query parameter with the given key.
 
@@ -145,7 +145,7 @@ class QueryParams:
         """
         pass
 
-    def get_all(self, key: str) -> Optional[list[str]]:
+    def get_all(self, key: str) -> list[str] | None:
         """
         Gets all the values of the query parameter with the given key.
 
@@ -193,16 +193,16 @@ class Cookie:
     """
 
     value: str
-    path: Optional[str] = None
-    domain: Optional[str] = None
-    max_age: Optional[int] = None
-    expires: Optional[str] = None
+    path: str | None = None
+    domain: str | None = None
+    max_age: int | None = None
+    expires: str | None = None
     secure: bool = False
     http_only: bool = False
-    same_site: Optional[str] = None
+    same_site: str | None = None
 
     @staticmethod
-    def deleted() -> "Cookie":
+    def deleted() -> Cookie:
         """
         Create a cookie configured for deletion (expires immediately with max_age=0).
 
@@ -227,7 +227,7 @@ class Cookies:
         """
         pass
 
-    def get(self, name: str) -> Optional[Cookie]:
+    def get(self, name: str) -> Cookie | None:
         """
         Gets the cookie with the given name.
 
@@ -272,7 +272,7 @@ class Cookies:
     def __setitem__(self, name: str, cookie: Cookie) -> None:
         pass
 
-    def __getitem__(self, name: str) -> Optional[Cookie]:
+    def __getitem__(self, name: str) -> Cookie | None:
         pass
 
     def __contains__(self, name: str) -> bool:
@@ -281,7 +281,7 @@ class Cookies:
     def __len__(self) -> int:
         pass
 
-    def __iter__(self) -> "CookiesIter":
+    def __iter__(self) -> CookiesIter:
         pass
 
     def __repr__(self) -> str:
@@ -290,17 +290,17 @@ class Cookies:
 class CookiesIter:
     """Iterator for Cookies collection."""
 
-    def __iter__(self) -> "CookiesIter":
+    def __iter__(self) -> CookiesIter:
         pass
 
     def __next__(self) -> str:
         pass
 
 class Headers:
-    def __init__(self, default_headers: Optional[dict]) -> None:
+    def __init__(self, default_headers: dict | None) -> None:
         pass
 
-    def __getitem__(self, key: str) -> Optional[str]:
+    def __getitem__(self, key: str) -> str | None:
         pass
 
     def __setitem__(self, key: str, value: str) -> None:
@@ -317,7 +317,7 @@ class Headers:
         """
         pass
 
-    def get(self, key: str) -> Optional[str]:
+    def get(self, key: str) -> str | None:
         """
         Gets the last value of the header with the given key.
 
@@ -383,13 +383,13 @@ class Request:
     query_params: QueryParams
     headers: Headers
     path_params: dict[str, str]
-    body: Union[str, bytes]
+    body: str | bytes
     method: str
     url: Url
     form_data: dict[str, str]
     files: dict[str, bytes]
-    ip_addr: Optional[str]
-    identity: Optional[Identity]
+    ip_addr: str | None
+    identity: Identity | None
 
     def json(self) -> dict:
         """
@@ -413,23 +413,23 @@ class Response:
     """
 
     status_code: int
-    headers: Union[Headers, dict]
-    description: Union[str, bytes]
-    response_type: Optional[str] = None
-    file_path: Optional[str] = None
-    cookies: Cookies = None  # Initialized automatically
+    headers: Headers | dict
+    description: str | bytes
+    response_type: str | None = None
+    file_path: str | None = None
+    cookies: Cookies | None = None  # Initialized automatically
 
     def set_cookie(
         self,
         key: str,
         value: str,
-        path: Optional[str] = None,
-        domain: Optional[str] = None,
-        max_age: Optional[int] = None,
-        expires: Optional[str] = None,
+        path: str | None = None,
+        domain: str | None = None,
+        max_age: int | None = None,
+        expires: str | None = None,
         secure: bool = False,
         http_only: bool = False,
-        same_site: Optional[str] = None,
+        same_site: str | None = None,
     ) -> None:
         """
         Sets a cookie in the response. If a cookie with the same key exists,
@@ -461,14 +461,14 @@ class Server:
         route: str,
         directory_path: str,
         show_files_listing: bool,
-        index_file: Optional[str],
+        index_file: str | None,
     ) -> None:
         pass
     def apply_request_headers(self, headers: Headers) -> None:
         pass
     def apply_response_headers(self, headers: Headers) -> None:
         pass
-    def set_response_headers_exclude_paths(self, excluded_response_headers_paths: Optional[list[str]] = None):
+    def set_response_headers_exclude_paths(self, excluded_response_headers_paths: list[str] | None = None):
         pass
 
     def add_route(
@@ -501,7 +501,7 @@ class Server:
         message_route: FunctionInfo,
     ) -> None:
         pass
-    def start(self, socket: SocketHeld, workers: int, client_timeout: int, keep_alive_timeout: int) -> None:
+    def start(self, socket: SocketHeld, workers: int) -> None:
         pass
 
 class WebSocketConnector:

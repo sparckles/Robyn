@@ -4,7 +4,6 @@ import signal
 import subprocess
 import sys
 import time
-from typing import List, Union
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
@@ -12,7 +11,7 @@ from watchdog.observers import Observer
 from robyn.logger import Colors, logger
 
 
-def compile_rust_files(directory_path: str) -> List[str]:
+def compile_rust_files(directory_path: str) -> list[str]:
     rust_files = glob.glob(os.path.join(directory_path, "**/*.rs"), recursive=True)
     rust_binaries: list[str] = []
 
@@ -21,8 +20,7 @@ def compile_rust_files(directory_path: str) -> List[str]:
 
         result = subprocess.run(
             [sys.executable, "-m", "rustimport", "build", rust_file],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             start_new_session=False,
         )
         if result.returncode != 0:
@@ -57,8 +55,7 @@ def create_rust_file(file_name: str) -> None:
 
     result = subprocess.run(
         [sys.executable, "-m", "rustimport", "new", rust_file],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         start_new_session=False,
     )
 
@@ -72,7 +69,7 @@ def create_rust_file(file_name: str) -> None:
         print("Created rust file : %s", rust_file)
 
 
-def clean_rust_binaries(rust_binaries: List[str]) -> None:
+def clean_rust_binaries(rust_binaries: list[str]) -> None:
     for file in rust_binaries:
         print("Cleaning rust file : %s", file)
         os.remove(file)
@@ -109,15 +106,17 @@ def setup_reloader(directory_path: str, file_path: str) -> None:
     finally:
         observer.stop()
         observer.join()
-        event_handler.process.wait()
+        process = event_handler.process
+        if process:
+            process.wait()
 
 
 class EventHandler(FileSystemEventHandler):
     def __init__(self, file_path: str, directory_path: str) -> None:
         self.file_path = file_path
         self.directory_path = directory_path
-        self.process: Union[subprocess.Popen[bytes], None] = None  # Keep track of the subprocess
-        self.built_rust_binaries: List = []  # Keep track of the built rust binaries
+        self.process: subprocess.Popen[bytes] | None = None  # Keep track of the subprocess
+        self.built_rust_binaries: list = []  # Keep track of the built rust binaries
 
         self.last_reload = time.time()  # Keep track of the last reload. EventHandler is initialized with the process.
 

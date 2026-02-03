@@ -34,7 +34,7 @@ def index(request):
         <script>
             const eventSource = new EventSource('/events');
             const eventsDiv = document.getElementById('events');
-            
+
             eventSource.onmessage = function(event) {
                 const eventDiv = document.createElement('div');
                 eventDiv.className = 'event';
@@ -42,7 +42,7 @@ def index(request):
                 eventsDiv.appendChild(eventDiv);
                 eventsDiv.scrollTop = eventsDiv.scrollHeight;
             };
-            
+
             eventSource.onerror = function(event) {
                 console.error('SSE error:', event);
             };
@@ -151,42 +151,42 @@ def help_page(request):
     </head>
     <body>
         <h1>Robyn SSE Example Endpoints</h1>
-        
+
         <div class="endpoint">
             <h3><code>GET /</code></h3>
             <p>Main demo page with a live SSE client</p>
         </div>
-        
+
         <div class="endpoint">
             <h3><code>GET /events</code></h3>
             <p>Basic SSE stream with 10 messages sent every second</p>
         </div>
-        
+
         <div class="endpoint">
             <h3><code>GET /events/json</code></h3>
             <p>SSE stream sending JSON data every 2 seconds</p>
         </div>
-        
+
         <div class="endpoint">
             <h3><code>GET /events/named</code></h3>
             <p>SSE stream with named events (user_joined, message, user_left)</p>
         </div>
-        
+
         <div class="endpoint">
             <h3><code>GET /events/async</code></h3>
             <p>Async SSE stream demonstrating async generators</p>
         </div>
-        
+
         <div class="endpoint">
             <h3><code>GET /events/heartbeat</code></h3>
             <p>Fast heartbeat stream sending messages every 0.5 seconds</p>
         </div>
-        
+
         <p><strong>Usage:</strong> Use curl, browser EventSource API, or any SSE client to connect to these endpoints.</p>
-        
+
         <h3>Example with curl:</h3>
         <pre><code>curl http://localhost:8080/events</code></pre>
-        
+
         <h3>Example with JavaScript:</h3>
         <pre><code>const eventSource = new EventSource('/events');
 eventSource.onmessage = function(event) {
