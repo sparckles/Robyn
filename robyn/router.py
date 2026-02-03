@@ -1,11 +1,11 @@
 import inspect
 import logging
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from functools import wraps
 from types import CoroutineType
-from typing import Callable, Dict, List, NamedTuple, Optional, Union
+from typing import TYPE_CHECKING, NamedTuple
 
-from robyn import status_codes
 from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
 from robyn.dependency_injection import DependencyMap
 from robyn.jsonify import jsonify
@@ -15,7 +15,12 @@ from robyn.robyn import FunctionInfo, Headers, HttpMethod, Identity, MiddlewareT
 from robyn.types import Body, Files, FormData, IPAddress, Method, PathParams
 from robyn.ws import WebSocket
 
+from . import status_codes
+
 _logger = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from robyn import SubRouter
 
 
 def lower_http_method(method: HttpMethod):
@@ -29,7 +34,7 @@ class Route(NamedTuple):
     is_const: bool
     auth_required: bool
     openapi_name: str
-    openapi_tags: List[str]
+    openapi_tags: list[str]
 
 
 class RouteMiddleware(NamedTuple):
@@ -46,20 +51,23 @@ class GlobalMiddleware(NamedTuple):
 
 class BaseRouter(ABC):
     @abstractmethod
-    def add_route(*args) -> Union[Callable, CoroutineType, WebSocket]: ...
+    def add_route(*args) -> Callable | CoroutineType | WebSocket: ...
 
 
 class Router(BaseRouter):
     def __init__(self) -> None:
         super().__init__()
-        self.routes: List[Route] = []
+        self.routes: list[Route] = []
 
     def _format_tuple_response(self, res: tuple) -> Response:
         if len(res) != 3:
             raise ValueError("Tuple should have 3 elements")
 
         description, headers, status_code = res
-        description = self._format_response(description).description
+        formatted = self._format_response(description)
+        if isinstance(formatted, StreamingResponse):
+            raise ValueError("StreamingResponse is not supported in tuple responses")
+        description = formatted.description
         new_headers: Headers = Headers(headers)
         if new_headers.contains("Content-Type"):
             headers.set("Content-Type", new_headers.get("Content-Type"))
@@ -70,10 +78,7 @@ class Router(BaseRouter):
             description=description,
         )
 
-    def _format_response(
-        self,
-        res: Union[Dict, Response, StreamingResponse, bytes, tuple, str],
-    ) -> Union[Response, StreamingResponse]:
+    def _format_response(self, res: dict | Response | StreamingResponse | bytes | tuple | str) -> Response | StreamingResponse:
         if isinstance(res, Response):
             return res
 
@@ -120,10 +125,10 @@ class Router(BaseRouter):
         is_const: bool,
         auth_required: bool,
         openapi_name: str,
-        openapi_tags: List[str],
-        exception_handler: Optional[Callable],
+        openapi_tags: list[str],
+        exception_handler: Callable | None,
         injected_dependencies: dict,
-    ) -> Union[Callable, CoroutineType]:
+    ) -> Callable | CoroutineType:
         def wrapped_handler(*args, **kwargs):
             # In the execute functions the request is passed into *args
             request = next(filter(lambda it: isinstance(it, Request), args), None)
@@ -159,9 +164,9 @@ class Router(BaseRouter):
                         type_filtered_params[handler_param_name] = getattr(request, type_name)
                     elif inspect.isclass(handler_param_type):
                         if issubclass(handler_param_type, Body):
-                            type_filtered_params[handler_param_name] = getattr(request, "body")
+                            type_filtered_params[handler_param_name] = request.body
                         elif issubclass(handler_param_type, QueryParams):
-                            type_filtered_params[handler_param_name] = getattr(request, "query_params")
+                            type_filtered_params[handler_param_name] = request.query_params
 
             request_components = {
                 "r": request,
@@ -251,26 +256,32 @@ class Router(BaseRouter):
             self.routes.append(Route(route_type, endpoint, function, is_const, auth_required, openapi_name, openapi_tags))
             return inner_handler
 
-    def prepare_routes_openapi(self, openapi: OpenAPI, included_routers: List) -> None:
+    def prepare_routes_openapi(self, openapi: OpenAPI, included_routers: list["SubRouter"]) -> None:
         for route in self.routes:
-            openapi.add_openapi_path_obj(lower_http_method(route.route_type), route.route, route.openapi_name, route.openapi_tags, route.function.handler)
+            openapi.add_openapi_path_obj(
+                lower_http_method(route.route_type),
+                route.route,
+                route.openapi_name,
+                route.openapi_tags,
+                route.function.handler,
+            )
 
         # TODO! after include_routes does not immediately merge all the routes
         # for router in included_routers:
         #    for route in router:
         #        openapi.add_openapi_path_obj(lower_http_method(route.route_type), route.route, route.openapi_name, route.openapi_tags, route.function.handler)
 
-    def get_routes(self) -> List[Route]:
+    def get_routes(self) -> list[Route]:
         return self.routes
 
 
 class MiddlewareRouter(BaseRouter):
-    def __init__(self, dependencies: DependencyMap = DependencyMap()) -> None:
+    def __init__(self, dependencies: DependencyMap | None = None) -> None:
         super().__init__()
-        self.global_middlewares: List[GlobalMiddleware] = []
-        self.route_middlewares: List[RouteMiddleware] = []
-        self.authentication_handler: Optional[AuthenticationHandler] = None
-        self.dependencies = dependencies
+        self.global_middlewares: list[GlobalMiddleware] = []
+        self.route_middlewares: list[RouteMiddleware] = []
+        self.authentication_handler: AuthenticationHandler | None = None
+        self.dependencies = DependencyMap() if dependencies is None else dependencies
 
     def set_authentication_handler(self, authentication_handler: AuthenticationHandler):
         self.authentication_handler = authentication_handler
@@ -335,7 +346,7 @@ class MiddlewareRouter(BaseRouter):
     # These inner functions are basically a wrapper around the closure(decorator) being returned.
     # They take a handler, convert it into a closure and return the arguments.
     # Arguments are returned as they could be modified by the middlewares.
-    def add_middleware(self, middleware_type: MiddlewareType, endpoint: Optional[str]) -> Callable[..., None]:
+    def add_middleware(self, middleware_type: MiddlewareType, endpoint: str | None = None) -> Callable[..., None]:
         """
         This method adds a middleware to the router.
 
@@ -407,10 +418,10 @@ class MiddlewareRouter(BaseRouter):
 
         return inner
 
-    def get_route_middlewares(self) -> List[RouteMiddleware]:
+    def get_route_middlewares(self) -> list[RouteMiddleware]:
         return self.route_middlewares
 
-    def get_global_middlewares(self) -> List[GlobalMiddleware]:
+    def get_global_middlewares(self) -> list[GlobalMiddleware]:
         return self.global_middlewares
 
 
@@ -422,5 +433,5 @@ class WebSocketRouter(BaseRouter):
     def add_route(self, endpoint: str, web_socket: WebSocket) -> None:  # type: ignore
         self.routes[endpoint] = web_socket
 
-    def get_routes(self) -> Dict[str, WebSocket]:
+    def get_routes(self) -> dict[str, WebSocket]:
         return self.routes

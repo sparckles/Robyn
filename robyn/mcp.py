@@ -10,18 +10,19 @@ import inspect
 import json
 import logging
 import re
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-def _extract_uri_params(uri: str) -> List[str]:
+def _extract_uri_params(uri: str) -> list[str]:
     """Extract parameter names from URI template like 'echo://{message}'"""
     return re.findall(r"\{(\w+)\}", uri)
 
 
-def _generate_schema_from_function(func: Callable) -> Dict[str, Any]:
+def _generate_schema_from_function(func: Callable) -> dict[str, Any]:
     """Generate JSON schema from function signature"""
     sig = inspect.signature(func)
     properties = {}
@@ -57,7 +58,7 @@ def _generate_schema_from_function(func: Callable) -> Dict[str, Any]:
     return {"type": "object", "properties": properties, "required": required}
 
 
-def _generate_prompt_args_from_function(func: Callable) -> List[Dict[str, Any]]:
+def _generate_prompt_args_from_function(func: Callable) -> list[dict[str, Any]]:
     """Generate prompt arguments from function signature"""
     sig = inspect.signature(func)
     arguments = []
@@ -66,7 +67,11 @@ def _generate_prompt_args_from_function(func: Callable) -> List[Dict[str, Any]]:
         if param_name == "self":
             continue
 
-        arg_def = {"name": param_name, "description": f"Parameter {param_name}", "required": param.default == inspect.Parameter.empty}
+        arg_def = {
+            "name": param_name,
+            "description": f"Parameter {param_name}",
+            "required": param.default == inspect.Parameter.empty,
+        }
         arguments.append(arg_def)
 
     return arguments
@@ -78,8 +83,8 @@ class MCPResource:
 
     uri: str
     name: str
-    description: Optional[str] = None
-    mimeType: Optional[str] = None
+    description: str | None = None
+    mimeType: str | None = None
 
 
 @dataclass
@@ -88,7 +93,7 @@ class MCPTool:
 
     name: str
     description: str
-    inputSchema: Dict[str, Any]
+    inputSchema: dict[str, Any]
 
 
 @dataclass
@@ -97,7 +102,7 @@ class MCPPrompt:
 
     name: str
     description: str
-    arguments: Optional[List[Dict[str, Any]]] = None
+    arguments: list[dict[str, Any]] | None = None
 
 
 @dataclass
@@ -105,17 +110,17 @@ class MCPMessage:
     """JSON-RPC 2.0 message structure"""
 
     jsonrpc: str = "2.0"
-    id: Optional[Union[str, int]] = None
-    method: Optional[str] = None
-    params: Optional[Dict[str, Any]] = None
-    result: Optional[Any] = None
-    error: Optional[Dict[str, Any]] = None
+    id: str | int | None = None
+    method: str | None = None
+    params: dict[str, Any] | None = None
+    result: Any | None = None
+    error: dict[str, Any] | None = None
 
 
 class MCPError(Exception):
     """MCP-specific error"""
 
-    def __init__(self, code: int, message: str, data: Optional[Any] = None):
+    def __init__(self, code: int, message: str, data: Any | None = None):
         self.code = code
         self.message = message
         self.data = data
@@ -126,30 +131,30 @@ class MCPHandler:
     """Handles MCP protocol requests and responses"""
 
     def __init__(self):
-        self.resources: Dict[str, Callable] = {}
-        self.tools: Dict[str, Callable] = {}
-        self.prompts: Dict[str, Callable] = {}
-        self.resource_metadata: Dict[str, MCPResource] = {}
-        self.tool_metadata: Dict[str, MCPTool] = {}
-        self.prompt_metadata: Dict[str, MCPPrompt] = {}
+        self.resources: dict[str, Callable] = {}
+        self.tools: dict[str, Callable] = {}
+        self.prompts: dict[str, Callable] = {}
+        self.resource_metadata: dict[str, MCPResource] = {}
+        self.tool_metadata: dict[str, MCPTool] = {}
+        self.prompt_metadata: dict[str, MCPPrompt] = {}
         self.server_info = {"name": "robyn-mcp-server", "version": "1.0.0"}
 
-    def register_resource(self, uri: str, name: str, handler: Callable, description: Optional[str] = None, mime_type: Optional[str] = None):
+    def register_resource(self, uri: str, name: str, handler: Callable, description: str | None = None, mime_type: str | None = None):
         """Register a resource handler"""
         self.resources[uri] = handler
         self.resource_metadata[uri] = MCPResource(uri=uri, name=name, description=description, mimeType=mime_type)
 
-    def register_tool(self, name: str, handler: Callable, description: str, input_schema: Dict[str, Any]):
+    def register_tool(self, name: str, handler: Callable, description: str, input_schema: dict[str, Any]):
         """Register a tool handler"""
         self.tools[name] = handler
         self.tool_metadata[name] = MCPTool(name=name, description=description, inputSchema=input_schema)
 
-    def register_prompt(self, name: str, handler: Callable, description: str, arguments: Optional[List[Dict[str, Any]]] = None):
+    def register_prompt(self, name: str, handler: Callable, description: str, arguments: list[dict[str, Any]] | None = None):
         """Register a prompt handler"""
         self.prompts[name] = handler
         self.prompt_metadata[name] = MCPPrompt(name=name, description=description, arguments=arguments)
 
-    async def handle_request(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_request(self, request_data: dict[str, Any]) -> dict[str, Any]:
         """Handle an MCP JSON-RPC request"""
         try:
             # Parse the request
@@ -179,12 +184,20 @@ class MCPHandler:
             return {"jsonrpc": "2.0", "id": request_id, "result": result}
 
         except MCPError as e:
-            return {"jsonrpc": "2.0", "id": request_data.get("id"), "error": {"code": e.code, "message": e.message, "data": e.data}}
+            return {
+                "jsonrpc": "2.0",
+                "id": request_data.get("id"),
+                "error": {"code": e.code, "message": e.message, "data": e.data},
+            }
         except Exception as e:
             logger.exception("Error handling MCP request")
-            return {"jsonrpc": "2.0", "id": request_data.get("id"), "error": {"code": -32603, "message": "Internal error", "data": str(e)}}
+            return {
+                "jsonrpc": "2.0",
+                "id": request_data.get("id"),
+                "error": {"code": -32603, "message": "Internal error", "data": str(e)},
+            }
 
-    async def _handle_initialize(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def _handle_initialize(self, params: dict[str, Any]) -> dict[str, Any]:
         """Handle MCP initialize request"""
         return {
             "protocolVersion": "2024-11-05",
@@ -192,14 +205,14 @@ class MCPHandler:
             "serverInfo": self.server_info,
         }
 
-    async def _handle_list_resources(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def _handle_list_resources(self, params: dict[str, Any]) -> dict[str, Any]:
         """Handle resources/list request"""
         resources = []
-        for uri, metadata in self.resource_metadata.items():
+        for _uri, metadata in self.resource_metadata.items():
             resources.append(asdict(metadata))
         return {"resources": resources}
 
-    def _match_uri_template(self, requested_uri: str) -> Optional[Tuple[str, Dict[str, str]]]:
+    def _match_uri_template(self, requested_uri: str) -> tuple[str, dict[str, str]] | None:
         """Match requested URI against registered URI templates"""
         for template_uri in self.resources.keys():
             # Extract parameter names from template
@@ -231,7 +244,7 @@ class MCPHandler:
 
         return None
 
-    async def _handle_read_resource(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def _handle_read_resource(self, params: dict[str, Any]) -> dict[str, Any]:
         """Handle resources/read request"""
         uri = params.get("uri")
         if not uri:
@@ -272,7 +285,7 @@ class MCPHandler:
                     content = handler()
         except TypeError as e:
             # Handle parameter mismatch errors
-            raise MCPError(-32603, f"Handler parameter error: {str(e)}")
+            raise MCPError(-32603, f"Handler parameter error: {str(e)}") from e
 
         # Determine content type
         metadata = self.resource_metadata[template_uri]
@@ -280,14 +293,14 @@ class MCPHandler:
 
         return {"contents": [{"uri": uri, "mimeType": mime_type, "text": str(content)}]}
 
-    async def _handle_list_tools(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def _handle_list_tools(self, params: dict[str, Any]) -> dict[str, Any]:
         """Handle tools/list request"""
         tools = []
-        for name, metadata in self.tool_metadata.items():
+        for _name, metadata in self.tool_metadata.items():
             tools.append(asdict(metadata))
         return {"tools": tools}
 
-    async def _handle_call_tool(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def _handle_call_tool(self, params: dict[str, Any]) -> dict[str, Any]:
         """Handle tools/call request"""
         name = params.get("name")
         arguments = params.get("arguments", {})
@@ -305,14 +318,14 @@ class MCPHandler:
 
         return {"content": [{"type": "text", "text": str(result)}]}
 
-    async def _handle_list_prompts(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def _handle_list_prompts(self, params: dict[str, Any]) -> dict[str, Any]:
         """Handle prompts/list request"""
         prompts = []
-        for name, metadata in self.prompt_metadata.items():
+        for _name, metadata in self.prompt_metadata.items():
             prompts.append(asdict(metadata))
         return {"prompts": prompts}
 
-    async def _handle_get_prompt(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def _handle_get_prompt(self, params: dict[str, Any]) -> dict[str, Any]:
         """Handle prompts/get request"""
         name = params.get("name")
         arguments = params.get("arguments", {})
@@ -378,9 +391,19 @@ class MCPApp:
                 return {"jsonrpc": "2.0", "id": None, "error": {"code": -32700, "message": "Parse error"}}
             except Exception as e:
                 logger.exception("Error in MCP request handler")
-                return {"jsonrpc": "2.0", "id": None, "error": {"code": -32603, "message": "Internal error", "data": str(e)}}
+                return {
+                    "jsonrpc": "2.0",
+                    "id": None,
+                    "error": {"code": -32603, "message": "Internal error", "data": str(e)},
+                }
 
-    def resource(self, uri: str = None, name: str = None, description: Optional[str] = None, mime_type: Optional[str] = None):
+    def resource(
+        self,
+        uri: str | None = None,
+        name: str | None = None,
+        description: str | None = None,
+        mime_type: str | None = None,
+    ):
         """
         Decorator to register an MCP resource
 
@@ -408,7 +431,7 @@ class MCPApp:
 
         return decorator
 
-    def tool(self, name: str = None, description: str = None, input_schema: Dict[str, Any] = None):
+    def tool(self, name: str | None = None, description: str | None = None, input_schema: dict[str, Any] | None = None):
         """
         Decorator to register an MCP tool
 
@@ -434,7 +457,7 @@ class MCPApp:
 
         return decorator
 
-    def prompt(self, name: str = None, description: str = None, arguments: Optional[List[Dict[str, Any]]] = None):
+    def prompt(self, name: str | None = None, description: str | None = None, arguments: list[dict[str, Any]] | None = None):
         """
         Decorator to register an MCP prompt
 

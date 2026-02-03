@@ -4,16 +4,34 @@ import os
 import pathlib
 import time
 from collections import defaultdict
-from typing import Optional
 
 from integration_tests.subroutes import di_subrouter, static_router, sub_router
-from robyn import Headers, Request, Response, Robyn, SSEMessage, SSEResponse, WebSocket, WebSocketConnector, jsonify, serve_file, serve_html
+from robyn import (
+    Headers,
+    Request,
+    Response,
+    Robyn,
+    SSEMessage,
+    SSEResponse,
+    WebSocket,
+    WebSocketConnector,
+    jsonify,
+    serve_file,
+    serve_html,
+)
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.robyn import QueryParams, Url
 from robyn.templating import JinjaTemplate
 from robyn.types import Body, JSONResponse, Method, PathParams
 
 app = Robyn(__file__)
+
+
+@app.exception
+def handle_exception(error):
+    return Response(status_code=500, description=f"error msg: {error}", headers={})
+
+
 websocket = WebSocket(app, "/web_socket")
 
 # Creating a new WebSocket app to test json handling + to serve an example to future users of this lib
@@ -796,14 +814,6 @@ async def async_body_patch(request: Request):
     return request.body
 
 
-# ==== Exception Handling ====
-
-
-@app.exception
-def handle_exception(error):
-    return Response(status_code=500, description=f"error msg: {error}", headers={})
-
-
 @app.get("/sync/exception/get")
 def sync_exception_get():
     raise ValueError("value error")
@@ -1113,7 +1123,7 @@ def sample_openapi_endpoint():
 
 class Initial(Body):
     is_present: bool
-    letter: Optional[str]
+    letter: str | None
 
 
 class FullName(Body):
@@ -1304,7 +1314,7 @@ def main():
     app.include_router(static_router)
 
     class BasicAuthHandler(AuthenticationHandler):
-        def authenticate(self, request: Request) -> Optional[Identity]:
+        def authenticate(self, request: Request) -> Identity | None:
             token = self.token_getter.get_token(request)
             if token is not None:
                 # Useless but we call the set_token method for testing purposes

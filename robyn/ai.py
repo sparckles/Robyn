@@ -9,7 +9,7 @@ Provides agent and memory functionality for building AI-powered applications for
 import logging
 import os
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ class AIConfig:
         """Update configuration with new values"""
         self.config.update(kwargs)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Get configuration as dictionary"""
         return self.config.copy()
 
@@ -64,12 +64,12 @@ class MemoryProvider(ABC):
     """Abstract base class for memory providers"""
 
     @abstractmethod
-    async def store(self, user_id: str, data: Dict[str, Any]) -> None:
+    async def store(self, user_id: str, data: dict[str, Any]) -> None:
         """Store data in memory"""
         pass
 
     @abstractmethod
-    async def retrieve(self, user_id: str, query: Optional[str] = None) -> List[Dict[str, Any]]:
+    async def retrieve(self, user_id: str, query: str | None = None) -> list[dict[str, Any]]:
         """Retrieve data from memory"""
         pass
 
@@ -83,14 +83,14 @@ class InMemoryProvider(MemoryProvider):
     """Simple in-memory storage provider"""
 
     def __init__(self):
-        self._storage: Dict[str, List[Dict[str, Any]]] = {}
+        self._storage: dict[str, list[dict[str, Any]]] = {}
 
-    async def store(self, user_id: str, data: Dict[str, Any]) -> None:
+    async def store(self, user_id: str, data: dict[str, Any]) -> None:
         if user_id not in self._storage:
             self._storage[user_id] = []
         self._storage[user_id].append(data)
 
-    async def retrieve(self, user_id: str, query: Optional[str] = None) -> List[Dict[str, Any]]:
+    async def retrieve(self, user_id: str, query: str | None = None) -> list[dict[str, Any]]:
         return self._storage.get(user_id, [])
 
     async def clear(self, user_id: str) -> None:
@@ -101,7 +101,7 @@ class InMemoryProvider(MemoryProvider):
 class Memory:
     """Memory interface for storing and retrieving conversation history and context"""
 
-    def __init__(self, provider: Union[str, MemoryProvider], user_id: str, **kwargs):
+    def __init__(self, provider: str | MemoryProvider, user_id: str, **kwargs):
         self.user_id = user_id
 
         if isinstance(provider, str):
@@ -112,12 +112,12 @@ class Memory:
         else:
             self.provider = provider
 
-    async def add(self, message: str, metadata: Optional[Dict[str, Any]] = None) -> None:
+    async def add(self, message: str, metadata: dict[str, Any] | None = None) -> None:
         """Add a message to memory"""
         data = {"message": message, "metadata": metadata or {}}
         await self.provider.store(self.user_id, data)
 
-    async def get(self, query: Optional[str] = None) -> List[Dict[str, Any]]:
+    async def get(self, query: str | None = None) -> list[dict[str, Any]]:
         """Get messages from memory"""
         return await self.provider.retrieve(self.user_id, query)
 
@@ -130,7 +130,7 @@ class AgentRunner(ABC):
     """Abstract base class for agent runners"""
 
     @abstractmethod
-    async def run(self, query: str, **kwargs) -> Dict[str, Any]:
+    async def run(self, query: str, **kwargs) -> dict[str, Any]:
         """Execute the agent with the given query"""
         pass
 
@@ -150,10 +150,10 @@ class SimpleRunner(AgentRunner):
 
                 self._client = openai.OpenAI(api_key=self.config.get("openai_api_key"))
             except ImportError:
-                raise ImportError("openai package not installed. Install with: pip install openai")
+                raise ImportError("openai package not installed. Install with: pip install openai") from None
         return self._client
 
-    async def run(self, query: str, **kwargs) -> Dict[str, Any]:
+    async def run(self, query: str, **kwargs) -> dict[str, Any]:
         """Execute with OpenAI (requires API key)"""
         client = self._get_client()
 
@@ -207,7 +207,7 @@ class SimpleRunner(AgentRunner):
 class Agent:
     """AI Agent interface for handling queries with memory and execution"""
 
-    def __init__(self, runner: Union[str, AgentRunner], memory: Optional[Memory] = None, **kwargs):
+    def __init__(self, runner: str | AgentRunner, memory: Memory | None = None, **kwargs):
         self.memory = memory
 
         if isinstance(runner, str):
@@ -218,7 +218,7 @@ class Agent:
         else:
             self.runner = runner
 
-    async def run(self, query: str, history: bool = False, **kwargs) -> Dict[str, Any]:
+    async def run(self, query: str, history: bool = False, **kwargs) -> dict[str, Any]:
         """Run the agent with the given query"""
         context = {}
 
@@ -276,7 +276,7 @@ def configure(**kwargs) -> AIConfig:
     return AIConfig(**kwargs)
 
 
-def agent(runner: str = "simple", memory: Optional[Memory] = None, config: Optional[AIConfig] = None, **kwargs) -> Agent:
+def agent(runner: str = "simple", memory: Memory | None = None, config: AIConfig | None = None, **kwargs) -> Agent:
     """
     Create an agent instance with the specified runner
 

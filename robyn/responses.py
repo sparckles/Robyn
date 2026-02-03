@@ -1,7 +1,7 @@
 import asyncio
 import mimetypes
 import os
-from typing import AsyncGenerator, Generator, Optional, Union
+from collections.abc import AsyncGenerator, AsyncIterator, Generator
 
 from robyn.robyn import Headers, Response
 
@@ -10,8 +10,8 @@ class FileResponse:
     def __init__(
         self,
         file_path: str,
-        status_code: Optional[int] = None,
-        headers: Optional[Headers] = None,
+        status_code: int | None = None,
+        headers: Headers | None = None,
     ):
         self.file_path = file_path
         self.description = ""
@@ -42,7 +42,7 @@ def serve_html(file_path: str) -> FileResponse:
     return FileResponse(file_path, headers=Headers({"Content-Type": "text/html"}))
 
 
-def serve_file(file_path: str, file_name: Optional[str] = None) -> FileResponse:
+def serve_file(file_path: str, file_name: str | None = None) -> FileResponse:
     """
     This function will help in serving a file
 
@@ -67,8 +67,8 @@ class AsyncGeneratorWrapper:
 
     def __init__(self, async_gen: AsyncGenerator[str, None]):
         self.async_gen = async_gen
-        self._loop = None
-        self._iterator = None
+        self._loop: asyncio.AbstractEventLoop | None = None
+        self._iterator: AsyncIterator[str] | None = None
         self._exhausted = False
 
     def __iter__(self):
@@ -105,33 +105,37 @@ class AsyncGeneratorWrapper:
 
     def _get_next_value(self):
         """Get the next value from async generator without buffering"""
+        assert self._iterator is not None
+        assert self._loop is not None
+        iterator = self._iterator
+        loop = self._loop
         try:
             # Create a coroutine to get the next value
             async def get_next():
-                return await self._iterator.__anext__()
+                return await iterator.__anext__()
 
             # Run the coroutine to get the next value
-            return self._loop.run_until_complete(get_next())
+            return loop.run_until_complete(get_next())
         except StopAsyncIteration:
             # Convert StopAsyncIteration to StopIteration for sync generator protocol
-            raise StopIteration
+            raise StopIteration from None
         except Exception as e:
             # Log error and stop iteration
             print(f"Error in async generator: {e}")
-            raise StopIteration
+            raise StopIteration from e
 
 
 class StreamingResponse:
     def __init__(
         self,
-        content: Union[Generator[str, None, None], AsyncGenerator[str, None]],
-        status_code: Optional[int] = None,
-        headers: Optional[Headers] = None,
+        content: Generator[str, None, None] | AsyncGenerator[str, None],
+        status_code: int | None = None,
+        headers: Headers | None = None,
         media_type: str = "text/event-stream",
     ):
         # Convert async generator to sync generator if needed
         # The Rust implementation detects async generators but falls back to Python wrapper
-        if hasattr(content, "__anext__"):
+        if isinstance(content, AsyncGenerator):
             # This is an async generator - wrap it with optimized wrapper
             self.content = AsyncGeneratorWrapper(content)
         else:
@@ -151,9 +155,9 @@ class StreamingResponse:
 
 
 def SSEResponse(
-    content: Union[Generator[str, None, None], AsyncGenerator[str, None]],
-    status_code: Optional[int] = None,
-    headers: Optional[Headers] = None,
+    content: Generator[str, None, None] | AsyncGenerator[str, None],
+    status_code: int | None = None,
+    headers: Headers | None = None,
 ) -> StreamingResponse:
     """
     Create a Server-Sent Events (SSE) streaming response.
@@ -166,7 +170,7 @@ def SSEResponse(
     return StreamingResponse(content=content, status_code=status_code, headers=headers, media_type="text/event-stream")
 
 
-def SSEMessage(data: str, event: Optional[str] = None, id: Optional[str] = None, retry: Optional[int] = None) -> str:
+def SSEMessage(data: str, event: str | None = None, id: str | None = None, retry: int | None = None) -> str:
     """
     Optimized SSE message formatting with minimal allocations.
 

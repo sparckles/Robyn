@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import inspect
-from typing import TYPE_CHECKING, Callable
+from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from robyn.argument_parser import Config
 from robyn.dependency_injection import DependencyMap
@@ -19,12 +20,18 @@ class WebSocket:
     # should this be websocket router?
     """This is the python wrapper for the web socket that will be used here."""
 
-    def __init__(self, robyn_object: "Robyn", endpoint: str, config: Config = Config(), dependencies: DependencyMap = DependencyMap()) -> None:
+    def __init__(
+        self,
+        robyn_object: Robyn,
+        endpoint: str,
+        config: Config | None = None,
+        dependencies: DependencyMap | None = None,
+    ) -> None:
         self.robyn_object = robyn_object
         self.endpoint = endpoint
         self.methods: dict = {}
-        self.config = config
-        self.dependencies = dependencies
+        self.config = Config() if config is None else config
+        self.dependencies = DependencyMap() if dependencies is None else dependencies
 
     def on(self, type: str) -> Callable[..., None]:
         def inner(handler):

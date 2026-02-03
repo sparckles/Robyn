@@ -1,11 +1,13 @@
 import inspect
 import json
+import types
 import typing
+from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from importlib import resources
 from inspect import Signature
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, TypedDict
+from typing import Any, Protocol, TypeAlias, TypedDict, get_args, get_origin
 
 from robyn.responses import html
 from robyn.robyn import QueryParams, Response
@@ -15,6 +17,15 @@ from robyn.types import Body
 class str_typed_dict(TypedDict):
     key: str
     value: str
+
+
+class _HasAnnotations(Protocol):
+    __annotations__: dict[str, Any]
+
+
+OpenAPIQueryParams: TypeAlias = type[QueryParams] | _HasAnnotations | None
+OpenAPIRequestBody: TypeAlias = type[Body] | _HasAnnotations | None
+OpenAPIReturnType: TypeAlias = Any | None
 
 
 @dataclass
@@ -28,9 +39,9 @@ class Contact:
     @param email: Optional[str] The email address of the contact person/organization. This MUST be in the form of an email address.
     """
 
-    name: Optional[str] = None
-    url: Optional[str] = None
-    email: Optional[str] = None
+    name: str | None = None
+    url: str | None = None
+    email: str | None = None
 
 
 @dataclass
@@ -43,8 +54,8 @@ class License:
     @param url: Optional[str] A URL to the license used for the API. This MUST be in the form of a URL.
     """
 
-    name: Optional[str] = None
-    url: Optional[str] = None
+    name: str | None = None
+    url: str | None = None
 
 
 @dataclass
@@ -61,7 +72,7 @@ class Server:
     """
 
     url: str
-    description: Optional[str] = None
+    description: str | None = None
 
 
 @dataclass
@@ -74,8 +85,8 @@ class ExternalDocumentation:
     @param url: Optional[str] The URL for the target documentation.
     """
 
-    description: Optional[str] = None
-    url: Optional[str] = None
+    description: str | None = None
+    url: str | None = None
 
 
 @dataclass
@@ -84,26 +95,26 @@ class Components:
     Additional external documentation for this operation.
     (https://swagger.io/specification/#components-object)
 
-    @param schemas: Optional[Dict[str, Dict]] An object to hold reusable Schema Objects.
-    @param responses: Optional[Dict[str, Dict]] An object to hold reusable Response Objects.
-    @param parameters: Optional[Dict[str, Dict]] An object to hold reusable Parameter Objects.
-    @param examples: Optional[Dict[str, Dict]] An object to hold reusable Example Objects.
-    @param requestBodies: Optional[Dict[str, Dict]] An object to hold reusable Request Body Objects.
-    @param securitySchemes: Optional[Dict[str, Dict]] An object to hold reusable Security Scheme Objects.
-    @param links: Optional[Dict[str, Dict]] An object to hold reusable Link Objects.
-    @param callbacks: Optional[Dict[str, Dict]] An object to hold reusable Callback Objects.
-    @param pathItems: Optional[Dict[str, Dict]] An object to hold reusable Callback Objects.
+    @param schemas: Dict[str, Dict] An object to hold reusable Schema Objects.
+    @param responses: Dict[str, Dict] An object to hold reusable Response Objects.
+    @param parameters: Dict[str, Dict] An object to hold reusable Parameter Objects.
+    @param examples: Dict[str, Dict] An object to hold reusable Example Objects.
+    @param requestBodies: Dict[str, Dict] An object to hold reusable Request Body Objects.
+    @param securitySchemes: Dict[str, Dict] An object to hold reusable Security Scheme Objects.
+    @param links: Dict[str, Dict] An object to hold reusable Link Objects.
+    @param callbacks: Dict[str, Dict] An object to hold reusable Callback Objects.
+    @param pathItems: Dict[str, Dict] An object to hold reusable Callback Objects.
     """
 
-    schemas: Optional[Dict[str, Dict]] = field(default_factory=dict)
-    responses: Optional[Dict[str, Dict]] = field(default_factory=dict)
-    parameters: Optional[Dict[str, Dict]] = field(default_factory=dict)
-    examples: Optional[Dict[str, Dict]] = field(default_factory=dict)
-    requestBodies: Optional[Dict[str, Dict]] = field(default_factory=dict)
-    securitySchemes: Optional[Dict[str, Dict]] = field(default_factory=dict)
-    links: Optional[Dict[str, Dict]] = field(default_factory=dict)
-    callbacks: Optional[Dict[str, Dict]] = field(default_factory=dict)
-    pathItems: Optional[Dict[str, Dict]] = field(default_factory=dict)
+    schemas: dict[str, dict] = field(default_factory=dict)
+    responses: dict[str, dict] = field(default_factory=dict)
+    parameters: dict[str, dict] = field(default_factory=dict)
+    examples: dict[str, dict] = field(default_factory=dict)
+    requestBodies: dict[str, dict] = field(default_factory=dict)
+    securitySchemes: dict[str, dict] = field(default_factory=dict)
+    links: dict[str, dict] = field(default_factory=dict)
+    callbacks: dict[str, dict] = field(default_factory=dict)
+    pathItems: dict[str, dict] = field(default_factory=dict)
 
 
 @dataclass
@@ -125,12 +136,12 @@ class OpenAPIInfo:
 
     title: str = "Robyn API"
     version: str = "1.0.0"
-    description: Optional[str] = None
-    termsOfService: Optional[str] = None
+    description: str | None = None
+    termsOfService: str | None = None
     contact: Contact = field(default_factory=Contact)
     license: License = field(default_factory=License)
-    servers: List[Server] = field(default_factory=list)
-    externalDocs: Optional[ExternalDocumentation] = field(default_factory=ExternalDocumentation)
+    servers: list[Server] = field(default_factory=list)
+    externalDocs: ExternalDocumentation | None = field(default_factory=ExternalDocumentation)
     components: Components = field(default_factory=Components)
 
 
@@ -160,10 +171,10 @@ class OpenAPI:
             "paths": {},
             "components": asdict(self.info.components),
             "servers": [asdict(server) for server in self.info.servers],
-            "externalDocs": asdict(self.info.externalDocs) if self.info.externalDocs.url else None,
+            "externalDocs": (asdict(self.info.externalDocs) if self.info.externalDocs is not None and self.info.externalDocs.url else None),
         }
 
-    def add_openapi_path_obj(self, route_type: str, endpoint: str, openapi_name: str, openapi_tags: List[str], handler: Callable):
+    def add_openapi_path_obj(self, route_type: str, endpoint: str, openapi_name: str, openapi_tags: list[str], handler: Callable):
         """
         Adds the given path to openapi spec
 
@@ -240,11 +251,11 @@ class OpenAPI:
         endpoint: str,
         name: str,
         description: str,
-        tags: List[str],
-        query_params: Optional[str_typed_dict],
-        request_body: Optional[str_typed_dict],
-        return_annotation: Optional[str_typed_dict],
-    ) -> Tuple[str, dict]:
+        tags: list[str],
+        query_params: OpenAPIQueryParams,
+        request_body: OpenAPIRequestBody,
+        return_annotation: OpenAPIReturnType,
+    ) -> tuple[str, dict]:
         """
         Get the "path" openapi object according to spec
 
@@ -252,9 +263,9 @@ class OpenAPI:
         @param name: str the name of the endpoint
         @param description: Optional[str] short description of the endpoint (to be fetched from the endpoint definition by default)
         @param tags: List[str] for grouping of endpoints
-        @param query_params: Optional[TypedDict] query params for the function
-        @param request_body: Optional[TypedDict] request body for the function
-        @param return_annotation: Optional[TypedDict] return type of the endpoint handler
+        @param query_params: Optional query params type for the function
+        @param request_body: Optional request body type for the function
+        @param return_annotation: Optional return type of the endpoint handler
 
         @return: (str, dict) a tuple containing the endpoint with path params wrapped in braces and the "path" openapi object
         according to spec
@@ -394,19 +405,26 @@ class OpenAPI:
                 properties["type"] = type_mapping[type_name]
                 return properties
 
-        # Check if it's a generic type (like List[Object])
-        if hasattr(param_type, "__origin__"):
-            if param_type.__origin__ is list or param_type.__origin__ is List:
-                properties["type"] = "array"
-                # Handle the element type in the list
-                if hasattr(param_type, "__args__") and param_type.__args__:
-                    item_type = param_type.__args__[0]
-                    properties["items"] = self.get_schema_object(f"{parameter}_item", item_type)
-                return properties
+        origin = get_origin(param_type)
+        args = get_args(param_type)
 
-        # check for Optional type
-        if param_type.__module__ == "typing":
-            properties["anyOf"] = [{"type": self.get_openapi_type(param_type.__args__[0])}, {"type": "null"}]
+        # Check if it's a generic type (like list[Object])
+        if origin is list:
+            properties["type"] = "array"
+            if args:
+                item_type = args[0]
+                properties["items"] = self.get_schema_object(f"{parameter}_item", item_type)
+            return properties
+
+        # check for Optional/Union types
+        if origin in (typing.Union, types.UnionType):
+            any_of: list[dict] = []
+            for arg in args:
+                if arg is type(None):
+                    any_of.append({"type": "null"})
+                else:
+                    any_of.append(self.get_schema_object(parameter, arg))
+            properties["anyOf"] = any_of
             return properties
         # check for custom classes and TypedDicts
         elif inspect.isclass(param_type):

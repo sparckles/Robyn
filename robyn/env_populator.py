@@ -12,7 +12,7 @@ def parser(config_path=None, project_root=""):
         config_path = Path(project_root) / "robyn.env"
 
     if config_path.exists():
-        with open(config_path, "r") as f:
+        with open(config_path) as f:
             for line in f:
                 if line.startswith("#"):
                     continue

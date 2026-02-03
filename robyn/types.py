@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, NewType, Optional, TypedDict
+from typing import NewType, TypeAlias, TypedDict
 
 
 @dataclass
@@ -7,7 +7,7 @@ class Directory:
     route: str
     directory_path: str
     show_files_listing: bool
-    index_file: Optional[str]
+    index_file: str | None = None
 
     def as_list(self):
         return [
@@ -18,11 +18,11 @@ class Directory:
         ]
 
 
-PathParams = NewType("PathParams", Dict[str, str])
+PathParams: TypeAlias = dict[str, str]
 Method = NewType("Method", str)
-FormData = NewType("FormData", Dict[str, str])
-Files = NewType("Files", Dict[str, bytes])
-IPAddress = NewType("IPAddress", Optional[str])
+FormData: TypeAlias = dict[str, str]
+Files: TypeAlias = dict[str, bytes]
+IPAddress: TypeAlias = str | None
 
 
 class JSONResponse(TypedDict):
