@@ -418,7 +418,13 @@ class OpenAPI:
 
         # check for Optional/Union types
         if origin in (typing.Union, types.UnionType):
-            properties["anyOf"] = [{"type": "null"} if arg is type(None) else {"type": self.get_openapi_type(arg)} for arg in args]
+            any_of: list[dict] = []
+            for arg in args:
+                if arg is type(None):
+                    any_of.append({"type": "null"})
+                else:
+                    any_of.append(self.get_schema_object(parameter, arg))
+            properties["anyOf"] = any_of
             return properties
         # check for custom classes and TypedDicts
         elif inspect.isclass(param_type):
