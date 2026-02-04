@@ -72,7 +72,7 @@ class Router(BaseRouter):
 
     def _format_response(
         self,
-        res: Union[Dict, Response, StreamingResponse, bytes, tuple, str],
+        res: Union[Dict, List, Response, StreamingResponse, bytes, tuple, str],
     ) -> Union[Response, StreamingResponse]:
         if isinstance(res, Response):
             return res
@@ -80,7 +80,7 @@ class Router(BaseRouter):
         if isinstance(res, StreamingResponse):
             return res
 
-        if isinstance(res, dict):
+        if isinstance(res, (dict, list)):
             return Response(
                 status_code=status_codes.HTTP_200_OK,
                 headers=Headers({"Content-Type": "application/json"}),
