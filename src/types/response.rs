@@ -315,11 +315,6 @@ impl PyStreamingResponse {
                 headers.set("Content-Type".to_string(), "text/event-stream".to_string());
                 headers.set("Cache-Control".to_string(), "no-cache".to_string());
                 headers.set("Connection".to_string(), "keep-alive".to_string());
-                headers.set("Access-Control-Allow-Origin".to_string(), "*".to_string());
-                headers.set(
-                    "Access-Control-Allow-Headers".to_string(),
-                    "Cache-Control".to_string(),
-                );
             } else {
                 // For non-SSE streaming responses, still set appropriate headers
                 headers.set("Content-Type".to_string(), media_type.clone());
@@ -563,21 +558,6 @@ impl FromPyObject<'_, '_> for StreamingResponse {
             }
             if headers.get("Connection".to_string()).is_none() {
                 headers.set("Connection".to_string(), "keep-alive".to_string());
-            }
-            if headers
-                .get("Access-Control-Allow-Origin".to_string())
-                .is_none()
-            {
-                headers.set("Access-Control-Allow-Origin".to_string(), "*".to_string());
-            }
-            if headers
-                .get("Access-Control-Allow-Headers".to_string())
-                .is_none()
-            {
-                headers.set(
-                    "Access-Control-Allow-Headers".to_string(),
-                    "Cache-Control".to_string(),
-                );
             }
         }
 
