@@ -376,6 +376,60 @@ async def async_json_get():
     return jsonify({"async json get": "json"})
 
 
+# JSON List (auto-serialized without explicit jsonify)
+
+
+@app.get("/sync/json/list")
+def sync_json_list_get():
+    return [
+        {"id": 1, "title": "First Post", "published": True},
+        {"id": 2, "title": "Draft Post", "published": False},
+        {"id": 3, "title": "Latest Post", "published": True},
+    ]
+
+
+@app.get("/async/json/list")
+async def async_json_list_get():
+    return [
+        {"id": 1, "title": "First Post", "published": True},
+        {"id": 2, "title": "Draft Post", "published": False},
+        {"id": 3, "title": "Latest Post", "published": True},
+    ]
+
+
+@app.get("/sync/json/list/empty")
+def sync_json_list_empty_get():
+    return []
+
+
+@app.get("/async/json/list/empty")
+async def async_json_list_empty_get():
+    return []
+
+
+@app.get("/sync/json/list/primitives")
+def sync_json_list_primitives_get():
+    return [1, 2, 3, "four", True, None]
+
+
+@app.get("/async/json/list/primitives")
+async def async_json_list_primitives_get():
+    return [1, 2, 3, "four", True, None]
+
+
+# JSON Dict (auto-serialized without explicit jsonify)
+
+
+@app.get("/sync/json/dict")
+def sync_json_dict_get():
+    return {"message": "sync dict", "count": 42, "active": True}
+
+
+@app.get("/async/json/dict")
+async def async_json_dict_get():
+    return {"message": "async dict", "count": 42, "active": True}
+
+
 @app.get("/sync/json/const", const=True)
 def sync_json_const_get():
     return jsonify({"sync json const get": "json"})

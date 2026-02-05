@@ -1,13 +1,15 @@
+from typing import Any, Dict, List, Union
+
 import orjson
 
 
-def jsonify(input_dict: dict) -> str:
+def jsonify(data: Union[Dict[str, Any], List[Any]]) -> str:
     """
-    This function serializes input dict to a json string
+    This function serializes input data to a json string
 
     Attributes:
-        input_dict dict: response of the function
+        data: dict or list to serialize as JSON response
     """
-    output_binary = orjson.dumps(input_dict)
+    output_binary = orjson.dumps(data)
     output_str = output_binary.decode("utf-8")
     return output_str
