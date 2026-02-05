@@ -384,7 +384,7 @@ The parameter injection system works in two phases:
 
 <Row>
   <Col>
-    Apply middleware to entire SubRouter groups for common functionality like authentication.
+    Configure authentication handlers on SubRouters and apply authentication to routes using `auth_required=True`.
   </Col>
   <Col sticky>
     <CodeGroup title="SubRouter Middleware">
@@ -399,23 +399,26 @@ The parameter injection system works in two phases:
         def authenticate(self, request):
             auth_header = request.headers.get("authorization", "")
             if not auth_header.startswith("Bearer "):
-                return False
+                return None
             
             token = auth_header[7:]  # Remove "Bearer "
             return self.validate_admin_token(token)
         
         def validate_admin_token(self, token):
             # Your token validation logic
-            return token == "admin-secret-token"
+            if token == "admin-secret-token":
+                return {"user": "admin"}  # Return identity object
+            return None
     
-    # Apply authentication to all admin routes
-    admin.add_auth_handler(AdminAuth())
+    # Configure the authentication handler for this SubRouter
+    admin.configure_authentication(AdminAuth())
     
-    @admin.get("/users")
+    # Routes must explicitly require authentication with auth_required=True
+    @admin.get("/users", auth_required=True)
     def admin_users():
         return {"admin_users": ["user1", "user2"]}
     
-    @admin.delete("/users/:id")
+    @admin.delete("/users/:id", auth_required=True)
     def delete_user(path_params):
         return {"deleted": path_params["id"]}
     ```
