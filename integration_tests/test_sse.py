@@ -17,7 +17,6 @@ def test_sse_basic_headers(session):
     # Accept either clean optimized headers or legacy compatibility
     cache_control = response.headers.get("Cache-Control")
     assert cache_control in ["no-cache, no-store, must-revalidate", "no-cache, no-cache, no-store, must-revalidate"]
-    assert "Access-Control-Allow-Origin" in response.headers
 
 
 @pytest.mark.benchmark
@@ -196,12 +195,16 @@ def test_sse_empty_stream(session):
 
 @pytest.mark.benchmark
 def test_sse_custom_headers(session):
-    """Test SSE endpoint with custom headers"""
+    """Test SSE endpoint with custom headers; SSE responses should not include default CORS headers for cross-origin EventSource support"""
     response = requests.get(f"{BASE_URL}/sse/with_headers", stream=True)
 
     assert response.status_code == 200
     assert response.headers.get("X-Custom-Header") == "custom-value"
     assert response.headers.get("Content-Type") == "text/event-stream"
+
+    # SSE responses should not include default CORS headers
+    assert response.headers.get("Access-Control-Allow-Origin") is None
+    assert response.headers.get("Access-Control-Allow-Headers") is None
 
 
 @pytest.mark.benchmark
@@ -409,7 +412,6 @@ def test_sse_optimization_headers(session):
     assert response.headers.get("Pragma") == "no-cache"
     assert response.headers.get("Expires") == "0"
     assert response.headers.get("X-Accel-Buffering") == "no"  # Nginx buffering disabled
-    assert response.headers.get("Access-Control-Allow-Origin") == "*"
     # Connection header might be managed by underlying HTTP infrastructure
     connection = response.headers.get("Connection")
     assert connection is None or connection == "keep-alive"
