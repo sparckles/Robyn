@@ -193,10 +193,15 @@ impl Server {
                         .app_data(web::Data::new(excluded_response_headers_paths.clone()));
 
                     let web_socket_map = web_socket_router.get_web_socket_map();
+                    let channel_flags = web_socket_router.get_channel_flags();
                     for (elem, value) in (web_socket_map.read()).iter() {
                         let endpoint = elem.clone();
                         let path_params = value.clone();
                         let endpoint_for_closure = endpoint.clone();
+                        let use_channel = *channel_flags
+                            .read()
+                            .get(&endpoint)
+                            .unwrap_or(&false);
                         app = app.route(
                             &endpoint,
                             web::get().to(move |stream: web::Payload, req: HttpRequest| {
@@ -209,6 +214,7 @@ impl Server {
                                     path_params.clone(),
                                     task_locals,
                                     endpoint_copy.to_string(),
+                                    use_channel,
                                 )
                             }),
                         );
@@ -443,9 +449,10 @@ impl Server {
         connect_route: FunctionInfo,
         close_route: FunctionInfo,
         message_route: FunctionInfo,
+        use_channel: bool,
     ) {
         self.websocket_router
-            .add_websocket_route(route, connect_route, close_route, message_route);
+            .add_websocket_route(route, connect_route, close_route, message_route, use_channel);
     }
 
     /// Add a new startup handler
