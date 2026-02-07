@@ -281,7 +281,7 @@ class OpenAPI:
         if path_param_names:
             # Convert param syntax to OpenAPI's {param} syntax
             # \w+ matches word characters (letters, digits, underscores) and does not match '/',
-# so each :param is captured individually without swallowing intervening path segments.
+            # so each :param is captured individually without swallowing intervening path segments.
             endpoint_with_path_params_wrapped_in_braces = re.sub(r":(\w+)", r"{\1}", endpoint)
 
             for name in path_param_names:
