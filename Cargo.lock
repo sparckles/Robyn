@@ -1523,6 +1523,7 @@ dependencies = [
  "actix-web",
  "actix-web-actors",
  "anyhow",
+ "crossbeam-channel",
  "dashmap",
  "futures",
  "futures-util",
