@@ -499,6 +499,7 @@ class Server:
         connect_route: FunctionInfo,
         close_route: FunctionInfo,
         message_route: FunctionInfo,
+        use_channel: bool,
     ) -> None:
         pass
     def start(self, socket: SocketHeld, workers: int, client_timeout: int, keep_alive_timeout: int) -> None:
