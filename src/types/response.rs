@@ -185,7 +185,6 @@ fn create_python_stream(
 }
 
 impl Response {
-    /// Returns default headers with Content-Type: text/plain for error responses.
     fn default_text_headers() -> Headers {
         let mut headers = Headers::new(None);
         headers.set("Content-Type".to_string(), "text/plain".to_string());
