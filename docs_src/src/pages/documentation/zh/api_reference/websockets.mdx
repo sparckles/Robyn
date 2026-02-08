@@ -9,31 +9,51 @@ export const description =
 
 "SSE 很适合向我的仪表板推送更新，"蝙蝠侠想道，"但我需要双向通信来与我的盟友协调！"
 
-为了实现双向实时通信，蝙蝠侠学习了如何使用 WebSocket。他创建了一个 WebSocket 类，并将其集成到他的 Robyn 应用中：
+为了实现双向实时通信，蝙蝠侠学习了如何使用 Robyn 的现代装饰器 API 处理 WebSocket。底层消息通过 Rust 通道传递，实现最大性能——消息分发过程中无需 Python GIL。
 </Col>
   <Col sticky>
 
-    <CodeGroup title="Request" tag="GET" label="/hello_world">
+    <CodeGroup title="Request" tag="WebSocket" label="/web_socket">
 
+<<<<<<< HEAD
     ```python
     from robyn import Robyn, jsonify, WebSocket
+=======
+    ```python {{ title: '基础回声' }}
+    from robyn import Robyn, WebSocketDisconnect
 
     app = Robyn(__file__)
-    websocket = WebSocket(app, "/web_socket")
 
-    @websocket.on("message")
-    def connect():
-        return "Hello world, from ws"
+    @app.websocket("/web_socket")
+    async def handler(websocket):
+        while True:
+            msg = await websocket.receive_text()
+            await websocket.send_text(f"Echo: {msg}")
 
-    @websocket.on("close")
-    def close():
-        return "Goodbye world, from ws"
+    app.start()
+    ```
 
-    @websocket.on("connect")
-    def message():
-        return "Connected to ws"
+    ```python {{ title: '带回调' }}
+    from robyn import Robyn, WebSocketDisconnect
+>>>>>>> ce7d0f4 (add docs and tests)
 
+    app = Robyn(__file__)
 
+    @app.websocket("/web_socket")
+    async def handler(websocket):
+        while True:
+            msg = await websocket.receive_text()
+            await websocket.send_text(f"Echo: {msg}")
+
+    @handler.on_connect
+    def on_connect(websocket):
+        return "已连接到 ws"
+
+    @handler.on_close
+    def on_close(websocket):
+        return "再见，来自 ws"
+
+    app.start()
     ```
     </CodeGroup>
 
@@ -42,26 +62,231 @@ export const description =
 
 ---
 
-## 可选返回值 {{ tag: '可选返回值', label: '可选返回值' }}
+## 接收消息 {{ tag: 'receive_text', label: 'receive_text' }}
 
 <Row>
   <Col>
-    蝙蝠侠发现 WebSocket 处理程序并不总是需要返回值。有时，他只是想处理消息或执行某个操作，而不需要向客户端发送响应。
+    `receive_text()` 方法会阻塞直到下一条消息到达。它由 Rust 的 `tokio::mpsc` 通道支持，因此 Python 处理程序在等待时不会持有 GIL。
 
-    "并非每条消息都需要回复，"蝙蝠侠意识到，"有时我只需要记录数据或触发某个操作。"
-
-    WebSocket 处理程序（`connect`、`message` 和 `close`）可以选择性地返回字符串。如果不返回值（或返回 `None`），则不会向客户端发送任何消息。
+    当客户端断开连接时，`receive_text()` 会抛出 `WebSocketDisconnect` 异常。您可以显式捕获它，也可以让内部包装器静默处理。
   </Col>
   <Col sticky>
-    <CodeGroup title="可选返回值" tag="WebSocket" label="/web_socket">
+    <CodeGroup title="接收消息" tag="WebSocket" label="/web_socket">
 
+<<<<<<< HEAD
       ```python
       from robyn import Robyn, WebSocket, WebSocketConnector
+=======
+      ```python {{ title: '文本消息' }}
+      @app.websocket("/ws")
+      async def handler(websocket):
+          try:
+              while True:
+                  msg = await websocket.receive_text()
+                  await websocket.send_text(f"收到: {msg}")
+          except WebSocketDisconnect:
+              print(f"客户端 {websocket.id} 已断开")
+      ```
+
+      ```python {{ title: 'JSON 消息' }}
+      @app.websocket("/api")
+      async def handler(websocket):
+          while True:
+              data = await websocket.receive_json()
+              result = process(data)
+              await websocket.send_json({"status": "ok", "result": result})
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+
+## 发送消息 {{ tag: 'send_text', label: 'send_text' }}
+
+<Row>
+  <Col>
+    使用 `send_text()` 或 `send_json()` 向当前客户端发送消息。所有发送方法都是异步的。
+  </Col>
+  <Col sticky>
+    <CodeGroup title="发送消息" tag="WebSocket" label="/web_socket">
+
+      ```python {{ title: '发送文本' }}
+      @app.websocket("/ws")
+      async def handler(websocket):
+          while True:
+              msg = await websocket.receive_text()
+              await websocket.send_text(f"Echo: {msg}")
+      ```
+
+      ```python {{ title: '发送 JSON' }}
+      @app.websocket("/ws")
+      async def handler(websocket):
+          while True:
+              data = await websocket.receive_json()
+              await websocket.send_json({"echo": data})
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+
+## 广播 {{ tag: 'broadcast', label: 'broadcast' }}
+
+<Row>
+  <Col>
+    使用 `broadcast()` 方法向同一 WebSocket 端点上的所有已连接客户端发送消息。
+  </Col>
+  <Col sticky>
+    <CodeGroup title="广播" tag="WebSocket" label="/chat">
+
+      ```python {{ title: '广播' }}
+      @app.websocket("/chat")
+      async def handler(websocket):
+          while True:
+              msg = await websocket.receive_text()
+              # 向所有已连接的客户端发送
+              await websocket.broadcast(f"用户 {websocket.id}: {msg}")
+              # 仅向当前客户端发送确认
+              await websocket.send_text("您的消息已发送")
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+
+## 查询参数 {{ tag: 'query_params', label: 'query_params' }}
+
+<Row>
+  <Col>
+    通过 `websocket.query_params` 访问 WebSocket 连接 URL 中的查询参数。
+  </Col>
+  <Col sticky>
+    <CodeGroup title="查询参数" tag="WebSocket" label="/ws?name=gordon&role=commissioner">
+
+      ```python {{ title: '查询参数' }}
+      @app.websocket("/ws")
+      async def handler(websocket):
+          name = websocket.query_params.get("name")
+          role = websocket.query_params.get("role")
+
+          if name == "gordon" and role == "commissioner":
+              await websocket.broadcast("戈登已授权！")
+
+          while True:
+              msg = await websocket.receive_text()
+              await websocket.send_text(f"你好 {name}: {msg}")
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+
+## 关闭连接 {{ tag: 'close', label: 'close' }}
+
+<Row>
+  <Col>
+    使用 `websocket.close()` 从服务端关闭 WebSocket 连接。该方法将：
+1. 关闭 WebSocket 连接。
+2. 从 WebSocket 注册表中移除客户端。
+3. 使任何挂起的 `receive_text()` 抛出 `WebSocketDisconnect` 异常。
+  </Col>
+  <Col sticky>
+    <CodeGroup title="关闭连接" tag="WebSocket" label="/ws">
+
+      ```python {{ title: '服务端关闭' }}
+      @app.websocket("/ws")
+      async def handler(websocket):
+          while True:
+              msg = await websocket.receive_text()
+              if msg == "quit":
+                  await websocket.close()
+                  break
+              await websocket.send_text(f"收到: {msg}")
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+
+## 连接和关闭回调 {{ tag: '回调', label: '回调' }}
+
+<Row>
+  <Col>
+    您可以为 WebSocket 处理程序附加可选的 `on_connect` 和 `on_close` 回调。它们是处理函数本身的装饰器。
+
+    - `on_connect` 在新客户端连接时调用。其返回值作为第一条消息发送给客户端。
+    - `on_close` 在连接关闭时调用。其返回值作为最后一条消息发送给客户端。
+
+    两个回调都接收一个 `websocket` 对象，可以访问 `id` 和 `query_params`。两者都是可选的。
+  </Col>
+  <Col sticky>
+    <CodeGroup title="回调" tag="WebSocket" label="/chat">
+
+      ```python {{ title: '回调' }}
+      @app.websocket("/chat")
+      async def chat(websocket):
+          while True:
+              msg = await websocket.receive_text()
+              await websocket.broadcast(msg)
+
+      @chat.on_connect
+      def on_connect(websocket):
+          return f"欢迎，{websocket.id}！"
+
+      @chat.on_close
+      def on_close(websocket):
+          return "再见！"
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+
+## WebSocket API 参考 {{ tag: 'API', label: 'API' }}
+
+<Row>
+  <Col>
+    传递给处理程序的 `websocket` 对象提供以下方法和属性：
+
+    | 方法 / 属性 | 描述 |
+    |---|---|
+    | `await websocket.receive_text()` | 阻塞直到下一条消息；连接关闭时抛出 `WebSocketDisconnect` |
+    | `await websocket.receive_json()` | 同上，但返回 JSON 解码后的数据 |
+    | `await websocket.send_text(data)` | 向当前客户端发送文本 |
+    | `await websocket.send_json(data)` | 向当前客户端发送 JSON |
+    | `await websocket.broadcast(data)` | 向此端点的所有客户端广播 |
+    | `await websocket.close()` | 从服务端关闭连接 |
+    | `websocket.id` | 连接 UUID 字符串 |
+    | `websocket.query_params` | 连接 URL 中的查询参数 |
+  </Col>
+</Row>
+
+---
+
+## 旧版 API {{ tag: '旧版', label: '旧版' }}
+
+<Row>
+  <Col>
+    旧版基于事件的 WebSocket API 仍然支持向后兼容。如果您有使用 `WebSocket(app, "/ws")` 和 `@websocket.on("message")` 的现有代码，它将继续正常工作。
+  </Col>
+  <Col sticky>
+    <CodeGroup title="旧版 API" tag="WebSocket" label="/web_socket">
+
+      ```python {{ title: '旧版风格' }}
+      from robyn import Robyn, WebSocket
+>>>>>>> ce7d0f4 (add docs and tests)
 
       app = Robyn(__file__)
       websocket = WebSocket(app, "/web_socket")
 
       @websocket.on("connect")
+<<<<<<< HEAD
       async def connect() -> None:
           # 无需返回 - 仅记录连接
           print("客户端已连接")
@@ -77,11 +302,24 @@ export const description =
           # 显式返回 None - 不发送消息
           cleanup_resources()
           return None
+=======
+      def connect():
+          return "Hello world, from ws"
+
+      @websocket.on("message")
+      def message(ws, msg):
+          return f"Echo: {msg}"
+
+      @websocket.on("close")
+      def close():
+          return "Goodbye world, from ws"
+>>>>>>> ce7d0f4 (add docs and tests)
       ```
     </CodeGroup>
   </Col>
 </Row>
 
+<<<<<<< HEAD
 <Row>
 
   <Col>
@@ -218,6 +456,8 @@ export const description =
   </Col>
 </Row>
 
+=======
+>>>>>>> ce7d0f4 (add docs and tests)
 ---
 
 ## 下一步

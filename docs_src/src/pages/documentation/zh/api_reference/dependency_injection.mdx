@@ -69,6 +69,44 @@ Robyn 提供了两种依赖注入方式：
   </Col>
 </Row>
 
+### WebSocket 依赖注入
+
+<Row>
+<Col>
+WebSocket 支持与 HTTP 路由相同的依赖注入系统。`global_dependencies` 和 `router_dependencies` 参数可以在主处理程序、`on_connect` 和 `on_close` 回调中使用。
+</Col>
+  <Col>
+    <CodeGroup title="WebSocket DI" tag="WebSocket" label="/chat">
+    ```python {{ title: 'WebSocket 依赖注入' }}
+      from robyn import Robyn
+      import logging
+
+      app = Robyn(__file__)
+
+      app.inject_global(logger=logging.getLogger(__name__))
+      app.inject(cache=RedisCache())
+
+      @app.websocket("/chat")
+      async def chat(websocket, global_dependencies=None, router_dependencies=None):
+          logger = global_dependencies.get("logger")
+          cache = router_dependencies.get("cache")
+          logger.info(f"新连接: {websocket.id}")
+
+          while True:
+              message = await websocket.receive_text()
+              cache.set(f"ws_{websocket.id}", message)
+              await websocket.broadcast(f"用户 {websocket.id}: {message}")
+
+      @chat.on_connect
+      async def on_connect(websocket, global_dependencies=None):
+          logger = global_dependencies.get("logger")
+          logger.info(f"客户端已连接: {websocket.id}")
+          return "已连接"
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
 ---
 
 ## 下一步

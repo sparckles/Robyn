@@ -100,12 +100,13 @@ def json_websocket_on_close(websocket):
 
 # --- WebSocket with dependency injection ---
 @app.websocket("/web_socket_di")
-async def di_websocket_endpoint(websocket):
+async def di_websocket_endpoint(websocket, global_dependencies=None, router_dependencies=None):
     try:
         while True:
-            await websocket.receive_text()
-            # Just echo back an empty response for DI test
-            await websocket.send_text("")
+            msg = await websocket.receive_text()
+            global_dep = global_dependencies.get("GLOBAL_DEPENDENCY", "MISSING GLOBAL") if global_dependencies else "MISSING GLOBAL"
+            router_dep = router_dependencies.get("ROUTER_DEPENDENCY", "MISSING ROUTER") if router_dependencies else "MISSING ROUTER"
+            await websocket.send_text(f"handler: {global_dep} {router_dep}")
     except WebSocketDisconnect:
         pass
 
@@ -114,12 +115,13 @@ async def di_websocket_endpoint(websocket):
 async def di_websocket_on_connect(websocket, global_dependencies=None, router_dependencies=None):
     global_dep = global_dependencies.get("GLOBAL_DEPENDENCY") if global_dependencies else "MISSING GLOBAL"
     router_dep = router_dependencies.get("ROUTER_DEPENDENCY") if router_dependencies else "MISSING ROUTER"
-    return f"{global_dep} {router_dep}"
+    return f"connect: {global_dep} {router_dep}"
 
 
 @di_websocket_endpoint.on_close
-async def di_websocket_on_close(websocket):
-    return ""
+async def di_websocket_on_close(websocket, global_dependencies=None):
+    global_dep = global_dependencies.get("GLOBAL_DEPENDENCY") if global_dependencies else "MISSING GLOBAL"
+    return f"close: {global_dep}"
 
 
 # --- WebSocket with empty returns ---

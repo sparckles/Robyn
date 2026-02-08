@@ -198,10 +198,7 @@ impl Server {
                         let endpoint = elem.clone();
                         let path_params = value.clone();
                         let endpoint_for_closure = endpoint.clone();
-                        let use_channel = *channel_flags
-                            .read()
-                            .get(&endpoint)
-                            .unwrap_or(&false);
+                        let use_channel = *channel_flags.read().get(&endpoint).unwrap_or(&false);
                         app = app.route(
                             &endpoint,
                             web::get().to(move |stream: web::Payload, req: HttpRequest| {
@@ -451,8 +448,13 @@ impl Server {
         message_route: FunctionInfo,
         use_channel: bool,
     ) {
-        self.websocket_router
-            .add_websocket_route(route, connect_route, close_route, message_route, use_channel);
+        self.websocket_router.add_websocket_route(
+            route,
+            connect_route,
+            close_route,
+            message_route,
+            use_channel,
+        );
     }
 
     /// Add a new startup handler
