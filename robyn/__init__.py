@@ -24,7 +24,7 @@ from robyn.responses import SSEMessage, SSEResponse, StreamingResponse, html, se
 from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, WebSocketConnector, get_version
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory
-from robyn.ws import WebSocket
+from robyn.ws import WebSocket, WebSocketAdapter, WebSocketDisconnect, create_websocket_decorator
 
 __version__ = get_version()
 
@@ -290,8 +290,29 @@ class BaseRobyn(ABC):
         """
         self.excluded_response_headers_paths = excluded_response_headers_paths
 
-    def add_web_socket(self, endpoint: str, ws: WebSocket) -> None:
-        self.web_socket_router.add_route(endpoint, ws)
+    def add_web_socket(self, endpoint: str, handlers) -> None:
+        self.web_socket_router.add_route(endpoint, handlers)
+
+    def websocket(self, endpoint: str):
+        """
+        Modern WebSocket decorator backed by Rust channels.
+
+        Usage:
+            @app.websocket("/ws")
+            async def handler(websocket):
+                while True:
+                    msg = await websocket.receive_text()
+                    await websocket.send_text(f"Echo: {msg}")
+
+            @handler.on_connect
+            def on_connect(websocket):
+                return "Welcome!"
+
+            @handler.on_close
+            def on_close(websocket):
+                return "Goodbye"
+        """
+        return create_websocket_decorator(self)(endpoint)
 
     def _add_event_handler(self, event_type: Events, handler: Callable) -> None:
         logger.info("Added event %s handler", event_type)
@@ -555,9 +576,9 @@ class BaseRobyn(ABC):
 
         # extend the websocket routes
         prefix = router.prefix
-        for route in router.web_socket_router.routes:
+        for route, handlers in router.web_socket_router.routes.items():
             new_endpoint = f"{prefix}{route}"
-            self.web_socket_router.routes[new_endpoint] = router.web_socket_router.routes[route]
+            self.web_socket_router.routes[new_endpoint] = handlers
 
         self.dependencies.merge_dependencies(router)
 
@@ -705,6 +726,13 @@ class SubRouter(BaseRobyn):
     def options(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["options"]):
         return super().options(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags)
 
+    def websocket(self, endpoint: str):
+        """
+        Modern WebSocket decorator for SubRouter with prefix support.
+        """
+        prefixed_endpoint = self.__add_prefix(endpoint)
+        return create_websocket_decorator(self)(prefixed_endpoint)
+
 
 def ALLOW_CORS(app: Robyn, origins: Union[List[str], str], headers: Union[List[str], str] = None):
     """
@@ -778,5 +806,7 @@ __all__ = [
     "Headers",
     "WebSocketConnector",
     "WebSocket",
+    "WebSocketAdapter",
+    "WebSocketDisconnect",
     "MCPApp",
 ]

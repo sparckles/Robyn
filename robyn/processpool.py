@@ -11,7 +11,6 @@ from robyn.logger import logger
 from robyn.robyn import FunctionInfo, Headers, Server, SocketHeld
 from robyn.router import GlobalMiddleware, Route, RouteMiddleware
 from robyn.types import Directory
-from robyn.ws import WebSocket
 
 
 def run_processes(
@@ -22,7 +21,7 @@ def run_processes(
     routes: List[Route],
     global_middlewares: List[GlobalMiddleware],
     route_middlewares: List[RouteMiddleware],
-    web_sockets: Dict[str, WebSocket],
+    web_sockets: Dict[str, dict],
     event_handlers: Dict[Events, FunctionInfo],
     workers: int,
     processes: int,
@@ -76,7 +75,7 @@ def init_processpool(
     routes: List[Route],
     global_middlewares: List[GlobalMiddleware],
     route_middlewares: List[RouteMiddleware],
-    web_sockets: Dict[str, WebSocket],
+    web_sockets: Dict[str, dict],
     event_handlers: Dict[Events, FunctionInfo],
     socket: SocketHeld,
     workers: int,
@@ -154,7 +153,7 @@ def spawn_process(
     routes: List[Route],
     global_middlewares: List[GlobalMiddleware],
     route_middlewares: List[RouteMiddleware],
-    web_sockets: Dict[str, WebSocket],
+    web_sockets: Dict[str, dict],
     event_handlers: Dict[Events, FunctionInfo],
     socket: SocketHeld,
     workers: int,
@@ -211,11 +210,21 @@ def spawn_process(
 
     for endpoint in web_sockets:
         web_socket = web_sockets[endpoint]
+        # Support both old-style WebSocket objects and new-style handler dicts
+        if hasattr(web_socket, "methods"):
+            # Old-style: WebSocket class with .methods dict
+            methods = web_socket.methods
+            use_channel = False
+        else:
+            # New-style: plain dict of handlers
+            methods = web_socket
+            use_channel = web_socket.get("_use_channel", False)
         server.add_web_socket_route(
             endpoint,
-            web_socket.methods["connect"],
-            web_socket.methods["close"],
-            web_socket.methods["message"],
+            methods["connect"],
+            methods["close"],
+            methods["message"],
+            use_channel,
         )
 
     try:
