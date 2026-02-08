@@ -185,13 +185,20 @@ fn create_python_stream(
 }
 
 impl Response {
+    /// Returns default headers with Content-Type: text/plain for error responses.
+    fn default_text_headers() -> Headers {
+        let mut headers = Headers::new(None);
+        headers.set("Content-Type".to_string(), "text/plain".to_string());
+        headers
+    }
+
     pub fn not_found(headers: Option<&Headers>) -> Self {
         const NOT_FOUND_BYTES: &[u8] = b"Not found";
 
         Self {
             status_code: 404,
             response_type: "text".to_string(),
-            headers: headers.cloned().unwrap_or_else(|| Headers::new(None)),
+            headers: headers.cloned().unwrap_or_else(Self::default_text_headers),
             description: NOT_FOUND_BYTES.to_vec(),
             file_path: None,
             cookies: Cookies::new(),
@@ -204,7 +211,7 @@ impl Response {
         Self {
             status_code: 500,
             response_type: "text".to_string(),
-            headers: headers.cloned().unwrap_or_else(|| Headers::new(None)),
+            headers: headers.cloned().unwrap_or_else(Self::default_text_headers),
             description: SERVER_ERROR_BYTES.to_vec(),
             file_path: None,
             cookies: Cookies::new(),
@@ -217,7 +224,7 @@ impl Response {
         Self {
             status_code: 405,
             response_type: "text".to_string(),
-            headers: headers.cloned().unwrap_or_else(|| Headers::new(None)),
+            headers: headers.cloned().unwrap_or_else(Self::default_text_headers),
             description: METHOD_NOT_ALLOWED_BYTES.to_vec(),
             file_path: None,
             cookies: Cookies::new(),
