@@ -18,13 +18,7 @@ Robyn told Batman that you can pre-compute the response for each route. This wil
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-      ```python {{ title: 'untyped' }}
-      @app.get("/", const=True)
-      async def h():
-          return "Hello, world"
-      ```
-
-      ```python {{title: 'typed'}}
+      ```python
       @app.get("/", const=True)
       async def h():
           return "Hello, world"
@@ -47,11 +41,7 @@ Robyn told Batman that he can use the `--workers` flag to scale the application 
   <Col sticky>
     <CodeGroup title="Request">
 
-      ```python {{ title: 'untyped' }}
-      python3 app.py --workers=N --process=M
-      ```
-
-      ```python {{title: 'typed'}}
+      ```python
       python3 app.py --workers=N --process=M
       ```
     </CodeGroup>

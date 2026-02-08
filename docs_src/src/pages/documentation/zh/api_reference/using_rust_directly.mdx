@@ -10,11 +10,7 @@
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-    python -m robyn --create-rust-file hello_world
-    ```
-
-    ```python {{title: 'typed'}}
+    ```python
     python -m robyn --create-rust-file hello_world
     ```
 
@@ -88,13 +84,7 @@
   <Col sticky>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-      ```python {{ title: 'untyped' }}
-      from hello_world import square
-
-      print(square(5))
-      ```
-
-      ```python {{title: 'typed'}}
+      ```python
       from hello_world import square
 
       print(square(5))
@@ -108,11 +98,7 @@
   <Col sticky>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-      ```python {{ title: 'untyped' }}
-      python -m robyn --compile-rust-path "." --dev
-      ```
-
-      ```python {{title: 'typed'}}
+      ```python
       python -m robyn --compile-rust-path "." --dev
       ```
     </CodeGroup>

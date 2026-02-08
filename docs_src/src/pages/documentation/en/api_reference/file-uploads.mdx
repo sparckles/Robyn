@@ -16,19 +16,7 @@ Batman scaled his application across multiple cores for better performance. He u
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-    @app.post("/upload")
-    async def upload():
-      body = request.body
-      file = bytearray(body)
-
-      # write whatever filename
-      with open('test.txt', 'wb') as f:
-          f.write(body)
-
-      return {'message': 'success'}
-    ```
-    ```python {{ title: 'typed' }}
+    ```python
     @app.post("/upload")
     async def upload():
       body = request.body
@@ -56,15 +44,7 @@ Batman scaled his application across multiple cores for better performance. He u
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-
-    @app.post("/sync/multipart-file")
-    def sync_multipart_file(request: Request):
-        files = request.files
-        file_names = files.keys()
-        return {"file_names": list(file_names)}
-    ```
-    ```python {{ title: 'typed' }}
+    ```python
 
     @app.post("/sync/multipart-file")
     def sync_multipart_file(request: Request):
@@ -94,21 +74,7 @@ Batman scaled his application across multiple cores for better performance. He u
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-    from robyn import Robyn, serve_html
-
-    app = Robyn(__file__)
-
-
-    @app.get("/")
-    async def h(request):
-        return serve_html("./index.html")
-
-    app.start(port=8080)
-
-    ```
-
-    ```python {{ title: 'typed' }}
+    ```python
     from robyn import Robyn, Request, serve_html
 
     app = Robyn(__file__)
@@ -136,22 +102,7 @@ Speaking of HTML files, Batman wanted to serve simple HTML strings. He was sugge
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-    from robyn import Robyn, html
-
-    app = Robyn(__file__)
-
-
-    @app.get("/")
-    async def h(request):
-        html_string = "<h1>Hello World</h1>"
-        return html(html_string)
-
-    app.start(port=8080)
-
-    ```
-
-    ```python {{ title: 'typed' }}
+    ```python
     from robyn import Robyn, Request, html
 
     app = Robyn(__file__)
@@ -181,21 +132,7 @@ Now, that Batman was able to serve HTML files, he wanted to serve other files li
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-    from robyn import Robyn, serve_file
-
-    app = Robyn(__file__)
-
-
-    @app.get("/")
-    async def h(request):
-        return serve_file("./index.html", file_name="index.html") # file_name is optional
-
-    app.start(port=8080)
-
-    ```
-
-    ```python {{ title: 'typed' }}
+    ```python
     from robyn import Robyn, serve_file, Request
 
     app = Robyn(__file__)
@@ -224,23 +161,7 @@ After serving other files, Batman wanted to serve directories, e.g. to serve a R
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-    from robyn import Robyn, serve_file
-
-    app = Robyn(__file__)
-
-
-    app.serve_directory(
-        route="/test_dir",
-        directory_path=os.path.join(current_file_path, "build"),
-        index_file="index.html",
-    )
-
-    app.start(port=8080)
-
-    ```
-
-    ```python {{ title: 'typed' }}
+    ```python
     from robyn import Robyn, serve_file, Request
 
     app = Robyn(__file__)

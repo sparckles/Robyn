@@ -17,14 +17,7 @@ You can allow CORS for your application by adding the following code:
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-      from robyn import Robyn, ALLOW_CORS
-
-      app = Robyn(__file__)
-      ALLOW_CORS(app, origins = ["http://localhost:<PORT>/"])
-    ```
-
-    ```python {{ title: 'typed' }}
+    ```python
       from robyn import Robyn, ALLOW_CORS
 
       app = Robyn(__file__)

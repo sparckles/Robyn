@@ -13,17 +13,7 @@ export const description =
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-    from robyn import Robyn
-
-    app = Robyn(__file__)
-
-    @app.get("/")
-    async def h(request):
-        return f"hello to you, {request.ip_addr}"
-
-    ```
-    ```python {{ title: 'typed' }}
+    ```python
     from robyn import Robyn, Request
 
     app = Robyn(__file__)

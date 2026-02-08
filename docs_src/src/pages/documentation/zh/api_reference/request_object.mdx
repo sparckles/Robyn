@@ -42,24 +42,7 @@ identity (Optional[Identity])：客户端的身份
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-    @dataclass
-    class Request:
-      """
-      query_params: QueryParams
-      headers: Headers
-      path_params: dict[str, str]
-      body: Union[str, bytes]
-      method: str
-      url: Url
-      form_data: dict[str, str]
-      files: dict[str, bytes]
-      ip_addr: Optional[str]
-      identity: Optional[Identity]
-      """
-    ```
-
-    ```python {{ title: 'typed' }}
+    ```python
     @dataclass
     class Request:
       """

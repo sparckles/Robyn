@@ -16,18 +16,7 @@ export const description =
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-    def sample_view():
-      def get():
-          return "Hello, world!"
-
-      def post(request):
-          body = request.body
-          return Response({"status_code": 200, "description": body, "headers": {}})
-
-    ```
-
-    ```python {{title: 'typed'}}
+    ```python
       from robyn import Request
 
       def sample_view():
@@ -54,18 +43,7 @@ export const description =
   <Col sticky>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-      ```python {{ title: 'untyped' }}
-      @app.view("/sync/view/decorator")
-      def sync_decorator_view():
-       def get():
-           return "Hello, world!"
-
-       def post(request):
-           body = request.body
-           return body
-
-      ```
-      ```python {{ title: 'typed' }}
+      ```python
       from robyn import Request
 
       @app.view("/sync/view/decorator")
@@ -90,15 +68,7 @@ export const description =
   <Col sticky>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-      ```python {{ title: 'untyped' }}
-        from .views import sample_view
-
-        ...
-        ...
-
-        app.add_view("/", sample_view)
-      ```
-      ```python {{ title: 'typed' }}
+      ```python
         from .views import sample_view
 
         ...
@@ -129,28 +99,7 @@ export const description =
   <Col sticky>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-      ```python {{ title: 'untyped' }}
-      from robyn import Robyn, SubRouter
-
-      app = Robyn(__file__)
-
-      sub_router = SubRouter("/sub_router")
-
-      @sub_router.get("/hello")
-      def hello():
-          return "Hello, world"
-
-      web_socket = SubRouter("/web_socket")
-
-      @web_socket.message()
-      async def hello():
-          return "Hello, world"
-
-      app.include_router(sub_router)
-      ```
-
-
-      ```python {{ title: 'typed' }}
+      ```python
       from robyn import Robyn, SubRouter
 
       app = Robyn(__file__)

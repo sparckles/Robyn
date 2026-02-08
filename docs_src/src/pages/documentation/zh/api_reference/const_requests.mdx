@@ -14,17 +14,10 @@ Robyn 告诉蝙蝠侠，可以为每个路由预处理响应，这样即使在�
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-      ```python {{ title: 'untyped' }}
+      ```python
       @app.get("/", const=True)
       async def h():
           return "Hello, world"
-      ```
-
-      ```python {{title: 'typed'}}
-      @app.get("/", const=True)
-      async def h():
-          return "Hello, world"
-
       ```
     </CodeGroup>
 
@@ -43,11 +36,7 @@ Robyn 告诉蝙蝠侠，可以使用 `--workers` 参数将应用程序扩展到�
   <Col sticky>
     <CodeGroup title="Request">
 
-      ```python {{ title: 'untyped' }}
-      python3 app.py --workers=N --process=M
-      ```
-
-      ```python {{title: 'typed'}}
+      ```python
       python3 app.py --workers=N --process=M
       ```
     </CodeGroup>

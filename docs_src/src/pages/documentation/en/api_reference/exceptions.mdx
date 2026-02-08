@@ -9,13 +9,7 @@ Batman learned how to create custom error handlers for different exception types
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-    @app.exception
-    def handle_exception(error):
-        return Response(status_code=500, description=f"error msg: {error}", headers={})
-    ```
-
-    ```python {{ title: 'typed' }}
+    ```python
     @app.exception
     def handle_exception(error: Exception):
         return Response(status_code=500, description=f"error msg: {error}", headers={})

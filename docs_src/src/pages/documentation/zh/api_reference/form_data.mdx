@@ -14,14 +14,7 @@ export const description = '在此页面中，我们将深入了解如何处理�
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-    @app.post("/upload")
-    async def upload(request):
-      form_data = request.form_data
-
-      return form_data
-    ```
-    ```python {{ title: 'typed' }}
+    ```python
     @app.post("/upload")
     async def upload(request: Request):
       form_data = request.form_data
