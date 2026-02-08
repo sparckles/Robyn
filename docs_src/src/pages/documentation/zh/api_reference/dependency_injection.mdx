@@ -84,7 +84,7 @@ WebSocket 支持与 HTTP 路由相同的依赖注入系统。`global_dependencie
       app = Robyn(__file__)
 
       app.inject_global(logger=logging.getLogger(__name__))
-      app.inject(cache={})  # 简单占位符；生产环境中替换为真实缓存实例
+      app.inject(cache=RedisCache())
 
       @app.websocket("/chat")
       async def chat(websocket, global_dependencies=None, router_dependencies=None):
@@ -94,7 +94,7 @@ WebSocket 支持与 HTTP 路由相同的依赖注入系统。`global_dependencie
 
           while True:
               message = await websocket.receive_text()
-              cache[f"ws_{websocket.id}"] = message
+              cache.set(f"ws_{websocket.id}", message)
               await websocket.broadcast(f"用户 {websocket.id}: {message}")
 
       @chat.on_connect

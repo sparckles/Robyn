@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import base64
-import contextlib
 import inspect
 import logging
 from typing import TYPE_CHECKING, Callable, Dict, Optional
@@ -11,7 +9,6 @@ import orjson
 
 from robyn.argument_parser import Config
 from robyn.dependency_injection import DependencyMap
-from robyn.exceptions import WebSocketException
 from robyn.robyn import FunctionInfo, WebSocketConnector
 
 if TYPE_CHECKING:
@@ -52,11 +49,9 @@ class WebSocketAdapter:
         return result
 
     async def receive_bytes(self) -> bytes:
-        """Receive binary data (base64-decoded from text)."""
+        """Receive binary data (decoded from text)."""
         text = await self.receive_text()
-        if not text:
-            return b""
-        return base64.b64decode(text)
+        return text.encode("utf-8")
 
     async def receive_json(self):
         """Receive and decode JSON data."""
@@ -68,9 +63,8 @@ class WebSocketAdapter:
         await self._connector.async_send_to(self._connector.id, data)
 
     async def send_bytes(self, data: bytes):
-        """Send binary data (base64-encoded as text) to this WebSocket client."""
-        text = base64.b64encode(data).decode("ascii")
-        await self._connector.async_send_to(self._connector.id, text)
+        """Send binary data (as text) to this WebSocket client."""
+        await self._connector.async_send_to(self._connector.id, data.decode("utf-8"))
 
     async def send_json(self, data):
         """Send JSON data to this WebSocket client."""
@@ -164,15 +158,11 @@ def create_websocket_decorator(app_instance):
                         await handler(adapter, **di_kwargs)
                     except WebSocketDisconnect:
                         pass
-                    except (WebSocketException, ConnectionError, OSError, RuntimeError):
-                        # Suppress concrete connection-related errors:
-                        #  - WebSocketException: Robyn-specific WebSocket error
-                        #  - ConnectionError (and subclasses): OS-level connection failures
-                        #  - OSError: broader OS-level I/O errors
-                        #  - RuntimeError: PyO3/Rust bridge errors on closed connections
-                        pass
                     except Exception as e:
-                        _logger.exception("Error in WebSocket handler for %s: %s", endpoint, e)
+                        if "connection closed" in str(e).lower() or "websocket" in str(e).lower():
+                            pass
+                        else:
+                            _logger.exception("Error in WebSocket handler for %s: %s", endpoint, e)
                     finally:
                         _connection_tasks.pop(conn_id, None)
 
@@ -209,14 +199,9 @@ def create_websocket_decorator(app_instance):
                 if task is not None:
                     try:
                         await asyncio.wait_for(task, timeout=5.0)
-                    except asyncio.CancelledError:
-                        raise
-                    except Exception:
+                    except (asyncio.TimeoutError, asyncio.CancelledError, Exception):
                         if not task.done():
                             task.cancel()
-                            with contextlib.suppress(asyncio.CancelledError):
-                                await task
-                        _logger.debug("Handler task for %s did not finish cleanly", conn_id)
 
                 # Call user's on_close if defined
                 if _on_close_fn is not None:
