@@ -30,19 +30,7 @@ Robyn supports both synchronous and asynchronous request handlers, allowing you 
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-    from robyn import Robyn
-
-    app = Robyn(__file__)
-
-    @app.get("/")
-    def h(request):
-        return "Hello, world"
-
-    app.start(port=8080, host="0.0.0.0") # host is optional, defaults to 127.0.0.1
-    ```
-
-    ```python {{title: 'typed'}}
+    ```python
     from robyn import Robyn, Request
 
     app = Robyn(__file__)
@@ -51,10 +39,7 @@ Robyn supports both synchronous and asynchronous request handlers, allowing you 
     def h(request: Request):
         return "Hello, world"
 
-    app.start(port=8080, host="0.0.0.0")
-
-
-
+    app.start(port=8080, host="0.0.0.0") # host is optional, defaults to 127.0.0.1
     ```
     </CodeGroup>
   </Col>
@@ -67,14 +52,7 @@ Robyn supports both synchronous and asynchronous request handlers, allowing you 
   <Col sticky>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-      ```python {{ title: 'untyped' }}
-      @app.get("/")
-      async def h(request):
-          return "Hello, world"
-
-      ```
-
-      ```python {{title: 'typed'}}
+      ```python
       from robyn import Request
 
       @app.get("/")
@@ -756,19 +734,7 @@ Batman learned to customize response formats by returning dictionaries or using 
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-    @app.post("/dictionary")
-    async def dictionary(request):
-        return {
-            "status_code": 200,
-            "description": "This is a regular response",
-            "type": "text",
-            "headers": {"Header": "header_value"},
-        }
-
-    ```
-
-    ```python {{title: 'typed'}}
+    ```python
     from robyn import Request
 
     @app.post("/dictionary")
@@ -779,7 +745,6 @@ Batman learned to customize response formats by returning dictionaries or using 
             "type": "text",
             "headers": {"Header": "header_value"},
         }
-
 
     ```
     </CodeGroup>
@@ -796,15 +761,7 @@ To use the Response object, he wrote:
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-    from robyn.robyn import Response
-
-    @app.get("/response")
-    async def response(request):
-        return Response(status_code=200, headers=Headers({}), description="OK")
-    ```
-
-    ```python {{title: 'typed'}}
+    ```python
     from robyn.robyn import Response, Request
 
     @app.get("/response")
@@ -826,31 +783,7 @@ Batman then wanted to return a binary output from his application. He could do t
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-    @app.get("/binary_output_response_sync")
-    def binary_output_response_sync(request):
-        return Response(
-            status_code=200,
-            headers={"Content-Type": "application/octet-stream"},
-            description="OK",
-        )
-
-
-    @app.get("/binary_output_async")
-    async def binary_output_async(request):
-        return b"OK"
-
-
-    @app.get("/binary_output_response_async")
-    async def binary_output_response_async(request):
-        return Response(
-            status_code=200,
-            headers={"Content-Type": "application/octet-stream"},
-            description="OK",
-        )
-    ```
-
-    ```python {{title: 'typed'}}
+    ```python
     from robyn import Request, Response
 
     @app.get("/binary_output_response_sync")
@@ -898,17 +831,7 @@ Either, by using the `headers` field in the `Response` object:
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-    @app.get("/")
-    def binary_output_response_sync(request):
-        return Response(
-            status_code=200,
-            headers={"Content-Type": "application/octet-stream"},
-            description="OK",
-        )
-    ```
-
-    ```python {{title: 'typed'}}
+    ```python
     from robyn import Request
 
     @app.get("/")
@@ -933,11 +856,7 @@ Either, by using the `headers` field in the `Response` object:
   <Col>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-    app.add_response_header("content-type", "application/json")
-    ```
-
-    ```python {{title: 'typed'}}
+    ```python
     app.add_response_header("content-type", "application/json")
     ```
     </CodeGroup>
@@ -951,11 +870,7 @@ Either, by using the `headers` field in the `Response` object:
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-    app.set_response_header("content-type", "application/json")
-    ```
-
-    ```python {{title: 'typed'}}
+    ```python
     app.set_response_header("content-type", "application/json")
     ```
     </CodeGroup>
@@ -968,11 +883,7 @@ To prevent the headers from getting applied to certain endpoints, you can use th
 <Col>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-    app.exclude_response_headers_for(["/login", "/signup"])
-    ```
-
-    ```python {{title: 'typed'}}
+    ```python
     app.exclude_response_headers_for(["/login", "/signup"])
     ```
     </CodeGroup>
@@ -990,17 +901,7 @@ Robyn provides a complete cookie API following RFC 6265. Set cookies using the `
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-    from robyn import Response, Headers
-
-    @app.get("/")
-    def set_session(request):
-        response = Response(200, Headers({}), "Welcome!")
-        response.set_cookie(key="session", value="abc123")
-        return response
-    ```
-
-    ```python {{ title: 'typed' }}
+    ```python
     from robyn import Request, Response, Headers
 
     @app.get("/")
@@ -1030,23 +931,7 @@ You can set additional cookie attributes for security and control:
 
     <CodeGroup title="Request" tag="GET" label="/secure-cookie">
 
-    ```python {{ title: 'untyped' }}
-    @app.get("/login")
-    def login(request):
-        response = Response(200, Headers({}), "Logged in")
-        response.set_cookie(
-            key="auth_token",
-            value="secret123",
-            path="/",
-            max_age=3600,        # 1 hour
-            secure=True,         # HTTPS only
-            http_only=True,      # No JavaScript access
-            same_site="Strict",  # CSRF protection
-        )
-        return response
-    ```
-
-    ```python {{ title: 'typed' }}
+    ```python
     from robyn import Request, Response, Headers
 
     @app.get("/login")
@@ -1077,15 +962,7 @@ To delete a cookie from the browser, use the `delete` method on the cookies coll
 
     <CodeGroup title="Request" tag="GET" label="/logout">
 
-    ```python {{ title: 'untyped' }}
-    @app.get("/logout")
-    def logout(request):
-        response = Response(200, Headers({}), "Logged out")
-        response.cookies.delete("auth_token")
-        return response
-    ```
-
-    ```python {{ title: 'typed' }}
+    ```python
     from robyn import Request, Response, Headers
 
     @app.get("/logout")
@@ -1108,28 +985,7 @@ You can iterate over cookies or access them by name:
 
     <CodeGroup title="Request" tag="GET" label="/cookies">
 
-    ```python {{ title: 'untyped' }}
-    @app.get("/debug")
-    def debug_cookies(request):
-        response = Response(200, Headers({}), "Cookies set")
-        response.set_cookie("a", "1")
-        response.set_cookie("b", "2")
-        
-        # Get all cookie names
-        names = response.cookies.keys()
-        
-        # Iterate over cookies
-        for name in response.cookies:
-            print(f"Cookie: {name}")
-        
-        # Check if cookie exists
-        if "a" in response.cookies:
-            print("Cookie 'a' exists")
-            
-        return response
-    ```
-
-    ```python {{ title: 'typed' }}
+    ```python
     from robyn import Request, Response, Headers
 
     @app.get("/debug")
@@ -1171,25 +1027,7 @@ Either, by using the `headers` field in the `Request` object:
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-    @app.get("/")
-    def binary_output_response_sync(request):
-      headers = request.headers
-
-      print("These are the request headers: ", headers)
-      existing_header = headers.get("exisiting_header")
-      existing_header = headers.get("exisiting_header", "default_value")
-      exisiting_header = headers["exisiting_header"] # This syntax is also valid
-
-      headers.set("modified", "modified_value")
-      headers["new_header"] = "new_value" # This syntax is also valid
-
-      print("These are the modified request headers: ", headers)
-      
-      return ""
-    ```
-
-    ```python {{title: 'typed'}}
+    ```python
     from robyn import Request
 
     @app.get("/")
@@ -1222,11 +1060,7 @@ Or by using the global Request Headers:
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-    app.add_request_header("server", "robyn")
-    ```
-
-    ```python {{title: 'typed'}}
+    ```python
     app.add_request_header("server", "robyn")
     ```
     </CodeGroup>
@@ -1242,11 +1076,7 @@ Or by using the global Request Headers:
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-    app.set_request_header("server", "robyn")
-    ```
-
-    ```python {{title: 'typed'}}
+    ```python
     app.set_request_header("server", "robyn")
     ```
     </CodeGroup>
@@ -1266,15 +1096,7 @@ After learning about response formats and headers, Batman learned to set status 
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-    from robyn import status_codes
-
-    @app.get("/response")
-    async def response(request):
-        return Response(status_code=status_codes.HTTP_200_OK, headers=Headers({}), description="OK")
-    ```
-
-    ```python {{title: 'typed'}}
+    ```python
     from robyn import status_codes, Request
 
 

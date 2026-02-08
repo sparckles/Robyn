@@ -15,28 +15,7 @@ export const description =
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-    from robyn import Robyn, jsonify, WebSocket
-
-    app = Robyn(__file__)
-    websocket = WebSocket(app, "/web_socket")
-
-    @websocket.on("message")
-    def connect():
-        return "Hello world, from ws"
-
-    @websocket.on("close")
-    def close():
-        return "Goodbye world, from ws"
-
-    @websocket.on("connect")
-    def message():
-        return "Connected to ws"
-
-
-    ```
-
-    ```python {{title: 'typed'}}
+    ```python
     from robyn import Robyn, jsonify, WebSocket
 
     app = Robyn(__file__)
@@ -76,31 +55,7 @@ export const description =
   <Col sticky>
     <CodeGroup title="可选返回值" tag="WebSocket" label="/web_socket">
 
-      ```python {{ title: 'untyped' }}
-      from robyn import Robyn, WebSocket
-
-      app = Robyn(__file__)
-      websocket = WebSocket(app, "/web_socket")
-
-      @websocket.on("connect")
-      async def connect():
-          # 无需返回 - 仅记录连接
-          print("客户端已连接")
-
-      @websocket.on("message")
-      def message(ws, msg):
-          # 处理消息但不响应
-          process_analytics(msg)
-          # 无需返回语句
-
-      @websocket.on("close")
-      async def close():
-          # 显式返回 None - 不发送消息
-          cleanup_resources()
-          return None
-      ```
-
-      ```python {{title: 'typed'}}
+      ```python
       from robyn import Robyn, WebSocket, WebSocketConnector
 
       app = Robyn(__file__)
@@ -135,17 +90,7 @@ export const description =
   <Col sticky>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-      ```python {{ title: 'untyped' }}
-
-        @websocket.on("message")
-        def message(ws, msg, global_dependencies) -> str:
-            websocket_id = ws.id
-            ws.sync_send_to(websocket_id, "This is a message to self")
-            return ""
-
-      ```
-
-      ```python {{title: 'typed'}}
+      ```python
 
         @websocket.on("message")
         def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
@@ -168,17 +113,7 @@ export const description =
   <Col sticky>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-      ```python {{ title: 'untyped' }}
-
-        @websocket.on("message")
-        async def message(ws, msg, global_dependencies) -> str:
-            websocket_id = ws.id
-            await ws.async_send_to(websocket_id, "This is a message to self")
-            return ""
-
-      ```
-
-      ```python {{title: 'typed'}}
+      ```python
 
         @websocket.on("message")
         async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
@@ -200,17 +135,7 @@ export const description =
   <Col sticky>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-      ```python {{ title: 'untyped' }}
-
-        @websocket.on("message")
-        def message(ws, msg, global_dependencies) -> str:
-            websocket_id = ws.id
-            ws.sync_broadcast("This is a message to self")
-            return ""
-
-      ```
-
-      ```python {{title: 'typed'}}
+      ```python
 
         @websocket.on("message")
         def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
@@ -231,17 +156,7 @@ export const description =
   <Col sticky>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-      ```python {{ title: 'untyped' }}
-
-        @websocket.on("message")
-        async def message(ws, msg, global_dependencies) -> str:
-            websocket_id = ws.id
-            await ws.async_broadcast("This is a message to self")
-            return ""
-
-      ```
-
-      ```python {{title: 'typed'}}
+      ```python
 
         @websocket.on("message")
         async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
@@ -262,18 +177,7 @@ export const description =
   <Col sticky>
     <CodeGroup title="Request" tag="GET" label="/hello_world?name=gordon&desg=commissioner">
 
-      ```python {{ title: 'untyped' }}
-
-        @websocket.on("message")
-        async def message(ws, msg, global_dependencies) -> str:
-            websocket_id = ws.id
-            if (ws.query_params.get("name") == "gordon" and ws.query_params.get("desg") == "commissioner"):
-              ws.sync_broadcast("Gordon authorized to login!")
-            return ""
-
-      ```
-
-      ```python {{title: 'typed'}}
+      ```python
 
         @websocket.on("message")
         async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
@@ -301,16 +205,7 @@ export const description =
   <Col>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-      ```python {{ title: 'untyped' }}
-      @websocket.on("message")
-      def message(ws, msg):
-          if msg == "disconnect":
-              ws.close()
-              return "Closing connection"
-          return "Message received"
-      ```
-
-      ```python {{title: 'typed'}}
+      ```python
       @websocket.on("message")
       def message(ws: WebSocketConnector, msg: str) -> str:
           if msg == "disconnect":

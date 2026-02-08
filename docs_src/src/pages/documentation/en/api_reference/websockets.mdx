@@ -16,7 +16,7 @@ To handle real-time bidirectional communication, Batman learned how to work with
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
+    ```python
     from robyn import Robyn, jsonify, WebSocket
 
     app = Robyn(__file__)
@@ -33,28 +33,6 @@ To handle real-time bidirectional communication, Batman learned how to work with
     @websocket.on("connect")
     def message():
         return "Connected to ws"
-
-
-    ```
-
-    ```python {{title: 'typed'}}
-    from robyn import Robyn, jsonify, WebSocket
-
-    app = Robyn(__file__)
-    websocket = WebSocket(app, "/web_socket")
-
-    @websocket.on("message")
-    def connect():
-        return "Hello world, from ws"
-
-    @websocket.on("close")
-    def close():
-        return "Goodbye world, from ws"
-
-    @websocket.on("connect")
-    def message():
-        return "Connected to ws"
-
 
     ```
     </CodeGroup>
@@ -76,31 +54,7 @@ To handle real-time bidirectional communication, Batman learned how to work with
   <Col sticky>
     <CodeGroup title="Optional Returns" tag="WebSocket" label="/web_socket">
 
-      ```python {{ title: 'untyped' }}
-      from robyn import Robyn, WebSocket
-
-      app = Robyn(__file__)
-      websocket = WebSocket(app, "/web_socket")
-
-      @websocket.on("connect")
-      async def connect():
-          # No return needed - just log the connection
-          print("Client connected")
-
-      @websocket.on("message")
-      def message(ws, msg):
-          # Process message without responding
-          process_analytics(msg)
-          # No return statement needed
-
-      @websocket.on("close")
-      async def close():
-          # Explicitly return None - no message sent
-          cleanup_resources()
-          return None
-      ```
-
-      ```python {{title: 'typed'}}
+      ```python
       from robyn import Robyn, WebSocket, WebSocketConnector
 
       app = Robyn(__file__)
@@ -135,22 +89,11 @@ To handle real-time bidirectional communication, Batman learned how to work with
   <Col sticky>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-      ```python {{ title: 'untyped' }}
-
-        @websocket.on("message")
-        def message(ws, msg, global_dependencies) -> str:
-            websocket_id = ws.id
-            ws.sync_send_to(websocket_id, "This is a message to self")
-            return ""
-
-      ```
-
-      ```python {{title: 'typed'}}
+      ```python
 
         @websocket.on("message")
         def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
             websocket_id = ws.id
-            state = websocket_state[websocket_id]
             ws.sync_send_to(websocket_id, "This is a message to self")
             return ""
 
@@ -168,22 +111,11 @@ To handle real-time bidirectional communication, Batman learned how to work with
   <Col sticky>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-      ```python {{ title: 'untyped' }}
-
-        @websocket.on("message")
-        async def message(ws, msg, global_dependencies) -> str:
-            websocket_id = ws.id
-            await ws.async_send_to(websocket_id, "This is a message to self")
-            return ""
-
-      ```
-
-      ```python {{title: 'typed'}}
+      ```python
 
         @websocket.on("message")
         async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
             websocket_id = ws.id
-            state = websocket_state[websocket_id]
             await ws.async_send_to(websocket_id, "This is a message to self")
             return ""
 
@@ -200,17 +132,7 @@ To handle real-time bidirectional communication, Batman learned how to work with
   <Col sticky>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-      ```python {{ title: 'untyped' }}
-
-        @websocket.on("message")
-        def message(ws, msg, global_dependencies) -> str:
-            websocket_id = ws.id
-            ws.sync_broadcast("This is a message to self")
-            return ""
-
-      ```
-
-      ```python {{title: 'typed'}}
+      ```python
 
         @websocket.on("message")
         def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
@@ -230,17 +152,7 @@ To handle real-time bidirectional communication, Batman learned how to work with
   <Col sticky>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-      ```python {{ title: 'untyped' }}
-
-        @websocket.on("message")
-        async def message(ws, msg, global_dependencies) -> str:
-            websocket_id = ws.id
-            await ws.async_broadcast("This is a message to self")
-            return ""
-
-      ```
-
-      ```python {{title: 'typed'}}
+      ```python
 
         @websocket.on("message")
         async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
@@ -260,18 +172,7 @@ To handle real-time bidirectional communication, Batman learned how to work with
   <Col sticky>
     <CodeGroup title="Request" tag="GET" label="/hello_world?name=gordon&desg=commissioner">
 
-      ```python {{ title: 'untyped' }}
-
-        @websocket.on("message")
-        async def message(ws, msg, global_dependencies) -> str:
-            websocket_id = ws.id
-            if (ws.query_params.get("name") == "gordon" and ws.query_params.get("desg") == "commissioner"):
-              ws.sync_broadcast("Gordon authorized to login!")
-            return ""
-
-      ```
-
-      ```python {{title: 'typed'}}
+      ```python
 
         @websocket.on("message")
         async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
@@ -301,16 +202,7 @@ This method is useful for scenarios where you need to programmatically end a Web
   <Col>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-      ```python {{ title: 'untyped' }}
-      @websocket.on("message")
-      def message(ws, msg):
-          if msg == "disconnect":
-              ws.close()
-              return "Closing connection"
-          return "Message received"
-      ```
-
-      ```python {{title: 'typed'}}
+      ```python
       @websocket.on("message")
       def message(ws: WebSocketConnector, msg: str) -> str:
           if msg == "disconnect":

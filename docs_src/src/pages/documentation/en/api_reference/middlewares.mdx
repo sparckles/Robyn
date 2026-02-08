@@ -18,16 +18,12 @@ Batman was excited to learn that he could add events as functions as well as dec
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
+    ```python
     async def startup_handler():
       print("Starting up")
 
     app.startup_handler(startup_handler)
 
-
-    ```
-
-    ```python {{title: 'typed'}}
     @app.shutdown_handler
     def shutdown_handler():
         print("Shutting down")
@@ -45,14 +41,7 @@ Batman was excited to learn that he could add events as functions as well as dec
   <Col sticky>
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-      ```python {{ title: 'untyped' }}
-      @app.get("/")
-      async def h(request):
-          return "Hello, world"
-
-      ```
-
-      ```python {{title: 'typed'}}
+      ```python
       from robyn import Request 
 
       @app.get("/")
@@ -88,19 +77,7 @@ Batman was excited to learn that he could add events as functions as well as dec
 
     <CodeGroup title="Request" tag="POST" label="/http_requests">
 
-    ```python {{ title: 'untyped' }}
-    @app.before_request("/")
-    async def hello_before_request(request: Request):
-        request.headers["before"] = "sync_before_request"
-        return request
-
-    @app.after_request("/")
-    def hello_after_request(response: Response):
-        response.headers.set("after", "sync_after_request")
-        return response
-    ```
-
-    ```python {{ title: 'typed' }}
+    ```python
     from robyn import Request, Response
 
     @app.before_request("/")

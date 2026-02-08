@@ -21,33 +21,7 @@ Robyn 向他保证，确实支持在多进程环境中共享变量。换句话�
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-        import threading
-        import time
-        from multiprocessing import Value
-
-        from robyn import Robyn, Request
-
-        app = Robyn(__file__)
-
-        count = Value("i", 0)
-
-        def counter():
-            while True:
-                count.value += 1
-                time.sleep(0.2)
-                print(count.value, "added 1")
-
-        @app.get("/")
-        def index(request):
-            return f"{count.value}"
-
-        threading.Thread(target=counter, daemon=True).start()
-
-        app.start()
-    ```
-
-    ```python {{ title: 'typed' }}
+    ```python
         import threading
         import time
         from multiprocessing import Value

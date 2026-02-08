@@ -17,7 +17,7 @@ Robyn 提供了两种依赖注入方式：
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
+    ```python
       from robyn import Robyn, ALLOW_CORS
 
       app = Robyn(__file__)
@@ -28,20 +28,6 @@ Robyn 提供了两种依赖注入方式：
       @app.get("/sync/global_di")
       def sync_global_di(request, global_dependencies):
         return global_dependencies["GLOBAL_DEPENDENCY"]
-    ```
-
-    ```python {{ title: 'typed' }}
-      from robyn import Robyn, ALLOW_CORS
-
-      app = Robyn(__file__)
-      GLOBAL_DEPENDENCY = "GLOBAL DEPENDENCY"
-
-      app.inject_global(GLOBAL_DEPENDENCY=GLOBAL_DEPENDENCY)
-
-      @app.get("/sync/global_di")
-      def sync_global_di(request, global_dependencies):
-        return global_dependencies["GLOBAL_DEPENDENCY"]
-
     ```
     </CodeGroup>
 
@@ -58,20 +44,7 @@ Robyn 提供了两种依赖注入方式：
 
     <CodeGroup title="Request" tag="GET" label="/hello_world">
 
-    ```python {{ title: 'untyped' }}
-      from robyn import Robyn, ALLOW_CORS
-
-      app = Robyn(__file__)
-      ROUTER_DEPENDENCY = "ROUTER DEPENDENCY"
-
-      app.inject(ROUTER_DEPENDENCY=ROUTER_DEPENDENCY)
-
-      @app.get("/sync/global_di")
-      def sync_global_di(r, router_dependencies): # r is the request object
-        return router_dependencies["ROUTER_DEPENDENCY"]
-    ```
-
-    ```python {{ title: 'typed' }}
+    ```python
       from robyn import Robyn, ALLOW_CORS, Request
 
       app = Robyn(__file__)
