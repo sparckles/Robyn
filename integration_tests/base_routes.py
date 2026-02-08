@@ -29,7 +29,7 @@ websocket_state = defaultdict(int)
 async def websocket_endpoint(websocket):
     try:
         while True:
-            msg = await websocket.receive_text()
+            _ = await websocket.receive_text()
             websocket_id = websocket.id
             global websocket_state
             state = websocket_state[websocket_id]
@@ -103,7 +103,7 @@ def json_websocket_on_close(websocket):
 async def di_websocket_endpoint(websocket, global_dependencies=None, router_dependencies=None):
     try:
         while True:
-            msg = await websocket.receive_text()
+            _ = await websocket.receive_text()
             global_dep = global_dependencies.get("GLOBAL_DEPENDENCY", "MISSING GLOBAL") if global_dependencies else "MISSING GLOBAL"
             router_dep = router_dependencies.get("ROUTER_DEPENDENCY", "MISSING ROUTER") if router_dependencies else "MISSING ROUTER"
             await websocket.send_text(f"handler: {global_dep} {router_dep}")

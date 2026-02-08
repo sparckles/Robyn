@@ -124,9 +124,6 @@ def create_websocket_decorator(app_instance):
             _on_connect_fn = None
             _on_close_fn = None
 
-            # Inspect the user's handler for DI params
-            handler_params = dict(inspect.signature(handler).parameters)
-
             def _get_di_kwargs(func):
                 """Build DI kwargs for a function based on its signature."""
                 sig_params = dict(inspect.signature(func).parameters)
