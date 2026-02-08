@@ -1,5 +1,6 @@
 import inspect
 import json
+import re
 import typing
 from dataclasses import asdict, dataclass, field
 from importlib import resources
@@ -275,27 +276,23 @@ class OpenAPI:
         # initialized with endpoint for handling endpoints without path params
         endpoint_with_path_params_wrapped_in_braces = endpoint
 
-        endpoint_path_params_split = endpoint.split(":")
+        path_param_names = re.findall(r":(\w+)", endpoint)
 
-        if len(endpoint_path_params_split) > 1:
-            endpoint_without_path_params = endpoint_path_params_split[0]
+        if path_param_names:
+            # Convert param syntax to OpenAPI's {param} syntax
+            # \w+ matches word characters (letters, digits, underscores) and does not match '/',
+            # so each :param is captured individually without swallowing intervening path segments.
+            endpoint_with_path_params_wrapped_in_braces = re.sub(r":(\w+)", r"{\1}", endpoint)
 
-            endpoint_with_path_params_wrapped_in_braces = (
-                endpoint_without_path_params[:-1] if endpoint_without_path_params.endswith("/") else endpoint_without_path_params
-            )
-
-            for path_param in endpoint_path_params_split[1:]:
-                path_param_name = path_param[:-1] if path_param.endswith("/") else path_param
-
+            for name in path_param_names:
                 openapi_path_object["parameters"].append(
                     {
-                        "name": path_param_name,
+                        "name": name,
                         "in": "path",
                         "required": True,
                         "schema": {"type": "string"},
                     }
                 )
-                endpoint_with_path_params_wrapped_in_braces += "/{" + path_param_name + "}"
 
         if query_params:
             query_param_annotations = query_params.__annotations__ if query_params is str_typed_dict else typing.get_type_hints(query_params)
