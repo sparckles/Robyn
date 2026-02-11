@@ -730,8 +730,7 @@ class SubRouter(BaseRobyn):
         """
         Modern WebSocket decorator for SubRouter with prefix support.
         """
-        prefixed_endpoint = self.__add_prefix(endpoint)
-        return create_websocket_decorator(self)(prefixed_endpoint)
+        return create_websocket_decorator(self)(endpoint)
 
 
 def ALLOW_CORS(app: Robyn, origins: Union[List[str], str], headers: Union[List[str], str] = None):

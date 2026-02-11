@@ -37,9 +37,12 @@ To handle real-time bidirectional communication, Batman learned how to work with
 
     @app.websocket("/web_socket")
     async def handler(websocket):
-        while True:
-            msg = await websocket.receive_text()
-            await websocket.send_text(f"Echo: {msg}")
+        try:
+            while True:
+                msg = await websocket.receive_text()
+                await websocket.send_text(f"Echo: {msg}")
+        except WebSocketDisconnect:
+            print(f"Client {websocket.id} disconnected")
 
     @handler.on_connect
     def on_connect(websocket):

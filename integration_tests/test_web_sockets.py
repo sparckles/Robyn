@@ -57,7 +57,7 @@ def test_web_socket_json(session):
 
 
 def test_websocket_di(session):
-    """Test dependency injection in all WebSocket phases: connect, handler, and close."""
+    """Test dependency injection in WebSocket connect and handler phases."""
 
     ws = create_connection(f"{BASE_URL}/web_socket_di")
 
