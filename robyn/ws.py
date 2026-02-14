@@ -74,7 +74,7 @@ class WebSocketAdapter:
         """Broadcast text data to all connected WebSocket clients on this endpoint."""
         await self._connector.async_broadcast(data)
 
-    async def close(self, code: int = 1000):
+    async def close(self):
         """Close the WebSocket connection."""
         self._connector.close()
 
