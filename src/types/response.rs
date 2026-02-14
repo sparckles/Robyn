@@ -112,14 +112,24 @@ impl Responder for StreamingResponse {
 
         apply_hashmap_headers(&mut response_builder, &self.headers);
 
-        // Only add SSE-specific headers for event-stream responses
+        // Only add SSE-specific headers for event-stream responses if not already present
         if self.media_type == "text/event-stream" {
-            response_builder
-                .append_header(("Connection", "keep-alive"))
-                .append_header(("X-Accel-Buffering", "no")) // Disable nginx buffering
-                .append_header(("Cache-Control", "no-cache, no-store, must-revalidate"))
-                .append_header(("Pragma", "no-cache"))
-                .append_header(("Expires", "0"));
+            if !self.headers.contains("Connection".to_string()) {
+                response_builder.append_header(("Connection", "keep-alive"));
+            }
+            if !self.headers.contains("X-Accel-Buffering".to_string()) {
+                response_builder.append_header(("X-Accel-Buffering", "no")); // Disable nginx buffering
+            }
+            if !self.headers.contains("Cache-Control".to_string()) {
+                response_builder
+                    .append_header(("Cache-Control", "no-cache, no-store, must-revalidate"));
+            }
+            if !self.headers.contains("Pragma".to_string()) {
+                response_builder.append_header(("Pragma", "no-cache"));
+            }
+            if !self.headers.contains("Expires".to_string()) {
+                response_builder.append_header(("Expires", "0"));
+            }
         }
 
         // Create the optimized stream from the Python generator
