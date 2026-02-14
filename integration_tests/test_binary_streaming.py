@@ -55,9 +55,7 @@ def test_stream_bytes_file(session):
             streamed_data += chunk
 
     # Read the original file to compare
-    test_file = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "build", "index.html"
-    )
+    test_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "build", "index.html")
     with open(test_file, "rb") as f:
         original_data = f.read()
 
