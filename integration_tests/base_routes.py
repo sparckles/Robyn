@@ -7,7 +7,7 @@ from collections import defaultdict
 from typing import Optional
 
 from integration_tests.subroutes import di_subrouter, static_router, sub_router
-from robyn import Headers, Request, Response, Robyn, SSEMessage, SSEResponse, WebSocketDisconnect, jsonify, serve_file, serve_html
+from robyn import Headers, Request, Response, Robyn, SSEMessage, SSEResponse, StreamingResponse, WebSocketDisconnect, jsonify, serve_file, serve_html
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.robyn import QueryParams, Url
 from robyn.templating import JinjaTemplate
@@ -1351,6 +1351,63 @@ def sse_status_code(request):
         yield "data: Message with custom status\n\n"
 
     return SSEResponse(event_generator(), status_code=201)
+
+
+# --- Binary streaming endpoints ---
+
+
+@app.get("/stream/bytes")
+def stream_bytes(request):
+    """Stream binary data using bytes chunks"""
+
+    def bytes_generator():
+        # Generate 3 chunks of known binary data
+        for i in range(3):
+            yield bytes([i] * 1024)  # 1KB chunks filled with the chunk index
+
+    return StreamingResponse(
+        content=bytes_generator(),
+        media_type="application/octet-stream",
+        headers=Headers({"Content-Type": "application/octet-stream"}),
+    )
+
+
+@app.get("/stream/bytes_file")
+def stream_bytes_file(request):
+    """Stream a file in binary mode using yield from"""
+    test_file = os.path.join(current_file_path, "build", "index.html")
+
+    def file_generator():
+        with open(test_file, "rb") as f:
+            while True:
+                chunk = f.read(512)
+                if not chunk:
+                    break
+                yield chunk
+
+    return StreamingResponse(
+        content=file_generator(),
+        media_type="application/octet-stream",
+        headers=Headers({
+            "Content-Type": "application/octet-stream",
+            "Content-Disposition": "attachment; filename=index.html",
+        }),
+    )
+
+
+@app.get("/stream/mixed_text")
+def stream_mixed_text(request):
+    """Stream text data using string chunks (ensures str still works)"""
+
+    def text_generator():
+        for i in range(3):
+            yield f"text chunk {i}\n"
+
+    return StreamingResponse(
+        content=text_generator(),
+        media_type="text/plain",
+        headers=Headers({"Content-Type": "text/plain"}),
+    )
 
 
 def main():

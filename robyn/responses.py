@@ -65,7 +65,7 @@ def serve_file(file_path: str, file_name: Optional[str] = None) -> FileResponse:
 class AsyncGeneratorWrapper:
     """Optimized true-streaming wrapper for async generators"""
 
-    def __init__(self, async_gen: AsyncGenerator[str, None]):
+    def __init__(self, async_gen: AsyncGenerator[Union[str, bytes], None]):
         self.async_gen = async_gen
         self._loop = None
         self._iterator = None
@@ -124,7 +124,10 @@ class AsyncGeneratorWrapper:
 class StreamingResponse:
     def __init__(
         self,
-        content: Union[Generator[str, None, None], AsyncGenerator[str, None]],
+        content: Union[
+            Generator[Union[str, bytes], None, None],
+            AsyncGenerator[Union[str, bytes], None],
+        ],
         status_code: Optional[int] = None,
         headers: Optional[Headers] = None,
         media_type: str = "text/event-stream",
@@ -149,7 +152,10 @@ class StreamingResponse:
 
 
 def SSEResponse(
-    content: Union[Generator[str, None, None], AsyncGenerator[str, None]],
+    content: Union[
+        Generator[Union[str, bytes], None, None],
+        AsyncGenerator[Union[str, bytes], None],
+    ],
     status_code: Optional[int] = None,
     headers: Optional[Headers] = None,
 ) -> StreamingResponse:
