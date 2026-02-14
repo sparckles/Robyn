@@ -31,6 +31,7 @@ pub struct StreamingResponse {
     pub status_code: u16,
     pub headers: Headers,
     pub content_generator: Py<PyAny>,
+    pub media_type: String,
 }
 
 #[derive(Debug)]
@@ -85,11 +86,17 @@ impl Responder for Response {
 }
 
 impl StreamingResponse {
-    pub fn new(status_code: u16, headers: Headers, content_generator: Py<PyAny>) -> Self {
+    pub fn new(
+        status_code: u16,
+        headers: Headers,
+        content_generator: Py<PyAny>,
+        media_type: String,
+    ) -> Self {
         Self {
             status_code,
             headers,
             content_generator,
+            media_type,
         }
     }
 }
@@ -104,13 +111,15 @@ impl Responder for StreamingResponse {
 
         apply_hashmap_headers(&mut response_builder, &self.headers);
 
-        // Optimized headers for SSE streaming
-        response_builder
-            .append_header(("Connection", "keep-alive"))
-            .append_header(("X-Accel-Buffering", "no")) // Disable nginx buffering
-            .append_header(("Cache-Control", "no-cache, no-store, must-revalidate"))
-            .append_header(("Pragma", "no-cache"))
-            .append_header(("Expires", "0"));
+        // Only add SSE-specific headers for event-stream responses
+        if self.media_type == "text/event-stream" {
+            response_builder
+                .append_header(("Connection", "keep-alive"))
+                .append_header(("X-Accel-Buffering", "no")) // Disable nginx buffering
+                .append_header(("Cache-Control", "no-cache, no-store, must-revalidate"))
+                .append_header(("Pragma", "no-cache"))
+                .append_header(("Expires", "0"));
+        }
 
         // Create the optimized stream from the Python generator
         let stream = create_python_stream(self.content_generator);
@@ -129,10 +138,22 @@ fn create_python_stream(
                 let gen = generator.bind(py);
 
                 match gen.call_method0("__next__") {
-                    Ok(value) => value.extract::<String>().ok().map(|s| (s, generator)),
+                    Ok(value) => {
+                        if let Ok(py_bytes) = value.downcast::<PyBytes>() {
+                            Some((py_bytes.as_bytes().to_vec(), generator))
+                        } else if let Ok(s) = value.extract::<String>() {
+                            Some((s.into_bytes(), generator))
+                        } else {
+                            None
+                        }
+                    }
                     Err(e) => {
                         if !e.is_instance_of::<pyo3::exceptions::PyStopIteration>(py) {
                             log::error!("Generator error: {}", e);
+                        }
+                        None
+                    }
+                }
                         }
                         None
                     }
@@ -141,7 +162,7 @@ fn create_python_stream(
         })
         .await
         {
-            Ok(Some((string_value, generator))) => Some((Ok(Bytes::from(string_value)), generator)),
+            Ok(Some((data, generator))) => Some((Ok(Bytes::from(data)), generator)),
             _ => None,
         }
     }))
@@ -455,6 +476,11 @@ impl FromPyObject<'_, '_> for StreamingResponse {
 
         let content: pyo3::Py<PyAny> = obj.getattr("content")?.unbind();
 
-        Ok(StreamingResponse::new(status_code, headers, content))
+        Ok(StreamingResponse::new(
+            status_code,
+            headers,
+            content,
+            media_type,
+        ))
     }
 }
