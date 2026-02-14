@@ -71,6 +71,44 @@ Note: `router_dependencies`, `global_dependencies` are reserved parameters and *
 </Col>
 </Row>
 
+### WebSocket Dependency Injection
+
+<Row>
+<Col>
+WebSockets support the same dependency injection system as HTTP routes. The `global_dependencies` and `router_dependencies` parameters work in the main handler, `on_connect`, and `on_close` callbacks.
+</Col>
+  <Col>
+    <CodeGroup title="WebSocket DI" tag="WebSocket" label="/chat">
+    ```python {{ title: 'WebSocket DI' }}
+      from robyn import Robyn
+      import logging
+
+      app = Robyn(__file__)
+
+      app.inject_global(logger=logging.getLogger(__name__))
+      app.inject(cache=RedisCache())
+
+      @app.websocket("/chat")
+      async def chat(websocket, global_dependencies=None, router_dependencies=None):
+          logger = global_dependencies.get("logger")
+          cache = router_dependencies.get("cache")
+          logger.info(f"New connection: {websocket.id}")
+
+          while True:
+              message = await websocket.receive_text()
+              cache.set(f"ws_{websocket.id}", message)
+              await websocket.broadcast(f"User {websocket.id}: {message}")
+
+      @chat.on_connect
+      async def on_connect(websocket, global_dependencies=None):
+          logger = global_dependencies.get("logger")
+          logger.info(f"Client connected: {websocket.id}")
+          return "Connected"
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
 ---
 
 

@@ -15,10 +15,36 @@ use parking_lot::RwLock;
 use pyo3::prelude::*;
 use pyo3::IntoPyObject;
 use pyo3_async_runtimes::TaskLocals;
+use std::sync::Arc;
+use tokio::sync::mpsc;
 use uuid::Uuid;
 
 use registry::{Register, WebSocketRegistry};
 use std::collections::HashMap;
+
+/// A Rust-backed channel receiver exposed to Python.
+/// Python handlers call `await channel.receive()` to get the next message.
+/// Returns the message string, or None when the connection is closed.
+#[pyclass]
+pub struct WebSocketChannel {
+    receiver: Arc<tokio::sync::Mutex<mpsc::UnboundedReceiver<Option<String>>>>,
+}
+
+#[pymethods]
+impl WebSocketChannel {
+    /// Await the next message from the WebSocket.
+    /// Returns the message string, or None if the connection was closed.
+    fn receive<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let receiver = self.receiver.clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let mut rx = receiver.lock().await;
+            match rx.recv().await {
+                Some(Some(msg)) => Ok(Some(msg)),
+                Some(None) | None => Ok(None),
+            }
+        })
+    }
+}
 
 /// Define HTTP actor
 #[pyclass]
@@ -28,6 +54,12 @@ pub struct WebSocketConnector {
     pub task_locals: TaskLocals,
     pub registry_addr: Addr<WebSocketRegistry>,
     pub query_params: QueryParams,
+    /// Whether this connection uses the new channel-based message delivery.
+    pub use_channel: bool,
+    /// Sender side of the message channel (stays in the Actix actor).
+    pub message_sender: Option<mpsc::UnboundedSender<Option<String>>>,
+    /// Receiver side exposed to Python via WebSocketChannel.
+    pub message_channel: Option<Py<WebSocketChannel>>,
 }
 
 // By default mailbox capacity is 16 messages.
@@ -42,6 +74,23 @@ impl Actor for WebSocketConnector {
             addr: addr.clone(),
         });
 
+        // If new-style (channel mode), create the tokio channel
+        if self.use_channel {
+            let (tx, rx) = mpsc::unbounded_channel::<Option<String>>();
+            self.message_sender = Some(tx);
+            self.message_channel = Python::with_gil(|py| {
+                Some(
+                    Py::new(
+                        py,
+                        WebSocketChannel {
+                            receiver: Arc::new(tokio::sync::Mutex::new(rx)),
+                        },
+                    )
+                    .unwrap(),
+                )
+            });
+        }
+
         let function = self.router.get("connect").unwrap();
         execute_ws_function(function, None, &self.task_locals, ctx, self);
 
@@ -49,6 +98,11 @@ impl Actor for WebSocketConnector {
     }
 
     fn stopped(&mut self, ctx: &mut Self::Context) {
+        // Drop the sender to close the channel.
+        // This causes any pending `channel.receive()` in Python to return None,
+        // which the WebSocketAdapter converts to WebSocketDisconnect.
+        self.message_sender.take();
+
         let function = self.router.get("close").unwrap();
         execute_ws_function(function, None, &self.task_locals, ctx, self);
         debug!("Actor is dead");
@@ -65,6 +119,11 @@ impl Clone for WebSocketConnector {
             task_locals: task_locals_clone,
             registry_addr: self.registry_addr.clone(),
             query_params: self.query_params.clone(),
+            use_channel: self.use_channel,
+            message_sender: self.message_sender.clone(),
+            message_channel: Python::with_gil(|py| {
+                self.message_channel.as_ref().map(|c| c.clone_ref(py))
+            }),
         }
     }
 }
@@ -89,29 +148,33 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebSocketConnecto
         match msg {
             Ok(ws::Message::Ping(msg)) => {
                 debug!("Ping message {:?}", msg);
-                let function = self.router.get("connect").unwrap();
-                debug!("{:?}", function.handler);
-                execute_ws_function(function, None, &self.task_locals, ctx, self);
                 ctx.pong(&msg)
             }
             Ok(ws::Message::Pong(msg)) => {
                 debug!("Pong message {:?}", msg);
             }
             Ok(ws::Message::Text(text)) => {
-                // need to also pass this text as a param
                 debug!("Text message received {:?}", text);
-                let function = self.router.get("message").unwrap();
-                execute_ws_function(
-                    function,
-                    Some(text.to_string()),
-                    &self.task_locals,
-                    ctx,
-                    self,
-                );
+                if let Some(ref sender) = self.message_sender {
+                    // New-style: push to Rust channel. No GIL. No Python call.
+                    let _ = sender.send(Some(text.to_string()));
+                } else {
+                    // Old-style: call Python message handler directly
+                    let function = self.router.get("message").unwrap();
+                    execute_ws_function(
+                        function,
+                        Some(text.to_string()),
+                        &self.task_locals,
+                        ctx,
+                        self,
+                    );
+                }
             }
             Ok(ws::Message::Binary(bin)) => ctx.binary(bin),
             Ok(ws::Message::Close(_close_reason)) => {
                 debug!("Socket was closed");
+                // Drop sender to signal channel closure
+                self.message_sender.take();
                 let function = self.router.get("close").unwrap();
                 execute_ws_function(function, None, &self.task_locals, ctx, self);
             }
@@ -199,6 +262,13 @@ impl WebSocketConnector {
     pub fn get_query_params(&self) -> QueryParams {
         self.query_params.clone()
     }
+
+    /// Get the message channel for new-style WebSocket handlers.
+    /// Returns None for old-style handlers.
+    #[getter]
+    pub fn get_message_channel(&self, py: Python) -> Option<Py<WebSocketChannel>> {
+        self.message_channel.as_ref().map(|c| c.clone_ref(py))
+    }
 }
 
 static REGISTRY_ADDRESSES: OnceCell<RwLock<HashMap<String, Addr<WebSocketRegistry>>>> =
@@ -230,6 +300,7 @@ pub async fn start_web_socket(
     router: HashMap<String, FunctionInfo>,
     task_locals: TaskLocals,
     endpoint: String,
+    use_channel: bool,
 ) -> Result<HttpResponse, Error> {
     let registry_addr = get_or_init_registry_for_endpoint(endpoint);
 
@@ -253,6 +324,9 @@ pub async fn start_web_socket(
             id: Uuid::new_v4(),
             registry_addr,
             query_params,
+            use_channel,
+            message_sender: None,
+            message_channel: None,
         },
         &req,
         stream,

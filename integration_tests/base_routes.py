@@ -7,25 +7,13 @@ from collections import defaultdict
 from typing import Optional
 
 from integration_tests.subroutes import di_subrouter, static_router, sub_router
-from robyn import Headers, Request, Response, Robyn, SSEMessage, SSEResponse, WebSocket, WebSocketConnector, jsonify, serve_file, serve_html
+from robyn import Headers, Request, Response, Robyn, SSEMessage, SSEResponse, WebSocketDisconnect, jsonify, serve_file, serve_html
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.robyn import QueryParams, Url
 from robyn.templating import JinjaTemplate
 from robyn.types import Body, JSONResponse, Method, PathParams
 
 app = Robyn(__file__)
-websocket = WebSocket(app, "/web_socket")
-
-# Creating a new WebSocket app to test json handling + to serve an example to future users of this lib
-# while the original "raw" web_socket is used with benchmark tests
-websocket_json = WebSocket(app, "/web_socket_json")
-
-websocket_di = WebSocket(app, "/web_socket_di")
-
-websocket_di.inject_global(GLOBAL_DEPENDENCY="GLOBAL DEPENDENCY")
-websocket_di.inject(ROUTER_DEPENDENCY="ROUTER DEPENDENCY")
-
-websocket_empty_returns = WebSocket(app, "/web_socket_empty_returns")
 
 current_file_path = pathlib.Path(__file__).parent.resolve()
 jinja_template = JinjaTemplate(os.path.join(current_file_path, "templates"))
@@ -36,100 +24,125 @@ jinja_template = JinjaTemplate(os.path.join(current_file_path, "templates"))
 websocket_state = defaultdict(int)
 
 
-@websocket_json.on("message")
-async def jsonws_message(ws, msg: str) -> str:
-    websocket_id = ws.id
-    response: dict = {"ws_id": websocket_id, "resp": "", "msg": msg}
-    global websocket_state
-    state = websocket_state[websocket_id]
-    if state == 0:
-        response["resp"] = "Whaaat??"
-    elif state == 1:
-        response["resp"] = "Whooo??"
-    elif state == 2:
-        response["resp"] = "*chika* *chika* Slim Shady."
-    websocket_state[websocket_id] = (state + 1) % 3
-    return jsonify(response)
+# --- Regular WebSocket endpoint (new-style with Rust channels) ---
+@app.websocket("/web_socket")
+async def websocket_endpoint(websocket):
+    try:
+        while True:
+            _ = await websocket.receive_text()
+            websocket_id = websocket.id
+            global websocket_state
+            state = websocket_state[websocket_id]
+
+            if state == 0:
+                await websocket.broadcast("This is a broadcast message")
+                await websocket.send_text("This is a message to self")
+                await websocket.send_text("Whaaat??")
+            elif state == 1:
+                await websocket.send_text("Whooo??")
+            elif state == 2:
+                await websocket.broadcast(websocket.query_params.get("one", ""))
+                await websocket.send_text(websocket.query_params.get("two", ""))
+                await websocket.send_text("*chika* *chika* Slim Shady.")
+            elif state == 3:
+                await websocket.send_text("Connection closed")
+                await websocket.close()
+                break
+
+            websocket_state[websocket_id] = (state + 1) % 4
+    except WebSocketDisconnect:
+        pass
 
 
-@websocket.on("message")
-async def message(ws: WebSocketConnector, msg: str, global_dependencies) -> str:
-    global websocket_state
-    websocket_id = ws.id
-    state = websocket_state[websocket_id]
-    resp = ""
-    if state == 0:
-        resp = "Whaaat??"
-        await ws.async_broadcast("This is a broadcast message")
-        ws.sync_send_to(websocket_id, "This is a message to self")
-    elif state == 1:
-        resp = "Whooo??"
-    elif state == 2:
-        await ws.async_broadcast(ws.query_params.get("one", None))
-        ws.sync_send_to(websocket_id, ws.query_params.get("two", None))
-        resp = "*chika* *chika* Slim Shady."
-    elif state == 3:
-        ws.close()
-        # TODO temporary fix to avoid CI failure
-        resp = "Connection closed"
-
-    websocket_state[websocket_id] = (state + 1) % 4
-    return resp
-
-
-@websocket.on("close")
-def close():
-    return "GoodBye world, from ws"
-
-
-@websocket_json.on("close")
-def jsonws_close():
-    return "GoodBye world, from ws"
-
-
-@websocket.on("connect")
-def connect():
+@websocket_endpoint.on_connect
+def websocket_on_connect(websocket):
     return "Hello world, from ws"
 
 
-@websocket_json.on("connect")
-def jsonws_connect():
+@websocket_endpoint.on_close
+def websocket_on_close(websocket):
+    return "GoodBye world, from ws"
+
+
+# --- JSON WebSocket endpoint ---
+@app.websocket("/web_socket_json")
+async def json_websocket_endpoint(websocket):
+    try:
+        while True:
+            msg = await websocket.receive_text()
+            websocket_id = websocket.id
+            response = {"ws_id": websocket_id, "resp": "", "msg": msg}
+            global websocket_state
+            state = websocket_state[websocket_id]
+
+            if state == 0:
+                response["resp"] = "Whaaat??"
+            elif state == 1:
+                response["resp"] = "Whooo??"
+            elif state == 2:
+                response["resp"] = "*chika* *chika* Slim Shady."
+
+            websocket_state[websocket_id] = (state + 1) % 3
+            await websocket.send_json(response)
+    except WebSocketDisconnect:
+        pass
+
+
+@json_websocket_endpoint.on_connect
+def json_websocket_on_connect(websocket):
     return "Hello world, from ws"
 
 
-@websocket_di.on("connect")
-async def di_message_connect(global_dependencies, router_dependencies):
-    return global_dependencies["GLOBAL_DEPENDENCY"] + " " + router_dependencies["ROUTER_DEPENDENCY"]
+@json_websocket_endpoint.on_close
+def json_websocket_on_close(websocket):
+    return "GoodBye world, from ws"
 
 
-@websocket_di.on("message")
-async def di_message():
-    # Test empty return - should not send anything
-    pass
+# --- WebSocket with dependency injection ---
+@app.websocket("/web_socket_di")
+async def di_websocket_endpoint(websocket, global_dependencies=None, router_dependencies=None):
+    try:
+        while True:
+            _ = await websocket.receive_text()
+            global_dep = global_dependencies.get("GLOBAL_DEPENDENCY", "MISSING GLOBAL") if global_dependencies else "MISSING GLOBAL"
+            router_dep = router_dependencies.get("ROUTER_DEPENDENCY", "MISSING ROUTER") if router_dependencies else "MISSING ROUTER"
+            await websocket.send_text(f"handler: {global_dep} {router_dep}")
+    except WebSocketDisconnect:
+        pass
 
 
-@websocket_di.on("close")
-async def di_message_close():
-    # Test empty return - should not send anything
-    pass
+@di_websocket_endpoint.on_connect
+async def di_websocket_on_connect(websocket, global_dependencies=None, router_dependencies=None):
+    global_dep = global_dependencies.get("GLOBAL_DEPENDENCY") if global_dependencies else "MISSING GLOBAL"
+    router_dep = router_dependencies.get("ROUTER_DEPENDENCY") if router_dependencies else "MISSING ROUTER"
+    return f"connect: {global_dep} {router_dep}"
 
 
-@websocket_empty_returns.on("connect")
-async def empty_connect():
+@di_websocket_endpoint.on_close
+async def di_websocket_on_close(websocket, global_dependencies=None):
+    global_dep = global_dependencies.get("GLOBAL_DEPENDENCY") if global_dependencies else "MISSING GLOBAL"
+    return f"close: {global_dep}"
+
+
+# --- WebSocket with empty returns ---
+@app.websocket("/web_socket_empty_returns")
+async def empty_websocket_endpoint(websocket):
+    try:
+        while True:
+            await websocket.receive_text()
+            # No response sent
+    except WebSocketDisconnect:
+        pass
+
+
+@empty_websocket_endpoint.on_connect
+async def empty_websocket_on_connect(websocket):
     """Test async handler with no return"""
-    # No return statement - should not send anything
     pass
 
 
-@websocket_empty_returns.on("message")
-def empty_message_sync():
-    """Test sync handler with no return"""
-    # No return statement - should not send anything
-    pass
-
-
-@websocket_empty_returns.on("close")
-async def empty_close():
+@empty_websocket_endpoint.on_close
+async def empty_websocket_on_close(websocket):
     """Test async handler with explicit None return"""
     return None
 

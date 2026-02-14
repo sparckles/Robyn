@@ -22,7 +22,7 @@ use types::{
     HttpMethod, Url,
 };
 
-use websockets::{registry::WebSocketRegistry, WebSocketConnector};
+use websockets::{registry::WebSocketRegistry, WebSocketChannel, WebSocketConnector};
 
 #[pyfunction]
 fn get_version() -> String {
@@ -41,6 +41,7 @@ pub fn robyn(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<CookiesIter>()?;
     m.add_class::<WebSocketRegistry>()?;
     m.add_class::<WebSocketConnector>()?;
+    m.add_class::<WebSocketChannel>()?;
     m.add_class::<SocketHeld>()?;
     m.add_class::<FunctionInfo>()?;
     m.add_class::<Identity>()?;

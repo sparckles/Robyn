@@ -57,15 +57,22 @@ def test_web_socket_json(session):
 
 
 def test_websocket_di(session):
-    """
-    Not using this as the benchmark test since this involves JSON marshalling/unmarshalling
-
-    """
-
-    msg = "GLOBAL DEPENDENCY ROUTER DEPENDENCY"
+    """Test dependency injection in WebSocket connect and handler phases."""
 
     ws = create_connection(f"{BASE_URL}/web_socket_di")
-    assert ws.recv() == msg
+
+    # 1. on_connect should receive both global and router dependencies
+    assert ws.recv() == "connect: GLOBAL DEPENDENCY ROUTER DEPENDENCY"
+
+    # 2. Main handler should also receive both dependencies when processing messages
+    ws.send("test")
+    assert ws.recv() == "handler: GLOBAL DEPENDENCY ROUTER DEPENDENCY"
+
+    # Send another message to confirm DI is stable across multiple messages
+    ws.send("test again")
+    assert ws.recv() == "handler: GLOBAL DEPENDENCY ROUTER DEPENDENCY"
+
+    ws.close()
 
 
 def test_websocket_empty_returns(session):
