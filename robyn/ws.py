@@ -56,7 +56,9 @@ class WebSocketAdapter:
     async def receive_json(self):
         """Receive and decode JSON data."""
         text = await self.receive_text()
-        return orjson.loads(text) if text else None
+        if text is None:
+            return None
+        return orjson.loads(text)
 
     async def send_text(self, data: str):
         """Send text data to this WebSocket client."""

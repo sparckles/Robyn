@@ -575,9 +575,12 @@ class BaseRobyn(ABC):
             self.openapi.add_subrouter_paths(self.openapi)
 
         # extend the websocket routes
-        prefix = router.prefix
+        prefix = _normalize_endpoint(router.prefix, treat_empty_as_root=True)
+        if prefix == "/":
+            prefix = ""
         for route, handlers in router.web_socket_router.routes.items():
-            new_endpoint = f"{prefix}{route}"
+            normalized_route = _normalize_endpoint(route)
+            new_endpoint = f"{prefix}{normalized_route}"
             self.web_socket_router.routes[new_endpoint] = handlers
 
         self.dependencies.merge_dependencies(router)
