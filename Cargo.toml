@@ -1,6 +1,6 @@
 [package]
 name = "robyn"
-version = "0.77.0"
+version = "0.78.0"
 authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 edition = "2021"
 description = "Robyn is a Super Fast Async Python Web Framework with a Rust runtime."

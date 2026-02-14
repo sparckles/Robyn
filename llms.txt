@@ -4,7 +4,7 @@
 
 ## Quick Facts
 
-- Version: 0.77.0
+- Version: 0.78.0
 - Python: >= 3.10
 - License: BSD 2.0
 - Repository: https://github.com/sparckles/robyn
