@@ -120,7 +120,6 @@ jobs:
             { version: "3.11", abi: "cp311-cp311" },
             { version: "3.12", abi: "cp312-cp312" },
             { version: "3.13", abi: "cp313-cp313" },
-            { version: "3.14", abi: "cp314-cp314" },
           ]
         target: [aarch64, armv7]
     steps:
@@ -132,6 +131,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           manylinux: auto
+          maturin-version: "v1.12.0"
           args: -i python${{matrix.python.version}} --release --out dist
       - uses: uraimo/run-on-arch-action@v2
         name: Install build wheel
