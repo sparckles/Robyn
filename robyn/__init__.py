@@ -810,5 +810,6 @@ __all__ = [
     "WebSocket",
     "WebSocketAdapter",
     "WebSocketDisconnect",
+    "JsonBody",
     "MCPApp",
 ]
