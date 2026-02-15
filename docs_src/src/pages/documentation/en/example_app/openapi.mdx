@@ -96,7 +96,7 @@ from robyn.robyn import QueryParams
 
 from robyn import Request, SubRouter
 
-subrouter: SubRouter = SubRouter(__name__, prefix="/sub")
+subrouter: SubRouter = SubRouter(prefix="/sub")
 
 
 @subrouter.get("/")

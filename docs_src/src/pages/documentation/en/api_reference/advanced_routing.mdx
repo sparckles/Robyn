@@ -344,7 +344,7 @@ The parameter injection system works in two phases:
     app = Robyn(__file__)
     
     # API v1 routes
-    api_v1 = SubRouter(__file__, prefix="/api/v1")
+    api_v1 = SubRouter(prefix="/api/v1")
     
     @api_v1.get("/users")
     def list_users():
@@ -359,7 +359,7 @@ The parameter injection system works in two phases:
         return {"created": True, "data": body}
     
     # Admin routes
-    admin = SubRouter(__file__, prefix="/admin")
+    admin = SubRouter(prefix="/admin")
     
     @admin.get("/dashboard")
     def admin_dashboard():
@@ -393,7 +393,7 @@ The parameter injection system works in two phases:
     from robyn.authentication import AuthenticationHandler
     
     # Admin routes with authentication
-    admin = SubRouter(__file__, prefix="/admin")
+    admin = SubRouter(prefix="/admin")
     
     class AdminAuth(AuthenticationHandler):
         def authenticate(self, request):

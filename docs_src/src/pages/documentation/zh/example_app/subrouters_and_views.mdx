@@ -37,7 +37,7 @@ current_file_path = pathlib.Path(__file__).parent.resolve()
 jinja_template = JinjaTemplate(os.path.join(current_file_path, "templates"))
 
 
-frontend = SubRouter(__name__, prefix="/frontend")
+frontend = SubRouter(prefix="/frontend")
 
 @frontend.get("/")
 async def get_frontend(request):

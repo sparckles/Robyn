@@ -78,35 +78,9 @@ class BaseRobyn(ABC):
 
     def __init__(
         self,
-        file_object: str,
-        config: Config = Config(),
-        openapi_file_path: Optional[str] = None,
-        openapi: Optional[OpenAPI] = None,
         dependencies: DependencyMap = DependencyMap(),
     ) -> None:
-        directory_path = os.path.dirname(os.path.abspath(file_object))
-        self.file_path = file_object
-        self.directory_path = directory_path
-        self.config = config
         self.dependencies = dependencies
-        self.openapi = openapi
-
-        self.init_openapi(openapi_file_path)
-
-        if not bool(os.environ.get("ROBYN_CLI", False)):
-            # the env variables are already set when are running through the cli
-            load_vars(project_root=directory_path)
-
-        self._handle_dev_mode()
-
-        logging.basicConfig(level=self.config.log_level)
-
-        if self.config.log_level.lower() != "warn":
-            logger.info(
-                "SERVER IS RUNNING IN VERBOSE/DEBUG MODE. Set --log-level to WARN to run in production mode.",
-                color=Colors.BLUE,
-            )
-
         self.router = Router()
         self.middleware_router = MiddlewareRouter()
         self.web_socket_router = WebSocketRouter()
@@ -119,32 +93,6 @@ class BaseRobyn(ABC):
         self.authentication_handler: Optional[AuthenticationHandler] = None
         self.included_routers: List[Router] = []
         self._mcp_app: Optional[MCPApp] = None
-
-    def init_openapi(self, openapi_file_path: Optional[str]) -> None:
-        if self.config.disable_openapi:
-            return
-
-        if self.openapi is None:
-            self.openapi = OpenAPI()
-
-        if openapi_file_path:
-            self.openapi.override_openapi(Path(self.directory_path).joinpath(openapi_file_path))
-        elif Path(self.directory_path).joinpath("openapi.json").exists():
-            self.openapi.override_openapi(Path(self.directory_path).joinpath("openapi.json"))
-        else:
-            logger.debug("No OpenAPI spec file found; using auto-generated documentation only.", color=Colors.YELLOW)
-
-    def _handle_dev_mode(self):
-        cli_dev_mode = self.config.dev  # --dev
-        env_dev_mode = os.getenv("ROBYN_DEV_MODE", "False").lower() == "true"  # ROBYN_DEV_MODE=True
-        is_robyn = os.getenv("ROBYN_CLI", False)
-
-        if cli_dev_mode and not is_robyn:
-            raise SystemExit("Dev mode is not supported in the python wrapper. Please use the Robyn CLI. e.g. python3 -m robyn app.py --dev")
-
-        if env_dev_mode and not is_robyn:
-            logger.error("Ignoring ROBYN_DEV_MODE environment variable. Dev mode is not supported in the python wrapper.")
-            raise SystemExit("Dev mode is not supported in the python wrapper. Please use the Robyn CLI. e.g. python3 -m robyn app.py")
 
     def add_route(
         self,
@@ -334,32 +282,6 @@ class BaseRobyn(ABC):
                 return s.connect_ex(("localhost", port)) == 0
         except Exception:
             raise Exception(f"Invalid port number: {port}")
-
-    def _add_openapi_routes(self, auth_required: bool = False):
-        if self.config.disable_openapi:
-            return
-
-        if self.openapi is None:
-            logger.error("No openAPI")
-            return
-
-        self.router.prepare_routes_openapi(self.openapi, self.included_routers)
-
-        self.add_route(
-            route_type=HttpMethod.GET,
-            endpoint="/openapi.json",
-            handler=self.openapi.get_openapi_config,
-            is_const=True,
-            auth_required=auth_required,
-        )
-        self.add_route(
-            route_type=HttpMethod.GET,
-            endpoint="/docs",
-            handler=self.openapi.get_openapi_docs_page,
-            is_const=True,
-            auth_required=auth_required,
-        )
-        self.exclude_response_headers_for(["/docs", "/openapi.json"])
 
     def exception(self, exception_handler: Callable):
         self.exception_handler = exception_handler
@@ -626,6 +548,90 @@ class BaseRobyn(ABC):
 
 
 class Robyn(BaseRobyn):
+    def __init__(
+        self,
+        file_object: str,
+        config: Config = Config(),
+        openapi_file_path: Optional[str] = None,
+        openapi: Optional[OpenAPI] = None,
+        dependencies: DependencyMap = DependencyMap(),
+    ) -> None:
+        super().__init__(dependencies=dependencies)
+
+        directory_path = os.path.dirname(os.path.abspath(file_object))
+        self.file_path = file_object
+        self.directory_path = directory_path
+        self.config = config
+        self.openapi = openapi
+
+        self._init_openapi(openapi_file_path)
+
+        if not bool(os.environ.get("ROBYN_CLI", False)):
+            # the env variables are already set when are running through the cli
+            load_vars(project_root=directory_path)
+
+        self._handle_dev_mode()
+
+        logging.basicConfig(level=self.config.log_level)
+
+        if self.config.log_level.lower() != "warn":
+            logger.info(
+                "SERVER IS RUNNING IN VERBOSE/DEBUG MODE. Set --log-level to WARN to run in production mode.",
+                color=Colors.BLUE,
+            )
+
+    def _init_openapi(self, openapi_file_path: Optional[str]) -> None:
+        if self.config.disable_openapi:
+            return
+
+        if self.openapi is None:
+            self.openapi = OpenAPI()
+
+        if openapi_file_path:
+            self.openapi.override_openapi(Path(self.directory_path).joinpath(openapi_file_path))
+        elif Path(self.directory_path).joinpath("openapi.json").exists():
+            self.openapi.override_openapi(Path(self.directory_path).joinpath("openapi.json"))
+        else:
+            logger.debug("No OpenAPI spec file found; using auto-generated documentation only.", color=Colors.YELLOW)
+
+    def _handle_dev_mode(self):
+        cli_dev_mode = self.config.dev  # --dev
+        env_dev_mode = os.getenv("ROBYN_DEV_MODE", "False").lower() == "true"  # ROBYN_DEV_MODE=True
+        is_robyn = os.getenv("ROBYN_CLI", False)
+
+        if cli_dev_mode and not is_robyn:
+            raise SystemExit("Dev mode is not supported in the python wrapper. Please use the Robyn CLI. e.g. python3 -m robyn app.py --dev")
+
+        if env_dev_mode and not is_robyn:
+            logger.error("Ignoring ROBYN_DEV_MODE environment variable. Dev mode is not supported in the python wrapper.")
+            raise SystemExit("Dev mode is not supported in the python wrapper. Please use the Robyn CLI. e.g. python3 -m robyn app.py")
+
+    def _add_openapi_routes(self, auth_required: bool = False):
+        if self.config.disable_openapi:
+            return
+
+        if self.openapi is None:
+            logger.error("No openAPI")
+            return
+
+        self.router.prepare_routes_openapi(self.openapi, self.included_routers)
+
+        self.add_route(
+            route_type=HttpMethod.GET,
+            endpoint="/openapi.json",
+            handler=self.openapi.get_openapi_config,
+            is_const=True,
+            auth_required=auth_required,
+        )
+        self.add_route(
+            route_type=HttpMethod.GET,
+            endpoint="/docs",
+            handler=self.openapi.get_openapi_docs_page,
+            is_const=True,
+            auth_required=auth_required,
+        )
+        self.exclude_response_headers_for(["/docs", "/openapi.json"])
+
     def start(self, host: str = "127.0.0.1", port: int = 8080, _check_port: bool = True, client_timeout: int = 30, keep_alive_timeout: int = 20):
         """
         Starts the server
@@ -682,8 +688,8 @@ class Robyn(BaseRobyn):
 
 
 class SubRouter(BaseRobyn):
-    def __init__(self, file_object: str, prefix: str = "", config: Config = Config(), openapi: OpenAPI = OpenAPI()) -> None:
-        super().__init__(file_object=file_object, config=config, openapi=openapi)
+    def __init__(self, prefix: str = "", dependencies: DependencyMap = DependencyMap()) -> None:
+        super().__init__(dependencies=dependencies)
         self.prefix = prefix
 
     def __add_prefix(self, endpoint: str):

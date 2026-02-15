@@ -3,7 +3,7 @@ from robyn import SubRouter, WebSocket, jsonify
 from .di_subrouter import di_subrouter
 from .file_api import static_router
 
-sub_router = SubRouter(__name__, prefix="/sub_router")
+sub_router = SubRouter(prefix="/sub_router")
 
 websocket = WebSocket(sub_router, "/ws")
 
