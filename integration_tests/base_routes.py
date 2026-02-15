@@ -1388,10 +1388,12 @@ def stream_bytes_file(request):
     return StreamingResponse(
         content=file_generator(),
         media_type="application/octet-stream",
-        headers=Headers({
-            "Content-Type": "application/octet-stream",
-            "Content-Disposition": "attachment; filename=index.html",
-        }),
+        headers=Headers(
+            {
+                "Content-Type": "application/octet-stream",
+                "Content-Disposition": "attachment; filename=index.html",
+            }
+        ),
     )
 
 
