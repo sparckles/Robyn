@@ -367,7 +367,6 @@ Robyn supports all standard HTTP methods. Here's how to create a complete RESTfu
 
     ```python
     from robyn import Robyn, Request
-    import json
     
     app = Robyn(__file__)
     
@@ -394,8 +393,8 @@ Robyn supports all standard HTTP methods. Here's how to create a complete RESTfu
     
     # POST - Create new post
     @app.post("/posts")
-    def create_post(body):
-        data = json.loads(body)
+    def create_post(request: Request):
+        data = request.json()
         post_id = str(len(posts) + 1)
         new_post = {
             "id": post_id,
@@ -407,12 +406,12 @@ Robyn supports all standard HTTP methods. Here's how to create a complete RESTfu
     
     # PUT - Update entire post
     @app.put("/posts/:id")
-    def update_post(path_params, body):
+    def update_post(request: Request, path_params):
         post_id = path_params["id"]
         if post_id not in posts:
             return {"error": "Post not found"}, 404
         
-        data = json.loads(body)
+        data = request.json()
         posts[post_id] = {
             "id": post_id,
             "title": data.get("title", ""),
@@ -422,12 +421,12 @@ Robyn supports all standard HTTP methods. Here's how to create a complete RESTfu
     
     # PATCH - Partial update
     @app.patch("/posts/:id")
-    def patch_post(path_params, body):
+    def patch_post(request: Request, path_params):
         post_id = path_params["id"]
         if post_id not in posts:
             return {"error": "Post not found"}, 404
         
-        data = json.loads(body)
+        data = request.json()
         post = posts[post_id]
         
         # Update only provided fields
@@ -470,7 +469,6 @@ Robyn automatically handles JSON serialization, but also provides flexible respo
     ```python
     from robyn import Robyn, Request
     from datetime import datetime
-    import json
     
     app = Robyn(__file__)
 
@@ -516,9 +514,9 @@ Robyn automatically handles JSON serialization, but also provides flexible respo
 
     # Custom status codes with JSON
     @app.post("/api/posts")
-    def create_post(body):
+    def create_post(request: Request):
         try:
-            data = json.loads(body)
+            data = request.json()
             # Validate required fields
             if not data.get("title"):
                 return {"error": "Title is required"}, 400
@@ -532,7 +530,7 @@ Robyn automatically handles JSON serialization, but also provides flexible respo
                     "created_at": datetime.now().isoformat()
                 }
             }, 201
-        except json.JSONDecodeError:
+        except ValueError:
             return {"error": "Invalid JSON format"}, 400
     ```
     </CodeGroup>

@@ -393,9 +393,20 @@ class Request:
 
     def json(self) -> Union[dict, list]:
         """
-        If the body is valid JSON, this will return the parsed JSON data
-        as a dict (for JSON objects) or a list (for JSON arrays).
-        Otherwise, this will throw a ValueError.
+        Parse the request body as JSON and return a dict with preserved types.
+
+        JSON types are mapped to Python types as follows:
+        - null -> None
+        - bool -> bool
+        - number -> int or float
+        - string -> str
+        - array -> list
+        - object -> dict
+
+        Nested structures are handled recursively up to a maximum depth of 128.
+
+        Raises:
+            ValueError: If the body is not a valid JSON object.
         """
         pass
 

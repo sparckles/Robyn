@@ -26,7 +26,7 @@ headers (dict[str, str]): The headers of the request. `e.g. {"Content-Type": "ap
 params (dict[str, str]): The parameters of the request. `e.g. /user/:id -> {"id": "123"}`
 </li>
 <li>
-body (Union[str, bytes]): The body of the request. If the request is a JSON, it will be a dict.
+body (Union[str, bytes]): The raw body of the request. For JSON payloads, use the `json()` method to parse the body into a dict with proper type preservation.
 </li>
 <li>
 method (str): The method of the request. `e.g. GET, POST, PUT, DELETE`
@@ -69,6 +69,33 @@ identity (Optional[Identity]): The identity of the client
     </CodeGroup>
   </Col>
 </Row>
+
+## Parsing JSON Body
+
+The `request.json()` method parses the request body as JSON and returns a Python `dict` with full type preservation:
+
+- JSON `null` becomes Python `None`
+- JSON numbers become Python `int` or `float`
+- JSON booleans become Python `bool`
+- JSON strings become Python `str`
+- JSON arrays become Python `list`
+- JSON objects become Python `dict`
+
+Nested structures are handled recursively up to a maximum depth of 128 levels.
+
+<CodeGroup title="Parsing JSON" tag="POST" label="/example">
+
+```python
+@app.post("/example")
+async def handler(request: Request):
+    data = request.json()  # Returns a dict with preserved types
+    # e.g. {"count": 42, "active": true, "tags": ["a", "b"]}
+    # ->   {"count": 42, "active": True, "tags": ["a", "b"]}
+    return {"received": data}
+```
+</CodeGroup>
+
+If the body is not valid JSON or is not a JSON object, a `ValueError` will be raised.
 
 ## Extra Path Parameters
 
