@@ -33,7 +33,7 @@
     "mdx-annotations": "^0.1.3",
     "meilisearch": "^0.33.0",
     "next": "13.4.2",
-    "next-mdx-remote": "^4.4.1",
+    "next-mdx-remote": "^6.0.0",
     "next-router-mock": "^0.9.3",
     "postcss-focus-visible": "^6.0.4",
     "prism-themes": "^1.9.0",
