@@ -57,6 +57,19 @@ class JsonBody:
         def create_user(request: Request, data: MyBody):
             # data is the parsed JSON dict
             ...
+
+    .. note::
+
+        The JSON body is parsed via ``request.json()`` during parameter
+        resolution, *before* the handler is invoked.  If the request body is
+        not valid JSON, a ``ValueError`` will be raised at that point and will
+        propagate to the outer exception handler (typically resulting in a 500
+        response).  Because parsing happens before handler invocation, the
+        error **cannot** be caught with a try/except inside the handler.
+
+        If you need to handle malformed JSON gracefully within your handler,
+        accept the raw body instead (e.g., ``body: Body``) and call
+        ``request.json()`` yourself inside a try/except block.
     """
 
     pass

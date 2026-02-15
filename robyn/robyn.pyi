@@ -393,7 +393,7 @@ class Request:
 
     def json(self) -> Union[dict, list]:
         """
-        Parse the request body as JSON and return a dict with preserved types.
+        Parse the request body as JSON and return a Python dict or list with preserved types.
 
         JSON types are mapped to Python types as follows:
         - null -> None
@@ -406,7 +406,7 @@ class Request:
         Nested structures are handled recursively up to a maximum depth of 128.
 
         Raises:
-            ValueError: If the body is not a valid JSON object.
+            ValueError: If the body is not valid JSON.
         """
         pass
 
