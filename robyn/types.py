@@ -41,4 +41,25 @@ class Body:
     pass
 
 
-__all__ = ["JSONResponse", "Body"]
+class JsonBody:
+    """
+    A type alias for JSON request bodies. When used as a parameter type annotation,
+    the handler receives the parsed JSON (dict) from request.json() and the OpenAPI
+    docs will show a generic JSON request body input.
+
+    Can be subclassed with annotations to provide a typed schema in the OpenAPI docs:
+
+        class MyBody(JsonBody):
+            name: str
+            age: int
+
+        @app.post("/users")
+        def create_user(request: Request, data: MyBody):
+            # data is the parsed JSON dict
+            ...
+    """
+
+    pass
+
+
+__all__ = ["JSONResponse", "Body", "JsonBody"]

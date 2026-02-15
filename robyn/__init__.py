@@ -23,7 +23,7 @@ from robyn.reloader import compile_rust_files
 from robyn.responses import SSEMessage, SSEResponse, StreamingResponse, html, serve_file, serve_html
 from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, WebSocketConnector, get_version
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
-from robyn.types import Directory
+from robyn.types import Directory, JsonBody
 from robyn.ws import WebSocket, WebSocketAdapter, WebSocketDisconnect, create_websocket_decorator
 
 __version__ = get_version()

@@ -214,3 +214,52 @@ def test_openapi_query_params():
     assert "required" == openapi_spec["paths"][endpoint][route_type]["parameters"][0]["name"]
     assert "query" == openapi_spec["paths"][endpoint][route_type]["parameters"][0]["in"]
     assert {"type": "boolean"} == openapi_spec["paths"][endpoint][route_type]["parameters"][0]["schema"]
+
+
+@pytest.mark.benchmark
+def test_openapi_json_body_typed():
+    """Test that a typed JsonBody subclass generates a proper requestBody schema in OpenAPI docs."""
+    openapi_response = get("/openapi.json", should_check_response=False)
+
+    assert openapi_response.status_code == 200
+
+    openapi_spec = openapi_response.json()
+
+    assert isinstance(openapi_spec, dict)
+
+    route_type = "post"
+    endpoint = "/openapi_json_body"
+
+    assert endpoint in openapi_spec["paths"]
+    assert route_type in openapi_spec["paths"][endpoint]
+    assert "requestBody" in openapi_spec["paths"][endpoint][route_type]
+    assert "content" in openapi_spec["paths"][endpoint][route_type]["requestBody"]
+    assert "application/json" in openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]
+    assert "schema" in openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]["application/json"]
+    assert "properties" in openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]["application/json"]["schema"]
+
+    properties = openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]["application/json"]["schema"]["properties"]
+    assert "fahrenheit" in properties
+    assert "number" == properties["fahrenheit"]["type"]
+
+
+@pytest.mark.benchmark
+def test_openapi_json_body_bare():
+    """Test that a bare JsonBody generates a requestBody with empty properties in OpenAPI docs."""
+    openapi_response = get("/openapi.json", should_check_response=False)
+
+    assert openapi_response.status_code == 200
+
+    openapi_spec = openapi_response.json()
+
+    assert isinstance(openapi_spec, dict)
+
+    route_type = "post"
+    # bare JsonBody routes should still have requestBody in the spec
+    endpoint = "/sync/json_body/bare"
+
+    assert endpoint in openapi_spec["paths"]
+    assert route_type in openapi_spec["paths"][endpoint]
+    assert "requestBody" in openapi_spec["paths"][endpoint][route_type]
+    assert "content" in openapi_spec["paths"][endpoint][route_type]["requestBody"]
+    assert "application/json" in openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]
