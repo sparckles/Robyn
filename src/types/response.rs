@@ -349,7 +349,6 @@ impl PyStreamingResponse {
             let mut headers = Headers::new(None);
             if media_type == "text/event-stream" {
                 headers.set("Content-Type".to_string(), "text/event-stream".to_string());
-                headers.set("Cache-Control".to_string(), "no-cache".to_string());
                 headers.set("Connection".to_string(), "keep-alive".to_string());
             } else {
                 // For non-SSE streaming responses, still set appropriate headers
@@ -589,9 +588,6 @@ impl FromPyObject<'_, '_> for StreamingResponse {
         // Set proper SSE headers if needed
         if media_type == "text/event-stream" {
             headers.set("Content-Type".to_string(), "text/event-stream".to_string());
-            if headers.get("Cache-Control".to_string()).is_none() {
-                headers.set("Cache-Control".to_string(), "no-cache".to_string());
-            }
             if headers.get("Connection".to_string()).is_none() {
                 headers.set("Connection".to_string(), "keep-alive".to_string());
             }
