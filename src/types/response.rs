@@ -168,10 +168,7 @@ fn create_python_stream(
                                 debug!("Generator yielded {} bytes", data.len());
                                 Some((data, generator))
                             } else if let Ok(string_value) = value.extract::<String>() {
-                                debug!(
-                                    "Generator yielded string of len {}",
-                                    string_value.len()
-                                );
+                                debug!("Generator yielded string of len {}", string_value.len());
                                 Some((string_value.into_bytes(), generator))
                             } else {
                                 let type_name = value
@@ -179,10 +176,7 @@ fn create_python_stream(
                                     .name()
                                     .map(|n| n.to_string())
                                     .unwrap_or_else(|_| "unknown".to_string());
-                                debug!(
-                                    "Generator yielded unsupported type: {}",
-                                    type_name
-                                );
+                                debug!("Generator yielded unsupported type: {}", type_name);
                                 None // End of stream
                             }
                         }
@@ -609,6 +603,11 @@ impl FromPyObject<'_, '_> for StreamingResponse {
             "Successfully extracted StreamingResponse with status {} from type {}",
             status_code, type_name
         );
-        Ok(StreamingResponse::new(status_code, headers, content, media_type))
+        Ok(StreamingResponse::new(
+            status_code,
+            headers,
+            content,
+            media_type,
+        ))
     }
 }
