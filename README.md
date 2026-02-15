@@ -118,20 +118,30 @@ python --version
 ## 💡 Features
 
 - Under active development!
-- Written in Rust, btw xD
 - A multithreaded Runtime
 - Extensible
-- Automatic OpenAPI generation
 - A simple API
 - Sync and Async Function Support
 - Dynamic URL Routing
 - Multi Core Scaling
-- WebSockets!
-- Middlewares
+- WebSockets
+- Middlewares (before and after request hooks)
 - Built in form data handling
 - Dependency Injection
 - Hot Reloading
 - Direct Rust Integration
+- Automatic OpenAPI generation
+- Jinja2 Templating
+- Static File Serving
+- File Responses and Downloads
+- Authentication Support
+- CORS Configuration
+- Streaming / SSE Responses
+- Startup and Shutdown Events
+- Exception Handling
+- SubRouters
+- Project Scaffolding via CLI
+- Experimental io-uring Support
 - **🤖 AI Agent Support** - Built-in agent routing and execution
 - **🔌 MCP (Model Context Protocol)** - Connect to AI applications as a server
 - Community First and truly FOSS!
