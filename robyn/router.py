@@ -158,7 +158,14 @@ class Router(BaseRouter):
                         type_filtered_params[handler_param_name] = getattr(request, type_name)
                     elif inspect.isclass(handler_param_type):
                         if issubclass(handler_param_type, JsonBody):
-                            type_filtered_params[handler_param_name] = request.json()
+                            try:
+                                type_filtered_params[handler_param_name] = request.json()
+                            except ValueError as e:
+                                return Response(
+                                    status_code=status_codes.HTTP_400_BAD_REQUEST,
+                                    headers=Headers({"Content-Type": "application/json"}),
+                                    description=jsonify({"error": f"Invalid JSON body: {e}"}),
+                                )
                         elif issubclass(handler_param_type, Body):
                             type_filtered_params[handler_param_name] = getattr(request, "body")
                         elif issubclass(handler_param_type, QueryParams):

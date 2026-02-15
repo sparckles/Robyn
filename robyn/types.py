@@ -62,14 +62,15 @@ class JsonBody:
 
         The JSON body is parsed via ``request.json()`` during parameter
         resolution, *before* the handler is invoked.  If the request body is
-        not valid JSON, a ``ValueError`` will be raised at that point and will
-        propagate to the outer exception handler (typically resulting in a 500
-        response).  Because parsing happens before handler invocation, the
-        error **cannot** be caught with a try/except inside the handler.
+        not valid JSON, a 400 Bad Request response is returned automatically
+        with a JSON error message (e.g., ``{"error": "Invalid JSON body: ..."}``)
+        and the handler is never called.  Because parsing happens before
+        handler invocation, the error **cannot** be caught with a try/except
+        inside the handler.
 
-        If you need to handle malformed JSON gracefully within your handler,
-        accept the raw body instead (e.g., ``body: Body``) and call
-        ``request.json()`` yourself inside a try/except block.
+        If you need custom error handling for malformed JSON, accept the raw
+        body instead (e.g., ``body: Body``) and call ``request.json()``
+        yourself inside a try/except block.
     """
 
     pass

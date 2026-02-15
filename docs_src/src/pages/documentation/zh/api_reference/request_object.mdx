@@ -65,7 +65,7 @@ identity (Optional[Identity])：客户端的身份
 
 ## 解析 JSON 请求体
 
-`request.json()` 方法将请求体解析为 JSON，并返回一个保留完整类型的 Python `dict`：
+`request.json()` 方法将请求体解析为 JSON，并返回一个保留完整类型的 Python `dict` 或 `list`（JSON 对象返回 `dict`，JSON 数组返回 `list`）：
 
 - JSON `null` 转换为 Python `None`
 - JSON 数字转换为 Python `int` 或 `float`
@@ -81,7 +81,7 @@ identity (Optional[Identity])：客户端的身份
 ```python
 @app.post("/example")
 async def handler(request: Request):
-    data = request.json()  # 返回一个保留类型的字典
+    data = request.json()  # 返回一个保留类型的字典或列表
     # 例如 {"count": 42, "active": true, "tags": ["a", "b"]}
     # ->   {"count": 42, "active": True, "tags": ["a", "b"]}
     return {"received": data}
