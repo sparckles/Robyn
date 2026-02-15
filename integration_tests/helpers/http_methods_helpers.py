@@ -63,7 +63,7 @@ def post(
 
 def json_post(
     endpoint: str,
-    json_data: Optional[dict] = None,
+    json_data=None,
     expected_status_code: int = 200,
     headers: dict = {},
     should_check_response: bool = True,
@@ -72,7 +72,7 @@ def json_post(
     Makes a POST request with JSON body to the given endpoint and checks the response.
 
     endpoint str: The endpoint to make the request to.
-    json_data Optional[dict]: The JSON data to send with the request.
+    json_data: The JSON-serializable data to send with the request (dict, list, etc.).
     expected_status_code int: The expected status code of the response.
     headers dict: The headers to send with the request.
     should_check_response bool: A boolean to indicate if the status code and headers should be checked.

@@ -391,9 +391,10 @@ class Request:
     ip_addr: Optional[str]
     identity: Optional[Identity]
 
-    def json(self) -> dict:
+    def json(self) -> Union[dict, list]:
         """
-        If the body is a valid JSON this will return the parsed JSON data.
+        If the body is valid JSON, this will return the parsed JSON data
+        as a dict (for JSON objects) or a list (for JSON arrays).
         Otherwise, this will throw a ValueError.
         """
         pass
