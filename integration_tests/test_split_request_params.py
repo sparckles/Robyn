@@ -81,8 +81,10 @@ def test_split_request_params_typed_untyped_post_combined(session, function_type
 @pytest.mark.benchmark
 @pytest.mark.parametrize("function_type", ["sync", "async"])
 def test_split_request_params_get_combined_failure(session, function_type):
+    # 'vishnu' is an unknown param with no default — now returns 400 (was 500 before easy-access params)
+    # because unresolved params are treated as missing required query params
     res = post(f"/{function_type}/split_request_typed_untyped/combined/failure?hello=robyn&a=1&b=2", data={"hello": "world"}, should_check_response=False)
-    assert 500 == res.status_code
+    assert 400 == res.status_code
 
 
 @pytest.mark.benchmark

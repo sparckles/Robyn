@@ -4,7 +4,7 @@ import os
 import pathlib
 import time
 from collections import defaultdict
-from typing import Optional
+from typing import List, Optional
 
 from integration_tests.subroutes import di_subrouter, static_router, sub_router
 from robyn import Headers, Request, Response, Robyn, SSEMessage, SSEResponse, WebSocketDisconnect, jsonify, serve_file, serve_html
@@ -1428,6 +1428,90 @@ def sse_status_code(request):
         yield "data: Message with custom status\n\n"
 
     return SSEResponse(event_generator(), status_code=201)
+
+
+# ===== Easy Access Query/Path Parameters =====
+
+
+@app.get("/easy/sync/:id")
+def easy_access_sync(id: int, q: str, page: int = 1):
+    return {"id": id, "q": q, "page": page}
+
+
+@app.get("/easy/async/:id")
+async def easy_access_async(id: int, q: str, page: int = 1):
+    return {"id": id, "q": q, "page": page}
+
+
+@app.get("/easy/sync/optional")
+def easy_access_optional_sync(name: str, age: Optional[int] = None):
+    return {"name": name, "age": age}
+
+
+@app.get("/easy/async/optional")
+async def easy_access_optional_async(name: str, age: Optional[int] = None):
+    return {"name": name, "age": age}
+
+
+@app.get("/easy/sync/list")
+def easy_access_list_sync(tag: List[str]):
+    return {"tags": tag}
+
+
+@app.get("/easy/async/list")
+async def easy_access_list_async(tag: List[str]):
+    return {"tags": tag}
+
+
+@app.get("/easy/sync/bool")
+def easy_access_bool_sync(active: bool = False):
+    return {"active": active}
+
+
+@app.get("/easy/async/bool")
+async def easy_access_bool_async(active: bool = False):
+    return {"active": active}
+
+
+@app.get("/easy/sync/mixed/:id")
+def easy_access_mixed_sync(request: Request, id: int, q: str = ""):
+    return {"id": id, "q": q, "method": request.method}
+
+
+@app.get("/easy/async/mixed/:id")
+async def easy_access_mixed_async(request: Request, id: int, q: str = ""):
+    return {"id": id, "q": q, "method": request.method}
+
+
+@app.get("/easy/sync/float")
+def easy_access_float_sync(price: float):
+    return {"price": price}
+
+
+@app.get("/easy/async/float")
+async def easy_access_float_async(price: float):
+    return {"price": price}
+
+
+# --- WebSocket with easy access query params ---
+@app.websocket("/web_socket_easy_access")
+async def easy_access_ws_handler(websocket, room: str = "default", page: int = 1):
+    try:
+        while True:
+            msg = await websocket.receive_text()
+            await websocket.send_text(f"room={room} page={page} msg={msg}")
+    except WebSocketDisconnect:
+        pass
+
+
+@easy_access_ws_handler.on_connect
+def easy_access_ws_on_connect(websocket, room: str = "default"):
+    return f"connected to {room}"
+
+
+@easy_access_ws_handler.on_close
+def easy_access_ws_on_close(websocket, room: str = "default"):
+    return f"left {room}"
 
 
 def main():
