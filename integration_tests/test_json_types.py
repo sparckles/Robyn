@@ -119,6 +119,53 @@ def test_json_mixed_types_preserved(function_type: str, session):
     assert result["field_value"]["type"] == "str"
 
 
+# ===== Top-level JSON Array Parsing Tests (Issue #1145) =====
+
+
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_json_top_level_array_of_strings(function_type: str, session):
+    """Test that request.json() handles a top-level array of strings (exact scenario from #1145)"""
+    json_data = ["google_docs", "notion"]
+    res = json_post(f"/{function_type}/request_json/array", json_data=json_data)
+    result = res.json()
+
+    assert result["type"] == "list"
+    assert result["parsed"] == ["google_docs", "notion"]
+
+
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_json_top_level_array_of_objects(function_type: str, session):
+    """Test that request.json() handles a top-level array of objects"""
+    json_data = [{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}]
+    res = json_post(f"/{function_type}/request_json/array", json_data=json_data)
+    result = res.json()
+
+    assert result["type"] == "list"
+    assert result["parsed"] == [{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}]
+
+
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_json_top_level_empty_array(function_type: str, session):
+    """Test that request.json() handles an empty top-level array"""
+    json_data = []
+    res = json_post(f"/{function_type}/request_json/array", json_data=json_data)
+    result = res.json()
+
+    assert result["type"] == "list"
+    assert result["parsed"] == []
+
+
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_json_top_level_array_of_mixed_types(function_type: str, session):
+    """Test that request.json() handles a top-level array with mixed types"""
+    json_data = [1, "two", True, None, {"key": "value"}]
+    res = json_post(f"/{function_type}/request_json/array", json_data=json_data)
+    result = res.json()
+
+    assert result["type"] == "list"
+    assert result["parsed"] == [1, "two", True, None, {"key": "value"}]
+
+
 # ===== JSON List Serialization Tests (Issue #1300) =====
 
 

@@ -753,6 +753,21 @@ async def async_json_types(request: Request):
     return result
 
 
+# JSON top-level array test (Issue #1145)
+@app.post("/sync/request_json/array")
+def sync_json_array(request: Request):
+    """Returns the parsed JSON when the body is a top-level array"""
+    data = request.json()
+    return {"parsed": data, "type": type(data).__name__}
+
+
+@app.post("/async/request_json/array")
+async def async_json_array(request: Request):
+    """Returns the parsed JSON when the body is a top-level array"""
+    data = request.json()
+    return {"parsed": data, "type": type(data).__name__}
+
+
 # --- PUT ---
 
 # dict
