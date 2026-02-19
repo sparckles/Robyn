@@ -1,6 +1,6 @@
 import pytest
 
-from integration_tests.helpers.http_methods_helpers import get, post
+from integration_tests.helpers.http_methods_helpers import get, json_post, post
 
 
 @pytest.mark.benchmark
@@ -83,3 +83,20 @@ def test_split_request_params_typed_untyped_post_combined(session, function_type
 def test_split_request_params_get_combined_failure(session, function_type):
     res = post(f"/{function_type}/split_request_typed_untyped/combined/failure?hello=robyn&a=1&b=2", data={"hello": "world"}, should_check_response=False)
     assert 500 == res.status_code
+
+
+@pytest.mark.benchmark
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_json_body_bare(session, function_type):
+    """Test that bare JsonBody passes the parsed JSON dict to the handler."""
+    res = json_post(f"/{function_type}/json_body/bare", json_data={"hello": "world", "count": 42})
+    assert res.json() == {"hello": "world", "count": 42}
+
+
+@pytest.mark.benchmark
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_json_body_typed(session, function_type):
+    """Test that typed JsonBody subclass passes the parsed JSON dict to the handler."""
+    res = json_post(f"/{function_type}/json_body/typed", json_data={"fahrenheit": 212})
+    result = res.json()
+    assert result["celsius"] == pytest.approx(100.0)

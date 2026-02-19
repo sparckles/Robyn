@@ -11,7 +11,7 @@ from robyn import Headers, Request, Response, Robyn, SSEMessage, SSEResponse, We
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.robyn import QueryParams, Url
 from robyn.templating import JinjaTemplate
-from robyn.types import Body, JSONResponse, Method, PathParams
+from robyn.types import Body, JsonBody, JSONResponse, Method, PathParams
 
 app = Robyn(__file__)
 
@@ -1223,6 +1223,47 @@ class CreateItemQueryParamsParams(QueryParams):
 @app.post("/openapi_request_body")
 def create_item(request, body: CreateItemBody, query: CreateItemQueryParamsParams) -> CreateItemResponse:
     return CreateItemResponse(success=True, items_changed=2)
+
+
+# ===== JsonBody Routes =====
+
+
+class TemperatureInput(JsonBody):
+    fahrenheit: float
+
+
+@app.post("/sync/json_body/bare")
+def sync_json_body_bare(data: JsonBody):
+    """Bare JsonBody - receives parsed JSON dict"""
+    return data
+
+
+@app.post("/async/json_body/bare")
+async def async_json_body_bare(data: JsonBody):
+    """Bare JsonBody - receives parsed JSON dict"""
+    return data
+
+
+@app.post("/sync/json_body/typed")
+def sync_json_body_typed(data: TemperatureInput):
+    """Typed JsonBody - receives parsed JSON dict, docs show schema"""
+    fahrenheit = data.get("fahrenheit", 0)
+    celsius = (float(fahrenheit) - 32) * 5 / 9
+    return {"celsius": celsius}
+
+
+@app.post("/async/json_body/typed")
+async def async_json_body_typed(data: TemperatureInput):
+    """Typed JsonBody - receives parsed JSON dict, docs show schema"""
+    fahrenheit = data.get("fahrenheit", 0)
+    celsius = (float(fahrenheit) - 32) * 5 / 9
+    return {"celsius": celsius}
+
+
+@app.post("/openapi_json_body")
+def openapi_json_body_endpoint(request: Request, data: TemperatureInput) -> dict:
+    """Convert fahrenheit to celsius using JsonBody"""
+    return {"celsius": (float(data.get("fahrenheit", 0)) - 32) * 5 / 9}
 
 
 # ===== Server-Sent Events (SSE) Routes =====

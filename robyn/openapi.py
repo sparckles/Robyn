@@ -10,7 +10,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, TypedDict
 
 from robyn.responses import html
 from robyn.robyn import QueryParams, Response
-from robyn.types import Body
+from robyn.types import Body, JsonBody
 
 
 class str_typed_dict(TypedDict):
@@ -205,7 +205,9 @@ class OpenAPI:
                 param_annotation = parameters[parameter].annotation
 
                 if inspect.isclass(param_annotation):
-                    if issubclass(param_annotation, Body):
+                    if issubclass(param_annotation, JsonBody):
+                        request_body = param_annotation
+                    elif issubclass(param_annotation, Body):
                         request_body = param_annotation
                     elif issubclass(param_annotation, QueryParams):
                         query_params = param_annotation

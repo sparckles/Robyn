@@ -12,7 +12,7 @@ from robyn.jsonify import jsonify
 from robyn.openapi import OpenAPI
 from robyn.responses import FileResponse, StreamingResponse
 from robyn.robyn import FunctionInfo, Headers, HttpMethod, Identity, MiddlewareType, QueryParams, Request, Response, Url
-from robyn.types import Body, Files, FormData, IPAddress, Method, PathParams
+from robyn.types import Body, Files, FormData, IPAddress, JsonBody, Method, PathParams
 
 _logger = logging.getLogger(__name__)
 
@@ -157,7 +157,16 @@ class Router(BaseRouter):
                     elif handler_param_type is type_mapping[type_name]:
                         type_filtered_params[handler_param_name] = getattr(request, type_name)
                     elif inspect.isclass(handler_param_type):
-                        if issubclass(handler_param_type, Body):
+                        if issubclass(handler_param_type, JsonBody):
+                            try:
+                                type_filtered_params[handler_param_name] = request.json()
+                            except ValueError as e:
+                                return Response(
+                                    status_code=status_codes.HTTP_400_BAD_REQUEST,
+                                    headers=Headers({"Content-Type": "application/json"}),
+                                    description=jsonify({"error": f"Invalid JSON body: {e}"}),
+                                )
+                        elif issubclass(handler_param_type, Body):
                             type_filtered_params[handler_param_name] = getattr(request, "body")
                         elif issubclass(handler_param_type, QueryParams):
                             type_filtered_params[handler_param_name] = getattr(request, "query_params")

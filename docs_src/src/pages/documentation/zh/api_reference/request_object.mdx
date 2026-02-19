@@ -23,7 +23,7 @@ headers (dict[str, str])：请求的标头。`例如：{"Content-Type": "applica
 params (dict[str, str])：请求的路径参数。`例如：/user/:id -> {"id": "123"}`
 </li>
 <li>
-body (Union[str, bytes])：请求的正文。如果请求是 JSON 格式，它就会被解析为字典为一个字典。
+body (Union[str, bytes])：请求的原始正文。对于 JSON 请求体，请使用 `json()` 方法将正文解析为具有正确类型保留的字典。
 </li>
 <li>
 method (str)：请求的方法。`例如：GET、POST、PUT、DELETE`
@@ -62,6 +62,33 @@ identity (Optional[Identity])：客户端的身份
 
   </Col>
 </Row>
+
+## 解析 JSON 请求体
+
+`request.json()` 方法将请求体解析为 JSON，并返回一个保留完整类型的 Python `dict` 或 `list`（JSON 对象返回 `dict`，JSON 数组返回 `list`）：
+
+- JSON `null` 转换为 Python `None`
+- JSON 数字转换为 Python `int` 或 `float`
+- JSON 布尔值转换为 Python `bool`
+- JSON 字符串转换为 Python `str`
+- JSON 数组转换为 Python `list`
+- JSON 对象转换为 Python `dict`
+
+嵌套结构将被递归处理，最大深度为 128 层。
+
+<CodeGroup title="解析 JSON" tag="POST" label="/example">
+
+```python
+@app.post("/example")
+async def handler(request: Request):
+    data = request.json()  # 返回一个保留类型的字典或列表
+    # 例如 {"count": 42, "active": true, "tags": ["a", "b"]}
+    # ->   {"count": 42, "active": True, "tags": ["a", "b"]}
+    return {"received": data}
+```
+</CodeGroup>
+
+如果请求体不是有效的 JSON，将会抛出 `ValueError`。
 
 ## Extra Path Parameters
 
