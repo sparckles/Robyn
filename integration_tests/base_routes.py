@@ -11,7 +11,7 @@ from robyn import Headers, Request, Response, Robyn, SSEMessage, SSEResponse, We
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.robyn import QueryParams, Url
 from robyn.templating import JinjaTemplate
-from robyn.types import Body, JSONResponse, JsonBody, Method, PathParams
+from robyn.types import Body, JsonBody, JSONResponse, Method, PathParams
 
 app = Robyn(__file__)
 
