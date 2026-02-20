@@ -32,6 +32,7 @@ pub struct StreamingResponse {
     pub status_code: u16,
     pub headers: Headers,
     pub content_generator: Py<PyAny>,
+    pub media_type: String,
 }
 
 #[derive(Debug)]
@@ -86,11 +87,17 @@ impl Responder for Response {
 }
 
 impl StreamingResponse {
-    pub fn new(status_code: u16, headers: Headers, content_generator: Py<PyAny>) -> Self {
+    pub fn new(
+        status_code: u16,
+        headers: Headers,
+        content_generator: Py<PyAny>,
+        media_type: String,
+    ) -> Self {
         Self {
             status_code,
             headers,
             content_generator,
+            media_type,
         }
     }
 }
@@ -105,13 +112,25 @@ impl Responder for StreamingResponse {
 
         apply_hashmap_headers(&mut response_builder, &self.headers);
 
-        // Optimized headers for SSE streaming
-        response_builder
-            .append_header(("Connection", "keep-alive"))
-            .append_header(("X-Accel-Buffering", "no")) // Disable nginx buffering
-            .append_header(("Cache-Control", "no-cache, no-store, must-revalidate"))
-            .append_header(("Pragma", "no-cache"))
-            .append_header(("Expires", "0"));
+        // Only add SSE-specific headers for event-stream responses if not already present
+        if self.media_type == "text/event-stream" {
+            if !self.headers.contains("Connection".to_string()) {
+                response_builder.append_header(("Connection", "keep-alive"));
+            }
+            if !self.headers.contains("X-Accel-Buffering".to_string()) {
+                response_builder.append_header(("X-Accel-Buffering", "no")); // Disable nginx buffering
+            }
+            if !self.headers.contains("Cache-Control".to_string()) {
+                response_builder
+                    .append_header(("Cache-Control", "no-cache, no-store, must-revalidate"));
+            }
+            if !self.headers.contains("Pragma".to_string()) {
+                response_builder.append_header(("Pragma", "no-cache"));
+            }
+            if !self.headers.contains("Expires".to_string()) {
+                response_builder.append_header(("Expires", "0"));
+            }
+        }
 
         // Create the optimized stream from the Python generator
         let stream = create_python_stream(self.content_generator);
@@ -142,18 +161,23 @@ fn create_python_stream(
                     // Try to get the next value from the generator (sync)
                     match gen.call_method0("__next__") {
                         Ok(value) => {
-                            match value.extract::<String>() {
-                                Ok(string_value) => {
-                                    debug!("Generator yielded: {}", string_value);
-                                    Some((string_value, generator))
-                                }
-                                Err(extract_err) => {
-                                    debug!(
-                                        "Failed to extract string from generator value: {}",
-                                        extract_err
-                                    );
-                                    None // End of stream
-                                }
+                            // Try bytes first (common for binary file streaming),
+                            // then fall back to string extraction
+                            if let Ok(py_bytes) = value.downcast::<PyBytes>() {
+                                let data = py_bytes.as_bytes().to_vec();
+                                debug!("Generator yielded {} bytes", data.len());
+                                Some((data, generator))
+                            } else if let Ok(string_value) = value.extract::<String>() {
+                                debug!("Generator yielded string of len {}", string_value.len());
+                                Some((string_value.into_bytes(), generator))
+                            } else {
+                                let type_name = value
+                                    .get_type()
+                                    .name()
+                                    .map(|n| n.to_string())
+                                    .unwrap_or_else(|_| "unknown".to_string());
+                                debug!("Generator yielded unsupported type: {}", type_name);
+                                None // End of stream
                             }
                         }
                         Err(call_err) => {
@@ -171,7 +195,7 @@ fn create_python_stream(
         })
         .await
         {
-            Ok(Some((string_value, generator))) => Some((Ok(Bytes::from(string_value)), generator)),
+            Ok(Some((data, generator))) => Some((Ok(Bytes::from(data)), generator)),
             Ok(None) => None,
             Err(join_err) => {
                 debug!(
@@ -319,7 +343,6 @@ impl PyStreamingResponse {
             let mut headers = Headers::new(None);
             if media_type == "text/event-stream" {
                 headers.set("Content-Type".to_string(), "text/event-stream".to_string());
-                headers.set("Cache-Control".to_string(), "no-cache".to_string());
                 headers.set("Connection".to_string(), "keep-alive".to_string());
             } else {
                 // For non-SSE streaming responses, still set appropriate headers
@@ -559,9 +582,6 @@ impl FromPyObject<'_, '_> for StreamingResponse {
         // Set proper SSE headers if needed
         if media_type == "text/event-stream" {
             headers.set("Content-Type".to_string(), "text/event-stream".to_string());
-            if headers.get("Cache-Control".to_string()).is_none() {
-                headers.set("Cache-Control".to_string(), "no-cache".to_string());
-            }
             if headers.get("Connection".to_string()).is_none() {
                 headers.set("Connection".to_string(), "keep-alive".to_string());
             }
@@ -583,6 +603,11 @@ impl FromPyObject<'_, '_> for StreamingResponse {
             "Successfully extracted StreamingResponse with status {} from type {}",
             status_code, type_name
         );
-        Ok(StreamingResponse::new(status_code, headers, content))
+        Ok(StreamingResponse::new(
+            status_code,
+            headers,
+            content,
+            media_type,
+        ))
     }
 }
