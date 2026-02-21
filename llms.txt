@@ -88,7 +88,7 @@ Main application class and sub-router for modular routes.
 from robyn import Robyn, SubRouter
 
 app = Robyn(__file__)
-api = SubRouter(__file__, prefix="/api")
+api = SubRouter(prefix="/api")
 
 @api.get("/users")
 def get_users(request):
