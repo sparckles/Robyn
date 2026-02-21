@@ -301,6 +301,7 @@ pub async fn start_web_socket(
     task_locals: TaskLocals,
     endpoint: String,
     use_channel: bool,
+    max_frame_size: usize,
 ) -> Result<HttpResponse, Error> {
     let registry_addr = get_or_init_registry_for_endpoint(endpoint);
 
@@ -317,7 +318,7 @@ pub async fn start_web_socket(
         }
     }
 
-    ws::start(
+    ws::WsResponseBuilder::new(
         WebSocketConnector {
             router,
             task_locals,
@@ -331,4 +332,6 @@ pub async fn start_web_socket(
         &req,
         stream,
     )
+    .frame_size(max_frame_size)
+    .start()
 }

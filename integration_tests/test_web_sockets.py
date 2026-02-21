@@ -75,6 +75,21 @@ def test_websocket_di(session):
     ws.close()
 
 
+def test_websocket_large_payload(session):
+    """Test that WebSocket can handle messages larger than the default 64KB frame size (#1269)"""
+    ws = create_connection(f"{BASE_URL}/web_socket_echo")
+    # Consume the empty connect message
+    ws.recv()
+
+    large_message = "A" * (128 * 1024)  # 128KB, well above the old 64KB default
+    ws.send(large_message)
+    response = ws.recv()
+    assert response == large_message
+    assert len(response) == 128 * 1024
+
+    ws.close()
+
+
 def test_websocket_empty_returns(session):
     """Test that WebSocket handlers can return nothing without causing errors"""
     ws = create_connection(f"{BASE_URL}/web_socket_empty_returns")
