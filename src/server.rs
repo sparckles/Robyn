@@ -212,6 +212,7 @@ impl Server {
                                     task_locals,
                                     endpoint_copy.to_string(),
                                     use_channel,
+                                    max_payload_size,
                                 )
                             }),
                         );

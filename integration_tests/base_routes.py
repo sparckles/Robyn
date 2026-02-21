@@ -124,6 +124,27 @@ async def di_websocket_on_close(websocket, global_dependencies=None):
     return f"close: {global_dep}"
 
 
+# --- WebSocket echo endpoint for large payload testing (#1269) ---
+@app.websocket("/web_socket_echo")
+async def echo_websocket_endpoint(websocket):
+    try:
+        while True:
+            msg = await websocket.receive_text()
+            await websocket.send_text(msg)
+    except WebSocketDisconnect:
+        pass
+
+
+@echo_websocket_endpoint.on_connect
+def echo_websocket_on_connect(websocket):
+    return ""
+
+
+@echo_websocket_endpoint.on_close
+def echo_websocket_on_close(websocket):
+    return ""
+
+
 # --- WebSocket with empty returns ---
 @app.websocket("/web_socket_empty_returns")
 async def empty_websocket_endpoint(websocket):
