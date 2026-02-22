@@ -6,21 +6,24 @@ Batman decided to implement real-time notifications for police officers using We
 
 
 
-```python {{ title: 'Setting up Authentication Middlewares' }}
-from robyn import WebSocket
+```python {{ title: 'Setting up Real-time Notifications' }}
+from robyn import WebSocketDisconnect
 
-websocket = WebSocket(app, "/notifications")
+@app.websocket("/notifications")
+async def notify_handler(websocket):
+    try:
+        while True:
+            message = await websocket.receive_text()
+            await websocket.send_text(f"Received: {message}")
+    except WebSocketDisconnect:
+        pass
 
-@websocket.on("connect")
-async def notify_connect():
+@notify_handler.on_connect
+def notify_connect(websocket):
     return "Connected to notifications"
 
-@websocket.on("message")
-async def notify_message(message):
-    return f"Received: {message}"
-
-@websocket.on("close")
-async def notify_close():
+@notify_handler.on_close
+def notify_close(websocket):
     return "Disconnected from notifications"
 
 ```

@@ -1,27 +1,30 @@
-from robyn import SubRouter, WebSocket, jsonify
+from robyn import SubRouter, WebSocketDisconnect, jsonify
 
 from .di_subrouter import di_subrouter
 from .file_api import static_router
 
 sub_router = SubRouter(__name__, prefix="/sub_router")
 
-websocket = WebSocket(sub_router, "/ws")
-
-__all__ = ["sub_router", "websocket", "di_subrouter", "static_router"]
+__all__ = ["sub_router", "di_subrouter", "static_router"]
 
 
-@websocket.on("connect")
-async def connect(ws):
+@sub_router.websocket("/ws")
+async def ws_handler(websocket):
+    try:
+        while True:
+            await websocket.receive_text()
+            await websocket.send_text("Message")
+    except WebSocketDisconnect:
+        pass
+
+
+@ws_handler.on_connect
+async def connect(websocket):
     return "Hello world, from ws"
 
 
-@websocket.on("message")
-async def message():
-    return "Message"
-
-
-@websocket.on("close")
-async def close(ws):
+@ws_handler.on_close
+async def close(websocket):
     return jsonify({"message": "closed"})
 
 

@@ -3,16 +3,11 @@ from __future__ import annotations
 import asyncio
 import inspect
 import logging
-from typing import TYPE_CHECKING, Callable, Dict
+from typing import Dict
 
 import orjson
 
-from robyn.argument_parser import Config
-from robyn.dependency_injection import DependencyMap
 from robyn.robyn import FunctionInfo, WebSocketConnector
-
-if TYPE_CHECKING:
-    from robyn import Robyn
 
 _logger = logging.getLogger(__name__)
 
@@ -247,9 +242,6 @@ def create_websocket_decorator(app_instance):
                 {},
             )
 
-            # Mark as channel-based
-            handlers["_use_channel"] = True
-
             # --- Decorator methods for on_connect / on_close ---
             def add_on_connect(connect_fn):
                 nonlocal _on_connect_fn
@@ -272,58 +264,3 @@ def create_websocket_decorator(app_instance):
         return decorator
 
     return websocket
-
-
-class WebSocket:
-    """Legacy WebSocket class for backward compatibility.
-
-    Uses the old event-based API with @websocket.on("connect"/"message"/"close").
-    """
-
-    def __init__(self, robyn_object: "Robyn", endpoint: str, config: Config = Config(), dependencies: DependencyMap = DependencyMap()) -> None:
-        self.robyn_object = robyn_object
-        self.endpoint = endpoint
-        self.methods: dict = {}
-        self.config = config
-        self.dependencies = dependencies
-
-    def on(self, type: str) -> Callable[..., None]:
-        def inner(handler):
-            if type not in ["connect", "close", "message"]:
-                raise Exception(f"Socket method {type} does not exist")
-
-            params = dict(inspect.signature(handler).parameters)
-            num_params = len(params)
-            is_async = inspect.iscoroutinefunction(handler)
-
-            injected_dependencies = self.dependencies.get_dependency_map(self)
-
-            new_injected_dependencies = {}
-            if "global_dependencies" in params:
-                new_injected_dependencies["global_dependencies"] = injected_dependencies.get("global_dependencies", {})
-            if "router_dependencies" in params:
-                new_injected_dependencies["router_dependencies"] = injected_dependencies.get("router_dependencies", {})
-
-            self.methods[type] = FunctionInfo(handler, is_async, num_params, params, new_injected_dependencies)
-            self.robyn_object.add_web_socket(self.endpoint, self)
-
-            return handler
-
-        return inner
-
-    def inject(self, **kwargs):
-        """
-        Injects the dependencies for the route
-
-        :param kwargs dict: the dependencies to be injected
-        """
-        self.dependencies.add_router_dependency(self, **kwargs)
-
-    def inject_global(self, **kwargs):
-        """
-        Injects the dependencies for the global routes
-        Ideally, this function should be a global function
-
-        :param kwargs dict: the dependencies to be injected
-        """
-        self.dependencies.add_global_dependency(**kwargs)
