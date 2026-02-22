@@ -20,7 +20,6 @@ def tests(session):
         "requirements.txt",
     )
     session.run("pip", "install", "-r", "requirements.txt")
-    session.run("pip", "install", "-e", ".")
 
     args = [
         "maturin",
