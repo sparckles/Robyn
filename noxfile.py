@@ -44,6 +44,15 @@ def tests(session):
 
 @nox.session(python=["3.11"])
 def lint(session):
-    session.run("pip", "install", "ruff")
-    session.run("ruff", "check", ".")
-    session.run("ruff", "format", "--check", ".")
+    session.run("pip", "install", "uv")
+    session.run(
+        "uv",
+        "sync",
+        "--frozen",
+        "--only-group",
+        "dev",
+        "--no-install-project",
+        external=True,
+    )
+    session.run("uv", "run", "--frozen", "ruff", "check", ".", external=True)
+    session.run("uv", "run", "--frozen", "ruff", "format", "--check", ".", external=True)
