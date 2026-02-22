@@ -22,8 +22,8 @@ jobs:
 
     - name: Install dependencies with uv
       run: |
-        uv pip install ruff isort black
+        uv pip install ruff
     - name: Run linters
       run: |
         uv run ruff check .
-        uv run isort --check-only --diff .
+        uv run ruff format --check .
