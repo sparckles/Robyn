@@ -12,9 +12,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  UV_SYSTEM_PYTHON: 1
-
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -29,8 +26,8 @@ jobs:
 
     - name: Install dependencies with uv
       run: |
-        uv pip install ruff
+        uv sync --locked --only-group dev --no-install-project
     - name: Run linters
       run: |
-        uv run ruff check .
-        uv run ruff format --check .
+        uv run --locked ruff check .
+        uv run --locked ruff format --check .

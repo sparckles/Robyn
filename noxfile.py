@@ -8,6 +8,7 @@ def tests(session):
     session.run(
         "uv",
         "export",
+        "--frozen",
         "--group",
         "test",
         "--group",
@@ -37,4 +38,4 @@ def tests(session):
 def lint(session):
     session.run("pip", "install", "ruff")
     session.run("ruff", "check", ".")
-    session.run("ruff", "format", ".")
+    session.run("ruff", "format", "--check", ".")
