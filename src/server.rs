@@ -445,12 +445,8 @@ impl Server {
         close_route: FunctionInfo,
         message_route: FunctionInfo,
     ) {
-        self.websocket_router.add_websocket_route(
-            route,
-            connect_route,
-            close_route,
-            message_route,
-        );
+        self.websocket_router
+            .add_websocket_route(route, connect_route, close_route, message_route);
     }
 
     /// Add a new startup handler
