@@ -3,7 +3,6 @@ from __future__ import annotations
 import asyncio
 import inspect
 import logging
-from typing import Dict
 
 import orjson
 
@@ -49,10 +48,9 @@ class WebSocketAdapter:
         return text.encode("utf-8")
 
     async def receive_json(self):
-        """Receive and decode JSON data."""
+        """Receive and decode JSON data.
+        Raises WebSocketDisconnect when the connection is closed."""
         text = await self.receive_text()
-        if text is None:
-            return None
         return orjson.loads(text)
 
     async def send_text(self, data: str):
@@ -87,7 +85,7 @@ class WebSocketAdapter:
 
 
 # Global storage for connection state (per-connection queues and tasks)
-_connection_tasks: Dict[str, asyncio.Task] = {}
+_connection_tasks: dict[str, asyncio.Task] = {}
 
 
 def create_websocket_decorator(app_instance):
@@ -152,11 +150,10 @@ def create_websocket_decorator(app_instance):
                         await handler(adapter, **di_kwargs)
                     except WebSocketDisconnect:
                         pass
-                    except Exception as e:
-                        if "connection closed" in str(e).lower() or "websocket" in str(e).lower():
-                            pass
-                        else:
-                            _logger.exception("Error in WebSocket handler for %s: %s", endpoint, e)
+                    except ConnectionError:
+                        _logger.debug("Connection lost in WebSocket handler for %s", endpoint, exc_info=True)
+                    except Exception:
+                        _logger.exception("Error in WebSocket handler for %s", endpoint)
                     finally:
                         _connection_tasks.pop(conn_id, None)
 
@@ -193,7 +190,11 @@ def create_websocket_decorator(app_instance):
                 if task is not None:
                     try:
                         await asyncio.wait_for(task, timeout=5.0)
-                    except (asyncio.TimeoutError, asyncio.CancelledError, Exception):
+                    except (asyncio.TimeoutError, asyncio.CancelledError):
+                        if not task.done():
+                            task.cancel()
+                    except Exception:
+                        _logger.debug("Unexpected error while awaiting handler task for %s", conn_id, exc_info=True)
                         if not task.done():
                             task.cancel()
 

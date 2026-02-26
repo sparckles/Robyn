@@ -155,10 +155,10 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebSocketConnecto
             Ok(ws::Message::Binary(bin)) => ctx.binary(bin),
             Ok(ws::Message::Close(_close_reason)) => {
                 debug!("Socket was closed");
-                // Drop sender to signal channel closure
+                // Drop sender to signal channel closure so receive() returns None.
+                // The close handler is called once from stopped().
                 self.message_sender.take();
-                let function = self.router.get("close").unwrap();
-                execute_ws_function(function, &self.task_locals, ctx, self);
+                ctx.stop();
             }
             _ => (),
         }
