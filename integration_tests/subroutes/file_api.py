@@ -10,7 +10,7 @@ Notes:
 
 from robyn import Request, SubRouter
 
-static_router = SubRouter(__name__, "/static")
+static_router = SubRouter(prefix="/static")
 
 
 @static_router.get("/build")

@@ -3,7 +3,7 @@ from robyn import SubRouter, WebSocketDisconnect, jsonify
 from .di_subrouter import di_subrouter
 from .file_api import static_router
 
-sub_router = SubRouter(__name__, prefix="/sub_router")
+sub_router = SubRouter(prefix="/sub_router")
 
 __all__ = ["sub_router", "di_subrouter", "static_router"]
 
