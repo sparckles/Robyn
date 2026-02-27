@@ -3,16 +3,10 @@ from __future__ import annotations
 import asyncio
 import inspect
 import logging
-from typing import TYPE_CHECKING, Callable, Dict
 
 import orjson
 
-from robyn.argument_parser import Config
-from robyn.dependency_injection import DependencyMap
 from robyn.robyn import FunctionInfo, WebSocketConnector
-
-if TYPE_CHECKING:
-    from robyn import Robyn
 
 _logger = logging.getLogger(__name__)
 
@@ -54,10 +48,9 @@ class WebSocketAdapter:
         return text.encode("utf-8")
 
     async def receive_json(self):
-        """Receive and decode JSON data."""
+        """Receive and decode JSON data.
+        Raises WebSocketDisconnect when the connection is closed."""
         text = await self.receive_text()
-        if text is None:
-            return None
         return orjson.loads(text)
 
     async def send_text(self, data: str):
@@ -92,7 +85,7 @@ class WebSocketAdapter:
 
 
 # Global storage for connection state (per-connection queues and tasks)
-_connection_tasks: Dict[str, asyncio.Task] = {}
+_connection_tasks: dict[str, asyncio.Task] = {}
 
 
 def create_websocket_decorator(app_instance):
@@ -157,11 +150,10 @@ def create_websocket_decorator(app_instance):
                         await handler(adapter, **di_kwargs)
                     except WebSocketDisconnect:
                         pass
-                    except Exception as e:
-                        if "connection closed" in str(e).lower() or "websocket" in str(e).lower():
-                            pass
-                        else:
-                            _logger.exception("Error in WebSocket handler for %s: %s", endpoint, e)
+                    except ConnectionError:
+                        _logger.debug("Connection lost in WebSocket handler for %s", endpoint, exc_info=True)
+                    except Exception:
+                        _logger.exception("Error in WebSocket handler for %s", endpoint)
                     finally:
                         _connection_tasks.pop(conn_id, None)
 
@@ -198,7 +190,11 @@ def create_websocket_decorator(app_instance):
                 if task is not None:
                     try:
                         await asyncio.wait_for(task, timeout=5.0)
-                    except (asyncio.TimeoutError, asyncio.CancelledError, Exception):
+                    except (asyncio.TimeoutError, asyncio.CancelledError):
+                        if not task.done():
+                            task.cancel()
+                    except Exception:
+                        _logger.debug("Unexpected error while awaiting handler task for %s", conn_id, exc_info=True)
                         if not task.done():
                             task.cancel()
 
@@ -247,9 +243,6 @@ def create_websocket_decorator(app_instance):
                 {},
             )
 
-            # Mark as channel-based
-            handlers["_use_channel"] = True
-
             # --- Decorator methods for on_connect / on_close ---
             def add_on_connect(connect_fn):
                 nonlocal _on_connect_fn
@@ -272,58 +265,3 @@ def create_websocket_decorator(app_instance):
         return decorator
 
     return websocket
-
-
-class WebSocket:
-    """Legacy WebSocket class for backward compatibility.
-
-    Uses the old event-based API with @websocket.on("connect"/"message"/"close").
-    """
-
-    def __init__(self, robyn_object: "Robyn", endpoint: str, config: Config = Config(), dependencies: DependencyMap = DependencyMap()) -> None:
-        self.robyn_object = robyn_object
-        self.endpoint = endpoint
-        self.methods: dict = {}
-        self.config = config
-        self.dependencies = dependencies
-
-    def on(self, type: str) -> Callable[..., None]:
-        def inner(handler):
-            if type not in ["connect", "close", "message"]:
-                raise Exception(f"Socket method {type} does not exist")
-
-            params = dict(inspect.signature(handler).parameters)
-            num_params = len(params)
-            is_async = inspect.iscoroutinefunction(handler)
-
-            injected_dependencies = self.dependencies.get_dependency_map(self)
-
-            new_injected_dependencies = {}
-            if "global_dependencies" in params:
-                new_injected_dependencies["global_dependencies"] = injected_dependencies.get("global_dependencies", {})
-            if "router_dependencies" in params:
-                new_injected_dependencies["router_dependencies"] = injected_dependencies.get("router_dependencies", {})
-
-            self.methods[type] = FunctionInfo(handler, is_async, num_params, params, new_injected_dependencies)
-            self.robyn_object.add_web_socket(self.endpoint, self)
-
-            return handler
-
-        return inner
-
-    def inject(self, **kwargs):
-        """
-        Injects the dependencies for the route
-
-        :param kwargs dict: the dependencies to be injected
-        """
-        self.dependencies.add_router_dependency(self, **kwargs)
-
-    def inject_global(self, **kwargs):
-        """
-        Injects the dependencies for the global routes
-        Ideally, this function should be a global function
-
-        :param kwargs dict: the dependencies to be injected
-        """
-        self.dependencies.add_global_dependency(**kwargs)

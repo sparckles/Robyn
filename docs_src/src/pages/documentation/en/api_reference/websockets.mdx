@@ -265,39 +265,6 @@ To handle real-time bidirectional communication, Batman learned how to work with
 
 ---
 
-## Legacy API {{ tag: 'Legacy', label: 'Legacy' }}
-
-<Row>
-  <Col>
-    The old event-based WebSocket API is still supported for backward compatibility. If you have existing code using `WebSocket(app, "/ws")` with `@websocket.on("message")`, it will continue to work without changes.
-  </Col>
-  <Col sticky>
-    <CodeGroup title="Legacy API" tag="WebSocket" label="/web_socket">
-
-      ```python {{ title: 'Legacy Style' }}
-      from robyn import Robyn, WebSocket
-
-      app = Robyn(__file__)
-      websocket = WebSocket(app, "/web_socket")
-
-      @websocket.on("connect")
-      def connect():
-          return "Hello world, from ws"
-
-      @websocket.on("message")
-      def message(ws, msg):
-          return f"Echo: {msg}"
-
-      @websocket.on("close")
-      def close():
-          return "Goodbye world, from ws"
-      ```
-    </CodeGroup>
-  </Col>
-</Row>
-
----
-
 ## What's next?
 
 As the codebase grew, Batman wanted to onboard the justice league to help him manage the application. 

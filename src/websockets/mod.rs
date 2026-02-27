@@ -54,8 +54,6 @@ pub struct WebSocketConnector {
     pub task_locals: TaskLocals,
     pub registry_addr: Addr<WebSocketRegistry>,
     pub query_params: QueryParams,
-    /// Whether this connection uses the new channel-based message delivery.
-    pub use_channel: bool,
     /// Sender side of the message channel (stays in the Actix actor).
     pub message_sender: Option<mpsc::UnboundedSender<Option<String>>>,
     /// Receiver side exposed to Python via WebSocketChannel.
@@ -68,31 +66,27 @@ impl Actor for WebSocketConnector {
 
     fn started(&mut self, ctx: &mut Self::Context) {
         let addr = ctx.address();
-        // Register with global registry
         self.registry_addr.do_send(Register {
             id: self.id,
             addr: addr.clone(),
         });
 
-        // If new-style (channel mode), create the tokio channel
-        if self.use_channel {
-            let (tx, rx) = mpsc::unbounded_channel::<Option<String>>();
-            self.message_sender = Some(tx);
-            self.message_channel = Python::with_gil(|py| {
-                Some(
-                    Py::new(
-                        py,
-                        WebSocketChannel {
-                            receiver: Arc::new(tokio::sync::Mutex::new(rx)),
-                        },
-                    )
-                    .unwrap(),
+        let (tx, rx) = mpsc::unbounded_channel::<Option<String>>();
+        self.message_sender = Some(tx);
+        self.message_channel = Python::with_gil(|py| {
+            Some(
+                Py::new(
+                    py,
+                    WebSocketChannel {
+                        receiver: Arc::new(tokio::sync::Mutex::new(rx)),
+                    },
                 )
-            });
-        }
+                .unwrap(),
+            )
+        });
 
         let function = self.router.get("connect").unwrap();
-        execute_ws_function(function, None, &self.task_locals, ctx, self);
+        execute_ws_function(function, &self.task_locals, ctx, self);
 
         debug!("Actor is alive");
     }
@@ -104,7 +98,7 @@ impl Actor for WebSocketConnector {
         self.message_sender.take();
 
         let function = self.router.get("close").unwrap();
-        execute_ws_function(function, None, &self.task_locals, ctx, self);
+        execute_ws_function(function, &self.task_locals, ctx, self);
         debug!("Actor is dead");
     }
 }
@@ -119,7 +113,6 @@ impl Clone for WebSocketConnector {
             task_locals: task_locals_clone,
             registry_addr: self.registry_addr.clone(),
             query_params: self.query_params.clone(),
-            use_channel: self.use_channel,
             message_sender: self.message_sender.clone(),
             message_channel: Python::with_gil(|py| {
                 self.message_channel.as_ref().map(|c| c.clone_ref(py))
@@ -156,27 +149,16 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebSocketConnecto
             Ok(ws::Message::Text(text)) => {
                 debug!("Text message received {:?}", text);
                 if let Some(ref sender) = self.message_sender {
-                    // New-style: push to Rust channel. No GIL. No Python call.
                     let _ = sender.send(Some(text.to_string()));
-                } else {
-                    // Old-style: call Python message handler directly
-                    let function = self.router.get("message").unwrap();
-                    execute_ws_function(
-                        function,
-                        Some(text.to_string()),
-                        &self.task_locals,
-                        ctx,
-                        self,
-                    );
                 }
             }
             Ok(ws::Message::Binary(bin)) => ctx.binary(bin),
             Ok(ws::Message::Close(_close_reason)) => {
                 debug!("Socket was closed");
-                // Drop sender to signal channel closure
+                // Drop sender to signal channel closure so receive() returns None.
+                // The close handler is called once from stopped().
                 self.message_sender.take();
-                let function = self.router.get("close").unwrap();
-                execute_ws_function(function, None, &self.task_locals, ctx, self);
+                ctx.stop();
             }
             _ => (),
         }
@@ -263,8 +245,7 @@ impl WebSocketConnector {
         self.query_params.clone()
     }
 
-    /// Get the message channel for new-style WebSocket handlers.
-    /// Returns None for old-style handlers.
+    /// Get the message channel for WebSocket handlers.
     #[getter]
     pub fn get_message_channel(&self, py: Python) -> Option<Py<WebSocketChannel>> {
         self.message_channel.as_ref().map(|c| c.clone_ref(py))
@@ -300,7 +281,6 @@ pub async fn start_web_socket(
     router: HashMap<String, FunctionInfo>,
     task_locals: TaskLocals,
     endpoint: String,
-    use_channel: bool,
     max_frame_size: usize,
 ) -> Result<HttpResponse, Error> {
     let registry_addr = get_or_init_registry_for_endpoint(endpoint);
@@ -325,7 +305,6 @@ pub async fn start_web_socket(
             id: Uuid::new_v4(),
             registry_addr,
             query_params,
-            use_channel,
             message_sender: None,
             message_channel: None,
         },

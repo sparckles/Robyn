@@ -310,16 +310,17 @@ Robyn's WebSocket implementation maintains persistent connections in the Rust la
   <Col sticky>
     <CodeGroup title="WebSocket Flow">
     ```python
-    from robyn import WebSocket
-    
+    from robyn import WebSocketDisconnect
+
     @app.websocket("/chat")
-    async def websocket_handler(websocket: WebSocket):
-        # Connection established in Rust
-        # Message handling in Python
-        async for message in websocket:
-            # Process message
-            response = process_chat_message(message)
-            await websocket.send_text(response)
+    async def websocket_handler(websocket):
+        try:
+            while True:
+                message = await websocket.receive_text()
+                response = process_chat_message(message)
+                await websocket.send_text(response)
+        except WebSocketDisconnect:
+            pass
     ```
     </CodeGroup>
   </Col>

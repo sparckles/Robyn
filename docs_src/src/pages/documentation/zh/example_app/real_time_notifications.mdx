@@ -5,21 +5,24 @@ export const description =
 
 蝙蝠侠决定使用 WebSockets 为哥谭市警察局的警官们实现实时通知功能，从而使他们能够即时接收关于犯罪活动的更新，并在发生新的犯罪报告时触发警报。
 
-```python {{ title: '设置身份验证中间件' }}
-from robyn import WebSocket
+```python {{ title: '设置实时通知' }}
+from robyn import WebSocketDisconnect
 
-websocket = WebSocket(app, "/notifications")
+@app.websocket("/notifications")
+async def notify_handler(websocket):
+    try:
+        while True:
+            message = await websocket.receive_text()
+            await websocket.send_text(f"Received: {message}")
+    except WebSocketDisconnect:
+        pass
 
-@websocket.on("connect")
-async def notify_connect():
+@notify_handler.on_connect
+def notify_connect(websocket):
     return "Connected to notifications"
 
-@websocket.on("message")
-async def notify_message(message):
-    return f"Received: {message}"
-
-@websocket.on("close")
-async def notify_close():
+@notify_handler.on_close
+def notify_close(websocket):
     return "Disconnected from notifications"
 
 ```

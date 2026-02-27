@@ -141,20 +141,23 @@ Response(
 
 ### WebSockets
 ```python
-from robyn import WebSocket
+from robyn import WebSocketDisconnect
 
-ws = WebSocket(app, "/ws")
+@app.websocket("/ws")
+async def handler(websocket):
+    try:
+        while True:
+            msg = await websocket.receive_text()
+            await websocket.send_text(f"Echo: {msg}")
+    except WebSocketDisconnect:
+        pass
 
-@ws.on("connect")
-def on_connect(ws, msg):
+@handler.on_connect
+def on_connect(websocket):
     return "Connected"
 
-@ws.on("message")
-def on_message(ws, msg):
-    return f"Echo: {msg}"
-
-@ws.on("close")
-def on_close(ws, msg):
+@handler.on_close
+def on_close(websocket):
     return "Closed"
 ```
 

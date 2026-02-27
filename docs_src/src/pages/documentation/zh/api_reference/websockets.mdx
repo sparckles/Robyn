@@ -262,39 +262,6 @@ export const description =
 
 ---
 
-## 旧版 API {{ tag: '旧版', label: '旧版' }}
-
-<Row>
-  <Col>
-    旧版基于事件的 WebSocket API 仍然支持向后兼容。如果您有使用 `WebSocket(app, "/ws")` 和 `@websocket.on("message")` 的现有代码，它将继续正常工作。
-  </Col>
-  <Col sticky>
-    <CodeGroup title="旧版 API" tag="WebSocket" label="/web_socket">
-
-      ```python {{ title: '旧版风格' }}
-      from robyn import Robyn, WebSocket
-
-      app = Robyn(__file__)
-      websocket = WebSocket(app, "/web_socket")
-
-      @websocket.on("connect")
-      def connect():
-          return "Hello world, from ws"
-
-      @websocket.on("message")
-      def message(ws, msg):
-          return f"Echo: {msg}"
-
-      @websocket.on("close")
-      def close():
-          return "Goodbye world, from ws"
-      ```
-    </CodeGroup>
-  </Col>
-</Row>
-
----
-
 ## 下一步
 
 随着代码库的扩展，蝙蝠侠希望正义联盟的成员能够参与管理应用程序。

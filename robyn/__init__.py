@@ -24,7 +24,7 @@ from robyn.responses import SSEMessage, SSEResponse, StreamingResponse, html, se
 from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, WebSocketConnector, get_version
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.types import Directory, JsonBody
-from robyn.ws import WebSocket, WebSocketAdapter, WebSocketDisconnect, create_websocket_decorator
+from robyn.ws import WebSocketAdapter, WebSocketDisconnect, create_websocket_decorator
 
 __version__ = get_version()
 
@@ -807,7 +807,6 @@ __all__ = [
     "AuthenticationHandler",
     "Headers",
     "WebSocketConnector",
-    "WebSocket",
     "WebSocketAdapter",
     "WebSocketDisconnect",
     "JsonBody",

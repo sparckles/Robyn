@@ -210,21 +210,11 @@ def spawn_process(
 
     for endpoint in web_sockets:
         web_socket = web_sockets[endpoint]
-        # Support both old-style WebSocket objects and new-style handler dicts
-        if hasattr(web_socket, "methods"):
-            # Old-style: WebSocket class with .methods dict
-            methods = web_socket.methods
-            use_channel = False
-        else:
-            # New-style: plain dict of handlers
-            methods = web_socket
-            use_channel = web_socket.get("_use_channel", False)
         server.add_web_socket_route(
             endpoint,
-            methods["connect"],
-            methods["close"],
-            methods["message"],
-            use_channel,
+            web_socket["connect"],
+            web_socket["close"],
+            web_socket["message"],
         )
 
     try:
