@@ -48,6 +48,7 @@ app.start(port=8080)
 - **Authentication**: AuthenticationHandler base class for custom auth
 - **Static Files**: Directory serving via `app.serve_directory()`
 - **SSE**: Server-Sent Events support via `SSEResponse`
+- **Easy Access Parameters**: Typed path/query params with automatic coercion in handler signatures
 - **Direct Rust Integration**: Embed Rust code directly in routes
 
 ## Project Structure
@@ -159,6 +160,34 @@ def on_connect(websocket):
 @handler.on_close
 def on_close(websocket):
     return "Closed"
+```
+
+### Easy Access Parameters
+Declare typed path and query parameters directly in handler signatures. Works for both HTTP and WebSocket handlers.
+
+```python
+from typing import List, Optional
+
+# HTTP: path params + query params with type coercion
+@app.get("/items/:id")
+async def get_item(id: int, q: str, page: int = 1):
+    return {"id": id, "q": q, "page": page}
+
+# Optional, List, and bool params
+@app.get("/search")
+def search(name: str, tags: List[str], active: bool = False, age: Optional[int] = None):
+    return {"name": name, "tags": tags, "active": active, "age": age}
+
+# WebSocket: typed query params on handler and callbacks
+@app.websocket("/ws")
+async def handler(websocket, room: str = "default", page: int = 1):
+    while True:
+        msg = await websocket.receive_text()
+        await websocket.send_text(f"room={room} page={page} msg={msg}")
+
+@handler.on_connect
+def on_connect(websocket, room: str = "default"):
+    return f"connected to {room}"
 ```
 
 ### MCP (Model Context Protocol)

@@ -6,7 +6,8 @@ import logging
 
 import orjson
 
-from robyn.robyn import FunctionInfo, WebSocketConnector
+from robyn._param_utils import QueryParamValidationError, resolve_individual_params
+from robyn.robyn import FunctionInfo, QueryParams, WebSocketConnector
 
 _logger = logging.getLogger(__name__)
 
@@ -119,16 +120,52 @@ def create_websocket_decorator(app_instance):
             _on_connect_fn = None
             _on_close_fn = None
 
-            def _get_di_kwargs(func):
-                """Build DI kwargs for a function based on its signature."""
-                sig_params = dict(inspect.signature(func).parameters)
+            def _resolve_ws_params(func_params, adapter):
+                """
+                Resolve all handler params beyond the first positional (websocket).
+
+                Handles:
+                  - global_dependencies / router_dependencies (DI)
+                  - query_params (whole QueryParams object, by name or type annotation)
+                  - individual query params (everything else, with type coercion)
+                """
                 injected = app_instance.dependencies.get_dependency_map(app_instance)
-                kwargs = {}
-                if "global_dependencies" in sig_params:
-                    kwargs["global_dependencies"] = injected.get("global_dependencies", {})
-                if "router_dependencies" in sig_params:
-                    kwargs["router_dependencies"] = injected.get("router_dependencies", {})
-                return kwargs
+                resolved = {}
+                unresolved = {}
+
+                for idx, (param_name, param) in enumerate(func_params.items()):
+                    # Skip the websocket adapter (first positional arg, passed separately)
+                    if idx == 0 or param.annotation is WebSocketAdapter:
+                        continue
+
+                    # DI: global_dependencies
+                    if param_name == "global_dependencies":
+                        resolved[param_name] = injected.get("global_dependencies", {})
+                        continue
+
+                    # DI: router_dependencies
+                    if param_name == "router_dependencies":
+                        resolved[param_name] = injected.get("router_dependencies", {})
+                        continue
+
+                    # Whole QueryParams object (by type annotation or reserved name)
+                    if param.annotation is QueryParams or param_name == "query_params":
+                        resolved[param_name] = adapter.query_params
+                        continue
+
+                    # Everything else: individual query param
+                    unresolved[param_name] = param
+
+                if unresolved:
+                    individual = resolve_individual_params(
+                        unresolved,
+                        adapter.query_params,
+                        path_params=None,  # WebSocket has no path params yet
+                        route_param_names=set(),
+                    )
+                    resolved.update(individual)
+
+                return resolved
 
             # --- Connect handler (called by Rust on connection open) ---
             async def connect_handler(ws):
@@ -141,13 +178,18 @@ def create_websocket_decorator(app_instance):
                 # Create the adapter with the Rust channel
                 adapter = WebSocketAdapter(ws, channel)
 
-                # Build DI kwargs for the main handler
-                di_kwargs = _get_di_kwargs(handler)
+                # Build resolved kwargs for the main handler
+                try:
+                    handler_params = inspect.signature(handler).parameters
+                    handler_kwargs = _resolve_ws_params(handler_params, adapter)
+                except QueryParamValidationError as e:
+                    _logger.warning("WebSocket connection rejected for %s: %s", endpoint, e.detail)
+                    return f"Error: {e.detail}"
 
                 # Start the user's handler as a long-running asyncio task
                 async def _run_handler():
                     try:
-                        await handler(adapter, **di_kwargs)
+                        await handler(adapter, **handler_kwargs)
                     except WebSocketDisconnect:
                         pass
                     except ConnectionError:
@@ -163,11 +205,19 @@ def create_websocket_decorator(app_instance):
                 # Call user's on_connect if defined
                 if _on_connect_fn is not None:
                     connect_adapter = WebSocketAdapter(ws, channel)
-                    connect_di = _get_di_kwargs(_on_connect_fn)
+                    try:
+                        connect_params = inspect.signature(_on_connect_fn).parameters
+                        connect_kwargs = _resolve_ws_params(connect_params, connect_adapter)
+                    except QueryParamValidationError as e:
+                        _logger.warning("WebSocket on_connect rejected for %s: %s", endpoint, e.detail)
+                        task = _connection_tasks.pop(conn_id, None)
+                        if task is not None and not task.done():
+                            task.cancel()
+                        return f"Error: {e.detail}"
                     if asyncio.iscoroutinefunction(_on_connect_fn):
-                        result = await _on_connect_fn(connect_adapter, **connect_di)
+                        result = await _on_connect_fn(connect_adapter, **connect_kwargs)
                     else:
-                        result = _on_connect_fn(connect_adapter, **connect_di)
+                        result = _on_connect_fn(connect_adapter, **connect_kwargs)
                     return result
 
                 return None
@@ -201,11 +251,16 @@ def create_websocket_decorator(app_instance):
                 # Call user's on_close if defined
                 if _on_close_fn is not None:
                     close_adapter = WebSocketAdapter(ws, None)
-                    close_di = _get_di_kwargs(_on_close_fn)
+                    try:
+                        close_params = inspect.signature(_on_close_fn).parameters
+                        close_kwargs = _resolve_ws_params(close_params, close_adapter)
+                    except QueryParamValidationError as e:
+                        _logger.warning("WebSocket on_close param error for %s: %s", endpoint, e.detail)
+                        return None
                     if asyncio.iscoroutinefunction(_on_close_fn):
-                        result = await _on_close_fn(close_adapter, **close_di)
+                        result = await _on_close_fn(close_adapter, **close_kwargs)
                     else:
-                        result = _on_close_fn(close_adapter, **close_di)
+                        result = _on_close_fn(close_adapter, **close_kwargs)
                     return result
 
                 return None

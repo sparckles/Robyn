@@ -117,6 +117,100 @@ Robyn 支持通过 `*extra` 语法捕获额外的路径参数，这样可以捕�
 
 ---
 
+## 便捷参数访问
+
+你可以在函数签名中直接声明带类型注解的查询参数和路径参数，无需手动从请求对象中提取和转换。Robyn 会自动解析并进行类型转换。
+
+任何不匹配已知请求组件（`Request`、`QueryParams`、`Headers` 等）的处理函数参数，都会被视为独立的路径参数或查询参数。
+
+<Row>
+  <Col>
+    **基本用法** — 带类型转换和默认值的路径参数与查询参数。
+  </Col>
+  <Col sticky>
+    <CodeGroup title="便捷参数" tag="GET" label="/items/:id?q=hello&page=5">
+
+    ```python {{ title: '类型化参数' }}
+    @app.get("/items/:id")
+    async def get_item(id: int, q: str, page: int = 1):
+        # id 从路径参数字符串自动转换为 int
+        # q 从 ?q=... 获取
+        # page 未提供时默认为 1
+        return {"id": id, "q": q, "page": page}
+    ```
+
+    ```python {{ title: '与 Request 混合使用' }}
+    @app.get("/items/:id")
+    async def get_item(request: Request, id: int, q: str = ""):
+        # request 仍然按原来的方式注入
+        # id 和 q 作为独立参数解析
+        return {"id": id, "q": q, "method": request.method}
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+<Row>
+  <Col>
+    **Optional、List、Bool 和 Float 参数** — Robyn 自动处理常见的 Python 类型。
+
+    - `Optional[T]` — 未提供时解析为 `None`
+    - `List[T]` — 收集重复的查询参数（例如 `?tag=a&tag=b`）
+    - `bool` — 接受 `true/false`、`1/0`、`yes/no`、`on/off`
+    - `float` — 标准浮点数转换
+  </Col>
+  <Col sticky>
+    <CodeGroup title="高级类型" tag="GET" label="/search">
+
+    ```python {{ title: 'Optional' }}
+    @app.get("/search")
+    def search(name: str, age: Optional[int] = None):
+        return {"name": name, "age": age}
+    # GET /search?name=bob        -> {"name": "bob", "age": null}
+    # GET /search?name=bob&age=30 -> {"name": "bob", "age": 30}
+    ```
+
+    ```python {{ title: 'List' }}
+    from typing import List
+
+    @app.get("/filter")
+    def filter_items(tag: List[str]):
+        return {"tags": tag}
+    # GET /filter?tag=python&tag=rust -> {"tags": ["python", "rust"]}
+    ```
+
+    ```python {{ title: 'Bool 和 Float' }}
+    @app.get("/settings")
+    def settings(active: bool = False, price: float = 0.0):
+        return {"active": active, "price": price}
+    # GET /settings?active=true&price=19.99
+    # -> {"active": true, "price": 19.99}
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+<Row>
+  <Col>
+    **错误处理** — 如果缺少必需的参数或值无法转换为声明的类型，Robyn 会自动返回 `400 Bad Request` 响应。
+  </Col>
+  <Col sticky>
+    <CodeGroup title="验证错误" tag="GET" label="/items/:id">
+
+    ```python {{ title: '自动返回 400' }}
+    @app.get("/items/:id")
+    def get_item(id: int, q: str):
+        return {"id": id, "q": q}
+
+    # GET /items/42         -> 400（缺少必需的 'q'）
+    # GET /items/abc?q=test -> 400（无法将 'abc' 转换为 int）
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+
 ## 下一步
 
 接下来，蝙蝠侠希望了解 Robyn 服务器的配置。于是他开始了解 Robyn 环境配置文件的概念。

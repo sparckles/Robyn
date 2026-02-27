@@ -6,6 +6,7 @@ from types import CoroutineType
 from typing import Callable, Dict, List, NamedTuple, Optional, Union
 
 from robyn import status_codes
+from robyn._param_utils import QueryParamValidationError, parse_route_param_names, resolve_individual_params
 from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
 from robyn.dependency_injection import DependencyMap
 from robyn.jsonify import jsonify
@@ -123,6 +124,20 @@ class Router(BaseRouter):
         exception_handler: Optional[Callable],
         injected_dependencies: dict,
     ) -> Union[Callable, CoroutineType]:
+        # Pre-compute at registration time
+        route_param_names = parse_route_param_names(endpoint)
+
+        # Warn if the route declares :param names the handler doesn't use
+        handler_param_names = set(inspect.signature(handler).parameters.keys())
+        unused_route_params = route_param_names - handler_param_names
+        if unused_route_params:
+            _logger.warning(
+                "Route '%s' declares path params %s but handler '%s' doesn't use them",
+                endpoint,
+                unused_route_params,
+                handler.__name__,
+            )
+
         def wrapped_handler(*args, **kwargs):
             # In the execute functions the request is passed into *args
             request = next(filter(lambda it: isinstance(it, Request), args), None)
@@ -146,6 +161,7 @@ class Router(BaseRouter):
                 "identity": Identity,
             }
 
+            # Phase 1: Type-annotated request components
             type_filtered_params = {}
 
             for handler_param in iter(handler_params):
@@ -171,6 +187,7 @@ class Router(BaseRouter):
                         elif issubclass(handler_param_type, QueryParams):
                             type_filtered_params[handler_param_name] = getattr(request, "query_params")
 
+            # Phase 2: Reserved-name request components
             request_components = {
                 "r": request,
                 "req": request,
@@ -194,9 +211,17 @@ class Router(BaseRouter):
 
             filtered_params = dict(**type_filtered_params, **name_filtered_params)
 
-            if len(filtered_params) != len(handler_params):
-                invalid_args = set(handler_params) - set(filtered_params)
-                raise SyntaxError(f"Unexpected request params found: {invalid_args}")
+            # Phase 3: Individual path/query param resolution
+            unresolved_names = set(handler_params) - set(filtered_params)
+            if unresolved_names:
+                unresolved = {name: handler_params[name] for name in unresolved_names}
+                individual_params = resolve_individual_params(
+                    unresolved,
+                    request.query_params,
+                    request.path_params,
+                    route_param_names,
+                )
+                filtered_params.update(individual_params)
 
             return handler(**filtered_params)
 
@@ -205,6 +230,12 @@ class Router(BaseRouter):
             try:
                 response = self._format_response(
                     await wrapped_handler(*args, **kwargs),
+                )
+            except QueryParamValidationError as err:
+                response = Response(
+                    status_code=status_codes.HTTP_400_BAD_REQUEST,
+                    headers=Headers({"Content-Type": "text/plain"}),
+                    description=str(err),
                 )
             except Exception as err:
                 if exception_handler is None:
@@ -219,6 +250,12 @@ class Router(BaseRouter):
             try:
                 response = self._format_response(
                     wrapped_handler(*args, **kwargs),
+                )
+            except QueryParamValidationError as err:
+                response = Response(
+                    status_code=status_codes.HTTP_400_BAD_REQUEST,
+                    headers=Headers({"Content-Type": "text/plain"}),
+                    description=str(err),
                 )
             except Exception as err:
                 if exception_handler is None:

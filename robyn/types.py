@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Dict, NewType, Optional, TypedDict
 
+from robyn._param_utils import QueryParamValidationError
+
 
 @dataclass
 class Directory:
@@ -76,4 +78,4 @@ class JsonBody:
     pass
 
 
-__all__ = ["JSONResponse", "Body", "JsonBody"]
+__all__ = ["JSONResponse", "Body", "JsonBody", "QueryParamValidationError"]

@@ -129,6 +129,100 @@ This feature is particularly useful when you need to handle dynamic, nested rout
 
 ---
 
+## Easy Access Parameters
+
+Instead of manually extracting and converting query parameters and path parameters from the request object, you can declare them directly in your function signature with type annotations. Robyn will automatically resolve and coerce them for you.
+
+Any handler parameter that doesn't match a known request component (`Request`, `QueryParams`, `Headers`, etc.) is treated as an individual path or query parameter.
+
+<Row>
+  <Col>
+    **Basic usage** — path params and query params with type coercion and defaults.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Easy Access Params" tag="GET" label="/items/:id?q=hello&page=5">
+
+    ```python {{ title: 'Typed Params' }}
+    @app.get("/items/:id")
+    async def get_item(id: int, q: str, page: int = 1):
+        # id is coerced from the path param string to int
+        # q is taken from ?q=...
+        # page defaults to 1 if not provided
+        return {"id": id, "q": q, "page": page}
+    ```
+
+    ```python {{ title: 'Mixed with Request' }}
+    @app.get("/items/:id")
+    async def get_item(request: Request, id: int, q: str = ""):
+        # request is still injected as usual
+        # id and q are resolved as individual params
+        return {"id": id, "q": q, "method": request.method}
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+<Row>
+  <Col>
+    **Optional, List, Bool, and Float params** — Robyn handles common Python types automatically.
+
+    - `Optional[T]` — resolves to `None` when not provided
+    - `List[T]` — collects repeated query params (e.g. `?tag=a&tag=b`)
+    - `bool` — accepts `true/false`, `1/0`, `yes/no`, `on/off`
+    - `float` — standard float coercion
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Advanced Types" tag="GET" label="/search">
+
+    ```python {{ title: 'Optional' }}
+    @app.get("/search")
+    def search(name: str, age: Optional[int] = None):
+        return {"name": name, "age": age}
+    # GET /search?name=bob        -> {"name": "bob", "age": null}
+    # GET /search?name=bob&age=30 -> {"name": "bob", "age": 30}
+    ```
+
+    ```python {{ title: 'List' }}
+    from typing import List
+
+    @app.get("/filter")
+    def filter_items(tag: List[str]):
+        return {"tags": tag}
+    # GET /filter?tag=python&tag=rust -> {"tags": ["python", "rust"]}
+    ```
+
+    ```python {{ title: 'Bool & Float' }}
+    @app.get("/settings")
+    def settings(active: bool = False, price: float = 0.0):
+        return {"active": active, "price": price}
+    # GET /settings?active=true&price=19.99
+    # -> {"active": true, "price": 19.99}
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+<Row>
+  <Col>
+    **Error handling** — if a required parameter is missing or a value cannot be coerced to the declared type, Robyn returns a `400 Bad Request` response automatically.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Validation Errors" tag="GET" label="/items/:id">
+
+    ```python {{ title: 'Automatic 400' }}
+    @app.get("/items/:id")
+    def get_item(id: int, q: str):
+        return {"id": id, "q": q}
+
+    # GET /items/42         -> 400 (missing required 'q')
+    # GET /items/abc?q=test -> 400 (cannot coerce 'abc' to int)
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+
 
 ## What's next?
 
