@@ -232,14 +232,11 @@ class Router(BaseRouter):
                     await wrapped_handler(*args, **kwargs),
                 )
             except QueryParamValidationError as err:
-                if exception_handler is not None:
-                    response = self._format_response(exception_handler(err))
-                else:
-                    response = Response(
-                        status_code=status_codes.HTTP_400_BAD_REQUEST,
-                        headers=Headers({"Content-Type": "text/plain"}),
-                        description=str(err),
-                    )
+                response = Response(
+                    status_code=status_codes.HTTP_400_BAD_REQUEST,
+                    headers=Headers({"Content-Type": "text/plain"}),
+                    description=str(err),
+                )
             except Exception as err:
                 if exception_handler is None:
                     raise
@@ -255,14 +252,11 @@ class Router(BaseRouter):
                     wrapped_handler(*args, **kwargs),
                 )
             except QueryParamValidationError as err:
-                if exception_handler is not None:
-                    response = self._format_response(exception_handler(err))
-                else:
-                    response = Response(
-                        status_code=status_codes.HTTP_400_BAD_REQUEST,
-                        headers=Headers({"Content-Type": "text/plain"}),
-                        description=str(err),
-                    )
+                response = Response(
+                    status_code=status_codes.HTTP_400_BAD_REQUEST,
+                    headers=Headers({"Content-Type": "text/plain"}),
+                    description=str(err),
+                )
             except Exception as err:
                 if exception_handler is None:
                     raise
