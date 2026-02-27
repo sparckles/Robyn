@@ -179,6 +179,45 @@ To handle real-time bidirectional communication, Batman learned how to work with
 
 ---
 
+## Easy Access Query Parameters {{ tag: 'easy_access', label: 'easy_access' }}
+
+<Row>
+  <Col>
+    Instead of manually calling `websocket.query_params.get(...)`, you can declare typed query parameters directly in your handler, `on_connect`, and `on_close` signatures. Robyn will automatically resolve and coerce them — just like HTTP easy access parameters.
+
+    Parameters with defaults are optional. Parameters without defaults are required — if missing, the connection is rejected with an error message.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Easy Access Query Params" tag="WebSocket" label="/ws?room=chat&page=5">
+
+      ```python {{ title: 'Handler' }}
+      @app.websocket("/ws")
+      async def handler(websocket, room: str = "default", page: int = 1):
+          try:
+              while True:
+                  msg = await websocket.receive_text()
+                  await websocket.send_text(
+                      f"room={room} page={page} msg={msg}"
+                  )
+          except WebSocketDisconnect:
+              pass
+      ```
+
+      ```python {{ title: 'Callbacks' }}
+      @handler.on_connect
+      def on_connect(websocket, room: str = "default"):
+          return f"connected to {room}"
+
+      @handler.on_close
+      def on_close(websocket, room: str = "default"):
+          return f"left {room}"
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+
 ## Closing Connections {{ tag: 'close', label: 'close' }}
 
 <Row>

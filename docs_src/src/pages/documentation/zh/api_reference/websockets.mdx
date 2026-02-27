@@ -176,6 +176,45 @@ export const description =
 
 ---
 
+## 便捷查询参数访问 {{ tag: 'easy_access', label: 'easy_access' }}
+
+<Row>
+  <Col>
+    除了手动调用 `websocket.query_params.get(...)` 之外，你还可以在处理函数、`on_connect` 和 `on_close` 的签名中直接声明带类型注解的查询参数。Robyn 会自动解析并进行类型转换——与 HTTP 便捷参数访问的用法一致。
+
+    带默认值的参数是可选的。没有默认值的参数是必需的——如果缺少，连接将被拒绝并返回错误消息。
+  </Col>
+  <Col sticky>
+    <CodeGroup title="便捷查询参数" tag="WebSocket" label="/ws?room=chat&page=5">
+
+      ```python {{ title: '处理函数' }}
+      @app.websocket("/ws")
+      async def handler(websocket, room: str = "default", page: int = 1):
+          try:
+              while True:
+                  msg = await websocket.receive_text()
+                  await websocket.send_text(
+                      f"room={room} page={page} msg={msg}"
+                  )
+          except WebSocketDisconnect:
+              pass
+      ```
+
+      ```python {{ title: '回调' }}
+      @handler.on_connect
+      def on_connect(websocket, room: str = "default"):
+          return f"已连接到 {room}"
+
+      @handler.on_close
+      def on_close(websocket, room: str = "default"):
+          return f"已离开 {room}"
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+
 ## 关闭连接 {{ tag: 'close', label: 'close' }}
 
 <Row>
