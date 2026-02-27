@@ -6,7 +6,7 @@ import logging
 
 import orjson
 
-from robyn._param_utils import resolve_individual_params
+from robyn._param_utils import QueryParamValidationError, resolve_individual_params
 from robyn.robyn import FunctionInfo, QueryParams, WebSocketConnector
 
 _logger = logging.getLogger(__name__)
@@ -120,9 +120,6 @@ def create_websocket_decorator(app_instance):
             _on_connect_fn = None
             _on_close_fn = None
 
-            # Reserved param names that are NOT individual query params
-            _ws_first_param_names = frozenset({"websocket", "ws"})
-
             def _resolve_ws_params(func_params, adapter):
                 """
                 Resolve all handler params beyond the first positional (websocket).
@@ -136,9 +133,9 @@ def create_websocket_decorator(app_instance):
                 resolved = {}
                 unresolved = {}
 
-                for param_name, param in func_params.items():
-                    # Skip the websocket param (first positional arg, passed separately)
-                    if param_name in _ws_first_param_names or param.annotation is WebSocketAdapter:
+                for idx, (param_name, param) in enumerate(func_params.items()):
+                    # Skip the websocket adapter (first positional arg, passed separately)
+                    if idx == 0 or param.annotation is WebSocketAdapter:
                         continue
 
                     # DI: global_dependencies
@@ -182,8 +179,12 @@ def create_websocket_decorator(app_instance):
                 adapter = WebSocketAdapter(ws, channel)
 
                 # Build resolved kwargs for the main handler
-                handler_params = inspect.signature(handler).parameters
-                handler_kwargs = _resolve_ws_params(handler_params, adapter)
+                try:
+                    handler_params = inspect.signature(handler).parameters
+                    handler_kwargs = _resolve_ws_params(handler_params, adapter)
+                except QueryParamValidationError as e:
+                    _logger.warning("WebSocket connection rejected for %s: %s", endpoint, e.detail)
+                    return f"Error: {e.detail}"
 
                 # Start the user's handler as a long-running asyncio task
                 async def _run_handler():
@@ -204,8 +205,15 @@ def create_websocket_decorator(app_instance):
                 # Call user's on_connect if defined
                 if _on_connect_fn is not None:
                     connect_adapter = WebSocketAdapter(ws, channel)
-                    connect_params = inspect.signature(_on_connect_fn).parameters
-                    connect_kwargs = _resolve_ws_params(connect_params, connect_adapter)
+                    try:
+                        connect_params = inspect.signature(_on_connect_fn).parameters
+                        connect_kwargs = _resolve_ws_params(connect_params, connect_adapter)
+                    except QueryParamValidationError as e:
+                        _logger.warning("WebSocket on_connect rejected for %s: %s", endpoint, e.detail)
+                        task = _connection_tasks.pop(conn_id, None)
+                        if task is not None and not task.done():
+                            task.cancel()
+                        return f"Error: {e.detail}"
                     if asyncio.iscoroutinefunction(_on_connect_fn):
                         result = await _on_connect_fn(connect_adapter, **connect_kwargs)
                     else:
@@ -243,8 +251,12 @@ def create_websocket_decorator(app_instance):
                 # Call user's on_close if defined
                 if _on_close_fn is not None:
                     close_adapter = WebSocketAdapter(ws, None)
-                    close_params = inspect.signature(_on_close_fn).parameters
-                    close_kwargs = _resolve_ws_params(close_params, close_adapter)
+                    try:
+                        close_params = inspect.signature(_on_close_fn).parameters
+                        close_kwargs = _resolve_ws_params(close_params, close_adapter)
+                    except QueryParamValidationError as e:
+                        _logger.warning("WebSocket on_close param error for %s: %s", endpoint, e.detail)
+                        return None
                     if asyncio.iscoroutinefunction(_on_close_fn):
                         result = await _on_close_fn(close_adapter, **close_kwargs)
                     else:

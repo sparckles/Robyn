@@ -1,9 +1,11 @@
+import os
+
 import pytest
 from websocket import create_connection
 
 from integration_tests.helpers.http_methods_helpers import get
 
-WS_BASE_URL = "ws://127.0.0.1:8080"
+WS_BASE_URL = f"ws://127.0.0.1:{os.environ.get('ROBYN_PORT', '8080')}"
 
 
 # ===== HTTP: Path param + query param with type coercion =====

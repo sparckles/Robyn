@@ -123,6 +123,7 @@ def resolve_individual_params(
 
         inner_type, is_optional = unwrap_optional(annotation)
         is_list = is_list_type(inner_type)
+        elem_type = get_list_element_type(inner_type) if is_list else inner_type
 
         raw_value = _MISSING
 
@@ -137,7 +138,6 @@ def resolve_individual_params(
             if is_list:
                 all_values = query_params.get_all(param_name)
                 if all_values is not None:
-                    elem_type = get_list_element_type(inner_type)
                     resolved[param_name] = [coerce_value(v, elem_type, param_name) for v in all_values]
                     continue
             else:
@@ -161,7 +161,7 @@ def resolve_individual_params(
             continue
 
         # 6. Truly missing required parameter
-        raise QueryParamValidationError(param_name, None, inner_type)
+        raise QueryParamValidationError(param_name, None, elem_type)
 
     return resolved
 
