@@ -5,16 +5,13 @@ on:
     branches: [main]
 
 
-env:
-  UV_SYSTEM_PYTHON: 1
-
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     - name: Install uv
-      uses: astral-sh/setup-uv@v3
+      uses: astral-sh/setup-uv@v7
 
     - uses: actions/setup-python@v6
       with:
@@ -22,8 +19,8 @@ jobs:
 
     - name: Install dependencies with uv
       run: |
-        uv pip install ruff isort black
+        uv sync --locked --only-group dev --no-install-project
     - name: Run linters
       run: |
-        uv run ruff check .
-        uv run isort --check-only --diff .
+        uv run --locked ruff check .
+        uv run --locked ruff format --check .
