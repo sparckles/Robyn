@@ -10,6 +10,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, TypedDict
 
 from robyn.responses import html
 from robyn.robyn import QueryParams, Response
+from robyn.pydantic_support import get_pydantic_openapi_schema, is_pydantic_model
 from robyn.types import Body, JsonBody
 
 
@@ -211,6 +212,8 @@ class OpenAPI:
                         request_body = param_annotation
                     elif issubclass(param_annotation, QueryParams):
                         query_params = param_annotation
+                    elif is_pydantic_model(param_annotation):
+                        request_body = param_annotation
 
             if signature.return_annotation is not Signature.empty:
                 return_annotation = signature.return_annotation
@@ -312,23 +315,32 @@ class OpenAPI:
                 )
 
         if request_body:
-            properties = {}
-
-            request_body_annotations = request_body.__annotations__ if request_body is TypedDict else typing.get_type_hints(request_body)
-
-            for body_item in request_body_annotations:
-                properties[body_item] = self.get_schema_object(body_item, request_body_annotations[body_item])
-
-            request_body_object = {
-                "content": {
-                    "application/json": {
-                        "schema": {
-                            "type": "object",
-                            "properties": properties,
+            if is_pydantic_model(request_body):
+                schema, component_schemas = get_pydantic_openapi_schema(request_body)
+                if component_schemas:
+                    self.openapi_spec["components"]["schemas"].update(component_schemas)
+                request_body_object = {
+                    "content": {
+                        "application/json": {
+                            "schema": schema
                         }
                     }
                 }
-            }
+            else:
+                properties = {}
+                request_body_annotations = request_body.__annotations__ if request_body is TypedDict else typing.get_type_hints(request_body)
+                for body_item in request_body_annotations:
+                    properties[body_item] = self.get_schema_object(body_item, request_body_annotations[body_item])
+                request_body_object = {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": properties,
+                            }
+                        }
+                    }
+                }
 
             openapi_path_object["requestBody"] = request_body_object
 
@@ -402,6 +414,13 @@ class OpenAPI:
                     item_type = param_type.__args__[0]
                     properties["items"] = self.get_schema_object(f"{parameter}_item", item_type)
                 return properties
+
+        # check for Pydantic models
+        if is_pydantic_model(param_type):
+            schema, component_schemas = get_pydantic_openapi_schema(param_type)
+            if component_schemas:
+                self.openapi_spec["components"]["schemas"].update(component_schemas)
+            return schema
 
         # check for Optional type
         if param_type.__module__ == "typing":

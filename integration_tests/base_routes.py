@@ -1573,6 +1573,16 @@ if _HAS_PYDANTIC:
     async def async_pydantic_user_put(user: UserCreate):
         return {"updated": True, "name": user.name}
 
+    @app.post("/openapi_pydantic_body", openapi_tags=["pydantic"])
+    def openapi_pydantic_body_endpoint(request: Request, user: UserCreate) -> dict:
+        """Create a user with Pydantic validation"""
+        return {"name": user.name}
+
+    @app.post("/openapi_pydantic_nested", openapi_tags=["pydantic"])
+    def openapi_pydantic_nested_endpoint(data: UserWithAddress) -> dict:
+        """Create a user with nested address"""
+        return {"name": data.name, "city": data.address.city}
+
 
 def main():
     app.set_response_header("server", "robyn")

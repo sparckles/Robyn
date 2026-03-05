@@ -117,6 +117,28 @@ def validate_pydantic_body(model_class, body: Any) -> Tuple[Any, Optional[dict]]
         }
 
 
+def get_pydantic_openapi_schema(model_class) -> Tuple[dict, dict]:
+    """Get OpenAPI-compatible JSON Schema from a Pydantic model.
+
+    Uses ref_template so nested model references point to
+    #/components/schemas/{ModelName} in the OpenAPI spec.
+
+    Returns:
+        (schema, component_schemas) where:
+        - schema: the model's JSON Schema (without $defs)
+        - component_schemas: dict of model_name -> schema for components/schemas
+    """
+    _ensure_pydantic()
+    if _BaseModel is None or not (inspect.isclass(model_class) and issubclass(model_class, _BaseModel)):
+        return {}, {}
+
+    full_schema = model_class.model_json_schema(
+        ref_template="#/components/schemas/{model}"
+    )
+    component_schemas = full_schema.pop("$defs", {})
+    return full_schema, component_schemas
+
+
 class PydanticBodyValidationError(Exception):
     """Raised at request time when Pydantic body validation fails.
     Carries the serializable error dict for the 422 response."""
