@@ -1,6 +1,6 @@
 import pytest
 
-from integration_tests.helpers.http_methods_helpers import json_post, put
+from integration_tests.helpers.http_methods_helpers import json_post
 
 try:
     import pydantic

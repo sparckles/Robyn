@@ -132,9 +132,7 @@ def get_pydantic_openapi_schema(model_class) -> Tuple[dict, dict]:
     if _BaseModel is None or not (inspect.isclass(model_class) and issubclass(model_class, _BaseModel)):
         return {}, {}
 
-    full_schema = model_class.model_json_schema(
-        ref_template="#/components/schemas/{model}"
-    )
+    full_schema = model_class.model_json_schema(ref_template="#/components/schemas/{model}")
     component_schemas = full_schema.pop("$defs", {})
     return full_schema, component_schemas
 

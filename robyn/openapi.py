@@ -319,13 +319,7 @@ class OpenAPI:
                 schema, component_schemas = get_pydantic_openapi_schema(request_body)
                 if component_schemas:
                     self.openapi_spec["components"]["schemas"].update(component_schemas)
-                request_body_object = {
-                    "content": {
-                        "application/json": {
-                            "schema": schema
-                        }
-                    }
-                }
+                request_body_object = {"content": {"application/json": {"schema": schema}}}
             else:
                 properties = {}
                 request_body_annotations = request_body.__annotations__ if request_body is TypedDict else typing.get_type_hints(request_body)
