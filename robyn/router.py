@@ -11,6 +11,7 @@ from robyn.authentication import AuthenticationHandler, AuthenticationNotConfigu
 from robyn.dependency_injection import DependencyMap
 from robyn.jsonify import jsonify
 from robyn.openapi import OpenAPI
+from robyn.pydantic_support import PydanticBodyValidationError, check_pydantic_installed_for_handler, detect_pydantic_params, validate_pydantic_body
 from robyn.responses import FileResponse, StreamingResponse
 from robyn.robyn import FunctionInfo, Headers, HttpMethod, Identity, MiddlewareType, QueryParams, Request, Response, Url
 from robyn.types import Body, Files, FormData, IPAddress, JsonBody, Method, PathParams
@@ -138,6 +139,10 @@ class Router(BaseRouter):
                 handler.__name__,
             )
 
+        # Detect Pydantic model params once at registration (zero cost if not used)
+        pydantic_params = detect_pydantic_params(handler)
+        check_pydantic_installed_for_handler(handler, pydantic_params)
+
         def wrapped_handler(*args, **kwargs):
             # In the execute functions the request is passed into *args
             request = next(filter(lambda it: isinstance(it, Request), args), None)
@@ -186,6 +191,16 @@ class Router(BaseRouter):
                             type_filtered_params[handler_param_name] = getattr(request, "body")
                         elif issubclass(handler_param_type, QueryParams):
                             type_filtered_params[handler_param_name] = getattr(request, "query_params")
+
+            # Phase 1.5: Pydantic model body params (only runs if handler uses pydantic)
+            if pydantic_params:
+                for param_name, model_class in pydantic_params.items():
+                    if param_name in type_filtered_params:
+                        continue
+                    validated, error = validate_pydantic_body(model_class, request.body)
+                    if error is not None:
+                        raise PydanticBodyValidationError(error)
+                    type_filtered_params[param_name] = validated
 
             # Phase 2: Reserved-name request components
             request_components = {
@@ -237,6 +252,12 @@ class Router(BaseRouter):
                     headers=Headers({"Content-Type": "text/plain"}),
                     description=str(err),
                 )
+            except PydanticBodyValidationError as err:
+                response = Response(
+                    status_code=status_codes.HTTP_422_UNPROCESSABLE_ENTITY,
+                    headers=Headers({"Content-Type": "application/json"}),
+                    description=jsonify(err.error_detail),
+                )
             except Exception as err:
                 if exception_handler is None:
                     raise
@@ -256,6 +277,12 @@ class Router(BaseRouter):
                     status_code=status_codes.HTTP_400_BAD_REQUEST,
                     headers=Headers({"Content-Type": "text/plain"}),
                     description=str(err),
+                )
+            except PydanticBodyValidationError as err:
+                response = Response(
+                    status_code=status_codes.HTTP_422_UNPROCESSABLE_ENTITY,
+                    headers=Headers({"Content-Type": "application/json"}),
+                    description=jsonify(err.error_detail),
                 )
             except Exception as err:
                 if exception_handler is None:

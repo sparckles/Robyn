@@ -13,6 +13,13 @@ from robyn.robyn import QueryParams, Url
 from robyn.templating import JinjaTemplate
 from robyn.types import Body, JsonBody, JSONResponse, Method, PathParams
 
+try:
+    from pydantic import BaseModel as PydanticBaseModel
+
+    _HAS_PYDANTIC = True
+except ImportError:
+    _HAS_PYDANTIC = False
+
 app = Robyn(__file__)
 
 current_file_path = pathlib.Path(__file__).parent.resolve()
@@ -1512,6 +1519,69 @@ def easy_access_ws_on_connect(websocket, room: str = "default"):
 @easy_access_ws_handler.on_close
 def easy_access_ws_on_close(websocket, room: str = "default"):
     return f"left {room}"
+
+
+# ===== Pydantic Integration Routes =====
+
+if _HAS_PYDANTIC:
+
+    class UserCreate(PydanticBaseModel):
+        name: str
+        email: str
+        age: int
+        active: bool = True
+
+    class Address(PydanticBaseModel):
+        street: str
+        city: str
+        zip_code: str
+
+    class UserWithAddress(PydanticBaseModel):
+        name: str
+        email: str
+        address: Address
+
+    @app.post("/sync/pydantic/user")
+    def sync_pydantic_user(user: UserCreate):
+        return {"name": user.name, "email": user.email, "age": user.age, "active": user.active}
+
+    @app.post("/async/pydantic/user")
+    async def async_pydantic_user(user: UserCreate):
+        return {"name": user.name, "email": user.email, "age": user.age, "active": user.active}
+
+    @app.post("/sync/pydantic/user_with_request")
+    def sync_pydantic_user_with_request(request: Request, user: UserCreate):
+        return {"method": request.method, "name": user.name, "email": user.email}
+
+    @app.post("/async/pydantic/user_with_request")
+    async def async_pydantic_user_with_request(request: Request, user: UserCreate):
+        return {"method": request.method, "name": user.name, "email": user.email}
+
+    @app.post("/sync/pydantic/nested")
+    def sync_pydantic_nested(data: UserWithAddress):
+        return {"name": data.name, "city": data.address.city}
+
+    @app.post("/async/pydantic/nested")
+    async def async_pydantic_nested(data: UserWithAddress):
+        return {"name": data.name, "city": data.address.city}
+
+    @app.put("/sync/pydantic/user")
+    def sync_pydantic_user_put(user: UserCreate):
+        return {"updated": True, "name": user.name}
+
+    @app.put("/async/pydantic/user")
+    async def async_pydantic_user_put(user: UserCreate):
+        return {"updated": True, "name": user.name}
+
+    @app.post("/openapi_pydantic_body", openapi_tags=["pydantic"])
+    def openapi_pydantic_body_endpoint(request: Request, user: UserCreate) -> dict:
+        """Create a user with Pydantic validation"""
+        return {"name": user.name}
+
+    @app.post("/openapi_pydantic_nested", openapi_tags=["pydantic"])
+    def openapi_pydantic_nested_endpoint(data: UserWithAddress) -> dict:
+        """Create a user with nested address"""
+        return {"name": data.name, "city": data.address.city}
 
 
 def main():

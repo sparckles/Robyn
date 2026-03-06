@@ -78,4 +78,4 @@ class JsonBody:
     pass
 
 
-__all__ = ["JSONResponse", "Body", "JsonBody", "QueryParamValidationError"]
+__all__ = ["JSONResponse", "Body", "JsonBody", "QueryParamValidationError", "Directory", "PathParams", "Method", "FormData", "Files", "IPAddress"]

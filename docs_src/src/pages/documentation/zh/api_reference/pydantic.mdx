@@ -1,0 +1,306 @@
+export const description =
+  '了解如何在 Robyn 中使用 Pydantic 模型实现自动请求体验证和 OpenAPI 文档生成。'
+
+
+## Pydantic 集成
+
+Robyn 支持 [Pydantic](https://docs.pydantic.dev/) v2 作为可选依赖，用于自动请求体验证和丰富的 OpenAPI 文档生成。当未安装 Pydantic 时，不会产生任何性能开销 — Robyn 不会导入它。
+
+
+## 安装
+
+使用可选扩展安装带 Pydantic 支持的 Robyn：
+
+<CodeGroup title="安装">
+
+```bash {{ title: 'pip' }}
+pip install "robyn[pydantic]"
+```
+
+```bash {{ title: 'conda' }}
+conda install robyn pydantic -c conda-forge
+```
+
+</CodeGroup>
+
+
+## 基本用法
+
+定义一个 Pydantic `BaseModel`，并将其用作处理函数参数的类型注解。Robyn 将自动解析传入的 JSON 请求体，根据模型进行验证，并将验证后的实例注入到处理函数中。
+
+<CodeGroup title="基本 Pydantic 验证">
+
+```python {{ title: '同步' }}
+from pydantic import BaseModel
+from robyn import Robyn
+
+app = Robyn(__file__)
+
+
+class UserCreate(BaseModel):
+    name: str
+    email: str
+    age: int
+    active: bool = True
+
+
+@app.post("/users")
+def create_user(user: UserCreate):
+    """创建新用户"""
+    return {
+        "name": user.name,
+        "email": user.email,
+        "age": user.age,
+        "active": user.active,
+    }
+
+
+if __name__ == "__main__":
+    app.start()
+```
+
+```python {{ title: '异步' }}
+from pydantic import BaseModel
+from robyn import Robyn
+
+app = Robyn(__file__)
+
+
+class UserCreate(BaseModel):
+    name: str
+    email: str
+    age: int
+    active: bool = True
+
+
+@app.post("/users")
+async def create_user(user: UserCreate):
+    """创建新用户"""
+    return {
+        "name": user.name,
+        "email": user.email,
+        "age": user.age,
+        "active": user.active,
+    }
+
+
+if __name__ == "__main__":
+    app.start()
+```
+
+</CodeGroup>
+
+
+## 验证错误
+
+当请求体验证失败时，Robyn 会自动返回 **422 Unprocessable Entity** 响应，并附带结构化的错误详情。您无需编写任何错误处理代码。
+
+例如，发送 `{"name": "Alice", "email": "alice@example.com", "age": "not_a_number"}` 将产生：
+
+```json
+{
+  "error": "Validation Error",
+  "detail": [
+    {
+      "type": "int_parsing",
+      "loc": ["age"],
+      "msg": "Input should be a valid integer, unable to parse string as an integer",
+      "input": "not_a_number"
+    }
+  ]
+}
+```
+
+缺少必填字段也会被捕获：
+
+```json
+{
+  "error": "Validation Error",
+  "detail": [
+    {
+      "type": "missing",
+      "loc": ["email"],
+      "msg": "Field required",
+      "input": {"name": "Alice", "age": 30}
+    }
+  ]
+}
+```
+
+
+## 嵌套模型
+
+Pydantic 模型可以引用其他模型。Robyn 会自动处理嵌套验证。
+
+<CodeGroup title="嵌套模型">
+
+```python
+from pydantic import BaseModel
+from robyn import Robyn
+
+app = Robyn(__file__)
+
+
+class Address(BaseModel):
+    street: str
+    city: str
+    zip_code: str
+
+
+class UserWithAddress(BaseModel):
+    name: str
+    email: str
+    address: Address
+
+
+@app.post("/users")
+def create_user(data: UserWithAddress):
+    """创建带有地址的用户"""
+    return {"name": data.name, "city": data.address.city}
+```
+
+</CodeGroup>
+
+如果嵌套的 `address` 对象缺失或格式错误，Robyn 将返回 422 响应，并包含完整的错误路径（例如 `["address", "city"]`）。
+
+
+## 与 Request 对象配合使用
+
+您可以在同一个处理函数中同时使用 Pydantic 参数和标准的 `Request` 对象。这样您可以在获取验证后的请求体的同时，访问请求头、查询参数和其他请求元数据。
+
+<CodeGroup title="Pydantic + Request">
+
+```python
+from pydantic import BaseModel
+from robyn import Robyn, Request
+
+app = Robyn(__file__)
+
+
+class UserCreate(BaseModel):
+    name: str
+    email: str
+    age: int
+    active: bool = True
+
+
+@app.post("/users")
+def create_user(request: Request, user: UserCreate):
+    """创建用户 — 同时访问原始请求和验证后的模型"""
+    return {
+        "method": request.method,
+        "name": user.name,
+        "email": user.email,
+    }
+```
+
+</CodeGroup>
+
+
+## OpenAPI 集成
+
+当您使用 Pydantic 模型时，Robyn 会自动在 `/openapi.json` 的 OpenAPI 规范中生成丰富的 JSON Schema。包括：
+
+- **属性类型** — `string`、`integer`、`boolean` 等
+- **必填字段** — 没有默认值的字段会列在 `required` 中
+- **默认值** — 在 Schema 中展示
+- **嵌套模型** — 通过 `$ref` 引用，并放置在 `components/schemas` 中
+
+<CodeGroup title="OpenAPI 与 Pydantic">
+
+```python
+from pydantic import BaseModel
+from robyn import Robyn, Request
+
+app = Robyn(__file__)
+
+
+class Address(BaseModel):
+    street: str
+    city: str
+    zip_code: str
+
+
+class UserWithAddress(BaseModel):
+    name: str
+    email: str
+    address: Address
+
+
+@app.post("/users", openapi_tags=["Users"])
+def create_user(request: Request, data: UserWithAddress) -> dict:
+    """创建带有嵌套地址的用户"""
+    return {"name": data.name, "city": data.address.city}
+```
+
+</CodeGroup>
+
+生成的 `/openapi.json` 将包含：
+
+```json
+{
+  "paths": {
+    "/users": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {"type": "string", "title": "Name"},
+                  "email": {"type": "string", "title": "Email"},
+                  "address": {"$ref": "#/components/schemas/Address"}
+                },
+                "required": ["name", "email", "address"],
+                "title": "UserWithAddress"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Address": {
+        "type": "object",
+        "properties": {
+          "street": {"type": "string", "title": "Street"},
+          "city": {"type": "string", "title": "City"},
+          "zip_code": {"type": "string", "title": "Zip Code"}
+        },
+        "required": ["street", "city", "zip_code"],
+        "title": "Address"
+      }
+    }
+  }
+}
+```
+
+
+## Pydantic 与 Body 对比
+
+Robyn 支持两种类型化请求体的方式。根据您的需求选择合适的方式：
+
+| 特性 | `Body` 子类 | Pydantic `BaseModel` |
+|---|---|---|
+| 安装 | 内置 | `pip install "robyn[pydantic]"` |
+| 验证 | 无自动验证 | 完整验证，附带详细错误信息 |
+| 错误响应 | 手动处理 | 自动返回 422 结构化错误 |
+| OpenAPI Schema | 基本类型推断 | 完整 JSON Schema（类型、必填、默认值、`$ref`） |
+| 嵌套模型 | 支持（基本） | 支持（OpenAPI 中使用 `$ref`） |
+| 性能开销 | 无 | 仅在安装并使用 Pydantic 时 |
+
+两种方式都支持 OpenAPI 文档。如果您需要验证功能，请使用 Pydantic。如果只需要 OpenAPI Schema 提示而不需要验证，`Body` 即可满足需求。
+
+
+## 下一步
+
+蝙蝠侠想知道 Robyn 的处理函数是否可以分发到多个进程中执行。
+
+Robyn 向他展示了方法！
+
+[多进程执行](/documentation/zh/api_reference/multiprocess_execution)
+
+

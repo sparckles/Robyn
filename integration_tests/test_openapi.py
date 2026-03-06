@@ -263,3 +263,67 @@ def test_openapi_json_body_bare():
     assert "requestBody" in openapi_spec["paths"][endpoint][route_type]
     assert "content" in openapi_spec["paths"][endpoint][route_type]["requestBody"]
     assert "application/json" in openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]
+
+
+try:
+    import pydantic  # noqa: F401
+
+    _HAS_PYDANTIC = True
+except ImportError:
+    _HAS_PYDANTIC = False
+
+
+@pytest.mark.benchmark
+@pytest.mark.skipif(not _HAS_PYDANTIC, reason="pydantic not installed")
+def test_openapi_pydantic_request_body():
+    """Pydantic model should produce a full JSON Schema in requestBody."""
+    openapi_response = get("/openapi.json", should_check_response=False)
+    assert openapi_response.status_code == 200
+    openapi_spec = openapi_response.json()
+
+    endpoint = "/openapi_pydantic_body"
+    route = openapi_spec["paths"][endpoint]["post"]
+
+    assert "requestBody" in route
+    schema = route["requestBody"]["content"]["application/json"]["schema"]
+    assert schema["type"] == "object"
+    assert "properties" in schema
+    assert "name" in schema["properties"]
+    assert "email" in schema["properties"]
+    assert "age" in schema["properties"]
+    assert "active" in schema["properties"]
+    assert schema["properties"]["name"]["type"] == "string"
+    assert schema["properties"]["age"]["type"] == "integer"
+    assert schema["properties"]["active"]["type"] == "boolean"
+    assert schema["properties"]["active"]["default"] is True
+    assert "required" in schema
+    assert "name" in schema["required"]
+    assert "email" in schema["required"]
+    assert "age" in schema["required"]
+    assert "active" not in schema["required"]
+
+
+@pytest.mark.benchmark
+@pytest.mark.skipif(not _HAS_PYDANTIC, reason="pydantic not installed")
+def test_openapi_pydantic_nested_model():
+    """Nested Pydantic models should use $ref and populate components/schemas."""
+    openapi_response = get("/openapi.json", should_check_response=False)
+    assert openapi_response.status_code == 200
+    openapi_spec = openapi_response.json()
+
+    endpoint = "/openapi_pydantic_nested"
+    route = openapi_spec["paths"][endpoint]["post"]
+
+    schema = route["requestBody"]["content"]["application/json"]["schema"]
+
+    assert "name" in schema["properties"]
+    assert "email" in schema["properties"]
+    assert "address" in schema["properties"]
+    assert schema["properties"]["address"]["$ref"] == "#/components/schemas/Address"
+
+    assert "Address" in openapi_spec["components"]["schemas"]
+    address_schema = openapi_spec["components"]["schemas"]["Address"]
+    assert address_schema["type"] == "object"
+    assert "street" in address_schema["properties"]
+    assert "city" in address_schema["properties"]
+    assert "zip_code" in address_schema["properties"]

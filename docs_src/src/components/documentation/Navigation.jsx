@@ -321,6 +321,10 @@ export const navigation = [
         title: 'OpenAPI Documentation',
       },
       {
+        href: '/documentation/en/api_reference/pydantic',
+        title: 'Pydantic Integration',
+      },
+      {
         href: '/documentation/en/api_reference/dependency_injection',
         title: 'Dependency Injection',
       },
@@ -467,6 +471,7 @@ const translations = {
       'Direct Rust Usage': 'Direct Rust Usage',
       'GraphQL Support': 'GraphQL Support',
       'Dependency Injection': 'Dependency Injection',
+      'Pydantic Integration': 'Pydantic Integration',
       'AI': 'AI',
       'AI Agents': 'AI Agents',
       Talks: 'Talks',
@@ -513,6 +518,7 @@ const translations = {
       'Direct Rust Usage': '直接使用 Rust',
       'GraphQL Support': 'GraphQL 支持',
       'Dependency Injection': '依赖注入',
+      'Pydantic Integration': 'Pydantic 集成',
       'AI': 'AI',
       'AI Agents': 'AI 代理',
       'Talks': '演讲',
