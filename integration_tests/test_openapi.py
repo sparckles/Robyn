@@ -379,3 +379,29 @@ def test_openapi_pydantic_return_type():
     assert response_schema["properties"]["name"]["type"] == "string"
     assert response_schema["properties"]["age"]["type"] == "integer"
     assert set(response_schema["required"]) == {"name", "email", "age"}
+
+
+@pytest.mark.benchmark
+@pytest.mark.skipif(not _HAS_PYDANTIC, reason="pydantic not installed")
+def test_openapi_pydantic_return_list_type():
+    """When a route returns list[PydanticModel], the response schema should be
+    an array with items containing the full Pydantic model schema."""
+    openapi_response = get("/openapi.json", should_check_response=False)
+    assert openapi_response.status_code == 200
+    openapi_spec = openapi_response.json()
+
+    endpoint = "/sync/pydantic/return_list"
+    route = openapi_spec["paths"][endpoint]["post"]
+
+    assert route["tags"] == ["pydantic"]
+    assert route["description"] == "Return a list of Pydantic models"
+
+    response_schema = route["responses"]["200"]["content"]["application/json"]["schema"]
+    assert response_schema["type"] == "array"
+    assert "items" in response_schema
+
+    items = response_schema["items"]
+    assert items["type"] == "object"
+    assert items["title"] == "UserCreate"
+    assert items["properties"]["name"]["type"] == "string"
+    assert items["properties"]["age"]["type"] == "integer"

@@ -170,7 +170,7 @@ With the reference documentation deployed and running smoothly, Batman had a pow
 
 ## Using Pydantic Models
 
-If you have Pydantic installed (`pip install "robyn[pydantic]"`), you can use Pydantic `BaseModel` classes directly as handler parameter annotations. Robyn will automatically validate the request body **and** generate a rich OpenAPI schema — including property types, required fields, defaults, and `$ref` for nested models.
+If you have Pydantic installed (`pip install "robyn[pydantic]"` or `pip install "robyn[all]"`), you can use Pydantic `BaseModel` classes directly as handler parameter annotations. Robyn will automatically validate the request body **and** generate a rich OpenAPI schema — including property types, required fields, defaults, and `$ref` for nested models.
 
 <CodeGroup title="Pydantic + OpenAPI">
 

@@ -34,6 +34,12 @@ Or, with [conda-forge](https://conda-forge.org/)
 conda install -c conda-forge robyn
 ```
 
+To install with all optional features (Pydantic validation, Jinja2 templating):
+
+```
+pip install "robyn[all]"
+```
+
 ## 🤔 Usage
 
 ### 🚀 Define your API

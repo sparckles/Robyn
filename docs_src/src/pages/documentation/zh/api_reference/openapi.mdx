@@ -169,7 +169,7 @@ def create_item(request: Request, body: CreateItemBody) -> CreateResponse:
 
 ## 使用 Pydantic 模型
 
-如果您已安装 Pydantic（`pip install "robyn[pydantic]"`），可以直接使用 Pydantic `BaseModel` 类作为处理函数参数的类型注解。Robyn 将自动验证请求体，**并且**生成丰富的 OpenAPI Schema — 包括属性类型、必填字段、默认值，以及嵌套模型的 `$ref` 引用。
+如果您已安装 Pydantic（`pip install "robyn[pydantic]"` 或 `pip install "robyn[all]"`），可以直接使用 Pydantic `BaseModel` 类作为处理函数参数的类型注解。Robyn 将自动验证请求体，**并且**生成丰富的 OpenAPI Schema — 包括属性类型、必填字段、默认值，以及嵌套模型的 `$ref` 引用。
 
 <CodeGroup title="Pydantic + OpenAPI">
 

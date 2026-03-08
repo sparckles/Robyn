@@ -1,5 +1,6 @@
 import inspect
 import json
+import logging
 import re
 import typing
 from dataclasses import asdict, dataclass, field
@@ -12,6 +13,8 @@ from robyn.responses import html
 from robyn.robyn import QueryParams, Response
 from robyn.pydantic_support import get_pydantic_openapi_schema, is_pydantic_model
 from robyn.types import Body, JsonBody
+
+_logger = logging.getLogger(__name__)
 
 
 class str_typed_dict(TypedDict):
@@ -226,9 +229,27 @@ class OpenAPI:
             self.openapi_spec["paths"][modified_endpoint] = {}
         self.openapi_spec["paths"][modified_endpoint][route_type] = path_obj
 
+    def _merge_component_schemas(self, incoming: dict):
+        """Merge incoming component schemas into the spec with collision detection.
+
+        If an incoming schema name already exists and the schemas differ,
+        a warning is logged.  The incoming schema always wins so that the
+        most-recently-registered route's models are used (matching the
+        behaviour of path registration).
+        """
+        existing = self.openapi_spec["components"]["schemas"]
+        for name, schema in incoming.items():
+            if name in existing and existing[name] != schema:
+                _logger.warning(
+                    "OpenAPI component schema '%s' is defined by multiple models with "
+                    "different shapes — the later definition will be used",
+                    name,
+                )
+            existing[name] = schema
+
     def add_subrouter_paths(self, subrouter_openapi: "OpenAPI"):
         """
-        Adds the subrouter paths to main router's openapi specs
+        Adds the subrouter paths and component schemas to main router's openapi specs.
 
         @param subrouter_openapi: OpenAPI the OpenAPI object of the current subrouter
         """
@@ -236,10 +257,12 @@ class OpenAPI:
         if self.openapi_file_override:
             return
 
-        paths = subrouter_openapi.openapi_spec["paths"]
+        for path, path_obj in subrouter_openapi.openapi_spec["paths"].items():
+            self.openapi_spec["paths"][path] = path_obj
 
-        for path in paths:
-            self.openapi_spec["paths"][path] = paths[path]
+        subrouter_schemas = subrouter_openapi.openapi_spec.get("components", {}).get("schemas", {})
+        if subrouter_schemas:
+            self._merge_component_schemas(subrouter_schemas)
 
     def get_path_obj(
         self,
@@ -318,7 +341,7 @@ class OpenAPI:
             if is_pydantic_model(request_body):
                 schema, component_schemas = get_pydantic_openapi_schema(request_body)
                 if component_schemas:
-                    self.openapi_spec["components"]["schemas"].update(component_schemas)
+                    self._merge_component_schemas(component_schemas)
                 request_body_object = {
                     "content": {
                         "application/json": {
@@ -419,7 +442,7 @@ class OpenAPI:
         if is_pydantic_model(param_type):
             schema, component_schemas = get_pydantic_openapi_schema(param_type)
             if component_schemas:
-                self.openapi_spec["components"]["schemas"].update(component_schemas)
+                self._merge_component_schemas(component_schemas)
             return schema
 
         # check for Optional type

@@ -202,7 +202,7 @@ class PydanticNotInstalledError(ImportError):
         super().__init__(
             f"Handler '{handler_name}' has parameter '{param_name}' annotated with "
             f"Pydantic model '{model_name}', but pydantic is not installed. "
-            f"Install it with: pip install robyn[pydantic]"
+            f'Install it with: pip install "robyn[pydantic]" or pip install "robyn[all]"'
         )
 
 

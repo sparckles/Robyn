@@ -1593,12 +1593,12 @@ if _HAS_PYDANTIC:
         return user
 
     @app.post("/sync/pydantic/return_list", openapi_tags=["pydantic"])
-    def sync_pydantic_return_list(user: UserCreate) -> list:
+    def sync_pydantic_return_list(user: UserCreate) -> list[UserCreate]:
         """Return a list of Pydantic models"""
         return [user, user]
 
     @app.post("/async/pydantic/return_list")
-    async def async_pydantic_return_list(user: UserCreate) -> list:
+    async def async_pydantic_return_list(user: UserCreate) -> list[UserCreate]:
         return [user, user]
 
 
