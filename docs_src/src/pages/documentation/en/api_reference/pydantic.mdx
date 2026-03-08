@@ -197,6 +197,52 @@ def create_user(request: Request, user: UserCreate):
 </CodeGroup>
 
 
+## Returning Pydantic Models Directly
+
+You can return a Pydantic model instance (or a list of them) directly from a handler. Robyn will automatically serialize it to JSON with the correct `Content-Type` header — no need to call `.model_dump()` manually.
+
+<CodeGroup title="Returning Models">
+
+```python {{ title: 'Single model' }}
+@app.post("/users")
+def create_user(user: UserCreate) -> UserCreate:
+    """Validate and echo back the user"""
+    return user
+```
+
+```python {{ title: 'List of models' }}
+@app.post("/users/batch")
+def create_users(user: UserCreate) -> list:
+    """Return multiple model instances"""
+    return [user, user]
+```
+
+</CodeGroup>
+
+Both forms produce an `application/json` response. The single-model path uses Pydantic's Rust-based `model_dump_json()` for maximum throughput.
+
+
+## Supported HTTP Methods
+
+Pydantic validation works with every HTTP method that accepts a request body — `POST`, `PUT`, `PATCH`, and `DELETE`. The annotation-based approach is the same for all methods:
+
+<CodeGroup title="HTTP Methods">
+
+```python {{ title: 'PUT' }}
+@app.put("/users/:id")
+def update_user(user: UserCreate):
+    return {"updated": True, "name": user.name}
+```
+
+```python {{ title: 'PATCH' }}
+@app.patch("/users/:id")
+def patch_user(user: UserCreate):
+    return {"patched": True, "name": user.name}
+```
+
+</CodeGroup>
+
+
 ## OpenAPI Integration
 
 When you use Pydantic models, Robyn automatically generates rich JSON Schema in your OpenAPI specification at `/openapi.json`. This includes:
@@ -288,11 +334,18 @@ Robyn supports two approaches for typed request bodies. Choose the one that fits
 | Installation | Built-in | `pip install "robyn[pydantic]"` |
 | Validation | No automatic validation | Full validation with detailed errors |
 | Error responses | Manual | Automatic 422 with structured errors |
+| Return serialization | Manual `dict()` | Auto-serialize model to JSON |
 | OpenAPI schema | Basic type inference | Full JSON Schema (types, required, defaults, `$ref`) |
 | Nested models | Supported (basic) | Supported (with `$ref` in OpenAPI) |
 | Performance overhead | None | Only when Pydantic is installed and used |
 
 Both approaches work with OpenAPI documentation. If you need validation, use Pydantic. If you just need OpenAPI schema hints without validation, `Body` is sufficient.
+
+
+## Important Notes
+
+- **One Pydantic body per handler** — Each handler can have at most one parameter annotated with a Pydantic model. The entire request body is parsed into that single model. If you need multiple model inputs, compose them into a single parent model with nested fields.
+- **Request validation only** — Robyn validates *incoming* request bodies against Pydantic models but does not validate *outgoing* responses. When you return a model instance, it is serialized as-is without re-validation. This is a deliberate design choice for performance — if you constructed the model, it's already valid.
 
 
 ## What's next?

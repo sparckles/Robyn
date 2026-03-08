@@ -11,7 +11,7 @@ from robyn.authentication import AuthenticationHandler, AuthenticationNotConfigu
 from robyn.dependency_injection import DependencyMap
 from robyn.jsonify import jsonify
 from robyn.openapi import OpenAPI
-from robyn.pydantic_support import PydanticBodyValidationError, check_pydantic_installed_for_handler, detect_pydantic_params, validate_pydantic_body
+from robyn.pydantic_support import PydanticBodyValidationError, check_pydantic_installed_for_handler, detect_pydantic_params, serialize_pydantic_response, validate_pydantic_body
 from robyn.responses import FileResponse, StreamingResponse
 from robyn.robyn import FunctionInfo, Headers, HttpMethod, Identity, MiddlewareType, QueryParams, Request, Response, Url
 from robyn.types import Body, Files, FormData, IPAddress, JsonBody, Method, PathParams
@@ -81,6 +81,14 @@ class Router(BaseRouter):
         if isinstance(res, StreamingResponse):
             return res
 
+        pydantic_json = serialize_pydantic_response(res)
+        if pydantic_json is not None:
+            return Response(
+                status_code=status_codes.HTTP_200_OK,
+                headers=Headers({"Content-Type": "application/json"}),
+                description=pydantic_json,
+            )
+
         if isinstance(res, (dict, list)):
             return Response(
                 status_code=status_codes.HTTP_200_OK,
@@ -125,11 +133,12 @@ class Router(BaseRouter):
         exception_handler: Optional[Callable],
         injected_dependencies: dict,
     ) -> Union[Callable, CoroutineType]:
-        # Pre-compute at registration time
+        # Pre-compute handler signature ONCE at registration time.
+        # This avoids calling inspect.signature() on every request.
         route_param_names = parse_route_param_names(endpoint)
+        handler_params = inspect.signature(handler).parameters
+        handler_param_names = set(handler_params.keys())
 
-        # Warn if the route declares :param names the handler doesn't use
-        handler_param_names = set(inspect.signature(handler).parameters.keys())
         unused_route_params = route_param_names - handler_param_names
         if unused_route_params:
             _logger.warning(
@@ -140,14 +149,11 @@ class Router(BaseRouter):
             )
 
         # Detect Pydantic model params once at registration (zero cost if not used)
-        pydantic_params = detect_pydantic_params(handler)
+        pydantic_params = detect_pydantic_params(handler_params)
         check_pydantic_installed_for_handler(handler, pydantic_params)
 
         def wrapped_handler(*args, **kwargs):
-            # In the execute functions the request is passed into *args
             request = next(filter(lambda it: isinstance(it, Request), args), None)
-
-            handler_params = inspect.signature(handler).parameters
 
             if not request or (len(handler_params) == 1 and next(iter(handler_params)) is Request):
                 return handler(*args, **kwargs)
@@ -292,8 +298,7 @@ class Router(BaseRouter):
                 )
             return response
 
-        # these are the arguments
-        params = dict(inspect.signature(handler).parameters)
+        params = dict(handler_params)
 
         new_injected_dependencies = {}
         for dependency in injected_dependencies:

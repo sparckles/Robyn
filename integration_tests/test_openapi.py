@@ -355,3 +355,27 @@ def test_openapi_pydantic_nested_model():
     assert "responses" in route
     assert "200" in route["responses"]
     assert "application/json" in route["responses"]["200"]["content"]
+
+
+@pytest.mark.benchmark
+@pytest.mark.skipif(not _HAS_PYDANTIC, reason="pydantic not installed")
+def test_openapi_pydantic_return_type():
+    """When a route has a Pydantic model as return type annotation, the response
+    schema should reflect the full Pydantic model schema, not just 'object'."""
+    openapi_response = get("/openapi.json", should_check_response=False)
+    assert openapi_response.status_code == 200
+    openapi_spec = openapi_response.json()
+
+    endpoint = "/sync/pydantic/return_model"
+    route = openapi_spec["paths"][endpoint]["post"]
+
+    assert route["tags"] == ["pydantic"]
+    assert route["description"] == "Return the validated Pydantic model directly"
+
+    response_schema = route["responses"]["200"]["content"]["application/json"]["schema"]
+    assert response_schema["type"] == "object"
+    assert response_schema["title"] == "UserCreate"
+    assert "properties" in response_schema
+    assert response_schema["properties"]["name"]["type"] == "string"
+    assert response_schema["properties"]["age"]["type"] == "integer"
+    assert set(response_schema["required"]) == {"name", "email", "age"}

@@ -1575,6 +1575,32 @@ if _HAS_PYDANTIC:
     async def async_pydantic_user_put(user: UserCreate):
         return {"updated": True, "name": user.name}
 
+    @app.patch("/sync/pydantic/user")
+    def sync_pydantic_user_patch(user: UserCreate):
+        return {"patched": True, "name": user.name}
+
+    @app.patch("/async/pydantic/user")
+    async def async_pydantic_user_patch(user: UserCreate):
+        return {"patched": True, "name": user.name}
+
+    @app.post("/sync/pydantic/return_model", openapi_tags=["pydantic"])
+    def sync_pydantic_return_model(user: UserCreate) -> UserCreate:
+        """Return the validated Pydantic model directly"""
+        return user
+
+    @app.post("/async/pydantic/return_model")
+    async def async_pydantic_return_model(user: UserCreate) -> UserCreate:
+        return user
+
+    @app.post("/sync/pydantic/return_list", openapi_tags=["pydantic"])
+    def sync_pydantic_return_list(user: UserCreate) -> list:
+        """Return a list of Pydantic models"""
+        return [user, user]
+
+    @app.post("/async/pydantic/return_list")
+    async def async_pydantic_return_list(user: UserCreate) -> list:
+        return [user, user]
+
 
 def main():
     app.set_response_header("server", "robyn")

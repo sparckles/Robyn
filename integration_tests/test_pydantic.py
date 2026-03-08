@@ -343,3 +343,92 @@ def test_pydantic_put_invalid(function_type: str, session):
     error_fields = {tuple(e["loc"]) for e in result["detail"]}
     assert ("email",) in error_fields
     assert ("age",) in error_fields
+
+
+# ===== Pydantic with PATCH =====
+
+
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_pydantic_patch_valid(function_type: str, session):
+    """Pydantic validation must work with PATCH method."""
+    json_data = {"name": "Iris", "email": "iris@example.com", "age": 29}
+    res = requests.patch(f"{BASE_URL}/{function_type}/pydantic/user", json=json_data)
+    result = res.json()
+
+    assert result["patched"] is True
+    assert result["name"] == "Iris"
+
+
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_pydantic_patch_invalid(function_type: str, session):
+    """PATCH with invalid body must also return 422."""
+    json_data = {"name": "Iris"}  # missing email and age
+    res = requests.patch(f"{BASE_URL}/{function_type}/pydantic/user", json=json_data)
+    assert res.status_code == 422
+    result = res.json()
+    assert result["error"] == "Validation Error"
+    error_fields = {tuple(e["loc"]) for e in result["detail"]}
+    assert ("email",) in error_fields
+    assert ("age",) in error_fields
+
+
+# ===== Returning Pydantic models directly =====
+
+
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_pydantic_return_model_directly(function_type: str, session):
+    """Returning a Pydantic model from a handler should auto-serialize to JSON."""
+    json_data = {"name": "Jack", "email": "jack@example.com", "age": 32}
+    res = requests.post(f"{BASE_URL}/{function_type}/pydantic/return_model", json=json_data)
+
+    assert res.status_code == 200
+    assert "application/json" in res.headers.get("content-type", "")
+
+    result = res.json()
+    assert result["name"] == "Jack"
+    assert result["email"] == "jack@example.com"
+    assert result["age"] == 32
+    assert result["active"] is True  # default field
+
+
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_pydantic_return_model_preserves_all_fields(function_type: str, session):
+    """Returned model should include every field, including those with defaults."""
+    json_data = {"name": "Kate", "email": "kate@example.com", "age": 27, "active": False}
+    res = requests.post(f"{BASE_URL}/{function_type}/pydantic/return_model", json=json_data)
+    result = res.json()
+
+    assert result["name"] == "Kate"
+    assert result["email"] == "kate@example.com"
+    assert result["age"] == 27
+    assert result["active"] is False
+
+
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_pydantic_return_model_validation_still_works(function_type: str, session):
+    """Validation should still trigger 422 even when the route returns a model."""
+    json_data = {"name": "Kate"}  # missing email and age
+    res = requests.post(f"{BASE_URL}/{function_type}/pydantic/return_model", json=json_data)
+    assert res.status_code == 422
+    result = res.json()
+    assert result["error"] == "Validation Error"
+
+
+# ===== Returning lists of Pydantic models =====
+
+
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_pydantic_return_list_of_models(function_type: str, session):
+    """Returning a list of Pydantic models should auto-serialize to a JSON array."""
+    json_data = {"name": "Leo", "email": "leo@example.com", "age": 45}
+    res = requests.post(f"{BASE_URL}/{function_type}/pydantic/return_list", json=json_data)
+
+    assert res.status_code == 200
+    assert "application/json" in res.headers.get("content-type", "")
+
+    result = res.json()
+    assert isinstance(result, list)
+    assert len(result) == 2
+    assert result[0]["name"] == "Leo"
+    assert result[1]["name"] == "Leo"
+    assert result[0]["active"] is True
