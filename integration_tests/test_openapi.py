@@ -276,54 +276,82 @@ except ImportError:
 @pytest.mark.benchmark
 @pytest.mark.skipif(not _HAS_PYDANTIC, reason="pydantic not installed")
 def test_openapi_pydantic_request_body():
-    """Pydantic model should produce a full JSON Schema in requestBody."""
+    """Pydantic model on a regular route should produce a full JSON Schema in
+    requestBody — no dedicated OpenAPI route needed."""
     openapi_response = get("/openapi.json", should_check_response=False)
     assert openapi_response.status_code == 200
     openapi_spec = openapi_response.json()
 
-    endpoint = "/openapi_pydantic_body"
+    endpoint = "/sync/pydantic/user"
     route = openapi_spec["paths"][endpoint]["post"]
+
+    assert route["tags"] == ["pydantic"]
+    assert route["description"] == "Create a user with Pydantic validation"
 
     assert "requestBody" in route
     schema = route["requestBody"]["content"]["application/json"]["schema"]
+
     assert schema["type"] == "object"
-    assert "properties" in schema
-    assert "name" in schema["properties"]
-    assert "email" in schema["properties"]
-    assert "age" in schema["properties"]
-    assert "active" in schema["properties"]
-    assert schema["properties"]["name"]["type"] == "string"
-    assert schema["properties"]["age"]["type"] == "integer"
-    assert schema["properties"]["active"]["type"] == "boolean"
-    assert schema["properties"]["active"]["default"] is True
-    assert "required" in schema
-    assert "name" in schema["required"]
-    assert "email" in schema["required"]
-    assert "age" in schema["required"]
+    assert schema["title"] == "UserCreate"
+
+    props = schema["properties"]
+    assert props["name"]["type"] == "string"
+    assert props["name"]["title"] == "Name"
+    assert props["email"]["type"] == "string"
+    assert props["email"]["title"] == "Email"
+    assert props["age"]["type"] == "integer"
+    assert props["age"]["title"] == "Age"
+    assert props["active"]["type"] == "boolean"
+    assert props["active"]["title"] == "Active"
+    assert props["active"]["default"] is True
+
+    assert set(schema["required"]) == {"name", "email", "age"}
     assert "active" not in schema["required"]
+
+    assert "responses" in route
+    assert "200" in route["responses"]
+    assert "application/json" in route["responses"]["200"]["content"]
 
 
 @pytest.mark.benchmark
 @pytest.mark.skipif(not _HAS_PYDANTIC, reason="pydantic not installed")
 def test_openapi_pydantic_nested_model():
-    """Nested Pydantic models should use $ref and populate components/schemas."""
+    """Nested Pydantic models on a regular route should use $ref and populate
+    components/schemas — no dedicated OpenAPI route needed."""
     openapi_response = get("/openapi.json", should_check_response=False)
     assert openapi_response.status_code == 200
     openapi_spec = openapi_response.json()
 
-    endpoint = "/openapi_pydantic_nested"
+    endpoint = "/sync/pydantic/nested"
     route = openapi_spec["paths"][endpoint]["post"]
 
-    schema = route["requestBody"]["content"]["application/json"]["schema"]
+    assert route["tags"] == ["pydantic"]
+    assert route["description"] == "Create a user with nested address"
 
-    assert "name" in schema["properties"]
-    assert "email" in schema["properties"]
-    assert "address" in schema["properties"]
+    schema = route["requestBody"]["content"]["application/json"]["schema"]
+    assert schema["type"] == "object"
+    assert schema["title"] == "UserWithAddress"
+
+    assert schema["properties"]["name"]["type"] == "string"
+    assert schema["properties"]["email"]["type"] == "string"
     assert schema["properties"]["address"]["$ref"] == "#/components/schemas/Address"
+
+    assert set(schema["required"]) == {"name", "email", "address"}
 
     assert "Address" in openapi_spec["components"]["schemas"]
     address_schema = openapi_spec["components"]["schemas"]["Address"]
     assert address_schema["type"] == "object"
-    assert "street" in address_schema["properties"]
-    assert "city" in address_schema["properties"]
-    assert "zip_code" in address_schema["properties"]
+    assert address_schema["title"] == "Address"
+
+    assert address_schema["properties"]["street"]["type"] == "string"
+    assert address_schema["properties"]["street"]["title"] == "Street"
+    assert address_schema["properties"]["city"]["type"] == "string"
+    assert address_schema["properties"]["city"]["title"] == "City"
+    assert address_schema["properties"]["zip_code"]["type"] == "string"
+    assert address_schema["properties"]["zip_code"]["title"] == "Zip Code"
+
+    assert set(address_schema["required"]) == {"street", "city", "zip_code"}
+
+    assert "responses" in route
+    assert "200" in route["responses"]
+    assert "application/json" in route["responses"]["200"]["content"]

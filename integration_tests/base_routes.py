@@ -1541,8 +1541,9 @@ if _HAS_PYDANTIC:
         email: str
         address: Address
 
-    @app.post("/sync/pydantic/user")
-    def sync_pydantic_user(user: UserCreate):
+    @app.post("/sync/pydantic/user", openapi_tags=["pydantic"])
+    def sync_pydantic_user(user: UserCreate) -> dict:
+        """Create a user with Pydantic validation"""
         return {"name": user.name, "email": user.email, "age": user.age, "active": user.active}
 
     @app.post("/async/pydantic/user")
@@ -1557,8 +1558,9 @@ if _HAS_PYDANTIC:
     async def async_pydantic_user_with_request(request: Request, user: UserCreate):
         return {"method": request.method, "name": user.name, "email": user.email}
 
-    @app.post("/sync/pydantic/nested")
-    def sync_pydantic_nested(data: UserWithAddress):
+    @app.post("/sync/pydantic/nested", openapi_tags=["pydantic"])
+    def sync_pydantic_nested(data: UserWithAddress) -> dict:
+        """Create a user with nested address"""
         return {"name": data.name, "city": data.address.city}
 
     @app.post("/async/pydantic/nested")
@@ -1572,16 +1574,6 @@ if _HAS_PYDANTIC:
     @app.put("/async/pydantic/user")
     async def async_pydantic_user_put(user: UserCreate):
         return {"updated": True, "name": user.name}
-
-    @app.post("/openapi_pydantic_body", openapi_tags=["pydantic"])
-    def openapi_pydantic_body_endpoint(request: Request, user: UserCreate) -> dict:
-        """Create a user with Pydantic validation"""
-        return {"name": user.name}
-
-    @app.post("/openapi_pydantic_nested", openapi_tags=["pydantic"])
-    def openapi_pydantic_nested_endpoint(data: UserWithAddress) -> dict:
-        """Create a user with nested address"""
-        return {"name": data.name, "city": data.address.city}
 
 
 def main():
