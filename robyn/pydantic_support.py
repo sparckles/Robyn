@@ -152,9 +152,7 @@ def get_pydantic_openapi_schema(model_class) -> Tuple[dict, dict]:
     if _BaseModel is None or not (inspect.isclass(model_class) and issubclass(model_class, _BaseModel)):
         return {}, {}
 
-    full_schema = model_class.model_json_schema(
-        ref_template="#/components/schemas/{model}"
-    )
+    full_schema = model_class.model_json_schema(ref_template="#/components/schemas/{model}")
     component_schemas = full_schema.pop("$defs", {})
     return full_schema, component_schemas
 
@@ -174,9 +172,7 @@ def serialize_pydantic_response(res) -> Optional[str]:
     if isinstance(res, _BaseModel):
         return res.model_dump_json()
     if isinstance(res, list) and res and isinstance(res[0], _BaseModel):
-        return orjson.dumps(
-            [item.model_dump(mode="python") for item in res]
-        ).decode("utf-8")
+        return orjson.dumps([item.model_dump(mode="python") for item in res]).decode("utf-8")
     return None
 
 

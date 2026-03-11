@@ -243,8 +243,7 @@ class OpenAPI:
         for name, schema in incoming.items():
             if name in existing and existing[name] != schema:
                 _logger.warning(
-                    "OpenAPI component schema '%s' is defined by multiple models with "
-                    "different shapes — the later definition will be used",
+                    "OpenAPI component schema '%s' is defined by multiple models with different shapes — the later definition will be used",
                     name,
                 )
             existing[name] = schema
@@ -344,13 +343,7 @@ class OpenAPI:
                 schema, component_schemas = get_pydantic_openapi_schema(request_body)
                 if component_schemas:
                     self._merge_component_schemas(component_schemas)
-                request_body_object = {
-                    "content": {
-                        "application/json": {
-                            "schema": schema
-                        }
-                    }
-                }
+                request_body_object = {"content": {"application/json": {"schema": schema}}}
             else:
                 properties = {}
                 request_body_annotations = request_body.__annotations__ if request_body is TypedDict else typing.get_type_hints(request_body)

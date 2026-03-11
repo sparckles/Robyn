@@ -11,7 +11,13 @@ from robyn.authentication import AuthenticationHandler, AuthenticationNotConfigu
 from robyn.dependency_injection import DependencyMap
 from robyn.jsonify import jsonify
 from robyn.openapi import OpenAPI
-from robyn.pydantic_support import PydanticBodyValidationError, check_pydantic_installed_for_handler, detect_pydantic_params, serialize_pydantic_response, validate_pydantic_body
+from robyn.pydantic_support import (
+    PydanticBodyValidationError,
+    check_pydantic_installed_for_handler,
+    detect_pydantic_params,
+    serialize_pydantic_response,
+    validate_pydantic_body,
+)
 from robyn.responses import FileResponse, StreamingResponse
 from robyn.robyn import FunctionInfo, Headers, HttpMethod, Identity, MiddlewareType, QueryParams, Request, Response, Url
 from robyn.types import Body, Files, FormData, IPAddress, JsonBody, Method, PathParams
@@ -154,8 +160,7 @@ class Router(BaseRouter):
 
         if pydantic_params and route_type in (HttpMethod.GET, HttpMethod.HEAD):
             _logger.warning(
-                "Handler '%s' on %s '%s' uses Pydantic body parameter(s) %s, "
-                "but %s requests typically do not carry a request body",
+                "Handler '%s' on %s '%s' uses Pydantic body parameter(s) %s, but %s requests typically do not carry a request body",
                 handler.__name__,
                 route_type.name,
                 endpoint,
