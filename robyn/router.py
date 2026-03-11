@@ -3,7 +3,7 @@ import logging
 from abc import ABC, abstractmethod
 from functools import wraps
 from types import CoroutineType
-from typing import Callable, Dict, List, NamedTuple, Optional, Union
+from typing import Callable, Dict, List, NamedTuple, Optional, Union, is_typeddict
 
 from robyn import status_codes
 from robyn._param_utils import QueryParamValidationError, parse_route_param_names, resolve_individual_params
@@ -208,6 +208,15 @@ class Router(BaseRouter):
                             type_filtered_params[handler_param_name] = getattr(request, "body")
                         elif issubclass(handler_param_type, QueryParams):
                             type_filtered_params[handler_param_name] = getattr(request, "query_params")
+                        elif is_typeddict(handler_param_type):
+                            try:
+                                type_filtered_params[handler_param_name] = request.json()
+                            except ValueError as e:
+                                return Response(
+                                    status_code=status_codes.HTTP_400_BAD_REQUEST,
+                                    headers=Headers({"Content-Type": "application/json"}),
+                                    description=jsonify({"error": f"Invalid JSON body: {e}"}),
+                                )
 
             # Phase 1.5: Pydantic model body params (only runs if handler uses pydantic)
             if pydantic_params:

@@ -7,7 +7,7 @@ from dataclasses import asdict, dataclass, field
 from importlib import resources
 from inspect import Signature
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, TypedDict
+from typing import Any, Callable, Dict, List, Optional, Tuple, TypedDict, is_typeddict
 
 from robyn.responses import html
 from robyn.robyn import QueryParams, Response
@@ -216,6 +216,8 @@ class OpenAPI:
                     elif issubclass(param_annotation, QueryParams):
                         query_params = param_annotation
                     elif is_pydantic_model(param_annotation):
+                        request_body = param_annotation
+                    elif is_typeddict(param_annotation):
                         request_body = param_annotation
 
             if signature.return_annotation is not Signature.empty:

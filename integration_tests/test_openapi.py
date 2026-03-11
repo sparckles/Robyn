@@ -1,6 +1,6 @@
 import pytest
 
-from integration_tests.helpers.http_methods_helpers import get
+from integration_tests.helpers.http_methods_helpers import get, json_post
 from robyn import Robyn
 
 
@@ -405,3 +405,105 @@ def test_openapi_pydantic_return_list_type():
     assert items["title"] == "UserCreate"
     assert items["properties"]["name"]["type"] == "string"
     assert items["properties"]["age"]["type"] == "integer"
+
+
+# ===== TypedDict request body tests =====
+
+
+@pytest.mark.benchmark
+def test_openapi_typeddict_request_body():
+    """TypedDict subclass used as a parameter annotation should produce a
+    requestBody schema in OpenAPI docs (issue #1254)."""
+    openapi_response = get("/openapi.json", should_check_response=False)
+    assert openapi_response.status_code == 200
+    openapi_spec = openapi_response.json()
+
+    endpoint = "/sync/typeddict/body"
+    route = openapi_spec["paths"][endpoint]["post"]
+
+    assert route["tags"] == ["typeddict"]
+    assert "requestBody" in route
+    schema = route["requestBody"]["content"]["application/json"]["schema"]
+    assert "properties" in schema
+    assert "name" in schema["properties"]
+    assert "value" in schema["properties"]
+    assert schema["properties"]["name"]["type"] == "string"
+    assert schema["properties"]["value"]["type"] == "integer"
+
+    assert "responses" in route
+    assert "200" in route["responses"]
+    response_schema = route["responses"]["200"]["content"]["application/json"]["schema"]
+    assert "properties" in response_schema
+    assert "result" in response_schema["properties"]
+    assert "count" in response_schema["properties"]
+
+
+@pytest.mark.benchmark
+def test_openapi_typeddict_with_request():
+    """TypedDict body combined with a Request param should still produce
+    a requestBody schema (issue #1254)."""
+    openapi_response = get("/openapi.json", should_check_response=False)
+    assert openapi_response.status_code == 200
+    openapi_spec = openapi_response.json()
+
+    endpoint = "/sync/typeddict/with_request"
+    route = openapi_spec["paths"][endpoint]["post"]
+
+    assert "requestBody" in route
+    schema = route["requestBody"]["content"]["application/json"]["schema"]
+    assert "properties" in schema
+    assert "name" in schema["properties"]
+    assert "value" in schema["properties"]
+
+
+@pytest.mark.benchmark
+def test_typeddict_body_injection_sync():
+    """TypedDict-annotated parameter should receive the parsed JSON dict
+    at runtime, not the raw string (issue #1254)."""
+    response = json_post(
+        "/sync/typeddict/body",
+        json_data={"name": "alice", "value": 42},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["result"] == "alice"
+    assert data["count"] == 42
+
+
+@pytest.mark.benchmark
+def test_typeddict_body_injection_async():
+    """Async handler with TypedDict body should also receive parsed JSON."""
+    response = json_post(
+        "/async/typeddict/body",
+        json_data={"name": "bob", "value": 7},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["result"] == "bob"
+    assert data["count"] == 7
+
+
+@pytest.mark.benchmark
+def test_typeddict_body_with_request_injection():
+    """TypedDict body and Request object should coexist in the same handler."""
+    response = json_post(
+        "/sync/typeddict/with_request",
+        json_data={"name": "charlie", "value": 99},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["method"] == "POST"
+    assert data["name"] == "charlie"
+
+
+@pytest.mark.benchmark
+def test_typeddict_body_invalid_json():
+    """Sending invalid JSON to a TypedDict-annotated handler should return 400."""
+    import requests
+
+    response = requests.post(
+        "http://127.0.0.1:8080/sync/typeddict/body",
+        data="not valid json",
+        headers={"Content-Type": "application/json"},
+    )
+    assert response.status_code == 400

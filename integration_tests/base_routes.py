@@ -4,7 +4,7 @@ import os
 import pathlib
 import time
 from collections import defaultdict
-from typing import List, Optional
+from typing import List, Optional, TypedDict
 
 from integration_tests.subroutes import di_subrouter, static_router, sub_router
 from robyn import Headers, Request, Response, Robyn, SSEMessage, SSEResponse, WebSocketDisconnect, jsonify, serve_file, serve_html
@@ -1519,6 +1519,43 @@ def easy_access_ws_on_connect(websocket, room: str = "default"):
 @easy_access_ws_handler.on_close
 def easy_access_ws_on_close(websocket, room: str = "default"):
     return f"left {room}"
+
+
+# ===== TypedDict Body Routes =====
+
+
+class TypedDictRequestBody(TypedDict):
+    name: str
+    value: int
+
+
+class TypedDictResponseBody(TypedDict):
+    result: str
+    count: int
+
+
+@app.post("/sync/typeddict/body", openapi_tags=["typeddict"])
+def sync_typeddict_body(data: TypedDictRequestBody) -> TypedDictResponseBody:
+    """Accept a TypedDict request body and return a TypedDict response"""
+    return {"result": data["name"], "count": data["value"]}
+
+
+@app.post("/async/typeddict/body", openapi_tags=["typeddict"])
+async def async_typeddict_body(data: TypedDictRequestBody) -> TypedDictResponseBody:
+    """Accept a TypedDict request body and return a TypedDict response"""
+    return {"result": data["name"], "count": data["value"]}
+
+
+@app.post("/sync/typeddict/with_request", openapi_tags=["typeddict"])
+def sync_typeddict_with_request(request: Request, data: TypedDictRequestBody):
+    """TypedDict body alongside Request object"""
+    return {"method": request.method, "name": data["name"]}
+
+
+@app.post("/async/typeddict/with_request", openapi_tags=["typeddict"])
+async def async_typeddict_with_request(request: Request, data: TypedDictRequestBody):
+    """TypedDict body alongside Request object"""
+    return {"method": request.method, "name": data["name"]}
 
 
 # ===== Pydantic Integration Routes =====
