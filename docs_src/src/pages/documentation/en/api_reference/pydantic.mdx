@@ -218,7 +218,7 @@ def create_user(user: UserCreate) -> UserCreate:
 
 ```python {{ title: 'List of models' }}
 @app.post("/users/batch")
-def create_users(user: UserCreate) -> list:
+def create_users(user: UserCreate) -> list[UserCreate]:
     """Return multiple model instances"""
     return [user, user]
 ```

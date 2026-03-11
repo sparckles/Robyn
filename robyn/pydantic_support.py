@@ -135,11 +135,6 @@ def validate_pydantic_body(model_class, body: Any) -> Tuple[Any, Optional[dict]]
             "detail": _sanitize_errors(e.errors()),
             "error": "Validation Error",
         }
-    except Exception as e:
-        return None, {
-            "detail": str(e),
-            "error": "Invalid request body",
-        }
 
 
 def get_pydantic_openapi_schema(model_class) -> Tuple[dict, dict]:

@@ -218,7 +218,7 @@ def create_user(user: UserCreate) -> UserCreate:
 
 ```python {{ title: '模型列表' }}
 @app.post("/users/batch")
-def create_users(user: UserCreate) -> list:
+def create_users(user: UserCreate) -> list[UserCreate]:
     """返回多个模型实例"""
     return [user, user]
 ```

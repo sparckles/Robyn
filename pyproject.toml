@@ -36,8 +36,8 @@ dependencies = [
 
 [project.optional-dependencies]
 "templating" = ["jinja2 >= 3.1.6, < 4.0.0"]
-"pydantic" = ["pydantic >= 2.0.0"]
-"all" = ["jinja2 >= 3.1.6, < 4.0.0", "pydantic >= 2.0.0"]
+"pydantic" = ["pydantic >= 2.0.0, < 3.0.0"]
+"all" = ["jinja2 >= 3.1.6, < 4.0.0", "pydantic >= 2.0.0, < 3.0.0"]
 
 [project.urls]
 Documentation = "https://robyn.tech/"
