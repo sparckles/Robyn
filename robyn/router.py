@@ -152,6 +152,17 @@ class Router(BaseRouter):
         pydantic_params = detect_pydantic_params(handler_params)
         check_pydantic_installed_for_handler(handler, pydantic_params)
 
+        if pydantic_params and route_type in (HttpMethod.GET, HttpMethod.HEAD):
+            _logger.warning(
+                "Handler '%s' on %s '%s' uses Pydantic body parameter(s) %s, "
+                "but %s requests typically do not carry a request body",
+                handler.__name__,
+                route_type.name,
+                endpoint,
+                list(pydantic_params.keys()),
+                route_type.name,
+            )
+
         def wrapped_handler(*args, **kwargs):
             request = next(filter(lambda it: isinstance(it, Request), args), None)
 

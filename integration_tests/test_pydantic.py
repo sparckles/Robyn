@@ -372,6 +372,33 @@ def test_pydantic_patch_invalid(function_type: str, session):
     assert ("age",) in error_fields
 
 
+# ===== Pydantic with DELETE =====
+
+
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_pydantic_delete_valid(function_type: str, session):
+    """Pydantic validation must work with DELETE method."""
+    json_data = {"name": "Zara", "email": "zara@example.com", "age": 33}
+    res = requests.delete(f"{BASE_URL}/{function_type}/pydantic/user", json=json_data)
+    result = res.json()
+
+    assert result["deleted"] is True
+    assert result["name"] == "Zara"
+
+
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_pydantic_delete_invalid(function_type: str, session):
+    """DELETE with invalid body must also return 422 with proper error structure."""
+    json_data = {"name": "Zara"}  # missing email and age
+    res = requests.delete(f"{BASE_URL}/{function_type}/pydantic/user", json=json_data)
+    assert res.status_code == 422
+    result = res.json()
+    assert result["error"] == "Validation Error"
+    error_fields = {tuple(e["loc"]) for e in result["detail"]}
+    assert ("email",) in error_fields
+    assert ("age",) in error_fields
+
+
 # ===== Returning Pydantic models directly =====
 
 

@@ -1546,7 +1546,7 @@ if _HAS_PYDANTIC:
         """Create a user with Pydantic validation"""
         return {"name": user.name, "email": user.email, "age": user.age, "active": user.active}
 
-    @app.post("/async/pydantic/user")
+    @app.post("/async/pydantic/user", openapi_tags=["pydantic"])
     async def async_pydantic_user(user: UserCreate):
         return {"name": user.name, "email": user.email, "age": user.age, "active": user.active}
 
@@ -1563,7 +1563,7 @@ if _HAS_PYDANTIC:
         """Create a user with nested address"""
         return {"name": data.name, "city": data.address.city}
 
-    @app.post("/async/pydantic/nested")
+    @app.post("/async/pydantic/nested", openapi_tags=["pydantic"])
     async def async_pydantic_nested(data: UserWithAddress):
         return {"name": data.name, "city": data.address.city}
 
@@ -1583,12 +1583,20 @@ if _HAS_PYDANTIC:
     async def async_pydantic_user_patch(user: UserCreate):
         return {"patched": True, "name": user.name}
 
+    @app.delete("/sync/pydantic/user")
+    def sync_pydantic_user_delete(user: UserCreate):
+        return {"deleted": True, "name": user.name}
+
+    @app.delete("/async/pydantic/user")
+    async def async_pydantic_user_delete(user: UserCreate):
+        return {"deleted": True, "name": user.name}
+
     @app.post("/sync/pydantic/return_model", openapi_tags=["pydantic"])
     def sync_pydantic_return_model(user: UserCreate) -> UserCreate:
         """Return the validated Pydantic model directly"""
         return user
 
-    @app.post("/async/pydantic/return_model")
+    @app.post("/async/pydantic/return_model", openapi_tags=["pydantic"])
     async def async_pydantic_return_model(user: UserCreate) -> UserCreate:
         return user
 
@@ -1597,7 +1605,7 @@ if _HAS_PYDANTIC:
         """Return a list of Pydantic models"""
         return [user, user]
 
-    @app.post("/async/pydantic/return_list")
+    @app.post("/async/pydantic/return_list", openapi_tags=["pydantic"])
     async def async_pydantic_return_list(user: UserCreate) -> list[UserCreate]:
         return [user, user]
 
