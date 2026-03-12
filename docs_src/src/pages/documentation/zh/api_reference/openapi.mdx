@@ -167,6 +167,32 @@ def create_item(request: Request, body: CreateItemBody) -> CreateResponse:
 
 随着参考文档的成功部署，蝙蝠侠拥有了一个强大的新工具。Robyn 框架为他提供了创建高效打击犯罪应用所需的灵活性、可扩展性和性能，使他在保护哥谭市的持续战斗中获得了技术优势。
 
+## 使用 Pydantic 模型
+
+如果您已安装 Pydantic（`pip install "robyn[pydantic]"` 或 `pip install "robyn[all]"`），可以直接使用 Pydantic `BaseModel` 类作为处理函数参数的类型注解。Robyn 将自动验证请求体，**并且**生成丰富的 OpenAPI Schema — 包括属性类型、必填字段、默认值，以及嵌套模型的 `$ref` 引用。
+
+<CodeGroup title="Pydantic + OpenAPI">
+
+```python
+from pydantic import BaseModel
+
+class UserCreate(BaseModel):
+    name: str
+    email: str
+    age: int
+    active: bool = True
+
+@app.post("/users", openapi_tags=["Users"])
+def create_user(user: UserCreate) -> dict:
+    """创建新用户"""
+    return {"name": user.name}
+```
+
+</CodeGroup>
+
+有关 Pydantic 验证、嵌套模型、错误响应和 OpenAPI 集成的完整指南，请参阅 [Pydantic 集成](/documentation/zh/api_reference/pydantic) 页面。
+
+
 ## 下一步
 
 完成接口文档配置后，蝙蝠侠开始思考如何提升应用程序的并发处理能力。

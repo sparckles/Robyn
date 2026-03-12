@@ -168,6 +168,31 @@ def create_item(request: Request, body: CreateItemBody) -> CreateResponse:
 
 With the reference documentation deployed and running smoothly, Batman had a powerful new tool at his disposal. The Robyn framework had provided him with the flexibility, scalability, and performance needed to create an effective crime-fighting application, giving him a technological edge in his ongoing battle to protect Gotham City.
 
+## Using Pydantic Models
+
+If you have Pydantic installed (`pip install "robyn[pydantic]"` or `pip install "robyn[all]"`), you can use Pydantic `BaseModel` classes directly as handler parameter annotations. Robyn will automatically validate the request body **and** generate a rich OpenAPI schema — including property types, required fields, defaults, and `$ref` for nested models.
+
+<CodeGroup title="Pydantic + OpenAPI">
+
+```python
+from pydantic import BaseModel
+
+class UserCreate(BaseModel):
+    name: str
+    email: str
+    age: int
+    active: bool = True
+
+@app.post("/users", openapi_tags=["Users"])
+def create_user(user: UserCreate) -> dict:
+    """Create a new user"""
+    return {"name": user.name}
+```
+
+</CodeGroup>
+
+For the full guide on Pydantic validation, nested models, error responses, and OpenAPI integration, see the dedicated [Pydantic Integration](/documentation/en/api_reference/pydantic) page.
+
 
 ## What's next?
 
@@ -176,7 +201,7 @@ Batman wondered about whether Robyn handlers can be dispatched to multiple proce
 
 Robyn showed him the way!
 
-[Multitiprocess Execution](/documentation/en/api_reference/multiprocess_execution)
+[Multiprocess Execution](/documentation/en/api_reference/multiprocess_execution)
 
 
 

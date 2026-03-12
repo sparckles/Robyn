@@ -4,7 +4,7 @@ import os
 import pathlib
 import time
 from collections import defaultdict
-from typing import List, Optional
+from typing import List, Optional, TypedDict
 
 from integration_tests.subroutes import di_subrouter, static_router, sub_router
 from robyn import Headers, Request, Response, Robyn, SSEMessage, SSEResponse, WebSocketDisconnect, jsonify, serve_file, serve_html
@@ -12,6 +12,13 @@ from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.robyn import QueryParams, Url
 from robyn.templating import JinjaTemplate
 from robyn.types import Body, JsonBody, JSONResponse, Method, PathParams
+
+try:
+    from pydantic import BaseModel as PydanticBaseModel
+
+    _HAS_PYDANTIC = True
+except ImportError:
+    _HAS_PYDANTIC = False
 
 app = Robyn(__file__)
 
@@ -1512,6 +1519,132 @@ def easy_access_ws_on_connect(websocket, room: str = "default"):
 @easy_access_ws_handler.on_close
 def easy_access_ws_on_close(websocket, room: str = "default"):
     return f"left {room}"
+
+
+# ===== TypedDict Body Routes =====
+
+
+class TypedDictRequestBody(TypedDict):
+    name: str
+    value: int
+
+
+class TypedDictResponseBody(TypedDict):
+    result: str
+    count: int
+
+
+@app.post("/sync/typeddict/body", openapi_tags=["typeddict"])
+def sync_typeddict_body(data: TypedDictRequestBody) -> TypedDictResponseBody:
+    """Accept a TypedDict request body and return a TypedDict response"""
+    return {"result": data["name"], "count": data["value"]}
+
+
+@app.post("/async/typeddict/body", openapi_tags=["typeddict"])
+async def async_typeddict_body(data: TypedDictRequestBody) -> TypedDictResponseBody:
+    """Accept a TypedDict request body and return a TypedDict response"""
+    return {"result": data["name"], "count": data["value"]}
+
+
+@app.post("/sync/typeddict/with_request", openapi_tags=["typeddict"])
+def sync_typeddict_with_request(request: Request, data: TypedDictRequestBody):
+    """TypedDict body alongside Request object"""
+    return {"method": request.method, "name": data["name"]}
+
+
+@app.post("/async/typeddict/with_request", openapi_tags=["typeddict"])
+async def async_typeddict_with_request(request: Request, data: TypedDictRequestBody):
+    """TypedDict body alongside Request object"""
+    return {"method": request.method, "name": data["name"]}
+
+
+# ===== Pydantic Integration Routes =====
+
+if _HAS_PYDANTIC:
+
+    class UserCreate(PydanticBaseModel):
+        name: str
+        email: str
+        age: int
+        active: bool = True
+
+    class Address(PydanticBaseModel):
+        street: str
+        city: str
+        zip_code: str
+
+    class UserWithAddress(PydanticBaseModel):
+        name: str
+        email: str
+        address: Address
+
+    @app.post("/sync/pydantic/user", openapi_tags=["pydantic"])
+    def sync_pydantic_user(user: UserCreate) -> dict:
+        """Create a user with Pydantic validation"""
+        return {"name": user.name, "email": user.email, "age": user.age, "active": user.active}
+
+    @app.post("/async/pydantic/user", openapi_tags=["pydantic"])
+    async def async_pydantic_user(user: UserCreate):
+        return {"name": user.name, "email": user.email, "age": user.age, "active": user.active}
+
+    @app.post("/sync/pydantic/user_with_request")
+    def sync_pydantic_user_with_request(request: Request, user: UserCreate):
+        return {"method": request.method, "name": user.name, "email": user.email}
+
+    @app.post("/async/pydantic/user_with_request")
+    async def async_pydantic_user_with_request(request: Request, user: UserCreate):
+        return {"method": request.method, "name": user.name, "email": user.email}
+
+    @app.post("/sync/pydantic/nested", openapi_tags=["pydantic"])
+    def sync_pydantic_nested(data: UserWithAddress) -> dict:
+        """Create a user with nested address"""
+        return {"name": data.name, "city": data.address.city}
+
+    @app.post("/async/pydantic/nested", openapi_tags=["pydantic"])
+    async def async_pydantic_nested(data: UserWithAddress):
+        return {"name": data.name, "city": data.address.city}
+
+    @app.put("/sync/pydantic/user")
+    def sync_pydantic_user_put(user: UserCreate):
+        return {"updated": True, "name": user.name}
+
+    @app.put("/async/pydantic/user")
+    async def async_pydantic_user_put(user: UserCreate):
+        return {"updated": True, "name": user.name}
+
+    @app.patch("/sync/pydantic/user")
+    def sync_pydantic_user_patch(user: UserCreate):
+        return {"patched": True, "name": user.name}
+
+    @app.patch("/async/pydantic/user")
+    async def async_pydantic_user_patch(user: UserCreate):
+        return {"patched": True, "name": user.name}
+
+    @app.delete("/sync/pydantic/user")
+    def sync_pydantic_user_delete(user: UserCreate):
+        return {"deleted": True, "name": user.name}
+
+    @app.delete("/async/pydantic/user")
+    async def async_pydantic_user_delete(user: UserCreate):
+        return {"deleted": True, "name": user.name}
+
+    @app.post("/sync/pydantic/return_model", openapi_tags=["pydantic"])
+    def sync_pydantic_return_model(user: UserCreate) -> UserCreate:
+        """Return the validated Pydantic model directly"""
+        return user
+
+    @app.post("/async/pydantic/return_model", openapi_tags=["pydantic"])
+    async def async_pydantic_return_model(user: UserCreate) -> UserCreate:
+        return user
+
+    @app.post("/sync/pydantic/return_list", openapi_tags=["pydantic"])
+    def sync_pydantic_return_list(user: UserCreate) -> list[UserCreate]:
+        """Return a list of Pydantic models"""
+        return [user, user]
+
+    @app.post("/async/pydantic/return_list", openapi_tags=["pydantic"])
+    async def async_pydantic_return_list(user: UserCreate) -> list[UserCreate]:
+        return [user, user]
 
 
 def main():

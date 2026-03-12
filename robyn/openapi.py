@@ -1,16 +1,20 @@
 import inspect
 import json
+import logging
 import re
 import typing
 from dataclasses import asdict, dataclass, field
 from importlib import resources
 from inspect import Signature
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, TypedDict
+from typing import Any, Callable, Dict, List, Optional, Tuple, TypedDict, is_typeddict
 
 from robyn.responses import html
 from robyn.robyn import QueryParams, Response
+from robyn.pydantic_support import get_pydantic_openapi_schema, is_pydantic_model
 from robyn.types import Body, JsonBody
+
+_logger = logging.getLogger(__name__)
 
 
 class str_typed_dict(TypedDict):
@@ -211,6 +215,10 @@ class OpenAPI:
                         request_body = param_annotation
                     elif issubclass(param_annotation, QueryParams):
                         query_params = param_annotation
+                    elif is_pydantic_model(param_annotation):
+                        request_body = param_annotation
+                    elif is_typeddict(param_annotation):
+                        request_body = param_annotation
 
             if signature.return_annotation is not Signature.empty:
                 return_annotation = signature.return_annotation
@@ -223,9 +231,26 @@ class OpenAPI:
             self.openapi_spec["paths"][modified_endpoint] = {}
         self.openapi_spec["paths"][modified_endpoint][route_type] = path_obj
 
+    def _merge_component_schemas(self, incoming: dict):
+        """Merge incoming component schemas into the spec with collision detection.
+
+        If an incoming schema name already exists and the schemas differ,
+        a warning is logged.  The incoming schema always wins so that the
+        most-recently-registered route's models are used (matching the
+        behaviour of path registration).
+        """
+        existing = self.openapi_spec["components"]["schemas"]
+        for name, schema in incoming.items():
+            if name in existing and existing[name] != schema:
+                _logger.warning(
+                    "OpenAPI component schema '%s' is defined by multiple models with different shapes — the later definition will be used",
+                    name,
+                )
+            existing[name] = schema
+
     def add_subrouter_paths(self, subrouter_openapi: "OpenAPI"):
         """
-        Adds the subrouter paths to main router's openapi specs
+        Adds the subrouter paths and component schemas to main router's openapi specs.
 
         @param subrouter_openapi: OpenAPI the OpenAPI object of the current subrouter
         """
@@ -233,10 +258,12 @@ class OpenAPI:
         if self.openapi_file_override:
             return
 
-        paths = subrouter_openapi.openapi_spec["paths"]
+        for path, path_obj in subrouter_openapi.openapi_spec["paths"].items():
+            self.openapi_spec["paths"][path] = path_obj
 
-        for path in paths:
-            self.openapi_spec["paths"][path] = paths[path]
+        subrouter_schemas = subrouter_openapi.openapi_spec.get("components", {}).get("schemas", {})
+        if subrouter_schemas:
+            self._merge_component_schemas(subrouter_schemas)
 
     def get_path_obj(
         self,
@@ -312,23 +339,26 @@ class OpenAPI:
                 )
 
         if request_body:
-            properties = {}
-
-            request_body_annotations = request_body.__annotations__ if request_body is TypedDict else typing.get_type_hints(request_body)
-
-            for body_item in request_body_annotations:
-                properties[body_item] = self.get_schema_object(body_item, request_body_annotations[body_item])
-
-            request_body_object = {
-                "content": {
-                    "application/json": {
-                        "schema": {
-                            "type": "object",
-                            "properties": properties,
+            if is_pydantic_model(request_body):
+                schema, component_schemas = get_pydantic_openapi_schema(request_body)
+                if component_schemas:
+                    self._merge_component_schemas(component_schemas)
+                request_body_object = {"content": {"application/json": {"schema": schema}}}
+            else:
+                properties = {}
+                request_body_annotations = request_body.__annotations__ if request_body is TypedDict else typing.get_type_hints(request_body)
+                for body_item in request_body_annotations:
+                    properties[body_item] = self.get_schema_object(body_item, request_body_annotations[body_item])
+                request_body_object = {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": properties,
+                            }
                         }
                     }
                 }
-            }
 
             openapi_path_object["requestBody"] = request_body_object
 
@@ -402,6 +432,13 @@ class OpenAPI:
                     item_type = param_type.__args__[0]
                     properties["items"] = self.get_schema_object(f"{parameter}_item", item_type)
                 return properties
+
+        # check for Pydantic models
+        if is_pydantic_model(param_type):
+            schema, component_schemas = get_pydantic_openapi_schema(param_type)
+            if component_schemas:
+                self._merge_component_schemas(component_schemas)
+            return schema
 
         # check for Optional type
         if param_type.__module__ == "typing":

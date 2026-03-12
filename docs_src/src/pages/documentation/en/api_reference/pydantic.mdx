@@ -1,0 +1,366 @@
+export const description =
+  'Learn how to use Pydantic models with Robyn for automatic request body validation and OpenAPI schema generation.'
+
+
+## Pydantic Integration
+
+Robyn supports [Pydantic](https://docs.pydantic.dev/) v2 as an optional dependency for automatic request body validation and rich OpenAPI schema generation. Validation is **opt-in per handler** — it only activates when you annotate a parameter with a Pydantic `BaseModel`. Handlers without Pydantic annotations are completely unaffected: no parsing, no validation, no overhead. When Pydantic is not installed at all, Robyn never imports it.
+
+
+## Installation
+
+Install Robyn with Pydantic support using the optional extra:
+
+<CodeGroup title="Installation">
+
+```bash {{ title: 'Pydantic only' }}
+pip install "robyn[pydantic]"
+```
+
+```bash {{ title: 'All extras' }}
+pip install "robyn[all]"
+```
+
+```bash {{ title: 'conda' }}
+conda install robyn pydantic -c conda-forge
+```
+
+</CodeGroup>
+
+`robyn[all]` includes Pydantic, Jinja2 templating, and any future optional features.
+
+
+## Basic Usage
+
+Define a Pydantic `BaseModel` and use it as a type annotation on your handler parameter. Robyn will automatically parse the incoming JSON body, validate it against the model, and inject the validated instance into your handler.
+
+<CodeGroup title="Basic Pydantic Validation">
+
+```python {{ title: 'Synchronous' }}
+from pydantic import BaseModel
+from robyn import Robyn
+
+app = Robyn(__file__)
+
+
+class UserCreate(BaseModel):
+    name: str
+    email: str
+    age: int
+    active: bool = True
+
+
+@app.post("/users")
+def create_user(user: UserCreate):
+    """Create a new user"""
+    return {
+        "name": user.name,
+        "email": user.email,
+        "age": user.age,
+        "active": user.active,
+    }
+
+
+if __name__ == "__main__":
+    app.start()
+```
+
+```python {{ title: 'Asynchronous' }}
+from pydantic import BaseModel
+from robyn import Robyn
+
+app = Robyn(__file__)
+
+
+class UserCreate(BaseModel):
+    name: str
+    email: str
+    age: int
+    active: bool = True
+
+
+@app.post("/users")
+async def create_user(user: UserCreate):
+    """Create a new user"""
+    return {
+        "name": user.name,
+        "email": user.email,
+        "age": user.age,
+        "active": user.active,
+    }
+
+
+if __name__ == "__main__":
+    app.start()
+```
+
+</CodeGroup>
+
+
+## Validation Errors
+
+When the request body fails validation, Robyn automatically returns a **422 Unprocessable Entity** response with structured error details. You do not need to write any error handling code.
+
+For example, sending `{"name": "Alice", "email": "alice@example.com", "age": "not_a_number"}` would produce:
+
+```json
+{
+  "error": "Validation Error",
+  "detail": [
+    {
+      "type": "int_parsing",
+      "loc": ["age"],
+      "msg": "Input should be a valid integer, unable to parse string as an integer",
+      "input": "not_a_number"
+    }
+  ]
+}
+```
+
+Missing required fields are also caught:
+
+```json
+{
+  "error": "Validation Error",
+  "detail": [
+    {
+      "type": "missing",
+      "loc": ["email"],
+      "msg": "Field required",
+      "input": {"name": "Alice", "age": 30}
+    }
+  ]
+}
+```
+
+
+## Nested Models
+
+Pydantic models can reference other models. Robyn handles nested validation automatically.
+
+<CodeGroup title="Nested Models">
+
+```python
+from pydantic import BaseModel
+from robyn import Robyn
+
+app = Robyn(__file__)
+
+
+class Address(BaseModel):
+    street: str
+    city: str
+    zip_code: str
+
+
+class UserWithAddress(BaseModel):
+    name: str
+    email: str
+    address: Address
+
+
+@app.post("/users")
+def create_user(data: UserWithAddress):
+    """Create a user with an address"""
+    return {"name": data.name, "city": data.address.city}
+```
+
+</CodeGroup>
+
+If the nested `address` object is missing or malformed, Robyn returns a 422 with the full error path (e.g. `["address", "city"]`).
+
+
+## Using with the Request Object
+
+You can combine Pydantic parameters with the standard `Request` object in the same handler. This gives you access to headers, query params, and other request metadata alongside the validated body.
+
+<CodeGroup title="Pydantic + Request">
+
+```python
+from pydantic import BaseModel
+from robyn import Robyn, Request
+
+app = Robyn(__file__)
+
+
+class UserCreate(BaseModel):
+    name: str
+    email: str
+    age: int
+    active: bool = True
+
+
+@app.post("/users")
+def create_user(request: Request, user: UserCreate):
+    """Create a user — access both raw request and validated model"""
+    return {
+        "method": request.method,
+        "name": user.name,
+        "email": user.email,
+    }
+```
+
+</CodeGroup>
+
+
+## Returning Pydantic Models Directly
+
+You can return a Pydantic model instance (or a list of them) directly from a handler. Robyn will automatically serialize it to JSON with the correct `Content-Type` header — no need to call `.model_dump()` manually.
+
+<CodeGroup title="Returning Models">
+
+```python {{ title: 'Single model' }}
+@app.post("/users")
+def create_user(user: UserCreate) -> UserCreate:
+    """Validate and echo back the user"""
+    return user
+```
+
+```python {{ title: 'List of models' }}
+@app.post("/users/batch")
+def create_users(user: UserCreate) -> list[UserCreate]:
+    """Return multiple model instances"""
+    return [user, user]
+```
+
+</CodeGroup>
+
+Both forms produce an `application/json` response. The single-model path uses Pydantic's Rust-based `model_dump_json()` for maximum throughput.
+
+
+## How Validation Is Triggered
+
+Pydantic validation is **annotation-driven, not method-driven**. The router inspects each handler's signature at registration time; any parameter annotated with a `BaseModel` subclass triggers automatic validation of `request.body` when that route is called. This works with every HTTP method — `POST`, `PUT`, `PATCH`, `DELETE`, or any other method that carries a body.
+
+<CodeGroup title="Any HTTP Method">
+
+```python {{ title: 'PUT' }}
+@app.put("/users/:id")
+def update_user(user: UserCreate):
+    return {"updated": True, "name": user.name}
+```
+
+```python {{ title: 'PATCH' }}
+@app.patch("/users/:id")
+def patch_user(user: UserCreate):
+    return {"patched": True, "name": user.name}
+```
+
+</CodeGroup>
+
+
+## OpenAPI Integration
+
+When you use Pydantic models, Robyn automatically generates rich JSON Schema in your OpenAPI specification at `/openapi.json`. This includes:
+
+- **Property types** — `string`, `integer`, `boolean`, etc.
+- **Required fields** — fields without defaults are listed in `required`
+- **Default values** — shown in the schema
+- **Nested models** — referenced via `$ref` and placed in `components/schemas`
+
+<CodeGroup title="OpenAPI with Pydantic">
+
+```python
+from pydantic import BaseModel
+from robyn import Robyn, Request
+
+app = Robyn(__file__)
+
+
+class Address(BaseModel):
+    street: str
+    city: str
+    zip_code: str
+
+
+class UserWithAddress(BaseModel):
+    name: str
+    email: str
+    address: Address
+
+
+@app.post("/users", openapi_tags=["Users"])
+def create_user(request: Request, data: UserWithAddress) -> dict:
+    """Create a user with a nested address"""
+    return {"name": data.name, "city": data.address.city}
+```
+
+</CodeGroup>
+
+The generated `/openapi.json` will contain:
+
+```json
+{
+  "paths": {
+    "/users": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {"type": "string", "title": "Name"},
+                  "email": {"type": "string", "title": "Email"},
+                  "address": {"$ref": "#/components/schemas/Address"}
+                },
+                "required": ["name", "email", "address"],
+                "title": "UserWithAddress"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Address": {
+        "type": "object",
+        "properties": {
+          "street": {"type": "string", "title": "Street"},
+          "city": {"type": "string", "title": "City"},
+          "zip_code": {"type": "string", "title": "Zip Code"}
+        },
+        "required": ["street", "city", "zip_code"],
+        "title": "Address"
+      }
+    }
+  }
+}
+```
+
+
+## Pydantic vs Body
+
+Robyn supports two approaches for typed request bodies. Choose the one that fits your needs:
+
+| Feature | `Body` subclass | Pydantic `BaseModel` |
+|---|---|---|
+| Installation | Built-in | `pip install "robyn[pydantic]"` |
+| Validation | No automatic validation | Full validation with detailed errors |
+| Error responses | Manual | Automatic 422 with structured errors |
+| Return serialization | Manual `dict()` | Auto-serialize model to JSON |
+| OpenAPI schema | Basic type inference | Full JSON Schema (types, required, defaults, `$ref`) |
+| Nested models | Supported (basic) | Supported (with `$ref` in OpenAPI) |
+| Performance overhead | None | Only when Pydantic is installed and used |
+
+Both approaches work with OpenAPI documentation. If you need validation, use Pydantic. If you just need OpenAPI schema hints without validation, `Body` is sufficient.
+
+
+## Important Notes
+
+- **Opt-in per handler** — Validation only runs on handlers where a parameter is annotated with a Pydantic `BaseModel`. All other handlers (using `Body`, `Request`, path params, etc.) behave exactly as before with zero additional overhead.
+- **One Pydantic body per handler** — Each handler can have at most one parameter annotated with a Pydantic model. The entire request body is parsed into that single model. If you need multiple model inputs, compose them into a single parent model with nested fields.
+- **Request validation only** — Robyn validates *incoming* request bodies against Pydantic models but does not validate *outgoing* responses. When you return a model instance, it is serialized as-is without re-validation. This is a deliberate design choice for performance — if you constructed the model, it's already valid.
+
+
+## What's next?
+
+Batman wondered about whether Robyn handlers can be dispatched to multiple processes.
+
+Robyn showed him the way!
+
+[Multiprocess Execution](/documentation/en/api_reference/multiprocess_execution)
+
+

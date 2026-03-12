@@ -24,14 +24,20 @@ Source: [TechEmpower Round 22](https://www.techempower.com/benchmarks/#section=d
 
 You can simply use Pip for installation.
 
-```
+```bash
 pip install robyn
 ```
 
 Or, with [conda-forge](https://conda-forge.org/)
 
-```
+```bash
 conda install -c conda-forge robyn
+```
+
+To install with all optional features (Pydantic validation, Jinja2 templating):
+
+```bash
+pip install "robyn[all]"
 ```
 
 ## 🤔 Usage

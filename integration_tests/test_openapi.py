@@ -1,6 +1,6 @@
 import pytest
 
-from integration_tests.helpers.http_methods_helpers import get
+from integration_tests.helpers.http_methods_helpers import get, json_post
 from robyn import Robyn
 
 
@@ -263,3 +263,247 @@ def test_openapi_json_body_bare():
     assert "requestBody" in openapi_spec["paths"][endpoint][route_type]
     assert "content" in openapi_spec["paths"][endpoint][route_type]["requestBody"]
     assert "application/json" in openapi_spec["paths"][endpoint][route_type]["requestBody"]["content"]
+
+
+try:
+    import pydantic  # noqa: F401
+
+    _HAS_PYDANTIC = True
+except ImportError:
+    _HAS_PYDANTIC = False
+
+
+@pytest.mark.benchmark
+@pytest.mark.skipif(not _HAS_PYDANTIC, reason="pydantic not installed")
+def test_openapi_pydantic_request_body():
+    """Pydantic model on a regular route should produce a full JSON Schema in
+    requestBody — no dedicated OpenAPI route needed."""
+    openapi_response = get("/openapi.json", should_check_response=False)
+    assert openapi_response.status_code == 200
+    openapi_spec = openapi_response.json()
+
+    endpoint = "/sync/pydantic/user"
+    route = openapi_spec["paths"][endpoint]["post"]
+
+    assert route["tags"] == ["pydantic"]
+    assert route["description"] == "Create a user with Pydantic validation"
+
+    assert "requestBody" in route
+    schema = route["requestBody"]["content"]["application/json"]["schema"]
+
+    assert schema["type"] == "object"
+    assert schema["title"] == "UserCreate"
+
+    props = schema["properties"]
+    assert props["name"]["type"] == "string"
+    assert props["name"]["title"] == "Name"
+    assert props["email"]["type"] == "string"
+    assert props["email"]["title"] == "Email"
+    assert props["age"]["type"] == "integer"
+    assert props["age"]["title"] == "Age"
+    assert props["active"]["type"] == "boolean"
+    assert props["active"]["title"] == "Active"
+    assert props["active"]["default"] is True
+
+    assert set(schema["required"]) == {"name", "email", "age"}
+    assert "active" not in schema["required"]
+
+    assert "responses" in route
+    assert "200" in route["responses"]
+    assert "application/json" in route["responses"]["200"]["content"]
+
+
+@pytest.mark.benchmark
+@pytest.mark.skipif(not _HAS_PYDANTIC, reason="pydantic not installed")
+def test_openapi_pydantic_nested_model():
+    """Nested Pydantic models on a regular route should use $ref and populate
+    components/schemas — no dedicated OpenAPI route needed."""
+    openapi_response = get("/openapi.json", should_check_response=False)
+    assert openapi_response.status_code == 200
+    openapi_spec = openapi_response.json()
+
+    endpoint = "/sync/pydantic/nested"
+    route = openapi_spec["paths"][endpoint]["post"]
+
+    assert route["tags"] == ["pydantic"]
+    assert route["description"] == "Create a user with nested address"
+
+    schema = route["requestBody"]["content"]["application/json"]["schema"]
+    assert schema["type"] == "object"
+    assert schema["title"] == "UserWithAddress"
+
+    assert schema["properties"]["name"]["type"] == "string"
+    assert schema["properties"]["email"]["type"] == "string"
+    assert schema["properties"]["address"]["$ref"] == "#/components/schemas/Address"
+
+    assert set(schema["required"]) == {"name", "email", "address"}
+
+    assert "Address" in openapi_spec["components"]["schemas"]
+    address_schema = openapi_spec["components"]["schemas"]["Address"]
+    assert address_schema["type"] == "object"
+    assert address_schema["title"] == "Address"
+
+    assert address_schema["properties"]["street"]["type"] == "string"
+    assert address_schema["properties"]["street"]["title"] == "Street"
+    assert address_schema["properties"]["city"]["type"] == "string"
+    assert address_schema["properties"]["city"]["title"] == "City"
+    assert address_schema["properties"]["zip_code"]["type"] == "string"
+    assert address_schema["properties"]["zip_code"]["title"] == "Zip Code"
+
+    assert set(address_schema["required"]) == {"street", "city", "zip_code"}
+
+    assert "responses" in route
+    assert "200" in route["responses"]
+    assert "application/json" in route["responses"]["200"]["content"]
+
+
+@pytest.mark.benchmark
+@pytest.mark.skipif(not _HAS_PYDANTIC, reason="pydantic not installed")
+def test_openapi_pydantic_return_type():
+    """When a route has a Pydantic model as return type annotation, the response
+    schema should reflect the full Pydantic model schema, not just 'object'."""
+    openapi_response = get("/openapi.json", should_check_response=False)
+    assert openapi_response.status_code == 200
+    openapi_spec = openapi_response.json()
+
+    endpoint = "/sync/pydantic/return_model"
+    route = openapi_spec["paths"][endpoint]["post"]
+
+    assert route["tags"] == ["pydantic"]
+    assert route["description"] == "Return the validated Pydantic model directly"
+
+    response_schema = route["responses"]["200"]["content"]["application/json"]["schema"]
+    assert response_schema["type"] == "object"
+    assert response_schema["title"] == "UserCreate"
+    assert "properties" in response_schema
+    assert response_schema["properties"]["name"]["type"] == "string"
+    assert response_schema["properties"]["age"]["type"] == "integer"
+    assert set(response_schema["required"]) == {"name", "email", "age"}
+
+
+@pytest.mark.benchmark
+@pytest.mark.skipif(not _HAS_PYDANTIC, reason="pydantic not installed")
+def test_openapi_pydantic_return_list_type():
+    """When a route returns list[PydanticModel], the response schema should be
+    an array with items containing the full Pydantic model schema."""
+    openapi_response = get("/openapi.json", should_check_response=False)
+    assert openapi_response.status_code == 200
+    openapi_spec = openapi_response.json()
+
+    endpoint = "/sync/pydantic/return_list"
+    route = openapi_spec["paths"][endpoint]["post"]
+
+    assert route["tags"] == ["pydantic"]
+    assert route["description"] == "Return a list of Pydantic models"
+
+    response_schema = route["responses"]["200"]["content"]["application/json"]["schema"]
+    assert response_schema["type"] == "array"
+    assert "items" in response_schema
+
+    items = response_schema["items"]
+    assert items["type"] == "object"
+    assert items["title"] == "UserCreate"
+    assert items["properties"]["name"]["type"] == "string"
+    assert items["properties"]["age"]["type"] == "integer"
+
+
+# ===== TypedDict request body tests =====
+
+
+@pytest.mark.benchmark
+def test_openapi_typeddict_request_body():
+    """TypedDict subclass used as a parameter annotation should produce a
+    requestBody schema in OpenAPI docs (issue #1254)."""
+    openapi_response = get("/openapi.json", should_check_response=False)
+    assert openapi_response.status_code == 200
+    openapi_spec = openapi_response.json()
+
+    endpoint = "/sync/typeddict/body"
+    route = openapi_spec["paths"][endpoint]["post"]
+
+    assert route["tags"] == ["typeddict"]
+    assert "requestBody" in route
+    schema = route["requestBody"]["content"]["application/json"]["schema"]
+    assert "properties" in schema
+    assert "name" in schema["properties"]
+    assert "value" in schema["properties"]
+    assert schema["properties"]["name"]["type"] == "string"
+    assert schema["properties"]["value"]["type"] == "integer"
+
+    assert "responses" in route
+    assert "200" in route["responses"]
+    response_schema = route["responses"]["200"]["content"]["application/json"]["schema"]
+    assert "properties" in response_schema
+    assert "result" in response_schema["properties"]
+    assert "count" in response_schema["properties"]
+
+
+@pytest.mark.benchmark
+def test_openapi_typeddict_with_request():
+    """TypedDict body combined with a Request param should still produce
+    a requestBody schema (issue #1254)."""
+    openapi_response = get("/openapi.json", should_check_response=False)
+    assert openapi_response.status_code == 200
+    openapi_spec = openapi_response.json()
+
+    endpoint = "/sync/typeddict/with_request"
+    route = openapi_spec["paths"][endpoint]["post"]
+
+    assert "requestBody" in route
+    schema = route["requestBody"]["content"]["application/json"]["schema"]
+    assert "properties" in schema
+    assert "name" in schema["properties"]
+    assert "value" in schema["properties"]
+
+
+@pytest.mark.benchmark
+def test_typeddict_body_injection_sync():
+    """TypedDict-annotated parameter should receive the parsed JSON dict
+    at runtime, not the raw string (issue #1254)."""
+    response = json_post(
+        "/sync/typeddict/body",
+        json_data={"name": "alice", "value": 42},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["result"] == "alice"
+    assert data["count"] == 42
+
+
+@pytest.mark.benchmark
+def test_typeddict_body_injection_async():
+    """Async handler with TypedDict body should also receive parsed JSON."""
+    response = json_post(
+        "/async/typeddict/body",
+        json_data={"name": "bob", "value": 7},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["result"] == "bob"
+    assert data["count"] == 7
+
+
+@pytest.mark.benchmark
+def test_typeddict_body_with_request_injection():
+    """TypedDict body and Request object should coexist in the same handler."""
+    response = json_post(
+        "/sync/typeddict/with_request",
+        json_data={"name": "charlie", "value": 99},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["method"] == "POST"
+    assert data["name"] == "charlie"
+
+
+@pytest.mark.benchmark
+def test_typeddict_body_invalid_json():
+    """Sending invalid JSON to a TypedDict-annotated handler should return 400."""
+    import requests
+
+    response = requests.post(
+        "http://127.0.0.1:8080/sync/typeddict/body",
+        data="not valid json",
+        headers={"Content-Type": "application/json"},
+    )
+    assert response.status_code == 400
