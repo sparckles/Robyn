@@ -118,10 +118,10 @@ class Config:
                 break
 
         if self.fast and self.dev:
-            raise Exception("--fast and --dev shouldn't be used together")
+            raise ValueError("--fast and --dev shouldn't be used together")
 
         if self.dev and (self.processes != 1 or self.workers != 1):
-            raise Exception("--processes and --workers shouldn't be used with --dev")
+            raise ValueError("--processes and --workers shouldn't be used with --dev")
 
         if self.dev and self.log_level is None:
             self.log_level = "DEBUG"

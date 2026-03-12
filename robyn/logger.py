@@ -54,7 +54,7 @@ class Logger:
         bold: bool = False,
         underline: bool = False,
     ):
-        self.logger.warn(self._format_msg(msg, color, bold, underline), *args)
+        self.logger.warning(self._format_msg(msg, color, bold, underline), *args)
 
     def info(
         self,
