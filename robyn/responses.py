@@ -1,9 +1,12 @@
 import asyncio
+import logging
 import mimetypes
 import os
 from typing import AsyncGenerator, Generator, Optional, Union
 
 from robyn.robyn import Headers, Response
+
+logger = logging.getLogger(__name__)
 
 
 class FileResponse:
@@ -117,7 +120,7 @@ class AsyncGeneratorWrapper:
             raise StopIteration
         except Exception as e:
             # Log error and stop iteration
-            print(f"Error in async generator: {e}")
+            logger.error("Error in async generator: %s", e)
             raise StopIteration
 
 

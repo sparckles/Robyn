@@ -70,7 +70,7 @@ config = Config()
 
 if (compile_path := config.compile_rust_path) is not None:
     compile_rust_files(compile_path)
-    print("Compiled rust files")
+    logger.info("Compiled rust files")
 
 
 class BaseRobyn(ABC):
