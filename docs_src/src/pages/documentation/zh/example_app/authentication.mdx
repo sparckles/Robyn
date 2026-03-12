@@ -103,7 +103,7 @@ def authenticate_user(db: Session, username: str, password: str):
     if not verify_password(password, user.hashed_password):
         return False
 
-    created_token = create_access_token(data={"sub": .username})
+    created_token = create_access_token(data={"sub": user.username})
     return created_token
 
 
