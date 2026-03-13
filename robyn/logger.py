@@ -19,6 +19,7 @@ class Logger:
 
     def __init__(self):
         self.logger = logging.getLogger(__name__)
+        self.logger.addHandler(logging.NullHandler())
 
     def _format_msg(
         self,
