@@ -1,4 +1,5 @@
 import glob
+import logging
 import os
 import signal
 import subprocess
@@ -10,6 +11,11 @@ from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
 from robyn.logger import Colors, logger
+
+# Ensure logging is configured before any logger calls that may run
+# at module level (e.g. compile_rust_files called during import),
+# before Robyn.__init__ calls logging.basicConfig().
+logging.basicConfig(level=logging.INFO)
 
 
 def compile_rust_files(directory_path: str) -> List[str]:

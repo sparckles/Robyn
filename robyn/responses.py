@@ -120,7 +120,7 @@ class AsyncGeneratorWrapper:
             raise StopIteration
         except Exception as e:
             # Log error and stop iteration
-            logger.error("Error in async generator: %s", e)
+            logger.exception("Error in async generator: %s", e)
             raise StopIteration
 
 
