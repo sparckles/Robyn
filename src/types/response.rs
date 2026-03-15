@@ -128,13 +128,14 @@ fn create_python_stream(
             Python::with_gil(|py| {
                 let gen = generator.bind(py);
 
-                if gen.hasattr("__anext__").unwrap_or(false) {
-                    return None;
-                }
-
                 match gen.call_method0("__next__") {
                     Ok(value) => value.extract::<String>().ok().map(|s| (s, generator)),
-                    Err(_) => None,
+                    Err(e) => {
+                        if !e.is_instance_of::<pyo3::exceptions::PyStopIteration>(py) {
+                            log::error!("Generator error: {}", e);
+                        }
+                        None
+                    }
                 }
             })
         })
