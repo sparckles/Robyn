@@ -6,7 +6,7 @@ import time
 from collections import defaultdict
 from typing import List, Optional, TypedDict
 
-from integration_tests.subroutes import di_subrouter, static_router, sub_router
+from integration_tests.subroutes import async_auth_subrouter, di_subrouter, inherited_auth_subrouter, static_router, sub_router
 from robyn import Headers, Request, Response, Robyn, SSEMessage, SSEResponse, WebSocketDisconnect, jsonify, serve_file, serve_html
 from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
 from robyn.robyn import QueryParams, Url
@@ -1663,6 +1663,8 @@ def main():
     app.include_router(sub_router)
     app.include_router(di_subrouter)
     app.include_router(static_router)
+    app.include_router(async_auth_subrouter)
+    app.include_router(inherited_auth_subrouter)
 
     class BasicAuthHandler(AuthenticationHandler):
         def authenticate(self, request: Request) -> Optional[Identity]:
