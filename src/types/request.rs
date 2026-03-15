@@ -124,7 +124,7 @@ impl Request {
         req: &HttpRequest,
         mut payload: web::Payload,
         global_headers: &Headers,
-    ) -> Self {
+    ) -> Result<Self, Error> {
         let mut query_params: QueryParams = QueryParams::new();
         let mut form_data: HashMap<String, String> = HashMap::new();
         let mut files = HashMap::new();
@@ -151,9 +151,7 @@ impl Request {
             let multipart = Multipart::new(req.headers(), payload);
             let mut body_local: Vec<u8> = Vec::new();
 
-            let a = handle_multipart(multipart, &mut files, &mut form_data, &mut body_local).await;
-
-            let _ = a;
+            handle_multipart(multipart, &mut files, &mut form_data, &mut body_local).await?;
 
             body_local
         } else {
@@ -180,7 +178,7 @@ impl Request {
         );
         let ip_addr = req.peer_addr().map(|val| val.ip().to_string());
 
-        Self {
+        Ok(Self {
             query_params,
             headers,
             method: req.method().as_str().to_owned(),
@@ -191,7 +189,7 @@ impl Request {
             identity: None,
             form_data: Some(form_data),
             files: Some(files),
-        }
+        })
     }
 }
 

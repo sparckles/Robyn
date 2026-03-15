@@ -491,8 +491,13 @@ async fn index(
         Err(_) => return ResponseType::Standard(Response::method_not_allowed(None)),
     };
 
-    let mut request: Request =
-        Request::from_actix_request(&req, payload, &global_request_headers).await;
+    let mut request: Request = match Request::from_actix_request(&req, payload, &global_request_headers).await {
+        Ok(r) => r,
+        Err(e) => {
+            error!("Failed to parse request for `{}`: {}", req.path(), e);
+            return ResponseType::Standard(Response::internal_server_error(None));
+        }
+    };
 
     let route = format!("{}{}", req.method(), request.url.path);
 
