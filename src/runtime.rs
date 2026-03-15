@@ -1,13 +1,7 @@
-use pyo3::{IntoPyObjectExt, prelude::*};
-use std::{
-    future::Future,
-    sync::Arc,
-};
-use tokio::{
-    runtime::Builder as RuntimeBuilder,
-    task::JoinHandle,
-};
 use futures::FutureExt;
+use pyo3::{prelude::*, IntoPyObjectExt};
+use std::{future::Future, sync::Arc};
+use tokio::{runtime::Builder as RuntimeBuilder, task::JoinHandle};
 
 #[cfg(unix)]
 use super::callbacks::PyFutureAwaitable;
@@ -74,7 +68,11 @@ impl RuntimeWrapper {
     }
 
     pub fn handler(&self) -> RuntimeRef {
-        RuntimeRef::new(self.inner.handle().clone(), self.br.clone(), self.pr.clone())
+        RuntimeRef::new(
+            self.inner.handle().clone(),
+            self.br.clone(),
+            self.pr.clone(),
+        )
     }
 }
 
@@ -86,7 +84,11 @@ pub struct RuntimeRef {
 }
 
 impl RuntimeRef {
-    pub fn new(rt: tokio::runtime::Handle, br: Arc<BlockingRunner>, pyloop: Arc<Py<PyAny>>) -> Self {
+    pub fn new(
+        rt: tokio::runtime::Handle,
+        br: Arc<BlockingRunner>,
+        pyloop: Arc<Py<PyAny>>,
+    ) -> Self {
         Self {
             inner: rt,
             innerb: br,
@@ -141,7 +143,10 @@ pub(crate) fn empty_future_into_py(py: Python) -> PyResult<Bound<PyAny>> {
 }
 
 #[inline(always)]
-pub(crate) fn done_future_into_py(py: Python, result: PyResult<Py<PyAny>>) -> PyResult<Bound<PyAny>> {
+pub(crate) fn done_future_into_py(
+    py: Python,
+    result: PyResult<Py<PyAny>>,
+) -> PyResult<Bound<PyAny>> {
     PyDoneAwaitable::new(result).into_bound_py_any(py)
 }
 
@@ -256,13 +261,14 @@ where
             // We have a handle, use our optimized implementation
             // Get the event loop from Python
             let asyncio = py.import("asyncio")?;
-            let event_loop = asyncio.call_method0("get_event_loop")
+            let event_loop = asyncio
+                .call_method0("get_event_loop")
                 .or_else(|_| asyncio.call_method0("new_event_loop"))?;
             let event_loop: Py<PyAny> = event_loop.unbind();
 
             // Create a simple blocking runner (1 thread, 30s timeout)
             let blocking_runner = Arc::new(BlockingRunner::new(1, 30));
-            
+
             // Create RuntimeRef
             let rt_ref = RuntimeRef::new(rt_handle, blocking_runner, Arc::new(event_loop));
 
@@ -270,9 +276,13 @@ where
             let wrapped_fut = async move {
                 match fut.await {
                     Ok(()) => FutureResultToPy::None,
-                    Err(e) => FutureResultToPy::Err(Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
-                        format!("Future error: {}", e)
-                    ))),
+                    Err(e) => FutureResultToPy::Err(Err(PyErr::new::<
+                        pyo3::exceptions::PyRuntimeError,
+                        _,
+                    >(format!(
+                        "Future error: {}",
+                        e
+                    )))),
                 }
             };
 
@@ -284,12 +294,14 @@ where
             // This happens when called from Python code that's not in a tokio async context
             // Convert Result<(), anyhow::Error> to PyResult<()> for pyo3_async_runtimes
             let py_fut = fut.map(|result| {
-                result.map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
-                    format!("Future error: {}", e)
-                ))
+                result.map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
+                        "Future error: {}",
+                        e
+                    ))
+                })
             });
             pyo3_async_runtimes::tokio::future_into_py(py, py_fut)
         }
     }
 }
-

@@ -4,8 +4,8 @@ mod callbacks;
 mod conversion;
 mod executors;
 mod io_helpers;
-mod runtime;
 mod routers;
+mod runtime;
 mod server;
 mod shared_socket;
 mod types;
@@ -65,7 +65,7 @@ pub fn robyn(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<callbacks::PyIterAwaitable>()?;
     m.add_class::<callbacks::PyFutureAwaitable>()?;
 
-    // Note: prepare_freethreaded_python is deprecated, but Python::initialize() 
+    // Note: prepare_freethreaded_python is deprecated, but Python::initialize()
     // is not available in pymodule context. This is safe to ignore for now.
     #[allow(deprecated)]
     pyo3::prepare_freethreaded_python();

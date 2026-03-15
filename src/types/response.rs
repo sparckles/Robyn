@@ -133,10 +133,7 @@ fn create_python_stream(
                 }
 
                 match gen.call_method0("__next__") {
-                    Ok(value) => value
-                        .extract::<String>()
-                        .ok()
-                        .map(|s| (s, generator)),
+                    Ok(value) => value.extract::<String>().ok().map(|s| (s, generator)),
                     Err(_) => None,
                 }
             })
@@ -431,9 +428,7 @@ impl FromPyObject<'_, '_> for StreamingResponse {
 
     #[inline]
     fn extract(obj: pyo3::Borrowed<'_, '_, PyAny>) -> Result<Self, Self::Error> {
-        if !obj.hasattr("content").unwrap_or(false)
-            || !obj.hasattr("media_type").unwrap_or(false)
-        {
+        if !obj.hasattr("content").unwrap_or(false) || !obj.hasattr("media_type").unwrap_or(false) {
             return Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
                 "Object is missing required StreamingResponse attributes",
             ));

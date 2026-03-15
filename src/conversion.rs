@@ -19,8 +19,7 @@ impl<'p> IntoPyObject<'p> for FutureResultToPy {
             Self::Value(val) => {
                 let bound = val.bind(py);
                 Ok(bound.clone())
-            },
+            }
         }
     }
 }
-

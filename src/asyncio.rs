@@ -32,4 +32,3 @@ pub(crate) fn copy_context(py: Python) -> Py<PyAny> {
     };
     ctx.unbind()
 }
-

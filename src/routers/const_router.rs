@@ -1,14 +1,14 @@
 use actix_http::StatusCode;
-use actix_web::{HttpResponse, HttpResponseBuilder, web::Bytes};
+use actix_web::{web::Bytes, HttpResponse, HttpResponseBuilder};
 use parking_lot::RwLock;
 use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::executors::execute_http_function;
 use crate::types::function_info::FunctionInfo;
+use crate::types::headers::Headers;
 use crate::types::request::Request;
 use crate::types::response::Response;
-use crate::types::headers::Headers;
 use crate::types::HttpMethod;
 use anyhow::Context;
 use matchit::Router as MatchItRouter;
@@ -92,7 +92,11 @@ impl Router<Response, HttpMethod> for ConstRouter {
         event_loop: Option<Bound<'py, pyo3::PyAny>>,
     ) -> Result<(), Error> {
         let table = Arc::clone(self.routes.get(route_type).context("No relevant map")?);
-        let fast_table = Arc::clone(self.fast_routes.get(route_type).context("No relevant fast map")?);
+        let fast_table = Arc::clone(
+            self.fast_routes
+                .get(route_type)
+                .context("No relevant fast map")?,
+        );
 
         let route = route.to_string();
         let event_loop =
@@ -131,14 +135,23 @@ impl ConstRouter {
         let mut routes = HashMap::new();
         let mut fast_routes = HashMap::new();
         for method in [
-            HttpMethod::GET, HttpMethod::POST, HttpMethod::PUT,
-            HttpMethod::DELETE, HttpMethod::PATCH, HttpMethod::HEAD,
-            HttpMethod::OPTIONS, HttpMethod::CONNECT, HttpMethod::TRACE,
+            HttpMethod::GET,
+            HttpMethod::POST,
+            HttpMethod::PUT,
+            HttpMethod::DELETE,
+            HttpMethod::PATCH,
+            HttpMethod::HEAD,
+            HttpMethod::OPTIONS,
+            HttpMethod::CONNECT,
+            HttpMethod::TRACE,
         ] {
             routes.insert(method.clone(), Arc::new(RwLock::new(MatchItRouter::new())));
             fast_routes.insert(method, Arc::new(RwLock::new(HashMap::new())));
         }
-        Self { routes, fast_routes }
+        Self {
+            routes,
+            fast_routes,
+        }
     }
 
     /// Bake global response headers into all cached responses.

@@ -9,10 +9,10 @@ use crate::routers::Router;
 use crate::routers::http_router::HttpRouter;
 use crate::routers::{middleware_router::MiddlewareRouter, web_socket_router::WebSocketRouter};
 use crate::shared_socket::SocketHeld;
+use crate::types::cookie::Cookies;
 use crate::types::function_info::{FunctionInfo, MiddlewareType};
 use crate::types::headers::Headers;
 use crate::types::request::Request;
-use crate::types::cookie::Cookies;
 use crate::types::response::{Response, ResponseType};
 use crate::types::HttpMethod;
 use crate::types::MiddlewareReturn;
@@ -224,16 +224,25 @@ impl Server {
                                   payload: web::Payload,
                                   global_request_headers: web::Data<Arc<Headers>>,
                                   global_response_headers: web::Data<Arc<Headers>>,
-                                  response_headers_exclude_paths: web::Data<Option<Vec<String>>>,
+                                  response_headers_exclude_paths: web::Data<
+                                Option<Vec<String>>,
+                            >,
                                   req: HttpRequest| async move {
                                 // Fast path: const routes bypass request parsing, Python, and middleware
                                 // Only safe when no middlewares are registered (checked dynamically via AtomicBool)
                                 if !middleware_router.has_any_middleware() {
-                                    if let Ok(http_method) = HttpMethod::from_actix_method(req.method()) {
-                                        if let Some(cached) = const_router.get_cached_route(&http_method, req.uri().path()) {
-                                            if let Some(ref excluded) = *response_headers_exclude_paths.get_ref() {
+                                    if let Ok(http_method) =
+                                        HttpMethod::from_actix_method(req.method())
+                                    {
+                                        if let Some(cached) = const_router
+                                            .get_cached_route(&http_method, req.uri().path())
+                                        {
+                                            if let Some(ref excluded) =
+                                                *response_headers_exclude_paths.get_ref()
+                                            {
                                                 if excluded.contains(&req.uri().path().to_owned()) {
-                                                    return cached.to_http_response_without_global_headers();
+                                                    return cached
+                                                        .to_http_response_without_global_headers();
                                                 }
                                             }
                                             return cached.to_http_response();
@@ -245,19 +254,22 @@ impl Server {
                                 let req_ref = req.clone();
                                 let task_locals =
                                     Python::with_gil(|py| TASK_LOCALS.get().unwrap().clone_ref(py));
-                                let response = pyo3_async_runtimes::tokio::scope_local(task_locals, async move {
-                                    index(
-                                        router,
-                                        const_router,
-                                        payload,
-                                        middleware_router,
-                                        global_request_headers,
-                                        global_response_headers,
-                                        response_headers_exclude_paths,
-                                        req,
-                                    )
-                                    .await
-                                })
+                                let response = pyo3_async_runtimes::tokio::scope_local(
+                                    task_locals,
+                                    async move {
+                                        index(
+                                            router,
+                                            const_router,
+                                            payload,
+                                            middleware_router,
+                                            global_request_headers,
+                                            global_response_headers,
+                                            response_headers_exclude_paths,
+                                            req,
+                                        )
+                                        .await
+                                    },
+                                )
                                 .await;
                                 response.respond_to(&req_ref)
                             },
@@ -530,7 +542,8 @@ async fn index(
             resp.headers.set(k.clone(), v.clone());
         }
         ResponseType::Standard(resp)
-    } else if let Some((function, route_params)) = router.get_route(&http_method, &request.url.path) {
+    } else if let Some((function, route_params)) = router.get_route(&http_method, &request.url.path)
+    {
         request.path_params = route_params;
         match execute_http_function(&request, &function).await {
             Ok(r) => r,
@@ -557,8 +570,7 @@ async fn index(
     }
 
     // After middleware
-    let after_middlewares =
-        middleware_router.get_global_middlewares(&MiddlewareType::AfterRequest);
+    let after_middlewares = middleware_router.get_global_middlewares(&MiddlewareType::AfterRequest);
     let route_after = middleware_router.get_route(&MiddlewareType::AfterRequest, &route);
 
     if !after_middlewares.is_empty() || route_after.is_some() {
