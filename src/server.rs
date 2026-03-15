@@ -139,6 +139,8 @@ impl Server {
                     .await
                     .unwrap();
 
+                const_router.bake_global_headers(&global_response_headers);
+
                 HttpServer::new(move || {
                     let mut app = App::new();
 
@@ -224,7 +226,7 @@ impl Server {
                                 // Fast path: const routes bypass request parsing, Python, and middleware
                                 if let Ok(http_method) = HttpMethod::from_actix_method(req.method()) {
                                     if let Some(cached) = const_router.get_cached_route(&http_method, req.uri().path()) {
-                                        return cached.to_http_response(&global_response_headers);
+                                        return cached.to_http_response();
                                     }
                                 }
 

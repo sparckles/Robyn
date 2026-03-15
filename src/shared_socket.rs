@@ -1,6 +1,5 @@
 use pyo3::prelude::*;
 
-use log::debug;
 use socket2::{Domain, Protocol, Socket, Type};
 use std::net::{IpAddr, SocketAddr};
 
@@ -21,14 +20,13 @@ impl SocketHeld {
             Socket::new(Domain::IPV6, Type::STREAM, Some(Protocol::TCP))?
         };
         let address = SocketAddr::new(ip, port);
-        debug!("{}", address);
-        // reuse port is not available on windows
         #[cfg(not(target_os = "windows"))]
         socket.set_reuse_port(true)?;
-
         socket.set_reuse_address(true)?;
+        socket.set_nodelay(true)?;
         socket.bind(&address.into())?;
-        socket.listen(1024)?;
+        socket.listen(16384)?;
+        socket.set_nonblocking(true)?;
 
         Ok(SocketHeld { socket })
     }
