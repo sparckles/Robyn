@@ -226,11 +226,30 @@ where
             result = fut => {
                 rth.spawn_blocking(move |py| {
                     let pyres = result.into_pyobject(py).map(Bound::unbind);
-                    let (cb, value) = match pyres {
-                        Ok(val) => (fut_ref.getattr(py, pyo3::intern!(py, "set_result")).unwrap(), val),
-                        Err(err) => (fut_ref.getattr(py, pyo3::intern!(py, "set_exception")).unwrap(), err.into_py_any(py).unwrap())
+                    let resolved: PyResult<()> = match pyres {
+                        Ok(val) => {
+                            let cb = fut_ref.getattr(py, pyo3::intern!(py, "set_result"))?;
+                            let _ = event_loop_ref.call_method1(
+                                py,
+                                pyo3::intern!(py, "call_soon_threadsafe"),
+                                (PyFutureResultSetter, cb, val),
+                            );
+                            Ok(())
+                        }
+                        Err(err) => {
+                            let cb = fut_ref.getattr(py, pyo3::intern!(py, "set_exception"))?;
+                            let val = err.into_py_any(py)?;
+                            let _ = event_loop_ref.call_method1(
+                                py,
+                                pyo3::intern!(py, "call_soon_threadsafe"),
+                                (PyFutureResultSetter, cb, val),
+                            );
+                            Ok(())
+                        }
                     };
-                    let _ = event_loop_ref.call_method1(py, pyo3::intern!(py, "call_soon_threadsafe"), (PyFutureResultSetter, cb, value));
+                    if let Err(err) = resolved {
+                        log::error!("Failed to resolve Python future: {}", err);
+                    }
                     fut_ref.drop_ref(py);
                     event_loop_ref.drop_ref(py);
                 });

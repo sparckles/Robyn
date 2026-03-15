@@ -521,10 +521,13 @@ async fn index(
                     break;
                 }
                 Err(e) => {
+                    let msg = match e.downcast_ref::<PyErr>() {
+                        Some(py_err) => get_traceback(py_err),
+                        None => format!("{e:?}"),
+                    };
                     error!(
                         "Error executing before middleware for `{}`: {}",
-                        request.url.path,
-                        get_traceback(e.downcast_ref::<PyErr>().unwrap())
+                        request.url.path, msg
                     );
                     return ResponseType::Standard(Response::internal_server_error(None));
                 }
@@ -598,10 +601,13 @@ async fn index(
                     }
                     Ok(MiddlewareReturn::Response(r)) => ResponseType::Standard(r),
                     Err(e) => {
+                        let msg = match e.downcast_ref::<PyErr>() {
+                            Some(py_err) => get_traceback(py_err),
+                            None => format!("{e:?}"),
+                        };
                         error!(
                             "Error executing after middleware for `{}`: {}",
-                            request.url.path,
-                            get_traceback(e.downcast_ref::<PyErr>().unwrap())
+                            request.url.path, msg
                         );
                         return ResponseType::Standard(Response::internal_server_error(Some(
                             &std_response.headers,
