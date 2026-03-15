@@ -91,4 +91,13 @@ impl MiddlewareRouter {
             .unwrap()
             .to_vec()
     }
+
+    pub fn has_global_middlewares(&self) -> bool {
+        for vec in self.globals.values() {
+            if !vec.read().unwrap().is_empty() {
+                return true;
+            }
+        }
+        false
+    }
 }

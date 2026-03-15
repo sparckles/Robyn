@@ -12,6 +12,7 @@ use crate::shared_socket::SocketHeld;
 use crate::types::function_info::{FunctionInfo, MiddlewareType};
 use crate::types::headers::Headers;
 use crate::types::request::Request;
+use crate::types::cookie::Cookies;
 use crate::types::response::{Response, ResponseType};
 use crate::types::HttpMethod;
 use crate::types::MiddlewareReturn;
@@ -139,7 +140,10 @@ impl Server {
                     .await
                     .unwrap();
 
-                const_router.bake_global_headers(&global_response_headers);
+                let has_middlewares = middleware_router.has_global_middlewares();
+                if !has_middlewares {
+                    const_router.bake_global_headers(&global_response_headers);
+                }
 
                 HttpServer::new(move || {
                     let mut app = App::new();
@@ -224,19 +228,23 @@ impl Server {
                                   response_headers_exclude_paths: web::Data<Option<Vec<String>>>,
                                   req: HttpRequest| async move {
                                 // Fast path: const routes bypass request parsing, Python, and middleware
-                                if let Ok(http_method) = HttpMethod::from_actix_method(req.method()) {
-                                    if let Some(cached) = const_router.get_cached_route(&http_method, req.uri().path()) {
-                                        return cached.to_http_response();
+                                // Only safe when no middlewares are registered (middlewares need to run per-request)
+                                if !has_middlewares {
+                                    if let Ok(http_method) = HttpMethod::from_actix_method(req.method()) {
+                                        if let Some(cached) = const_router.get_cached_route(&http_method, req.uri().path()) {
+                                            return cached.to_http_response();
+                                        }
                                     }
                                 }
 
-                                // Normal path: dynamic routes require Python
+                                // Normal path: dynamic routes (and const routes when middlewares exist) require Python
                                 let req_ref = req.clone();
                                 let task_locals =
                                     Python::with_gil(|py| TASK_LOCALS.get().unwrap().clone_ref(py));
                                 let response = pyo3_async_runtimes::tokio::scope_local(task_locals, async move {
                                     index(
                                         router,
+                                        const_router,
                                         payload,
                                         middleware_router,
                                         global_request_headers,
@@ -448,10 +456,9 @@ impl Default for Server {
     }
 }
 
-/// Service handler for dynamic (non-const) routes.
-/// Const routes are handled by the fast path in the default_service handler above.
 async fn index(
     router: web::Data<Arc<HttpRouter>>,
+    const_router: web::Data<Arc<ConstRouter>>,
     payload: web::Payload,
     middleware_router: web::Data<Arc<MiddlewareRouter>>,
     global_request_headers: web::Data<Arc<Headers>>,
@@ -502,9 +509,22 @@ async fn index(
         }
     }
 
-    // Route execution (const routes already handled by fast path)
+    // Route execution — check const router first, then dynamic router
     let mut response =
-        if let Some((function, route_params)) = router.get_route(&http_method, &request.url.path) {
+        if let Some(cached) = const_router.get_cached_route(&http_method, &request.url.path) {
+            let mut resp = Response {
+                status_code: cached.status.as_u16(),
+                response_type: "text".to_string(),
+                headers: Headers::new(None),
+                description: cached.body.to_vec(),
+                file_path: None,
+                cookies: Cookies::new(),
+            };
+            for (k, v) in cached.headers.as_ref() {
+                resp.headers.set(k.clone(), v.clone());
+            }
+            ResponseType::Standard(resp)
+        } else if let Some((function, route_params)) = router.get_route(&http_method, &request.url.path) {
             request.path_params = route_params;
             match execute_http_function(&request, &function).await {
                 Ok(r) => r,
