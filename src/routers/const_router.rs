@@ -8,6 +8,7 @@ use crate::executors::execute_http_function;
 use crate::types::function_info::FunctionInfo;
 use crate::types::headers::Headers;
 use crate::types::request::Request;
+use crate::types::cookie::Cookies;
 use crate::types::response::Response;
 use crate::types::HttpMethod;
 use anyhow::Context;
@@ -125,8 +126,20 @@ impl Router<Response, HttpMethod> for ConstRouter {
         Ok(())
     }
 
-    fn get_route(&self, _route_method: &HttpMethod, _route: &str) -> Option<Response> {
-        None
+    fn get_route(&self, route_method: &HttpMethod, route: &str) -> Option<Response> {
+        let cached = self.get_cached_route(route_method, route)?;
+        let mut resp = Response {
+            status_code: cached.status.as_u16(),
+            response_type: "text".to_string(),
+            headers: Headers::new(None),
+            description: cached.body.to_vec(),
+            file_path: None,
+            cookies: Cookies::new(),
+        };
+        for (k, v) in cached.headers.as_ref() {
+            resp.headers.set(k.clone(), v.clone());
+        }
+        Some(resp)
     }
 }
 
@@ -167,25 +180,41 @@ impl ConstRouter {
         if extra_headers.is_empty() {
             return;
         }
-        for fast_table in self.fast_routes.values() {
+        for (method, fast_table) in &self.fast_routes {
             let mut map = fast_table.write();
             for cached in map.values_mut() {
                 let mut combined = cached.headers.as_ref().clone();
                 combined.extend(extra_headers.iter().cloned());
                 cached.headers = Arc::new(combined);
             }
+
+            if let Some(route_table) = self.routes.get(method) {
+                let mut new_router = MatchItRouter::new();
+                for (route, cached) in map.iter() {
+                    let _ = new_router.insert(route.clone(), cached.clone());
+                }
+                *route_table.write() = new_router;
+            }
         }
     }
 
-    /// Ultra-fast lookup: flat HashMap, no matchit regex, no path-param extraction.
+    /// Fast lookup: tries exact HashMap first, falls back to matchit for parameterized/wildcard routes.
     #[inline(always)]
     pub fn get_cached_route(
         &self,
         route_method: &HttpMethod,
         route: &str,
     ) -> Option<CachedResponse> {
-        let table = self.fast_routes.get(route_method)?;
-        let map = table.read();
-        map.get(route).cloned()
+        let fast_table = self.fast_routes.get(route_method)?;
+        {
+            let map = fast_table.read();
+            if let Some(cached) = map.get(route) {
+                return Some(cached.clone());
+            }
+        }
+
+        let route_table = self.routes.get(route_method)?;
+        let router = route_table.read();
+        router.at(route).ok().map(|matched| matched.value.clone())
     }
 }
