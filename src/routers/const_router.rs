@@ -1,3 +1,5 @@
+use actix_http::StatusCode;
+use actix_web::{HttpResponse, HttpResponseBuilder, web::Bytes};
 use parking_lot::RwLock;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -6,9 +8,9 @@ use crate::executors::execute_http_function;
 use crate::types::function_info::FunctionInfo;
 use crate::types::request::Request;
 use crate::types::response::Response;
+use crate::types::headers::Headers;
 use crate::types::HttpMethod;
 use anyhow::Context;
-use log::debug;
 use matchit::Router as MatchItRouter;
 use pyo3::{Bound, PyErr, Python};
 
@@ -16,15 +18,59 @@ use anyhow::{Error, Result};
 
 use crate::routers::Router;
 
-type RouteMap = RwLock<MatchItRouter<Response>>;
+/// Pre-built response for const routes, avoids DashMap clone per request
+#[derive(Clone)]
+pub struct CachedResponse {
+    pub status: StatusCode,
+    pub headers: Arc<Vec<(String, String)>>,
+    pub body: Bytes,
+}
 
-/// Contains the thread safe hashmaps of different routes
+impl CachedResponse {
+    fn from_response(response: &Response) -> Self {
+        let mut headers = Vec::new();
+        for entry in response.headers.headers.iter() {
+            let (key, values) = entry.pair();
+            for value in values {
+                headers.push((key.clone(), value.clone()));
+            }
+        }
+        for (name, cookie) in &response.cookies.cookies {
+            if let Ok(header_value) = cookie.to_header_value(name) {
+                headers.push(("set-cookie".to_string(), header_value));
+            }
+        }
+        Self {
+            status: StatusCode::from_u16(response.status_code)
+                .unwrap_or(StatusCode::INTERNAL_SERVER_ERROR),
+            headers: Arc::new(headers),
+            body: Bytes::from(response.description.clone()),
+        }
+    }
+
+    #[inline]
+    pub fn to_http_response(&self, global_headers: &Headers) -> HttpResponse {
+        let mut builder = HttpResponseBuilder::new(self.status);
+        for (k, v) in self.headers.as_ref() {
+            builder.append_header((k.as_str(), v.as_str()));
+        }
+        for entry in global_headers.headers.iter() {
+            let (key, values) = entry.pair();
+            for value in values {
+                builder.append_header((key.as_str(), value.as_str()));
+            }
+        }
+        builder.body(self.body.clone())
+    }
+}
+
+type RouteMap = RwLock<MatchItRouter<CachedResponse>>;
+
 pub struct ConstRouter {
     routes: HashMap<HttpMethod, Arc<RouteMap>>,
 }
 
 impl Router<Response, HttpMethod> for ConstRouter {
-    /// Doesn't allow query params/body/etc as variables cannot be "memoized"/"const"ified
     fn add_route<'py>(
         &self,
         _py: Python,
@@ -43,11 +89,10 @@ impl Router<Response, HttpMethod> for ConstRouter {
             let output = execute_http_function(&Request::default(), &function)
                 .await
                 .unwrap();
-            debug!("This is the result of the output {:?}", output);
-            // Const routes only support standard responses, not streaming
             match output {
                 crate::types::response::ResponseType::Standard(response) => {
-                    table.write().insert(route, response).unwrap();
+                    let cached = CachedResponse::from_response(&response);
+                    table.write().insert(route, cached).unwrap();
                 }
                 crate::types::response::ResponseType::Streaming(_) => {
                     return Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
@@ -63,13 +108,7 @@ impl Router<Response, HttpMethod> for ConstRouter {
     }
 
     fn get_route(&self, route_method: &HttpMethod, route: &str) -> Option<Response> {
-        let table = self.routes.get(route_method)?;
-        let route_map = table.read();
-
-        match route_map.at(route) {
-            Ok(res) => Some(res.value.clone()),
-            Err(_) => None,
-        }
+        None
     }
 }
 
@@ -107,5 +146,20 @@ impl ConstRouter {
             Arc::new(RwLock::new(MatchItRouter::new())),
         );
         Self { routes }
+    }
+
+    /// Fast lookup for const routes — returns a CachedResponse without deep cloning
+    #[inline]
+    pub fn get_cached_route(
+        &self,
+        route_method: &HttpMethod,
+        route: &str,
+    ) -> Option<CachedResponse> {
+        let table = self.routes.get(route_method)?;
+        let route_map = table.read();
+        match route_map.at(route) {
+            Ok(res) => Some(res.value.clone()),
+            Err(_) => None,
+        }
     }
 }

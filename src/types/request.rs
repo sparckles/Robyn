@@ -4,7 +4,6 @@ use actix_web::{
     Error, HttpRequest,
 };
 use futures_util::StreamExt as _;
-use log::debug;
 use pyo3::types::{PyBytes, PyDict, PyList, PyString};
 use pyo3::{exceptions::PyValueError, prelude::*, IntoPyObject};
 use serde_json::Value;
@@ -99,9 +98,7 @@ async fn handle_multipart(
         let mut field = item?;
 
         let mut data = Vec::new();
-        // Read the field data
         while let Some(chunk) = field.next().await {
-            debug!("Chunk: {:?}", chunk);
             let data_chunk = chunk?;
             data.extend_from_slice(&data_chunk);
         }
@@ -144,7 +141,6 @@ impl Request {
         }
 
         let mut headers = Headers::from_actix_headers(req.headers());
-        debug!("Global headers: {:?}", global_headers);
         headers.extend(global_headers);
 
         let body: Vec<u8> = if headers.contains(String::from("content-type"))
@@ -152,16 +148,12 @@ impl Request {
                 .get(String::from("content-type"))
                 .is_some_and(|val| val.contains("multipart/form-data"))
         {
-            let h = headers.get(String::from("content-type")).unwrap();
-            debug!("Content-Type: {:?}", h);
             let multipart = Multipart::new(req.headers(), payload);
             let mut body_local: Vec<u8> = Vec::new();
 
             let a = handle_multipart(multipart, &mut files, &mut form_data, &mut body_local).await;
 
-            if let Err(e) = a {
-                debug!("Error handling multipart data: {:?}", e);
-            }
+            let _ = a;
 
             body_local
         } else {
@@ -173,15 +165,6 @@ impl Request {
             body_local.freeze().to_vec()
         };
 
-        debug!("Request body: {:?}", body);
-        debug!("Request headers: {:?}", headers);
-        debug!("Request query params: {:?}", query_params);
-        debug!("Request form data: {:?}", form_data);
-        debug!("Request files: {:?}", files);
-
-        // Normalizing Path.
-        // Rules:
-        // 1. Other than Root("/"), "/endpoint/" will be routed to "/endpoint" internally, without any client redirection.
         let route_path = {
             let mut path = req.path();
             if path.ends_with("/") && path.len() > 1 {

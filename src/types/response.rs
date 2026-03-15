@@ -1,7 +1,6 @@
 use actix_http::{body::BoxBody, StatusCode};
 use actix_web::{web::Bytes, HttpRequest, HttpResponse, HttpResponseBuilder, Responder};
 use futures::Stream;
-use log::debug;
 use pyo3::{
     exceptions::PyIOError,
     prelude::*,
@@ -76,7 +75,7 @@ impl Responder for Response {
                     response_builder.append_header(("Set-Cookie", header_value));
                 }
                 Err(e) => {
-                    debug!("Skipping invalid cookie '{}': {}", name, e);
+                    log::debug!("Skipping invalid cookie '{}': {}", name, e);
                 }
             }
         }
@@ -125,61 +124,27 @@ fn create_python_stream(
     generator: Py<PyAny>,
 ) -> Pin<Box<dyn Stream<Item = Result<Bytes, actix_web::Error>> + Send>> {
     Box::pin(futures::stream::unfold(generator, |generator| async move {
-        // Use spawn_blocking to execute the Python generator call in a separate thread
-        // This prevents blocking the async runtime when the generator contains blocking operations
         match tokio::task::spawn_blocking(move || {
             Python::with_gil(|py| {
                 let gen = generator.bind(py);
 
-                // Check if this is an async generator first
-                let is_async_gen = gen.hasattr("__anext__").unwrap_or(false);
+                if gen.hasattr("__anext__").unwrap_or(false) {
+                    return None;
+                }
 
-                if is_async_gen {
-                    // For async generators, we expect them to be converted to sync generators in Python
-                    debug!("Detected async generator - this should be handled in Python layer");
-                    None
-                } else {
-                    // Try to get the next value from the generator (sync)
-                    match gen.call_method0("__next__") {
-                        Ok(value) => {
-                            match value.extract::<String>() {
-                                Ok(string_value) => {
-                                    debug!("Generator yielded: {}", string_value);
-                                    Some((string_value, generator))
-                                }
-                                Err(extract_err) => {
-                                    debug!(
-                                        "Failed to extract string from generator value: {}",
-                                        extract_err
-                                    );
-                                    None // End of stream
-                                }
-                            }
-                        }
-                        Err(call_err) => {
-                            // Check if this is a StopIteration (normal end) or actual error
-                            if call_err.is_instance_of::<pyo3::exceptions::PyStopIteration>(py) {
-                                debug!("Generator exhausted (StopIteration)");
-                            } else {
-                                debug!("Generator call error: {}", call_err);
-                            }
-                            None // End of stream
-                        }
-                    }
+                match gen.call_method0("__next__") {
+                    Ok(value) => value
+                        .extract::<String>()
+                        .ok()
+                        .map(|s| (s, generator)),
+                    Err(_) => None,
                 }
             })
         })
         .await
         {
             Ok(Some((string_value, generator))) => Some((Ok(Bytes::from(string_value)), generator)),
-            Ok(None) => None,
-            Err(join_err) => {
-                debug!(
-                    "Failed to execute generator call in spawn_blocking: {}",
-                    join_err
-                );
-                None
-            }
+            _ => None,
         }
     }))
 }
@@ -433,12 +398,10 @@ impl PyResponse {
 impl FromPyObject<'_, '_> for Response {
     type Error = PyErr;
 
+    #[inline]
     fn extract(obj: pyo3::Borrowed<'_, '_, PyAny>) -> Result<Self, Self::Error> {
-        // Only extract from actual Response objects, not StreamingResponse
         let type_name = obj.get_type().name()?;
-        debug!("Attempting to extract Response from type: {}", type_name);
         if type_name != "Response" {
-            debug!("Type mismatch: expected Response, got {}", type_name);
             return Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(format!(
                 "Expected Response, got {}",
                 type_name
@@ -452,10 +415,6 @@ impl FromPyObject<'_, '_> for Response {
         let file_path: Option<String> = obj.getattr("file_path")?.extract()?;
         let cookies: Cookies = obj.getattr("cookies")?.extract()?;
 
-        debug!(
-            "Successfully extracted Response with status {}",
-            status_code
-        );
         Ok(Response {
             status_code,
             response_type,
@@ -470,93 +429,24 @@ impl FromPyObject<'_, '_> for Response {
 impl FromPyObject<'_, '_> for StreamingResponse {
     type Error = PyErr;
 
+    #[inline]
     fn extract(obj: pyo3::Borrowed<'_, '_, PyAny>) -> Result<Self, Self::Error> {
-        // Check if it's a StreamingResponse by checking attributes rather than strict type name
-        let type_name = obj
-            .get_type()
-            .name()
-            .map(|n| n.to_string())
-            .unwrap_or_else(|_| "unknown".to_string());
-        debug!("=== STREAMING RESPONSE EXTRACTION START ===");
-        debug!(
-            "Attempting to extract StreamingResponse from type: {}",
-            type_name
-        );
-
-        // Check if it has the required attributes for a StreamingResponse
-        let has_content = obj.hasattr("content").unwrap_or(false);
-        let has_status_code = obj.hasattr("status_code").unwrap_or(false);
-        let has_headers = obj.hasattr("headers").unwrap_or(false);
-        let has_media_type = obj.hasattr("media_type").unwrap_or(false);
-
-        debug!(
-            "Attribute check: content={}, status_code={}, headers={}, media_type={}",
-            has_content, has_status_code, has_headers, has_media_type
-        );
-
-        // For StreamingResponse, we need content and media_type specifically
-        if !has_content || !has_status_code || !has_headers || !has_media_type {
-            debug!("Missing required StreamingResponse attributes");
-            return Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(format!(
-                "Object is missing required StreamingResponse attributes"
-            )));
+        if !obj.hasattr("content").unwrap_or(false)
+            || !obj.hasattr("media_type").unwrap_or(false)
+        {
+            return Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+                "Object is missing required StreamingResponse attributes",
+            ));
         }
 
-        debug!("All attributes present, proceeding with extraction");
+        let status_code: u16 = obj.getattr("status_code")?.extract()?;
+        let mut headers: Headers = obj.getattr("headers")?.extract()?;
 
-        let status_code: u16 = match obj.getattr("status_code") {
-            Ok(attr) => match attr.extract() {
-                Ok(code) => {
-                    debug!("Successfully extracted status_code: {}", code);
-                    code
-                }
-                Err(e) => {
-                    debug!("Failed to extract status_code as u16: {}", e);
-                    return Err(e);
-                }
-            },
-            Err(e) => {
-                debug!("Failed to get status_code attribute: {}", e);
-                return Err(e);
-            }
-        };
+        let media_type: String = obj
+            .getattr("media_type")
+            .and_then(|a| a.extract())
+            .unwrap_or_else(|_| "text/event-stream".to_string());
 
-        let mut headers: Headers = match obj.getattr("headers") {
-            Ok(attr) => match attr.extract() {
-                Ok(headers) => {
-                    debug!("Successfully extracted headers");
-                    headers
-                }
-                Err(e) => {
-                    debug!("Failed to extract headers: {}", e);
-                    return Err(e.into());
-                }
-            },
-            Err(e) => {
-                debug!("Failed to get headers attribute: {}", e);
-                return Err(e);
-            }
-        };
-
-        // Ensure proper SSE headers are set if media_type is text/event-stream
-        let media_type: String = match obj.getattr("media_type") {
-            Ok(attr) => match attr.extract() {
-                Ok(media_type) => {
-                    debug!("Successfully extracted media_type: {}", media_type);
-                    media_type
-                }
-                Err(e) => {
-                    debug!("Failed to extract media_type: {}", e);
-                    "text/event-stream".to_string()
-                }
-            },
-            Err(e) => {
-                debug!("Failed to get media_type attribute: {}", e);
-                "text/event-stream".to_string()
-            }
-        };
-
-        // Set proper SSE headers if needed
         if media_type == "text/event-stream" {
             headers.set("Content-Type".to_string(), "text/event-stream".to_string());
             if headers.get("Cache-Control".to_string()).is_none() {
@@ -567,22 +457,8 @@ impl FromPyObject<'_, '_> for StreamingResponse {
             }
         }
 
-        let content: pyo3::Py<PyAny> = match obj.getattr("content") {
-            Ok(attr) => {
-                debug!("Successfully got content attribute");
-                attr.unbind()
-            }
-            Err(e) => {
-                debug!("Failed to get content attribute: {}", e);
-                return Err(e);
-            }
-        };
+        let content: pyo3::Py<PyAny> = obj.getattr("content")?.unbind();
 
-        debug!("=== STREAMING RESPONSE EXTRACTION SUCCESS ===");
-        debug!(
-            "Successfully extracted StreamingResponse with status {} from type {}",
-            status_code, type_name
-        );
         Ok(StreamingResponse::new(status_code, headers, content))
     }
 }

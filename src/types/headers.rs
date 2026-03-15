@@ -1,6 +1,5 @@
 use actix_http::header::HeaderMap;
 use dashmap::DashMap;
-use log::debug;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
 use pyo3::IntoPyObject;
@@ -41,12 +40,10 @@ impl Headers {
     }
 
     pub fn set(&mut self, key: String, value: String) {
-        debug!("Setting header {} to {}", key, value);
         self.headers.insert(key.to_lowercase(), vec![value]);
     }
 
     pub fn append(&mut self, key: String, value: String) {
-        debug!("Setting header {} to {}", key, value);
         self.headers
             .entry(key.to_lowercase())
             .or_default()
@@ -98,8 +95,6 @@ impl Headers {
     }
 
     pub fn contains(&self, key: String) -> bool {
-        debug!("Checking if header {} exists", key);
-        debug!("Headers: {:?}", self.headers);
         self.headers.contains_key(&key.to_lowercase())
     }
 
