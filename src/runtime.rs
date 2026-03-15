@@ -1,6 +1,6 @@
 use futures::FutureExt;
 use pyo3::{prelude::*, IntoPyObjectExt};
-use std::{future::Future, sync::Arc};
+use std::{future::Future, sync::Arc, sync::OnceLock};
 use tokio::{runtime::Builder as RuntimeBuilder, task::JoinHandle};
 
 #[cfg(unix)]
@@ -151,7 +151,7 @@ pub(crate) fn done_future_into_py(
 }
 
 #[inline(always)]
-pub(crate) fn err_future_into_py(py: Python, err: PyResult<()>) -> PyResult<Bound<PyAny>> {
+pub(crate) fn err_future_into_py(py: Python, err: PyErr) -> PyResult<Bound<PyAny>> {
     PyErrAwaitable::new(err).into_bound_py_any(py)
 }
 
@@ -247,32 +247,30 @@ where
     Ok(py_fut.into_bound(py))
 }
 
-// Wrapper function to replace pyo3_async_runtimes::tokio::future_into_py
-// This function matches the signature and converts Result<T, E> to FutureResultToPy
+static SHARED_BLOCKING_RUNNER: OnceLock<Arc<BlockingRunner>> = OnceLock::new();
+
+fn shared_blocking_runner() -> Arc<BlockingRunner> {
+    SHARED_BLOCKING_RUNNER
+        .get_or_init(|| Arc::new(BlockingRunner::new(1, 30)))
+        .clone()
+}
+
 pub fn future_into_py<F>(py: Python, fut: F) -> PyResult<Bound<PyAny>>
 where
     F: Future<Output = Result<(), anyhow::Error>> + Send + 'static,
 {
-    // Try to get the tokio runtime handle
-    // When called from Python code, we might not be in a tokio async context
-    // So we try try_current() first, and if that fails, fall back to pyo3_async_runtimes
     match tokio::runtime::Handle::try_current() {
         Ok(rt_handle) => {
-            // We have a handle, use our optimized implementation
-            // Get the event loop from Python
             let asyncio = py.import("asyncio")?;
             let event_loop = asyncio
-                .call_method0("get_event_loop")
+                .call_method0("get_running_loop")
                 .or_else(|_| asyncio.call_method0("new_event_loop"))?;
             let event_loop: Py<PyAny> = event_loop.unbind();
 
-            // Create a simple blocking runner (1 thread, 30s timeout)
-            let blocking_runner = Arc::new(BlockingRunner::new(1, 30));
+            let blocking_runner = shared_blocking_runner();
 
-            // Create RuntimeRef
             let rt_ref = RuntimeRef::new(rt_handle, blocking_runner, Arc::new(event_loop));
 
-            // Convert the future to use FutureResultToPy
             let wrapped_fut = async move {
                 match fut.await {
                     Ok(()) => FutureResultToPy::None,
@@ -286,13 +284,9 @@ where
                 }
             };
 
-            // Use the futlike implementation (better for most cases)
             future_into_py_futlike(rt_ref, py, wrapped_fut)
         }
         Err(_) => {
-            // Fall back to pyo3_async_runtimes when we can't get the handle
-            // This happens when called from Python code that's not in a tokio async context
-            // Convert Result<(), anyhow::Error> to PyResult<()> for pyo3_async_runtimes
             let py_fut = fut.map(|result| {
                 result.map_err(|e| {
                     PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(

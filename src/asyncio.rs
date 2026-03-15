@@ -23,12 +23,9 @@ pub(crate) fn empty_context(py: Python<'_>) -> PyResult<&Bound<'_, PyAny>> {
 }
 
 #[inline(always)]
-pub(crate) fn copy_context(py: Python) -> Py<PyAny> {
-    // Use the fast FFI path for CPython
-    // Note: PyPy support would require a different implementation, but robyn targets CPython
-    let ctx = unsafe {
+pub(crate) fn copy_context(py: Python) -> PyResult<Py<PyAny>> {
+    unsafe {
         let ptr = pyo3::ffi::PyContext_CopyCurrent();
-        Bound::from_owned_ptr(py, ptr)
-    };
-    ctx.unbind()
+        Ok(Bound::from_owned_ptr_or_err(py, ptr)?.unbind())
+    }
 }

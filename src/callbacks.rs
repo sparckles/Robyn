@@ -53,12 +53,12 @@ impl PyDoneAwaitable {
 
 #[pyclass(frozen, module = "robyn._robyn")]
 pub(crate) struct PyErrAwaitable {
-    result: PyResult<()>,
+    err: PyErr,
 }
 
 impl PyErrAwaitable {
-    pub(crate) fn new(result: PyResult<()>) -> Self {
-        Self { result }
+    pub(crate) fn new(err: PyErr) -> Self {
+        Self { err }
     }
 }
 
@@ -73,7 +73,7 @@ impl PyErrAwaitable {
     }
 
     fn __next__(&self, py: Python) -> PyResult<()> {
-        Err(self.result.as_ref().err().unwrap().clone_ref(py))
+        Err(self.err.clone_ref(py))
     }
 }
 
@@ -230,6 +230,9 @@ impl PyFutureAwaitable {
         self.event_loop.clone_ref(py)
     }
 
+    /// Single-callback optimization: only the most recent callback is stored.
+    /// This is intentional — this type is internal to the robyn runtime and in
+    /// practice asyncio registers at most one done-callback per future.
     #[pyo3(signature = (cb, context=None))]
     fn add_done_callback(
         pyself: PyRef<'_, Self>,
@@ -257,11 +260,18 @@ impl PyFutureAwaitable {
         Ok(())
     }
 
+    /// Clears the single stored callback (see `add_done_callback`).
+    /// The `cb` argument is accepted for asyncio protocol compatibility but
+    /// is not used for matching — the sole stored callback is always removed.
     #[allow(unused)]
     fn remove_done_callback(&self, cb: Py<PyAny>) -> i32 {
         let mut ack = self.ack.write().unwrap();
-        *ack = None;
-        1
+        if ack.is_some() {
+            *ack = None;
+            1
+        } else {
+            0
+        }
     }
 
     #[allow(unused)]
