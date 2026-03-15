@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::RwLock;
 
 use anyhow::{Context, Error, Result};
@@ -10,10 +11,10 @@ use crate::types::function_info::{FunctionInfo, MiddlewareType};
 
 type RouteMap = RwLock<MatchItRouter<FunctionInfo>>;
 
-/// Contains the thread safe hashmaps of different routes
 pub struct MiddlewareRouter {
     globals: HashMap<MiddlewareType, RwLock<Vec<FunctionInfo>>>,
     routes: HashMap<MiddlewareType, RouteMap>,
+    has_middleware: AtomicBool,
 }
 
 impl Router<(FunctionInfo, HashMap<String, String>), MiddlewareType> for MiddlewareRouter {
@@ -28,6 +29,7 @@ impl Router<(FunctionInfo, HashMap<String, String>), MiddlewareType> for Middlew
         let table = self.routes.get(route_type).context("No relevant map")?;
 
         table.write().unwrap().insert(route.to_string(), function)?;
+        self.has_middleware.store(true, Ordering::Release);
 
         Ok(())
     }
@@ -66,7 +68,11 @@ impl MiddlewareRouter {
             MiddlewareType::AfterRequest,
             RwLock::new(MatchItRouter::new()),
         );
-        Self { globals, routes }
+        Self {
+            globals,
+            routes,
+            has_middleware: AtomicBool::new(false),
+        }
     }
 
     pub fn add_global_middleware(
@@ -80,6 +86,7 @@ impl MiddlewareRouter {
             .write()
             .unwrap()
             .push(function);
+        self.has_middleware.store(true, Ordering::Release);
         Ok(())
     }
 
@@ -92,12 +99,7 @@ impl MiddlewareRouter {
             .to_vec()
     }
 
-    pub fn has_global_middlewares(&self) -> bool {
-        for vec in self.globals.values() {
-            if !vec.read().unwrap().is_empty() {
-                return true;
-            }
-        }
-        false
+    pub fn has_any_middleware(&self) -> bool {
+        self.has_middleware.load(Ordering::Acquire)
     }
 }

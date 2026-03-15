@@ -25,6 +25,7 @@ pub struct CachedResponse {
     pub status: StatusCode,
     pub headers: Arc<Vec<(String, String)>>,
     pub body: Bytes,
+    route_header_count: usize,
 }
 
 impl CachedResponse {
@@ -41,11 +42,13 @@ impl CachedResponse {
                 headers.push(("set-cookie".to_string(), header_value));
             }
         }
+        let route_header_count = headers.len();
         Self {
             status: StatusCode::from_u16(response.status_code)
                 .unwrap_or(StatusCode::INTERNAL_SERVER_ERROR),
             headers: Arc::new(headers),
             body: Bytes::from(response.description.clone()),
+            route_header_count,
         }
     }
 
@@ -53,6 +56,15 @@ impl CachedResponse {
     pub fn to_http_response(&self) -> HttpResponse {
         let mut builder = HttpResponseBuilder::new(self.status);
         for (k, v) in self.headers.as_ref() {
+            builder.append_header((k.as_str(), v.as_str()));
+        }
+        builder.body(self.body.clone())
+    }
+
+    #[inline(always)]
+    pub fn to_http_response_without_global_headers(&self) -> HttpResponse {
+        let mut builder = HttpResponseBuilder::new(self.status);
+        for (k, v) in self.headers.as_ref().iter().take(self.route_header_count) {
             builder.append_header((k.as_str(), v.as_str()));
         }
         builder.body(self.body.clone())

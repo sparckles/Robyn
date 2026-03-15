@@ -140,8 +140,7 @@ impl Server {
                     .await
                     .unwrap();
 
-                let has_middlewares = middleware_router.has_global_middlewares();
-                if !has_middlewares {
+                if !middleware_router.has_any_middleware() {
                     const_router.bake_global_headers(&global_response_headers);
                 }
 
@@ -228,10 +227,15 @@ impl Server {
                                   response_headers_exclude_paths: web::Data<Option<Vec<String>>>,
                                   req: HttpRequest| async move {
                                 // Fast path: const routes bypass request parsing, Python, and middleware
-                                // Only safe when no middlewares are registered (middlewares need to run per-request)
-                                if !has_middlewares {
+                                // Only safe when no middlewares are registered (checked dynamically via AtomicBool)
+                                if !middleware_router.has_any_middleware() {
                                     if let Ok(http_method) = HttpMethod::from_actix_method(req.method()) {
                                         if let Some(cached) = const_router.get_cached_route(&http_method, req.uri().path()) {
+                                            if let Some(ref excluded) = *response_headers_exclude_paths.get_ref() {
+                                                if excluded.contains(&req.uri().path().to_owned()) {
+                                                    return cached.to_http_response_without_global_headers();
+                                                }
+                                            }
                                             return cached.to_http_response();
                                         }
                                     }
@@ -485,6 +489,7 @@ async fn index(
         middleware_router.get_global_middlewares(&MiddlewareType::BeforeRequest);
     let route_before = middleware_router.get_route(&MiddlewareType::BeforeRequest, &route);
 
+    let mut early_response: Option<Response> = None;
     if !before_middlewares.is_empty() || route_before.is_some() {
         let mut all_before = before_middlewares;
         if let Some((function, route_params)) = route_before {
@@ -495,7 +500,8 @@ async fn index(
             request = match execute_middleware_function(&request, &before_middleware).await {
                 Ok(MiddlewareReturn::Request(r)) => r,
                 Ok(MiddlewareReturn::Response(r)) => {
-                    return ResponseType::Standard(r);
+                    early_response = Some(r);
+                    break;
                 }
                 Err(e) => {
                     error!(
@@ -509,44 +515,45 @@ async fn index(
         }
     }
 
-    // Route execution — check const router first, then dynamic router
-    let mut response =
-        if let Some(cached) = const_router.get_cached_route(&http_method, &request.url.path) {
-            let mut resp = Response {
-                status_code: cached.status.as_u16(),
-                response_type: "text".to_string(),
-                headers: Headers::new(None),
-                description: cached.body.to_vec(),
-                file_path: None,
-                cookies: Cookies::new(),
-            };
-            for (k, v) in cached.headers.as_ref() {
-                resp.headers.set(k.clone(), v.clone());
-            }
-            ResponseType::Standard(resp)
-        } else if let Some((function, route_params)) = router.get_route(&http_method, &request.url.path) {
-            request.path_params = route_params;
-            match execute_http_function(&request, &function).await {
-                Ok(r) => r,
-                Err(e) => {
-                    error!(
-                        "Error executing route function for `{}`: {}",
-                        request.url.path,
-                        get_traceback(&e)
-                    );
-                    ResponseType::Standard(Response::internal_server_error(None))
-                }
-            }
-        } else {
-            ResponseType::Standard(Response::not_found(None))
+    let mut response = if let Some(r) = early_response {
+        ResponseType::Standard(r)
+    } else if let Some(cached) = const_router.get_cached_route(&http_method, &request.url.path) {
+        let mut resp = Response {
+            status_code: cached.status.as_u16(),
+            response_type: "text".to_string(),
+            headers: Headers::new(None),
+            description: cached.body.to_vec(),
+            file_path: None,
+            cookies: Cookies::new(),
         };
-
-    response.headers_mut().extend(&global_response_headers);
-
-    if let Some(ref excluded) = *excluded_response_headers_paths.get_ref() {
-        if excluded.contains(&request.url.path) {
-            response.headers_mut().clear();
+        for (k, v) in cached.headers.as_ref() {
+            resp.headers.set(k.clone(), v.clone());
         }
+        ResponseType::Standard(resp)
+    } else if let Some((function, route_params)) = router.get_route(&http_method, &request.url.path) {
+        request.path_params = route_params;
+        match execute_http_function(&request, &function).await {
+            Ok(r) => r,
+            Err(e) => {
+                error!(
+                    "Error executing route function for `{}`: {}",
+                    request.url.path,
+                    get_traceback(&e)
+                );
+                ResponseType::Standard(Response::internal_server_error(None))
+            }
+        }
+    } else {
+        ResponseType::Standard(Response::not_found(None))
+    };
+
+    let is_excluded = excluded_response_headers_paths
+        .get_ref()
+        .as_ref()
+        .is_some_and(|paths| paths.contains(&request.url.path));
+
+    if !is_excluded {
+        response.headers_mut().extend(&global_response_headers);
     }
 
     // After middleware
