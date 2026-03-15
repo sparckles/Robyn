@@ -65,9 +65,5 @@ pub fn robyn(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<callbacks::PyIterAwaitable>()?;
     m.add_class::<callbacks::PyFutureAwaitable>()?;
 
-    // Note: prepare_freethreaded_python is deprecated, but Python::initialize()
-    // is not available in pymodule context. This is safe to ignore for now.
-    #[allow(deprecated)]
-    pyo3::prepare_freethreaded_python();
     Ok(())
 }
