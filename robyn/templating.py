@@ -8,13 +8,36 @@ from .robyn import Headers, Response
 
 
 class TemplateInterface(ABC):
-    def __init__(self): ...
+    """
+    Interface for implementing various template engines in Robyn.
+    """
+
+    def __init__(self):
+        """
+        Initializes the template interface.
+        """
+        ...
 
     @abstractmethod
-    def render_template(self, *args, **kwargs) -> Response: ...
+    def render_template(self, *args, **kwargs) -> Response:
+        """
+        Renders a template with the given arguments.
+
+        Args:
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            Response: The rendered template response.
+        """
+        ...
 
 
 class JinjaTemplate(TemplateInterface):
+    """
+    Jinja2 implementation of the TemplateInterface.
+    """
+
     def __init__(self, directory, encoding="utf-8", followlinks=False):
         """
         Initializes the Jinja2 template environment with autoescape enabled for HTML and XML files.
@@ -30,6 +53,16 @@ class JinjaTemplate(TemplateInterface):
         )
 
     def render_template(self, template_name, **kwargs) -> Response:
+        """
+        Renders a Jinja2 template.
+
+        Args:
+            template_name (str): The name of the template file to render.
+            **kwargs: Variables to pass to the template.
+
+        Returns:
+            Response: The rendered template as a Robyn Response object.
+        """
         rendered_template = self.env.get_template(template_name).render(**kwargs)
         return Response(
             status_code=status_codes.HTTP_200_OK,
