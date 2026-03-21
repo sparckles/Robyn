@@ -228,23 +228,30 @@ where
                     let pyres = result.into_pyobject(py).map(Bound::unbind);
                     let resolved: PyResult<()> = match pyres {
                         Ok(val) => {
-                            let cb = fut_ref.getattr(py, pyo3::intern!(py, "set_result"))?;
-                            let _ = event_loop_ref.call_method1(
-                                py,
-                                pyo3::intern!(py, "call_soon_threadsafe"),
-                                (PyFutureResultSetter, cb, val),
-                            );
-                            Ok(())
+                            let cb = fut_ref.getattr(py, pyo3::intern!(py, "set_result"));
+                            match cb {
+                                Ok(cb) => {
+                                    let _ = event_loop_ref.call_method1(
+                                        py,
+                                        pyo3::intern!(py, "call_soon_threadsafe"),
+                                        (PyFutureResultSetter, cb, val),
+                                    );
+                                    Ok(())
+                                }
+                                Err(e) => Err(e),
+                            }
                         }
                         Err(err) => {
-                            let cb = fut_ref.getattr(py, pyo3::intern!(py, "set_exception"))?;
-                            let val = err.into_py_any(py)?;
-                            let _ = event_loop_ref.call_method1(
-                                py,
-                                pyo3::intern!(py, "call_soon_threadsafe"),
-                                (PyFutureResultSetter, cb, val),
-                            );
-                            Ok(())
+                            (|| -> PyResult<()> {
+                                let cb = fut_ref.getattr(py, pyo3::intern!(py, "set_exception"))?;
+                                let val = err.into_py_any(py)?;
+                                let _ = event_loop_ref.call_method1(
+                                    py,
+                                    pyo3::intern!(py, "call_soon_threadsafe"),
+                                    (PyFutureResultSetter, cb, val),
+                                );
+                                Ok(())
+                            })()
                         }
                     };
                     if let Err(err) = resolved {
