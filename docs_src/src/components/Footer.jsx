@@ -48,6 +48,7 @@ export function Footer() {
                   <NavLink href="/">Home</NavLink>
                   <NavLink href="/documentation">Documentation</NavLink>
                   <NavLink href="/releases">Releases</NavLink>
+                  <NavLink href="/blog">Blog</NavLink>
                   <NavLink href="/community">Community</NavLink>
                   <NavLink href="https://discord.gg/rkERZ5eNU8" target="_blank">
                     Discord

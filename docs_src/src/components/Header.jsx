@@ -92,6 +92,7 @@ function MobileNavigation(props) {
                   Documentation
                 </MobileNavItem>
                 <MobileNavItem href="/releases">Releases</MobileNavItem>
+                <MobileNavItem href="/blog">Blog</MobileNavItem>
                 <MobileNavItem href="/community">Community</MobileNavItem>
                 <MobileNavItem href="https://github.com/sparckles/robyn">
                   GitHub
@@ -133,6 +134,7 @@ function DesktopNavigation(props) {
       <ul className="flex rounded-full bg-zinc-800/90 px-3 text-sm  font-medium text-zinc-200 shadow-lg  shadow-zinc-800/5 ring-1 ring-white/10 backdrop-blur">
         <NavItem href="/documentation">Documentation</NavItem>
         <NavItem href="/releases">Releases</NavItem>
+        <NavItem href="/blog">Blog</NavItem>
         <NavItem href="/community">Community</NavItem>
         <NavItem href="https://discord.gg/rkERZ5eNU8" target="_blank">
           Discord
@@ -215,7 +217,7 @@ function Avatar({ large = false, className, ...props }) {
     >
       <Image
         src={robynLogo}
-        alt=""
+        alt="Robyn Framework logo"
         sizes={large ? '4rem' : '2.25rem'}
         className={clsx(
           'rounded-md bg-zinc-800 object-cover',

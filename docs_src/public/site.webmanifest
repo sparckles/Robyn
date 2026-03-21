@@ -1,0 +1,31 @@
+{
+  "name": "Robyn Framework",
+  "short_name": "Robyn",
+  "description": "A fast, innovator-friendly, and community-driven Python web framework powered by Rust",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/robynog.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

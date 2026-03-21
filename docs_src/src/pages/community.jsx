@@ -1,7 +1,7 @@
-import Head from 'next/head'
 import Image from 'next/image'
 import sparcklesLogo from '@/images/sparckles-logo.png'
 import { useEffect, useState } from 'react'
+import { SEO, OrganizationJsonLd } from '@/components/SEO'
 
 function Contributors() {
   const [contributors, setContributors] = useState([])
@@ -42,7 +42,7 @@ function Contributors() {
           >
             <img
               src={contributor.avatar_url}
-              alt={contributor.login}
+              alt={`${contributor.login}'s avatar`}
               className="h-12 w-12 rounded-full"
             />
           </a>
@@ -54,12 +54,11 @@ function Contributors() {
 export default function Community() {
   return (
     <>
-      <Head>
-        <meta
-          name="description"
-          content="The Robyn Community is a group of people who are passionate about the Robyn project."
-        />
-      </Head>
+      <SEO
+        title="Community"
+        description="Join the Robyn community — meet our contributors, sponsors, and the Sparckles open-source organization behind the Robyn Python web framework."
+        jsonLd={OrganizationJsonLd()}
+      />
       <main className="relative isolate">
         {/* Background */}
         <div
@@ -78,9 +77,9 @@ export default function Community() {
         {/* Header section */}
         <div className="px-6 pt-14 lg:px-8">
           <div className="mx-auto max-w-2xl pt-24 text-center sm:pt-40">
-            <h2 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
+            <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
               Robyn Community
-            </h2>
+            </h1>
             <p className="mt-6 text-lg leading-8 text-gray-300">
               Robyn is a community project and is housed under the sparckles
               organisation.
@@ -151,7 +150,7 @@ export default function Community() {
               <Image
                 className="h-96 w-full flex-none rounded-2xl object-cover shadow-xl  lg:aspect-square lg:h-auto lg:max-w-sm"
                 src={sparcklesLogo}
-                alt="sparckles logo"
+                alt="Sparckles open-source organization logo"
               />
               <div className="w-full flex-auto">
                 <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
@@ -212,7 +211,7 @@ export default function Community() {
                     <dd className=" text-3xl font-semibold tracking-tight text-white">
                       <img
                         src="https://opensource.nyc3.cdn.digitaloceanspaces.com/attribution/assets/SVG/DO_Logo_vertical_blue.svg"
-                        alt="Digital Ocean"
+                        alt="DigitalOcean sponsor logo"
                         className="aspect-square  "
                       />
                     </dd>
@@ -228,7 +227,7 @@ export default function Community() {
                     <dd className=" text-3xl font-semibold tracking-tight text-white">
                       <img
                         src="https://pbs.twimg.com/profile_images/1569586501335359494/4rq0Hb99_400x400.jpg"
-                        alt="AppWrite"
+                        alt="Appwrite sponsor logo"
                         className="rounded-full"
                       />
                     </dd>
@@ -236,7 +235,6 @@ export default function Community() {
                 </div>
                 <div className="flex flex-col justify-center justify-items-center  bg-white/5 p-8">
                   <dt className="text-sm font-semibold leading-6 text-gray-300">
-                    {/* Community Contributors */}
                   </dt>
                   <a
                     href="https://github.com/shivaylamba"
@@ -246,7 +244,7 @@ export default function Community() {
                     <dd className=" text-3xl font-semibold tracking-tight text-white">
                       <img
                         src="https://avatars.githubusercontent.com/u/19529592?v=4"
-                        alt="Shivay Lamba"
+                        alt="Shivay Lamba sponsor"
                         className="rounded-full "
                       />
                     </dd>

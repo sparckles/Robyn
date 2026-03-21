@@ -1,5 +1,5 @@
 import { Head, Html, Main, NextScript } from 'next/document'
-import { Analytics } from '@vercel/analytics/react';
+import { Analytics } from '@vercel/analytics/react'
 
 const modeScript = `
   let darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
@@ -36,9 +36,11 @@ const modeScript = `
   }
 `
 
-export default function Document() {
+export default function Document({ __NEXT_DATA__ }) {
+  const locale = __NEXT_DATA__?.locale || 'en'
+
   return (
-    <Html className="h-full antialiased" lang="en">
+    <Html className="h-full antialiased" lang={locale}>
       <Head>
         <script dangerouslySetInnerHTML={{ __html: modeScript }} />
         <link
@@ -51,11 +53,11 @@ export default function Document() {
           type="application/feed+json"
           href={`${process.env.NEXT_PUBLIC_SITE_URL}/rss/feed.json`}
         />
-        <link
-          rel="icon"
-          type="image/png"
-          href="https://user-images.githubusercontent.com/29942790/140995889-5d91dcff-3aa7-4cfb-8a90-2cddf1337dca.png"
-        />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/site.webmanifest" />
+        <meta name="theme-color" content="#000000" />
       </Head>
       <body className="flex h-full flex-col bg-black">
         <Main />

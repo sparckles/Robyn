@@ -10,10 +10,16 @@ import {
 } from '@/components/releases/mdx'
 
 import * as releaseMdxComponents from '@/components/releases/mdx'
+import { SEO } from '@/components/SEO'
 
 const ChangelogPage = ({ releases }) => {
   return (
     <>
+      <SEO
+        title="Releases & Changelog"
+        description="Stay up to date with the latest Robyn releases, new features, bug fixes, and improvements to the Python web framework powered by Rust."
+        ogType="website"
+      />
       {releases.map((release) => (
         <MDXProvider key={release.id} components={releaseMdxComponents}>
           <Article
