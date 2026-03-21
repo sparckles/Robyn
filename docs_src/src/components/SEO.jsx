@@ -1,7 +1,7 @@
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://robyn.tech'
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://robyn.tech').replace(/\/+$/, '')
 const DEFAULT_OG_IMAGE = `${SITE_URL}/robynog.png`
 const TWITTER_HANDLE = '@robaborobyn'
 const SITE_NAME = 'Robyn Framework'
