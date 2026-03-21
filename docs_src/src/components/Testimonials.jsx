@@ -60,7 +60,7 @@ let testimonials = [
   },
   // More testimonials...
   {
-    body: 'Robyn has made a big difference in my projects. Its flexible structure allows my work to adapt smoothly to my needs, even when I face complex challenges. The community-driven and open-source nature of Robyn makes it a welcoming place for developers like me. Plus, its simple yet powerful API has greatly streamlined my development process, reducing my wor oad. I highly recommend it!',
+    body: 'Robyn has made a big difference in my projects. Its flexible structure allows my work to adapt smoothly to my needs, even when I face complex challenges. The community-driven and open-source nature of Robyn makes it a welcoming place for developers like me. Plus, its simple yet powerful API has greatly streamlined my development process, reducing my workload. I highly recommend it!',
     author: {
       name: 'Julia Furst Morgado',
       handle: 'juliafmorgado',
@@ -172,7 +172,7 @@ export default function Testimonials() {
                     <img
                       className="h-10 w-10 rounded-full bg-gray-50"
                       src={testimonial.author.imageUrl}
-                      alt=""
+                      alt={`Photo of ${testimonial.author.name}`}
                     />
                     <div>
                       <div className="font-semibold text-white">

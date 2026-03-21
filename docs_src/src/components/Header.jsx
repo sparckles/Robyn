@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
@@ -92,6 +92,7 @@ function MobileNavigation(props) {
                   Documentation
                 </MobileNavItem>
                 <MobileNavItem href="/releases">Releases</MobileNavItem>
+                <MobileNavItem href="/blog">Blog</MobileNavItem>
                 <MobileNavItem href="/community">Community</MobileNavItem>
                 <MobileNavItem href="https://github.com/sparckles/robyn">
                   GitHub
@@ -133,6 +134,7 @@ function DesktopNavigation(props) {
       <ul className="flex rounded-full bg-zinc-800/90 px-3 text-sm  font-medium text-zinc-200 shadow-lg  shadow-zinc-800/5 ring-1 ring-white/10 backdrop-blur">
         <NavItem href="/documentation">Documentation</NavItem>
         <NavItem href="/releases">Releases</NavItem>
+        <NavItem href="/blog">Blog</NavItem>
         <NavItem href="/community">Community</NavItem>
         <NavItem href="https://discord.gg/rkERZ5eNU8" target="_blank">
           Discord
@@ -146,18 +148,18 @@ function GitHubStars() {
   const [stars, setStars] = useState('6.1k')
   const [loading, setLoading] = useState(false)
 
-  const fetchStars = async () => {
+  const fetchStars = useCallback(async () => {
     if (loading) return
-    
+
     setLoading(true)
     try {
       const response = await fetch('https://api.github.com/repos/sparckles/robyn')
       const data = await response.json()
-      
+
       if (data.stargazers_count) {
         const count = data.stargazers_count
-        const formatted = count >= 1000 
-          ? `${(count / 1000).toFixed(1)}k` 
+        const formatted = count >= 1000
+          ? `${(count / 1000).toFixed(1)}k`
           : count.toString()
         setStars(formatted)
       }
@@ -166,15 +168,15 @@ function GitHubStars() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [loading])
 
   useEffect(() => {
     fetchStars()
-    
+
     const interval = setInterval(fetchStars, 300000)
-    
+
     return () => clearInterval(interval)
-  }, [])
+  }, [fetchStars])
 
   return (
     <a
@@ -215,7 +217,7 @@ function Avatar({ large = false, className, ...props }) {
     >
       <Image
         src={robynLogo}
-        alt=""
+        alt="Robyn Framework logo"
         sizes={large ? '4rem' : '2.25rem'}
         className={clsx(
           'rounded-md bg-zinc-800 object-cover',

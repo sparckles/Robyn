@@ -32,7 +32,7 @@ export const img = function Img(props) {
   return (
     <div className="relative mt-8 overflow-hidden rounded-xl bg-gray-900 [&+*]:mt-8">
       <Image
-        alt=""
+        alt={props.alt || 'Release image'}
         sizes="(min-width: 1280px) 36rem, (min-width: 1024px) 45vw, (min-width: 640px) 32rem, 95vw"
         {...props}
       />

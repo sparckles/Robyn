@@ -3,7 +3,7 @@ pub mod registry;
 use crate::executors::web_socket_executors::execute_ws_function;
 use crate::types::function_info::FunctionInfo;
 use crate::types::multimap::QueryParams;
-use registry::{Close, CloseConnection, SendMessageToAll, SendText};
+use registry::{Close, SendMessageToAll, SendText};
 
 use actix::prelude::*;
 use actix::{Actor, AsyncContext, StreamHandler};
@@ -129,16 +129,11 @@ impl Handler<SendText> for WebSocketConnector {
     fn handle(&mut self, msg: SendText, ctx: &mut Self::Context) {
         if self.id == msg.recipient_id {
             ctx.text(msg.message.clone());
+            if msg.message == "Connection closed" {
+                // Close the WebSocket connection
+                ctx.stop();
+            }
         }
-    }
-}
-
-impl Handler<CloseConnection> for WebSocketConnector {
-    type Result = ();
-
-    fn handle(&mut self, _msg: CloseConnection, ctx: &mut Self::Context) {
-        ctx.close(None);
-        ctx.stop();
     }
 }
 
@@ -174,10 +169,8 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebSocketConnecto
 
 #[pymethods]
 impl WebSocketConnector {
-    pub fn sync_send_to(&self, recipient_id: String, message: String) -> PyResult<()> {
-        let recipient_id = Uuid::parse_str(&recipient_id).map_err(|e| {
-            pyo3::exceptions::PyValueError::new_err(format!("Invalid recipient_id UUID: {e}"))
-        })?;
+    pub fn sync_send_to(&self, recipient_id: String, message: String) {
+        let recipient_id = Uuid::parse_str(&recipient_id).unwrap();
 
         match self.registry_addr.try_send(SendText {
             message,
@@ -187,7 +180,6 @@ impl WebSocketConnector {
             Ok(_) => println!("Message sent successfully"),
             Err(e) => println!("Failed to send message: {}", e),
         }
-        Ok(())
     }
 
     pub fn async_send_to(
@@ -197,9 +189,7 @@ impl WebSocketConnector {
         message: String,
     ) -> PyResult<Py<PyAny>> {
         let registry = self.registry_addr.clone();
-        let recipient_id = Uuid::parse_str(&recipient_id).map_err(|e| {
-            pyo3::exceptions::PyValueError::new_err(format!("Invalid recipient_id UUID: {e}"))
-        })?;
+        let recipient_id = Uuid::parse_str(&recipient_id).unwrap();
         let sender_id = self.id;
 
         let awaitable = runtime::future_into_py(py, async move {

@@ -1,7 +1,12 @@
-import Head from 'next/head'
 import Link from 'next/link'
 
 import { Container } from '@/components/Container'
+import {
+  SEO,
+  WebsiteJsonLd,
+  SoftwareApplicationJsonLd,
+  OrganizationJsonLd,
+} from '@/components/SEO'
 import hljs from 'highlight.js/lib/core'
 import python from 'highlight.js/lib/languages/python'
 import 'highlight.js/styles/tomorrow-night-blue.css'
@@ -54,45 +59,19 @@ function Example() {
 }
 
 export default function Home({ articles }) {
+  const jsonLd = [
+    WebsiteJsonLd(),
+    SoftwareApplicationJsonLd(),
+    OrganizationJsonLd(),
+  ]
+
   return (
     <>
-      <Head>
-        <title>
-          Robyn - A Fast, Innovator Friendly, and Community Driven Python Web
-          Framework.
-        </title>
-        <meta
-          name="description"
-          content="Robyn - A Fast, Innovator Friendly, and Community Driven Python Web Framework."
-        />
-        <meta
-          property="og:title"
-          content="Robyn - A Fast, Innovator Friendly, and Community Driven Python Web Framework."
-        />
-        <meta property="og:image" content="https://robyn.tech/robynog.png" />
-        <meta
-          property="og:description"
-          content="Robyn is a fast, innovator-friendly, and community-driven Python web framework."
-        />
-        <meta property="og:url" content="https://robyn.tech" />
-
-        {/*Twitter specific meta tags*/}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@yourTwitterHandle" />
-        <meta
-          name="twitter:title"
-          content="Robyn - A Fast, Innovator Friendly, and Community Driven Python Web Framework."
-        />
-        <meta
-          name="twitter:description"
-          content="Robyn is a fast, innovator-friendly, and community-driven Python web framework."
-        />
-        <meta name="twitter:image" content="https://robyn.tech/robynog.png" />
-
-        {/*LinkedIn specific meta tags*/}
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Robyn Framework" />
-      </Head>
+      <SEO
+        title={null}
+        description="Robyn is a high-performance async Python web framework powered by a Rust runtime. Build fast, scalable web applications with Python's simplicity and Rust's speed."
+        jsonLd={jsonLd}
+      />
 
       <Container className="mt-10 md:mt-14">
         <div className="relative isolate pt-4">
@@ -124,18 +103,18 @@ export default function Home({ articles }) {
                   scaffolding, enjoyable usage, and robust plugin support.
                 </p>
                 <div className="mt-10 flex items-center justify-center gap-x-6">
-                  <a
+                  <Link
                     href="/documentation/en"
                     className="rounded-md bg-yellow-500 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-yellow-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
                   >
                     Get started
-                  </a>
-                  <a
-                    href="https://github.com/sparckles/robyn"
+                  </Link>
+                  <Link
+                    href="/documentation/en"
                     className="text-sm font-semibold leading-6 text-white"
                   >
-                    Learn more
-                  </a>
+                    Learn more <span aria-hidden="true">→</span>
+                  </Link>
                 </div>
               </div>
               <Example />
@@ -279,12 +258,6 @@ export default function Home({ articles }) {
                   <dt className="text-sm font-semibold leading-6 text-gray-300">
                     Robyn installs
                   </dt>
-                  {/* <a href="https://www.digitalocean.com/?refcode=3f2b9fd4968d&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge" target="_blank" rel="noopener noreferrer">
-                  <dd className="order-first text-3xl font-semibold tracking-tight text-white">
-                    <img src="https://web-platforms.sfo2.cdn.digitaloceanspaces.com/WWW/Badge%201.svg" alt="Digital Ocean" />
-                  </dd>
-                  </a> */}
-
                   <dd className="order-first text-3xl font-semibold tracking-tight text-white">
                     3 million
                   </dd>
@@ -293,12 +266,6 @@ export default function Home({ articles }) {
                   <dt className="text-sm font-semibold leading-6 text-gray-300">
                     Stars on Github
                   </dt>
-                  {/* <a href="https://github.com/appwrite" target="_blank" rel="noopener noreferrer">
-                  <dd className="order-first text-3xl font-semibold tracking-tight text-white">
-                    <img src="https://avatars.githubusercontent.com/u/25003669?s=200&v=4" alt="AppWrite" />
-                  </dd>
-                  </a> */}
-
                   <dd className="order-first text-3xl font-semibold tracking-tight text-white">
                     6k+
                   </dd>
@@ -307,11 +274,6 @@ export default function Home({ articles }) {
                   <dt className="text-sm font-semibold leading-6 text-gray-300">
                     Community Contributors
                   </dt>
-                  {/* <a href="https://github.com/shivaylamba" target="_blank" rel="noopener noreferrer">
-                  <dd className="order-first text-3xl font-semibold tracking-tight text-white">
-                    <img src="https://avatars.githubusercontent.com/u/19529592?v=4" alt="Shivay Lamba" className='rounded-full' />
-                  </dd>
-                  </a> */}
                   <dd className="order-first text-3xl font-semibold tracking-tight text-white">
                     70+
                   </dd>
@@ -342,18 +304,18 @@ export default function Home({ articles }) {
                 Go through a small tutorial or read the docs to get started.
               </p>
               <div className="mt-10 flex items-center justify-center gap-x-6">
-                <a
+                <Link
                   href="/documentation/en/example_app"
                   className="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                 >
                   Get started
-                </a>
-                <a
+                </Link>
+                <Link
                   href="/documentation/en/api_reference"
                   className="text-sm font-semibold leading-6 text-white"
                 >
                   Read the docs <span aria-hidden="true">→</span>
-                </a>
+                </Link>
               </div>
             </div>
           </div>
