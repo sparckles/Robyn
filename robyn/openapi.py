@@ -126,6 +126,7 @@ class OpenAPIInfo:
     @param servers: list[Server] An list of Server objects representing the servers.
     @param externalDocs: Optional[ExternalDocumentation] Additional external documentation.
     @param components: Components An element to hold various schemas for the document.
+    @param security: List[Dict[str, List[str]]] Global security requirements applied to all operations.
     """
 
     title: str = "Robyn API"
@@ -137,6 +138,7 @@ class OpenAPIInfo:
     servers: List[Server] = field(default_factory=list)
     externalDocs: Optional[ExternalDocumentation] = field(default_factory=ExternalDocumentation)
     components: Components = field(default_factory=Components)
+    security: List[Dict[str, List[str]]] = field(default_factory=list)
 
 
 @dataclass
@@ -168,7 +170,39 @@ class OpenAPI:
             "externalDocs": asdict(self.info.externalDocs) if self.info.externalDocs.url else None,
         }
 
-    def add_openapi_path_obj(self, route_type: str, endpoint: str, openapi_name: str, openapi_tags: List[str], handler: Callable):
+        if self.info.security:
+            self.openapi_spec["security"] = self.info.security
+
+    def add_security_scheme(self, name: str, scheme: Dict, apply_globally: bool = True):
+        """
+        Add a security scheme to the OpenAPI spec and optionally apply it globally.
+
+        @param name: str the name of the security scheme (e.g. "BearerAuth")
+        @param scheme: Dict the security scheme object per OpenAPI spec
+            (e.g. {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"})
+        @param apply_globally: bool if True, the scheme is also added as a global
+            security requirement so Swagger UI shows the Authorize dialog
+        """
+        if self.openapi_file_override:
+            return
+
+        self.info.components.securitySchemes[name] = scheme
+        self.openapi_spec["components"]["securitySchemes"][name] = scheme
+
+        if apply_globally:
+            security_entry = {name: []}
+            self.info.security.append(security_entry)
+            self.openapi_spec.setdefault("security", []).append(security_entry)
+
+    def add_openapi_path_obj(
+        self,
+        route_type: str,
+        endpoint: str,
+        openapi_name: str,
+        openapi_tags: List[str],
+        handler: Callable,
+        auth_required: bool = False,
+    ):
         """
         Adds the given path to openapi spec
 
@@ -177,6 +211,7 @@ class OpenAPI:
         @param openapi_name: str the name of the endpoint
         @param openapi_tags: List[str] for grouping of endpoints
         @param handler: Callable the handler function for the endpoint
+        @param auth_required: bool whether this route requires authentication
         """
 
         if self.openapi_file_override:
@@ -226,6 +261,9 @@ class OpenAPI:
         modified_endpoint, path_obj = self.get_path_obj(
             endpoint, openapi_name, openapi_description, openapi_tags, query_params, request_body, return_annotation
         )
+
+        if auth_required and self.info.components.securitySchemes:
+            path_obj["security"] = [{name: []} for name in self.info.components.securitySchemes]
 
         if modified_endpoint not in self.openapi_spec["paths"]:
             self.openapi_spec["paths"][modified_endpoint] = {}
