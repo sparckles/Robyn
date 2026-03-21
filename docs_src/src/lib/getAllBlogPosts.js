@@ -33,6 +33,11 @@ export function getAllBlogPosts() {
 
 export function getBlogPostBySlug(slug) {
   const filePath = path.join(BLOG_DIR, `${slug}.mdx`)
+
+  if (!fs.existsSync(filePath)) {
+    return null
+  }
+
   const fileContent = fs.readFileSync(filePath, 'utf-8')
   const { data, content } = matter(fileContent)
 

@@ -1,17 +1,19 @@
 /** @type {import('next-sitemap').IConfig} */
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://robyn.tech'
+
 module.exports = {
-  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://robyn.tech',
+  siteUrl,
   generateRobotsTxt: false,
   generateIndexSitemap: false,
   outDir: 'public',
   exclude: ['/api/*'],
   alternateRefs: [
     {
-      href: 'https://robyn.tech',
+      href: siteUrl,
       hreflang: 'en',
     },
     {
-      href: 'https://robyn.tech/zh',
+      href: `${siteUrl}/zh`,
       hreflang: 'zh',
     },
   ],

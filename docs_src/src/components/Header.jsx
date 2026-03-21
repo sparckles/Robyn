@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
@@ -148,18 +148,18 @@ function GitHubStars() {
   const [stars, setStars] = useState('6.1k')
   const [loading, setLoading] = useState(false)
 
-  const fetchStars = async () => {
+  const fetchStars = useCallback(async () => {
     if (loading) return
-    
+
     setLoading(true)
     try {
       const response = await fetch('https://api.github.com/repos/sparckles/robyn')
       const data = await response.json()
-      
+
       if (data.stargazers_count) {
         const count = data.stargazers_count
-        const formatted = count >= 1000 
-          ? `${(count / 1000).toFixed(1)}k` 
+        const formatted = count >= 1000
+          ? `${(count / 1000).toFixed(1)}k`
           : count.toString()
         setStars(formatted)
       }
@@ -168,15 +168,15 @@ function GitHubStars() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [loading])
 
   useEffect(() => {
     fetchStars()
-    
+
     const interval = setInterval(fetchStars, 300000)
-    
+
     return () => clearInterval(interval)
-  }, [])
+  }, [fetchStars])
 
   return (
     <a

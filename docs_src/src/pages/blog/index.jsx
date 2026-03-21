@@ -2,14 +2,7 @@ import Link from 'next/link'
 import { SEO } from '@/components/SEO'
 import { Container } from '@/components/Container'
 import { getAllBlogPosts } from '@/lib/getAllBlogPosts'
-
-function formatDate(dateString) {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-}
+import { formatDate } from '@/lib/formatDate'
 
 export default function BlogIndex({ posts }) {
   return (

@@ -4,15 +4,8 @@ import { MDXRemote } from 'next-mdx-remote'
 import { SEO, BreadcrumbJsonLd } from '@/components/SEO'
 import { Container } from '@/components/Container'
 import { getAllBlogPosts, getBlogPostBySlug } from '@/lib/getAllBlogPosts'
+import { formatDate } from '@/lib/formatDate'
 import Link from 'next/link'
-
-function formatDate(dateString) {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-}
 
 const blogMdxComponents = {
   h1: (props) => <h1 className="text-3xl font-bold text-white mt-8 mb-4" {...props} />,
@@ -69,7 +62,7 @@ export default function BlogPost({ post }) {
               <li aria-hidden="true">/</li>
               <li><Link href="/blog" className="hover:text-gray-300">Blog</Link></li>
               <li aria-hidden="true">/</li>
-              <li className="text-gray-300">{post.title}</li>
+              <li className="text-gray-300" aria-current="page">{post.title}</li>
             </ol>
           </nav>
 
@@ -115,6 +108,11 @@ export async function getStaticPaths() {
 
 export async function getStaticProps({ params }) {
   const post = getBlogPostBySlug(params.slug)
+
+  if (!post) {
+    return { notFound: true }
+  }
+
   const content = await serialize(post.content)
 
   return {

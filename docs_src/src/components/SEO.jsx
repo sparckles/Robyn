@@ -6,6 +6,10 @@ const DEFAULT_OG_IMAGE = `${SITE_URL}/robynog.png`
 const TWITTER_HANDLE = '@robaborobyn'
 const SITE_NAME = 'Robyn Framework'
 
+function escapeJsonLd(obj) {
+  return JSON.stringify(obj).replace(/</g, '\\u003c').replace(/>/g, '\\u003e')
+}
+
 export function SEO({
   title,
   description,
@@ -15,7 +19,8 @@ export function SEO({
   jsonLd,
 }) {
   const router = useRouter()
-  const canonicalUrl = `${SITE_URL}${router.asPath.split('?')[0]}`
+  const cleanPath = router.asPath.split(/[?#]/)[0]
+  const canonicalUrl = `${SITE_URL}${cleanPath}`
 
   const fullTitle = title
     ? `${title} | ${SITE_NAME}`
@@ -26,8 +31,11 @@ export function SEO({
 
   const metaDescription = description || defaultDescription
 
-  const locales = ['en', 'zh']
-  const currentPath = router.asPath.split('?')[0]
+  const locales = router.locales || ['en', 'zh']
+  const defaultLocale = router.defaultLocale || 'en'
+
+  const localePrefix = new RegExp(`^/(${locales.join('|')})(/|$)`)
+  const normalizedPath = cleanPath.replace(localePrefix, '/$2').replace(/^\/\//, '/')
 
   return (
     <Head>
@@ -38,18 +46,20 @@ export function SEO({
       <link rel="canonical" href={canonicalUrl} />
 
       {locales.map((locale) => {
-        const localePath =
-          locale === 'en' ? currentPath : `/${locale}${currentPath}`
+        const href =
+          locale === defaultLocale
+            ? `${SITE_URL}${normalizedPath}`
+            : `${SITE_URL}/${locale}${normalizedPath}`
         return (
           <link
             key={locale}
             rel="alternate"
             hrefLang={locale}
-            href={`${SITE_URL}${localePath}`}
+            href={href}
           />
         )
       })}
-      <link rel="alternate" hrefLang="x-default" href={`${SITE_URL}${currentPath}`} />
+      <link rel="alternate" hrefLang="x-default" href={`${SITE_URL}${normalizedPath}`} />
 
       {/* Open Graph */}
       <meta property="og:title" content={fullTitle} />
@@ -71,7 +81,7 @@ export function SEO({
       {jsonLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: escapeJsonLd(jsonLd) }}
         />
       )}
     </Head>

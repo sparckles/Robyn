@@ -9,7 +9,8 @@ import { Prose } from '@/components/documentation/Prose'
 import { SectionProvider } from '@/components/documentation/SectionProvider'
 
 function buildBreadcrumbs(path) {
-  const segments = path.split('/').filter(Boolean)
+  const cleanPath = path.split(/[?#]/)[0]
+  const segments = cleanPath.split('/').filter(Boolean)
   const items = [{ name: 'Home', href: '/' }]
 
   let currentPath = ''

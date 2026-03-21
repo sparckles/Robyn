@@ -1,8 +1,12 @@
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { SEO } from '@/components/SEO'
 import { Container } from '@/components/Container'
 
 export default function NotFound() {
+  const { locale } = useRouter()
+  const docsHref = `/documentation/${locale || 'en'}`
+
   return (
     <>
       <SEO title="Page Not Found" description="The page you're looking for doesn't exist." noindex />
@@ -23,7 +27,7 @@ export default function NotFound() {
               Go back home
             </Link>
             <Link
-              href="/documentation/en"
+              href={docsHref}
               className="text-sm font-semibold text-white"
             >
               Documentation <span aria-hidden="true">→</span>

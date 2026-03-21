@@ -542,12 +542,12 @@ class WebSocketConnector:
             message (str | bytes): The message to broadcast. str sends a text frame, bytes sends a binary frame.
         """
         pass
-    async def async_send_to(self, sender_id: str, message: str | bytes) -> None:
+    async def async_send_to(self, recipient_id: str, message: str | bytes) -> None:
         """
         Sends a message to a specific client.
 
         Args:
-            sender_id (str): The id of the sender
+            recipient_id (str): The id of the recipient
             message (str | bytes): The message to send. str sends a text frame, bytes sends a binary frame.
         """
         pass
@@ -559,12 +559,12 @@ class WebSocketConnector:
             message (str | bytes): The message to broadcast. str sends a text frame, bytes sends a binary frame.
         """
         pass
-    def sync_send_to(self, sender_id: str, message: str | bytes) -> None:
+    def sync_send_to(self, recipient_id: str, message: str | bytes) -> None:
         """
         Sends a message to a specific client.
 
         Args:
-            sender_id (str): The id of the sender
+            recipient_id (str): The id of the recipient
             message (str | bytes): The message to send. str sends a text frame, bytes sends a binary frame.
         """
         pass
