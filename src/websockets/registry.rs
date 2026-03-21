@@ -107,17 +107,18 @@ impl Message for Close {
     type Result = ();
 }
 
+pub struct CloseConnection;
+
+impl Message for CloseConnection {
+    type Result = ();
+}
+
 impl Handler<Close> for WebSocketRegistry {
     type Result = ();
 
     fn handle(&mut self, msg: Close, _ctx: &mut Self::Context) {
         if let Some(client) = self.clients.remove(&msg.id) {
-            // Send a close message to the client before removing it
-            client.do_send(SendText {
-                recipient_id: msg.id,
-                message: "Connection closed".to_string(),
-                sender_id: msg.id,
-            });
+            client.do_send(CloseConnection);
         }
     }
 }

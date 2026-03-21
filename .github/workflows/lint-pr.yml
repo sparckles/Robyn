@@ -3,7 +3,14 @@ name: Lint PR
 on:
   pull_request:
     branches: [main]
+    paths:
+      - "**/*.py"
+      - "pyproject.toml"
+      - ".github/workflows/lint-pr.yml"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   UV_SYSTEM_PYTHON: 1

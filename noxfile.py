@@ -1,5 +1,3 @@
-import sys
-
 import nox
 
 
@@ -29,12 +27,6 @@ def tests(session):
         "--out",
         "dist",
     ]
-
-    if sys.platform == "darwin":
-        session.run("rustup", "target", "add", "x86_64-apple-darwin")
-        session.run("rustup", "target", "add", "aarch64-apple-darwin")
-        args.append("--target")
-        args.append("universal2-apple-darwin")
 
     session.run(*args)
     session.run("pip", "install", "--no-index", "--find-links=dist/", "robyn")
