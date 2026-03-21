@@ -44,6 +44,4 @@ def test_response_in_before_middleware(session):
 )
 def test_global_middleware_applied_to_const_routes(route: str, session):
     r = get(route)
-    assert r.headers.get("global_after") == "global_after_request", (
-        f"Global after-request middleware was not applied to const route {route}"
-    )
+    assert r.headers.get("global_after") == "global_after_request", f"Global after-request middleware was not applied to const route {route}"
