@@ -5,10 +5,10 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::executors::execute_http_function;
+use crate::types::cookie::Cookies;
 use crate::types::function_info::FunctionInfo;
 use crate::types::headers::Headers;
 use crate::types::request::Request;
-use crate::types::cookie::Cookies;
 use crate::types::response::Response;
 use crate::types::HttpMethod;
 use anyhow::Context;
