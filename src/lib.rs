@@ -1,6 +1,11 @@
+mod asyncio;
+mod blocking;
+mod callbacks;
+mod conversion;
 mod executors;
 mod io_helpers;
 mod routers;
+mod runtime;
 mod server;
 mod shared_socket;
 mod types;
@@ -53,6 +58,12 @@ pub fn robyn(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<MiddlewareType>()?;
     m.add_class::<HttpMethod>()?;
 
-    pyo3::prepare_freethreaded_python();
+    // Register awaitable types
+    m.add_class::<callbacks::PyEmptyAwaitable>()?;
+    m.add_class::<callbacks::PyDoneAwaitable>()?;
+    m.add_class::<callbacks::PyErrAwaitable>()?;
+    m.add_class::<callbacks::PyIterAwaitable>()?;
+    m.add_class::<callbacks::PyFutureAwaitable>()?;
+
     Ok(())
 }

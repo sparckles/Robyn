@@ -185,7 +185,9 @@ The parameter injection system works in two phases:
 
 <Row>
   <Col>
-    Use `const=True` for responses that never change. These are cached in Rust memory and served without Python execution.
+    Use `const=True` for responses that never change. These are cached in Rust memory and the handler function is never re-executed after startup.
+
+    When no middleware is registered, const routes take a fast path served entirely from the Rust layer without entering Python at all. When middleware is registered (including global before-request and after-request handlers), const routes still serve the cached response but middleware executes normally for every request. This means const routes are always safe to use alongside middleware.
   </Col>
   <Col sticky>
     <CodeGroup title="Const Route Optimization">

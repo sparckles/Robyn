@@ -118,7 +118,7 @@ Robyn includes a "const routes" optimization for static responses:
 
 <Row>
   <Col>
-    When you mark a route as `const`, Robyn can serve the response directly from the Rust layer without invoking Python at all.
+    When you mark a route as `const`, Robyn caches the response in Rust memory and never re-executes the Python handler. If no middleware is registered, const routes are served entirely from the Rust layer without entering Python at all. When middleware is present, the cached response is still used but before-request and after-request middleware execute normally.
   </Col>
   <Col sticky>
     <CodeGroup title="Const Routes">
@@ -128,8 +128,8 @@ Robyn includes a "const routes" optimization for static responses:
     def health_check():
         return {"status": "healthy"}
     
-    # Subsequent requests are served directly from Rust
-    # bypassing Python entirely
+    # Without middleware: served directly from Rust, bypassing Python entirely
+    # With middleware: cached response is used, but middleware still runs
     ```
     </CodeGroup>
   </Col>

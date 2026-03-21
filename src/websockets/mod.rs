@@ -19,6 +19,8 @@ use std::sync::Arc;
 use tokio::sync::mpsc;
 use uuid::Uuid;
 
+use crate::runtime;
+
 use registry::{Register, WebSocketRegistry};
 use std::collections::HashMap;
 
@@ -190,7 +192,7 @@ impl WebSocketConnector {
         let recipient_id = Uuid::parse_str(&recipient_id).unwrap();
         let sender_id = self.id;
 
-        let awaitable = pyo3_async_runtimes::tokio::future_into_py(py, async move {
+        let awaitable = runtime::future_into_py(py, async move {
             match registry.try_send(SendText {
                 message,
                 sender_id,
@@ -220,7 +222,7 @@ impl WebSocketConnector {
         let registry = self.registry_addr.clone();
         let sender_id = self.id;
 
-        let awaitable = pyo3_async_runtimes::tokio::future_into_py(py, async move {
+        let awaitable = runtime::future_into_py(py, async move {
             match registry.try_send(SendMessageToAll { message, sender_id }) {
                 Ok(_) => println!("Message sent successfully"),
                 Err(e) => println!("Failed to send message: {}", e),

@@ -28,3 +28,20 @@ def test_global_middleware(session):
 def test_response_in_before_middleware(session):
     r = get("/sync/middlewares/401", should_check_response=False)
     assert r.status_code == 401
+
+
+@pytest.mark.benchmark
+@pytest.mark.parametrize(
+    "route",
+    [
+        "/sync/str/const",
+        "/async/str/const",
+        "/sync/dict/const",
+        "/async/dict/const",
+        "/sync/response/const",
+        "/async/response/const",
+    ],
+)
+def test_global_middleware_applied_to_const_routes(route: str, session):
+    r = get(route)
+    assert r.headers.get("global_after") == "global_after_request", f"Global after-request middleware was not applied to const route {route}"

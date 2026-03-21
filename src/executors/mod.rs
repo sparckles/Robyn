@@ -1,12 +1,9 @@
 #[deny(clippy::if_same_then_else)]
-/// This is the module that has all the executor functions
-/// i.e. the functions that have the responsibility of parsing and executing functions.
 pub mod web_socket_executors;
 
 use std::sync::Arc;
 
 use anyhow::Result;
-use log::debug;
 use pyo3::prelude::*;
 use pyo3::{BoundObject, IntoPyObject};
 use pyo3_async_runtimes::TaskLocals;
@@ -29,6 +26,12 @@ where
     for<'py> <T as IntoPyObject<'py>>::Error: std::fmt::Debug,
 {
     let handler = function.handler.bind(py).downcast()?;
+
+    // 0-param handlers: skip Request→Python conversion entirely
+    if function.number_of_params == 0 {
+        return handler.call0();
+    }
+
     let kwargs = function.kwargs.bind(py);
     let function_args: Py<PyAny> = function_args
         .clone()
@@ -41,16 +44,13 @@ where
         })?
         .into_any()
         .unbind();
-    debug!("Function args: {:?}", function_args);
 
     match function.number_of_params {
-        0 => handler.call0(),
         1 => {
             if pyo3::types::PyDictMethods::get_item(kwargs, "global_dependencies")
                 .is_ok_and(|it| !it.is_none())
                 || pyo3::types::PyDictMethods::get_item(kwargs, "router_dependencies")
                     .is_ok_and(|it| !it.is_none())
-            // these are reserved keywords
             {
                 handler.call((), Some(kwargs))
             } else {
@@ -92,7 +92,6 @@ where
     } else {
         Python::with_gil(|py| -> Result<MiddlewareReturn> {
             let output = get_function_output(function, py, input)?;
-            debug!("Middleware output: {:?}", output);
 
             match output.extract::<Response>() {
                 Ok(response) => Ok(MiddlewareReturn::Response(response)),
@@ -121,6 +120,11 @@ where
     for<'py> <U as IntoPyObject<'py>>::Error: std::fmt::Debug,
 {
     let handler = function.handler.bind(py).downcast()?;
+
+    if function.number_of_params == 0 {
+        return handler.call0();
+    }
+
     let kwargs = function.kwargs.bind(py);
     let first_arg: Py<PyAny> = first_arg
         .clone()
@@ -144,12 +148,9 @@ where
         })?
         .into_any()
         .unbind();
-    debug!("Function args: {:?}, {:?}", first_arg, second_arg);
 
     match function.number_of_params {
-        0 => handler.call0(),
         1 => {
-            // If function only has 1 parameter, pass only the response (second_arg) for backward compatibility
             if pyo3::types::PyDictMethods::get_item(kwargs, "global_dependencies")
                 .is_ok_and(|it| !it.is_none())
                 || pyo3::types::PyDictMethods::get_item(kwargs, "router_dependencies")
@@ -161,8 +162,6 @@ where
             }
         }
         2 => {
-            // If function has 2 parameters, pass both request and response
-            // Check if there are dependencies to pass via kwargs
             if pyo3::types::PyDictMethods::get_item(kwargs, "global_dependencies")
                 .is_ok_and(|it| !it.is_none())
                 || pyo3::types::PyDictMethods::get_item(kwargs, "router_dependencies")
@@ -205,7 +204,6 @@ pub async fn execute_after_middleware_function(
     } else {
         Python::with_gil(|py| -> Result<MiddlewareReturn> {
             let output = get_function_output_with_two_args(function, py, request, response)?;
-            debug!("After middleware output: {:?}", output);
 
             match output.extract::<Response>() {
                 Ok(response) => Ok(MiddlewareReturn::Response(response)),
@@ -230,73 +228,39 @@ pub async fn execute_http_function(
         })?
         .await?;
 
-        Python::with_gil(|py| -> PyResult<ResponseType> {
-            debug!(
-                "Output object type: {}",
-                output
-                    .bind(py)
-                    .get_type()
-                    .name()
-                    .map(|n| n.to_string())
-                    .unwrap_or_else(|_| "unknown".to_string())
-            );
-            // Try to extract as StreamingResponse first, then as Response
-            match output.extract::<StreamingResponse>(py) {
-                Ok(streaming_response) => {
-                    debug!("Successfully extracted as StreamingResponse");
-                    Ok(ResponseType::Streaming(streaming_response))
-                }
-                Err(streaming_err) => {
-                    debug!("Failed to extract as StreamingResponse: {}", streaming_err);
-                    match output.extract::<Response>(py) {
-                        Ok(response) => {
-                            debug!("Successfully extracted as Response");
-                            Ok(ResponseType::Standard(response))
-                        }
-                        Err(response_err) => {
-                            debug!("Failed to extract as Response: {}", response_err);
-                            Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
-                                "Function must return a Response or StreamingResponse",
-                            ))
-                        }
-                    }
-                }
-            }
-        })
+        Python::with_gil(|py| extract_response_type(output, py))
     } else {
-        Python::with_gil(|py| -> PyResult<ResponseType> {
+        Python::with_gil(|py| {
             let output = get_function_output(function, py, request)?;
-            debug!(
-                "Output object type: {}",
-                output
-                    .get_type()
-                    .name()
-                    .map(|n| n.to_string())
-                    .unwrap_or_else(|_| "unknown".to_string())
-            );
-            // Try to extract as StreamingResponse first, then as Response
-            match output.extract::<StreamingResponse>() {
-                Ok(streaming_response) => {
-                    debug!("Successfully extracted as StreamingResponse");
-                    Ok(ResponseType::Streaming(streaming_response))
-                }
-                Err(streaming_err) => {
-                    debug!("Failed to extract as StreamingResponse: {}", streaming_err);
-                    match output.extract::<Response>() {
-                        Ok(response) => {
-                            debug!("Successfully extracted as Response");
-                            Ok(ResponseType::Standard(response))
-                        }
-                        Err(response_err) => {
-                            debug!("Failed to extract as Response: {}", response_err);
-                            Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
-                                "Function must return a Response or StreamingResponse",
-                            ))
-                        }
-                    }
-                }
-            }
+            extract_response_type_bound(output)
         })
+    }
+}
+
+#[inline]
+fn extract_response_type(output: Py<PyAny>, py: Python) -> PyResult<ResponseType> {
+    // Try Response first (most common case), then StreamingResponse
+    match output.extract::<Response>(py) {
+        Ok(response) => Ok(ResponseType::Standard(response)),
+        Err(_) => match output.extract::<StreamingResponse>(py) {
+            Ok(streaming_response) => Ok(ResponseType::Streaming(streaming_response)),
+            Err(_) => Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+                "Function must return a Response or StreamingResponse",
+            )),
+        },
+    }
+}
+
+#[inline]
+fn extract_response_type_bound(output: pyo3::Bound<'_, pyo3::PyAny>) -> PyResult<ResponseType> {
+    match output.extract::<Response>() {
+        Ok(response) => Ok(ResponseType::Standard(response)),
+        Err(_) => match output.extract::<StreamingResponse>() {
+            Ok(streaming_response) => Ok(ResponseType::Streaming(streaming_response)),
+            Err(_) => Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+                "Function must return a Response or StreamingResponse",
+            )),
+        },
     }
 }
 
@@ -306,7 +270,6 @@ pub async fn execute_startup_handler(
 ) -> Result<()> {
     if let Some(function) = event_handler {
         if function.is_async {
-            debug!("Startup event handler async");
             Python::with_gil(|py| {
                 pyo3_async_runtimes::into_future_with_locals(
                     task_locals,
@@ -315,7 +278,6 @@ pub async fn execute_startup_handler(
             })?
             .await?;
         } else {
-            debug!("Startup event handler");
             Python::with_gil(|py| function.handler.call0(py))?;
         }
     }
