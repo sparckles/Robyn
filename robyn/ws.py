@@ -33,8 +33,8 @@ class WebSocketAdapter:
         self._connector = websocket_connector
         self._channel = channel
 
-    async def receive(self) -> str | bytes:
-        """Receive the next message. Returns str for text frames, bytes for binary frames.
+    async def receive_text(self) -> str:
+        """Receive the next text message. Blocks until a message arrives.
         Raises WebSocketDisconnect when the connection is closed."""
         if self._channel is None:
             raise WebSocketDisconnect(reason="No message channel available")
@@ -43,46 +43,31 @@ class WebSocketAdapter:
             raise WebSocketDisconnect()
         return result
 
-    async def receive_text(self) -> str:
-        """Receive the next text frame. Raises TypeError if a binary frame arrives.
-        Raises WebSocketDisconnect when the connection is closed."""
-        msg = await self.receive()
-        if not isinstance(msg, str):
-            raise TypeError(f"Expected text frame, got {type(msg).__name__}")
-        return msg
-
     async def receive_bytes(self) -> bytes:
-        """Receive the next binary frame. Raises TypeError if a text frame arrives.
-        Raises WebSocketDisconnect when the connection is closed."""
-        msg = await self.receive()
-        if not isinstance(msg, bytes):
-            raise TypeError(f"Expected binary frame, got {type(msg).__name__}")
-        return msg
+        """Receive binary data (decoded from text)."""
+        text = await self.receive_text()
+        return text.encode("utf-8")
 
     async def receive_json(self):
-        """Receive and decode JSON data from a text frame.
+        """Receive and decode JSON data.
         Raises WebSocketDisconnect when the connection is closed."""
         text = await self.receive_text()
         return orjson.loads(text)
 
-    async def send(self, data: str | bytes):
-        """Send data to this WebSocket client. str sends a text frame, bytes sends a binary frame."""
-        await self._connector.async_send_to(self._connector.id, data)
-
     async def send_text(self, data: str):
-        """Send a text frame to this WebSocket client."""
+        """Send text data to this WebSocket client."""
         await self._connector.async_send_to(self._connector.id, data)
 
     async def send_bytes(self, data: bytes):
-        """Send a binary frame to this WebSocket client."""
-        await self._connector.async_send_to(self._connector.id, data)
+        """Send binary data (as text) to this WebSocket client."""
+        await self._connector.async_send_to(self._connector.id, data.decode("utf-8"))
 
     async def send_json(self, data):
-        """Send JSON data as a text frame to this WebSocket client."""
+        """Send JSON data to this WebSocket client."""
         await self.send_text(orjson.dumps(data).decode())
 
-    async def broadcast(self, data: str | bytes):
-        """Broadcast data to all connected WebSocket clients on this endpoint."""
+    async def broadcast(self, data: str):
+        """Broadcast text data to all connected WebSocket clients on this endpoint."""
         await self._connector.async_broadcast(data)
 
     async def close(self):
