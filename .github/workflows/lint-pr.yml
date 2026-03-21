@@ -4,9 +4,8 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - "robyn/**"
-      - "integration_tests/**"
-      - "unit_tests/**"
+      - "**/*.py"
+      - "pyproject.toml"
       - ".github/workflows/lint-pr.yml"
 
 concurrency:
