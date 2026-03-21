@@ -585,6 +585,20 @@ class BaseRobyn(ABC):
 
         self.dependencies.merge_dependencies(router)
 
+    def add_security_scheme(self, name: str, scheme: dict, apply_globally: bool = True):
+        """
+        Add a security scheme to the OpenAPI spec.
+
+        :param name: the name of the security scheme (e.g. "BearerAuth")
+        :param scheme: the security scheme definition per OpenAPI spec
+            (e.g. {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"})
+        :param apply_globally: if True, the scheme is added as a global security
+            requirement so Swagger UI presents it for all endpoints
+        """
+        if self.config.disable_openapi or self.openapi is None:
+            return
+        self.openapi.add_security_scheme(name, scheme, apply_globally)
+
     def configure_authentication(self, authentication_handler: AuthenticationHandler):
         """
         Configures the authentication handler for the application.
