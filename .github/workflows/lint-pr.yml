@@ -3,7 +3,15 @@ name: Lint PR
 on:
   pull_request:
     branches: [main]
+    paths:
+      - "robyn/**"
+      - "integration_tests/**"
+      - "unit_tests/**"
+      - ".github/workflows/lint-pr.yml"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   UV_SYSTEM_PYTHON: 1
