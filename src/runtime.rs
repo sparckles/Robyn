@@ -1,3 +1,8 @@
+// Portions of this file are adapted from Granian (https://github.com/emmett-framework/granian)
+// Copyright 2021 Giovanni Barillari
+// Licensed under the BSD 3-Clause License
+// See: https://github.com/emmett-framework/granian/blob/master/LICENSE
+
 use futures::FutureExt;
 use pyo3::{prelude::*, IntoPyObjectExt};
 use std::{future::Future, sync::Arc, sync::OnceLock};
