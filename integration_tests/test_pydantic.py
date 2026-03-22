@@ -1,3 +1,5 @@
+import importlib.util
+
 import pytest
 import requests
 
@@ -5,12 +7,7 @@ from integration_tests.helpers.http_methods_helpers import json_post
 
 BASE_URL = "http://127.0.0.1:8080"
 
-try:
-    import pydantic
-
-    _HAS_PYDANTIC = True
-except ImportError:
-    _HAS_PYDANTIC = False
+_HAS_PYDANTIC = importlib.util.find_spec("pydantic") is not None
 
 pytestmark = pytest.mark.skipif(not _HAS_PYDANTIC, reason="pydantic not installed")
 
