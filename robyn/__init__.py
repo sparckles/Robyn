@@ -23,6 +23,7 @@ from robyn.reloader import compile_rust_files
 from robyn.responses import SSEMessage, SSEResponse, StreamingResponse, html, serve_file, serve_html
 from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, WebSocketConnector, get_version
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
+from robyn.testing import TestClient
 from robyn.types import Directory, JsonBody
 from robyn.ws import WebSocketAdapter, WebSocketDisconnect, create_websocket_decorator
 
@@ -811,4 +812,5 @@ __all__ = [
     "WebSocketDisconnect",
     "JsonBody",
     "MCPApp",
+    "TestClient",
 ]
