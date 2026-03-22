@@ -1,3 +1,8 @@
+// Portions of this file are adapted from Granian (https://github.com/emmett-framework/granian)
+// Copyright 2021 Giovanni Barillari
+// Licensed under the BSD 3-Clause License
+// See: https://github.com/emmett-framework/granian/blob/master/LICENSE
+
 use pyo3::{exceptions::PyStopIteration, prelude::*, IntoPyObjectExt};
 use std::sync::{atomic, Arc, OnceLock, RwLock};
 use tokio::sync::Notify;
