@@ -144,9 +144,7 @@ class TestClient:
     def _build(self) -> None:
         for route in self.app.router.get_routes():
             method = _method_str(route.route_type)
-            self._http_routes.setdefault(method, _RouteTable()).add(
-                route.route, route.function
-            )
+            self._http_routes.setdefault(method, _RouteTable()).add(route.route, route.function)
 
         for mw in self.app.middleware_router.get_global_middlewares():
             if mw.middleware_type == MiddlewareType.BEFORE_REQUEST:
