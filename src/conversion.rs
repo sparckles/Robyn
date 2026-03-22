@@ -1,9 +1,6 @@
-// Derived from Granian (https://github.com/emmett-framework/granian)
-// Copyright 2021 Giovanni Barillari
-// Licensed under the BSD 3-Clause License
-// See: https://github.com/emmett-framework/granian/blob/master/LICENSE
-
 use pyo3::prelude::*;
+
+// Adapted for robyn - returns Py<PyAny> directly
 pub(crate) enum FutureResultToPy {
     None,
     Err(PyResult<()>),

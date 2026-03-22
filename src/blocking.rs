@@ -1,8 +1,3 @@
-// Derived from Granian (https://github.com/emmett-framework/granian)
-// Copyright 2021 Giovanni Barillari
-// Licensed under the BSD 3-Clause License
-// See: https://github.com/emmett-framework/granian/blob/master/LICENSE
-
 use crossbeam_channel as channel;
 use pyo3::prelude::*;
 use std::{
