@@ -177,6 +177,16 @@ impl Headers {
         }
     }
 
+    /// Merge headers from `headers` into `self`, but only for keys not already present.
+    /// This gives middleware-set headers precedence over global defaults,
+    /// preventing duplicate `Access-Control-Allow-Origin` (and similar) violations.
+    pub fn set_missing(&mut self, headers: &Headers) {
+        for iter in headers.headers.iter() {
+            let (key, values) = iter.pair();
+            self.headers.entry(key.clone()).or_insert_with(|| values.clone());
+        }
+    }
+
     pub fn from_actix_headers(req_headers: &HeaderMap) -> Self {
         let headers = Headers::default();
 
