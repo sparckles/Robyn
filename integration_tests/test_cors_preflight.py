@@ -106,9 +106,7 @@ def test_options_preflight_no_duplicate_allow_origin(cors_server):
     origin_values = raw_headers.getall("Access-Control-Allow-Origin", None) if hasattr(raw_headers, "getall") else None
 
     if origin_values is not None:
-        assert len(origin_values) == 1, (
-            f"Access-Control-Allow-Origin appeared {len(origin_values)} times: {origin_values}"
-        )
+        assert len(origin_values) == 1, f"Access-Control-Allow-Origin appeared {len(origin_values)} times: {origin_values}"
 
     assert resp.headers["Access-Control-Allow-Origin"] == ALLOWED_ORIGIN
 
