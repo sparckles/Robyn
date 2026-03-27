@@ -265,6 +265,10 @@ export const navigation = [
         href: '/documentation/en/api_reference/redirection',
       },
       {
+        href: '/documentation/en/api_reference/static-files',
+        title: 'Static Files',
+      },
+      {
         href: '/documentation/en/api_reference/file-uploads',
         title: 'File Uploads',
       },
@@ -458,6 +462,7 @@ const translations = {
       CORS: 'CORS',
       Templating: 'Templating',
       Redirection: 'Redirection',
+      'Static Files': 'Static Files',
       'File Uploads': 'File Uploads',
       'Form Data': 'Form Data',
       Websockets: 'Websockets',
@@ -504,6 +509,7 @@ const translations = {
       CORS: '跨域资源共享',
       Templating: '模板系统',
       Redirection: '重定向',
+      'Static Files': '静态文件',
       'File Uploads': '文件上传',
       'Form Data': '表单数据',
       'Websockets': 'WebSocket',

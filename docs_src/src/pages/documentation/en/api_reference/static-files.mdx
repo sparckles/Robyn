@@ -1,0 +1,196 @@
+export const description =
+  'Learn how to serve static files and directories in Robyn, including SPAs, file listings, and individual file serving.'
+
+## Static Files and Directory Serving
+
+Robyn provides flexible static file serving powered by Rust's actix-files for high performance. You can serve individual files, entire directories, or SPA build folders.
+
+## Serving Directories {{ tag: 'app.serve_directory' }}
+
+<Row>
+<Col>
+Use `app.serve_directory()` to serve an entire directory of static files. This is commonly used for serving frontend build outputs (React, Vue, etc.) or static asset folders.
+
+The method supports three modes:
+- **SPA/Build mode**: Set `index_file` to serve a build folder with an index
+- **File listing mode**: Set `show_files_listing=True` for browsable directory listings
+- **File-only mode**: Default — serves files directly without directory browsing
+</Col>
+<Col sticky>
+
+<CodeGroup title="Directory Serving" tag="STATIC" label="/static">
+
+```python
+import os
+from robyn import Robyn
+
+app = Robyn(__file__)
+
+# Mode 1: SPA / Build folder (e.g., React, Vue)
+app.serve_directory(
+    route="/",
+    directory_path=os.path.join(os.path.dirname(__file__), "build"),
+    index_file="index.html",
+)
+
+# Mode 2: Browsable file listing
+app.serve_directory(
+    route="/files",
+    directory_path="./uploads",
+    show_files_listing=True,
+)
+
+# Mode 3: Direct file serving (no listing, no index)
+app.serve_directory(
+    route="/assets",
+    directory_path="./static",
+)
+
+app.start(port=8080)
+```
+
+</CodeGroup>
+</Col>
+</Row>
+
+### Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `route` | `str` | required | URL path prefix for the directory |
+| `directory_path` | `str` | required | Filesystem path to the directory |
+| `index_file` | `str` | `None` | Index file to serve for directory requests (e.g., `"index.html"`) |
+| `show_files_listing` | `bool` | `False` | Enable browsable directory listing |
+
+---
+
+## Serving Individual Files {{ tag: 'serve_file' }}
+
+<Row>
+<Col>
+Use `serve_file()` to serve a specific file from a route handler. The function automatically detects the MIME type based on the file extension and sets appropriate headers.
+</Col>
+<Col sticky>
+
+<CodeGroup title="File Serving" tag="GET" label="/download">
+
+```python
+from robyn import Robyn, Request, serve_file
+
+app = Robyn(__file__)
+
+@app.get("/download/report")
+async def download_report(request: Request):
+    return serve_file(
+        "./reports/annual.pdf",
+        file_name="annual-report.pdf"  # optional, defaults to basename
+    )
+
+app.start(port=8080)
+```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
+## Serving HTML Files {{ tag: 'serve_html' }}
+
+<Row>
+<Col>
+Use `serve_html()` to serve an HTML file with the correct `text/html` content type.
+</Col>
+<Col sticky>
+
+<CodeGroup title="HTML Serving" tag="GET" label="/">
+
+```python
+from robyn import Robyn, Request, serve_html
+
+app = Robyn(__file__)
+
+@app.get("/")
+async def index(request: Request):
+    return serve_html("./templates/index.html")
+
+app.start(port=8080)
+```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
+## Serving HTML Strings {{ tag: 'html()' }}
+
+<Row>
+<Col>
+Use the `html()` helper to return an HTML string directly with the correct content type, without reading from a file.
+</Col>
+<Col sticky>
+
+<CodeGroup title="HTML String" tag="GET" label="/page">
+
+```python
+from robyn import Robyn, Request, html
+
+app = Robyn(__file__)
+
+@app.get("/page")
+async def dynamic_page(request: Request):
+    return html("<h1>Hello from Robyn</h1><p>This is a dynamic page.</p>")
+
+app.start(port=8080)
+```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
+## Combining Static Files with API Routes
+
+<Row>
+<Col>
+You can serve static files alongside API routes in the same application. This is common when building a full-stack app with a frontend SPA and a backend API.
+</Col>
+<Col sticky>
+
+<CodeGroup title="Combined" tag="FULL" label="/app">
+
+```python
+import os
+from robyn import Robyn, Request
+
+app = Robyn(__file__)
+
+# Serve the React/Vue build
+app.serve_directory(
+    route="/",
+    directory_path=os.path.join(os.path.dirname(__file__), "frontend/build"),
+    index_file="index.html",
+)
+
+# API routes work alongside static serving
+@app.get("/api/health")
+def health():
+    return {"status": "ok"}
+
+@app.get("/api/users")
+async def get_users(request: Request):
+    return [{"id": 1, "name": "Alice"}]
+
+app.start(port=8080)
+```
+
+</CodeGroup>
+</Col>
+</Row>
+
+## What's next?
+
+- [File Uploads](/documentation/en/api_reference/file-uploads)
+- [Form Data](/documentation/en/api_reference/form_data)
