@@ -1,15 +1,18 @@
+export const description =
+  'Learn how to use existing Robyn plugins and create your own to extend the framework.'
+
 ## Plugins
 
-Robyn is a versatile and extensible web framework that allows anyone to make plugins over the top of Robyn.
-Plugins in Robyn allow you to enhance and customize the framework's functionality to suit your specific needs. Here are some noteworthy plugins that can supercharge your Robyn-based projects:
+Robyn is a versatile and extensible web framework that allows anyone to build plugins on top of Robyn.
+Plugins in Robyn are standard Python packages that use Robyn's public APIs — there is no special plugin runtime or registry. You build them using the same tools you use to build Robyn applications: routes, middleware, SubRouters, dependency injection, and lifecycle events.
+
+## Community Plugins
 
 ### Rate Limit Plugin
 
-- Description: This plugin enables you to implement rate limiting for your Robyn application's routes. It helps prevent abuse, and brute-force attacks and ensures fair usage of your resources.
-- GitHub repository: [robyn-rate-limits](https://github.com/IdoKendo/robyn_rate_limits)
-- Installation:
-  `python -m pip install robyn-rate-limits`
-- Usage:
+- **Description**: Enables rate limiting for your Robyn application's routes to prevent abuse and brute-force attacks.
+- **GitHub**: [robyn-rate-limits](https://github.com/IdoKendo/robyn_rate_limits)
+- **Installation**: `pip install robyn-rate-limits`
 
 ```py
 from robyn import Robyn, Request
@@ -30,12 +33,140 @@ def h():
 app.start(port=8080)
 ```
 
-In this example, robyn-rate-limits is used to enforce a rate limit of 3 requests per 100-seconds window for specific routes. If a client exceeds this limit, they will receive a "Too many requests" message.
+---
 
-The plugin integrates seamlessly with the Robyn web framework, enhancing the security and stability of your application by preventing excessive requests from a single client.
+## Creating Your Own Plugin
+
+A Robyn plugin is a regular Python package that depends on `robyn` and uses its public API. There is no special base class or registration mechanism — any pattern that works in a Robyn app works in a plugin.
+
+### Plugin Patterns
+
+There are several common patterns for building plugins:
+
+#### 1. Middleware-Based Plugins
+
+Middleware plugins hook into `before_request` or `after_request` to process every request. This is ideal for cross-cutting concerns like logging, authentication, or rate limiting.
+
+```py
+from robyn import Request, Response, Headers
+
+class RequestLogger:
+    """A plugin that logs all incoming requests."""
+
+    def __init__(self, log_headers: bool = False):
+        self.log_headers = log_headers
+
+    def handle(self, request: Request):
+        print(f"[{request.method}] {request.url.path}")
+        if self.log_headers:
+            print(f"  Headers: {request.headers}")
+
+# Usage in an app:
+# logger = RequestLogger(log_headers=True)
+# @app.before_request()
+# def log_request(request: Request):
+#     logger.handle(request)
+```
+
+#### 2. SubRouter-Based Plugins
+
+SubRouter plugins bundle a set of routes that can be included in any Robyn app via `app.include_router()`. This is ideal for reusable API modules like health checks, admin panels, or metrics endpoints.
+
+```py
+from robyn import SubRouter, Request
+
+def create_health_router(prefix: str = "/health") -> SubRouter:
+    """A plugin that adds health check endpoints."""
+    router = SubRouter(__name__, prefix=prefix)
+
+    @router.get("/")
+    def health_check():
+        return {"status": "healthy"}
+
+    @router.get("/ready")
+    def readiness_check():
+        return {"ready": True}
+
+    return router
+
+# Usage in an app:
+# from my_plugin import create_health_router
+# app.include_router(create_health_router())
+```
+
+#### 3. Lifecycle Plugins
+
+Plugins can hook into application startup and shutdown events for initialization and cleanup tasks like database connections or background workers.
+
+```py
+from robyn import Robyn
+
+def register_db_plugin(app: Robyn, connection_string: str):
+    """A plugin that manages a database connection pool."""
+
+    @app.startup_handler
+    async def init_db():
+        app.state["db"] = await create_pool(connection_string)
+        print("Database pool initialized")
+
+    @app.shutdown_handler
+    async def close_db():
+        await app.state["db"].close()
+        print("Database pool closed")
+```
+
+### Package Structure
+
+A typical Robyn plugin package looks like this:
+
+```
+robyn-my-plugin/
+├── pyproject.toml
+├── README.md
+├── src/
+│   └── robyn_my_plugin/
+│       ├── __init__.py
+│       └── core.py
+└── tests/
+    └── test_plugin.py
+```
+
+Your `pyproject.toml` should declare `robyn` as a dependency:
+
+```toml
+[project]
+name = "robyn-my-plugin"
+version = "0.1.0"
+dependencies = ["robyn>=0.80.0"]
+```
+
+### Naming Conventions
+
+To make your plugin discoverable, we recommend:
+- Package name: `robyn-<plugin-name>` (e.g., `robyn-rate-limits`, `robyn-cors-helper`)
+- Import name: `robyn_<plugin_name>` (e.g., `robyn_rate_limits`)
+
+### Testing Your Plugin
+
+Test your plugin by creating a minimal Robyn app in your test suite:
+
+```py
+import pytest
+from robyn import Robyn
+from robyn_my_plugin import create_health_router
+
+@pytest.fixture
+def app():
+    app = Robyn(__name__)
+    app.include_router(create_health_router())
+    return app
+
+def test_health_endpoint(app):
+    # Use Robyn's test client or integration test patterns
+    pass
+```
 
 ## What's next?
 
-After exploring the plugins, Batman wanted to explore the community.So, Robyn pointed him to
-
+- [Community Resources](/documentation/en/community-resources)
 - [Future Roadmap](/documentation/en/api_reference/future-roadmap)
