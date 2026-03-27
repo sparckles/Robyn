@@ -86,6 +86,8 @@ impl Server {
         _py: Python,
         socket: PyRef<SocketHeld>,
         workers: usize,
+        client_timeout: u64,
+        keep_alive_timeout: u64,
     ) -> PyResult<()> {
         pyo3_log::init();
 
@@ -275,9 +277,9 @@ impl Server {
                             },
                         ))
                 })
-                .keep_alive(KeepAlive::Os)
+                .keep_alive(KeepAlive::Timeout(std::time::Duration::from_secs(keep_alive_timeout)))
                 .workers(workers)
-                .client_request_timeout(std::time::Duration::from_secs(0))
+                .client_request_timeout(std::time::Duration::from_secs(client_timeout))
                 .listen(raw_socket.into())
                 .unwrap()
                 .run()
