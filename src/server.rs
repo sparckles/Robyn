@@ -40,6 +40,11 @@ const MAX_PAYLOAD_SIZE: &str = "ROBYN_MAX_PAYLOAD_SIZE";
 const DEFAULT_MAX_PAYLOAD_SIZE: usize = 1_000_000; // 1Mb
 
 static STARTED: AtomicBool = AtomicBool::new(false);
+static REQUEST_COUNT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+pub fn get_request_count() -> u64 {
+    REQUEST_COUNT.load(Relaxed)
+}
 
 #[derive(Clone)]
 struct Directory {
@@ -482,6 +487,8 @@ async fn index(
     excluded_response_headers_paths: web::Data<Option<Vec<String>>>,
     req: HttpRequest,
 ) -> ResponseType {
+    REQUEST_COUNT.fetch_add(1, Relaxed);
+
     if !HttpMethod::is_supported(req.method()) {
         return ResponseType::Standard(Response::method_not_allowed(None));
     }

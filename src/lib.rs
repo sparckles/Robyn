@@ -34,10 +34,16 @@ fn get_version() -> String {
     env!("CARGO_PKG_VERSION").into()
 }
 
+#[pyfunction]
+fn get_request_count() -> u64 {
+    server::get_request_count()
+}
+
 #[pymodule]
 pub fn robyn(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     // the pymodule class/function to make the rustPyFunctions available
     m.add_function(wrap_pyfunction!(get_version, m)?)?;
+    m.add_function(wrap_pyfunction!(get_request_count, m)?)?;
 
     m.add_class::<Server>()?;
     m.add_class::<Headers>()?;

@@ -7,6 +7,10 @@ from typing import Callable, Optional, Union
 def get_version() -> str:
     pass
 
+def get_request_count() -> int:
+    """Returns the total number of HTTP requests handled by this worker process."""
+    pass
+
 class SocketHeld:
     def __init__(self, url: str, port: int):
         pass

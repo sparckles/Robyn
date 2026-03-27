@@ -84,6 +84,14 @@ class Config:
             default=False,
             help="Fast mode. It sets the optimal values for processes, workers and log level. However, you can override them.",
         )
+        parser.add_argument(
+            "--max-requests",
+            dest="max_requests",
+            type=int,
+            default=None,
+            required=False,
+            help="Recycle worker processes after this many requests. Helps contain memory leaks. [Default: None (disabled)]",
+        )
 
         args, unknown_args = parser.parse_known_args()
         self.fast = args.fast
@@ -99,6 +107,7 @@ class Config:
         self.file_path = None
         self.disable_openapi = args.disable_openapi
         self.log_level = args.log_level
+        self.max_requests = args.max_requests
 
         if self.fast:
             # doing this here before every other check
