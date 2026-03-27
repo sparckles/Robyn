@@ -575,7 +575,7 @@ async fn index(
         .is_some_and(|paths| paths.contains(&request.url.path));
 
     if !is_excluded {
-        response.headers_mut().extend(&global_response_headers);
+        response.headers_mut().set_missing(&global_response_headers);
     }
 
     // After middleware
