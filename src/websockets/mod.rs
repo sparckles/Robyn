@@ -87,20 +87,21 @@ impl Actor for WebSocketConnector {
             )
         });
 
-        let function = self.router.get("connect").unwrap();
-        execute_ws_function(function, &self.task_locals, ctx, self);
+        match self.router.get("connect") {
+            Some(function) => execute_ws_function(function, &self.task_locals, ctx, self),
+            None => log::error!("No 'connect' handler registered for WebSocket"),
+        }
 
         debug!("Actor is alive");
     }
 
     fn stopped(&mut self, ctx: &mut Self::Context) {
-        // Drop the sender to close the channel.
-        // This causes any pending `channel.receive()` in Python to return None,
-        // which the WebSocketAdapter converts to WebSocketDisconnect.
         self.message_sender.take();
 
-        let function = self.router.get("close").unwrap();
-        execute_ws_function(function, &self.task_locals, ctx, self);
+        match self.router.get("close") {
+            Some(function) => execute_ws_function(function, &self.task_locals, ctx, self),
+            None => log::error!("No 'close' handler registered for WebSocket"),
+        }
         debug!("Actor is dead");
     }
 }
@@ -170,15 +171,21 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebSocketConnecto
 #[pymethods]
 impl WebSocketConnector {
     pub fn sync_send_to(&self, recipient_id: String, message: String) {
-        let recipient_id = Uuid::parse_str(&recipient_id).unwrap();
+        let recipient_id = match Uuid::parse_str(&recipient_id) {
+            Ok(id) => id,
+            Err(e) => {
+                log::error!("Invalid recipient_id '{}': {}", recipient_id, e);
+                return;
+            }
+        };
 
         match self.registry_addr.try_send(SendText {
             message,
             sender_id: self.id,
             recipient_id,
         }) {
-            Ok(_) => println!("Message sent successfully"),
-            Err(e) => println!("Failed to send message: {}", e),
+            Ok(_) => log::debug!("Message sent successfully"),
+            Err(e) => log::error!("Failed to send message: {}", e),
         }
     }
 
@@ -189,7 +196,15 @@ impl WebSocketConnector {
         message: String,
     ) -> PyResult<Py<PyAny>> {
         let registry = self.registry_addr.clone();
-        let recipient_id = Uuid::parse_str(&recipient_id).unwrap();
+        let recipient_id = match Uuid::parse_str(&recipient_id) {
+            Ok(id) => id,
+            Err(e) => {
+                return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                    "Invalid recipient_id '{}': {}",
+                    recipient_id, e
+                )));
+            }
+        };
         let sender_id = self.id;
 
         let awaitable = runtime::future_into_py(py, async move {
@@ -198,8 +213,8 @@ impl WebSocketConnector {
                 sender_id,
                 recipient_id,
             }) {
-                Ok(_) => println!("Message sent successfully"),
-                Err(e) => println!("Failed to send message: {}", e),
+                Ok(_) => log::debug!("Message sent successfully"),
+                Err(e) => log::error!("Failed to send message: {}", e),
             }
             Ok(())
         })?;
@@ -213,8 +228,8 @@ impl WebSocketConnector {
             message,
             sender_id: self.id,
         }) {
-            Ok(_) => println!("Message sent successfully"),
-            Err(e) => println!("Failed to send message: {}", e),
+            Ok(_) => log::debug!("Broadcast sent successfully"),
+            Err(e) => log::error!("Failed to broadcast message: {}", e),
         }
     }
 
@@ -224,8 +239,8 @@ impl WebSocketConnector {
 
         let awaitable = runtime::future_into_py(py, async move {
             match registry.try_send(SendMessageToAll { message, sender_id }) {
-                Ok(_) => println!("Message sent successfully"),
-                Err(e) => println!("Failed to send message: {}", e),
+                Ok(_) => log::debug!("Broadcast sent successfully"),
+                Err(e) => log::error!("Failed to broadcast message: {}", e),
             }
             Ok(())
         })?;
