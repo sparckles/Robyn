@@ -1,0 +1,54 @@
+export const description =
+  'Find ways to contribute to Robyn, discover beginner-friendly issues, and learn how to get started with development.'
+
+## Good First Issues
+
+Looking for a place to start? These issues are specifically curated for newcomers:
+
+- [Good First Issues](https://github.com/sparckles/robyn/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) — Beginner-friendly tasks to help you get started
+- [Good Second Issues](https://github.com/sparckles/robyn/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+second+issue%22) — Slightly more involved tasks for contributors who have made their first contribution
+
+## Help Wanted
+
+These issues need extra attention from the community:
+
+- [Help Wanted](https://github.com/sparckles/robyn/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) — Issues where maintainers are looking for community contributions
+- [Documentation](https://github.com/sparckles/robyn/issues?q=is%3Aissue+is%3Aopen+label%3A%22documentation%22) — Help improve Robyn's documentation
+- [Bug Fixes](https://github.com/sparckles/robyn/issues?q=is%3Aissue+is%3Aopen+label%3A%22bug%22) — Known bugs that need fixing
+
+## How to Contribute
+
+1. **Fork the repository** — Start by forking [sparckles/robyn](https://github.com/sparckles/robyn) on GitHub
+2. **Clone your fork** — `git clone https://github.com/<your-username>/robyn.git`
+3. **Create a branch** — `git checkout -b your-feature-branch`
+4. **Set up the development environment:**
+
+```bash
+# Install Rust (required for the runtime)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Install Python dependencies
+pip install maturin
+
+# Build the Rust extension and install in development mode
+maturin develop
+
+# Install test dependencies
+pip install -e ".[all]"
+```
+
+5. **Make your changes** and write tests if applicable
+6. **Push and open a Pull Request** against the `main` branch
+
+For detailed contribution guidelines, see the [Contributing Guide](https://github.com/sparckles/robyn/blob/main/CONTRIBUTING.md).
+
+## Community
+
+- [Discord](https://discord.gg/rkERZ5eNU8) — Join our Discord server for discussions, questions, and real-time help
+- [GitHub Discussions](https://github.com/sparckles/robyn/discussions) — For longer-form conversations and proposals
+- [Twitter/X](https://twitter.com/robaborin) — Follow for updates and announcements
+
+## Next Steps
+
+- [Community Resources](/documentation/en/community-resources)
+- [Plugins](/documentation/en/plugins)

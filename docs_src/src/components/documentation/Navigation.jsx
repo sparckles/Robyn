@@ -353,6 +353,10 @@ export const navigation = [
         href: '/documentation/en/community-resources#blogs',
         title: 'Blogs',
       },
+      {
+        href: '/documentation/en/needs-help',
+        title: 'Needs Help',
+      },
     ],
   },
   {
@@ -476,6 +480,7 @@ const translations = {
       'AI Agents': 'AI Agents',
       Talks: 'Talks',
       Blogs: 'Blogs',
+      'Needs Help': 'Needs Help',
       Introduction: 'Introduction',
       'Upcoming Features': 'Upcoming Features',
       Railway: 'Railway',
@@ -523,6 +528,7 @@ const translations = {
       'AI Agents': 'AI 代理',
       'Talks': '演讲',
       'Blogs': '博客',
+      'Needs Help': '需要帮助',
       'Introduction': '引入',
       'Upcoming Features': '即将推出的功能',
       'Railway': 'Railway',
