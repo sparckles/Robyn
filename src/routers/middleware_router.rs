@@ -90,13 +90,15 @@ impl MiddlewareRouter {
         Ok(())
     }
 
-    pub fn get_global_middlewares(&self, middleware_type: &MiddlewareType) -> Vec<FunctionInfo> {
+    pub fn get_global_middlewares(
+        &self,
+        middleware_type: &MiddlewareType,
+    ) -> std::sync::RwLockReadGuard<'_, Vec<FunctionInfo>> {
         self.globals
             .get(middleware_type)
             .unwrap()
             .read()
             .unwrap()
-            .to_vec()
     }
 
     pub fn has_any_middleware(&self) -> bool {
