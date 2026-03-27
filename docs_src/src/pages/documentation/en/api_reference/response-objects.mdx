@@ -1,0 +1,375 @@
+export const description =
+  'Robyn supports multiple response return styles. This page documents every way a route handler can return data, from simple strings to streaming responses.'
+
+## Response Return Styles
+
+Robyn automatically converts your handler's return value into a proper HTTP response. Here's a complete reference of every supported return style.
+
+## String {{ tag: 'text/plain' }}
+
+<Row>
+<Col>
+The simplest return style. Returns the string as `text/plain` with status 200. The string is encoded as UTF-8 automatically.
+</Col>
+<Col sticky>
+
+<CodeGroup title="Response" tag="GET" label="/hello">
+
+    ```python
+    from robyn import Robyn
+
+    app = Robyn(__file__)
+
+    @app.get("/hello")
+    def hello():
+        return "Hello, World!"
+    ```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
+## Dictionary or List {{ tag: 'application/json' }}
+
+<Row>
+<Col>
+Returning a `dict` or `list` automatically serializes the value to JSON and sets `Content-Type: application/json` with status 200.
+</Col>
+<Col sticky>
+
+<CodeGroup title="Response" tag="GET" label="/data">
+
+    ```python {{ title: 'Dictionary' }}
+    @app.get("/user")
+    def get_user():
+        return {"name": "Alice", "age": 30}
+    ```
+
+    ```python {{ title: 'List' }}
+    @app.get("/items")
+    def get_items():
+        return [1, 2, 3, "four", {"nested": True}]
+    ```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
+## Response Object {{ tag: 'full control' }}
+
+<Row>
+<Col>
+The `Response` object gives you full control over status code, headers, and body. Use it when you need to customize everything about the response.
+</Col>
+<Col sticky>
+
+<CodeGroup title="Response" tag="GET" label="/custom">
+
+    ```python
+    from robyn import Robyn, Response, Headers
+
+    app = Robyn(__file__)
+
+    @app.get("/custom")
+    async def custom_response():
+        return Response(
+            status_code=200,
+            headers=Headers({"X-Custom": "value"}),
+            description="OK",
+        )
+    ```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
+## Bytes {{ tag: 'application/octet-stream' }}
+
+<Row>
+<Col>
+Returning a `bytes` object sets `Content-Type: application/octet-stream` with status 200. Useful for binary data such as images or file content generated in memory.
+</Col>
+<Col sticky>
+
+<CodeGroup title="Response" tag="GET" label="/binary">
+
+    ```python
+    @app.get("/binary")
+    async def binary_data():
+        return b"binary data"
+    ```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
+## Pydantic BaseModel {{ tag: 'application/json' }}
+
+<Row>
+<Col>
+If you return a Pydantic `BaseModel` instance, Robyn serializes it to JSON automatically with `Content-Type: application/json` and status 200.
+
+**Caveat:** Pydantic must be installed as an optional dependency (`pip install pydantic`). If it is not installed, the model will not be detected and will fall through to the default string serialization.
+</Col>
+<Col sticky>
+
+<CodeGroup title="Response" tag="GET" label="/model">
+
+    ```python
+    from pydantic import BaseModel
+    from robyn import Robyn
+
+    app = Robyn(__file__)
+
+    class User(BaseModel):
+        name: str
+        email: str
+        age: int
+
+    @app.get("/model")
+    def get_model():
+        return User(name="Alice", email="alice@example.com", age=30)
+    ```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
+## Tuple (body, headers, status_code) {{ tag: 'custom' }}
+
+<Row>
+<Col>
+A 3-element tuple of `(body, headers, status_code)` lets you set a custom status code and headers inline. The body element is itself formatted using the same rules (string, dict, bytes, etc.).
+
+**Caveat:** The tuple must have exactly 3 elements. Passing a tuple with a different number of elements raises a `ValueError`.
+</Col>
+<Col sticky>
+
+<CodeGroup title="Response" tag="POST" label="/create">
+
+    ```python {{ title: 'Error response' }}
+    from robyn import Headers
+
+    @app.get("/not-found")
+    def not_found():
+        return (
+            {"error": "Resource not found"},
+            Headers({"X-Error": "true"}),
+            404,
+        )
+    ```
+
+    ```python {{ title: 'Created response' }}
+    @app.post("/users")
+    def create_user():
+        return (
+            {"id": 1, "name": "Alice"},
+            Headers({}),
+            201,
+        )
+    ```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
+## FileResponse / serve_file / serve_html {{ tag: 'file serving' }}
+
+<Row>
+<Col>
+Robyn provides helper functions for serving files. `serve_file` sets `Content-Disposition: attachment` and auto-detects the MIME type. `serve_html` sets `Content-Type: text/html`. You can also construct a `FileResponse` directly for full control.
+</Col>
+<Col sticky>
+
+<CodeGroup title="Response" tag="GET" label="/download">
+
+    ```python {{ title: 'serve_file' }}
+    from robyn import Robyn
+    from robyn.responses import serve_file
+
+    app = Robyn(__file__)
+
+    @app.get("/download")
+    def download():
+        return serve_file("report.pdf")
+    ```
+
+    ```python {{ title: 'serve_html' }}
+    from robyn.responses import serve_html
+
+    @app.get("/page")
+    def page():
+        return serve_html("templates/index.html")
+    ```
+
+    ```python {{ title: 'FileResponse' }}
+    from robyn.responses import FileResponse
+    from robyn.robyn import Headers
+
+    @app.get("/custom-file")
+    def custom_file():
+        return FileResponse(
+            file_path="data/export.csv",
+            status_code=200,
+            headers=Headers({"Content-Type": "text/csv"}),
+        )
+    ```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
+## html() {{ tag: 'text/html' }}
+
+<Row>
+<Col>
+The `html()` helper wraps a raw HTML string into a `Response` with `Content-Type: text/html` and status 200. Useful for returning dynamically generated HTML without a template engine.
+</Col>
+<Col sticky>
+
+<CodeGroup title="Response" tag="GET" label="/page">
+
+    ```python
+    from robyn import Robyn
+    from robyn.responses import html
+
+    app = Robyn(__file__)
+
+    @app.get("/page")
+    def page():
+        return html("<h1>Hello, World!</h1><p>Welcome to Robyn.</p>")
+    ```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
+## StreamingResponse {{ tag: 'chunked streaming' }}
+
+<Row>
+<Col>
+`StreamingResponse` sends chunked responses using a generator (sync or async). The default `media_type` is `text/event-stream`, but you can set it to any MIME type. The body is streamed chunk by chunk, so the client receives data as it is produced.
+</Col>
+<Col sticky>
+
+<CodeGroup title="Response" tag="GET" label="/stream">
+
+    ```python {{ title: 'Sync generator' }}
+    from robyn import Robyn
+    from robyn.responses import StreamingResponse
+
+    app = Robyn(__file__)
+
+    @app.get("/stream")
+    def stream():
+        def generate():
+            for i in range(5):
+                yield f"chunk {i}\n"
+
+        return StreamingResponse(
+            content=generate(),
+            media_type="text/plain",
+        )
+    ```
+
+    ```python {{ title: 'Async generator' }}
+    import asyncio
+    from robyn.responses import StreamingResponse
+
+    @app.get("/stream-async")
+    async def stream_async():
+        async def generate():
+            for i in range(5):
+                await asyncio.sleep(0.5)
+                yield f"chunk {i}\n"
+
+        return StreamingResponse(
+            content=generate(),
+            media_type="text/plain",
+        )
+    ```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
+## SSEResponse {{ tag: 'text/event-stream' }}
+
+<Row>
+<Col>
+`SSEResponse` is a convenience wrapper around `StreamingResponse` pre-configured for Server-Sent Events. Use it with the `SSEMessage` helper to format messages in the SSE protocol. Each message can have optional `event`, `id`, and `retry` fields.
+
+For a deeper guide on Server-Sent Events, see the [SSE documentation](/documentation/en/api_reference/server_sent_events).
+</Col>
+<Col sticky>
+
+<CodeGroup title="Response" tag="GET" label="/events">
+
+    ```python {{ title: 'Basic SSE' }}
+    from robyn import Robyn
+    from robyn.responses import SSEResponse, SSEMessage
+    import time
+
+    app = Robyn(__file__)
+
+    @app.get("/events")
+    def events():
+        def event_stream():
+            for i in range(10):
+                yield SSEMessage(
+                    f"Event {i}",
+                    event="update",
+                    id=str(i),
+                )
+                time.sleep(1)
+
+        return SSEResponse(event_stream())
+    ```
+
+    ```python {{ title: 'Async SSE' }}
+    import asyncio
+    from robyn.responses import SSEResponse, SSEMessage
+
+    @app.get("/events/async")
+    async def async_events():
+        async def event_stream():
+            for i in range(10):
+                await asyncio.sleep(0.5)
+                yield SSEMessage(
+                    f"Async event {i}",
+                    event="update",
+                    id=str(i),
+                )
+
+        return SSEResponse(event_stream())
+    ```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
+## What's next?
+
+Now that you know every way to return data from a Robyn handler, explore file uploads to learn how to receive files from clients.
+
+- [File Uploads](/documentation/en/api_reference/file-uploads)
