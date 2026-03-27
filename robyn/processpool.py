@@ -270,12 +270,14 @@ def spawn_process(
         loop = asyncio.get_event_loop()
 
         if max_requests and max_requests > 0:
+
             def _check_max_requests():
                 if get_request_count() >= max_requests:
                     logger.info("Max requests (%d) reached, worker shutting down for recycling.", max_requests)
                     loop.stop()
                 else:
                     loop.call_later(5, _check_max_requests)
+
             loop.call_later(5, _check_max_requests)
 
         loop.run_forever()
