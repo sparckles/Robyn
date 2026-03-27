@@ -154,7 +154,21 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebSocketConnecto
                     let _ = sender.send(Some(text.to_string()));
                 }
             }
-            Ok(ws::Message::Binary(bin)) => ctx.binary(bin),
+            Ok(ws::Message::Binary(bin)) => {
+                if let Some(ref sender) = self.message_sender {
+                    match String::from_utf8(bin.to_vec()) {
+                        Ok(text) => {
+                            let _ = sender.send(Some(text));
+                        }
+                        Err(_) => {
+                            debug!("Received non-UTF-8 binary WebSocket frame, echoing back");
+                            ctx.binary(bin);
+                        }
+                    }
+                } else {
+                    ctx.binary(bin);
+                }
+            }
             Ok(ws::Message::Close(_close_reason)) => {
                 debug!("Socket was closed");
                 // Drop sender to signal channel closure so receive() returns None.
