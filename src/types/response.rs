@@ -204,8 +204,8 @@ impl<'py> IntoPyObject<'py> for Response {
         let description = if self.description.is_empty() {
             "".into_pyobject(py)?.into_any()
         } else {
-            match String::from_utf8(self.description.clone()) {
-                Ok(description) => description.into_pyobject(py)?.into_any(),
+            match std::str::from_utf8(&self.description) {
+                Ok(s) => s.into_pyobject(py)?.into_any(),
                 Err(_) => PyBytes::new(py, &self.description).into_any(),
             }
         };
