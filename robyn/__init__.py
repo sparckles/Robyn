@@ -343,6 +343,10 @@ class BaseRobyn(ABC):
             logger.error("No openAPI")
             return
 
+        if self.authentication_handler:
+            # self.authentication_handler.token_getter
+            self.openapi.add_global_security_scheme(name="bearerAuth", scheme={"type": "http", "scheme": "bearer"})
+
         self.router.prepare_routes_openapi(self.openapi, self.included_routers)
 
         self.add_route(
