@@ -1,5 +1,5 @@
 use crate::executors::{
-    execute_after_middleware_function, execute_http_function, execute_middleware_function,
+    execute_after_middleware_chain, execute_before_middleware_chain, execute_http_function,
     execute_startup_handler,
 };
 
@@ -503,42 +503,37 @@ async fn index(
     let route = format!("{}{}", req.method(), request.url.path);
 
     // Before middleware
-    let before_middlewares =
+    let mut before_middlewares =
         middleware_router.get_global_middlewares(&MiddlewareType::BeforeRequest);
     let route_before = middleware_router.get_route(&MiddlewareType::BeforeRequest, &route);
 
-    let mut early_response: Option<Response> = None;
-    if !before_middlewares.is_empty() || route_before.is_some() {
-        let mut all_before = before_middlewares;
-        if let Some((function, route_params)) = route_before {
-            all_before.push(function);
-            request.path_params = route_params;
-        }
-        for before_middleware in all_before {
-            request = match execute_middleware_function(&request, &before_middleware).await {
-                Ok(MiddlewareReturn::Request(r)) => r,
-                Ok(MiddlewareReturn::Response(r)) => {
-                    early_response = Some(r);
-                    break;
-                }
-                Err(e) => {
-                    let msg = match e.downcast_ref::<PyErr>() {
-                        Some(py_err) => get_traceback(py_err),
-                        None => format!("{e:?}"),
-                    };
-                    error!(
-                        "Error executing before middleware for `{}`: {}",
-                        request.url.path, msg
-                    );
-                    return ResponseType::Standard(Response::internal_server_error(None));
-                }
-            };
-        }
+    if let Some((function, route_params)) = route_before {
+        before_middlewares.push(function);
+        request.path_params = route_params;
     }
 
-    let mut response = if let Some(r) = early_response {
-        ResponseType::Standard(r)
-    } else if let Some(cached) = const_router.get_cached_route(&http_method, &request.url.path) {
+    // Execute all before middlewares with batched GIL acquisition
+    if !before_middlewares.is_empty() {
+        request = match execute_before_middleware_chain(&request, &before_middlewares).await {
+            Ok(MiddlewareReturn::Request(r)) => r,
+            Ok(MiddlewareReturn::Response(r)) => {
+                return ResponseType::Standard(r);
+            }
+            Err(e) => {
+                let msg = match e.downcast_ref::<PyErr>() {
+                    Some(py_err) => get_traceback(py_err),
+                    None => format!("{e:?}"),
+                };
+                error!(
+                    "Error executing before middleware for `{}`: {}",
+                    request.url.path, msg
+                );
+                return ResponseType::Standard(Response::internal_server_error(None));
+            }
+        };
+    }
+
+    let mut response = if let Some(cached) = const_router.get_cached_route(&http_method, &request.url.path) {
         let mut resp = Response {
             status_code: cached.status.as_u16(),
             response_type: "text".to_string(),
@@ -579,43 +574,38 @@ async fn index(
     }
 
     // After middleware
-    let after_middlewares = middleware_router.get_global_middlewares(&MiddlewareType::AfterRequest);
+    let mut after_middlewares =
+        middleware_router.get_global_middlewares(&MiddlewareType::AfterRequest);
     let route_after = middleware_router.get_route(&MiddlewareType::AfterRequest, &route);
 
-    if !after_middlewares.is_empty() || route_after.is_some() {
-        let mut all_after = after_middlewares;
-        if let Some((function, _)) = route_after {
-            all_after.push(function);
-        }
-        for after_middleware in all_after {
-            if let ResponseType::Standard(std_response) = response {
-                response = match execute_after_middleware_function(
-                    &request,
-                    &std_response,
-                    &after_middleware,
-                )
-                .await
-                {
-                    Ok(MiddlewareReturn::Request(_)) => {
-                        error!("After middleware returned a request");
-                        return ResponseType::Standard(Response::internal_server_error(None));
-                    }
-                    Ok(MiddlewareReturn::Response(r)) => ResponseType::Standard(r),
-                    Err(e) => {
-                        let msg = match e.downcast_ref::<PyErr>() {
-                            Some(py_err) => get_traceback(py_err),
-                            None => format!("{e:?}"),
-                        };
-                        error!(
-                            "Error executing after middleware for `{}`: {}",
-                            request.url.path, msg
-                        );
-                        return ResponseType::Standard(Response::internal_server_error(Some(
-                            &std_response.headers,
-                        )));
-                    }
-                };
-            }
+    if let Some((function, _)) = route_after {
+        after_middlewares.push(function);
+    }
+
+    // Execute all after middlewares with batched GIL acquisition
+    if !after_middlewares.is_empty() {
+        if let ResponseType::Standard(std_response) = response {
+            response = match execute_after_middleware_chain(&std_response, &after_middlewares).await
+            {
+                Ok(MiddlewareReturn::Request(_)) => {
+                    error!("After middleware returned a request");
+                    return ResponseType::Standard(Response::internal_server_error(None));
+                }
+                Ok(MiddlewareReturn::Response(r)) => ResponseType::Standard(r),
+                Err(e) => {
+                    let msg = match e.downcast_ref::<PyErr>() {
+                        Some(py_err) => get_traceback(py_err),
+                        None => format!("{e:?}"),
+                    };
+                    error!(
+                        "Error executing after middleware for `{}`: {}",
+                        request.url.path, msg
+                    );
+                    return ResponseType::Standard(Response::internal_server_error(Some(
+                        &std_response.headers,
+                    )));
+                }
+            };
         }
     }
 
