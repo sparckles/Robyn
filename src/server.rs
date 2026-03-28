@@ -81,11 +81,22 @@ impl Server {
         }
     }
 
+    /// Start the Robyn server.
+    ///
+    /// * `client_timeout` – maximum seconds to wait for the client to transmit
+    ///   the complete request headers. This does **not** limit handler execution
+    ///   time or overall request duration; it only guards against slow or
+    ///   stalled clients during the initial header-reading phase. Mapped to
+    ///   actix-web's `client_request_timeout`.
+    /// * `keep_alive_timeout` – seconds to keep an idle connection open before
+    ///   closing it. Mapped to actix-web's `KeepAlive::Timeout`.
     pub fn start(
         &mut self,
         _py: Python,
         socket: PyRef<SocketHeld>,
         workers: usize,
+        client_timeout: u64,
+        keep_alive_timeout: u64,
     ) -> PyResult<()> {
         pyo3_log::init();
 
@@ -275,9 +286,9 @@ impl Server {
                             },
                         ))
                 })
-                .keep_alive(KeepAlive::Os)
+                .keep_alive(KeepAlive::Timeout(std::time::Duration::from_secs(keep_alive_timeout)))
                 .workers(workers)
-                .client_request_timeout(std::time::Duration::from_secs(0))
+                .client_request_timeout(std::time::Duration::from_secs(client_timeout))
                 .listen(raw_socket.into())
                 .unwrap()
                 .run()

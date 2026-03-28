@@ -633,8 +633,15 @@ class Robyn(BaseRobyn):
         :param host str: represents the host at which the server is listening
         :param port int: represents the port number at which the server is listening
         :param _check_port bool: represents if the port should be checked if it is already in use
-        :param client_timeout int: timeout for client connections in seconds (default: 30)
-        :param keep_alive_timeout int: timeout for keep-alive connections in seconds (default: 20)
+        :param client_timeout int: maximum time in seconds to wait for the client to send
+            the complete request headers (default: 30). This does **not** limit handler
+            execution time or the overall request duration — it only guards against slow
+            or stalled clients during the initial header-reading phase. Under the hood
+            this maps to actix-web's ``client_request_timeout``.
+            Can be overridden with the ``ROBYN_CLIENT_TIMEOUT`` environment variable.
+        :param keep_alive_timeout int: time in seconds to keep an idle connection open
+            before closing it (default: 20). Can be overridden with the
+            ``ROBYN_KEEP_ALIVE_TIMEOUT`` environment variable.
         """
 
         host = os.getenv("ROBYN_HOST", host)
