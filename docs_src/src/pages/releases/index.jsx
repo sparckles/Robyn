@@ -50,24 +50,31 @@ const ChangelogPage = ({ releases }) => {
 }
 
 export async function getStaticProps() {
-  const response = await axios.get(
-    'https://api.github.com/repos/sparckles/robyn/releases'
-  )
+  let releases = []
 
-  const releases = await Promise.all(
-    response.data.map(async (release) => ({
-      id: release.id,
-      name: release.name,
-      body: await serialize(release.body),
-      publishedAt: release.published_at,
-      tag: release.tag_name,
-    }))
-  )
+  try {
+    const response = await axios.get(
+      'https://api.github.com/repos/sparckles/robyn/releases'
+    )
+
+    releases = await Promise.all(
+      response.data.map(async (release) => ({
+        id: release.id,
+        name: release.name,
+        body: await serialize(release.body),
+        publishedAt: release.published_at,
+        tag: release.tag_name,
+      }))
+    )
+  } catch (error) {
+    console.error('Failed to fetch releases:', error)
+  }
 
   return {
     props: {
       releases,
     },
+    revalidate: 3600,
   }
 }
 

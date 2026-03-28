@@ -1,35 +1,8 @@
 import Image from 'next/image'
 import sparcklesLogo from '@/images/sparckles-logo.png'
-import { useEffect, useState } from 'react'
 import { SEO, OrganizationJsonLd } from '@/components/SEO'
 
-function Contributors() {
-  const [contributors, setContributors] = useState([])
-  const [error, setError] = useState(null)
-
-  useEffect(() => {
-    const fetchContributors = async () => {
-      try {
-        const response = await fetch(
-          `https://api.github.com/repos/sparckles/robyn/contributors`
-        )
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-        const data = await response.json()
-        setContributors(data)
-      } catch (error) {
-        setError(error.toString())
-      }
-    }
-
-    fetchContributors()
-  }, [])
-
-  if (error) {
-    return <div className="text-red-500">{error}</div>
-  }
-
+function Contributors({ contributors }) {
   return (
     <div className="flex flex-wrap bg-transparent">
       {contributors.map((contributor) => (
@@ -51,7 +24,7 @@ function Contributors() {
     </div>
   )
 }
-export default function Community() {
+export default function Community({ contributors }) {
   return (
     <>
       <SEO
@@ -96,7 +69,7 @@ export default function Community() {
                 <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
                   Our Amazing Contributors
                 </h2>
-                <Contributors />
+                <Contributors contributors={contributors} />
               </div>
             </div>
           </div>
@@ -257,4 +230,32 @@ export default function Community() {
       </main>
     </>
   )
+}
+
+export async function getStaticProps() {
+  let contributors = []
+
+  try {
+    const response = await fetch(
+      'https://api.github.com/repos/sparckles/robyn/contributors?per_page=100',
+      { headers: { 'Accept': 'application/vnd.github.v3+json' } }
+    )
+
+    if (response.ok) {
+      const data = await response.json()
+      contributors = data.map(({ id, html_url, avatar_url, login }) => ({
+        id,
+        html_url,
+        avatar_url,
+        login,
+      }))
+    }
+  } catch {
+    // Fall back to empty list; page still renders without contributors
+  }
+
+  return {
+    props: { contributors },
+    revalidate: 3600,
+  }
 }
