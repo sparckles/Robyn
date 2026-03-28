@@ -401,6 +401,10 @@ export const navigation = [
         href: '/documentation/en/plugins',
         title: 'Plugins',
       },
+      {
+        href: '/documentation/en/plugins#creating-your-own-plugin',
+        title: 'Creating Plugins',
+      },
     ],
   },
   {
@@ -490,6 +494,7 @@ const translations = {
       'Upcoming Features': 'Upcoming Features',
       Railway: 'Railway',
       'Exposing Ports': 'Exposing Ports',
+      'Creating Plugins': 'Creating Plugins',
     },
   },
   zh: {
@@ -538,7 +543,8 @@ const translations = {
       'Introduction': '引入',
       'Upcoming Features': '即将推出的功能',
       'Railway': 'Railway',
-      'Exposing Ports': '开放端口'
+      'Exposing Ports': '开放端口',
+      'Creating Plugins': '创建插件'
     }
   }
 }
