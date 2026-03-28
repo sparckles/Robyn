@@ -81,6 +81,15 @@ impl Server {
         }
     }
 
+    /// Start the Robyn server.
+    ///
+    /// * `client_timeout` – maximum seconds to wait for the client to transmit
+    ///   the complete request headers. This does **not** limit handler execution
+    ///   time or overall request duration; it only guards against slow or
+    ///   stalled clients during the initial header-reading phase. Mapped to
+    ///   actix-web's `client_request_timeout`.
+    /// * `keep_alive_timeout` – seconds to keep an idle connection open before
+    ///   closing it. Mapped to actix-web's `KeepAlive::Timeout`.
     pub fn start(
         &mut self,
         _py: Python,

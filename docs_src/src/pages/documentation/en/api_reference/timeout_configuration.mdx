@@ -24,7 +24,7 @@ async def hello(request):
 app.start(
     host="0.0.0.0", 
     port=8080,
-    client_timeout=30,          # Client connection timeout (seconds)
+    client_timeout=30,          # Max seconds to read request headers (seconds)
     keep_alive_timeout=20       # Keep-alive timeout (seconds)
 )
 ```
@@ -46,8 +46,8 @@ python app.py
 
 | Parameter | Default | Description | Environment Variable |
 |-----------|---------|-------------|---------------------|
-| `client_timeout` | 30 | Maximum time (seconds) for client request processing | `ROBYN_CLIENT_TIMEOUT` |
-| `keep_alive_timeout` | 20 | Time (seconds) to keep idle connections alive | `ROBYN_KEEP_ALIVE_TIMEOUT` |
+| `client_timeout` | 30 | Maximum time (seconds) to wait for the client to transmit the complete request headers. This does **not** limit handler execution time or overall request duration — it only guards against slow or stalled clients during the initial header-reading phase. Maps to actix-web's `client_request_timeout`. | `ROBYN_CLIENT_TIMEOUT` |
+| `keep_alive_timeout` | 20 | Time (seconds) to keep idle connections alive before closing them | `ROBYN_KEEP_ALIVE_TIMEOUT` |
 
 ## Usage Examples
 
@@ -65,7 +65,7 @@ app.start(client_timeout=30)
 app.start(
     host="0.0.0.0",
     port=8080,
-    client_timeout=60,      # Allow longer processing time
+    client_timeout=60,      # More time for clients on slow networks to send headers
     keep_alive_timeout=15   # Shorter keep-alive for faster turnover
 )
 ```
@@ -75,7 +75,7 @@ app.start(
 ```python
 # Development-friendly settings
 app.start(
-    client_timeout=300,     # Long timeout for debugging
+    client_timeout=300,     # Generous header-read timeout for debugging
     keep_alive_timeout=60   # Longer keep-alive for testing
 )
 ```
@@ -85,7 +85,7 @@ app.start(
 ```python
 # Optimized for load testing with tools like wrk
 app.start(
-    client_timeout=10,      # Quick timeouts
+    client_timeout=10,      # Quick header-read timeout
     keep_alive_timeout=5    # Fast connection turnover
 )
 ```
@@ -130,9 +130,11 @@ If you encounter file descriptor exhaustion:
 - Lower `keep_alive_timeout` (5-15s)
 - Moderate `client_timeout` (15-30s)
 
-**For long-running operations:**
-- Higher `client_timeout` (60-300s)
+**For clients on slow networks:**
+- Higher `client_timeout` (60-120s) so slow clients have time to send headers
 - Standard `keep_alive_timeout` (20-30s)
+
+> **Note:** `client_timeout` only controls how long the server waits for request headers — it does not cap handler execution time. If you need to limit how long a handler can run, implement that logic within the handler itself (e.g. with `asyncio.wait_for`).
 
 
 ## Best Practices

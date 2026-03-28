@@ -24,7 +24,7 @@ async def hello(request):
 app.start(
     host="0.0.0.0", 
     port=8080,
-    client_timeout=30,          # 客户端连接超时（秒）
+    client_timeout=30,          # 读取请求头的最大等待时间（秒）
     keep_alive_timeout=20,      # 保持连接超时（秒）
 )
 ```
@@ -46,7 +46,7 @@ python app.py
 
 | 参数 | 默认值 | 描述 | 环境变量 |
 |------|-------|------|---------|
-| `client_timeout` | 30 | 客户端请求处理的最大时间（秒） | `ROBYN_CLIENT_TIMEOUT` |
+| `client_timeout` | 30 | 等待客户端发送完整请求头的最大时间（秒）。此参数**不**限制处理函数执行时间或整个请求的持续时间——它仅防止客户端在发送头信息阶段过慢或停滞。对应 actix-web 的 `client_request_timeout`。 | `ROBYN_CLIENT_TIMEOUT` |
 | `keep_alive_timeout` | 20 | 保持空闲连接的时间（秒） | `ROBYN_KEEP_ALIVE_TIMEOUT` |
 
 ## 使用示例
@@ -65,7 +65,7 @@ app.start(client_timeout=30)
 app.start(
     host="0.0.0.0",
     port=8080,
-    client_timeout=60,      # 允许更长的处理时间
+    client_timeout=60,      # 为慢速网络客户端留更多时间发送请求头
     keep_alive_timeout=15,  # 更短的保持连接以加快周转
 )
 ```
@@ -75,7 +75,7 @@ app.start(
 ```python
 # 开发友好设置
 app.start(
-    client_timeout=300,     # 调试的长超时
+    client_timeout=300,     # 调试时宽裕的请求头读取超时
     keep_alive_timeout=60,  # 测试的长保持连接
 )
 ```
@@ -85,7 +85,7 @@ app.start(
 ```python
 # 针对 wrk 等工具的负载测试优化
 app.start(
-    client_timeout=10,      # 快速超时
+    client_timeout=10,      # 快速请求头读取超时
     keep_alive_timeout=5,   # 快速连接周转
 )
 ```
@@ -130,9 +130,11 @@ app.start(client_timeout=30)
 - 较低的 `keep_alive_timeout` (5-15秒)
 - 中等的 `client_timeout` (15-30秒)
 
-**对于长时间运行的操作：**
-- 较高的 `client_timeout` (60-300秒)
+**对于慢速网络上的客户端：**
+- 较高的 `client_timeout` (60-120秒)，为慢速客户端留出发送请求头的时间
 - 标准的 `keep_alive_timeout` (20-30秒)
+
+> **注意：** `client_timeout` 仅控制服务器等待请求头的时间——它不会限制处理函数的执行时间。如需限制处理函数运行时长，请在处理函数内部实现该逻辑（例如使用 `asyncio.wait_for`）。
 
 ## 与其他框架的比较
 
