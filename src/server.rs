@@ -509,13 +509,14 @@ async fn index(
 
     let mut early_response: Option<Response> = None;
     if !before_middlewares.is_empty() || route_before.is_some() {
-        let mut all_before = before_middlewares;
-        if let Some((function, route_params)) = route_before {
-            all_before.push(function);
+        let route_fn = if let Some((function, route_params)) = route_before {
             request.path_params = route_params;
-        }
-        for before_middleware in all_before {
-            request = match execute_middleware_function(&request, &before_middleware).await {
+            Some(function)
+        } else {
+            None
+        };
+        for before_middleware in before_middlewares.iter().chain(route_fn.as_ref()) {
+            request = match execute_middleware_function(&request, before_middleware).await {
                 Ok(MiddlewareReturn::Request(r)) => r,
                 Ok(MiddlewareReturn::Response(r)) => {
                     early_response = Some(r);
@@ -583,16 +584,13 @@ async fn index(
     let route_after = middleware_router.get_route(&MiddlewareType::AfterRequest, &route);
 
     if !after_middlewares.is_empty() || route_after.is_some() {
-        let mut all_after = after_middlewares;
-        if let Some((function, _)) = route_after {
-            all_after.push(function);
-        }
-        for after_middleware in all_after {
+        let route_fn = route_after.map(|(function, _)| function);
+        for after_middleware in after_middlewares.iter().chain(route_fn.as_ref()) {
             if let ResponseType::Standard(std_response) = response {
                 response = match execute_after_middleware_function(
                     &request,
                     &std_response,
-                    &after_middleware,
+                    after_middleware,
                 )
                 .await
                 {
