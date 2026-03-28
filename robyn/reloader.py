@@ -127,7 +127,7 @@ class EventHandler(FileSystemEventHandler):
 
     def reload(self) -> None:
         self.stop_server()
-        logger.info("Reloading the server")
+        print("Reloading the server")
 
         new_env = os.environ.copy()
         new_env["IS_RELOADER_RUNNING"] = "True"  # This is used to check if a reloader is already running
