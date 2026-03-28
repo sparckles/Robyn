@@ -51,9 +51,18 @@ def run_processes(
     )
 
     def terminating_signal_handler(_sig, _frame):
-        logger.info("Terminating server!!", bold=True)
+        logger.info("Gracefully shutting down server...", bold=True)
         for process in process_pool:
-            process.kill()
+            process.terminate()
+
+        for process in process_pool:
+            process.join(timeout=30)
+            if process.is_alive():
+                logger.warning("Process %s did not shut down in time, forcing kill.", process.pid)
+                process.kill()
+                process.join(timeout=5)
+
+        sys.exit(0)
 
     signal.signal(signal.SIGINT, terminating_signal_handler)
     signal.signal(signal.SIGTERM, terminating_signal_handler)
@@ -220,6 +229,12 @@ def spawn_process(
     try:
         server.start(socket, workers)
         loop = asyncio.get_event_loop()
+
+        if not sys.platform.startswith("win32"):
+            loop.add_signal_handler(signal.SIGTERM, loop.stop)
+
         loop.run_forever()
     except KeyboardInterrupt:
+        pass
+    finally:
         loop.close()

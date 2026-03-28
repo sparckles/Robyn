@@ -123,7 +123,13 @@ class EventHandler(FileSystemEventHandler):
 
     def stop_server(self) -> None:
         if self.process:
-            os.kill(self.process.pid, signal.SIGTERM)  # Stop the subprocess using os.kill()
+            self.process.terminate()
+            try:
+                self.process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                logger.warning("Process %s did not shut down in time, forcing kill.", self.process.pid)
+                self.process.kill()
+                self.process.wait()
 
     def reload(self) -> None:
         self.stop_server()
@@ -137,10 +143,6 @@ class EventHandler(FileSystemEventHandler):
 
         clean_rust_binaries(self.built_rust_binaries)
         self.built_rust_binaries = compile_rust_files(self.directory_path)
-
-        prev_process = self.process
-        if prev_process:
-            prev_process.kill()
 
         self.process = subprocess.Popen(
             [sys.executable, *arguments],
