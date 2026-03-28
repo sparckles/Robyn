@@ -1,7 +1,5 @@
 import logging
 from enum import Enum
-from typing import Optional
-
 
 class Colors(Enum):
     BLUE = "\033[94m"
@@ -9,7 +7,6 @@ class Colors(Enum):
     GREEN = "\033[92m"
     YELLOW = "\033[93m"
     RED = "\033[91m"
-
 
 class Logger:
     HEADER = "\033[95m"
@@ -23,7 +20,7 @@ class Logger:
     def _format_msg(
         self,
         msg: str,
-        color: Optional[Colors],
+        color: Colors | None,
         bold: bool,
         underline: bool,
     ):
@@ -40,7 +37,7 @@ class Logger:
         self,
         msg: str,
         *args,
-        color: Optional[Colors] = Colors.RED,
+        color: Colors | None = Colors.RED,
         bold: bool = False,
         underline: bool = False,
     ):
@@ -50,7 +47,7 @@ class Logger:
         self,
         msg: str,
         *args,
-        color: Optional[Colors] = Colors.YELLOW,
+        color: Colors | None = Colors.YELLOW,
         bold: bool = False,
         underline: bool = False,
     ):
@@ -60,7 +57,7 @@ class Logger:
         self,
         msg: str,
         *args,
-        color: Optional[Colors] = Colors.GREEN,
+        color: Colors | None = Colors.GREEN,
         bold: bool = False,
         underline: bool = False,
     ):
@@ -75,6 +72,5 @@ class Logger:
         underline: bool = False,
     ):
         self.logger.debug(self._format_msg(msg, color, bold, underline), *args)
-
 
 logger = Logger()

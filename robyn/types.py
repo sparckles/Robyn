@@ -1,15 +1,14 @@
 from dataclasses import dataclass
-from typing import Dict, NewType, Optional, TypedDict
+from typing import NewType, TypedDict
 
 from robyn._param_utils import QueryParamValidationError
-
 
 @dataclass
 class Directory:
     route: str
     directory_path: str
     show_files_listing: bool
-    index_file: Optional[str]
+    index_file: str | None
 
     def as_list(self):
         return [
@@ -19,13 +18,11 @@ class Directory:
             self.index_file,
         ]
 
-
-PathParams = NewType("PathParams", Dict[str, str])
+PathParams = NewType("PathParams", dict[str, str])
 Method = NewType("Method", str)
-FormData = NewType("FormData", Dict[str, str])
-Files = NewType("Files", Dict[str, bytes])
-IPAddress = NewType("IPAddress", Optional[str])
-
+FormData = NewType("FormData", dict[str, str])
+Files = NewType("Files", dict[str, bytes])
+IPAddress = NewType("IPAddress", str | None)
 
 class JSONResponse(TypedDict):
     """
@@ -34,14 +31,12 @@ class JSONResponse(TypedDict):
 
     pass
 
-
 class Body:
     """
     A type alias for openapi request bodies. This class should be inherited by the request body class annotation.
     """
 
     pass
-
 
 class JsonBody:
     """
@@ -76,6 +71,5 @@ class JsonBody:
     """
 
     pass
-
 
 __all__ = ["JSONResponse", "Body", "JsonBody", "QueryParamValidationError", "Directory", "PathParams", "Method", "FormData", "Files", "IPAddress"]

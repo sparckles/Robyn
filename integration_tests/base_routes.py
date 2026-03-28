@@ -4,7 +4,7 @@ import os
 import pathlib
 import time
 from collections import defaultdict
-from typing import List, Optional, TypedDict
+from typing import TypedDict
 
 from integration_tests.subroutes import di_subrouter, static_router, sub_router
 from robyn import Headers, Request, Response, Robyn, SSEMessage, SSEResponse, WebSocketDisconnect, jsonify, serve_file, serve_html
@@ -1223,7 +1223,7 @@ def sample_openapi_endpoint():
 
 class Initial(Body):
     is_present: bool
-    letter: Optional[str]
+    letter: str | None
 
 
 class FullName(Body):
@@ -1451,22 +1451,22 @@ async def easy_access_async(id: int, q: str, page: int = 1):
 
 
 @app.get("/easy/sync/optional")
-def easy_access_optional_sync(name: str, age: Optional[int] = None):
+def easy_access_optional_sync(name: str, age: int | None = None):
     return {"name": name, "age": age}
 
 
 @app.get("/easy/async/optional")
-async def easy_access_optional_async(name: str, age: Optional[int] = None):
+async def easy_access_optional_async(name: str, age: int | None = None):
     return {"name": name, "age": age}
 
 
 @app.get("/easy/sync/list")
-def easy_access_list_sync(tag: List[str]):
+def easy_access_list_sync(tag: list[str]):
     return {"tags": tag}
 
 
 @app.get("/easy/async/list")
-async def easy_access_list_async(tag: List[str]):
+async def easy_access_list_async(tag: list[str]):
     return {"tags": tag}
 
 
@@ -1665,7 +1665,7 @@ def main():
     app.include_router(static_router)
 
     class BasicAuthHandler(AuthenticationHandler):
-        def authenticate(self, request: Request) -> Optional[Identity]:
+        def authenticate(self, request: Request) -> Identity | None:
             token = self.token_getter.get_token(request)
             if token is not None:
                 # Useless but we call the set_token method for testing purposes

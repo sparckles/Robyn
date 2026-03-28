@@ -2,7 +2,6 @@ import asyncio
 import signal
 import sys
 import webbrowser
-from typing import Dict, List, Optional
 
 from multiprocess import Process  # type: ignore
 
@@ -12,25 +11,24 @@ from robyn.robyn import FunctionInfo, Headers, Server, SocketHeld
 from robyn.router import GlobalMiddleware, Route, RouteMiddleware
 from robyn.types import Directory
 
-
 def run_processes(
     url: str,
     port: int,
-    directories: List[Directory],
+    directories: list[Directory],
     request_headers: Headers,
-    routes: List[Route],
-    global_middlewares: List[GlobalMiddleware],
-    route_middlewares: List[RouteMiddleware],
-    web_sockets: Dict[str, dict],
-    event_handlers: Dict[Events, FunctionInfo],
+    routes: list[Route],
+    global_middlewares: list[GlobalMiddleware],
+    route_middlewares: list[RouteMiddleware],
+    web_sockets: dict[str, dict],
+    event_handlers: dict[Events, FunctionInfo],
     workers: int,
     processes: int,
     response_headers: Headers,
-    excluded_response_headers_paths: Optional[List[str]],
+    excluded_response_headers_paths: list[str] | None,
     open_browser: bool,
     client_timeout: int = 30,
     keep_alive_timeout: int = 20,
-) -> List[Process]:
+) -> list[Process]:
     socket = SocketHeld(url, port)
 
     process_pool = init_processpool(
@@ -68,23 +66,22 @@ def run_processes(
 
     return process_pool
 
-
 def init_processpool(
-    directories: List[Directory],
+    directories: list[Directory],
     request_headers: Headers,
-    routes: List[Route],
-    global_middlewares: List[GlobalMiddleware],
-    route_middlewares: List[RouteMiddleware],
-    web_sockets: Dict[str, dict],
-    event_handlers: Dict[Events, FunctionInfo],
+    routes: list[Route],
+    global_middlewares: list[GlobalMiddleware],
+    route_middlewares: list[RouteMiddleware],
+    web_sockets: dict[str, dict],
+    event_handlers: dict[Events, FunctionInfo],
     socket: SocketHeld,
     workers: int,
     processes: int,
     response_headers: Headers,
-    excluded_response_headers_paths: Optional[List[str]],
+    excluded_response_headers_paths: list[str] | None,
     client_timeout: int = 30,
     keep_alive_timeout: int = 20,
-) -> List[Process]:
+) -> list[Process]:
     process_pool: List = []
     if sys.platform.startswith("win32") or processes == 1:
         spawn_process(
@@ -130,7 +127,6 @@ def init_processpool(
 
     return process_pool
 
-
 def initialize_event_loop():
     if sys.platform.startswith("win32") or sys.platform.startswith("linux-cross"):
         loop = asyncio.new_event_loop()
@@ -146,19 +142,18 @@ def initialize_event_loop():
         asyncio.set_event_loop(loop)
         return loop
 
-
 def spawn_process(
-    directories: List[Directory],
+    directories: list[Directory],
     request_headers: Headers,
-    routes: List[Route],
-    global_middlewares: List[GlobalMiddleware],
-    route_middlewares: List[RouteMiddleware],
-    web_sockets: Dict[str, dict],
-    event_handlers: Dict[Events, FunctionInfo],
+    routes: list[Route],
+    global_middlewares: list[GlobalMiddleware],
+    route_middlewares: list[RouteMiddleware],
+    web_sockets: dict[str, dict],
+    event_handlers: dict[Events, FunctionInfo],
     socket: SocketHeld,
     workers: int,
     response_headers: Headers,
-    excluded_response_headers_paths: Optional[List[str]],
+    excluded_response_headers_paths: list[str] | None,
     client_timeout: int = 30,
     keep_alive_timeout: int = 20,
 ):
@@ -168,8 +163,8 @@ def spawn_process(
 
     :param directories List: the list of all the directories and related data
     :param headers tuple: All the global headers in a tuple
-    :param routes Tuple[Route]: The routes tuple, containing the description about every route.
-    :param middlewares Tuple[Route]: The middleware routes tuple, containing the description about every route.
+    :param routes tuple[Route]: The routes tuple, containing the description about every route.
+    :param middlewares tuple[Route]: The middleware routes tuple, containing the description about every route.
     :param web_sockets list: This is a list of all the web socket routes
     :param event_handlers Dict: This is an event dict that contains the event handlers
     :param socket SocketHeld: This is the main tcp socket, which is being shared across multiple processes.

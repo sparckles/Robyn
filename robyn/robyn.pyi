@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Callable, Optional, Union
+from typing import Callable
 
 def get_version() -> str:
     pass
@@ -108,13 +108,13 @@ class QueryParams:
         """
         pass
 
-    def get(self, key: str, default: Optional[str] = None) -> Optional[str]:
+    def get(self, key: str, default: str | None = None) -> str | None:
         """
         Gets the last value of the query parameter with the given key.
 
         Args:
             key (str): The key of the query parameter
-            default (Optional[str]): The default value if the key does not exist
+            default (str | None): The default value if the key does not exist
         """
         pass
 
@@ -135,7 +135,7 @@ class QueryParams:
         """
         pass
 
-    def get_first(self, key: str) -> Optional[str]:
+    def get_first(self, key: str) -> str | None:
         """
         Gets the first value of the query parameter with the given key.
 
@@ -145,7 +145,7 @@ class QueryParams:
         """
         pass
 
-    def get_all(self, key: str) -> Optional[list[str]]:
+    def get_all(self, key: str) -> list[str] | None:
         """
         Gets all the values of the query parameter with the given key.
 
@@ -183,23 +183,23 @@ class Cookie:
 
     Attributes:
         value (str): The cookie value
-        path (Optional[str]): Cookie path (e.g. "/")
-        domain (Optional[str]): Cookie domain
-        max_age (Optional[int]): Max age in seconds
-        expires (Optional[str]): Expiry date (deprecated, use max_age instead)
+        path (str | None): Cookie path (e.g. "/")
+        domain (str | None): Cookie domain
+        max_age (int | None): Max age in seconds
+        expires (str | None): Expiry date (deprecated, use max_age instead)
         secure (bool): Only send over HTTPS
         http_only (bool): Not accessible via JavaScript
-        same_site (Optional[str]): "Strict", "Lax", or "None" (case-insensitive)
+        same_site (str | None): "Strict", "Lax", or "None" (case-insensitive)
     """
 
     value: str
-    path: Optional[str] = None
-    domain: Optional[str] = None
-    max_age: Optional[int] = None
-    expires: Optional[str] = None
+    path: str | None = None
+    domain: str | None = None
+    max_age: int | None = None
+    expires: str | None = None
     secure: bool = False
     http_only: bool = False
-    same_site: Optional[str] = None
+    same_site: str | None = None
 
     @staticmethod
     def deleted() -> "Cookie":
@@ -227,7 +227,7 @@ class Cookies:
         """
         pass
 
-    def get(self, name: str) -> Optional[Cookie]:
+    def get(self, name: str) -> Cookie | None:
         """
         Gets the cookie with the given name.
 
@@ -272,7 +272,7 @@ class Cookies:
     def __setitem__(self, name: str, cookie: Cookie) -> None:
         pass
 
-    def __getitem__(self, name: str) -> Optional[Cookie]:
+    def __getitem__(self, name: str) -> Cookie | None:
         pass
 
     def __contains__(self, name: str) -> bool:
@@ -297,10 +297,10 @@ class CookiesIter:
         pass
 
 class Headers:
-    def __init__(self, default_headers: Optional[dict]) -> None:
+    def __init__(self, default_headers: dict | None) -> None:
         pass
 
-    def __getitem__(self, key: str) -> Optional[str]:
+    def __getitem__(self, key: str) -> str | None:
         pass
 
     def __setitem__(self, key: str, value: str) -> None:
@@ -317,7 +317,7 @@ class Headers:
         """
         pass
 
-    def get(self, key: str) -> Optional[str]:
+    def get(self, key: str) -> str | None:
         """
         Gets the last value of the header with the given key.
 
@@ -371,27 +371,27 @@ class Request:
         query_params (QueryParams): The query parameters of the request. e.g. /user?id=123 -> {"id": "123"}
         headers Headers: The headers of the request. e.g. Headers({"Content-Type": "application/json"})
         path_params (dict[str, str]): The parameters of the request. e.g. /user/:id -> {"id": "123"}
-        body (Union[str, bytes]): The body of the request. If the request is a JSON, it will be a dict.
+        body (str | bytes): The body of the request. If the request is a JSON, it will be a dict.
         method (str): The method of the request. e.g. GET, POST, PUT etc.
         url (Url): The url of the request. e.g. https://localhost/user
         form_data (dict[str, str]): The form data of the request. e.g. {"name": "John"}
         files (dict[str, bytes]): The files of the request. e.g. {"file": b"file"}
-        ip_addr (Optional[str]): The IP Address of the client
-        identity (Optional[Identity]): The identity of the client
+        ip_addr (str | None): The IP Address of the client
+        identity (Identity | None): The identity of the client
     """
 
     query_params: QueryParams
     headers: Headers
     path_params: dict[str, str]
-    body: Union[str, bytes]
+    body: str | bytes
     method: str
     url: Url
     form_data: dict[str, str]
     files: dict[str, bytes]
-    ip_addr: Optional[str]
-    identity: Optional[Identity]
+    ip_addr: str | None
+    identity: Identity | None
 
-    def json(self) -> Union[dict, list]:
+    def json(self) -> dict | list:
         """
         Parse the request body as JSON and return a Python dict or list with preserved types.
 
@@ -417,31 +417,31 @@ class Response:
 
     Attributes:
         status_code (int): The status code of the response. e.g. 200, 404, 500 etc.
-        response_type (Optional[str]): The response type of the response. e.g. text, json, html, file etc.
-        headers (Union[Headers, dict]): The headers of the response or Headers directly. e.g. {"Content-Type": "application/json"}
-        description (Union[str, bytes]): The body of the response. If the response is a JSON, it will be a dict.
-        file_path (Optional[str]): The file path of the response. e.g. /home/user/file.txt
+        response_type (str | None): The response type of the response. e.g. text, json, html, file etc.
+        headers (Headers | dict): The headers of the response or Headers directly. e.g. {"Content-Type": "application/json"}
+        description (str | bytes): The body of the response. If the response is a JSON, it will be a dict.
+        file_path (str | None): The file path of the response. e.g. /home/user/file.txt
         cookies (Cookies): The cookies to set in the response.
     """
 
     status_code: int
-    headers: Union[Headers, dict]
-    description: Union[str, bytes]
-    response_type: Optional[str] = None
-    file_path: Optional[str] = None
+    headers: Headers | dict
+    description: str | bytes
+    response_type: str | None = None
+    file_path: str | None = None
     cookies: Cookies = None  # Initialized automatically
 
     def set_cookie(
         self,
         key: str,
         value: str,
-        path: Optional[str] = None,
-        domain: Optional[str] = None,
-        max_age: Optional[int] = None,
-        expires: Optional[str] = None,
+        path: str | None = None,
+        domain: str | None = None,
+        max_age: int | None = None,
+        expires: str | None = None,
         secure: bool = False,
         http_only: bool = False,
-        same_site: Optional[str] = None,
+        same_site: str | None = None,
     ) -> None:
         """
         Sets a cookie in the response. If a cookie with the same key exists,
@@ -450,13 +450,13 @@ class Response:
         Args:
             key (str): The name of the cookie
             value (str): The value of the cookie
-            path (Optional[str]): Cookie path (e.g. "/")
-            domain (Optional[str]): Cookie domain
-            max_age (Optional[int]): Max age in seconds
-            expires (Optional[str]): Expiry date (RFC 7231 format)
+            path (str | None): Cookie path (e.g. "/")
+            domain (str | None): Cookie domain
+            max_age (int | None): Max age in seconds
+            expires (str | None): Expiry date (RFC 7231 format)
             secure (bool): Only send over HTTPS
             http_only (bool): Not accessible via JavaScript
-            same_site (Optional[str]): "Strict", "Lax", or "None"
+            same_site (str | None): "Strict", "Lax", or "None"
         """
         pass
 
@@ -473,14 +473,14 @@ class Server:
         route: str,
         directory_path: str,
         show_files_listing: bool,
-        index_file: Optional[str],
+        index_file: str | None,
     ) -> None:
         pass
     def apply_request_headers(self, headers: Headers) -> None:
         pass
     def apply_response_headers(self, headers: Headers) -> None:
         pass
-    def set_response_headers_exclude_paths(self, excluded_response_headers_paths: Optional[list[str]] = None):
+    def set_response_headers_exclude_paths(self, excluded_response_headers_paths: list[str] | None = None):
         pass
 
     def add_route(

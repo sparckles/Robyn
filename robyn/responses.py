@@ -1,23 +1,21 @@
 import asyncio
 import mimetypes
 import os
-from typing import AsyncGenerator, Generator, Optional, Union
+from typing import AsyncGenerator, Generator, Optional
 
 from robyn.robyn import Headers, Response
-
 
 class FileResponse:
     def __init__(
         self,
         file_path: str,
-        status_code: Optional[int] = None,
-        headers: Optional[Headers] = None,
+        status_code: int | None = None,
+        headers: Headers | None = None,
     ):
         self.file_path = file_path
         self.description = ""
         self.status_code = status_code or 200
         self.headers = headers or Headers({"Content-Disposition": "attachment"})
-
 
 def html(html: str) -> Response:
     """
@@ -31,7 +29,6 @@ def html(html: str) -> Response:
         headers=Headers({"Content-Type": "text/html"}),
     )
 
-
 def serve_html(file_path: str) -> FileResponse:
     """
     This function will help in serving a single html file
@@ -41,8 +38,7 @@ def serve_html(file_path: str) -> FileResponse:
 
     return FileResponse(file_path, headers=Headers({"Content-Type": "text/html"}))
 
-
-def serve_file(file_path: str, file_name: Optional[str] = None) -> FileResponse:
+def serve_file(file_path: str, file_name: str | None = None) -> FileResponse:
     """
     This function will help in serving a file
 
@@ -60,7 +56,6 @@ def serve_file(file_path: str, file_name: Optional[str] = None) -> FileResponse:
         file_path,
         headers=headers,
     )
-
 
 class AsyncGeneratorWrapper:
     """Optimized true-streaming wrapper for async generators"""
@@ -120,13 +115,12 @@ class AsyncGeneratorWrapper:
             print(f"Error in async generator: {e}")
             raise StopIteration
 
-
 class StreamingResponse:
     def __init__(
         self,
-        content: Union[Generator[str, None, None], AsyncGenerator[str, None]],
-        status_code: Optional[int] = None,
-        headers: Optional[Headers] = None,
+        content: Generator[str | None | None] | AsyncGenerator[str | None],
+        status_code: int | None = None,
+        headers: Headers | None = None,
         media_type: str = "text/event-stream",
     ):
         # Convert async generator to sync generator if needed
@@ -147,11 +141,10 @@ class StreamingResponse:
             self.headers.set("Content-Type", "text/event-stream")
             # Cache-Control and Connection headers are set by Rust layer with optimized headers
 
-
 def SSEResponse(
-    content: Union[Generator[str, None, None], AsyncGenerator[str, None]],
-    status_code: Optional[int] = None,
-    headers: Optional[Headers] = None,
+    content: Generator[str | None | None] | AsyncGenerator[str | None],
+    status_code: int | None = None,
+    headers: Headers | None = None,
 ) -> StreamingResponse:
     """
     Create a Server-Sent Events (SSE) streaming response.
@@ -163,8 +156,7 @@ def SSEResponse(
     """
     return StreamingResponse(content=content, status_code=status_code, headers=headers, media_type="text/event-stream")
 
-
-def SSEMessage(data: str, event: Optional[str] = None, id: Optional[str] = None, retry: Optional[int] = None) -> str:
+def SSEMessage(data: str, event: str | None = None, id: str | None = None, retry: int | None = None) -> str:
     """
     Optimized SSE message formatting with minimal allocations.
 
