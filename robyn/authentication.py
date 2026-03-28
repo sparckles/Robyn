@@ -67,8 +67,15 @@ class AuthenticationHandler(ABC):
     def authenticate(self, request: Request) -> Optional[Identity]:
         """
         Authenticates the user.
+
+        This method may be overridden as either a regular (sync) method or an
+        ``async def`` coroutine.  When the implementation is async, the
+        framework will ``await`` it automatically, allowing the use of async
+        ORMs, HTTP clients, or any other async I/O inside the authentication
+        logic.
+
         :param request: The request object.
-        :return: The identity of the user.
+        :return: The identity of the user, or ``None`` to reject the request.
         """
         raise NotImplementedError()
 

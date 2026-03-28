@@ -585,14 +585,28 @@ class BaseRobyn(ABC):
 
         self.dependencies.merge_dependencies(router)
 
+        if router.authentication_handler is None and self.authentication_handler is not None:
+            router.authentication_handler = self.authentication_handler
+            router.middleware_router.set_authentication_handler(self.authentication_handler)
+
     def configure_authentication(self, authentication_handler: AuthenticationHandler):
         """
         Configures the authentication handler for the application.
+
+        The handler is also propagated to any already-included SubRouters that
+        have not configured their own authentication handler, so that routes
+        declared with ``auth_required=True`` on those SubRouters work without
+        requiring a separate ``configure_authentication`` call on each one.
 
         :param authentication_handler: the instance of a class inheriting the AuthenticationHandler base class
         """
         self.authentication_handler = authentication_handler
         self.middleware_router.set_authentication_handler(authentication_handler)
+
+        for router in self.included_routers:
+            if router.authentication_handler is None:
+                router.authentication_handler = authentication_handler
+                router.middleware_router.set_authentication_handler(authentication_handler)
 
     @property
     def mcp(self):

@@ -407,16 +407,23 @@ class MiddlewareRouter(BaseRouter):
     def add_auth_middleware(self, endpoint: str, route_type: HttpMethod):
         """
         This method adds an authentication middleware to the specified endpoint.
+
+        Supports both sync and async ``authenticate()`` implementations.
+        The wrapper is always async so the Rust executor can ``await`` it;
+        when the underlying ``authenticate()`` is synchronous, the extra
+        overhead is negligible.
         """
 
         injected_dependencies: dict = {}
 
         def decorator(handler):
             @wraps(handler)
-            def inner_handler(request: Request, *args):
+            async def inner_handler(request: Request, *args):
                 if not self.authentication_handler:
                     raise AuthenticationNotConfiguredError()
                 identity = self.authentication_handler.authenticate(request)
+                if inspect.isawaitable(identity):
+                    identity = await identity
                 if identity is None:
                     return self.authentication_handler.unauthorized_response
                 request.identity = identity
