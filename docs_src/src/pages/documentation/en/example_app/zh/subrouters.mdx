@@ -9,7 +9,7 @@ export const description =
 from robyn import SubRouter
 
 # 创建处理犯罪相关路由的子路由器
-crime_router = SubRouter(__file__, prefix="/crimes")
+crime_router = SubRouter(prefix="/crimes")
 
 @crime_router.get("/list")
 def list_crimes():
@@ -21,7 +21,7 @@ def report_crime(request):
     return {"id": create_crime_report(crime_data)}
 
 # 创建处理嫌疑人相关路由的子路由器
-suspect_router = SubRouter(__file__, prefix="/suspects")
+suspect_router = SubRouter(prefix="/suspects")
 
 @suspect_router.get("/list")
 def list_suspects():
