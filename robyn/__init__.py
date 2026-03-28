@@ -678,6 +678,7 @@ class Robyn(BaseRobyn):
             open_browser,
             client_timeout,
             keep_alive_timeout,
+            self.config.max_requests,
         )
 
 

@@ -30,7 +30,10 @@ def run_processes(
     open_browser: bool,
     client_timeout: int = 30,
     keep_alive_timeout: int = 20,
+    max_requests: Optional[int] = None,
 ) -> List[Process]:
+    import time
+
     socket = SocketHeld(url, port)
 
     process_pool = init_processpool(
@@ -48,12 +51,24 @@ def run_processes(
         excluded_response_headers_paths,
         client_timeout,
         keep_alive_timeout,
+        max_requests,
     )
 
+    shutting_down = False
+
     def terminating_signal_handler(_sig, _frame):
-        logger.info("Terminating server!!", bold=True)
+        nonlocal shutting_down
+        shutting_down = True
+        logger.info("Gracefully shutting down server...", bold=True)
         for process in process_pool:
-            process.kill()
+            process.terminate()
+        for process in process_pool:
+            process.join(timeout=30)
+            if process.is_alive():
+                logger.warning("Process %s did not shut down in time, forcing kill.", process.pid)
+                process.kill()
+                process.join(timeout=5)
+        sys.exit(0)
 
     signal.signal(signal.SIGINT, terminating_signal_handler)
     signal.signal(signal.SIGTERM, terminating_signal_handler)
@@ -63,8 +78,39 @@ def run_processes(
         webbrowser.open_new_tab(f"http://{url}:{port}/")
 
     logger.info("Press Ctrl + C to stop \n")
-    for process in process_pool:
-        process.join()
+
+    if max_requests and max_requests > 0 and len(process_pool) > 0:
+        while not shutting_down:
+            for i, process in enumerate(process_pool):
+                if not process.is_alive() and not shutting_down:
+                    process.join()
+                    logger.info("Worker process exited (recycling), spawning replacement.")
+                    copied_socket = socket.try_clone()
+                    new_process = Process(
+                        target=spawn_process,
+                        args=(
+                            directories,
+                            request_headers,
+                            routes,
+                            global_middlewares,
+                            route_middlewares,
+                            web_sockets,
+                            event_handlers,
+                            copied_socket,
+                            workers,
+                            response_headers,
+                            excluded_response_headers_paths,
+                            client_timeout,
+                            keep_alive_timeout,
+                            max_requests,
+                        ),
+                    )
+                    new_process.start()
+                    process_pool[i] = new_process
+            time.sleep(5)
+    else:
+        for process in process_pool:
+            process.join()
 
     return process_pool
 
@@ -84,6 +130,7 @@ def init_processpool(
     excluded_response_headers_paths: Optional[List[str]],
     client_timeout: int = 30,
     keep_alive_timeout: int = 20,
+    max_requests: Optional[int] = None,
 ) -> List[Process]:
     process_pool: List = []
     if sys.platform.startswith("win32") or processes == 1:
@@ -123,6 +170,7 @@ def init_processpool(
                 excluded_response_headers_paths,
                 client_timeout,
                 keep_alive_timeout,
+                max_requests,
             ),
         )
         process.start()
@@ -161,6 +209,7 @@ def spawn_process(
     excluded_response_headers_paths: Optional[List[str]],
     client_timeout: int = 30,
     keep_alive_timeout: int = 20,
+    max_requests: Optional[int] = None,
 ):
     """
     This function is called by the main process handler to create a server runtime.
@@ -175,14 +224,13 @@ def spawn_process(
     :param socket SocketHeld: This is the main tcp socket, which is being shared across multiple processes.
     :param process_name string: This is the name given to the process to identify the process
     :param workers int: This is the name given to the process to identify the process
+    :param max_requests Optional[int]: Recycle this worker after N requests
     """
 
     loop = initialize_event_loop()
 
     server = Server()
 
-    # TODO: if we remove the dot access
-    # the startup time will improve in the server
     for directory in directories:
         server.add_directory(*directory.as_list())
 
@@ -218,8 +266,10 @@ def spawn_process(
         )
 
     try:
-        server.start(socket, workers)
+        server.start(socket, workers, max_requests)
         loop = asyncio.get_event_loop()
         loop.run_forever()
     except KeyboardInterrupt:
+        pass
+    finally:
         loop.close()
