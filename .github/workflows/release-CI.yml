@@ -216,9 +216,19 @@ jobs:
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
+          if [[ "$GITHUB_REF" != refs/tags/v* ]]; then
+            echo "::warning::GITHUB_REF ($GITHUB_REF) is not a tag push — skipping Discord notification"
+            exit 0
+          fi
+
           VERSION="${GITHUB_REF#refs/tags/v}"
           PREV_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]' | sed -n '2p')
-          CHANGELOG=$(git log "${PREV_TAG}..HEAD" --pretty=format:"- %s" --no-merges | grep -v "^- Release ")
+
+          if [ -z "$PREV_TAG" ]; then
+            CHANGELOG=$(git log --pretty=format:"- %s" --no-merges -20 | grep -v "^- Release " || true)
+          else
+            CHANGELOG=$(git log "${PREV_TAG}..HEAD" --pretty=format:"- %s" --no-merges | grep -v "^- Release " || true)
+          fi
 
           read -r -d '' MESSAGE << EOM || true
           Hey @everyone 👋
