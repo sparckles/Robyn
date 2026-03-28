@@ -83,6 +83,7 @@ def run_processes(
         while not shutting_down:
             for i, process in enumerate(process_pool):
                 if not process.is_alive() and not shutting_down:
+                    process.join()
                     logger.info("Worker process exited (recycling), spawning replacement.")
                     copied_socket = socket.try_clone()
                     new_process = Process(
@@ -147,7 +148,6 @@ def init_processpool(
             excluded_response_headers_paths,
             client_timeout,
             keep_alive_timeout,
-            max_requests,
         )
 
         return process_pool

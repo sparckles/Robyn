@@ -27,7 +27,10 @@ use std::{env, thread};
 
 use actix_files::Files;
 use actix_http::KeepAlive;
+use actix_web::dev::{Service, ServiceRequest, ServiceResponse, Transform};
 use actix_web::*;
+use futures_util::future::{ok, LocalBoxFuture, Ready};
+use std::task::{Context, Poll};
 
 use log::error;
 use once_cell::sync::OnceCell;
@@ -44,6 +47,50 @@ static REQUEST_COUNT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU6
 
 pub fn get_request_count() -> u64 {
     REQUEST_COUNT.load(Relaxed)
+}
+
+struct RequestCounter;
+
+impl<S, B> Transform<S, ServiceRequest> for RequestCounter
+where
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S::Future: 'static,
+    B: 'static,
+{
+    type Response = ServiceResponse<B>;
+    type Error = Error;
+    type InitError = ();
+    type Transform = RequestCounterMiddleware<S>;
+    type Future = Ready<Result<Self::Transform, Self::InitError>>;
+
+    fn new_transform(&self, service: S) -> Self::Future {
+        ok(RequestCounterMiddleware { service })
+    }
+}
+
+struct RequestCounterMiddleware<S> {
+    service: S,
+}
+
+impl<S, B> Service<ServiceRequest> for RequestCounterMiddleware<S>
+where
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S::Future: 'static,
+    B: 'static,
+{
+    type Response = ServiceResponse<B>;
+    type Error = Error;
+    type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
+
+    fn poll_ready(&self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        self.service.poll_ready(cx)
+    }
+
+    fn call(&self, req: ServiceRequest) -> Self::Future {
+        REQUEST_COUNT.fetch_add(1, Relaxed);
+        let fut = self.service.call(req);
+        Box::pin(fut)
+    }
 }
 
 #[derive(Clone)]
@@ -150,7 +197,7 @@ impl Server {
                 }
 
                 HttpServer::new(move || {
-                    let mut app = App::new();
+                    let mut app = App::new().wrap(RequestCounter);
 
                     let directories = directories.read().unwrap();
 
@@ -487,8 +534,6 @@ async fn index(
     excluded_response_headers_paths: web::Data<Option<Vec<String>>>,
     req: HttpRequest,
 ) -> ResponseType {
-    REQUEST_COUNT.fetch_add(1, Relaxed);
-
     if !HttpMethod::is_supported(req.method()) {
         return ResponseType::Standard(Response::method_not_allowed(None));
     }
