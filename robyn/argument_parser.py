@@ -2,6 +2,16 @@ import argparse
 import os
 
 
+def _positive_int(value: str) -> int:
+    try:
+        ivalue = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"invalid int value: '{value}'")
+    if ivalue <= 0:
+        raise argparse.ArgumentTypeError(f"--max-requests must be a positive integer, got {ivalue}")
+    return ivalue
+
+
 class Config:
     def __init__(self) -> None:
         parser = argparse.ArgumentParser(description="Robyn, a fast async web framework with a rust runtime.")
@@ -87,7 +97,7 @@ class Config:
         parser.add_argument(
             "--max-requests",
             dest="max_requests",
-            type=int,
+            type=_positive_int,
             default=None,
             required=False,
             help="Recycle worker processes after this many requests. Helps contain memory leaks. [Default: None (disabled)]",
