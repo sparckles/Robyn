@@ -8,7 +8,7 @@ from multiprocess import Process  # type: ignore
 
 from robyn.events import Events
 from robyn.logger import logger
-from robyn.robyn import FunctionInfo, Headers, Server, SocketHeld, get_request_count
+from robyn.robyn import FunctionInfo, Headers, Server, SocketHeld
 from robyn.router import GlobalMiddleware, Route, RouteMiddleware
 from robyn.types import Directory
 
@@ -266,20 +266,8 @@ def spawn_process(
         )
 
     try:
-        server.start(socket, workers)
+        server.start(socket, workers, max_requests)
         loop = asyncio.get_event_loop()
-
-        if max_requests and max_requests > 0:
-
-            def _check_max_requests():
-                if get_request_count() >= max_requests:
-                    logger.info("Max requests (%d) reached, worker shutting down for recycling.", max_requests)
-                    loop.stop()
-                else:
-                    loop.call_later(5, _check_max_requests)
-
-            loop.call_later(5, _check_max_requests)
-
         loop.run_forever()
     except KeyboardInterrupt:
         pass

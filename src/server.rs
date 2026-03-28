@@ -138,6 +138,7 @@ impl Server {
         _py: Python,
         socket: PyRef<SocketHeld>,
         workers: usize,
+        max_requests: Option<u64>,
     ) -> PyResult<()> {
         pyo3_log::init();
 
@@ -196,7 +197,7 @@ impl Server {
                     const_router.bake_global_headers(&global_response_headers);
                 }
 
-                HttpServer::new(move || {
+                let server = HttpServer::new(move || {
                     let mut app = App::new().wrap(RequestCounter);
 
                     let directories = directories.read().unwrap();
@@ -332,9 +333,28 @@ impl Server {
                 .client_request_timeout(std::time::Duration::from_secs(0))
                 .listen(raw_socket.into())
                 .unwrap()
-                .run()
-                .await
-                .unwrap();
+                .run();
+
+                let server_handle = server.handle();
+
+                if let Some(limit) = max_requests {
+                    let handle = server_handle.clone();
+                    actix_web::rt::spawn(async move {
+                        loop {
+                            actix_web::rt::time::sleep(std::time::Duration::from_secs(5)).await;
+                            if REQUEST_COUNT.load(Relaxed) >= limit {
+                                log::info!(
+                                    "Max requests ({}) reached, worker shutting down for recycling.",
+                                    limit
+                                );
+                                handle.stop(true).await;
+                                break;
+                            }
+                        }
+                    });
+                }
+
+                server.await.unwrap();
             });
         });
 

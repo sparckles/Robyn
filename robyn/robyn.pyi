@@ -518,7 +518,7 @@ class Server:
         use_channel: bool,
     ) -> None:
         pass
-    def start(self, socket: SocketHeld, workers: int, client_timeout: int, keep_alive_timeout: int) -> None:
+    def start(self, socket: SocketHeld, workers: int, max_requests: int | None = None) -> None:
         pass
 
 class WebSocketConnector:
