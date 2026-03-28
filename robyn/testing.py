@@ -217,14 +217,15 @@ class TestClient:
 
     def _execute(self, method: str, path: str, **kwargs) -> TestResponse:
         request = self._build_request(method, path, **kwargs)
-        mw_key = f"{method}{path}"
+        mw_key = f"/{method}{path}"
 
         # ---- before middlewares (global) ----------------------------------
         for mw_fn in self._global_before:
             result = self._call(mw_fn, request)
             if isinstance(result, Response):
                 return self._to_test_response(result)
-            request = result
+            if result is not None:
+                request = result
 
         # ---- before middleware (route-specific) ---------------------------
         mw_fn, mw_params = self._mw_before.match(mw_key)
@@ -233,7 +234,8 @@ class TestClient:
             result = self._call(mw_fn, request)
             if isinstance(result, Response):
                 return self._to_test_response(result)
-            request = result
+            if result is not None:
+                request = result
 
         # ---- route match --------------------------------------------------
         route_table = self._http_routes.get(method)
@@ -259,6 +261,8 @@ class TestClient:
         # ---- merge global response headers --------------------------------
         excluded = self.app.excluded_response_headers_paths or []
         if path not in excluded and not self.app.response_headers.is_empty():
+            if isinstance(response.headers, dict):
+                response.headers = Headers(response.headers)
             resp_headers = response.headers
             global_dict = self.app.response_headers.get_headers()
             for key, values in global_dict.items():
@@ -290,6 +294,8 @@ class TestClient:
         body = response.description
         if isinstance(body, str):
             body = body.encode("utf-8")
+        elif isinstance(body, (dict, list)):
+            body = json.dumps(body).encode("utf-8")
         elif not isinstance(body, bytes):
             body = str(body).encode("utf-8")
 
