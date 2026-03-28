@@ -17,7 +17,7 @@ def compile_rust_files(directory_path: str) -> List[str]:
     rust_binaries: list[str] = []
 
     for rust_file in rust_files:
-        print(f"Compiling rust file: {rust_file}")
+        logger.info("Compiling rust file: %s", rust_file)
 
         result = subprocess.run(
             [sys.executable, "-m", "rustimport", "build", rust_file],
@@ -26,9 +26,9 @@ def compile_rust_files(directory_path: str) -> List[str]:
             start_new_session=False,
         )
         if result.returncode != 0:
-            print(f"Error compiling rust file: {rust_file} \n {result.stderr.decode('utf-8')} \n {result.stdout.decode('utf-8')}")
+            logger.error("Error compiling rust file: %s\n%s\n%s", rust_file, result.stderr.decode("utf-8"), result.stdout.decode("utf-8"))
         else:
-            print(f"Compiled rust file: {rust_file}")
+            logger.info("Compiled rust file: %s", rust_file)
             rust_file_base = rust_file.removesuffix(".rs")
 
             # Define the search pattern for the binary file
@@ -63,18 +63,18 @@ def create_rust_file(file_name: str) -> None:
     )
 
     if result.returncode != 0:
-        print(
-            "Error creating rust file : %s %s",
+        logger.error(
+            "Error creating rust file: %s %s",
             result.stderr.decode("utf-8"),
             result.stdout.decode("utf-8"),
         )
     else:
-        print("Created rust file : %s", rust_file)
+        logger.info("Created rust file: %s", rust_file)
 
 
 def clean_rust_binaries(rust_binaries: List[str]) -> None:
     for file in rust_binaries:
-        print("Cleaning rust file : %s", file)
+        logger.info("Cleaning rust file: %s", file)
         os.remove(file)
 
 
@@ -127,7 +127,7 @@ class EventHandler(FileSystemEventHandler):
 
     def reload(self) -> None:
         self.stop_server()
-        print("Reloading the server")
+        logger.info("Reloading the server")
 
         new_env = os.environ.copy()
         new_env["IS_RELOADER_RUNNING"] = "True"  # This is used to check if a reloader is already running
