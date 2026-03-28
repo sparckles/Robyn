@@ -9,9 +9,9 @@ from inspect import Signature
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple, TypedDict, is_typeddict
 
+from robyn.pydantic_support import get_pydantic_openapi_schema, is_pydantic_model
 from robyn.responses import html
 from robyn.robyn import QueryParams, Response
-from robyn.pydantic_support import get_pydantic_openapi_schema, is_pydantic_model
 from robyn.types import Body, JsonBody
 
 _logger = logging.getLogger(__name__)
