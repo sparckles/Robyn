@@ -57,13 +57,18 @@ export const description =
 
 ---
 
-## 接收消息 {{ tag: 'receive_text', label: 'receive_text' }}
+## 接收消息 {{ tag: 'receive', label: 'receive' }}
 
 <Row>
   <Col>
-    `receive_text()` 方法会阻塞直到下一条消息到达。它由 Rust 的 `tokio::mpsc` 通道支持，因此 Python 处理程序在等待时不会持有 GIL。
+    Robyn 提供了多种接收 WebSocket 消息的方法，所有方法都由 Rust 的 `tokio::mpsc` 通道支持，因此 Python 处理程序在等待时不会持有 GIL。
 
-    当客户端断开连接时，`receive_text()` 会抛出 `WebSocketDisconnect` 异常。您可以显式捕获它，也可以让内部包装器静默处理。
+    - `receive()` 返回下一帧，文本帧返回 `str`，二进制帧返回 `bytes`。
+    - `receive_text()` 返回下一个文本帧，如果收到二进制帧则抛出 `TypeError`。
+    - `receive_bytes()` 返回下一个二进制帧，如果收到文本帧则抛出 `TypeError`。
+    - `receive_json()` 接收文本帧并进行 JSON 解码。
+
+    所有接收方法在客户端断开连接时都会抛出 `WebSocketDisconnect` 异常。您可以显式捕获它，也可以让内部包装器静默处理。
   </Col>
   <Col sticky>
     <CodeGroup title="接收消息" tag="WebSocket" label="/web_socket">
@@ -77,6 +82,26 @@ export const description =
                   await websocket.send_text(f"收到: {msg}")
           except WebSocketDisconnect:
               print(f"客户端 {websocket.id} 已断开")
+      ```
+
+      ```python {{ title: '二进制消息' }}
+      @app.websocket("/ws")
+      async def handler(websocket):
+          while True:
+              data = await websocket.receive_bytes()
+              result = process(data)
+              await websocket.send_bytes(result)
+      ```
+
+      ```python {{ title: '混合帧' }}
+      @app.websocket("/ws")
+      async def handler(websocket):
+          while True:
+              msg = await websocket.receive()
+              if isinstance(msg, str):
+                  await websocket.send_text(f"收到文本: {msg}")
+              else:
+                  await websocket.send_bytes(msg)  # 回显二进制
       ```
 
       ```python {{ title: 'JSON 消息' }}
@@ -93,11 +118,16 @@ export const description =
 
 ---
 
-## 发送消息 {{ tag: 'send_text', label: 'send_text' }}
+## 发送消息 {{ tag: 'send', label: 'send' }}
 
 <Row>
   <Col>
-    使用 `send_text()` 或 `send_json()` 向当前客户端发送消息。所有发送方法都是异步的。
+    使用以下方法向当前客户端发送消息。所有方法都是异步的。
+
+    - `send(data)` 接受 `str` 或 `bytes` — `str` 发送文本帧，`bytes` 发送二进制帧。
+    - `send_text(data)` 发送文本帧。
+    - `send_bytes(data)` 发送二进制帧。
+    - `send_json(data)` 序列化为 JSON 并发送文本帧。
   </Col>
   <Col sticky>
     <CodeGroup title="发送消息" tag="WebSocket" label="/web_socket">
@@ -108,6 +138,15 @@ export const description =
           while True:
               msg = await websocket.receive_text()
               await websocket.send_text(f"Echo: {msg}")
+      ```
+
+      ```python {{ title: '发送二进制' }}
+      @app.websocket("/ws")
+      async def handler(websocket):
+          while True:
+              data = await websocket.receive_bytes()
+              compressed = zlib.compress(data)
+              await websocket.send_bytes(compressed)
       ```
 
       ```python {{ title: '发送 JSON' }}
@@ -127,12 +166,12 @@ export const description =
 
 <Row>
   <Col>
-    使用 `broadcast()` 方法向同一 WebSocket 端点上的所有已连接客户端发送消息。
+    使用 `broadcast()` 方法向同一 WebSocket 端点上的所有已连接客户端发送消息。它同时接受 `str`（文本帧）和 `bytes`（二进制帧）。
   </Col>
   <Col sticky>
     <CodeGroup title="广播" tag="WebSocket" label="/chat">
 
-      ```python {{ title: '广播' }}
+      ```python {{ title: '广播文本' }}
       @app.websocket("/chat")
       async def handler(websocket):
           while True:
@@ -141,6 +180,15 @@ export const description =
               await websocket.broadcast(f"用户 {websocket.id}: {msg}")
               # 仅向当前客户端发送确认
               await websocket.send_text("您的消息已发送")
+      ```
+
+      ```python {{ title: '广播二进制' }}
+      @app.websocket("/stream")
+      async def handler(websocket):
+          while True:
+              data = await websocket.receive_bytes()
+              # 向所有客户端广播二进制数据
+              await websocket.broadcast(data)
       ```
     </CodeGroup>
   </Col>
@@ -222,7 +270,7 @@ export const description =
     使用 `websocket.close()` 从服务端关闭 WebSocket 连接。该方法将：
 1. 关闭 WebSocket 连接。
 2. 从 WebSocket 注册表中移除客户端。
-3. 使任何挂起的 `receive_text()` 抛出 `WebSocketDisconnect` 异常。
+3. 使任何挂起的 `receive()` / `receive_text()` / `receive_bytes()` 抛出 `WebSocketDisconnect` 异常。
   </Col>
   <Col sticky>
     <CodeGroup title="关闭连接" tag="WebSocket" label="/ws">
@@ -286,13 +334,15 @@ export const description =
 
     | 方法 / 属性 | 描述 |
     |---|---|
-    | `await websocket.receive_text()` | 阻塞直到下一条消息；连接关闭时抛出 `WebSocketDisconnect` |
-    | `await websocket.receive_bytes()` | 阻塞直到下一条二进制消息；连接关闭时抛出 `WebSocketDisconnect` |
-    | `await websocket.receive_json()` | 与 `receive_text()` 相同，但返回 JSON 解码后的数据 |
-    | `await websocket.send_text(data)` | 向当前客户端发送文本 |
-    | `await websocket.send_bytes(data)` | 向当前客户端发送二进制数据 |
-    | `await websocket.send_json(data)` | 向当前客户端发送 JSON |
-    | `await websocket.broadcast(data)` | 向此端点的所有客户端广播 |
+    | `await websocket.receive()` | 阻塞直到下一帧；文本帧返回 `str`，二进制帧返回 `bytes`；连接关闭时抛出 `WebSocketDisconnect` |
+    | `await websocket.receive_text()` | 阻塞直到下一个文本帧；收到二进制帧时抛出 `TypeError`；连接关闭时抛出 `WebSocketDisconnect` |
+    | `await websocket.receive_bytes()` | 阻塞直到下一个二进制帧；收到文本帧时抛出 `TypeError`；连接关闭时抛出 `WebSocketDisconnect` |
+    | `await websocket.receive_json()` | 接收文本帧并进行 JSON 解码 |
+    | `await websocket.send(data)` | 发送 `str` 为文本帧或 `bytes` 为二进制帧 |
+    | `await websocket.send_text(data)` | 向当前客户端发送文本帧 |
+    | `await websocket.send_bytes(data)` | 向当前客户端发送二进制帧 |
+    | `await websocket.send_json(data)` | 向当前客户端发送 JSON 文本帧 |
+    | `await websocket.broadcast(data)` | 向此端点的所有客户端广播 `str`（文本）或 `bytes`（二进制） |
     | `await websocket.close()` | 从服务端关闭连接 |
     | `websocket.id` | 连接 UUID 字符串 |
     | `websocket.query_params` | 连接 URL 中的查询参数 |

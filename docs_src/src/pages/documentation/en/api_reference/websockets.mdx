@@ -60,13 +60,18 @@ To handle real-time bidirectional communication, Batman learned how to work with
 
 ---
 
-## Receiving Messages {{ tag: 'receive_text', label: 'receive_text' }}
+## Receiving Messages {{ tag: 'receive', label: 'receive' }}
 
 <Row>
   <Col>
-    The `receive_text()` method blocks until the next message arrives from the client. It is backed by a Rust `tokio::mpsc` channel, so the Python handler genuinely suspends without holding the GIL.
+    Robyn provides several methods for receiving WebSocket messages, all backed by a Rust `tokio::mpsc` channel so the Python handler genuinely suspends without holding the GIL.
 
-    When the client disconnects, `receive_text()` raises `WebSocketDisconnect`. You can either catch it explicitly or let the internal wrapper handle it silently.
+    - `receive()` returns the next frame as `str` (text frame) or `bytes` (binary frame).
+    - `receive_text()` returns the next text frame, raising `TypeError` if a binary frame arrives.
+    - `receive_bytes()` returns the next binary frame, raising `TypeError` if a text frame arrives.
+    - `receive_json()` receives a text frame and JSON-decodes it.
+
+    All receive methods raise `WebSocketDisconnect` when the client disconnects. You can either catch it explicitly or let the internal wrapper handle it silently.
   </Col>
   <Col sticky>
     <CodeGroup title="Receiving Messages" tag="WebSocket" label="/web_socket">
@@ -80,6 +85,26 @@ To handle real-time bidirectional communication, Batman learned how to work with
                   await websocket.send_text(f"Got: {msg}")
           except WebSocketDisconnect:
               print(f"Client {websocket.id} disconnected")
+      ```
+
+      ```python {{ title: 'Binary Messages' }}
+      @app.websocket("/ws")
+      async def handler(websocket):
+          while True:
+              data = await websocket.receive_bytes()
+              result = process(data)
+              await websocket.send_bytes(result)
+      ```
+
+      ```python {{ title: 'Mixed Frames' }}
+      @app.websocket("/ws")
+      async def handler(websocket):
+          while True:
+              msg = await websocket.receive()
+              if isinstance(msg, str):
+                  await websocket.send_text(f"Got text: {msg}")
+              else:
+                  await websocket.send_bytes(msg)  # echo binary
       ```
 
       ```python {{ title: 'JSON Messages' }}
@@ -96,11 +121,16 @@ To handle real-time bidirectional communication, Batman learned how to work with
 
 ---
 
-## Sending Messages {{ tag: 'send_text', label: 'send_text' }}
+## Sending Messages {{ tag: 'send', label: 'send' }}
 
 <Row>
   <Col>
-    To send a message to the current client, use `send_text()` or `send_json()`. All send methods are async.
+    To send a message to the current client, use any of the send methods. All are async.
+
+    - `send(data)` accepts `str` or `bytes` — a `str` sends a text frame, `bytes` sends a binary frame.
+    - `send_text(data)` sends a text frame.
+    - `send_bytes(data)` sends a binary frame.
+    - `send_json(data)` serializes to JSON and sends a text frame.
   </Col>
   <Col sticky>
     <CodeGroup title="Sending Messages" tag="WebSocket" label="/web_socket">
@@ -111,6 +141,15 @@ To handle real-time bidirectional communication, Batman learned how to work with
           while True:
               msg = await websocket.receive_text()
               await websocket.send_text(f"Echo: {msg}")
+      ```
+
+      ```python {{ title: 'Send Binary' }}
+      @app.websocket("/ws")
+      async def handler(websocket):
+          while True:
+              data = await websocket.receive_bytes()
+              compressed = zlib.compress(data)
+              await websocket.send_bytes(compressed)
       ```
 
       ```python {{ title: 'Send JSON' }}
@@ -130,12 +169,12 @@ To handle real-time bidirectional communication, Batman learned how to work with
 
 <Row>
   <Col>
-    To send a message to all connected clients on the same WebSocket endpoint, use the `broadcast()` method.
+    To send a message to all connected clients on the same WebSocket endpoint, use the `broadcast()` method. It accepts both `str` (text frame) and `bytes` (binary frame).
   </Col>
   <Col sticky>
     <CodeGroup title="Broadcasting" tag="WebSocket" label="/chat">
 
-      ```python {{ title: 'Broadcast' }}
+      ```python {{ title: 'Broadcast Text' }}
       @app.websocket("/chat")
       async def handler(websocket):
           while True:
@@ -144,6 +183,15 @@ To handle real-time bidirectional communication, Batman learned how to work with
               await websocket.broadcast(f"User {websocket.id}: {msg}")
               # Also send a confirmation to this client only
               await websocket.send_text("Your message was sent")
+      ```
+
+      ```python {{ title: 'Broadcast Binary' }}
+      @app.websocket("/stream")
+      async def handler(websocket):
+          while True:
+              data = await websocket.receive_bytes()
+              # Broadcast binary data to all clients
+              await websocket.broadcast(data)
       ```
     </CodeGroup>
   </Col>
@@ -225,7 +273,7 @@ To handle real-time bidirectional communication, Batman learned how to work with
     To programmatically close a WebSocket connection from the server side, use `websocket.close()`. This will:
 1. Close the WebSocket connection.
 2. Remove the client from the WebSocket registry.
-3. Cause any pending `receive_text()` to raise `WebSocketDisconnect`.
+3. Cause any pending `receive()` / `receive_text()` / `receive_bytes()` to raise `WebSocketDisconnect`.
   </Col>
   <Col sticky>
     <CodeGroup title="Close Connection" tag="WebSocket" label="/ws">
@@ -289,13 +337,15 @@ To handle real-time bidirectional communication, Batman learned how to work with
 
     | Method / Property | Description |
     |---|---|
-    | `await websocket.receive_text()` | Block until next message; raises `WebSocketDisconnect` on close |
-    | `await websocket.receive_bytes()` | Block until next binary message; raises `WebSocketDisconnect` on close |
-    | `await websocket.receive_json()` | Same as `receive_text()` but JSON-decoded |
-    | `await websocket.send_text(data)` | Send string to this client |
-    | `await websocket.send_bytes(data)` | Send binary data to this client |
-    | `await websocket.send_json(data)` | Send JSON to this client |
-    | `await websocket.broadcast(data)` | Send to all clients on this endpoint |
+    | `await websocket.receive()` | Block until next frame; returns `str` for text frames, `bytes` for binary frames; raises `WebSocketDisconnect` on close |
+    | `await websocket.receive_text()` | Block until next text frame; raises `TypeError` if a binary frame arrives; raises `WebSocketDisconnect` on close |
+    | `await websocket.receive_bytes()` | Block until next binary frame; raises `TypeError` if a text frame arrives; raises `WebSocketDisconnect` on close |
+    | `await websocket.receive_json()` | Receive a text frame and JSON-decode it |
+    | `await websocket.send(data)` | Send `str` as a text frame or `bytes` as a binary frame |
+    | `await websocket.send_text(data)` | Send a text frame to this client |
+    | `await websocket.send_bytes(data)` | Send a binary frame to this client |
+    | `await websocket.send_json(data)` | Send JSON as a text frame to this client |
+    | `await websocket.broadcast(data)` | Broadcast `str` (text) or `bytes` (binary) to all clients on this endpoint |
     | `await websocket.close()` | Close the connection server-side |
     | `websocket.id` | Connection UUID string |
     | `websocket.query_params` | Query parameters from the connection URL |
