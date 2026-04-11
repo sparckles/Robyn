@@ -8,7 +8,7 @@ from typing import Callable, Dict, List, NamedTuple, Optional, Union, is_typeddi
 
 from robyn import status_codes
 from robyn._param_utils import QueryParamValidationError, parse_route_param_names, resolve_individual_params
-from robyn.depends import Depends, _detect_depends_params, cleanup_dependencies, resolve_dependencies
+from robyn.depends import _detect_depends_params, cleanup_dependencies, resolve_dependencies
 from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
 from robyn.dependency_injection import DependencyMap
 from robyn.jsonify import jsonify
