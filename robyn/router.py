@@ -15,6 +15,7 @@ from robyn.pydantic_support import (
     PydanticBodyValidationError,
     check_pydantic_installed_for_handler,
     detect_pydantic_params,
+    is_pydantic_model,
     serialize_pydantic_response,
     validate_pydantic_body,
 )
@@ -37,6 +38,7 @@ class Route(NamedTuple):
     auth_required: bool
     openapi_name: str
     openapi_tags: List[str]
+    response_model: Optional[type] = None
 
 
 class RouteMiddleware(NamedTuple):
@@ -138,6 +140,7 @@ class Router(BaseRouter):
         openapi_tags: List[str],
         exception_handler: Optional[Callable],
         injected_dependencies: dict,
+        response_model: Optional[type] = None,
     ) -> Union[Callable, CoroutineType]:
         # Pre-compute handler signature ONCE at registration time.
         # This avoids calling inspect.signature() on every request.
@@ -274,9 +277,14 @@ class Router(BaseRouter):
         @wraps(handler)
         async def async_inner_handler(*args, **kwargs):
             try:
-                response = self._format_response(
-                    await wrapped_handler(*args, **kwargs),
-                )
+                result = await wrapped_handler(*args, **kwargs)
+                if response_model is not None and isinstance(result, dict):
+                    try:
+                        if is_pydantic_model(response_model):
+                            result = response_model(**result)
+                    except Exception:
+                        pass
+                response = self._format_response(result)
             except QueryParamValidationError as err:
                 response = Response(
                     status_code=status_codes.HTTP_400_BAD_REQUEST,
@@ -300,9 +308,14 @@ class Router(BaseRouter):
         @wraps(handler)
         def inner_handler(*args, **kwargs):
             try:
-                response = self._format_response(
-                    wrapped_handler(*args, **kwargs),
-                )
+                result = wrapped_handler(*args, **kwargs)
+                if response_model is not None and isinstance(result, dict):
+                    try:
+                        if is_pydantic_model(response_model):
+                            result = response_model(**result)
+                    except Exception:
+                        pass
+                response = self._format_response(result)
             except QueryParamValidationError as err:
                 response = Response(
                     status_code=status_codes.HTTP_400_BAD_REQUEST,
@@ -340,7 +353,7 @@ class Router(BaseRouter):
                 params,
                 new_injected_dependencies,
             )
-            self.routes.append(Route(route_type, endpoint, function, is_const, auth_required, openapi_name, openapi_tags))
+            self.routes.append(Route(route_type, endpoint, function, is_const, auth_required, openapi_name, openapi_tags, response_model))
             return async_inner_handler
         else:
             function = FunctionInfo(
@@ -350,12 +363,12 @@ class Router(BaseRouter):
                 params,
                 new_injected_dependencies,
             )
-            self.routes.append(Route(route_type, endpoint, function, is_const, auth_required, openapi_name, openapi_tags))
+            self.routes.append(Route(route_type, endpoint, function, is_const, auth_required, openapi_name, openapi_tags, response_model))
             return inner_handler
 
     def prepare_routes_openapi(self, openapi: OpenAPI, included_routers: List) -> None:
         for route in self.routes:
-            openapi.add_openapi_path_obj(lower_http_method(route.route_type), route.route, route.openapi_name, route.openapi_tags, route.function.handler)
+            openapi.add_openapi_path_obj(lower_http_method(route.route_type), route.route, route.openapi_name, route.openapi_tags, route.function.handler, response_model=route.response_model)
 
         # TODO! after include_routes does not immediately merge all the routes
         # for router in included_routers:
