@@ -361,7 +361,9 @@ class Router(BaseRouter):
 
     def prepare_routes_openapi(self, openapi: OpenAPI, included_routers: List) -> None:
         for route in self.routes:
-            openapi.add_openapi_path_obj(lower_http_method(route.route_type), route.route, route.openapi_name, route.openapi_tags, route.function.handler, route.default_status_code)
+            openapi.add_openapi_path_obj(
+                lower_http_method(route.route_type), route.route, route.openapi_name, route.openapi_tags, route.function.handler, route.default_status_code
+            )
 
         # TODO! after include_routes does not immediately merge all the routes
         # for router in included_routers:

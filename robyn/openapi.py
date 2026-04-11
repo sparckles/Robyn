@@ -168,7 +168,9 @@ class OpenAPI:
             "externalDocs": asdict(self.info.externalDocs) if self.info.externalDocs.url else None,
         }
 
-    def add_openapi_path_obj(self, route_type: str, endpoint: str, openapi_name: str, openapi_tags: List[str], handler: Callable, status_code: Optional[int] = None):
+    def add_openapi_path_obj(
+        self, route_type: str, endpoint: str, openapi_name: str, openapi_tags: List[str], handler: Callable, status_code: Optional[int] = None
+    ):
         """
         Adds the given path to openapi spec
 
