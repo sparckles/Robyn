@@ -7,7 +7,7 @@ from dataclasses import asdict, dataclass, field
 from importlib import resources
 from inspect import Signature
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, TypedDict, is_typeddict
+from typing import Any, Callable, Dict, List, Optional, Tuple, TypedDict, Union, is_typeddict
 
 from robyn.pydantic_support import get_pydantic_openapi_schema, is_pydantic_model
 from robyn.responses import html
@@ -425,13 +425,22 @@ class OpenAPI:
 
         # Check if it's a generic type (like List[Object])
         if hasattr(param_type, "__origin__"):
-            if param_type.__origin__ is list or param_type.__origin__ is List:
+            origin = getattr(param_type, "__origin__", None)
+            args = getattr(param_type, "__args__", ())
+
+            if origin is list or (hasattr(typing, "List") and origin is list):
                 properties["type"] = "array"
-                # Handle the element type in the list
-                if hasattr(param_type, "__args__") and param_type.__args__:
-                    item_type = param_type.__args__[0]
+                if args:
+                    item_type = args[0]
                     properties["items"] = self.get_schema_object(f"{parameter}_item", item_type)
                 return properties
+
+            # Handle Optional/Union types
+            if origin is Union:
+                non_none_args = [a for a in args if a is not type(None)]
+                if len(non_none_args) == 1 and type(None) in args:
+                    properties["anyOf"] = [self.get_schema_object(parameter, non_none_args[0]), {"type": "null"}]
+                    return properties
 
         # check for Pydantic models
         if is_pydantic_model(param_type):
@@ -440,21 +449,22 @@ class OpenAPI:
                 self._merge_component_schemas(component_schemas)
             return schema
 
-        # check for Optional type
-        if param_type.__module__ == "typing":
-            properties["anyOf"] = [{"type": self.get_openapi_type(param_type.__args__[0])}, {"type": "null"}]
-            return properties
         # check for custom classes and TypedDicts
-        elif inspect.isclass(param_type):
+        if inspect.isclass(param_type):
             properties["type"] = "object"
-
             properties["properties"] = {}
+            if hasattr(param_type, "__annotations__"):
+                for e in param_type.__annotations__:
+                    properties["properties"][e] = self.get_schema_object(e, param_type.__annotations__[e])
+            return properties
 
-            for e in param_type.__annotations__:
-                properties["properties"][e] = self.get_schema_object(e, param_type.__annotations__[e])
+        # check for Optional type (legacy path)
+        if hasattr(param_type, "__module__") and param_type.__module__ == "typing":
+            if hasattr(param_type, "__args__"):
+                properties["anyOf"] = [{"type": self.get_openapi_type(param_type.__args__[0])}, {"type": "null"}]
+                return properties
 
         properties["type"] = "object"
-
         return properties
 
     def override_openapi(self, openapi_json_spec_path: Path):

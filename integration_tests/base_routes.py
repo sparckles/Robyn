@@ -1232,6 +1232,11 @@ class FullName(Body):
     initial: Initial
 
 
+class TestTypedBody(Body):
+    items: List[str]
+    numbers: list[int]
+
+
 class CreateItemBody(Body):
     name: FullName
     description: str
@@ -1251,6 +1256,11 @@ class CreateItemQueryParamsParams(QueryParams):
 @app.post("/openapi_request_body")
 def create_item(request, body: CreateItemBody, query: CreateItemQueryParamsParams) -> CreateItemResponse:
     return CreateItemResponse(success=True, items_changed=2)
+
+
+@app.post("/sync/body/typed")
+def sync_body_typed(body: TestTypedBody):
+    return "OK"
 
 
 # ===== JsonBody Routes =====
