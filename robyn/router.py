@@ -37,6 +37,7 @@ class Route(NamedTuple):
     auth_required: bool
     openapi_name: str
     openapi_tags: List[str]
+    openapi_responses: Optional[dict] = None
 
 
 class RouteMiddleware(NamedTuple):
@@ -138,6 +139,7 @@ class Router(BaseRouter):
         openapi_tags: List[str],
         exception_handler: Optional[Callable],
         injected_dependencies: dict,
+        openapi_responses: Optional[dict] = None,
     ) -> Union[Callable, CoroutineType]:
         # Pre-compute handler signature ONCE at registration time.
         # This avoids calling inspect.signature() on every request.
@@ -340,7 +342,7 @@ class Router(BaseRouter):
                 params,
                 new_injected_dependencies,
             )
-            self.routes.append(Route(route_type, endpoint, function, is_const, auth_required, openapi_name, openapi_tags))
+            self.routes.append(Route(route_type, endpoint, function, is_const, auth_required, openapi_name, openapi_tags, openapi_responses))
             return async_inner_handler
         else:
             function = FunctionInfo(
@@ -350,12 +352,12 @@ class Router(BaseRouter):
                 params,
                 new_injected_dependencies,
             )
-            self.routes.append(Route(route_type, endpoint, function, is_const, auth_required, openapi_name, openapi_tags))
+            self.routes.append(Route(route_type, endpoint, function, is_const, auth_required, openapi_name, openapi_tags, openapi_responses))
             return inner_handler
 
     def prepare_routes_openapi(self, openapi: OpenAPI, included_routers: List) -> None:
         for route in self.routes:
-            openapi.add_openapi_path_obj(lower_http_method(route.route_type), route.route, route.openapi_name, route.openapi_tags, route.function.handler)
+            openapi.add_openapi_path_obj(lower_http_method(route.route_type), route.route, route.openapi_name, route.openapi_tags, route.function.handler, route.openapi_responses)
 
         # TODO! after include_routes does not immediately merge all the routes
         # for router in included_routers:

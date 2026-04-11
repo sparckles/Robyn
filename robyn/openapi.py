@@ -168,7 +168,7 @@ class OpenAPI:
             "externalDocs": asdict(self.info.externalDocs) if self.info.externalDocs.url else None,
         }
 
-    def add_openapi_path_obj(self, route_type: str, endpoint: str, openapi_name: str, openapi_tags: List[str], handler: Callable):
+    def add_openapi_path_obj(self, route_type: str, endpoint: str, openapi_name: str, openapi_tags: List[str], handler: Callable, openapi_responses: Optional[dict] = None):
         """
         Adds the given path to openapi spec
 
@@ -177,6 +177,7 @@ class OpenAPI:
         @param openapi_name: str the name of the endpoint
         @param openapi_tags: List[str] for grouping of endpoints
         @param handler: Callable the handler function for the endpoint
+        @param openapi_responses: Optional[dict] additional response definitions keyed by status code
         """
 
         if self.openapi_file_override:
@@ -224,7 +225,7 @@ class OpenAPI:
                 return_annotation = signature.return_annotation
 
         modified_endpoint, path_obj = self.get_path_obj(
-            endpoint, openapi_name, openapi_description, openapi_tags, query_params, request_body, return_annotation
+            endpoint, openapi_name, openapi_description, openapi_tags, query_params, request_body, return_annotation, openapi_responses
         )
 
         if modified_endpoint not in self.openapi_spec["paths"]:
@@ -274,6 +275,7 @@ class OpenAPI:
         query_params: Optional[str_typed_dict],
         request_body: Optional[str_typed_dict],
         return_annotation: Optional[str_typed_dict],
+        openapi_responses: Optional[dict] = None,
     ) -> Tuple[str, dict]:
         """
         Get the "path" openapi object according to spec
@@ -370,6 +372,14 @@ class OpenAPI:
             response_schema = self.get_schema_object("response object", return_annotation)
 
         openapi_path_object["responses"] = {"200": {"description": "Successful Response", "content": {response_type: {"schema": response_schema}}}}
+
+        if openapi_responses:
+            for status_code_str, response_spec in openapi_responses.items():
+                code = str(status_code_str)
+                if isinstance(response_spec, dict):
+                    openapi_path_object["responses"][code] = response_spec
+                else:
+                    openapi_path_object["responses"][code] = {"description": str(response_spec)}
 
         return endpoint_with_path_params_wrapped_in_braces, openapi_path_object
 
