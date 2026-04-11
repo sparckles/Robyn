@@ -19,6 +19,31 @@ class FileResponse:
         self.headers = headers or Headers({"Content-Disposition": "attachment"})
 
 
+class RedirectResponse(Response):
+    """Convenience response that issues an HTTP redirect.
+
+    Args:
+        url: The target URL to redirect to.
+        status_code: HTTP status code (default 307 Temporary Redirect).
+            Common values: 301 (permanent), 302 (found), 303 (see other), 307 (temporary), 308 (permanent redirect).
+        headers: Optional additional headers.
+    """
+
+    def __init__(
+        self,
+        url: str,
+        status_code: int = 307,
+        headers: Optional[Headers] = None,
+    ):
+        redirect_headers = headers or Headers({})
+        redirect_headers.set("Location", url)
+        super().__init__(
+            status_code=status_code,
+            headers=redirect_headers,
+            description="",
+        )
+
+
 def html(html: str) -> Response:
     """
     This function will help in serving a simple html string
