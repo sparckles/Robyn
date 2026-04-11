@@ -12,6 +12,7 @@ from robyn import status_codes
 from robyn.argument_parser import Config
 from robyn.authentication import AuthenticationHandler
 from robyn.dependency_injection import DependencyMap
+from robyn.exceptions import HTTPException
 from robyn.env_populator import load_vars
 from robyn.events import Events
 from robyn.jsonify import jsonify
@@ -811,4 +812,5 @@ __all__ = [
     "WebSocketDisconnect",
     "JsonBody",
     "MCPApp",
+    "HTTPException",
 ]
