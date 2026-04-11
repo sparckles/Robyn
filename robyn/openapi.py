@@ -168,7 +168,7 @@ class OpenAPI:
             "externalDocs": asdict(self.info.externalDocs) if self.info.externalDocs.url else None,
         }
 
-    def add_openapi_path_obj(self, route_type: str, endpoint: str, openapi_name: str, openapi_tags: List[str], handler: Callable):
+    def add_openapi_path_obj(self, route_type: str, endpoint: str, openapi_name: str, openapi_tags: List[str], handler: Callable, deprecated: bool = False):
         """
         Adds the given path to openapi spec
 
@@ -177,6 +177,7 @@ class OpenAPI:
         @param openapi_name: str the name of the endpoint
         @param openapi_tags: List[str] for grouping of endpoints
         @param handler: Callable the handler function for the endpoint
+        @param deprecated: bool whether this endpoint is deprecated
         """
 
         if self.openapi_file_override:
@@ -224,7 +225,7 @@ class OpenAPI:
                 return_annotation = signature.return_annotation
 
         modified_endpoint, path_obj = self.get_path_obj(
-            endpoint, openapi_name, openapi_description, openapi_tags, query_params, request_body, return_annotation
+            endpoint, openapi_name, openapi_description, openapi_tags, query_params, request_body, return_annotation, deprecated=deprecated
         )
 
         if modified_endpoint not in self.openapi_spec["paths"]:
@@ -274,6 +275,7 @@ class OpenAPI:
         query_params: Optional[str_typed_dict],
         request_body: Optional[str_typed_dict],
         return_annotation: Optional[str_typed_dict],
+        deprecated: bool = False,
     ) -> Tuple[str, dict]:
         """
         Get the "path" openapi object according to spec
@@ -299,6 +301,9 @@ class OpenAPI:
             "parameters": [],
             "tags": tags,
         }
+
+        if deprecated:
+            openapi_path_object["deprecated"] = True
 
         # robyn has paths like /:url/:etc whereas openapi requires path like /{url}/{path}
         # this function is used for converting path params to the required form
