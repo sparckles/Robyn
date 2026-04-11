@@ -6,6 +6,7 @@ from types import CoroutineType
 from typing import Callable, Dict, List, NamedTuple, Optional, Union, is_typeddict
 
 from robyn import status_codes
+from robyn.exceptions import HTTPException
 from robyn._param_utils import QueryParamValidationError, parse_route_param_names, resolve_individual_params
 from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
 from robyn.dependency_injection import DependencyMap
@@ -289,6 +290,12 @@ class Router(BaseRouter):
                     headers=Headers({"Content-Type": "application/json"}),
                     description=jsonify(err.error_detail),
                 )
+            except HTTPException as exc:
+                response = Response(
+                    status_code=exc.status_code,
+                    headers=Headers(exc.headers),
+                    description=exc.detail or "",
+                )
             except Exception as err:
                 if exception_handler is None:
                     raise
@@ -314,6 +321,12 @@ class Router(BaseRouter):
                     status_code=status_codes.HTTP_422_UNPROCESSABLE_ENTITY,
                     headers=Headers({"Content-Type": "application/json"}),
                     description=jsonify(err.error_detail),
+                )
+            except HTTPException as exc:
+                response = Response(
+                    status_code=exc.status_code,
+                    headers=Headers(exc.headers),
+                    description=exc.detail or "",
                 )
             except Exception as err:
                 if exception_handler is None:
