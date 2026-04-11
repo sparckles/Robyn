@@ -168,7 +168,7 @@ class OpenAPI:
             "externalDocs": asdict(self.info.externalDocs) if self.info.externalDocs.url else None,
         }
 
-    def add_openapi_path_obj(self, route_type: str, endpoint: str, openapi_name: str, openapi_tags: List[str], handler: Callable):
+    def add_openapi_path_obj(self, route_type: str, endpoint: str, openapi_name: str, openapi_tags: List[str], handler: Callable, status_code: Optional[int] = None):
         """
         Adds the given path to openapi spec
 
@@ -177,6 +177,7 @@ class OpenAPI:
         @param openapi_name: str the name of the endpoint
         @param openapi_tags: List[str] for grouping of endpoints
         @param handler: Callable the handler function for the endpoint
+        @param status_code: Optional[int] default response status code
         """
 
         if self.openapi_file_override:
@@ -224,7 +225,7 @@ class OpenAPI:
                 return_annotation = signature.return_annotation
 
         modified_endpoint, path_obj = self.get_path_obj(
-            endpoint, openapi_name, openapi_description, openapi_tags, query_params, request_body, return_annotation
+            endpoint, openapi_name, openapi_description, openapi_tags, query_params, request_body, return_annotation, status_code=status_code
         )
 
         if modified_endpoint not in self.openapi_spec["paths"]:
@@ -274,6 +275,7 @@ class OpenAPI:
         query_params: Optional[str_typed_dict],
         request_body: Optional[str_typed_dict],
         return_annotation: Optional[str_typed_dict],
+        status_code: Optional[int] = None,
     ) -> Tuple[str, dict]:
         """
         Get the "path" openapi object according to spec
@@ -369,7 +371,8 @@ class OpenAPI:
             response_type = "application/json"
             response_schema = self.get_schema_object("response object", return_annotation)
 
-        openapi_path_object["responses"] = {"200": {"description": "Successful Response", "content": {response_type: {"schema": response_schema}}}}
+        response_key = str(status_code) if status_code is not None else "200"
+        openapi_path_object["responses"] = {response_key: {"description": "Successful Response", "content": {response_type: {"schema": response_schema}}}}
 
         return endpoint_with_path_params_wrapped_in_braces, openapi_path_object
 
