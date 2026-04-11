@@ -391,7 +391,9 @@ class BaseRobyn(ABC):
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.GET, endpoint, handler, const, auth_required, openapi_name, openapi_tags, include_in_schema=include_in_schema, deprecated=deprecated)
+            return self.add_route(
+                HttpMethod.GET, endpoint, handler, const, auth_required, openapi_name, openapi_tags, include_in_schema=include_in_schema, deprecated=deprecated
+            )
 
         return inner
 
@@ -416,7 +418,16 @@ class BaseRobyn(ABC):
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.POST, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, include_in_schema=include_in_schema, deprecated=deprecated)
+            return self.add_route(
+                HttpMethod.POST,
+                endpoint,
+                handler,
+                auth_required=auth_required,
+                openapi_name=openapi_name,
+                openapi_tags=openapi_tags,
+                include_in_schema=include_in_schema,
+                deprecated=deprecated,
+            )
 
         return inner
 
@@ -441,7 +452,16 @@ class BaseRobyn(ABC):
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.PUT, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, include_in_schema=include_in_schema, deprecated=deprecated)
+            return self.add_route(
+                HttpMethod.PUT,
+                endpoint,
+                handler,
+                auth_required=auth_required,
+                openapi_name=openapi_name,
+                openapi_tags=openapi_tags,
+                include_in_schema=include_in_schema,
+                deprecated=deprecated,
+            )
 
         return inner
 
@@ -466,7 +486,16 @@ class BaseRobyn(ABC):
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.DELETE, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, include_in_schema=include_in_schema, deprecated=deprecated)
+            return self.add_route(
+                HttpMethod.DELETE,
+                endpoint,
+                handler,
+                auth_required=auth_required,
+                openapi_name=openapi_name,
+                openapi_tags=openapi_tags,
+                include_in_schema=include_in_schema,
+                deprecated=deprecated,
+            )
 
         return inner
 
@@ -491,7 +520,16 @@ class BaseRobyn(ABC):
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.PATCH, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, include_in_schema=include_in_schema, deprecated=deprecated)
+            return self.add_route(
+                HttpMethod.PATCH,
+                endpoint,
+                handler,
+                auth_required=auth_required,
+                openapi_name=openapi_name,
+                openapi_tags=openapi_tags,
+                include_in_schema=include_in_schema,
+                deprecated=deprecated,
+            )
 
         return inner
 
@@ -516,7 +554,16 @@ class BaseRobyn(ABC):
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.HEAD, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, include_in_schema=include_in_schema, deprecated=deprecated)
+            return self.add_route(
+                HttpMethod.HEAD,
+                endpoint,
+                handler,
+                auth_required=auth_required,
+                openapi_name=openapi_name,
+                openapi_tags=openapi_tags,
+                include_in_schema=include_in_schema,
+                deprecated=deprecated,
+            )
 
         return inner
 
@@ -541,7 +588,16 @@ class BaseRobyn(ABC):
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.OPTIONS, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, include_in_schema=include_in_schema, deprecated=deprecated)
+            return self.add_route(
+                HttpMethod.OPTIONS,
+                endpoint,
+                handler,
+                auth_required=auth_required,
+                openapi_name=openapi_name,
+                openapi_tags=openapi_tags,
+                include_in_schema=include_in_schema,
+                deprecated=deprecated,
+            )
 
         return inner
 
@@ -566,7 +622,16 @@ class BaseRobyn(ABC):
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.CONNECT, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, include_in_schema=include_in_schema, deprecated=deprecated)
+            return self.add_route(
+                HttpMethod.CONNECT,
+                endpoint,
+                handler,
+                auth_required=auth_required,
+                openapi_name=openapi_name,
+                openapi_tags=openapi_tags,
+                include_in_schema=include_in_schema,
+                deprecated=deprecated,
+            )
 
         return inner
 
@@ -591,7 +656,16 @@ class BaseRobyn(ABC):
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.TRACE, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, include_in_schema=include_in_schema, deprecated=deprecated)
+            return self.add_route(
+                HttpMethod.TRACE,
+                endpoint,
+                handler,
+                auth_required=auth_required,
+                openapi_name=openapi_name,
+                openapi_tags=openapi_tags,
+                include_in_schema=include_in_schema,
+                deprecated=deprecated,
+            )
 
         return inner
 
@@ -745,29 +819,151 @@ class SubRouter(BaseRobyn):
 
         return f"{normalized_prefix}{normalized_endpoint}"
 
-    def get(self, endpoint: str, const: bool = False, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["get"], include_in_schema: bool = True, deprecated: bool = False):
-        return super().get(endpoint=self.__add_prefix(endpoint), const=const, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, include_in_schema=include_in_schema, deprecated=deprecated)
+    def get(
+        self,
+        endpoint: str,
+        const: bool = False,
+        auth_required: bool = False,
+        openapi_name: str = "",
+        openapi_tags: List[str] = ["get"],
+        include_in_schema: bool = True,
+        deprecated: bool = False,
+    ):
+        return super().get(
+            endpoint=self.__add_prefix(endpoint),
+            const=const,
+            auth_required=auth_required,
+            openapi_name=openapi_name,
+            openapi_tags=openapi_tags,
+            include_in_schema=include_in_schema,
+            deprecated=deprecated,
+        )
 
-    def post(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["post"], include_in_schema: bool = True, deprecated: bool = False):
-        return super().post(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, include_in_schema=include_in_schema, deprecated=deprecated)
+    def post(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        openapi_name: str = "",
+        openapi_tags: List[str] = ["post"],
+        include_in_schema: bool = True,
+        deprecated: bool = False,
+    ):
+        return super().post(
+            endpoint=self.__add_prefix(endpoint),
+            auth_required=auth_required,
+            openapi_name=openapi_name,
+            openapi_tags=openapi_tags,
+            include_in_schema=include_in_schema,
+            deprecated=deprecated,
+        )
 
-    def put(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["put"], include_in_schema: bool = True, deprecated: bool = False):
-        return super().put(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, include_in_schema=include_in_schema, deprecated=deprecated)
+    def put(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        openapi_name: str = "",
+        openapi_tags: List[str] = ["put"],
+        include_in_schema: bool = True,
+        deprecated: bool = False,
+    ):
+        return super().put(
+            endpoint=self.__add_prefix(endpoint),
+            auth_required=auth_required,
+            openapi_name=openapi_name,
+            openapi_tags=openapi_tags,
+            include_in_schema=include_in_schema,
+            deprecated=deprecated,
+        )
 
-    def delete(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["delete"], include_in_schema: bool = True, deprecated: bool = False):
-        return super().delete(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, include_in_schema=include_in_schema, deprecated=deprecated)
+    def delete(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        openapi_name: str = "",
+        openapi_tags: List[str] = ["delete"],
+        include_in_schema: bool = True,
+        deprecated: bool = False,
+    ):
+        return super().delete(
+            endpoint=self.__add_prefix(endpoint),
+            auth_required=auth_required,
+            openapi_name=openapi_name,
+            openapi_tags=openapi_tags,
+            include_in_schema=include_in_schema,
+            deprecated=deprecated,
+        )
 
-    def patch(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["patch"], include_in_schema: bool = True, deprecated: bool = False):
-        return super().patch(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, include_in_schema=include_in_schema, deprecated=deprecated)
+    def patch(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        openapi_name: str = "",
+        openapi_tags: List[str] = ["patch"],
+        include_in_schema: bool = True,
+        deprecated: bool = False,
+    ):
+        return super().patch(
+            endpoint=self.__add_prefix(endpoint),
+            auth_required=auth_required,
+            openapi_name=openapi_name,
+            openapi_tags=openapi_tags,
+            include_in_schema=include_in_schema,
+            deprecated=deprecated,
+        )
 
-    def head(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["head"], include_in_schema: bool = True, deprecated: bool = False):
-        return super().head(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, include_in_schema=include_in_schema, deprecated=deprecated)
+    def head(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        openapi_name: str = "",
+        openapi_tags: List[str] = ["head"],
+        include_in_schema: bool = True,
+        deprecated: bool = False,
+    ):
+        return super().head(
+            endpoint=self.__add_prefix(endpoint),
+            auth_required=auth_required,
+            openapi_name=openapi_name,
+            openapi_tags=openapi_tags,
+            include_in_schema=include_in_schema,
+            deprecated=deprecated,
+        )
 
-    def trace(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["trace"], include_in_schema: bool = True, deprecated: bool = False):
-        return super().trace(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, include_in_schema=include_in_schema, deprecated=deprecated)
+    def trace(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        openapi_name: str = "",
+        openapi_tags: List[str] = ["trace"],
+        include_in_schema: bool = True,
+        deprecated: bool = False,
+    ):
+        return super().trace(
+            endpoint=self.__add_prefix(endpoint),
+            auth_required=auth_required,
+            openapi_name=openapi_name,
+            openapi_tags=openapi_tags,
+            include_in_schema=include_in_schema,
+            deprecated=deprecated,
+        )
 
-    def options(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["options"], include_in_schema: bool = True, deprecated: bool = False):
-        return super().options(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, include_in_schema=include_in_schema, deprecated=deprecated)
+    def options(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        openapi_name: str = "",
+        openapi_tags: List[str] = ["options"],
+        include_in_schema: bool = True,
+        deprecated: bool = False,
+    ):
+        return super().options(
+            endpoint=self.__add_prefix(endpoint),
+            auth_required=auth_required,
+            openapi_name=openapi_name,
+            openapi_tags=openapi_tags,
+            include_in_schema=include_in_schema,
+            deprecated=deprecated,
+        )
 
     def websocket(self, endpoint: str):
         """
