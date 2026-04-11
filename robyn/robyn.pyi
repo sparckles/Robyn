@@ -362,6 +362,14 @@ class Headers:
         """
         pass
 
+    def get_headers(self) -> dict[str, list[str]]:
+        """Returns all headers as a dictionary where keys are header names and values are lists of all values for that header."""
+        ...
+
+    def to_dict(self) -> dict[str, str]:
+        """Returns headers as a flattened dictionary, joining duplicate headers with commas."""
+        ...
+
 @dataclass
 class Request:
     """
