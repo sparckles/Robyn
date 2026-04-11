@@ -26,8 +26,7 @@ class _ParamMarker:
     a parameter value should be sourced from.
     """
 
-    __slots__ = ("default", "alias", "title", "description", "gt", "ge", "lt", "le",
-                 "min_length", "max_length", "pattern", "deprecated", "example", "source")
+    __slots__ = ("default", "alias", "title", "description", "gt", "ge", "lt", "le", "min_length", "max_length", "pattern", "deprecated", "example", "source")
 
     def __init__(
         self,
@@ -88,6 +87,7 @@ class _ParamMarker:
                 raise ValueError(f"Parameter '{param_name}' must have at most {self.max_length} characters")
             if self.pattern is not None:
                 import re
+
                 if not re.match(self.pattern, value):
                     raise ValueError(f"Parameter '{param_name}' does not match pattern '{self.pattern}'")
 
@@ -138,19 +138,23 @@ class _ParamMarker:
 
 class Query(_ParamMarker):
     """Mark a parameter as a query string parameter."""
+
     pass
 
 
 class Path(_ParamMarker):
     """Mark a parameter as a path/URL parameter."""
+
     pass
 
 
 class Header(_ParamMarker):
     """Mark a parameter as an HTTP header parameter."""
+
     pass
 
 
 class Cookie(_ParamMarker):
     """Mark a parameter as a cookie parameter."""
+
     pass
