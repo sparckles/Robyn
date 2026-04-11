@@ -1,3 +1,4 @@
+import asyncio
 import inspect
 import logging
 from abc import ABC, abstractmethod
@@ -7,6 +8,7 @@ from typing import Callable, Dict, List, NamedTuple, Optional, Union, is_typeddi
 
 from robyn import status_codes
 from robyn._param_utils import QueryParamValidationError, parse_route_param_names, resolve_individual_params
+from robyn.depends import Depends, _detect_depends_params, cleanup_dependencies, resolve_dependencies
 from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
 from robyn.dependency_injection import DependencyMap
 from robyn.jsonify import jsonify
@@ -158,6 +160,9 @@ class Router(BaseRouter):
         pydantic_params = detect_pydantic_params(handler_params)
         check_pydantic_installed_for_handler(handler, pydantic_params)
 
+        # Detect Depends() params once at registration (zero cost if not used)
+        depends_params = _detect_depends_params(handler_params)
+
         if pydantic_params and route_type in (HttpMethod.GET, HttpMethod.HEAD):
             _logger.warning(
                 "Handler '%s' on %s '%s' uses Pydantic body parameter(s) %s, but %s requests typically do not carry a request body",
@@ -259,6 +264,7 @@ class Router(BaseRouter):
 
             # Phase 3: Individual path/query param resolution
             unresolved_names = set(handler_params) - set(filtered_params)
+            unresolved_names -= set(depends_params.keys())
             if unresolved_names:
                 unresolved = {name: handler_params[name] for name in unresolved_names}
                 individual_params = resolve_individual_params(
@@ -273,7 +279,12 @@ class Router(BaseRouter):
 
         @wraps(handler)
         async def async_inner_handler(*args, **kwargs):
+            dep_cache = None
             try:
+                if depends_params:
+                    request = next(filter(lambda it: isinstance(it, Request), args), None)
+                    dep_kwargs, dep_cache = await resolve_dependencies(depends_params, request)
+                    kwargs.update(dep_kwargs)
                 response = self._format_response(
                     await wrapped_handler(*args, **kwargs),
                 )
@@ -295,11 +306,23 @@ class Router(BaseRouter):
                 response = self._format_response(
                     exception_handler(err),
                 )
+            finally:
+                if dep_cache is not None:
+                    await cleanup_dependencies(dep_cache)
             return response
 
         @wraps(handler)
         def inner_handler(*args, **kwargs):
+            dep_cache = None
             try:
+                if depends_params:
+                    request = next(filter(lambda it: isinstance(it, Request), args), None)
+                    loop = asyncio.new_event_loop()
+                    try:
+                        dep_kwargs, dep_cache = loop.run_until_complete(resolve_dependencies(depends_params, request))
+                    finally:
+                        loop.close()
+                    kwargs.update(dep_kwargs)
                 response = self._format_response(
                     wrapped_handler(*args, **kwargs),
                 )
@@ -321,6 +344,13 @@ class Router(BaseRouter):
                 response = self._format_response(
                     exception_handler(err),
                 )
+            finally:
+                if dep_cache is not None:
+                    loop = asyncio.new_event_loop()
+                    try:
+                        loop.run_until_complete(cleanup_dependencies(dep_cache))
+                    finally:
+                        loop.close()
             return response
 
         params = dict(handler_params)
