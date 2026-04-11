@@ -4,10 +4,13 @@ from robyn import Robyn
 def test_openapi_responses_registered():
     app = Robyn(__file__)
 
-    @app.get("/items/:id", openapi_responses={
-        404: {"description": "Not found"},
-        422: {"description": "Validation error"},
-    })
+    @app.get(
+        "/items/:id",
+        openapi_responses={
+            404: {"description": "Not found"},
+            422: {"description": "Validation error"},
+        },
+    )
     async def get_item():
         return {}
 

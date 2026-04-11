@@ -410,7 +410,15 @@ class BaseRobyn(ABC):
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.POST, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, openapi_responses=openapi_responses)
+            return self.add_route(
+                HttpMethod.POST,
+                endpoint,
+                handler,
+                auth_required=auth_required,
+                openapi_name=openapi_name,
+                openapi_tags=openapi_tags,
+                openapi_responses=openapi_responses,
+            )
 
         return inner
 
@@ -433,7 +441,15 @@ class BaseRobyn(ABC):
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.PUT, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, openapi_responses=openapi_responses)
+            return self.add_route(
+                HttpMethod.PUT,
+                endpoint,
+                handler,
+                auth_required=auth_required,
+                openapi_name=openapi_name,
+                openapi_tags=openapi_tags,
+                openapi_responses=openapi_responses,
+            )
 
         return inner
 
@@ -456,7 +472,15 @@ class BaseRobyn(ABC):
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.DELETE, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, openapi_responses=openapi_responses)
+            return self.add_route(
+                HttpMethod.DELETE,
+                endpoint,
+                handler,
+                auth_required=auth_required,
+                openapi_name=openapi_name,
+                openapi_tags=openapi_tags,
+                openapi_responses=openapi_responses,
+            )
 
         return inner
 
@@ -479,7 +503,15 @@ class BaseRobyn(ABC):
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.PATCH, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, openapi_responses=openapi_responses)
+            return self.add_route(
+                HttpMethod.PATCH,
+                endpoint,
+                handler,
+                auth_required=auth_required,
+                openapi_name=openapi_name,
+                openapi_tags=openapi_tags,
+                openapi_responses=openapi_responses,
+            )
 
         return inner
 
@@ -502,7 +534,15 @@ class BaseRobyn(ABC):
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.HEAD, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, openapi_responses=openapi_responses)
+            return self.add_route(
+                HttpMethod.HEAD,
+                endpoint,
+                handler,
+                auth_required=auth_required,
+                openapi_name=openapi_name,
+                openapi_tags=openapi_tags,
+                openapi_responses=openapi_responses,
+            )
 
         return inner
 
@@ -525,7 +565,15 @@ class BaseRobyn(ABC):
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.OPTIONS, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, openapi_responses=openapi_responses)
+            return self.add_route(
+                HttpMethod.OPTIONS,
+                endpoint,
+                handler,
+                auth_required=auth_required,
+                openapi_name=openapi_name,
+                openapi_tags=openapi_tags,
+                openapi_responses=openapi_responses,
+            )
 
         return inner
 
@@ -548,7 +596,15 @@ class BaseRobyn(ABC):
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.CONNECT, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, openapi_responses=openapi_responses)
+            return self.add_route(
+                HttpMethod.CONNECT,
+                endpoint,
+                handler,
+                auth_required=auth_required,
+                openapi_name=openapi_name,
+                openapi_tags=openapi_tags,
+                openapi_responses=openapi_responses,
+            )
 
         return inner
 
@@ -571,7 +627,15 @@ class BaseRobyn(ABC):
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.TRACE, endpoint, handler, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, openapi_responses=openapi_responses)
+            return self.add_route(
+                HttpMethod.TRACE,
+                endpoint,
+                handler,
+                auth_required=auth_required,
+                openapi_name=openapi_name,
+                openapi_tags=openapi_tags,
+                openapi_responses=openapi_responses,
+            )
 
         return inner
 
@@ -725,29 +789,105 @@ class SubRouter(BaseRobyn):
 
         return f"{normalized_prefix}{normalized_endpoint}"
 
-    def get(self, endpoint: str, const: bool = False, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["get"], openapi_responses: Optional[dict] = None):
-        return super().get(endpoint=self.__add_prefix(endpoint), const=const, auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, openapi_responses=openapi_responses)
+    def get(
+        self,
+        endpoint: str,
+        const: bool = False,
+        auth_required: bool = False,
+        openapi_name: str = "",
+        openapi_tags: List[str] = ["get"],
+        openapi_responses: Optional[dict] = None,
+    ):
+        return super().get(
+            endpoint=self.__add_prefix(endpoint),
+            const=const,
+            auth_required=auth_required,
+            openapi_name=openapi_name,
+            openapi_tags=openapi_tags,
+            openapi_responses=openapi_responses,
+        )
 
-    def post(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["post"], openapi_responses: Optional[dict] = None):
-        return super().post(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, openapi_responses=openapi_responses)
+    def post(
+        self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["post"], openapi_responses: Optional[dict] = None
+    ):
+        return super().post(
+            endpoint=self.__add_prefix(endpoint),
+            auth_required=auth_required,
+            openapi_name=openapi_name,
+            openapi_tags=openapi_tags,
+            openapi_responses=openapi_responses,
+        )
 
-    def put(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["put"], openapi_responses: Optional[dict] = None):
-        return super().put(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, openapi_responses=openapi_responses)
+    def put(
+        self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["put"], openapi_responses: Optional[dict] = None
+    ):
+        return super().put(
+            endpoint=self.__add_prefix(endpoint),
+            auth_required=auth_required,
+            openapi_name=openapi_name,
+            openapi_tags=openapi_tags,
+            openapi_responses=openapi_responses,
+        )
 
-    def delete(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["delete"], openapi_responses: Optional[dict] = None):
-        return super().delete(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, openapi_responses=openapi_responses)
+    def delete(
+        self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["delete"], openapi_responses: Optional[dict] = None
+    ):
+        return super().delete(
+            endpoint=self.__add_prefix(endpoint),
+            auth_required=auth_required,
+            openapi_name=openapi_name,
+            openapi_tags=openapi_tags,
+            openapi_responses=openapi_responses,
+        )
 
-    def patch(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["patch"], openapi_responses: Optional[dict] = None):
-        return super().patch(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, openapi_responses=openapi_responses)
+    def patch(
+        self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["patch"], openapi_responses: Optional[dict] = None
+    ):
+        return super().patch(
+            endpoint=self.__add_prefix(endpoint),
+            auth_required=auth_required,
+            openapi_name=openapi_name,
+            openapi_tags=openapi_tags,
+            openapi_responses=openapi_responses,
+        )
 
-    def head(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["head"], openapi_responses: Optional[dict] = None):
-        return super().head(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, openapi_responses=openapi_responses)
+    def head(
+        self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["head"], openapi_responses: Optional[dict] = None
+    ):
+        return super().head(
+            endpoint=self.__add_prefix(endpoint),
+            auth_required=auth_required,
+            openapi_name=openapi_name,
+            openapi_tags=openapi_tags,
+            openapi_responses=openapi_responses,
+        )
 
-    def trace(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["trace"], openapi_responses: Optional[dict] = None):
-        return super().trace(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, openapi_responses=openapi_responses)
+    def trace(
+        self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["trace"], openapi_responses: Optional[dict] = None
+    ):
+        return super().trace(
+            endpoint=self.__add_prefix(endpoint),
+            auth_required=auth_required,
+            openapi_name=openapi_name,
+            openapi_tags=openapi_tags,
+            openapi_responses=openapi_responses,
+        )
 
-    def options(self, endpoint: str, auth_required: bool = False, openapi_name: str = "", openapi_tags: List[str] = ["options"], openapi_responses: Optional[dict] = None):
-        return super().options(endpoint=self.__add_prefix(endpoint), auth_required=auth_required, openapi_name=openapi_name, openapi_tags=openapi_tags, openapi_responses=openapi_responses)
+    def options(
+        self,
+        endpoint: str,
+        auth_required: bool = False,
+        openapi_name: str = "",
+        openapi_tags: List[str] = ["options"],
+        openapi_responses: Optional[dict] = None,
+    ):
+        return super().options(
+            endpoint=self.__add_prefix(endpoint),
+            auth_required=auth_required,
+            openapi_name=openapi_name,
+            openapi_tags=openapi_tags,
+            openapi_responses=openapi_responses,
+        )
 
     def websocket(self, endpoint: str):
         """
