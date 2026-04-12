@@ -1,4 +1,4 @@
-import time
+import threading
 
 from robyn.background import BackgroundTask, BackgroundTasks
 
@@ -44,16 +44,18 @@ def test_background_tasks_collection():
 
 
 def test_background_tasks_run_in_thread():
+    event = threading.Event()
     results = []
 
     def slow_task():
         results.append("done")
+        event.set()
 
     tasks = BackgroundTasks()
     tasks.add_task(slow_task)
     tasks.run_in_thread()
 
-    time.sleep(0.5)
+    event.wait(timeout=5)
     assert results == ["done"]
 
 

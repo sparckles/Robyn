@@ -14,7 +14,10 @@ class BackgroundTask:
         self.func = func
         self.args = args
         self.kwargs = kwargs
-        self.is_async = inspect.iscoroutinefunction(func)
+        self.is_async = inspect.iscoroutinefunction(func) or (
+            callable(func)
+            and inspect.iscoroutinefunction(getattr(func, "__call__", None))
+        )
 
     def __call__(self) -> None:
         if self.is_async:
@@ -53,7 +56,10 @@ class BackgroundTasks:
             try:
                 task()
             except Exception:
-                _logger.exception("Background task %s failed", task.func.__name__)
+                func_name = getattr(task.func, "__name__", None) or getattr(
+                    task.func, "__qualname__", repr(task.func)
+                )
+                _logger.exception("Background task %s failed", func_name)
 
     def run_in_thread(self) -> None:
         """Execute all tasks in a background thread."""
