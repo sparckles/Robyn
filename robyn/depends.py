@@ -31,9 +31,7 @@ class Depends:
         self.use_cache = use_cache
 
     def __repr__(self) -> str:
-        name = getattr(self.dependency, "__name__", None) or getattr(
-            self.dependency, "__qualname__", repr(self.dependency)
-        )
+        name = getattr(self.dependency, "__name__", None) or getattr(self.dependency, "__qualname__", repr(self.dependency))
         return f"Depends({name})"
 
 
