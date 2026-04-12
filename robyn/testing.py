@@ -134,8 +134,8 @@ class TestClient:
         self._http_routes: Dict[str, _RouteTable] = {}
         self._global_before: list = []
         self._global_after: list = []
-        self._mw_before = _RouteTable()
-        self._mw_after = _RouteTable()
+        self._mw_before: Dict[str, _RouteTable] = {}
+        self._mw_after: Dict[str, _RouteTable] = {}
 
         self._build()
 
@@ -154,11 +154,10 @@ class TestClient:
 
         for mw in self.app.middleware_router.get_route_middlewares():
             mw_method = _method_str(mw.route_type)
-            combined = f"{mw_method}{mw.route}"
             if mw.middleware_type == MiddlewareType.BEFORE_REQUEST:
-                self._mw_before.add(combined, mw.function)
+                self._mw_before.setdefault(mw_method, _RouteTable()).add(mw.route, mw.function)
             else:
-                self._mw_after.add(combined, mw.function)
+                self._mw_after.setdefault(mw_method, _RouteTable()).add(mw.route, mw.function)
 
     # -- lifecycle ----------------------------------------------------------
 
@@ -206,7 +205,7 @@ class TestClient:
             qp,
             h,
             {},
-            body_val or "",
+            body_val,
             method,
             Url("http", "testclient", path),
             form_data or {},
@@ -217,25 +216,26 @@ class TestClient:
 
     def _execute(self, method: str, path: str, **kwargs) -> TestResponse:
         request = self._build_request(method, path, **kwargs)
-        mw_key = f"/{method}{path}"
 
         # ---- before middlewares (global) ----------------------------------
         for mw_fn in self._global_before:
             result = self._call(mw_fn, request)
-            if isinstance(result, Response):
-                return self._to_test_response(result)
             if result is not None:
+                if isinstance(result, Response):
+                    return self._to_test_response(result)
                 request = result
 
         # ---- before middleware (route-specific) ---------------------------
-        mw_fn, mw_params = self._mw_before.match(mw_key)
-        if mw_fn is not None:
-            request.path_params = mw_params
-            result = self._call(mw_fn, request)
-            if isinstance(result, Response):
-                return self._to_test_response(result)
-            if result is not None:
-                request = result
+        mw_table = self._mw_before.get(method)
+        if mw_table is not None:
+            mw_fn, mw_params = mw_table.match(path)
+            if mw_fn is not None:
+                request.path_params = mw_params
+                result = self._call(mw_fn, request)
+                if result is not None:
+                    if isinstance(result, Response):
+                        return self._to_test_response(result)
+                    request = result
 
         # ---- route match --------------------------------------------------
         route_table = self._http_routes.get(method)
@@ -252,10 +252,16 @@ class TestClient:
         response = self._call(fn_info, request)
 
         if not isinstance(response, Response):
+            if isinstance(response, (dict, list)):
+                body = json.dumps(response).encode("utf-8")
+            elif isinstance(response, bytes):
+                body = response
+            else:
+                body = str(response).encode("utf-8")
             return TestResponse(
                 status_code=200,
                 headers=Headers({}),
-                _body=str(response).encode("utf-8"),
+                _body=body,
             )
 
         # ---- merge global response headers --------------------------------
@@ -274,9 +280,11 @@ class TestClient:
             response = self._call_after_mw(mw_fn, request, response)
 
         # ---- after middleware (route-specific) ----------------------------
-        mw_fn, _ = self._mw_after.match(mw_key)
-        if mw_fn is not None:
-            response = self._call_after_mw(mw_fn, request, response)
+        mw_table = self._mw_after.get(method)
+        if mw_table is not None:
+            mw_fn, _ = mw_table.match(path)
+            if mw_fn is not None:
+                response = self._call_after_mw(mw_fn, request, response)
 
         return self._to_test_response(response)
 
