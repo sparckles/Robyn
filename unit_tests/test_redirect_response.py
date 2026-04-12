@@ -1,3 +1,5 @@
+import pytest
+
 from robyn.responses import RedirectResponse
 
 
@@ -20,3 +22,8 @@ def test_redirect_response_with_extra_headers():
     resp = RedirectResponse("/target", headers=h)
     assert resp.headers.get("Location") == "/target"
     assert resp.headers.get("X-Custom") == "value"
+
+
+def test_redirect_response_invalid_status_code():
+    with pytest.raises(ValueError, match="Invalid redirect status code"):
+        RedirectResponse("/target", status_code=200)

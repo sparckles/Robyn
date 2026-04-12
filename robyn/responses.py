@@ -5,6 +5,8 @@ from typing import AsyncGenerator, Generator, Optional, Union
 
 from robyn.robyn import Headers, Response
 
+_REDIRECT_STATUS_CODES = frozenset({301, 302, 303, 307, 308})
+
 
 class FileResponse:
     def __init__(
@@ -35,6 +37,10 @@ class RedirectResponse(Response):
         status_code: int = 307,
         headers: Optional[Headers] = None,
     ):
+        if status_code not in _REDIRECT_STATUS_CODES:
+            raise ValueError(
+                f"Invalid redirect status code {status_code}. Must be one of: {sorted(_REDIRECT_STATUS_CODES)}"
+            )
         redirect_headers = headers or Headers({})
         redirect_headers.set("Location", url)
         super().__init__(
