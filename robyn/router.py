@@ -18,6 +18,7 @@ from robyn.pydantic_support import (
     serialize_pydantic_response,
     validate_pydantic_body,
 )
+from robyn.background import BackgroundTasks
 from robyn.responses import FileResponse, StreamingResponse
 from robyn.robyn import FunctionInfo, Headers, HttpMethod, Identity, MiddlewareType, QueryParams, Request, Response, Url
 from robyn.types import Body, Files, FormData, IPAddress, JsonBody, Method, PathParams
@@ -273,10 +274,12 @@ class Router(BaseRouter):
 
         @wraps(handler)
         async def async_inner_handler(*args, **kwargs):
+            background = None
             try:
-                response = self._format_response(
-                    await wrapped_handler(*args, **kwargs),
-                )
+                result = await wrapped_handler(*args, **kwargs)
+                if isinstance(result, tuple) and len(result) == 2 and isinstance(result[1], BackgroundTasks):
+                    result, background = result
+                response = self._format_response(result)
             except QueryParamValidationError as err:
                 response = Response(
                     status_code=status_codes.HTTP_400_BAD_REQUEST,
@@ -295,14 +298,19 @@ class Router(BaseRouter):
                 response = self._format_response(
                     exception_handler(err),
                 )
+
+            if background is not None:
+                background.run_in_thread()
             return response
 
         @wraps(handler)
         def inner_handler(*args, **kwargs):
+            background = None
             try:
-                response = self._format_response(
-                    wrapped_handler(*args, **kwargs),
-                )
+                result = wrapped_handler(*args, **kwargs)
+                if isinstance(result, tuple) and len(result) == 2 and isinstance(result[1], BackgroundTasks):
+                    result, background = result
+                response = self._format_response(result)
             except QueryParamValidationError as err:
                 response = Response(
                     status_code=status_codes.HTTP_400_BAD_REQUEST,
@@ -321,6 +329,9 @@ class Router(BaseRouter):
                 response = self._format_response(
                     exception_handler(err),
                 )
+
+            if background is not None:
+                background.run_in_thread()
             return response
 
         params = dict(handler_params)

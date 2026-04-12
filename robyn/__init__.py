@@ -10,6 +10,7 @@ import multiprocess as mp  # type: ignore
 
 from robyn import status_codes
 from robyn.argument_parser import Config
+from robyn.background import BackgroundTask, BackgroundTasks
 from robyn.authentication import AuthenticationHandler
 from robyn.dependency_injection import DependencyMap
 from robyn.env_populator import load_vars
@@ -811,4 +812,6 @@ __all__ = [
     "WebSocketDisconnect",
     "JsonBody",
     "MCPApp",
+    "BackgroundTask",
+    "BackgroundTasks",
 ]
