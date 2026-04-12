@@ -133,6 +133,10 @@ impl Server {
         }
     }
 
+    pub fn get_request_count(&self) -> u64 {
+        get_request_count()
+    }
+
     pub fn start(
         &mut self,
         _py: Python,
@@ -355,6 +359,11 @@ impl Server {
                 }
 
                 server.await.unwrap();
+
+                if max_requests.is_some() {
+                    log::info!("Actix server stopped, exiting worker process for recycling.");
+                    std::process::exit(0);
+                }
             });
         });
 

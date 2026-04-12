@@ -133,7 +133,7 @@ def init_processpool(
     max_requests: Optional[int] = None,
 ) -> List[Process]:
     process_pool: List = []
-    if sys.platform.startswith("win32") or processes == 1:
+    if sys.platform.startswith("win32") or (processes == 1 and not max_requests):
         spawn_process(
             directories,
             request_headers,
@@ -148,11 +148,12 @@ def init_processpool(
             excluded_response_headers_paths,
             client_timeout,
             keep_alive_timeout,
+            max_requests,
         )
 
         return process_pool
 
-    for _ in range(processes):
+    for _ in range(max(1, processes)):
         copied_socket = socket.try_clone()
         process = Process(
             target=spawn_process,
