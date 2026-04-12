@@ -38,9 +38,7 @@ class RedirectResponse(Response):
         headers: Optional[Headers] = None,
     ):
         if status_code not in _REDIRECT_STATUS_CODES:
-            raise ValueError(
-                f"Invalid redirect status code {status_code}. Must be one of: {sorted(_REDIRECT_STATUS_CODES)}"
-            )
+            raise ValueError(f"Invalid redirect status code {status_code}. Must be one of: {sorted(_REDIRECT_STATUS_CODES)}")
         redirect_headers = headers or Headers({})
         redirect_headers.set("Location", url)
         super().__init__(
