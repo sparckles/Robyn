@@ -164,10 +164,6 @@ fn create_python_stream(
                         None
                     }
                 }
-                        }
-                        None
-                    }
-                }
             })
         })
         .await
@@ -473,12 +469,7 @@ impl FromPyObject<'_, '_> for StreamingResponse {
             .and_then(|a| a.extract())
             .unwrap_or_else(|_| "text/event-stream".to_string());
 
-        if media_type == "text/event-stream" {
-            headers.set("Content-Type".to_string(), "text/event-stream".to_string());
-            if headers.get("Connection".to_string()).is_none() {
-                headers.set("Connection".to_string(), "keep-alive".to_string());
-            }
-        }
+        headers.set("Content-Type".to_string(), media_type.clone());
 
         let content: pyo3::Py<PyAny> = obj.getattr("content")?.unbind();
 
