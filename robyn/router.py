@@ -275,12 +275,11 @@ class Router(BaseRouter):
 
         @wraps(handler)
         async def async_inner_handler(*args, **kwargs):
+            was_explicit_response = False
             try:
-                response = self._format_response(
-                    await wrapped_handler(*args, **kwargs),
-                )
-                if default_status_code is not None and response.status_code == 200:
-                    response.status_code = default_status_code
+                raw_result = await wrapped_handler(*args, **kwargs)
+                was_explicit_response = isinstance(raw_result, (Response, StreamingResponse))
+                response = self._format_response(raw_result)
             except QueryParamValidationError as err:
                 response = Response(
                     status_code=status_codes.HTTP_400_BAD_REQUEST,
@@ -299,16 +298,17 @@ class Router(BaseRouter):
                 response = self._format_response(
                     exception_handler(err),
                 )
+            if default_status_code is not None and not was_explicit_response and response.status_code == 200:
+                response.status_code = default_status_code
             return response
 
         @wraps(handler)
         def inner_handler(*args, **kwargs):
+            was_explicit_response = False
             try:
-                response = self._format_response(
-                    wrapped_handler(*args, **kwargs),
-                )
-                if default_status_code is not None and response.status_code == 200:
-                    response.status_code = default_status_code
+                raw_result = wrapped_handler(*args, **kwargs)
+                was_explicit_response = isinstance(raw_result, (Response, StreamingResponse))
+                response = self._format_response(raw_result)
             except QueryParamValidationError as err:
                 response = Response(
                     status_code=status_codes.HTTP_400_BAD_REQUEST,
@@ -327,6 +327,8 @@ class Router(BaseRouter):
                 response = self._format_response(
                     exception_handler(err),
                 )
+            if default_status_code is not None and not was_explicit_response and response.status_code == 200:
+                response.status_code = default_status_code
             return response
 
         params = dict(handler_params)
