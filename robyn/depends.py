@@ -31,7 +31,10 @@ class Depends:
         self.use_cache = use_cache
 
     def __repr__(self) -> str:
-        return f"Depends({self.dependency.__name__})"
+        name = getattr(self.dependency, "__name__", None) or getattr(
+            self.dependency, "__qualname__", repr(self.dependency)
+        )
+        return f"Depends({name})"
 
 
 def _detect_depends_params(handler_params: dict) -> Dict[str, "Depends"]:
@@ -89,8 +92,12 @@ async def resolve_dependencies(depends_params: Dict[str, Depends], request) -> t
     cache: dict = {}
     resolved = {}
 
-    for param_name, dep in depends_params.items():
-        resolved[param_name] = await _resolve_dependency(dep, request, cache)
+    try:
+        for param_name, dep in depends_params.items():
+            resolved[param_name] = await _resolve_dependency(dep, request, cache)
+    except Exception:
+        await cleanup_dependencies(cache)
+        raise
 
     return resolved, cache
 
