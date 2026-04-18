@@ -502,6 +502,20 @@ async fn index(
 
     let route = format!("{}{}", req.method(), request.url.path);
 
+    // Allocate a single `contextvars.Context` for the full request lifecycle so
+    // that writes made by a `before_request` hook are visible to the route
+    // handler and to `after_request` hooks. asyncio copies the current context
+    // for each task it creates, so without this shared object each phase would
+    // see its own isolated snapshot (see issue #1380).
+    let request_context: Py<PyAny> = match Python::with_gil(crate::asyncio::new_context) {
+        Ok(ctx) => ctx,
+        Err(e) => {
+            error!("Failed to create request contextvars context: {}", e);
+            return ResponseType::Standard(Response::internal_server_error(None));
+        }
+    };
+    let ctx_ref = Some(&request_context);
+
     // Before middleware
     let before_middlewares =
         middleware_router.get_global_middlewares(&MiddlewareType::BeforeRequest);
@@ -515,7 +529,7 @@ async fn index(
             request.path_params = route_params;
         }
         for before_middleware in all_before {
-            request = match execute_middleware_function(&request, &before_middleware).await {
+            request = match execute_middleware_function(&request, &before_middleware, ctx_ref).await {
                 Ok(MiddlewareReturn::Request(r)) => r,
                 Ok(MiddlewareReturn::Response(r)) => {
                     early_response = Some(r);
@@ -554,7 +568,7 @@ async fn index(
     } else if let Some((function, route_params)) = router.get_route(&http_method, &request.url.path)
     {
         request.path_params = route_params;
-        match execute_http_function(&request, &function).await {
+        match execute_http_function(&request, &function, ctx_ref).await {
             Ok(r) => r,
             Err(e) => {
                 error!(
@@ -593,6 +607,7 @@ async fn index(
                     &request,
                     &std_response,
                     &after_middleware,
+                    ctx_ref,
                 )
                 .await
                 {

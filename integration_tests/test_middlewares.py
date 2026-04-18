@@ -45,3 +45,21 @@ def test_response_in_before_middleware(session):
 def test_global_middleware_applied_to_const_routes(route: str, session):
     r = get(route)
     assert r.headers.get("global_after") == "global_after_request", f"Global after-request middleware was not applied to const route {route}"
+
+
+@pytest.mark.benchmark
+@pytest.mark.parametrize(
+    "function_type, expected",
+    [
+        ("async", "set-in-before"),
+        ("sync", "set-in-sync-before"),
+    ],
+)
+def test_contextvars_propagate_across_hooks(function_type: str, expected: str, session):
+    """Regression test for #1380: `contextvars.ContextVar` writes in
+    `before_request` must be visible to the route handler and to
+    `after_request`. Each request gets a fresh shared context.
+    """
+    r = get(f"/{function_type}/contextvars/route")
+    assert r.text == expected, "Route handler did not observe ContextVar set in before_request"
+    assert r.headers.get("x-ctxvar-after") == expected, "after_request did not observe ContextVar set in before_request"
