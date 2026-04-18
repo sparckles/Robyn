@@ -439,7 +439,18 @@ class OpenAPI:
             if origin is Union:
                 non_none_args = [a for a in args if a is not type(None)]
                 if len(non_none_args) == 1 and type(None) in args:
-                    properties["anyOf"] = [self.get_schema_object(parameter, non_none_args[0]), {"type": "null"}]
+                    inner = non_none_args[0]
+                    # For primitive types, emit the minimal legacy form
+                    # `{"type": "<openapi>"}` — otherwise callers that assert
+                    # equality on the branch dict (e.g. existing integration
+                    # tests) break because `get_schema_object` would inject a
+                    # `title` key via the recursive call. For complex inner
+                    # types we still recurse so class fields are captured.
+                    if inner in type_mapping:
+                        inner_schema: dict = {"type": type_mapping[inner]}
+                    else:
+                        inner_schema = self.get_schema_object(parameter, inner)
+                    properties["anyOf"] = [inner_schema, {"type": "null"}]
                     return properties
 
         # check for Pydantic models
