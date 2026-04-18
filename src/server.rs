@@ -529,7 +529,8 @@ async fn index(
             request.path_params = route_params;
         }
         for before_middleware in all_before {
-            request = match execute_middleware_function(&request, &before_middleware, ctx_ref).await {
+            request = match execute_middleware_function(&request, &before_middleware, ctx_ref).await
+            {
                 Ok(MiddlewareReturn::Request(r)) => r,
                 Ok(MiddlewareReturn::Response(r)) => {
                     early_response = Some(r);

@@ -336,8 +336,7 @@ pub async fn execute_after_middleware_function(
 ) -> Result<MiddlewareReturn> {
     if function.is_async {
         let output: Py<PyAny> = Python::with_gil(|py| -> PyResult<_> {
-            let coroutine =
-                get_function_output_with_two_args(function, py, request, response)?;
+            let coroutine = get_function_output_with_two_args(function, py, request, response)?;
             let awaitable = match context {
                 Some(ctx) => wrap_coro_in_context(py, ctx.bind(py), coroutine)?,
                 None => coroutine,

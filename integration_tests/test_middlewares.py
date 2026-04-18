@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 
 from integration_tests.helpers.http_methods_helpers import get
@@ -51,7 +53,15 @@ def test_global_middleware_applied_to_const_routes(route: str, session):
 @pytest.mark.parametrize(
     "function_type, expected",
     [
-        ("async", "set-in-before"),
+        pytest.param(
+            "async",
+            "set-in-before",
+            marks=pytest.mark.skipif(
+                sys.version_info < (3, 11),
+                reason="Sharing ContextVar writes across async middleware phases requires "
+                "loop.create_task(context=...), which is Python 3.11+ (see #1380).",
+            ),
+        ),
         ("sync", "set-in-sync-before"),
     ],
 )

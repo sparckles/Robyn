@@ -55,11 +55,21 @@ pub(crate) fn new_context(py: Python) -> PyResult<Py<PyAny>> {
 /// given `Context` object without copying it, so any `ContextVar` writes
 /// performed inside `coro` persist in `ctx` and are visible to later phases
 /// that reuse the same `ctx`.
+///
+/// The `context=` keyword on `loop.create_task` is Python 3.11+. On 3.10 the
+/// helper falls back to plain `await coro` (current thread-local context),
+/// preserving pre-fix behavior — writes made in `before_request` are not
+/// visible to later phases on 3.10.
 pub(crate) fn run_in_context_helper<'py>(py: Python<'py>) -> PyResult<&'py Bound<'py, PyAny>> {
     const SOURCE: &str = "import asyncio\n\
-                          async def _run_in_context(coro, ctx):\n    \
-                              task = asyncio.get_running_loop().create_task(coro, context=ctx)\n    \
-                              return await task\n";
+                          import sys\n\
+                          if sys.version_info >= (3, 11):\n    \
+                              async def _run_in_context(coro, ctx):\n        \
+                                  task = asyncio.get_running_loop().create_task(coro, context=ctx)\n        \
+                                  return await task\n\
+                          else:\n    \
+                              async def _run_in_context(coro, ctx):\n        \
+                                  return await coro\n";
 
     Ok(RUN_IN_CONTEXT
         .get_or_try_init(py, || -> PyResult<Py<PyAny>> {
