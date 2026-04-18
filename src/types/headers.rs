@@ -183,7 +183,9 @@ impl Headers {
     pub fn set_missing(&mut self, headers: &Headers) {
         for iter in headers.headers.iter() {
             let (key, values) = iter.pair();
-            self.headers.entry(key.clone()).or_insert_with(|| values.clone());
+            self.headers
+                .entry(key.clone())
+                .or_insert_with(|| values.clone());
         }
     }
 
