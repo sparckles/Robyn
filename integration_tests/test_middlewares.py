@@ -58,8 +58,7 @@ def test_global_middleware_applied_to_const_routes(route: str, session):
             "set-in-before",
             marks=pytest.mark.skipif(
                 sys.version_info < (3, 11),
-                reason="Sharing ContextVar writes across async middleware phases requires "
-                "loop.create_task(context=...), which is Python 3.11+ (see #1380).",
+                reason="Sharing ContextVar writes across async middleware phases requires loop.create_task(context=...), which is Python 3.11+ (see #1380).",
             ),
         ),
         ("sync", "set-in-sync-before"),
