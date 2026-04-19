@@ -2,6 +2,7 @@ import inspect
 import json
 import logging
 import re
+import types
 import typing
 from dataclasses import asdict, dataclass, field
 from importlib import resources
@@ -423,44 +424,39 @@ class OpenAPI:
                 properties["type"] = type_mapping[type_name]
                 return properties
 
-        # Check if it's a generic type (like List[Object])
-        if hasattr(param_type, "__origin__"):
-            origin = getattr(param_type, "__origin__", None)
-            args = getattr(param_type, "__args__", ())
+        origin = typing.get_origin(param_type)
+        args = typing.get_args(param_type)
 
-            if origin is list or (hasattr(typing, "List") and origin is list):
-                properties["type"] = "array"
-                if args:
-                    item_type = args[0]
-                    properties["items"] = self.get_schema_object(f"{parameter}_item", item_type)
-                return properties
+        if origin is list:
+            properties["type"] = "array"
+            if args:
+                item_type = args[0]
+                properties["items"] = self.get_schema_object(f"{parameter}_item", item_type)
+            return properties
 
-            # Handle Optional/Union types
-            if origin is Union:
-                non_none_args = [a for a in args if a is not type(None)]
-                if len(non_none_args) == 1 and type(None) in args:
-                    inner = non_none_args[0]
-                    # For primitive types, emit the minimal legacy form
-                    # `{"type": "<openapi>"}` — otherwise callers that assert
-                    # equality on the branch dict (e.g. existing integration
-                    # tests) break because `get_schema_object` would inject a
-                    # `title` key via the recursive call. For complex inner
-                    # types we still recurse so class fields are captured.
-                    if inner in type_mapping:
-                        inner_schema: dict = {"type": type_mapping[inner]}
-                    else:
-                        inner_schema = self.get_schema_object(parameter, inner)
-                    properties["anyOf"] = [inner_schema, {"type": "null"}]
-                    return properties
+        is_union = origin is Union or isinstance(param_type, types.UnionType)
+        if is_union and args:
+            non_none_args = [a for a in args if a is not type(None)]
+            nullable = type(None) in args
 
-        # check for Pydantic models
+            any_of = []
+            for arg in non_none_args:
+                if arg in type_mapping:
+                    any_of.append({"type": type_mapping[arg]})
+                else:
+                    any_of.append(self.get_schema_object(parameter, arg))
+            if nullable:
+                any_of.append({"type": "null"})
+
+            properties["anyOf"] = any_of
+            return properties
+
         if is_pydantic_model(param_type):
             schema, component_schemas = get_pydantic_openapi_schema(param_type)
             if component_schemas:
                 self._merge_component_schemas(component_schemas)
             return schema
 
-        # check for custom classes and TypedDicts
         if inspect.isclass(param_type):
             properties["type"] = "object"
             properties["properties"] = {}
@@ -468,12 +464,6 @@ class OpenAPI:
                 for e in param_type.__annotations__:
                     properties["properties"][e] = self.get_schema_object(e, param_type.__annotations__[e])
             return properties
-
-        # check for Optional type (legacy path)
-        if hasattr(param_type, "__module__") and param_type.__module__ == "typing":
-            if hasattr(param_type, "__args__"):
-                properties["anyOf"] = [{"type": self.get_openapi_type(param_type.__args__[0])}, {"type": "null"}]
-                return properties
 
         properties["type"] = "object"
         return properties
