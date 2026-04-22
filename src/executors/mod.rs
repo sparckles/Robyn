@@ -87,9 +87,13 @@ fn extract_response_type_fast(output: &Bound<'_, PyAny>) -> PyResult<ResponseTyp
     let py = output.py();
 
     // 1. PyResponse pyclass downcast — zero getattr calls.
-    if let Ok(py_resp) = output.downcast::<PyResponse>() {
+    //    `downcast_exact` (not `downcast`) so that user `Response` subclasses
+    //    with overridden properties fall through to the getattr-based slow
+    //    path below, preserving their custom read semantics.
+    if let Ok(py_resp) = output.downcast_exact::<PyResponse>() {
         let borrowed = py_resp.borrow();
-        let description = crate::types::get_description_from_pyobject(borrowed.description.bind(py))?;
+        let description =
+            crate::types::get_description_from_pyobject(borrowed.description.bind(py))?;
         let headers = borrowed.headers.borrow(py).clone();
         let cookies = borrowed.cookies.borrow(py).clone();
         return Ok(ResponseType::Standard(Response {
@@ -103,9 +107,10 @@ fn extract_response_type_fast(output: &Bound<'_, PyAny>) -> PyResult<ResponseTyp
     }
 
     // 2. Bare dict/list — serialize via orjson directly in Rust.
-    //    `downcast_exact` rejects subclasses; those take the slow path so
-    //    custom __iter__/__getitem__ semantics aren't bypassed silently.
-    if output.downcast_exact::<PyDict>().is_ok() || output.downcast_exact::<PyList>().is_ok() {
+    //    Uses subclass-aware `downcast` to match the Python router's
+    //    `isinstance(res, (dict, list, ...))` check; orjson serializes
+    //    dict/list subclasses as their base type by default.
+    if output.downcast::<PyDict>().is_ok() || output.downcast::<PyList>().is_ok() {
         let dumps = orjson_dumps(py)?;
         let encoded = dumps.call1((output,))?;
         let bytes = encoded.downcast::<PyBytes>()?.as_bytes().to_vec();
@@ -115,15 +120,16 @@ fn extract_response_type_fast(output: &Bound<'_, PyAny>) -> PyResult<ResponseTyp
         )));
     }
 
-    // 3. Bare str/bytes.
-    if let Ok(s) = output.downcast_exact::<PyString>() {
+    // 3. Bare str/bytes — `downcast` (subclass-aware) to match the Python
+    //    router's `isinstance` gate.
+    if let Ok(s) = output.downcast::<PyString>() {
         let bytes = s.to_string().into_bytes();
         return Ok(ResponseType::Standard(response_from_bytes(
             bytes,
             text_plain_headers(),
         )));
     }
-    if let Ok(b) = output.downcast_exact::<PyBytes>() {
+    if let Ok(b) = output.downcast::<PyBytes>() {
         let bytes = b.as_bytes().to_vec();
         return Ok(ResponseType::Standard(response_from_bytes(
             bytes,
