@@ -507,14 +507,24 @@ async fn index(
     // handler and to `after_request` hooks. asyncio copies the current context
     // for each task it creates, so without this shared object each phase would
     // see its own isolated snapshot (see issue #1380).
-    let request_context: Py<PyAny> = match Python::with_gil(crate::asyncio::new_context) {
-        Ok(ctx) => ctx,
-        Err(e) => {
-            error!("Failed to create request contextvars context: {}", e);
-            return ResponseType::Standard(Response::internal_server_error(None));
+    //
+    // The context only matters when middleware runs — without middleware there
+    // is no cross-phase `ContextVar` visibility to preserve. Skipping the
+    // per-request GIL acquire + `Context()` construction shaves measurable
+    // overhead off every request in middleware-free apps (the common case for
+    // the TechEmpower JSON benchmark).
+    let request_context: Option<Py<PyAny>> = if middleware_router.has_any_middleware() {
+        match Python::with_gil(crate::asyncio::new_context) {
+            Ok(ctx) => Some(ctx),
+            Err(e) => {
+                error!("Failed to create request contextvars context: {}", e);
+                return ResponseType::Standard(Response::internal_server_error(None));
+            }
         }
+    } else {
+        None
     };
-    let ctx_ref = Some(&request_context);
+    let ctx_ref = request_context.as_ref();
 
     // Before middleware
     let before_middlewares =

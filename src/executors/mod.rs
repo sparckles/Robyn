@@ -5,16 +5,146 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use pyo3::prelude::*;
+use pyo3::sync::PyOnceLock;
+use pyo3::types::{PyBytes, PyDict, PyList, PyString};
 use pyo3::{BoundObject, IntoPyObject};
 use pyo3_async_runtimes::TaskLocals;
 
 use crate::asyncio::run_in_context_helper;
+use crate::types::cookie::Cookies;
+use crate::types::headers::Headers;
+use crate::types::response::PyResponse;
 use crate::types::{
     function_info::FunctionInfo,
     request::Request,
     response::{Response, ResponseType, StreamingResponse},
     MiddlewareReturn,
 };
+
+/// Cached `orjson.dumps` callable. Resolved once at first use, reused across
+/// every request that returns a bare `dict`/`list` from its handler.
+static ORJSON_DUMPS: PyOnceLock<Py<PyAny>> = PyOnceLock::new();
+
+fn orjson_dumps<'py>(py: Python<'py>) -> PyResult<&'py Bound<'py, PyAny>> {
+    Ok(ORJSON_DUMPS
+        .get_or_try_init(py, || -> PyResult<Py<PyAny>> {
+            Ok(py.import("orjson")?.getattr("dumps")?.unbind())
+        })?
+        .bind(py))
+}
+
+#[inline]
+fn json_headers() -> Headers {
+    let h = Headers::default();
+    h.headers
+        .entry("content-type".to_string())
+        .or_default()
+        .push("application/json".to_string());
+    h
+}
+
+#[inline]
+fn text_plain_headers() -> Headers {
+    let h = Headers::default();
+    h.headers
+        .entry("content-type".to_string())
+        .or_default()
+        .push("text/plain".to_string());
+    h
+}
+
+#[inline]
+fn octet_stream_headers() -> Headers {
+    let h = Headers::default();
+    h.headers
+        .entry("content-type".to_string())
+        .or_default()
+        .push("application/octet-stream".to_string());
+    h
+}
+
+#[inline]
+fn response_from_bytes(body: Vec<u8>, headers: Headers) -> Response {
+    Response {
+        status_code: 200,
+        response_type: "text".to_string(),
+        headers,
+        description: body,
+        file_path: None,
+        cookies: Cookies::default(),
+    }
+}
+
+/// Try every fast path before falling back to the generic `FromPyObject for
+/// Response` conversion. Order matters:
+///   1. `#[pyclass] Response`  — read fields from the Rust struct directly.
+///   2. `dict`/`list`          — hand to orjson, skip Python-side wrapping.
+///   3. `str`/`bytes`          — wrap in a preset Response.
+///   4. `StreamingResponse`    — existing extract path.
+///   5. Fallback               — `FromPyObject` chain (handles subclasses).
+#[inline]
+fn extract_response_type_fast(output: &Bound<'_, PyAny>) -> PyResult<ResponseType> {
+    let py = output.py();
+
+    // 1. PyResponse pyclass downcast — zero getattr calls.
+    if let Ok(py_resp) = output.downcast::<PyResponse>() {
+        let borrowed = py_resp.borrow();
+        let description = crate::types::get_description_from_pyobject(borrowed.description.bind(py))?;
+        let headers = borrowed.headers.borrow(py).clone();
+        let cookies = borrowed.cookies.borrow(py).clone();
+        return Ok(ResponseType::Standard(Response {
+            status_code: borrowed.status_code,
+            response_type: borrowed.response_type.clone(),
+            headers,
+            description,
+            file_path: borrowed.file_path.clone(),
+            cookies,
+        }));
+    }
+
+    // 2. Bare dict/list — serialize via orjson directly in Rust.
+    //    `downcast_exact` rejects subclasses; those take the slow path so
+    //    custom __iter__/__getitem__ semantics aren't bypassed silently.
+    if output.downcast_exact::<PyDict>().is_ok() || output.downcast_exact::<PyList>().is_ok() {
+        let dumps = orjson_dumps(py)?;
+        let encoded = dumps.call1((output,))?;
+        let bytes = encoded.downcast::<PyBytes>()?.as_bytes().to_vec();
+        return Ok(ResponseType::Standard(response_from_bytes(
+            bytes,
+            json_headers(),
+        )));
+    }
+
+    // 3. Bare str/bytes.
+    if let Ok(s) = output.downcast_exact::<PyString>() {
+        let bytes = s.to_string().into_bytes();
+        return Ok(ResponseType::Standard(response_from_bytes(
+            bytes,
+            text_plain_headers(),
+        )));
+    }
+    if let Ok(b) = output.downcast_exact::<PyBytes>() {
+        let bytes = b.as_bytes().to_vec();
+        return Ok(ResponseType::Standard(response_from_bytes(
+            bytes,
+            octet_stream_headers(),
+        )));
+    }
+
+    // 4. StreamingResponse (duck-typed via `content`/`media_type` attrs).
+    if let Ok(streaming) = output.extract::<StreamingResponse>() {
+        return Ok(ResponseType::Streaming(streaming));
+    }
+
+    // 5. Slow-path fallback: anything that implements the Response protocol
+    //    (e.g. user subclasses) still works through the getattr chain.
+    match output.extract::<Response>() {
+        Ok(response) => Ok(ResponseType::Standard(response)),
+        Err(_) => Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "Function must return a Response, StreamingResponse, dict, list, str, or bytes",
+        )),
+    }
+}
 
 #[inline]
 fn get_function_output<'a, T>(
@@ -410,29 +540,12 @@ pub async fn execute_http_function(
 
 #[inline]
 fn extract_response_type(output: Py<PyAny>, py: Python) -> PyResult<ResponseType> {
-    // Try Response first (most common case), then StreamingResponse
-    match output.extract::<Response>(py) {
-        Ok(response) => Ok(ResponseType::Standard(response)),
-        Err(_) => match output.extract::<StreamingResponse>(py) {
-            Ok(streaming_response) => Ok(ResponseType::Streaming(streaming_response)),
-            Err(_) => Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
-                "Function must return a Response or StreamingResponse",
-            )),
-        },
-    }
+    extract_response_type_fast(output.bind(py))
 }
 
 #[inline]
 fn extract_response_type_bound(output: pyo3::Bound<'_, pyo3::PyAny>) -> PyResult<ResponseType> {
-    match output.extract::<Response>() {
-        Ok(response) => Ok(ResponseType::Standard(response)),
-        Err(_) => match output.extract::<StreamingResponse>() {
-            Ok(streaming_response) => Ok(ResponseType::Streaming(streaming_response)),
-            Err(_) => Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
-                "Function must return a Response or StreamingResponse",
-            )),
-        },
-    }
+    extract_response_type_fast(&output)
 }
 
 pub async fn execute_startup_handler(
