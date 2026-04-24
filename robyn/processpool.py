@@ -31,6 +31,15 @@ def run_processes(
     client_timeout: int = 30,
     keep_alive_timeout: int = 20,
 ) -> List[Process]:
+    """
+    Spawn server processes.
+
+    :param client_timeout: max seconds to wait for the client to send the
+        complete request headers (maps to actix-web's
+        ``client_request_timeout``). This does **not** limit handler execution
+        time or overall request duration.
+    :param keep_alive_timeout: seconds to keep idle connections open.
+    """
     socket = SocketHeld(url, port)
 
     process_pool = init_processpool(
@@ -175,6 +184,11 @@ def spawn_process(
     :param socket SocketHeld: This is the main tcp socket, which is being shared across multiple processes.
     :param process_name string: This is the name given to the process to identify the process
     :param workers int: This is the name given to the process to identify the process
+    :param client_timeout int: max seconds to wait for the client to send the
+        complete request headers (maps to actix-web's
+        ``client_request_timeout``). This does **not** limit handler execution
+        time or overall request duration.
+    :param keep_alive_timeout int: seconds to keep idle connections open.
     """
 
     loop = initialize_event_loop()
@@ -218,7 +232,7 @@ def spawn_process(
         )
 
     try:
-        server.start(socket, workers)
+        server.start(socket, workers, client_timeout, keep_alive_timeout)
         loop = asyncio.get_event_loop()
         loop.run_forever()
     except KeyboardInterrupt:

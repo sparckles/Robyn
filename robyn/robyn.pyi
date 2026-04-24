@@ -515,6 +515,19 @@ class Server:
     ) -> None:
         pass
     def start(self, socket: SocketHeld, workers: int, client_timeout: int, keep_alive_timeout: int) -> None:
+        """
+        Start the Robyn server.
+
+        :param socket: The shared socket to listen on.
+        :param workers: Number of worker threads.
+        :param client_timeout: Maximum time in seconds to wait for the client
+            to transmit the complete request headers. This does **not** limit
+            handler execution time or overall request duration — it only guards
+            against slow or stalled clients during the initial header-reading
+            phase (maps to actix-web's ``client_request_timeout``).
+        :param keep_alive_timeout: Time in seconds to keep an idle connection
+            open before closing it.
+        """
         pass
 
 class WebSocketConnector:
