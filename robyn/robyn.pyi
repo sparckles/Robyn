@@ -7,6 +7,10 @@ from typing import Callable, Optional, Union
 def get_version() -> str:
     pass
 
+def get_request_count() -> int:
+    """Returns the total number of HTTP requests handled by this worker process."""
+    pass
+
 class SocketHeld:
     def __init__(self, url: str, port: int):
         pass
@@ -514,7 +518,7 @@ class Server:
         use_channel: bool,
     ) -> None:
         pass
-    def start(self, socket: SocketHeld, workers: int, client_timeout: int, keep_alive_timeout: int) -> None:
+    def start(self, socket: SocketHeld, workers: int, max_requests: int | None = None) -> None:
         pass
 
 class WebSocketConnector:
