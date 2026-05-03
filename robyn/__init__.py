@@ -5,7 +5,6 @@ import socket
 from abc import ABC
 from collections.abc import Callable
 from pathlib import Path
-from typing import cast
 
 import multiprocess as mp  # type: ignore
 
@@ -24,6 +23,7 @@ from robyn.reloader import compile_rust_files
 from robyn.responses import SSEMessage, SSEResponse, StreamingResponse, html, serve_file, serve_html
 from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, WebSocketConnector, get_version
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
+from robyn.testing import TestClient
 from robyn.types import Directory, JsonBody
 from robyn.ws import WebSocketAdapter, WebSocketDisconnect, create_websocket_decorator
 
@@ -370,7 +370,7 @@ class BaseRobyn(ABC):
         const: bool = False,
         auth_required: bool = False,
         openapi_name: str = "",
-        openapi_tags: list[str] | None = None,
+        openapi_tags: list[str] = ["get"],
     ):
         """
         The @app.get decorator to add a route with the GET method
@@ -382,9 +382,6 @@ class BaseRobyn(ABC):
         :param openapi_tags: list[str] -- for grouping of endpoints in the openapi spec
         """
 
-        if openapi_tags is None:
-            openapi_tags = ["get"]
-
         def inner(handler):
             return self.add_route(HttpMethod.GET, endpoint, handler, const, auth_required, openapi_name, openapi_tags)
 
@@ -395,7 +392,7 @@ class BaseRobyn(ABC):
         endpoint: str,
         auth_required: bool = False,
         openapi_name: str = "",
-        openapi_tags: list[str] | None = None,
+        openapi_tags: list[str] = ["post"],
     ):
         """
         The @app.post decorator to add a route with POST method
@@ -405,9 +402,6 @@ class BaseRobyn(ABC):
         :param openapi_name: str -- the name of the endpoint in the openapi spec
         :param openapi_tags: list[str] -- for grouping of endpoints in the openapi spec
         """
-
-        if openapi_tags is None:
-            openapi_tags = ["post"]
 
         def inner(handler):
             return self.add_route(
@@ -426,7 +420,7 @@ class BaseRobyn(ABC):
         endpoint: str,
         auth_required: bool = False,
         openapi_name: str = "",
-        openapi_tags: list[str] | None = None,
+        openapi_tags: list[str] = ["put"],
     ):
         """
         The @app.put decorator to add a get route with PUT method
@@ -436,9 +430,6 @@ class BaseRobyn(ABC):
         :param openapi_name: str -- the name of the endpoint in the openapi spec
         :param openapi_tags: list[str] -- for grouping of endpoints in the openapi spec
         """
-
-        if openapi_tags is None:
-            openapi_tags = ["put"]
 
         def inner(handler):
             return self.add_route(
@@ -457,7 +448,7 @@ class BaseRobyn(ABC):
         endpoint: str,
         auth_required: bool = False,
         openapi_name: str = "",
-        openapi_tags: list[str] | None = None,
+        openapi_tags: list[str] = ["delete"],
     ):
         """
         The @app.delete decorator to add a route with DELETE method
@@ -467,9 +458,6 @@ class BaseRobyn(ABC):
         :param openapi_name: str -- the name of the endpoint in the openapi spec
         :param openapi_tags: list[str] -- for grouping of endpoints in the openapi spec
         """
-
-        if openapi_tags is None:
-            openapi_tags = ["delete"]
 
         def inner(handler):
             return self.add_route(
@@ -488,7 +476,7 @@ class BaseRobyn(ABC):
         endpoint: str,
         auth_required: bool = False,
         openapi_name: str = "",
-        openapi_tags: list[str] | None = None,
+        openapi_tags: list[str] = ["patch"],
     ):
         """
         The @app.patch decorator to add a route with PATCH method
@@ -498,9 +486,6 @@ class BaseRobyn(ABC):
         :param openapi_name: str -- the name of the endpoint in the openapi spec
         :param openapi_tags: list[str] -- for grouping of endpoints in the openapi spec
         """
-
-        if openapi_tags is None:
-            openapi_tags = ["patch"]
 
         def inner(handler):
             return self.add_route(
@@ -519,7 +504,7 @@ class BaseRobyn(ABC):
         endpoint: str,
         auth_required: bool = False,
         openapi_name: str = "",
-        openapi_tags: list[str] | None = None,
+        openapi_tags: list[str] = ["head"],
     ):
         """
         The @app.head decorator to add a route with HEAD method
@@ -529,9 +514,6 @@ class BaseRobyn(ABC):
         :param openapi_name: str -- the name of the endpoint in the openapi spec
         :param openapi_tags: list[str] -- for grouping of endpoints in the openapi spec
         """
-
-        if openapi_tags is None:
-            openapi_tags = ["head"]
 
         def inner(handler):
             return self.add_route(
@@ -550,7 +532,7 @@ class BaseRobyn(ABC):
         endpoint: str,
         auth_required: bool = False,
         openapi_name: str = "",
-        openapi_tags: list[str] | None = None,
+        openapi_tags: list[str] = ["options"],
     ):
         """
         The @app.options decorator to add a route with OPTIONS method
@@ -560,9 +542,6 @@ class BaseRobyn(ABC):
         :param openapi_name: str -- the name of the endpoint in the openapi spec
         :param openapi_tags: list[str] -- for grouping of endpoints in the openapi spec
         """
-
-        if openapi_tags is None:
-            openapi_tags = ["options"]
 
         def inner(handler):
             return self.add_route(
@@ -581,7 +560,7 @@ class BaseRobyn(ABC):
         endpoint: str,
         auth_required: bool = False,
         openapi_name: str = "",
-        openapi_tags: list[str] | None = None,
+        openapi_tags: list[str] = ["connect"],
     ):
         """
         The @app.connect decorator to add a route with CONNECT method
@@ -591,9 +570,6 @@ class BaseRobyn(ABC):
         :param openapi_name: str -- the name of the endpoint in the openapi spec
         :param openapi_tags: list[str] -- for grouping of endpoints in the openapi spec
         """
-
-        if openapi_tags is None:
-            openapi_tags = ["connect"]
 
         def inner(handler):
             return self.add_route(
@@ -612,7 +588,7 @@ class BaseRobyn(ABC):
         endpoint: str,
         auth_required: bool = False,
         openapi_name: str = "",
-        openapi_tags: list[str] | None = None,
+        openapi_tags: list[str] = ["trace"],
     ):
         """
         The @app.trace decorator to add a route with TRACE method
@@ -622,9 +598,6 @@ class BaseRobyn(ABC):
         :param openapi_name: str -- the name of the endpoint in the openapi spec
         :param openapi_tags: list[str] -- for grouping of endpoints in the openapi spec
         """
-
-        if openapi_tags is None:
-            openapi_tags = ["trace"]
 
         def inner(handler):
             return self.add_route(
@@ -807,10 +780,8 @@ class SubRouter(BaseRobyn):
         const: bool = False,
         auth_required: bool = False,
         openapi_name: str = "",
-        openapi_tags: list[str] | None = None,
+        openapi_tags: list[str] = ["get"],
     ):
-        if openapi_tags is None:
-            openapi_tags = ["get"]
         return super().get(
             endpoint=self.__add_prefix(endpoint),
             const=const,
@@ -824,10 +795,8 @@ class SubRouter(BaseRobyn):
         endpoint: str,
         auth_required: bool = False,
         openapi_name: str = "",
-        openapi_tags: list[str] | None = None,
+        openapi_tags: list[str] = ["post"],
     ):
-        if openapi_tags is None:
-            openapi_tags = ["post"]
         return super().post(
             endpoint=self.__add_prefix(endpoint),
             auth_required=auth_required,
@@ -840,10 +809,8 @@ class SubRouter(BaseRobyn):
         endpoint: str,
         auth_required: bool = False,
         openapi_name: str = "",
-        openapi_tags: list[str] | None = None,
+        openapi_tags: list[str] = ["put"],
     ):
-        if openapi_tags is None:
-            openapi_tags = ["put"]
         return super().put(
             endpoint=self.__add_prefix(endpoint),
             auth_required=auth_required,
@@ -856,10 +823,8 @@ class SubRouter(BaseRobyn):
         endpoint: str,
         auth_required: bool = False,
         openapi_name: str = "",
-        openapi_tags: list[str] | None = None,
+        openapi_tags: list[str] = ["delete"],
     ):
-        if openapi_tags is None:
-            openapi_tags = ["delete"]
         return super().delete(
             endpoint=self.__add_prefix(endpoint),
             auth_required=auth_required,
@@ -872,10 +837,8 @@ class SubRouter(BaseRobyn):
         endpoint: str,
         auth_required: bool = False,
         openapi_name: str = "",
-        openapi_tags: list[str] | None = None,
+        openapi_tags: list[str] = ["patch"],
     ):
-        if openapi_tags is None:
-            openapi_tags = ["patch"]
         return super().patch(
             endpoint=self.__add_prefix(endpoint),
             auth_required=auth_required,
@@ -888,10 +851,8 @@ class SubRouter(BaseRobyn):
         endpoint: str,
         auth_required: bool = False,
         openapi_name: str = "",
-        openapi_tags: list[str] | None = None,
+        openapi_tags: list[str] = ["head"],
     ):
-        if openapi_tags is None:
-            openapi_tags = ["head"]
         return super().head(
             endpoint=self.__add_prefix(endpoint),
             auth_required=auth_required,
@@ -904,10 +865,8 @@ class SubRouter(BaseRobyn):
         endpoint: str,
         auth_required: bool = False,
         openapi_name: str = "",
-        openapi_tags: list[str] | None = None,
+        openapi_tags: list[str] = ["trace"],
     ):
-        if openapi_tags is None:
-            openapi_tags = ["trace"]
         return super().trace(
             endpoint=self.__add_prefix(endpoint),
             auth_required=auth_required,
@@ -920,10 +879,8 @@ class SubRouter(BaseRobyn):
         endpoint: str,
         auth_required: bool = False,
         openapi_name: str = "",
-        openapi_tags: list[str] | None = None,
+        openapi_tags: list[str] = ["options"],
     ):
-        if openapi_tags is None:
-            openapi_tags = ["options"]
         return super().options(
             endpoint=self.__add_prefix(endpoint),
             auth_required=auth_required,
@@ -1011,4 +968,5 @@ __all__ = [
     "WebSocketDisconnect",
     "JsonBody",
     "MCPApp",
+    "TestClient",
 ]

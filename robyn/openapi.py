@@ -91,26 +91,26 @@ class Components:
     Additional external documentation for this operation.
     (https://swagger.io/specification/#components-object)
 
-    @param schemas: dict[str, Dict] | None An object to hold reusable Schema Objects.
-    @param responses: dict[str, Dict] | None An object to hold reusable Response Objects.
-    @param parameters: dict[str, Dict] | None An object to hold reusable Parameter Objects.
-    @param examples: dict[str, Dict] | None An object to hold reusable Example Objects.
-    @param requestBodies: dict[str, Dict] | None An object to hold reusable Request Body Objects.
-    @param securitySchemes: dict[str, Dict] | None An object to hold reusable Security Scheme Objects.
-    @param links: dict[str, Dict] | None An object to hold reusable Link Objects.
-    @param callbacks: dict[str, Dict] | None An object to hold reusable Callback Objects.
-    @param pathItems: dict[str, Dict] | None An object to hold reusable Callback Objects.
+    @param schemas: dict[str, dict] | None An object to hold reusable Schema Objects.
+    @param responses: dict[str, dict] | None An object to hold reusable Response Objects.
+    @param parameters: dict[str, dict] | None An object to hold reusable Parameter Objects.
+    @param examples: dict[str, dict] | None An object to hold reusable Example Objects.
+    @param requestBodies: dict[str, dict] | None An object to hold reusable Request Body Objects.
+    @param securitySchemes: dict[str, dict] | None An object to hold reusable Security Scheme Objects.
+    @param links: dict[str, dict] | None An object to hold reusable Link Objects.
+    @param callbacks: dict[str, dict] | None An object to hold reusable Callback Objects.
+    @param pathItems: dict[str, dict] | None An object to hold reusable Callback Objects.
     """
 
-    schemas: dict[str, Dict] | None = field(default_factory=dict)
-    responses: dict[str, Dict] | None = field(default_factory=dict)
-    parameters: dict[str, Dict] | None = field(default_factory=dict)
-    examples: dict[str, Dict] | None = field(default_factory=dict)
-    requestBodies: dict[str, Dict] | None = field(default_factory=dict)
-    securitySchemes: dict[str, Dict] | None = field(default_factory=dict)
-    links: dict[str, Dict] | None = field(default_factory=dict)
-    callbacks: dict[str, Dict] | None = field(default_factory=dict)
-    pathItems: dict[str, Dict] | None = field(default_factory=dict)
+    schemas: dict[str, dict] | None = field(default_factory=dict)
+    responses: dict[str, dict] | None = field(default_factory=dict)
+    parameters: dict[str, dict] | None = field(default_factory=dict)
+    examples: dict[str, dict] | None = field(default_factory=dict)
+    requestBodies: dict[str, dict] | None = field(default_factory=dict)
+    securitySchemes: dict[str, dict] | None = field(default_factory=dict)
+    links: dict[str, dict] | None = field(default_factory=dict)
+    callbacks: dict[str, dict] | None = field(default_factory=dict)
+    pathItems: dict[str, dict] | None = field(default_factory=dict)
 
 
 @dataclass
@@ -436,34 +436,39 @@ class OpenAPI:
                 properties["items"] = self.get_schema_object(f"{parameter}_item", item_type)
             return properties
 
-        # check for Pydantic models
+        is_union = origin in (typing.Union, types.UnionType)
+        if is_union and args:
+            non_none_args = [a for a in args if a is not type(None)]
+            nullable = type(None) in args
+
+            any_of: list[dict] = []
+            for arg in non_none_args:
+                if arg in type_mapping:
+                    any_of.append({"type": type_mapping[arg]})
+                else:
+                    any_of.append(self.get_schema_object(parameter, arg))
+            if nullable:
+                any_of.append({"type": "null"})
+
+            properties["anyOf"] = any_of
+            return properties
+
         if is_pydantic_model(param_type):
             schema, component_schemas = get_pydantic_openapi_schema(param_type)
             if component_schemas:
                 self._merge_component_schemas(component_schemas)
             return schema
 
-        # check for Optional/Union types
-        if origin in (typing.Union, types.UnionType):
-            any_of: list[dict] = []
-            for arg in args:
-                if arg is type(None):
-                    any_of.append({"type": "null"})
-                else:
-                    any_of.append(self.get_schema_object(parameter, arg))
-            properties["anyOf"] = any_of
-            return properties
         # check for custom classes and TypedDicts
-        elif inspect.isclass(param_type):
+        if inspect.isclass(param_type):
             properties["type"] = "object"
-
             properties["properties"] = {}
-
-            for e in param_type.__annotations__:
-                properties["properties"][e] = self.get_schema_object(e, param_type.__annotations__[e])
+            if hasattr(param_type, "__annotations__"):
+                for e in param_type.__annotations__:
+                    properties["properties"][e] = self.get_schema_object(e, param_type.__annotations__[e])
+            return properties
 
         properties["type"] = "object"
-
         return properties
 
     def override_openapi(self, openapi_json_spec_path: Path):

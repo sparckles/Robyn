@@ -2,23 +2,42 @@
 
 ## [Unreleased](https://github.com/sparckles/robyn/tree/HEAD)
 
-[Full Changelog](https://github.com/sparckles/robyn/compare/v0.26.1...HEAD)
+[Full Changelog](https://github.com/sparckles/robyn/compare/v0.84.0...HEAD)
+
+## [v0.84.0](https://github.com/sparckles/robyn/tree/v0.84.0) (2026-04-26)
+
+[Full Changelog](https://github.com/sparckles/robyn/compare/v0.83.0...v0.84.0)
 
 **Implemented enhancements:**
 
-- Allow empty returns on websocket handling [\#1263](https://github.com/sparckles/robyn/issues/1263)
+- perf: skip Python Response wrapping for bare dict/list/str/bytes returns [\#1384](https://github.com/sparckles/robyn/pull/1384)
 
-**Closed issues:**
+**Fixed bugs:**
 
-- Payload reached size limit. [\#463](https://github.com/sparckles/robyn/issues/463)
-- Proposal to rename `params` with `path_params` [\#457](https://github.com/sparckles/robyn/issues/457)
+- fix: improve OpenAPI schema generation for complex types [\#1377](https://github.com/sparckles/robyn/pull/1377)
+- fix: share contextvars Context across before/handler/after hooks [\#1382](https://github.com/sparckles/robyn/pull/1382)
+
+## [v0.83.0](https://github.com/sparckles/robyn/tree/v0.83.0) (2026-04-12)
+
+[Full Changelog](https://github.com/sparckles/robyn/compare/v0.82.1...v0.83.0)
+
+**Implemented enhancements:**
+
+- feat: add in-process TestClient for fast unit testing [\#1344](https://github.com/sparckles/robyn/pull/1344)
+- feat: forward WebSocket binary frames to Python message handler [\#1353](https://github.com/sparckles/robyn/pull/1353)
+- perf: avoid unnecessary response body clone in IntoPyObject [\#1351](https://github.com/sparckles/robyn/pull/1351)
+
+**Fixed bugs:**
+
+- fix: replace unused pydantic import with importlib.util.find\_spec [\#1343](https://github.com/sparckles/robyn/pull/1343)
+- fix: replace panicking unwrap() calls with proper error handling in WebSocket code [\#1352](https://github.com/sparckles/robyn/pull/1352)
+- fix(ci): remove Python 3.14 from linux-cross preview matrix [\#1362](https://github.com/sparckles/robyn/pull/1362)
+- fix(website): reduce excessive GitHub API requests from docs site [\#1360](https://github.com/sparckles/robyn/pull/1360)
 
 **Merged pull requests:**
 
-- feat: allow configurable payload sizes [\#465](https://github.com/sparckles/robyn/pull/465) ([sansyrox](https://github.com/sansyrox))
-- docs: remove test pypi instructions from pr template [\#462](https://github.com/sparckles/robyn/pull/462) ([sansyrox](https://github.com/sansyrox))
-- Rename params with path\_params [\#460](https://github.com/sparckles/robyn/pull/460) ([carlosm27](https://github.com/carlosm27))
-- feat: Implement global CORS [\#458](https://github.com/sparckles/robyn/pull/458) ([sansyrox](https://github.com/sansyrox))
+- docs: add comprehensive response return styles reference [\#1357](https://github.com/sparckles/robyn/pull/1357)
+- docs: add dedicated static files page and fix file-uploads SEO [\#1358](https://github.com/sparckles/robyn/pull/1358)
 
 ## [v0.26.1](https://github.com/sparckles/robyn/tree/v0.26.1) (2023-04-05)
 

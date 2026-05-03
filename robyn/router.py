@@ -29,6 +29,16 @@ if TYPE_CHECKING:
     from robyn import SubRouter
 
 
+# Prebuilt Headers singletons reused across every request so the hot path
+# doesn't allocate a fresh DashMap per response. These objects are passed
+# into `Response(...)` as-is; the Rust side clones them into an independent
+# `Headers` struct during extraction, so server-side header injection never
+# mutates the singleton. Handlers that return a bare dict/list/str/bytes
+# never receive the Response and can't mutate it either.
+_JSON_HEADERS = Headers({"Content-Type": "application/json"})
+_TEXT_HEADERS = Headers({"Content-Type": "text/plain"})
+
+
 def lower_http_method(method: HttpMethod):
     return (str(method))[11:].lower()
 
@@ -79,7 +89,10 @@ class Router(BaseRouter):
             description=description,
         )
 
-    def _format_response(self, res: dict | list | Response | StreamingResponse | bytes | tuple | str) -> Response | StreamingResponse:
+    def _format_response(
+        self,
+        res: dict | list | Response | StreamingResponse | bytes | tuple | str,
+    ) -> Response | StreamingResponse | dict | list | str | bytes:
         if isinstance(res, Response):
             return res
 
@@ -90,16 +103,15 @@ class Router(BaseRouter):
         if pydantic_json is not None:
             return Response(
                 status_code=status_codes.HTTP_200_OK,
-                headers=Headers({"Content-Type": "application/json"}),
+                headers=_JSON_HEADERS,
                 description=pydantic_json,
             )
 
-        if isinstance(res, (dict, list)):
-            return Response(
-                status_code=status_codes.HTTP_200_OK,
-                headers=Headers({"Content-Type": "application/json"}),
-                description=jsonify(res),
-            )
+        # Bare dict/list/str/bytes are handled natively in the Rust executor:
+        # it serializes dicts/lists via orjson and wraps str/bytes directly,
+        # skipping the per-request Python-side Response/Headers construction.
+        if isinstance(res, (dict, list, str, bytes)):
+            return res
 
         if isinstance(res, FileResponse):
             response: Response = Response(
@@ -110,19 +122,12 @@ class Router(BaseRouter):
             response.file_path = res.file_path
             return response
 
-        if isinstance(res, bytes):
-            return Response(
-                status_code=status_codes.HTTP_200_OK,
-                headers=Headers({"Content-Type": "application/octet-stream"}),
-                description=res,
-            )
-
         if isinstance(res, tuple):
             return self._format_tuple_response(tuple(res))
 
         return Response(
             status_code=status_codes.HTTP_200_OK,
-            headers=Headers({"Content-Type": "text/plain"}),
+            headers=_TEXT_HEADERS,
             description=str(res).encode("utf-8"),
         )
 
@@ -205,7 +210,7 @@ class Router(BaseRouter):
                             except ValueError as e:
                                 return Response(
                                     status_code=status_codes.HTTP_400_BAD_REQUEST,
-                                    headers=Headers({"Content-Type": "application/json"}),
+                                    headers=_JSON_HEADERS,
                                     description=jsonify({"error": f"Invalid JSON body: {e}"}),
                                 )
                         elif issubclass(handler_param_type, Body):
@@ -218,7 +223,7 @@ class Router(BaseRouter):
                             except ValueError as e:
                                 return Response(
                                     status_code=status_codes.HTTP_400_BAD_REQUEST,
-                                    headers=Headers({"Content-Type": "application/json"}),
+                                    headers=_JSON_HEADERS,
                                     description=jsonify({"error": f"Invalid JSON body: {e}"}),
                                 )
 
@@ -279,13 +284,13 @@ class Router(BaseRouter):
             except QueryParamValidationError as err:
                 response = Response(
                     status_code=status_codes.HTTP_400_BAD_REQUEST,
-                    headers=Headers({"Content-Type": "text/plain"}),
+                    headers=_TEXT_HEADERS,
                     description=str(err),
                 )
             except PydanticBodyValidationError as err:
                 response = Response(
                     status_code=status_codes.HTTP_422_UNPROCESSABLE_ENTITY,
-                    headers=Headers({"Content-Type": "application/json"}),
+                    headers=_JSON_HEADERS,
                     description=jsonify(err.error_detail),
                 )
             except Exception as err:
@@ -305,13 +310,13 @@ class Router(BaseRouter):
             except QueryParamValidationError as err:
                 response = Response(
                     status_code=status_codes.HTTP_400_BAD_REQUEST,
-                    headers=Headers({"Content-Type": "text/plain"}),
+                    headers=_TEXT_HEADERS,
                     description=str(err),
                 )
             except PydanticBodyValidationError as err:
                 response = Response(
                     status_code=status_codes.HTTP_422_UNPROCESSABLE_ENTITY,
-                    headers=Headers({"Content-Type": "application/json"}),
+                    headers=_JSON_HEADERS,
                     description=jsonify(err.error_detail),
                 )
             except Exception as err:
@@ -352,7 +357,7 @@ class Router(BaseRouter):
             self.routes.append(Route(route_type, endpoint, function, is_const, auth_required, openapi_name, openapi_tags))
             return inner_handler
 
-    def prepare_routes_openapi(self, openapi: OpenAPI, included_routers: List) -> None:
+    def prepare_routes_openapi(self, openapi: OpenAPI, included_routers: list) -> None:
         for route in self.routes:
             openapi.add_openapi_path_obj(lower_http_method(route.route_type), route.route, route.openapi_name, route.openapi_tags, route.function.handler)
 

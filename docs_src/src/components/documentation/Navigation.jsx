@@ -293,6 +293,10 @@ export const navigation = [
         title: 'Exceptions',
       },
       {
+        href: '/documentation/en/api_reference/testing',
+        title: 'Testing',
+      },
+      {
         href: '/documentation/en/api_reference/scaling',
         title: 'Scaling the Application',
       },
@@ -472,6 +476,7 @@ const translations = {
       'Form Data': 'Form Data',
       Websockets: 'Websockets',
       Exceptions: 'Exceptions',
+      'Testing': 'Testing',
       'Scaling the Application': 'Scaling the Application',
       'Timeout Configuration': 'Timeout Configuration',
       'Advanced Features': 'Advanced Features',
@@ -521,6 +526,7 @@ const translations = {
       'Websockets': 'WebSocket',
       'Server-Sent Events': '服务器发送事件',
       'Exceptions': '异常处理',
+      'Testing': '测试',
       'Scaling the Application': '多核扩展',
       'Timeout Configuration': '超时配置',
       'Advanced Features': '高级特性',

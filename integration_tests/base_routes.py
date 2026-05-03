@@ -1,4 +1,5 @@
 import asyncio
+import contextvars
 import json
 import os
 import pathlib
@@ -267,6 +268,45 @@ def sync_before_request_401():
 @app.get("/sync/middlewares/401")
 def sync_middlewares_401():
     pass
+
+
+# --- ContextVar propagation (regression test for #1380) ---
+
+_ctxvar_middleware_value: contextvars.ContextVar = contextvars.ContextVar("ctxvar_middleware_value", default="default")
+
+
+@app.before_request("/async/contextvars/route")
+async def contextvars_before(request: Request):
+    _ctxvar_middleware_value.set("set-in-before")
+    return request
+
+
+@app.after_request("/async/contextvars/route")
+async def contextvars_after(response: Response):
+    response.headers.set("x-ctxvar-after", _ctxvar_middleware_value.get())
+    return response
+
+
+@app.get("/async/contextvars/route")
+async def contextvars_handler(request: Request):
+    return _ctxvar_middleware_value.get()
+
+
+@app.before_request("/sync/contextvars/route")
+def contextvars_before_sync(request: Request):
+    _ctxvar_middleware_value.set("set-in-sync-before")
+    return request
+
+
+@app.after_request("/sync/contextvars/route")
+def contextvars_after_sync(response: Response):
+    response.headers.set("x-ctxvar-after", _ctxvar_middleware_value.get())
+    return response
+
+
+@app.get("/sync/contextvars/route")
+def contextvars_handler_sync(request: Request):
+    return _ctxvar_middleware_value.get()
 
 
 # ===== Routes =====
@@ -1232,6 +1272,11 @@ class FullName(Body):
     initial: Initial
 
 
+class TestTypedBody(Body):
+    items: List[str]
+    numbers: list[int]
+
+
 class CreateItemBody(Body):
     name: FullName
     description: str
@@ -1251,6 +1296,11 @@ class CreateItemQueryParamsParams(QueryParams):
 @app.post("/openapi_request_body")
 def create_item(request, body: CreateItemBody, query: CreateItemQueryParamsParams) -> CreateItemResponse:
     return CreateItemResponse(success=True, items_changed=2)
+
+
+@app.post("/sync/body/typed")
+def sync_body_typed(body: TestTypedBody):
+    return "OK"
 
 
 # ===== JsonBody Routes =====
