@@ -124,7 +124,7 @@ class AsyncGeneratorWrapper:
 class StreamingResponse:
     def __init__(
         self,
-        content: Generator[str | None | None] | AsyncGenerator[str | None],
+        content: Generator[str, None, None] | AsyncGenerator[str, None],
         status_code: int | None = None,
         headers: Headers | None = None,
         media_type: str = "text/event-stream",
@@ -149,7 +149,7 @@ class StreamingResponse:
 
 
 def SSEResponse(
-    content: Generator[str | None | None] | AsyncGenerator[str | None],
+    content: Generator[str, None, None] | AsyncGenerator[str, None],
     status_code: int | None = None,
     headers: Headers | None = None,
 ) -> StreamingResponse:

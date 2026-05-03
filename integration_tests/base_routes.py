@@ -1273,7 +1273,7 @@ class FullName(Body):
 
 
 class TestTypedBody(Body):
-    items: List[str]
+    items: list[str]
     numbers: list[int]
 
 

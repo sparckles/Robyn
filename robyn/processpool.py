@@ -84,7 +84,7 @@ def init_processpool(
     client_timeout: int = 30,
     keep_alive_timeout: int = 20,
 ) -> list[Process]:
-    process_pool: List = []
+    process_pool: list = []
     if sys.platform.startswith("win32") or processes == 1:
         spawn_process(
             directories,

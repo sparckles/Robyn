@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from functools import wraps
 from types import CoroutineType
-from typing import TYPE_CHECKING, NamedTuple, is_typeddict
+from typing import NamedTuple, is_typeddict
 
 from robyn import status_codes
 from robyn._param_utils import QueryParamValidationError, parse_route_param_names, resolve_individual_params
@@ -24,9 +24,6 @@ from robyn.robyn import FunctionInfo, Headers, HttpMethod, Identity, MiddlewareT
 from robyn.types import Body, Files, FormData, IPAddress, JsonBody, Method, PathParams
 
 _logger = logging.getLogger(__name__)
-
-if TYPE_CHECKING:
-    pass
 
 
 # Prebuilt Headers singletons reused across every request so the hot path
