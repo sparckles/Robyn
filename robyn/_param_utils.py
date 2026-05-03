@@ -7,7 +7,8 @@ Used by both robyn/router.py (HTTP handlers) and robyn/ws.py (WebSocket handlers
 
 import inspect
 import logging
-from typing import Any, Dict, Optional, Set, Tuple, Union
+import types
+from typing import Any, Dict, Optional, Set, Tuple, Union, get_args, get_origin
 
 _logger = logging.getLogger(__name__)
 
@@ -37,12 +38,13 @@ class QueryParamValidationError(Exception):
 
 def unwrap_optional(annotation) -> Tuple[Any, bool]:
     """
-    If annotation is Optional[T] (i.e. Union[T, None]), return (T, True).
+    If annotation is Optional[T] (i.e. T | None / Union[T, None]), return (T, True).
+    Handles both typing.Union and PEP 604 union syntax (X | Y).
     Otherwise return (annotation, False).
     """
-    origin = getattr(annotation, "__origin__", None)
-    if origin is Union:
-        args = annotation.__args__
+    origin = get_origin(annotation)
+    if origin is Union or origin is types.UnionType:
+        args = get_args(annotation)
         non_none_args = [a for a in args if a is not type(None)]
         if len(non_none_args) == 1 and type(None) in args:
             return non_none_args[0], True
@@ -51,8 +53,7 @@ def unwrap_optional(annotation) -> Tuple[Any, bool]:
 
 def is_list_type(annotation) -> bool:
     """Check if annotation is List[T] or list[T]."""
-    origin = getattr(annotation, "__origin__", None)
-    return origin is list
+    return get_origin(annotation) is list
 
 
 def get_list_element_type(annotation) -> type:

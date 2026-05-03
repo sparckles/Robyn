@@ -12,11 +12,11 @@ class TemplateInterface(ABC):
     Interface for implementing various template engines in Robyn.
     """
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs) -> None:
         """
         Initializes the template interface.
         """
-        ...
+        super().__init__()
 
     @abstractmethod
     def render_template(self, *args, **kwargs) -> Response:

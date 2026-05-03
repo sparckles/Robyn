@@ -1,7 +1,7 @@
 import asyncio
 import mimetypes
 import os
-from typing import AsyncGenerator, Generator, Optional, Union
+from typing import AsyncGenerator, Generator
 
 from robyn.robyn import Headers, Response
 
@@ -10,8 +10,8 @@ class FileResponse:
     def __init__(
         self,
         file_path: str,
-        status_code: Optional[int] = None,
-        headers: Optional[Headers] = None,
+        status_code: int | None = None,
+        headers: Headers | None = None,
     ):
         self.file_path = file_path
         self.description = ""
@@ -42,7 +42,7 @@ def serve_html(file_path: str) -> FileResponse:
     return FileResponse(file_path, headers=Headers({"Content-Type": "text/html"}))
 
 
-def serve_file(file_path: str, file_name: Optional[str] = None) -> FileResponse:
+def serve_file(file_path: str, file_name: str | None = None) -> FileResponse:
     """
     This function will help in serving a file
 
@@ -124,9 +124,9 @@ class AsyncGeneratorWrapper:
 class StreamingResponse:
     def __init__(
         self,
-        content: Union[Generator[str, None, None], AsyncGenerator[str, None]],
-        status_code: Optional[int] = None,
-        headers: Optional[Headers] = None,
+        content: Generator[str, None, None] | AsyncGenerator[str, None],
+        status_code: int | None = None,
+        headers: Headers | None = None,
         media_type: str = "text/event-stream",
     ):
         # Convert async generator to sync generator if needed
@@ -149,9 +149,9 @@ class StreamingResponse:
 
 
 def SSEResponse(
-    content: Union[Generator[str, None, None], AsyncGenerator[str, None]],
-    status_code: Optional[int] = None,
-    headers: Optional[Headers] = None,
+    content: Generator[str, None, None] | AsyncGenerator[str, None],
+    status_code: int | None = None,
+    headers: Headers | None = None,
 ) -> StreamingResponse:
     """
     Create a Server-Sent Events (SSE) streaming response.
@@ -164,7 +164,7 @@ def SSEResponse(
     return StreamingResponse(content=content, status_code=status_code, headers=headers, media_type="text/event-stream")
 
 
-def SSEMessage(data: str, event: Optional[str] = None, id: Optional[str] = None, retry: Optional[int] = None) -> str:
+def SSEMessage(data: str, event: str | None = None, id: str | None = None, retry: int | None = None) -> str:
     """
     Optimized SSE message formatting with minimal allocations.
 
