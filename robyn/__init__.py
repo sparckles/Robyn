@@ -80,15 +80,11 @@ class BaseRobyn(ABC):
     def __init__(
         self,
         file_object: str,
-        config: Config | None = None,
+        config: Config = Config(),
         openapi_file_path: str | None = None,
         openapi: OpenAPI | None = None,
-        dependencies: DependencyMap | None = None,
+        dependencies: DependencyMap = DependencyMap(),
     ) -> None:
-        if config is None:
-            config = Config()
-        if dependencies is None:
-            dependencies = DependencyMap()
         directory_path = os.path.dirname(os.path.abspath(file_object))
         self.file_path = file_object
         self.directory_path = directory_path
@@ -750,13 +746,7 @@ class Robyn(BaseRobyn):
 
 
 class SubRouter(BaseRobyn):
-    def __init__(
-        self,
-        file_object: str,
-        prefix: str = "",
-        config: Config | None = None,
-        openapi: OpenAPI | None = None,
-    ) -> None:
+    def __init__(self, file_object: str, prefix: str = "", config: Config = Config(), openapi: OpenAPI = OpenAPI()) -> None:
         super().__init__(file_object=file_object, config=config, openapi=openapi)
         self.prefix = prefix
 
