@@ -17,6 +17,7 @@ from .reloader import create_rust_file, setup_reloader
 SCAFFOLD_DIR = Path(__file__).parent / "scaffold"
 CURRENT_WORKING_DIR = Path.cwd()
 
+
 def create_robyn_app():
     questions = [
         {
@@ -71,9 +72,11 @@ def create_robyn_app():
 
     print(f"New Robyn project created in '{final_project_dir_path}' ")
 
+
 def docs():
     print("Opening Robyn documentation... | Offline docs coming soon!")
     webbrowser.open("https://robyn.tech")
+
 
 def start_dev_server(config: Config, file_path: str | None = None):
     if file_path is None:
@@ -86,6 +89,7 @@ def start_dev_server(config: Config, file_path: str | None = None):
         setup_reloader(str(directory_path), str(absolute_file_path))
         return
 
+
 def start_app_normally(config: Config):
     command = [sys.executable]
 
@@ -94,6 +98,7 @@ def start_app_normally(config: Config):
 
     # Run the subprocess
     subprocess.run(command, start_new_session=False)
+
 
 def run():
     config = Config()

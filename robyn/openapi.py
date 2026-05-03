@@ -9,7 +9,7 @@ from dataclasses import asdict, dataclass, field
 from importlib import resources
 from inspect import Signature
 from pathlib import Path
-from typing import Any, Protocol, TypeAlias, TypedDict, get_args, get_origin, is_typeddict
+from typing import Any, TypedDict, get_args, get_origin, is_typeddict
 
 from robyn.pydantic_support import get_pydantic_openapi_schema, is_pydantic_model
 from robyn.responses import html

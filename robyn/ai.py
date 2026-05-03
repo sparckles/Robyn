@@ -9,9 +9,10 @@ Provides agent and memory functionality for building AI-powered applications for
 import logging
 import os
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
+
 
 class AIConfig:
     """Configuration class for AI providers and settings"""
@@ -58,6 +59,7 @@ class AIConfig:
         """Get configuration as dictionary"""
         return self.config.copy()
 
+
 class MemoryProvider(ABC):
     """Abstract base class for memory providers"""
 
@@ -76,6 +78,7 @@ class MemoryProvider(ABC):
         """Clear memory for a user"""
         pass
 
+
 class InMemoryProvider(MemoryProvider):
     """Simple in-memory storage provider"""
 
@@ -93,6 +96,7 @@ class InMemoryProvider(MemoryProvider):
     async def clear(self, user_id: str) -> None:
         if user_id in self._storage:
             del self._storage[user_id]
+
 
 class Memory:
     """Memory interface for storing and retrieving conversation history and context"""
@@ -121,6 +125,7 @@ class Memory:
         """Clear all memory for this user"""
         await self.provider.clear(self.user_id)
 
+
 class AgentRunner(ABC):
     """Abstract base class for agent runners"""
 
@@ -128,6 +133,7 @@ class AgentRunner(ABC):
     async def run(self, query: str, **kwargs) -> dict[str, Any]:
         """Execute the agent with the given query"""
         pass
+
 
 class SimpleRunner(AgentRunner):
     """Simple runner with OpenAI integration and fallback responses"""
@@ -197,6 +203,7 @@ class SimpleRunner(AgentRunner):
             logger.error(f"Error in SimpleRunner: {e}")
             raise e
 
+
 class Agent:
     """AI Agent interface for handling queries with memory and execution"""
 
@@ -233,6 +240,7 @@ class Agent:
 
         return result
 
+
 def memory(provider: str = "inmemory", user_id: str = "default", **kwargs) -> Memory:
     """
     Create a memory instance with the specified provider
@@ -246,6 +254,7 @@ def memory(provider: str = "inmemory", user_id: str = "default", **kwargs) -> Me
         Memory instance
     """
     return Memory(provider=provider, user_id=user_id, **kwargs)
+
 
 def configure(**kwargs) -> AIConfig:
     """
@@ -265,6 +274,7 @@ def configure(**kwargs) -> AIConfig:
         )
     """
     return AIConfig(**kwargs)
+
 
 def agent(runner: str = "simple", memory: Memory | None = None, config: AIConfig | None = None, **kwargs) -> Agent:
     """

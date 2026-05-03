@@ -3,6 +3,7 @@ from typing import NewType, TypedDict
 
 from robyn._param_utils import QueryParamValidationError
 
+
 @dataclass
 class Directory:
     route: str
@@ -18,11 +19,13 @@ class Directory:
             self.index_file,
         ]
 
+
 PathParams = NewType("PathParams", dict[str, str])
 Method = NewType("Method", str)
 FormData = NewType("FormData", dict[str, str])
 Files = NewType("Files", dict[str, bytes])
 IPAddress = NewType("IPAddress", str | None)
+
 
 class JSONResponse(TypedDict):
     """
@@ -31,12 +34,14 @@ class JSONResponse(TypedDict):
 
     pass
 
+
 class Body:
     """
     A type alias for openapi request bodies. This class should be inherited by the request body class annotation.
     """
 
     pass
+
 
 class JsonBody:
     """
@@ -71,5 +76,6 @@ class JsonBody:
     """
 
     pass
+
 
 __all__ = ["JSONResponse", "Body", "JsonBody", "QueryParamValidationError", "Directory", "PathParams", "Method", "FormData", "Files", "IPAddress"]

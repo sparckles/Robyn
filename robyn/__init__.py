@@ -29,6 +29,7 @@ from robyn.ws import WebSocketAdapter, WebSocketDisconnect, create_websocket_dec
 
 __version__ = get_version()
 
+
 def _normalize_endpoint(endpoint: str | None, treat_empty_as_root: bool = False) -> str | None:
     """
     Normalize an endpoint to ensure consistent routing.
@@ -65,11 +66,13 @@ def _normalize_endpoint(endpoint: str | None, treat_empty_as_root: bool = False)
 
     return endpoint
 
+
 config = Config()
 
 if (compile_path := config.compile_rust_path) is not None:
     compile_rust_files(compile_path)
     print("Compiled rust files")
+
 
 class BaseRobyn(ABC):
     """This is the python wrapper for the Robyn binaries."""
@@ -680,6 +683,7 @@ class BaseRobyn(ABC):
             self._mcp_app = MCPApp(self)
         return self._mcp_app
 
+
 class Robyn(BaseRobyn):
     def start(
         self,
@@ -743,6 +747,7 @@ class Robyn(BaseRobyn):
             client_timeout,
             keep_alive_timeout,
         )
+
 
 class SubRouter(BaseRobyn):
     def __init__(
@@ -894,6 +899,7 @@ class SubRouter(BaseRobyn):
         """
         return create_websocket_decorator(self)(endpoint)
 
+
 def ALLOW_CORS(app: Robyn, origins: list[str] | str, headers: list[str] | str | None = None):
     """
     Configure CORS headers for the application.
@@ -946,6 +952,7 @@ def ALLOW_CORS(app: Robyn, origins: list[str] | str, headers: list[str] | str | 
     app.set_response_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS")
     app.set_response_header("Access-Control-Allow-Headers", str(headers) if headers else "Content-Type, Authorization")
     app.set_response_header("Access-Control-Allow-Credentials", "true")
+
 
 __all__ = [
     "Robyn",

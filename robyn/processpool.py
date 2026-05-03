@@ -11,6 +11,7 @@ from robyn.robyn import FunctionInfo, Headers, Server, SocketHeld
 from robyn.router import GlobalMiddleware, Route, RouteMiddleware
 from robyn.types import Directory
 
+
 def run_processes(
     url: str,
     port: int,
@@ -65,6 +66,7 @@ def run_processes(
         process.join()
 
     return process_pool
+
 
 def init_processpool(
     directories: list[Directory],
@@ -127,6 +129,7 @@ def init_processpool(
 
     return process_pool
 
+
 def initialize_event_loop():
     if sys.platform.startswith("win32") or sys.platform.startswith("linux-cross"):
         loop = asyncio.new_event_loop()
@@ -141,6 +144,7 @@ def initialize_event_loop():
         loop = uvloop.new_event_loop()
         asyncio.set_event_loop(loop)
         return loop
+
 
 def spawn_process(
     directories: list[Directory],

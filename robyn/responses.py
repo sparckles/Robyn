@@ -1,9 +1,10 @@
 import asyncio
 import mimetypes
 import os
-from typing import AsyncGenerator, Generator, Optional
+from typing import AsyncGenerator, Generator
 
 from robyn.robyn import Headers, Response
+
 
 class FileResponse:
     def __init__(
@@ -17,6 +18,7 @@ class FileResponse:
         self.status_code = status_code or 200
         self.headers = headers or Headers({"Content-Disposition": "attachment"})
 
+
 def html(html: str) -> Response:
     """
     This function will help in serving a simple html string
@@ -29,6 +31,7 @@ def html(html: str) -> Response:
         headers=Headers({"Content-Type": "text/html"}),
     )
 
+
 def serve_html(file_path: str) -> FileResponse:
     """
     This function will help in serving a single html file
@@ -37,6 +40,7 @@ def serve_html(file_path: str) -> FileResponse:
     """
 
     return FileResponse(file_path, headers=Headers({"Content-Type": "text/html"}))
+
 
 def serve_file(file_path: str, file_name: str | None = None) -> FileResponse:
     """
@@ -56,6 +60,7 @@ def serve_file(file_path: str, file_name: str | None = None) -> FileResponse:
         file_path,
         headers=headers,
     )
+
 
 class AsyncGeneratorWrapper:
     """Optimized true-streaming wrapper for async generators"""
@@ -115,6 +120,7 @@ class AsyncGeneratorWrapper:
             print(f"Error in async generator: {e}")
             raise StopIteration
 
+
 class StreamingResponse:
     def __init__(
         self,
@@ -141,6 +147,7 @@ class StreamingResponse:
             self.headers.set("Content-Type", "text/event-stream")
             # Cache-Control and Connection headers are set by Rust layer with optimized headers
 
+
 def SSEResponse(
     content: Generator[str | None | None] | AsyncGenerator[str | None],
     status_code: int | None = None,
@@ -155,6 +162,7 @@ def SSEResponse(
     :return: StreamingResponse configured for SSE
     """
     return StreamingResponse(content=content, status_code=status_code, headers=headers, media_type="text/event-stream")
+
 
 def SSEMessage(data: str, event: str | None = None, id: str | None = None, retry: int | None = None) -> str:
     """

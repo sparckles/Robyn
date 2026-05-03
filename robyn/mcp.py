@@ -11,13 +11,15 @@ import json
 import logging
 import re
 from dataclasses import asdict, dataclass
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
+
 
 def _extract_uri_params(uri: str) -> list[str]:
     """Extract parameter names from URI template like 'echo://{message}'"""
     return re.findall(r"\{(\w+)\}", uri)
+
 
 def _generate_schema_from_function(func: Callable) -> dict[str, Any]:
     """Generate JSON schema from function signature"""
@@ -54,6 +56,7 @@ def _generate_schema_from_function(func: Callable) -> dict[str, Any]:
 
     return {"type": "object", "properties": properties, "required": required}
 
+
 def _generate_prompt_args_from_function(func: Callable) -> list[dict[str, Any]]:
     """Generate prompt arguments from function signature"""
     sig = inspect.signature(func)
@@ -68,6 +71,7 @@ def _generate_prompt_args_from_function(func: Callable) -> list[dict[str, Any]]:
 
     return arguments
 
+
 @dataclass
 class MCPResource:
     """Represents an MCP resource"""
@@ -77,6 +81,7 @@ class MCPResource:
     description: str | None = None
     mimeType: str | None = None
 
+
 @dataclass
 class MCPTool:
     """Represents an MCP tool"""
@@ -85,6 +90,7 @@ class MCPTool:
     description: str
     inputSchema: dict[str, Any]
 
+
 @dataclass
 class MCPPrompt:
     """Represents an MCP prompt template"""
@@ -92,6 +98,7 @@ class MCPPrompt:
     name: str
     description: str
     arguments: Optional[list[dict[str, Any]]] = None
+
 
 @dataclass
 class MCPMessage:
@@ -104,6 +111,7 @@ class MCPMessage:
     result: Any | None = None
     error: dict[str, Any] | None = None
 
+
 class MCPError(Exception):
     """MCP-specific error"""
 
@@ -112,6 +120,7 @@ class MCPError(Exception):
         self.message = message
         self.data = data
         super().__init__(message)
+
 
 class MCPHandler:
     """Handles MCP protocol requests and responses"""
@@ -328,6 +337,7 @@ class MCPHandler:
             messages = [{"role": "user", "content": {"type": "text", "text": str(result)}}]
 
         return {"description": self.prompt_metadata[name].description, "messages": messages}
+
 
 class MCPApp:
     """MCP application wrapper for Robyn"""

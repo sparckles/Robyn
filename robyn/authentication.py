@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from robyn.robyn import Headers, Identity, Request, Response
 from robyn.status_codes import HTTP_401_UNAUTHORIZED
 
+
 class AuthenticationNotConfiguredError(Exception):
     """
     This exception is raised when the authentication is not configured.
@@ -10,6 +11,7 @@ class AuthenticationNotConfiguredError(Exception):
 
     def __str__(self):
         return "Authentication is not configured. Use app.configure_authentication() to configure it."
+
 
 class TokenGetter(ABC):
     @property
@@ -42,6 +44,7 @@ class TokenGetter(ABC):
         """
         raise NotImplementedError()
 
+
 class AuthenticationHandler(ABC):
     def __init__(self, token_getter: TokenGetter):
         """
@@ -67,6 +70,7 @@ class AuthenticationHandler(ABC):
         :return: The identity of the user.
         """
         raise NotImplementedError()
+
 
 class BearerGetter(TokenGetter):
     """

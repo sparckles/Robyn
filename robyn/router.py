@@ -26,7 +26,7 @@ from robyn.types import Body, Files, FormData, IPAddress, JsonBody, Method, Path
 _logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from robyn import SubRouter
+    pass
 
 
 # Prebuilt Headers singletons reused across every request so the hot path
@@ -42,6 +42,7 @@ _TEXT_HEADERS = Headers({"Content-Type": "text/plain"})
 def lower_http_method(method: HttpMethod):
     return (str(method))[11:].lower()
 
+
 class Route(NamedTuple):
     route_type: HttpMethod
     route: str
@@ -51,19 +52,23 @@ class Route(NamedTuple):
     openapi_name: str
     openapi_tags: list[str]
 
+
 class RouteMiddleware(NamedTuple):
     middleware_type: MiddlewareType
     route: str
     function: FunctionInfo
     route_type: HttpMethod
 
+
 class GlobalMiddleware(NamedTuple):
     middleware_type: MiddlewareType
     function: FunctionInfo
 
+
 class BaseRouter(ABC):
     @abstractmethod
     def add_route(*args) -> Callable | CoroutineType | dict: ...
+
 
 class Router(BaseRouter):
     def __init__(self) -> None:
@@ -369,6 +374,7 @@ class Router(BaseRouter):
     def get_routes(self) -> list[Route]:
         return self.routes
 
+
 class MiddlewareRouter(BaseRouter):
     def __init__(self, dependencies: DependencyMap = DependencyMap()) -> None:
         super().__init__()
@@ -517,6 +523,7 @@ class MiddlewareRouter(BaseRouter):
 
     def get_global_middlewares(self) -> list[GlobalMiddleware]:
         return self.global_middlewares
+
 
 class WebSocketRouter(BaseRouter):
     def __init__(self) -> None:

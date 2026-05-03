@@ -1,12 +1,14 @@
 import logging
 from enum import Enum
 
+
 class Colors(Enum):
     BLUE = "\033[94m"
     CYAN = "\033[96m"
     GREEN = "\033[92m"
     YELLOW = "\033[93m"
     RED = "\033[91m"
+
 
 class Logger:
     HEADER = "\033[95m"
@@ -72,5 +74,6 @@ class Logger:
         underline: bool = False,
     ):
         self.logger.debug(self._format_msg(msg, color, bold, underline), *args)
+
 
 logger = Logger()
