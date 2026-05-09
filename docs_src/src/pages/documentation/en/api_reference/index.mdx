@@ -5,37 +5,38 @@ Once upon a time in the city of Gotham, there was a powerful superhero named Rob
 
 One day, Batman approached Robyn for help with building a web application. Batman had heard about Robyn's powerful features and wanted to harness them to create a remarkable application. Batman was looking for an ally and in Robyn, he found the best one!
 
-
 ## Installing Robyn
-
 
 Robyn is a Python library that you can install using `pip` or `conda`
 
   <CodeGroup title="installation">
 
-  ```bash {{ title: 'pip' }}
-  pip install robyn
-  ```
+```bash {{ title: 'pip' }}
+pip install robyn
+```
 
-  ```bash {{ title: 'conda' }}
-  conda install robyn -c conda-forge
-  ```
+```bash {{ title: 'conda' }}
+conda install robyn -c conda-forge
+```
+
   </CodeGroup>
 
-While there are other more extensions of Robyn like
+Robyn also ships optional extras for templating, Pydantic validation, project scaffolding with `robyn-config`, and a combined `all` bundle:
 
   <CodeGroup title="installation">
 
-  ```bash {{ title: 'pip' }}
-  pip install "robyn[templating]"
-  ```
+```bash {{ title: 'pip' }}
+pip install "robyn[templating]"
+pip install "robyn[pydantic]"
+pip install "robyn[robyn-config]"
+pip install "robyn[all]"
+```
 
-  ```bash {{ title: 'conda' }}
-  conda install "robyn[templating]" -c conda-forge
-  ```
+```bash {{ title: 'conda' }}
+conda install "robyn[templating]" -c conda-forge
+```
+
   </CodeGroup>
-
-
 
 It is recommended to install the base package first and then install the extensions as needed.
 
@@ -43,8 +44,4 @@ It is recommended to install the base package first and then install the extensi
 
 Now, we can start using Robyn to build our application.
 
-
 - [Getting Started](/documentation/en/api_reference/getting_started)
-
-
-

@@ -1,5 +1,5 @@
 export const description =
-  'On this page, we'll explore Robyn\'s built-in TestClient for fast, in-process unit testing without starting a server.'
+  'On this page, we\'ll explore Robyn\'s built-in TestClient for fast, in-process unit testing without starting a server.'
 
 ## Testing
 
@@ -35,6 +35,7 @@ Import `TestClient` from `robyn.testing`, pass your app to it, and start making 
         assert response.text == "Hello, World!"
     ```
     </CodeGroup>
+
   </Col>
 </Row>
 
@@ -45,13 +46,13 @@ Every request method returns a `TestResponse` with the following properties:
 <Row>
 <Col>
 
-| Property | Type | Description |
-| --- | --- | --- |
-| `status_code` | `int` | HTTP status code |
-| `text` | `str` | Response body as a decoded string |
-| `content` | `bytes` | Raw response body |
-| `headers` | `Headers` | Response headers |
-| `ok` | `bool` | `True` if status is 2xx |
+| Property      | Type      | Description                       |
+| ------------- | --------- | --------------------------------- |
+| `status_code` | `int`     | HTTP status code                  |
+| `text`        | `str`     | Response body as a decoded string |
+| `content`     | `bytes`   | Raw response body                 |
+| `headers`     | `Headers` | Response headers                  |
+| `ok`          | `bool`    | `True` if status is 2xx           |
 
 `TestResponse` also has a `.json()` method that parses the body as JSON.
 
@@ -73,6 +74,7 @@ Every request method returns a `TestResponse` with the following properties:
         assert data[0]["name"] == "Batman"
     ```
     </CodeGroup>
+
   </Col>
 </Row>
 
@@ -100,6 +102,7 @@ Use `json_data` to send JSON payloads — the client automatically sets `Content
         assert response.json()["name"] == "Batarang"
     ```
     </CodeGroup>
+
   </Col>
 </Row>
 
@@ -122,9 +125,9 @@ You can also send raw string or bytes bodies, custom headers, query parameters, 
         assert response.ok
     ```
     </CodeGroup>
+
   </Col>
 </Row>
-
 
 ### Path Parameters
 
@@ -148,9 +151,9 @@ Path parameters are resolved from the URL and passed to your handler through the
         assert response.json()["user_id"] == 42
     ```
     </CodeGroup>
+
   </Col>
 </Row>
-
 
 ### Testing Middleware
 
@@ -185,9 +188,9 @@ Middlewares that modify the request or response are executed just like in produc
         assert response.headers.get("X-Server") == "Robyn"
     ```
     </CodeGroup>
+
   </Col>
 </Row>
-
 
 ### Using as a Context Manager
 
@@ -208,9 +211,9 @@ Middlewares that modify the request or response are executed just like in produc
         # event loop is closed here
     ```
     </CodeGroup>
+
   </Col>
 </Row>
-
 
 ### Running Tests with pytest
 
@@ -262,6 +265,7 @@ A typical test file:
         assert response.status_code == 404
     ```
     </CodeGroup>
+
   </Col>
 </Row>
 
@@ -271,25 +275,24 @@ Run with:
 pytest test_app.py -v
 ```
 
-
 ### Available Methods
 
-| Method | Signature |
-| --- | --- |
-| `client.get(path, **kw)` | GET request |
-| `client.post(path, json_data=None, **kw)` | POST request |
-| `client.put(path, json_data=None, **kw)` | PUT request |
-| `client.patch(path, json_data=None, **kw)` | PATCH request |
-| `client.delete(path, json_data=None, **kw)` | DELETE request |
-| `client.head(path, **kw)` | HEAD request |
-| `client.options(path, **kw)` | OPTIONS request |
+| Method                                      | Signature       |
+| ------------------------------------------- | --------------- |
+| `client.get(path, **kw)`                    | GET request     |
+| `client.post(path, json_data=None, **kw)`   | POST request    |
+| `client.put(path, json_data=None, **kw)`    | PUT request     |
+| `client.patch(path, json_data=None, **kw)`  | PATCH request   |
+| `client.delete(path, json_data=None, **kw)` | DELETE request  |
+| `client.head(path, **kw)`                   | HEAD request    |
+| `client.options(path, **kw)`                | OPTIONS request |
 
 All methods accept these keyword arguments:
 
-| Argument | Type | Description |
-| --- | --- | --- |
-| `body` | `str \| bytes` | Raw request body |
-| `headers` | `dict` | Request headers |
-| `query_params` | `dict` | Query string parameters |
-| `form_data` | `dict` | Form data fields |
-| `files` | `dict` | File uploads (name → bytes) |
+| Argument       | Type           | Description                 |
+| -------------- | -------------- | --------------------------- |
+| `body`         | `str \| bytes` | Raw request body            |
+| `headers`      | `dict`         | Request headers             |
+| `query_params` | `dict`         | Query string parameters     |
+| `form_data`    | `dict`         | Form data fields            |
+| `files`        | `dict`         | File uploads (name → bytes) |
