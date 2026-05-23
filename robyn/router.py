@@ -168,10 +168,10 @@ class Router(BaseRouter):
             _logger.warning(
                 "Handler '%s' on %s '%s' uses Pydantic body parameter(s) %s, but %s requests typically do not carry a request body",
                 handler.__name__,
-                route_type.name,
+                route_type,
                 endpoint,
                 list(pydantic_params.keys()),
-                route_type.name,
+                route_type,
             )
 
         def wrapped_handler(*args, **kwargs):
