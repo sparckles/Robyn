@@ -256,14 +256,16 @@ impl PyRequest {
     }
 
     pub fn json(&self, py: Python) -> PyResult<Py<PyAny>> {
-        match self.body.downcast_bound::<PyString>(py) {
-            Ok(python_string) => {
-                let parsed: Value = serde_json::from_str(python_string.extract()?)
-                    .map_err(|e| PyValueError::new_err(format!("Invalid JSON: {}", e)))?;
-                json_value_to_py(py, &parsed)
-            }
-            Err(e) => Err(e.into()),
+        let parsed: Value = if let Ok(python_string) = self.body.downcast_bound::<PyString>(py) {
+            serde_json::from_str(python_string.extract()?)
+        } else if let Ok(python_bytes) = self.body.downcast_bound::<PyBytes>(py) {
+            serde_json::from_slice(python_bytes.as_bytes())
+        } else {
+            return Err(PyValueError::new_err("Invalid JSON body"));
         }
+        .map_err(|e| PyValueError::new_err(format!("Invalid JSON: {}", e)))?;
+
+        json_value_to_py(py, &parsed)
     }
 }
 
