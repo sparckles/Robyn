@@ -1,0 +1,196 @@
+export const description =
+  '了解如何在 Robyn 中提供静态文件和目录服务，包括 SPA、文件列表和单个文件下载。'
+
+## 静态文件与目录服务
+
+Robyn 提供由 Rust 的 actix-files 驱动的高性能静态文件服务。你可以提供单个文件、整个目录，或前端 SPA 的构建产物目录。
+
+## 目录服务 {{ tag: 'app.serve_directory' }}
+
+<Row>
+<Col>
+使用 `app.serve_directory()` 可对整个静态文件目录提供服务。常用于提供前端构建产物（如 React、Vue）或静态资源文件夹。
+
+该方法支持三种模式：
+- **SPA/Build 模式**：通过设置 `index_file` 来服务带索引的构建目录
+- **文件列表模式**：将 `show_files_listing=True` 以启用可浏览的目录列表
+- **仅文件模式**：默认行为——直接提供文件而不显示目录浏览
+</Col>
+<Col sticky>
+
+<CodeGroup title="Directory Serving" tag="STATIC" label="/static">
+
+```python
+import os
+from robyn import Robyn
+
+app = Robyn(__file__)
+
+# Mode 1: SPA / Build folder (e.g., React, Vue)
+app.serve_directory(
+    route="/",
+    directory_path=os.path.join(os.path.dirname(__file__), "build"),
+    index_file="index.html",
+)
+
+# Mode 2: Browsable file listing
+app.serve_directory(
+    route="/files",
+    directory_path="./uploads",
+    show_files_listing=True,
+)
+
+# Mode 3: Direct file serving (no listing, no index)
+app.serve_directory(
+    route="/assets",
+    directory_path="./static",
+)
+
+app.start(port=8080)
+```
+
+</CodeGroup>
+</Col>
+</Row>
+
+### 参数说明
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `route` | `str` | required | 目录的 URL 前缀 |
+| `directory_path` | `str` | required | 目录在文件系统中的路径 |
+| `index_file` | `str` | `None` | 用于目录请求的索引文件（例如 `"index.html"`） |
+| `show_files_listing` | `bool` | `False` | 是否启用可浏览的目录列表 |
+
+---
+
+## 单个文件服务 {{ tag: 'serve_file' }}
+
+<Row>
+<Col>
+在路由处理函数中使用 `serve_file()` 可返回指定的单个文件。该函数会根据文件扩展名自动检测 MIME 类型并设置相应响应头。
+</Col>
+<Col sticky>
+
+<CodeGroup title="File Serving" tag="GET" label="/download">
+
+```python
+from robyn import Robyn, Request, serve_file
+
+app = Robyn(__file__)
+
+@app.get("/download/report")
+async def download_report(request: Request):
+    return serve_file(
+        "./reports/annual.pdf",
+        file_name="annual-report.pdf"  # optional, defaults to basename
+    )
+
+app.start(port=8080)
+```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
+## HTML 文件服务 {{ tag: 'serve_html' }}
+
+<Row>
+<Col>
+使用 `serve_html()` 可返回带有正确 `text/html` 类型的 HTML 文件。
+</Col>
+<Col sticky>
+
+<CodeGroup title="HTML Serving" tag="GET" label="/">
+
+```python
+from robyn import Robyn, Request, serve_html
+
+app = Robyn(__file__)
+
+@app.get("/")
+async def index(request: Request):
+    return serve_html("./templates/index.html")
+
+app.start(port=8080)
+```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
+## HTML 字符串返回 {{ tag: 'html()' }}
+
+<Row>
+<Col>
+使用 `html()` 辅助可直接返回 HTML 字符串并设置正确的内容类型，而无需从文件读取。
+</Col>
+<Col sticky>
+
+<CodeGroup title="HTML String" tag="GET" label="/page">
+
+```python
+from robyn import Robyn, Request, html
+
+app = Robyn(__file__)
+
+@app.get("/page")
+async def dynamic_page(request: Request):
+    return html("<h1>Hello from Robyn</h1><p>This is a dynamic page.</p>")
+
+app.start(port=8080)
+```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
+## 静态文件与 API 路由并存
+
+<Row>
+<Col>
+你可以在同一个应用中同时提供静态文件和 API 路由。这在构建包含前端 SPA 与后端 API 的全栈应用时很常见。
+</Col>
+<Col sticky>
+
+<CodeGroup title="Combined" tag="FULL" label="/app">
+
+```python
+import os
+from robyn import Robyn, Request
+
+app = Robyn(__file__)
+
+# Serve the React/Vue build
+app.serve_directory(
+    route="/",
+    directory_path=os.path.join(os.path.dirname(__file__), "frontend/build"),
+    index_file="index.html",
+)
+
+# API routes work alongside static serving
+@app.get("/api/health")
+def health():
+    return {"status": "ok"}
+
+@app.get("/api/users")
+async def get_users(request: Request):
+    return [{"id": 1, "name": "Alice"}]
+
+app.start(port=8080)
+```
+
+</CodeGroup>
+</Col>
+</Row>
+
+## 接下来？
+
+- [文件上传](/documentation/zh/api_reference/file-uploads)
+- [表单数据](/documentation/zh/api_reference/form_data)

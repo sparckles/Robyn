@@ -1,0 +1,139 @@
+# Model Context Protocol (MCP)
+
+> **⚠️ 实验性功能**：MCP 支持目前为实验性，API 可能发生变化。
+
+Robyn 支持 MCP，使得像 Claude Desktop 这样的 AI 应用可以连接到你的应用资源与工具。
+
+## 快速开始
+
+```python
+from robyn import Robyn
+
+app = Robyn(__file__)
+
+@app.mcp.resource("echo://{message}")
+def echo_resource(message: str) -> str:
+    return f"Resource echo: {message}"
+
+@app.mcp.tool()
+def echo_tool(message: str) -> str:
+    return f"Tool echo: {message}"
+
+@app.mcp.prompt()
+def echo_prompt(message: str) -> str:
+    return f"Please process: {message}"
+
+app.start()
+```
+
+## 功能特性
+
+- 从函数签名自动生成 JSON schema
+- 支持带参数提取的 URI 模板
+- 遵循 JSON-RPC 2.0 协议
+- 类型感知的参数处理
+
+## 装饰器参考
+
+### `@app.mcp.resource(uri, name=None, description=None, mime_type=None)`
+
+注册一个可供客户端读取的资源。
+
+```python
+@app.mcp.resource("user://{user_id}/profile")
+def user_profile(user_id: str) -> str:
+    return f"Profile for user {user_id}"
+```
+
+### `@app.mcp.tool(name=None, description=None, input_schema=None)`
+
+注册一个可由 AI 模型执行的工具。
+
+```python
+@app.mcp.tool()
+def greet(name: str, formal: bool = False) -> str:
+    if formal:
+        return f"Good day, {name}."
+    return f"Hi {name}!"
+```
+
+### `@app.mcp.prompt(name=None, description=None, arguments=None)`
+
+注册一个用于 AI 工作流的提示模板。
+
+```python
+@app.mcp.prompt()
+def code_review(code: str, language: str = "python") -> str:
+    return f"Please review this {language} code: {code}"
+```
+
+## 类型支持
+
+支持的类型：`str`、`int`、`float`、`bool`、`List`、`Dict`
+
+## URI 模板
+
+从 URI 中提取参数示例：
+
+```python
+@app.mcp.resource("user://{user_id}/posts/{post_id}")
+def get_user_post(user_id: str, post_id: str) -> str:
+    return f"Post {post_id} from user {user_id}"
+```
+
+## 客户端使用
+
+通过 curl 进行测试：
+
+```bash
+# List resources
+curl -X POST http://localhost:8080/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc": "2.0", "id": 1, "method": "resources/list", "params": {}}'
+```
+
+## 与 Claude Desktop 集成
+
+要将你的 Robyn MCP 服务器连接到 Claude Desktop：
+
+1. 启动包含 MCP 端点的 Robyn 应用
+2. 在 Claude Desktop 中配置连接到 `http://localhost:8080/mcp`
+3. 在对话中使用已注册的资源、工具与提示模板
+
+## 错误处理
+
+```python
+@app.mcp.tool()
+def divide(a: float, b: float) -> str:
+    if b == 0:
+        raise ValueError("Division by zero")
+    return str(a / b)
+```
+
+## 测试
+
+```bash
+# 单元测试
+python examples/mcp.py test-unit
+
+# 联机测试
+python examples/mcp.py test-live
+
+# 运行所有测试
+python examples/mcp.py test-all
+```
+
+## 配置
+
+MCP 在 `/mcp` 端点上通过 HTTP 使用 JSON-RPC 2.0 提供服务。无需额外配置。
+
+## Claude Desktop 集成（重复说明）
+
+1. 启动你的 Robyn 服务器
+2. 在 Claude Desktop 中配置连接到 `http://localhost:8080/mcp`
+3. 在对话中使用资源、工具与提示模板
+
+
+参见 `examples/mcp.py` 以获得完整示例。
+
+更多信息请参阅：https://modelcontextprotocol.io/

@@ -1,0 +1,375 @@
+export const description =
+  'Robyn 支持多种响应返回样式。本页记录了路由处理程序返回数据的所有方式，从简单字符串到流式响应。'
+
+## 响应返回样式
+
+Robyn 会自动将处理器的返回值转换为合适的 HTTP 响应。下面是支持的所有返回样式的完整参考。
+
+## 字符串 {{ tag: 'text/plain' }}
+
+<Row>
+<Col>
+最简单的返回样式。以状态码 200 返回字符串，并将其作为 `text/plain`，字符串会自动以 UTF-8 编码。
+</Col>
+<Col sticky>
+
+<CodeGroup title="Response" tag="GET" label="/hello">
+
+    ```python
+    from robyn import Robyn
+
+    app = Robyn(__file__)
+
+    @app.get("/hello")
+    def hello():
+        return "Hello, World!"
+    ```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
+## 字典或列表 {{ tag: 'application/json' }}
+
+<Row>
+<Col>
+返回 `dict` 或 `list` 会自动序列化为 JSON，并设置 `Content-Type: application/json`，状态码为 200。
+</Col>
+<Col sticky>
+
+<CodeGroup title="Response" tag="GET" label="/data">
+
+    ```python {{ title: 'Dictionary' }}
+    @app.get("/user")
+    def get_user():
+        return {"name": "Alice", "age": 30}
+    ```
+
+    ```python {{ title: 'List' }}
+    @app.get("/items")
+    def get_items():
+        return [1, 2, 3, "four", {"nested": True}]
+    ```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
+## Response 对象 {{ tag: 'full control' }}
+
+<Row>
+<Col>
+`Response` 对象让你完全控制状态码、响应头和主体。在需要对响应进行全面自定义时使用它。
+</Col>
+<Col sticky>
+
+<CodeGroup title="Response" tag="GET" label="/custom">
+
+    ```python
+    from robyn import Robyn, Response, Headers
+
+    app = Robyn(__file__)
+
+    @app.get("/custom")
+    async def custom_response():
+        return Response(
+            status_code=200,
+            headers=Headers({"X-Custom": "value"}),
+            description="OK",
+        )
+    ```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
+## Bytes {{ tag: 'application/octet-stream' }}
+
+<Row>
+<Col>
+返回 `bytes` 对象会设置 `Content-Type: application/octet-stream`，状态码为 200。适用于图像或在内存中生成的文件等二进制数据。
+</Col>
+<Col sticky>
+
+<CodeGroup title="Response" tag="GET" label="/binary">
+
+    ```python
+    @app.get("/binary")
+    async def binary_data():
+        return b"binary data"
+    ```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
+## Pydantic BaseModel {{ tag: 'application/json' }}
+
+<Row>
+<Col>
+如果返回一个 Pydantic 的 `BaseModel` 实例，Robyn 会自动将其序列化为 JSON，并设置 `Content-Type: application/json` 和状态码 200。
+
+**注意：** Pydantic 必须作为可选依赖安装（`pip install pydantic`）。如果未安装，模型将无法被检测，处理将回退到默认的字符串序列化。
+</Col>
+<Col sticky>
+
+<CodeGroup title="Response" tag="GET" label="/model">
+
+    ```python
+    from pydantic import BaseModel
+    from robyn import Robyn
+
+    app = Robyn(__file__)
+
+    class User(BaseModel):
+        name: str
+        email: str
+        age: int
+
+    @app.get("/model")
+    def get_model():
+        return User(name="Alice", email="alice@example.com", age=30)
+    ```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
+## 元组 (body, headers, status_code) {{ tag: 'custom' }}
+
+<Row>
+<Col>
+一个三元素元组 `(body, headers, status_code)` 允许你内联设置自定义状态码和响应头。元组中的 body 元素会按相同规则格式化（字符串、字典、字节等）。
+
+**注意：** 元组必须恰好包含 3 个元素。传入不同长度的元组会引发 `ValueError`。
+</Col>
+<Col sticky>
+
+<CodeGroup title="Response" tag="POST" label="/create">
+
+    ```python {{ title: 'Error response' }}
+    from robyn import Headers
+
+    @app.get("/not-found")
+    def not_found():
+        return (
+            {"error": "Resource not found"},
+            Headers({"X-Error": "true"}),
+            404,
+        )
+    ```
+
+    ```python {{ title: 'Created response' }}
+    @app.post("/users")
+    def create_user():
+        return (
+            {"id": 1, "name": "Alice"},
+            Headers({}),
+            201,
+        )
+    ```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
+## FileResponse / serve_file / serve_html {{ tag: 'file serving' }}
+
+<Row>
+<Col>
+Robyn 提供用于服务文件的辅助函数。`serve_file` 会设置 `Content-Disposition: attachment` 并自动检测 MIME 类型。`serve_html` 会设置 `Content-Type: text/html`。你也可以直接构造 `FileResponse` 以获得完全控制。
+</Col>
+<Col sticky>
+
+<CodeGroup title="Response" tag="GET" label="/download">
+
+    ```python {{ title: 'serve_file' }}
+    from robyn import Robyn
+    from robyn.responses import serve_file
+
+    app = Robyn(__file__)
+
+    @app.get("/download")
+    def download():
+        return serve_file("report.pdf")
+    ```
+
+    ```python {{ title: 'serve_html' }}
+    from robyn.responses import serve_html
+
+    @app.get("/page")
+    def page():
+        return serve_html("templates/index.html")
+    ```
+
+    ```python {{ title: 'FileResponse' }}
+    from robyn.responses import FileResponse
+    from robyn.robyn import Headers
+
+    @app.get("/custom-file")
+    def custom_file():
+        return FileResponse(
+            file_path="data/export.csv",
+            status_code=200,
+            headers=Headers({"Content-Type": "text/csv"}),
+        )
+    ```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
+## html() {{ tag: 'text/html' }}
+
+<Row>
+<Col>
+`html()` 辅助将原始 HTML 字符串封装为 `Response`，并设置 `Content-Type: text/html` 和状态码 200。适用于在不使用模板引擎的情况下返回动态生成的 HTML。
+</Col>
+<Col sticky>
+
+<CodeGroup title="Response" tag="GET" label="/page">
+
+    ```python
+    from robyn import Robyn
+    from robyn.responses import html
+
+    app = Robyn(__file__)
+
+    @app.get("/page")
+    def page():
+        return html("<h1>Hello, World!</h1><p>Welcome to Robyn.</p>")
+    ```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
+## StreamingResponse {{ tag: 'chunked streaming' }}
+
+<Row>
+<Col>
+`StreamingResponse` 使用生成器发送分块响应（同步或异步）。默认的 `media_type` 为 `text/event-stream`，但你可以将其设置为任意 MIME 类型。主体按块流式传输，客户端会在数据生成时逐块接收。
+</Col>
+<Col sticky>
+
+<CodeGroup title="Response" tag="GET" label="/stream">
+
+    ```python {{ title: 'Sync generator' }}
+    from robyn import Robyn
+    from robyn.responses import StreamingResponse
+
+    app = Robyn(__file__)
+
+    @app.get("/stream")
+    def stream():
+        def generate():
+            for i in range(5):
+                yield f"chunk {i}\n"
+
+        return StreamingResponse(
+            content=generate(),
+            media_type="text/plain",
+        )
+    ```
+
+    ```python {{ title: 'Async generator' }}
+    import asyncio
+    from robyn.responses import StreamingResponse
+
+    @app.get("/stream-async")
+    async def stream_async():
+        async def generate():
+            for i in range(5):
+                await asyncio.sleep(0.5)
+                yield f"chunk {i}\n"
+
+        return StreamingResponse(
+            content=generate(),
+            media_type="text/plain",
+        )
+    ```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
+## SSEResponse {{ tag: 'text.event-stream' }}
+
+<Row>
+<Col>
+`SSEResponse` 是 `StreamingResponse` 的便捷封装，预配置用于 Server-Sent Events。可配合 `SSEMessage` 辅助以 SSE 协议格式化消息。每条消息可选包含 `event`、`id`、和 `retry` 字段。
+
+有关 Server-Sent Events 的更详细指南，请参见 [SSE documentation](/documentation/en/api_reference/server_sent_events)。
+</Col>
+<Col sticky>
+
+<CodeGroup title="Response" tag="GET" label="/events">
+
+    ```python {{ title: 'Basic SSE' }}
+    from robyn import Robyn
+    from robyn.responses import SSEResponse, SSEMessage
+    import time
+
+    app = Robyn(__file__)
+
+    @app.get("/events")
+    def events():
+        def event_stream():
+            for i in range(10):
+                yield SSEMessage(
+                    f"Event {i}",
+                    event="update",
+                    id=str(i),
+                )
+                time.sleep(1)
+
+        return SSEResponse(event_stream())
+    ```
+
+    ```python {{ title: 'Async SSE' }}
+    import asyncio
+    from robyn.responses import SSEResponse, SSEMessage
+
+    @app.get("/events/async")
+    async def async_events():
+        async def event_stream():
+            for i in range(10):
+                await asyncio.sleep(0.5)
+                yield SSEMessage(
+                    f"Async event {i}",
+                    event="update",
+                    id=str(i),
+                )
+
+        return SSEResponse(event_stream())
+    ```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
+## 接下来？
+
+现在你已经了解了 Robyn 处理程序返回数据的各种方式，可以继续学习文件上传以了解如何从客户端接收文件。
+
+- [文件上传](/documentation/zh/api_reference/file-uploads)

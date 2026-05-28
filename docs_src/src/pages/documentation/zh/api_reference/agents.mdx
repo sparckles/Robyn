@@ -1,0 +1,125 @@
+export const description =
+  'Robyn AI Agents 为构建 AI 驱动的应用提供智能功能，基于 MCP（Model Context Protocol）实现，具备文件系统访问、任务管理和上下文感知能力。'
+
+# Agents
+
+本指南演示如何使用 Robyn 的 MCP（Model Context Protocol）实现来构建 AI 驱动的代理（agents）。
+
+## 概览
+
+代理系统将诸如 Claude Desktop 等 AI 助手连接到你的开发环境，提供无缝访问以下功能：
+
+- 文件系统操作（读取、搜索、整理）
+- 任务与笔记管理
+- 系统监控与 git 集成
+- 网页内容抓取与分析
+- 上下文感知的代码分析
+
+## 快速开始
+
+1. 启动 MCP 服务器：
+   ```bash
+   python examples/agents.py
+   ```
+
+2. 将你的 AI 助手连接到 `http://localhost:8080/mcp`
+
+3. 开始使用自然语言命令：
+   - "What files are in my projects directory?"
+   - "Show me my recent git commits"
+   - "Create a note about today's standup meeting"
+   - "What processes are using the most CPU?"
+   - "Add a task to review the quarterly report"
+
+## 配置
+
+助手会在用户目录下创建如下结构：
+
+```
+~/Documents/
+├── notes/           # Markdown 笔记
+└── tasks.json      # 任务列表
+
+~/projects/          # 开发项目
+├── project1/
+└── project2/
+```
+
+## 安全
+
+- 仅限访问用户主目录的文件
+- 安全的数学表达式求值
+- 对所有文件操作进行路径校验
+- 仅读的 git 操作
+
+## 可用资源
+
+### 文件系统
+- `fs://{path}` - 读取用户主目录下的文件
+- `fs://dir/{path}` - 列出目录内容
+
+### Git 集成
+- `git://repo/{repo_name}` - 仓库状态与提交信息
+
+### 系统监控
+- `system://processes` - 正在运行的进程
+- `system://stats` - 系统统计信息
+
+## 可用工具
+
+- `create_note(title, content, tags)` - 创建 Markdown 笔记
+- `add_task(task, priority, due_date)` - 添加任务
+- `complete_task(task_id)` - 标记任务为完成
+- `search_files(query, directory)` - 搜索文件内容
+- `fetch_url_content(url, max_length)` - 下载网页内容
+
+## 可用提示语（Prompts）
+
+- `analyze_file_structure(directory)` - 生成项目结构分析
+- `code_review_request(file_path, focus_area)` - 发起代码审查请求
+- `task_prioritization(context)` - 组织并优先排序任务
+
+## 依赖项
+
+可选的增强功能：
+
+```bash
+pip install psutil  # 增强的系统监控
+```
+
+## 示例场景
+
+### 开发工作流
+"Analyze my projects directory and help prioritize work based on recent activity"
+
+### 项目分析
+"Review my web-app project structure and suggest improvements"
+
+### 会议笔记
+"Create a note about today's architecture review with key decisions"
+
+### 代码搜索
+"Find all files mentioning 'authentication' and summarize approaches"
+
+### 任务管理
+"Add high-priority task to refactor user service, due Friday"
+
+## 集成收益
+
+将 AI 助手与开发环境连接能够实现：
+- 原生的文件系统浏览
+- 基于上下文的项目对话
+- 个性化的代码建议
+- 实时任务管理
+- 针对工作区的代码审查
+
+## 高级功能
+
+该 MCP 实现包括：
+- 支持参数提取的 URI 模板
+- 从类型提示自动生成的 schema
+- 异步/同步操作处理器
+- 符合 MCP 的错误处理
+- 类型安全的参数传递
+
+可按需通过自定义资源、工具和提示扩展以适配你的工作流。

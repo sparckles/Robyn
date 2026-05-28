@@ -1,0 +1,343 @@
+export const description =
+  '深入探讨 Robyn 独特的 Python-Rust 混合架构，以及它如何在保持 Python 易用性的同时提供卓越的性能。'
+
+# 架构深度解析
+
+Robyn 在 Python Web 框架领域具有独特的架构设计。它通过精心设计的混合系统，将 Python 的表达力与 Rust 的高性能结合在一起。本文将深入解释 Robyn 在底层的工作原理以及为何它能如此高效。
+
+## Python-Rust 混合设计
+
+### 两层架构
+
+Robyn 在两个相互关联但职责分明的层上运行：
+
+1. **Python 层**：提供面向开发者的 API、路由配置和业务逻辑
+2. **Rust 层**：负责 HTTP 解析、路由分发、响应生成与 I/O 操作
+
+<Row>
+  <Col>
+    Python 层是你编写应用代码的地方，负责：
+    - 路由定义与装饰器
+    - 请求参数注入
+    - 中间件配置
+    - 业务逻辑执行
+    - 响应格式化
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Python Layer Example">
+    ```python
+    from robyn import Robyn, Request
+    
+    app = Robyn(__file__)
+    
+    @app.get("/users/:id")
+    async def get_user(request: Request, user_id: str):
+        # Business logic runs in Python
+        user = await fetch_user_from_db(user_id)
+        return {"user": user.to_dict()}
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+<Row>
+  <Col>
+    Rust 层负责所有与性能密切相关的操作：
+    - HTTP 请求解析
+    - URL 路由与匹配
+    - WebSocket 连接管理
+    - 静态文件服务
+    - 响应序列化
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Rust Layer (Internal)">
+    ```rust
+    // This happens internally in Robyn's Rust core
+    impl HttpRouter {
+        pub fn route_request(&self, method: &str, path: &str) -> Option<RouteInfo> {
+            // High-performance routing using matchit crate
+            self.router.at(path).ok().map(|matched| {
+                RouteInfo {
+                    handler: matched.value.clone(),
+                    params: matched.params.clone(),
+                }
+            })
+        }
+    }
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+### PyO3 桥接：连接 Python 与 Rust
+
+核心的关键在于 PyO3，它使 Python 与 Rust 之间能够无缝通信：
+
+<Row>
+  <Col>
+    **函数注册**：当你在 Python 中定义路由处理函数时，Robyn 会通过 PyO3 绑定将其注册到 Rust 运行时。
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Function Registration Flow">
+    ```python
+    # Python side - route registration
+    @app.get("/api/data")
+    def handler(request):
+        return {"data": "example"}
+    
+    # Internally, this creates a FunctionInfo object
+    # that's passed to the Rust runtime
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+<Row>
+  <Col>
+    **请求执行流程**：当请求到达时，Rust 层负责路由分发，然后回调到 Python 执行你的处理函数。
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request Execution">
+    ```
+    1. HTTP Request arrives → Rust HTTP parser
+    2. Route matching → Rust router (matchit crate)
+    3. Parameter extraction → Rust
+    4. Handler execution → Python (via PyO3)
+    5. Response processing → Rust
+    6. HTTP Response → Client
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+## 性能优化
+
+### 静态响应的快速路径
+
+Robyn 提供了针对静态响应的 "const routes" 优化：
+
+<Row>
+  <Col>
+    当你将路由标记为 `const` 时，Robyn 会将响应缓存在 Rust 内存中，并且不会重新执行对应的 Python 处理函数。如果没有注册任何中间件，const 路由将完全由 Rust 层直接返回而不进入 Python。当存在中间件时，仍会使用缓存响应，但 before-request 与 after-request 中间件会如常执行。
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Const Routes">
+    ```python
+    # This response is cached in Rust memory
+    @app.get("/health", const=True)
+    def health_check():
+        return {"status": "healthy"}
+    
+    # Without middleware: served directly from Rust, bypassing Python entirely
+    # With middleware: cached response is used, but middleware still runs
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+### 零拷贝请求处理
+
+Rust 层在可能的情况下采用零拷贝技术：
+
+- 请求体只解析一次并在层间共享
+- 字符串数据以引用方式传递而非复制
+- 响应缓冲区在请求间重用
+
+### 异步运行时集成
+
+Robyn 将 Python 的 asyncio 与 Rust 的异步运行时结合：
+
+<Row>
+  <Col>
+    **同步处理函数**：在线程池中执行以避免阻塞异步运行时
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Sync Handler Execution">
+    ```python
+    @app.get("/sync")
+    def sync_handler(request):
+        # Runs in thread pool
+        time.sleep(1)  # Won't block other requests
+        return "Done"
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+<Row>
+  <Col>
+    **异步处理函数**：直接在主异步运行时中执行以获得最佳性能
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Async Handler Execution">
+    ```python
+    @app.get("/async")
+    async def async_handler(request):
+        # Runs in main async runtime
+        await asyncio.sleep(1)
+        return "Done"
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+## 高级参数注入
+
+Robyn 最复杂的功能之一是其参数注入系统：
+
+### 基于类型的注入
+
+<Row>
+  <Col>
+    Robyn 会分析你的函数签名，并根据类型注解自动注入相应的请求组件。
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Type-Based Injection">
+    ```python
+    from robyn import Request, QueryParams, Headers
+    from robyn.types import PathParams, RequestBody
+    
+    @app.post("/complex/:id")
+    async def complex_handler(
+        request: Request,           # Full request object
+        query_params: QueryParams,  # ?param=value
+        headers: Headers,           # Request headers
+        path_params: PathParams,    # :id from URL
+        body: RequestBody          # Request body
+    ):
+        return {
+            "id": path_params["id"],
+            "query": query_params.to_dict(),
+            "user_agent": headers.get("user-agent"),
+            "body_length": len(body)
+        }
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+### 基于名称的注入
+
+<Row>
+  <Col>
+    你也可以在没有类型注解的情况下使用保留参数名。
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Name-Based Injection">
+    ```python
+    @app.get("/simple/:id")
+    def simple_handler(query_params, path_params, headers):
+        # Parameters injected based on names
+        return {
+            "id": path_params["id"],
+            "search": query_params.get("q", ""),
+            "auth": headers.get("authorization")
+        }
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+## 内存管理
+
+### Python 对象生命周期
+
+Robyn 在 Python 与 Rust 边界处对 Python 对象进行精细管理：
+
+1. **请求对象**：每个请求创建一次并重用
+2. **响应对象**：高效序列化并传递到 Rust
+3. **处理函数引用**：存储在 Rust 中并通过 PyO3 调用
+
+### Rust 的内存安全
+
+Rust 层受益于 Rust 的所有权系统：
+
+- HTTP 解析不会导致内存泄漏
+- 对共享数据的并发访问安全
+- 连接资源自动清理
+
+## 横向扩展架构
+
+### 多进程模式
+
+<Row>
+  <Col>
+    Robyn 可以派生多个进程以利用所有 CPU 核心。
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Multi-Process Scaling">
+    ```bash
+    # Spawn 4 worker processes
+    python app.py --processes 4 --workers 2
+    
+    # Each process runs independently with shared-nothing architecture
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+### 多工作线程模式
+
+<Row>
+  <Col>
+    在每个进程内，多个工作线程并发处理请求。
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Worker Thread Model">
+    ```python
+    # Workers share the same Python interpreter
+    # but handle requests concurrently
+    app.start(port=8080, workers=4)
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+## WebSocket 架构
+
+### 持久连接
+
+Robyn 的 WebSocket 实现将持久连接维护在 Rust 层，同时允许 Python 处理函数处理消息：
+
+<Row>
+  <Col>
+    **连接管理**：为高效性而完全在 Rust 中处理
+    
+    **消息处理**：Python 处理函数负责处理单条消息
+    
+    **广播分发**：基于 Rust 的消息分发以获得高吞吐量
+  </Col>
+  <Col sticky>
+    <CodeGroup title="WebSocket Flow">
+    ```python
+    from robyn import WebSocketDisconnect
+
+    @app.websocket("/chat")
+    async def websocket_handler(websocket):
+        try:
+            while True:
+                message = await websocket.receive_text()
+                response = process_chat_message(message)
+                await websocket.send_text(response)
+        except WebSocketDisconnect:
+            pass
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+## 为何该架构奏效
+
+1. **兼得优势**：兼具 Python 的开发效率与 Rust 的运行性能
+2. **渐进式优化**：热路径可以逐步迁移到 Rust
+3. **内存高效**：层间拷贝最小化
+4. **异步集成**：与 Python 的 async/await 无缝衔接
+5. **安全性**：Rust 的内存安全避免常见的服务器漏洞
+
+这种架构使 Robyn 在保持 Python 开发便利性的同时，能够达到与纯 Rust Web 框架可比的性能表现。
+
+## 接下来？
+
+既然你已经了解了 Robyn 的架构，继续探索如何利用其高级特性：
+
+- [高级路由和参数注入](/documentation/zh/api_reference/advanced_routing)

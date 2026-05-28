@@ -1,0 +1,264 @@
+export const description =
+  'Robyn AI 提供代理与记忆功能，用于构建具有对话历史、上下文感知和可插拔 AI 运行器的智能应用。'
+
+# AI Agent 与 Memory
+
+Robyn 内置了 AI 能力，可让你创建带有对话记忆、上下文感知和可插拔代理运行器的智能应用。AI 模块为记忆存储和代理执行提供了抽象，便于与你的 Robyn 应用集成。
+
+## 安装
+
+AI 功能已包含在 Robyn 的基础安装中：
+
+```bash
+pip install robyn
+```
+
+
+## 快速开始
+
+下面是一个使用 Robyn AI 功能的简单示例：
+
+```python
+from robyn import Robyn
+from robyn.ai import agent, memory
+
+app = Robyn(__file__)
+
+# Create memory instance
+mem = memory(provider="inmemory", user_id="user123")
+
+# Create agent with memory
+chat_agent = agent(runner="simple", memory=mem)
+
+@app.get("/chat")
+async def chat_endpoint(request):
+    query = request.query_params.get("q", [""])[0]
+    if not query:
+        return {"error": "Query required"}
+    
+    # Run agent with conversation history
+    result = await chat_agent.run(query, history=True)
+    return result
+```
+
+## Memory 系统
+
+Memory 系统一用于持久化存储对话历史与上下文。它支持多种提供者并提供一致的接口来存取对话数据。
+
+### Memory 提供者
+
+#### InMemory 提供者
+
+最简单的提供者，数据存储在内存中。应用重启后数据会丢失。
+
+```python
+from robyn.ai import memory
+
+# Create in-memory storage
+mem = memory(provider="inmemory", user_id="user123")
+
+# Add messages
+await mem.add("Hello, how are you?")
+await mem.add("I'm doing great, thanks!")
+
+# Retrieve all messages
+messages = await mem.get()
+
+# Clear memory
+await mem.clear()
+```
+
+
+### Memory API
+
+Memory 类提供以下主要方法：
+
+- `add(message, metadata=None)` - 存储一条消息并可附带可选元数据
+- `get(query=None)` - 检索消息，可按查询过滤
+- `clear()` - 清除该用户的所有存储消息
+
+## Agent 系统
+
+Agents 提供 AI 功能的执行层。它们可以使用不同的 runner，并与 memory 集成以提供上下文感知的回复。
+
+### Agent Runners
+
+#### Simple Runner
+
+带有 OpenAI 集成的 runner，可生成智能回复：
+
+```python
+from robyn.ai import agent
+
+# Create simple agent with OpenAI
+from robyn.ai import configure
+
+config = configure(openai_api_key="your-openai-key")
+simple_agent = agent(runner="simple", config=config)
+
+# Use the agent
+result = await simple_agent.run("What's the weather like?")
+# Returns structured response with AI-generated content
+```
+
+
+### Agent API
+
+Agent 类提供：
+
+- `run(query, history=False, **kwargs)` - 执行代理并可选择包含历史上下文
+- 在提供 memory 时自动进行记忆集成
+- 支持自定义 runner 与配置
+
+## 完整示例
+
+下面是一个展示所有功能的综合示例：
+
+```python
+from robyn import Robyn
+from robyn.ai import agent, memory
+
+app = Robyn(__file__)
+
+# Create memory with InMemory provider
+mem = memory(
+    provider="inmemory",
+    user_id="guest"
+)
+
+# Create agent with memory
+chat_agent = agent(runner="simple", memory=mem)
+
+@app.get("/")
+async def home():
+    return {"message": "Robyn AI Chat API"}
+
+@app.post("/chat")  
+async def chat(request):
+    """Chat with AI agent"""
+    data = request.json()
+    query = data.get("query", "")
+    include_history = data.get("history", True)
+    
+    if not query:
+        return {"error": "Query is required"}
+    
+    try:
+        result = await chat_agent.run(query, history=include_history)
+        return {
+            "query": query,
+            "response": result.get("response"),
+            "history_included": include_history
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/memory")
+async def get_memory():
+    """Retrieve conversation history"""
+    try:
+        memories = await mem.get()
+        return {"memories": memories, "count": len(memories)}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.delete("/memory")
+async def clear_memory():
+    """Clear conversation history"""
+    try:
+        await mem.clear()
+        return {"message": "Memory cleared"}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/memory")
+async def add_memory(request):
+    """Add message to memory"""
+    data = request.json()
+    message = data.get("message", "")
+    metadata = data.get("metadata", {})
+    
+    if not message:
+        return {"error": "Message is required"}
+    
+    try:
+        await mem.add(message, metadata)
+        return {"message": "Added to memory"}
+    except Exception as e:
+        return {"error": str(e)}
+
+if __name__ == "__main__":
+    app.start(host="127.0.0.1", port=8080)
+```
+
+## 高级用法
+
+### 自定义 Memory 提供者
+
+你可以通过扩展 `MemoryProvider` 抽象基类来创建自定义的 memory 提供者：
+
+```python
+from robyn.ai import MemoryProvider
+from typing import Dict, List, Any, Optional
+
+class CustomMemoryProvider(MemoryProvider):
+    async def store(self, user_id: str, data: Dict[str, Any]) -> None:
+        # Implement custom storage logic
+        pass
+    
+    async def retrieve(self, user_id: str, query: Optional[str] = None) -> List[Dict[str, Any]]:
+        # Implement custom retrieval logic
+        return []
+    
+    async def clear(self, user_id: str) -> None:
+        # Implement custom clearing logic
+        pass
+
+# Use custom provider
+from robyn.ai import Memory
+custom_mem = Memory(provider=CustomMemoryProvider(), user_id="user123")
+```
+
+### 自定义 Agent Runners
+
+类似地，你可以创建自定义的 agent runner：
+
+```python
+from robyn.ai import AgentRunner
+from typing import Dict, Any
+
+class CustomAgentRunner(AgentRunner):
+    async def run(self, query: str, **kwargs) -> Dict[str, Any]:
+        # Implement custom agent logic
+        return {
+            "response": f"Custom response to: {query}",
+            "processed": True
+        }
+
+# Use custom runner
+from robyn.ai import Agent
+custom_agent = Agent(runner=CustomAgentRunner())
+```
+
+## 最佳实践
+
+1. **用户隔离**：始终使用唯一的用户 ID 来隔离不同用户之间的记忆
+2. **错误处理**：将 AI 操作放在 try-catch 块中，因为外部服务可能会失败
+3. **记忆管理**：定期清理或归档旧的记忆以防止无限增长
+4. **配置管理**：将敏感配置（API 密钥等）存储在环境变量中
+5. **测试**：在部署复杂代理之前，在开发和测试中使用 simple runner
+
+## 故障排查
+
+### 常见问题
+
+**ImportError for openai**: Install the required package:
+```bash
+pip install openai
+```
+
+**Memory not persisting**：请注意，InMemory 提供者在应用重启时会丢失数据。生产环境请考虑实现持久化的自定义提供者。
+
+**Agent timeouts**：复杂的操作可能耗时较长。建议在你的端点中实现超时处理以避免请求长时间挂起。
+
+**Memory growing too large**：定期清理记忆或使用具有内置保留策略的提供者，以防记忆体积无限增长。
