@@ -794,6 +794,16 @@ async def request_json(request: Request):
     return json["key"]
 
 
+@app.post("/sync/request_json/echo")
+def sync_request_json_echo_post(request: Request):
+    return request.json()
+
+
+@app.post("/async/request_json/echo")
+async def async_request_json_echo_post(request: Request):
+    return request.json()
+
+
 # JSON type preservation test
 @app.post("/sync/request_json/types")
 def sync_json_types(request: Request):
@@ -872,6 +882,16 @@ async def async_body_put(request: Request):
     return request.body
 
 
+@app.put("/sync/request_json/echo")
+def sync_request_json_echo_put(request: Request):
+    return request.json()
+
+
+@app.put("/async/request_json/echo")
+async def async_request_json_echo_put(request: Request):
+    return request.json()
+
+
 # --- DELETE ---
 
 # dict
@@ -944,6 +964,16 @@ def sync_body_patch(request: Request):
 @app.patch("/async/body")
 async def async_body_patch(request: Request):
     return request.body
+
+
+@app.patch("/sync/request_json/echo")
+def sync_request_json_echo_patch(request: Request):
+    return request.json()
+
+
+@app.patch("/async/request_json/echo")
+async def async_request_json_echo_patch(request: Request):
+    return request.json()
 
 
 # ==== Exception Handling ====
