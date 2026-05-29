@@ -1,7 +1,7 @@
 import inspect
 import logging
 from abc import ABC, abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from functools import wraps
 from types import CoroutineType
 from typing import NamedTuple, is_typeddict
@@ -71,6 +71,13 @@ class Router(BaseRouter):
     def __init__(self) -> None:
         super().__init__()
         self.routes: list[Route] = []
+
+    def _handler_can_access_path_params(self, handler_params: Mapping[str, inspect.Parameter]) -> bool:
+        for param in handler_params.values():
+            if param.annotation in (Request, PathParams):
+                return True
+
+        return bool({"r", "req", "request", "path_params"} & set(handler_params))
 
     def _format_tuple_response(self, res: tuple) -> Response:
         if len(res) != 3:
@@ -151,7 +158,7 @@ class Router(BaseRouter):
         handler_params = inspect.signature(handler).parameters
         handler_param_names = set(handler_params.keys())
 
-        unused_route_params = route_param_names - handler_param_names
+        unused_route_params = set() if self._handler_can_access_path_params(handler_params) else route_param_names - handler_param_names
         if unused_route_params:
             _logger.warning(
                 "Route '%s' declares path params %s but handler '%s' doesn't use them",
