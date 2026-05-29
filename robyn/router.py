@@ -34,6 +34,9 @@ _logger = logging.getLogger(__name__)
 # never receive the Response and can't mutate it either.
 _JSON_HEADERS = Headers({"Content-Type": "application/json"})
 _TEXT_HEADERS = Headers({"Content-Type": "text/plain"})
+_REQUEST_PARAM_NAMES = {"r", "req", "request"}
+_PATH_PARAMS_PARAM_NAMES = {"path_params"}
+_PATH_PARAM_ACCESS_TYPES = (Request, PathParams)
 
 
 def lower_http_method(method: HttpMethod):
@@ -74,10 +77,10 @@ class Router(BaseRouter):
 
     def _handler_can_access_path_params(self, handler_params: Mapping[str, inspect.Parameter]) -> bool:
         for param in handler_params.values():
-            if param.annotation in (Request, PathParams):
+            if param.annotation in _PATH_PARAM_ACCESS_TYPES:
                 return True
 
-        return bool({"r", "req", "request", "path_params"} & set(handler_params))
+        return bool((_REQUEST_PARAM_NAMES | _PATH_PARAMS_PARAM_NAMES) & set(handler_params))
 
     def _format_tuple_response(self, res: tuple) -> Response:
         if len(res) != 3:
