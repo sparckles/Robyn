@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Callable
+from typing import Callable, overload
 
 def get_version() -> str:
     pass
@@ -418,18 +418,31 @@ class Response:
     Attributes:
         status_code (int): The status code of the response. e.g. 200, 404, 500 etc.
         response_type (str | None): The response type of the response. e.g. text, json, html, file etc.
-        headers (Headers | dict): The headers of the response or Headers directly. e.g. {"Content-Type": "application/json"}
-        description (str | bytes): The body of the response. If the response is a JSON, it will be a dict.
+        headers (Headers): The response headers. The constructor accepts Headers, dict, or None.
+        description (str | bytes): Legacy supported name for the response body. Prefer body for new code.
+        body (str | bytes): Preferred name for the response body in the constructor.
         file_path (str | None): The file path of the response. e.g. /home/user/file.txt
         cookies (Cookies): The cookies to set in the response.
     """
 
     status_code: int
-    headers: Headers | dict
+    headers: Headers
     description: str | bytes
     response_type: str | None = None
     file_path: str | None = None
     cookies: Cookies = None  # Initialized automatically
+
+    @overload
+    def __init__(self, status_code: int, headers: Headers | dict | None, description: str | bytes) -> None:
+        pass
+
+    @overload
+    def __init__(self, status_code: int, headers: Headers | dict | None = None, *, description: str | bytes) -> None:
+        pass
+
+    @overload
+    def __init__(self, status_code: int, headers: Headers | dict | None = None, *, body: str | bytes) -> None:
+        pass
 
     def set_cookie(
         self,
