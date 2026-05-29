@@ -2,9 +2,9 @@ use actix_http::{body::BoxBody, StatusCode};
 use actix_web::{web::Bytes, HttpRequest, HttpResponse, HttpResponseBuilder, Responder};
 use futures::Stream;
 use pyo3::{
-    exceptions::PyIOError,
+    exceptions::{PyIOError, PyTypeError},
     prelude::*,
-    types::{PyBytes, PyDict},
+    types::{PyBytes, PyDict, PyEllipsis},
     Bound, IntoPyObject,
 };
 use std::pin::Pin;
@@ -145,6 +145,10 @@ fn create_python_stream(
             _ => None,
         }
     }))
+}
+
+fn missing_response_body() -> Py<PyAny> {
+    Python::attach(|py| py.Ellipsis())
 }
 
 impl Response {
@@ -304,26 +308,50 @@ impl PyStreamingResponse {
 impl PyResponse {
     // To do: Add check for content-type in header and change response_type accordingly
     #[new]
+    #[pyo3(signature = (status_code, headers=None, description=missing_response_body(), *, body=missing_response_body()))]
     pub fn new(
         py: Python,
         status_code: u16,
-        headers: Bound<'_, PyAny>,
+        headers: Option<Bound<'_, PyAny>>,
         description: Py<PyAny>,
+        body: Py<PyAny>,
     ) -> PyResult<Self> {
+        let description_is_missing = description.bind(py).is(&**PyEllipsis::get(py));
+        let body_is_missing = body.bind(py).is(&**PyEllipsis::get(py));
+
+        let description = match (description_is_missing, body_is_missing) {
+            (false, true) => description,
+            (true, false) => body,
+            (false, false) => {
+                return Err(PyTypeError::new_err(
+                    "Response() got both 'description' and 'body'; use only one",
+                ));
+            }
+            (true, true) => {
+                return Err(PyTypeError::new_err(
+                    "Response() missing required argument 'description' or 'body'",
+                ));
+            }
+        };
+
         check_body_type(py, &description)?;
 
-        let headers_output: Py<Headers> = if let Ok(headers_dict) = headers.downcast::<PyDict>() {
-            // Here you'd have logic to create a Headers instance from a PyDict
-            // For simplicity, let's assume you have a method `from_dict` on Headers for this
-            let headers = Headers::new(Some(headers_dict)); // Hypothetical method
-            Py::new(py, headers)?
-        } else if let Ok(headers) = headers.extract::<Py<Headers>>() {
-            // If it's already a Py<Headers>, use it directly
-            headers
+        let headers_output: Py<Headers> = if let Some(headers) = headers {
+            if let Ok(headers_dict) = headers.downcast::<PyDict>() {
+                // Here you'd have logic to create a Headers instance from a PyDict
+                // For simplicity, let's assume you have a method `from_dict` on Headers for this
+                let headers = Headers::new(Some(headers_dict)); // Hypothetical method
+                Py::new(py, headers)?
+            } else if let Ok(headers) = headers.extract::<Py<Headers>>() {
+                // If it's already a Py<Headers>, use it directly
+                headers
+            } else {
+                return Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+                    "headers must be a Headers instance or a dict",
+                ));
+            }
         } else {
-            return Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
-                "headers must be a Headers instance or a dict",
-            ));
+            Py::new(py, Headers::new(None))?
         };
 
         let cookies: Py<Cookies> = Py::new(py, Cookies::new())?;
