@@ -1,6 +1,7 @@
 import asyncio
 import signal
 import sys
+import time
 import webbrowser
 
 from multiprocess import Process  # type: ignore
@@ -10,6 +11,39 @@ from robyn.logger import logger
 from robyn.robyn import FunctionInfo, Headers, Server, SocketHeld
 from robyn.router import GlobalMiddleware, Route, RouteMiddleware
 from robyn.types import Directory
+
+GRACEFUL_SHUTDOWN_TIMEOUT = 10
+
+
+def _raise_keyboard_interrupt(_sig, _frame):
+    raise KeyboardInterrupt
+
+
+def _register_graceful_shutdown_handler() -> None:
+    if sys.platform.startswith("win32"):
+        return
+
+    signal.signal(signal.SIGTERM, _raise_keyboard_interrupt)
+
+
+def _terminate_process_pool(process_pool: list[Process]) -> None:
+    for process in process_pool:
+        try:
+            process.terminate()
+        except ProcessLookupError:
+            pass
+
+    deadline = time.monotonic() + GRACEFUL_SHUTDOWN_TIMEOUT
+    for process in process_pool:
+        remaining_timeout = max(deadline - time.monotonic(), 0)
+        process.join(timeout=remaining_timeout)
+        if process.is_alive():
+            logger.warn("Worker process %s did not exit gracefully, force killing it.", process.pid)
+            try:
+                process.kill()
+            except ProcessLookupError:
+                pass
+            process.join()
 
 
 def run_processes(
@@ -51,8 +85,7 @@ def run_processes(
 
     def terminating_signal_handler(_sig, _frame):
         logger.info("Terminating server!!", bold=True)
-        for process in process_pool:
-            process.kill()
+        _terminate_process_pool(process_pool)
 
     signal.signal(signal.SIGINT, terminating_signal_handler)
     signal.signal(signal.SIGTERM, terminating_signal_handler)
@@ -177,6 +210,7 @@ def spawn_process(
     """
 
     loop = initialize_event_loop()
+    _register_graceful_shutdown_handler()
 
     server = Server()
 

@@ -11,6 +11,8 @@ from watchdog.observers import Observer
 
 from robyn.logger import Colors, logger
 
+GRACEFUL_SHUTDOWN_TIMEOUT = 10
+
 
 def compile_rust_files(directory_path: str) -> list[str]:
     rust_files = glob.glob(os.path.join(directory_path, "**/*.rs"), recursive=True)
@@ -92,6 +94,7 @@ def setup_reloader(directory_path: str, file_path: str) -> None:
 
     def terminating_signal_handler(_sig, _frame):
         event_handler.stop_server()
+        event_handler.wait_for_server_shutdown()
         logger.info("Terminating reloader", bold=True)
         observer.stop()
         observer.join()
@@ -109,7 +112,7 @@ def setup_reloader(directory_path: str, file_path: str) -> None:
     finally:
         observer.stop()
         observer.join()
-        event_handler.process.wait()
+        event_handler.wait_for_server_shutdown()
 
 
 class EventHandler(FileSystemEventHandler):
@@ -123,7 +126,24 @@ class EventHandler(FileSystemEventHandler):
 
     def stop_server(self) -> None:
         if self.process:
-            os.kill(self.process.pid, signal.SIGTERM)  # Stop the subprocess using os.kill()
+            try:
+                self.process.terminate()
+            except ProcessLookupError:
+                pass
+
+    def wait_for_server_shutdown(self) -> None:
+        if not self.process:
+            return
+
+        try:
+            self.process.wait(timeout=GRACEFUL_SHUTDOWN_TIMEOUT)
+        except subprocess.TimeoutExpired:
+            logger.warn("Server process %s did not exit gracefully, force killing it.", self.process.pid)
+            try:
+                self.process.kill()
+            except ProcessLookupError:
+                pass
+            self.process.wait()
 
     def reload(self) -> None:
         self.stop_server()
@@ -140,7 +160,7 @@ class EventHandler(FileSystemEventHandler):
 
         prev_process = self.process
         if prev_process:
-            prev_process.kill()
+            self.wait_for_server_shutdown()
 
         self.process = subprocess.Popen(
             [sys.executable, *arguments],
