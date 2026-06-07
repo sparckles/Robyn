@@ -1,4 +1,10 @@
 from robyn import Robyn, SubRouter
+<<<<<<< HEAD
+=======
+
+
+# Tests nested subrouter prefixes are consistent with websocket routes
+>>>>>>> ef04402802eb361de3500bbf29e432f3af461f3e
 def test_subrouter_nested_prefixes():
     """
     Tests nested subrouter prefixes are consistent with websocket routes
@@ -43,4 +49,3 @@ def test_subrouter_nested_prefixes():
     # HTTP and WebSocket routes should both be correctly prefixed
     assert "/ccc/hello" in http_routes
     assert "/bbb/ccc/ws" in websocket_routes
-    
