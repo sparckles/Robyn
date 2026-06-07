@@ -23,7 +23,7 @@ from robyn.processpool import run_processes
 from robyn.reloader import compile_rust_files
 from robyn.responses import SSEMessage, SSEResponse, StreamingResponse, html, serve_file, serve_html
 from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, WebSocketConnector, get_version
-from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
+from robyn.router import MiddlewareRouter, MiddlewareType, WebSocketRouter
 from robyn.testing import TestClient
 from robyn.types import Directory, JsonBody
 from robyn.ws import WebSocketAdapter, WebSocketDisconnect, create_websocket_decorator
@@ -617,8 +617,8 @@ class BaseRobyn(ABC):
         Merge another SubRouter's routes, middlewares, websocket routes, and dependencies into this router.
         Note: This operation mutates the current router's internal collections (route list, middleware lists,
         websocket routes, and dependencies) and does not deep-copy the included router. Callers should ensure
-        there are no path or name conflicts before including a router. Also note that prefix resolution is 
-        handled here for both HTTP and WebSocket routes. 
+        there are no path or name conflicts before including a router. Also note that prefix resolution is
+        handled here for both HTTP and WebSocket routes.
 
         :param router SubRouter: the router object to include the routes from
         """
