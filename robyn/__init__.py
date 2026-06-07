@@ -6,6 +6,7 @@ from abc import ABC
 from collections.abc import Callable
 from pathlib import Path
 
+from robyn.router import Route, Router
 import multiprocess as mp  # type: ignore
 
 from robyn import status_codes
@@ -616,28 +617,32 @@ class BaseRobyn(ABC):
         Merge another SubRouter's routes, middlewares, websocket routes, and dependencies into this router.
         Note: This operation mutates the current router's internal collections (route list, middleware lists,
         websocket routes, and dependencies) and does not deep-copy the included router. Callers should ensure
-        there are no path or name conflicts before including a router.
+        there are no path or name conflicts before including a router. Also note that prefix resolution is 
+        handled here for both HTTP and WebSocket routes. 
 
         :param router SubRouter: the router object to include the routes from
         """
         self.included_routers.append(router)
 
-        self.router.routes.extend(router.router.routes)
         self.middleware_router.global_middlewares.extend(router.middleware_router.global_middlewares)
         self.middleware_router.route_middlewares.extend(router.middleware_router.route_middlewares)
 
         if not self.config.disable_openapi and self.openapi is not None:
-            self.openapi.add_subrouter_paths(self.openapi)
+            self.openapi.add_subrouter_paths(router.openapi)
 
-        # extend the websocket routes
+        # HTTP routes already are normalised
+        self.router.routes.extend(router.router.routes)
+        # websocket prefixing and normalisation
         prefix = _normalize_endpoint(router.prefix, treat_empty_as_root=True)
         if prefix == "/":
             prefix = ""
+
         for route, handlers in router.web_socket_router.routes.items():
             normalized_route = _normalize_endpoint(route)
             new_endpoint = f"{prefix}{normalized_route}"
             self.web_socket_router.routes[new_endpoint] = handlers
 
+        # merge dependencies
         self.dependencies.merge_dependencies(router)
 
     def configure_authentication(self, authentication_handler: AuthenticationHandler):
