@@ -6,7 +6,7 @@ from abc import ABC
 from collections.abc import Callable
 from pathlib import Path
 
-from robyn.router import Route, Router
+from robyn.router import Router
 import multiprocess as mp  # type: ignore
 
 from robyn import status_codes
