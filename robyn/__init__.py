@@ -6,7 +6,6 @@ from abc import ABC
 from collections.abc import Callable
 from pathlib import Path
 
-from robyn.router import Router
 import multiprocess as mp  # type: ignore
 
 from robyn import status_codes
@@ -23,7 +22,7 @@ from robyn.processpool import run_processes
 from robyn.reloader import compile_rust_files
 from robyn.responses import SSEMessage, SSEResponse, StreamingResponse, html, serve_file, serve_html
 from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, WebSocketConnector, get_version
-from robyn.router import MiddlewareRouter, MiddlewareType, WebSocketRouter
+from robyn.router import Router, MiddlewareRouter, MiddlewareType, WebSocketRouter
 from robyn.testing import TestClient
 from robyn.types import Directory, JsonBody
 from robyn.ws import WebSocketAdapter, WebSocketDisconnect, create_websocket_decorator
