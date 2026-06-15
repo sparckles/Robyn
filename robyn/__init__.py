@@ -25,6 +25,7 @@ from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, We
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.testing import TestClient
 from robyn.types import Directory, JsonBody
+from robyn.upload import UploadFile
 from robyn.ws import WebSocketAdapter, WebSocketDisconnect, create_websocket_decorator
 
 __version__ = get_version()
@@ -964,6 +965,7 @@ __all__ = [
     "WebSocketAdapter",
     "WebSocketDisconnect",
     "JsonBody",
+    "UploadFile",
     "MCPApp",
     "TestClient",
 ]
