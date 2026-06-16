@@ -8,6 +8,7 @@ actual HTTP requests — no TestClient.
 
 import os
 import pathlib
+import platform
 import signal
 import socket
 import subprocess
@@ -25,17 +26,41 @@ ALLOWED_ORIGIN = "http://localhost:3000"
 DISALLOWED_ORIGIN = "http://evil.example.com"
 
 
+def _terminate(process):
+    """Cross-platform process-group termination (POSIX uses killpg; Windows uses CTRL_BREAK)."""
+    if platform.system() == "Windows":
+        try:
+            process.send_signal(signal.CTRL_BREAK_EVENT)
+        except Exception:
+            pass
+        process.kill()
+        return
+    try:
+        os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+    except ProcessLookupError:
+        pass
+
+
 def _start_cors_server():
     app_path = os.path.join(pathlib.Path(__file__).parent.resolve(), "cors_app.py")
     env = os.environ.copy()
     env["ROBYN_HOST"] = CORS_HOST
     env["ROBYN_PORT"] = str(CORS_PORT)
 
-    process = subprocess.Popen(
-        ["python3", app_path],
-        env=env,
-        preexec_fn=os.setsid,
-    )
+    # os.setsid / os.killpg are POSIX-only; on Windows start the child in its own
+    # process group so it can be signalled the same way (mirrors conftest.py).
+    if platform.system() == "Windows":
+        process = subprocess.Popen(
+            ["python", app_path],
+            env=env,
+            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+        )
+    else:
+        process = subprocess.Popen(
+            ["python3", app_path],
+            env=env,
+            preexec_fn=os.setsid,
+        )
 
     timeout = 15
     start = time.time()
@@ -43,7 +68,7 @@ def _start_cors_server():
         if process.poll() is not None:
             raise RuntimeError(f"CORS server exited early with code {process.returncode}")
         if time.time() - start > timeout:
-            os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+            _terminate(process)
             raise ConnectionError(f"CORS server didn't start on {CORS_HOST}:{CORS_PORT}")
         try:
             sock = socket.create_connection((CORS_HOST, CORS_PORT), timeout=2)
@@ -60,10 +85,7 @@ def _start_cors_server():
 def cors_server():
     process = _start_cors_server()
     yield
-    try:
-        os.killpg(os.getpgid(process.pid), signal.SIGKILL)
-    except ProcessLookupError:
-        pass
+    _terminate(process)
 
 
 # ---------------------------------------------------------------------------
