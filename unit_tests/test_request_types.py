@@ -20,12 +20,11 @@ def test_request_types_importable_from_package():
 
 
 def test_request_types_importable_from_types_module():
-    from robyn.types import RequestBody, RequestMethod, RequestURL
-
     # Same objects regardless of import path.
     from robyn import RequestBody as PkgRequestBody
     from robyn import RequestMethod as PkgRequestMethod
     from robyn import RequestURL as PkgRequestURL
+    from robyn.types import RequestBody, RequestMethod, RequestURL
 
     assert RequestMethod is PkgRequestMethod
     assert RequestBody is PkgRequestBody
