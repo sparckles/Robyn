@@ -147,13 +147,17 @@ fn create_python_stream(
     }))
 }
 
-/// Sentinel used as the default for the `description`/`body` constructor args.
+/// Default sentinel for the `description`/`body` constructor args.
 ///
-/// We deliberately use `...` (Ellipsis) rather than `Option<..>=None` to mean
-/// "argument omitted": `None` is itself a value a caller may pass for the body,
-/// and one we explicitly reject in `check_body_type`. The sentinel lets us tell
-/// "not provided" apart from "explicitly passed None" so the latter still gets a
-/// clear "bad body type" error instead of being silently treated as missing.
+/// Python has no way to represent "argument omitted" as a value, so to support
+/// the `body=`/`description=` aliasing we must tell "not passed" apart from an
+/// explicitly-passed value. `Option<..> = None` can't do this: pyo3 extracts a
+/// Python `None` into Rust `None`, which is indistinguishable from an omitted
+/// argument. Using `...` (Ellipsis) as the sentinel keeps `None` a distinct,
+/// observable value, so `Response(body=None)` is forwarded to `check_body_type`
+/// and rejected with a `ValueError` ("Could not convert specified body to
+/// bytes") -- the existing behavior -- rather than being mistaken for a missing
+/// argument and raising a `TypeError` instead.
 fn missing_response_body() -> Py<PyAny> {
     Python::attach(|py| py.Ellipsis())
 }
