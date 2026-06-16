@@ -1,7 +1,8 @@
 from dataclasses import dataclass
-from typing import NewType, TypedDict
+from typing import Literal, NewType, TypedDict, Union
 
 from robyn._param_utils import QueryParamValidationError
+from robyn.robyn import Url
 
 
 @dataclass
@@ -25,6 +26,20 @@ Method = NewType("Method", str)
 FormData = NewType("FormData", dict[str, str])
 Files = NewType("Files", dict[str, bytes])
 IPAddress = NewType("IPAddress", str | None)
+
+# Convenience type aliases describing the runtime types of the components on
+# ``robyn.Request``. They let editors and type checkers (mypy, pyright) validate
+# handler code that reads ``request.method``, ``request.body`` and ``request.url``.
+# See https://github.com/sparckles/Robyn/issues/1077.
+
+# The HTTP methods a request can use (the value of ``request.method``).
+RequestMethod = Literal["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS", "CONNECT", "TRACE"]
+
+# The type of ``request.body``: text for UTF-8 payloads, raw bytes otherwise.
+RequestBody = Union[str, bytes]
+
+# The type of ``request.url`` (an alias of :class:`robyn.Url`).
+RequestURL = Url
 
 
 class JSONResponse(TypedDict):
@@ -78,4 +93,18 @@ class JsonBody:
     pass
 
 
-__all__ = ["JSONResponse", "Body", "JsonBody", "QueryParamValidationError", "Directory", "PathParams", "Method", "FormData", "Files", "IPAddress"]
+__all__ = [
+    "JSONResponse",
+    "Body",
+    "JsonBody",
+    "QueryParamValidationError",
+    "Directory",
+    "PathParams",
+    "Method",
+    "FormData",
+    "Files",
+    "IPAddress",
+    "RequestMethod",
+    "RequestBody",
+    "RequestURL",
+]

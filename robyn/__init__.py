@@ -24,7 +24,7 @@ from robyn.responses import SSEMessage, SSEResponse, StreamingResponse, html, se
 from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, WebSocketConnector, get_version
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.testing import TestClient
-from robyn.types import Directory, JsonBody
+from robyn.types import Directory, JsonBody, RequestBody, RequestMethod, RequestURL
 from robyn.ws import WebSocketAdapter, WebSocketDisconnect, create_websocket_decorator
 
 __version__ = get_version()
@@ -966,4 +966,7 @@ __all__ = [
     "JsonBody",
     "MCPApp",
     "TestClient",
+    "RequestMethod",
+    "RequestBody",
+    "RequestURL",
 ]
