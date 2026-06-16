@@ -5,6 +5,7 @@ import socket
 from abc import ABC
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 import multiprocess as mp  # type: ignore
 
@@ -17,7 +18,7 @@ from robyn.events import Events
 from robyn.jsonify import jsonify
 from robyn.logger import Colors, logger
 from robyn.mcp import MCPApp
-from robyn.openapi import OpenAPI
+from robyn.openapi import OpenAPI, RouteOpenAPIMeta
 from robyn.processpool import run_processes
 from robyn.reloader import compile_rust_files
 from robyn.responses import SSEMessage, SSEResponse, StreamingResponse, html, serve_file, serve_html
@@ -157,6 +158,11 @@ class BaseRobyn(ABC):
         auth_required: bool = False,
         openapi_name: str = "",
         openapi_tags: list[str] | None = None,
+        status_code: int | None = None,
+        response_model: Any = None,
+        responses: dict[int | str, Any] | None = None,
+        deprecated: bool = False,
+        include_in_schema: bool = True,
     ):
         """
         Connect a URI to a handler
@@ -166,13 +172,25 @@ class BaseRobyn(ABC):
         :param handler function: represents the sync or async function passed as a handler for the route
         :param is_const bool: represents if the handler is a const function or not
         :param auth_required bool: represents if the route needs authentication or not
-        """
-
-        """ We will add the status code here only
+        :param openapi_name str: the name (summary) of the endpoint in the openapi spec
+        :param openapi_tags list[str]: tags for grouping endpoints in the openapi spec
+        :param status_code int|None: default success status code (also reflected in the openapi spec)
+        :param response_model Any: type/Pydantic model used as the success response schema
+        :param responses dict|None: additional documented responses keyed by status code
+        :param deprecated bool: marks the operation as deprecated in the openapi spec
+        :param include_in_schema bool: when False the route is omitted from the openapi spec
         """
         injected_dependencies = self.dependencies.get_dependency_map(self)
 
         list_openapi_tags: list[str] = openapi_tags if openapi_tags else []
+
+        openapi_metadata = RouteOpenAPIMeta(
+            status_code=status_code,
+            response_model=response_model,
+            responses=responses,
+            deprecated=deprecated,
+            include_in_schema=include_in_schema,
+        )
 
         if isinstance(route_type, str):
             http_methods = {
@@ -214,6 +232,7 @@ class BaseRobyn(ABC):
             openapi_tags=list_openapi_tags,
             exception_handler=self.exception_handler,
             injected_dependencies=injected_dependencies,
+            openapi_metadata=openapi_metadata,
         )
 
         logger.info("Added route %s %s", route_type, normalized_endpoint)
@@ -344,12 +363,17 @@ class BaseRobyn(ABC):
 
         self.router.prepare_routes_openapi(self.openapi, self.included_routers)
 
+        # Drop empty component buckets (e.g. an empty securitySchemes that would
+        # otherwise make Swagger UI show an empty "Authorize" popup — #1122, #1339).
+        self.openapi.prune_empty_components()
+
         self.add_route(
             route_type=HttpMethod.GET,
             endpoint="/openapi.json",
             handler=self.openapi.get_openapi_config,
             is_const=True,
             auth_required=auth_required,
+            include_in_schema=False,
         )
         self.add_route(
             route_type=HttpMethod.GET,
@@ -357,6 +381,7 @@ class BaseRobyn(ABC):
             handler=self.openapi.get_openapi_docs_page,
             is_const=True,
             auth_required=auth_required,
+            include_in_schema=False,
         )
         self.exclude_response_headers_for(["/docs", "/openapi.json"])
 
@@ -370,6 +395,11 @@ class BaseRobyn(ABC):
         auth_required: bool = False,
         openapi_name: str = "",
         openapi_tags: list[str] = ["get"],
+        status_code: int | None = None,
+        response_model: Any = None,
+        responses: dict[int | str, Any] | None = None,
+        deprecated: bool = False,
+        include_in_schema: bool = True,
     ):
         """
         The @app.get decorator to add a route with the GET method
@@ -382,7 +412,20 @@ class BaseRobyn(ABC):
         """
 
         def inner(handler):
-            return self.add_route(HttpMethod.GET, endpoint, handler, const, auth_required, openapi_name, openapi_tags)
+            return self.add_route(
+                HttpMethod.GET,
+                endpoint,
+                handler,
+                const,
+                auth_required,
+                openapi_name,
+                openapi_tags,
+                status_code=status_code,
+                response_model=response_model,
+                responses=responses,
+                deprecated=deprecated,
+                include_in_schema=include_in_schema,
+            )
 
         return inner
 
@@ -392,6 +435,11 @@ class BaseRobyn(ABC):
         auth_required: bool = False,
         openapi_name: str = "",
         openapi_tags: list[str] = ["post"],
+        status_code: int | None = None,
+        response_model: Any = None,
+        responses: dict[int | str, Any] | None = None,
+        deprecated: bool = False,
+        include_in_schema: bool = True,
     ):
         """
         The @app.post decorator to add a route with POST method
@@ -410,6 +458,11 @@ class BaseRobyn(ABC):
                 auth_required=auth_required,
                 openapi_name=openapi_name,
                 openapi_tags=openapi_tags,
+                status_code=status_code,
+                response_model=response_model,
+                responses=responses,
+                deprecated=deprecated,
+                include_in_schema=include_in_schema,
             )
 
         return inner
@@ -420,6 +473,11 @@ class BaseRobyn(ABC):
         auth_required: bool = False,
         openapi_name: str = "",
         openapi_tags: list[str] = ["put"],
+        status_code: int | None = None,
+        response_model: Any = None,
+        responses: dict[int | str, Any] | None = None,
+        deprecated: bool = False,
+        include_in_schema: bool = True,
     ):
         """
         The @app.put decorator to add a get route with PUT method
@@ -438,6 +496,11 @@ class BaseRobyn(ABC):
                 auth_required=auth_required,
                 openapi_name=openapi_name,
                 openapi_tags=openapi_tags,
+                status_code=status_code,
+                response_model=response_model,
+                responses=responses,
+                deprecated=deprecated,
+                include_in_schema=include_in_schema,
             )
 
         return inner
@@ -448,6 +511,11 @@ class BaseRobyn(ABC):
         auth_required: bool = False,
         openapi_name: str = "",
         openapi_tags: list[str] = ["delete"],
+        status_code: int | None = None,
+        response_model: Any = None,
+        responses: dict[int | str, Any] | None = None,
+        deprecated: bool = False,
+        include_in_schema: bool = True,
     ):
         """
         The @app.delete decorator to add a route with DELETE method
@@ -466,6 +534,11 @@ class BaseRobyn(ABC):
                 auth_required=auth_required,
                 openapi_name=openapi_name,
                 openapi_tags=openapi_tags,
+                status_code=status_code,
+                response_model=response_model,
+                responses=responses,
+                deprecated=deprecated,
+                include_in_schema=include_in_schema,
             )
 
         return inner
@@ -476,6 +549,11 @@ class BaseRobyn(ABC):
         auth_required: bool = False,
         openapi_name: str = "",
         openapi_tags: list[str] = ["patch"],
+        status_code: int | None = None,
+        response_model: Any = None,
+        responses: dict[int | str, Any] | None = None,
+        deprecated: bool = False,
+        include_in_schema: bool = True,
     ):
         """
         The @app.patch decorator to add a route with PATCH method
@@ -494,6 +572,11 @@ class BaseRobyn(ABC):
                 auth_required=auth_required,
                 openapi_name=openapi_name,
                 openapi_tags=openapi_tags,
+                status_code=status_code,
+                response_model=response_model,
+                responses=responses,
+                deprecated=deprecated,
+                include_in_schema=include_in_schema,
             )
 
         return inner
@@ -504,6 +587,11 @@ class BaseRobyn(ABC):
         auth_required: bool = False,
         openapi_name: str = "",
         openapi_tags: list[str] = ["head"],
+        status_code: int | None = None,
+        response_model: Any = None,
+        responses: dict[int | str, Any] | None = None,
+        deprecated: bool = False,
+        include_in_schema: bool = True,
     ):
         """
         The @app.head decorator to add a route with HEAD method
@@ -522,6 +610,11 @@ class BaseRobyn(ABC):
                 auth_required=auth_required,
                 openapi_name=openapi_name,
                 openapi_tags=openapi_tags,
+                status_code=status_code,
+                response_model=response_model,
+                responses=responses,
+                deprecated=deprecated,
+                include_in_schema=include_in_schema,
             )
 
         return inner
@@ -532,6 +625,11 @@ class BaseRobyn(ABC):
         auth_required: bool = False,
         openapi_name: str = "",
         openapi_tags: list[str] = ["options"],
+        status_code: int | None = None,
+        response_model: Any = None,
+        responses: dict[int | str, Any] | None = None,
+        deprecated: bool = False,
+        include_in_schema: bool = True,
     ):
         """
         The @app.options decorator to add a route with OPTIONS method
@@ -550,6 +648,11 @@ class BaseRobyn(ABC):
                 auth_required=auth_required,
                 openapi_name=openapi_name,
                 openapi_tags=openapi_tags,
+                status_code=status_code,
+                response_model=response_model,
+                responses=responses,
+                deprecated=deprecated,
+                include_in_schema=include_in_schema,
             )
 
         return inner
@@ -560,6 +663,11 @@ class BaseRobyn(ABC):
         auth_required: bool = False,
         openapi_name: str = "",
         openapi_tags: list[str] = ["connect"],
+        status_code: int | None = None,
+        response_model: Any = None,
+        responses: dict[int | str, Any] | None = None,
+        deprecated: bool = False,
+        include_in_schema: bool = True,
     ):
         """
         The @app.connect decorator to add a route with CONNECT method
@@ -578,6 +686,11 @@ class BaseRobyn(ABC):
                 auth_required=auth_required,
                 openapi_name=openapi_name,
                 openapi_tags=openapi_tags,
+                status_code=status_code,
+                response_model=response_model,
+                responses=responses,
+                deprecated=deprecated,
+                include_in_schema=include_in_schema,
             )
 
         return inner
@@ -588,6 +701,11 @@ class BaseRobyn(ABC):
         auth_required: bool = False,
         openapi_name: str = "",
         openapi_tags: list[str] = ["trace"],
+        status_code: int | None = None,
+        response_model: Any = None,
+        responses: dict[int | str, Any] | None = None,
+        deprecated: bool = False,
+        include_in_schema: bool = True,
     ):
         """
         The @app.trace decorator to add a route with TRACE method
@@ -606,6 +724,11 @@ class BaseRobyn(ABC):
                 auth_required=auth_required,
                 openapi_name=openapi_name,
                 openapi_tags=openapi_tags,
+                status_code=status_code,
+                response_model=response_model,
+                responses=responses,
+                deprecated=deprecated,
+                include_in_schema=include_in_schema,
             )
 
         return inner
@@ -648,6 +771,21 @@ class BaseRobyn(ABC):
         """
         self.authentication_handler = authentication_handler
         self.middleware_router.set_authentication_handler(authentication_handler)
+
+        # Auto-register a matching OpenAPI security scheme so Swagger UI's
+        # "Authorize" button works out of the box for auth_required routes
+        # (#1122, #1339). Users can still add/override schemes via OpenAPIInfo.
+        if self.openapi is not None and not self.openapi.openapi_file_override:
+            token_getter = getattr(authentication_handler, "token_getter", None)
+            scheme = getattr(token_getter, "scheme", "") or ""
+            if scheme.lower().startswith("bearer"):
+                self.openapi.add_security_scheme("BearerAuth", {"type": "http", "scheme": "bearer"})
+            elif not self.openapi._security_scheme_names:
+                # Generic fallback: advertise the Authorization header as an API key.
+                self.openapi.add_security_scheme(
+                    "ApiKeyAuth",
+                    {"type": "apiKey", "in": "header", "name": "Authorization"},
+                )
 
     @property
     def mcp(self):
@@ -776,6 +914,11 @@ class SubRouter(BaseRobyn):
         auth_required: bool = False,
         openapi_name: str = "",
         openapi_tags: list[str] = ["get"],
+        status_code: int | None = None,
+        response_model: Any = None,
+        responses: dict[int | str, Any] | None = None,
+        deprecated: bool = False,
+        include_in_schema: bool = True,
     ):
         return super().get(
             endpoint=self.__add_prefix(endpoint),
@@ -783,6 +926,11 @@ class SubRouter(BaseRobyn):
             auth_required=auth_required,
             openapi_name=openapi_name,
             openapi_tags=openapi_tags,
+            status_code=status_code,
+            response_model=response_model,
+            responses=responses,
+            deprecated=deprecated,
+            include_in_schema=include_in_schema,
         )
 
     def post(
@@ -791,12 +939,22 @@ class SubRouter(BaseRobyn):
         auth_required: bool = False,
         openapi_name: str = "",
         openapi_tags: list[str] = ["post"],
+        status_code: int | None = None,
+        response_model: Any = None,
+        responses: dict[int | str, Any] | None = None,
+        deprecated: bool = False,
+        include_in_schema: bool = True,
     ):
         return super().post(
             endpoint=self.__add_prefix(endpoint),
             auth_required=auth_required,
             openapi_name=openapi_name,
             openapi_tags=openapi_tags,
+            status_code=status_code,
+            response_model=response_model,
+            responses=responses,
+            deprecated=deprecated,
+            include_in_schema=include_in_schema,
         )
 
     def put(
@@ -805,12 +963,22 @@ class SubRouter(BaseRobyn):
         auth_required: bool = False,
         openapi_name: str = "",
         openapi_tags: list[str] = ["put"],
+        status_code: int | None = None,
+        response_model: Any = None,
+        responses: dict[int | str, Any] | None = None,
+        deprecated: bool = False,
+        include_in_schema: bool = True,
     ):
         return super().put(
             endpoint=self.__add_prefix(endpoint),
             auth_required=auth_required,
             openapi_name=openapi_name,
             openapi_tags=openapi_tags,
+            status_code=status_code,
+            response_model=response_model,
+            responses=responses,
+            deprecated=deprecated,
+            include_in_schema=include_in_schema,
         )
 
     def delete(
@@ -819,12 +987,22 @@ class SubRouter(BaseRobyn):
         auth_required: bool = False,
         openapi_name: str = "",
         openapi_tags: list[str] = ["delete"],
+        status_code: int | None = None,
+        response_model: Any = None,
+        responses: dict[int | str, Any] | None = None,
+        deprecated: bool = False,
+        include_in_schema: bool = True,
     ):
         return super().delete(
             endpoint=self.__add_prefix(endpoint),
             auth_required=auth_required,
             openapi_name=openapi_name,
             openapi_tags=openapi_tags,
+            status_code=status_code,
+            response_model=response_model,
+            responses=responses,
+            deprecated=deprecated,
+            include_in_schema=include_in_schema,
         )
 
     def patch(
@@ -833,12 +1011,22 @@ class SubRouter(BaseRobyn):
         auth_required: bool = False,
         openapi_name: str = "",
         openapi_tags: list[str] = ["patch"],
+        status_code: int | None = None,
+        response_model: Any = None,
+        responses: dict[int | str, Any] | None = None,
+        deprecated: bool = False,
+        include_in_schema: bool = True,
     ):
         return super().patch(
             endpoint=self.__add_prefix(endpoint),
             auth_required=auth_required,
             openapi_name=openapi_name,
             openapi_tags=openapi_tags,
+            status_code=status_code,
+            response_model=response_model,
+            responses=responses,
+            deprecated=deprecated,
+            include_in_schema=include_in_schema,
         )
 
     def head(
@@ -847,12 +1035,22 @@ class SubRouter(BaseRobyn):
         auth_required: bool = False,
         openapi_name: str = "",
         openapi_tags: list[str] = ["head"],
+        status_code: int | None = None,
+        response_model: Any = None,
+        responses: dict[int | str, Any] | None = None,
+        deprecated: bool = False,
+        include_in_schema: bool = True,
     ):
         return super().head(
             endpoint=self.__add_prefix(endpoint),
             auth_required=auth_required,
             openapi_name=openapi_name,
             openapi_tags=openapi_tags,
+            status_code=status_code,
+            response_model=response_model,
+            responses=responses,
+            deprecated=deprecated,
+            include_in_schema=include_in_schema,
         )
 
     def trace(
@@ -861,12 +1059,22 @@ class SubRouter(BaseRobyn):
         auth_required: bool = False,
         openapi_name: str = "",
         openapi_tags: list[str] = ["trace"],
+        status_code: int | None = None,
+        response_model: Any = None,
+        responses: dict[int | str, Any] | None = None,
+        deprecated: bool = False,
+        include_in_schema: bool = True,
     ):
         return super().trace(
             endpoint=self.__add_prefix(endpoint),
             auth_required=auth_required,
             openapi_name=openapi_name,
             openapi_tags=openapi_tags,
+            status_code=status_code,
+            response_model=response_model,
+            responses=responses,
+            deprecated=deprecated,
+            include_in_schema=include_in_schema,
         )
 
     def options(
@@ -875,12 +1083,22 @@ class SubRouter(BaseRobyn):
         auth_required: bool = False,
         openapi_name: str = "",
         openapi_tags: list[str] = ["options"],
+        status_code: int | None = None,
+        response_model: Any = None,
+        responses: dict[int | str, Any] | None = None,
+        deprecated: bool = False,
+        include_in_schema: bool = True,
     ):
         return super().options(
             endpoint=self.__add_prefix(endpoint),
             auth_required=auth_required,
             openapi_name=openapi_name,
             openapi_tags=openapi_tags,
+            status_code=status_code,
+            response_model=response_model,
+            responses=responses,
+            deprecated=deprecated,
+            include_in_schema=include_in_schema,
         )
 
     def websocket(self, endpoint: str):
