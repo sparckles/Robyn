@@ -147,6 +147,13 @@ fn create_python_stream(
     }))
 }
 
+/// Sentinel used as the default for the `description`/`body` constructor args.
+///
+/// We deliberately use `...` (Ellipsis) rather than `Option<..>=None` to mean
+/// "argument omitted": `None` is itself a value a caller may pass for the body,
+/// and one we explicitly reject in `check_body_type`. The sentinel lets us tell
+/// "not provided" apart from "explicitly passed None" so the latter still gets a
+/// clear "bad body type" error instead of being silently treated as missing.
 fn missing_response_body() -> Py<PyAny> {
     Python::attach(|py| py.Ellipsis())
 }
@@ -316,6 +323,9 @@ impl PyResponse {
         description: Py<PyAny>,
         body: Py<PyAny>,
     ) -> PyResult<Self> {
+        // `body` is the preferred, intuitively-named alias for the response body;
+        // `description` is the legacy name. Exactly one must be supplied (see
+        // `missing_response_body` for why we use an Ellipsis sentinel here).
         let description_is_missing = description.bind(py).is(&**PyEllipsis::get(py));
         let body_is_missing = body.bind(py).is(&**PyEllipsis::get(py));
 
@@ -324,12 +334,12 @@ impl PyResponse {
             (true, false) => body,
             (false, false) => {
                 return Err(PyTypeError::new_err(
-                    "Response() got both 'description' and 'body'; use only one",
+                    "Response() got both 'description' and 'body'; pass only one",
                 ));
             }
             (true, true) => {
                 return Err(PyTypeError::new_err(
-                    "Response() missing required argument 'description' or 'body'",
+                    "Response() missing required argument: 'description' (or its alias 'body')",
                 ));
             }
         };

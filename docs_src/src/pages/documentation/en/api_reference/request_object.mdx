@@ -224,6 +224,48 @@ Any handler parameter that doesn't match a known request component (`Request`, `
 ---
 
 
+## Type Aliases
+
+Robyn ships convenience type aliases that describe the runtime types of the request components, so you can annotate handler code and have it checked by `mypy`/`pyright`. They are importable from both `robyn` and `robyn.types`.
+
+<Row>
+<Col>
+<ul>
+<li>
+`RequestMethod`: `Literal["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS", "CONNECT", "TRACE"]` — the value of `request.method`.
+</li>
+<li>
+`RequestBody`: `str | bytes` — the type of `request.body` (text for UTF-8 payloads, raw bytes otherwise).
+</li>
+<li>
+`RequestURL`: alias of `Url` — the type of `request.url`.
+</li>
+</ul>
+</Col>
+<Col sticky>
+
+<CodeGroup title="Type Aliases" tag="GET" label="/typed">
+
+    ```python
+    from robyn import Robyn, Request
+    from robyn import RequestMethod, RequestBody, RequestURL
+
+    app = Robyn(__file__)
+
+    @app.get("/typed")
+    def handler(request: Request):
+        method: RequestMethod = request.method
+        body: RequestBody = request.body
+        url: RequestURL = request.url
+        return {"method": method}
+    ```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
 ## What's next?
 
 Now, Batman wanted to understand the configuration of the Robyn server. He was then introduced to the concept of Robyn env files.
