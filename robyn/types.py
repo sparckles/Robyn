@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Literal, NewType, TypedDict, Union
+from typing import Literal, NewType, TypedDict
 
 from robyn._param_utils import QueryParamValidationError
 from robyn.robyn import Url
@@ -36,7 +36,7 @@ IPAddress = NewType("IPAddress", str | None)
 RequestMethod = Literal["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS", "CONNECT", "TRACE"]
 
 # The type of ``request.body``: text for UTF-8 payloads, raw bytes otherwise.
-RequestBody = Union[str, bytes]
+RequestBody = str | bytes
 
 # The type of ``request.url`` (an alias of :class:`robyn.Url`).
 RequestURL = Url

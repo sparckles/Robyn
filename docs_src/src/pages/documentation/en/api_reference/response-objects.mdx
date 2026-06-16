@@ -64,12 +64,29 @@ Returning a `dict` or `list` automatically serializes the value to JSON and sets
 <Row>
 <Col>
 The `Response` object gives you full control over status code, headers, and body. Use it when you need to customize everything about the response.
+
+The response body can be passed as either `body` (the preferred, intuitively-named argument) or `description` (kept for backwards compatibility). The two are aliases — pass exactly one. `headers` is optional and defaults to an empty `Headers` object.
+
+<ul>
+<li>
+`status_code` (int): The HTTP status code, e.g. `200`.
+</li>
+<li>
+`headers` (Headers | dict | None): Response headers. Accepts a `Headers` instance, a plain `dict`, or `None` (empty).
+</li>
+<li>
+`body` (str | bytes): The response body. Alias for `description`.
+</li>
+<li>
+`description` (str | bytes): The response body (legacy name; prefer `body`).
+</li>
+</ul>
 </Col>
 <Col sticky>
 
 <CodeGroup title="Response" tag="GET" label="/custom">
 
-    ```python
+    ```python {{ title: 'body (preferred)' }}
     from robyn import Robyn, Response, Headers
 
     app = Robyn(__file__)
@@ -79,8 +96,15 @@ The `Response` object gives you full control over status code, headers, and body
         return Response(
             status_code=200,
             headers=Headers({"X-Custom": "value"}),
-            description="OK",
+            body="OK",
         )
+    ```
+
+    ```python {{ title: 'description (legacy)' }}
+    @app.get("/custom")
+    async def custom_response():
+        # `description` still works and is identical to `body`
+        return Response(status_code=200, description="OK")
     ```
 
 </CodeGroup>
