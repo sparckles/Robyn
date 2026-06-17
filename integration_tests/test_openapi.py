@@ -507,3 +507,65 @@ def test_typeddict_body_invalid_json():
         headers={"Content-Type": "application/json"},
     )
     assert response.status_code == 400
+
+
+# ===== Consolidated OpenAPI parity features =====
+
+
+@pytest.mark.benchmark
+def test_openapi_status_code_in_spec():
+    """status_code= should set the success response key (#1368)."""
+    spec = get("/openapi.json", should_check_response=False).json()
+    responses = spec["paths"]["/openapi/created"]["post"]["responses"]
+    assert "201" in responses
+    assert "200" not in responses
+
+
+@pytest.mark.benchmark
+def test_openapi_additional_responses():
+    """responses= should document extra status codes (#1257)."""
+    spec = get("/openapi.json", should_check_response=False).json()
+    responses = spec["paths"]["/openapi/with_responses"]["get"]["responses"]
+    assert responses["404"]["description"] == "Item not found"
+    assert responses["422"]["description"] == "Validation error"
+    schema = responses["422"]["content"]["application/json"]["schema"]
+    assert "message" in schema["properties"]
+
+
+@pytest.mark.benchmark
+def test_openapi_deprecated_flag():
+    """deprecated=True should appear in the spec (#1369)."""
+    spec = get("/openapi.json", should_check_response=False).json()
+    assert spec["paths"]["/openapi/deprecated"]["get"]["deprecated"] is True
+
+
+@pytest.mark.benchmark
+def test_openapi_include_in_schema_false():
+    """include_in_schema=False routes must be absent from the spec (#1369)."""
+    spec = get("/openapi.json", should_check_response=False).json()
+    assert "/openapi/hidden" not in spec["paths"]
+
+
+@pytest.mark.benchmark
+def test_openapi_datetime_return_type():
+    """datetime return types must produce a valid schema, not crash (#1124)."""
+    spec = get("/openapi.json", should_check_response=False).json()
+    schema = spec["paths"]["/openapi/datetime_return"]["get"]["responses"]["200"]["content"]["application/json"]["schema"]
+    assert schema["type"] == "string"
+    assert schema["format"] == "date-time"
+
+
+@pytest.mark.benchmark
+def test_openapi_security_scheme_registered():
+    """configure_authentication should register a security scheme (#1122, #1339)."""
+    spec = get("/openapi.json", should_check_response=False).json()
+    schemes = spec.get("components", {}).get("securitySchemes", {})
+    assert "BearerAuth" in schemes
+    assert schemes["BearerAuth"]["scheme"] == "bearer"
+
+
+@pytest.mark.benchmark
+def test_openapi_auth_required_route_has_security():
+    """auth_required routes should advertise the security requirement (#1122, #1339)."""
+    spec = get("/openapi.json", should_check_response=False).json()
+    assert spec["paths"]["/sync/auth"]["get"]["security"] == [{"BearerAuth": []}]

@@ -1,9 +1,13 @@
+import datetime
+import decimal
+import enum
 import inspect
 import json
 import logging
 import re
 import types
 import typing
+import uuid
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from importlib import resources
@@ -22,6 +26,61 @@ _logger = logging.getLogger(__name__)
 class str_typed_dict(TypedDict):
     key: str
     value: str
+
+
+@dataclass
+class RouteOpenAPIMeta:
+    """Per-route OpenAPI metadata captured from the route decorators.
+
+    Bundles the familiar route-documentation knobs so handlers can document
+    their behaviour without hand-writing the spec.
+
+    @param status_code: int | None the default success status code (e.g. 201). Reflected
+        both at runtime (for plain returns) and as the success response key in the spec.
+    @param deprecated: bool marks the operation as deprecated (strikethrough in Swagger UI).
+    @param include_in_schema: bool when False the route is omitted from the generated spec.
+    @param response_model: Any a type (typically a Pydantic model) used as the success
+        response schema, overriding the handler's return annotation.
+    @param responses: dict | None additional responses keyed by status code. Each value may be
+        a description string, a full OpenAPI response object, or a dict with a ``model`` key.
+    @param summary: str | None overrides the operation summary (defaults to ``openapi_name``).
+    @param description: str | None overrides the operation description (defaults to the docstring).
+    @param operation_id: str | None an explicit ``operationId`` for the operation.
+    """
+
+    status_code: int | None = None
+    deprecated: bool = False
+    include_in_schema: bool = True
+    response_model: Any = None
+    responses: dict[int | str, Any] | None = None
+    summary: str | None = None
+    description: str | None = None
+    operation_id: str | None = None
+
+
+# Special leaf types that map to a JSON Schema ``type``/``format`` pair.
+# Mirrors the representation Pydantic emits for these stdlib types so
+# that a handler returning e.g. ``datetime`` produces a valid, descriptive
+# schema instead of crashing or rendering as a bare object (see #1124, #1073).
+_LEAF_TYPE_SCHEMAS: dict[type, dict] = {
+    datetime.datetime: {"type": "string", "format": "date-time"},
+    datetime.date: {"type": "string", "format": "date"},
+    datetime.time: {"type": "string", "format": "time"},
+    datetime.timedelta: {"type": "string", "format": "duration"},
+    uuid.UUID: {"type": "string", "format": "uuid"},
+    decimal.Decimal: {"type": "number"},
+    bytes: {"type": "string", "format": "binary"},
+}
+
+# Primitive Python types and their JSON Schema ``type`` names.
+_PRIMITIVE_TYPE_NAMES: dict[type, str] = {
+    int: "integer",
+    str: "string",
+    bool: "boolean",
+    float: "number",
+    dict: "object",
+    list: "array",
+}
 
 
 @dataclass
@@ -170,7 +229,50 @@ class OpenAPI:
             "externalDocs": asdict(self.info.externalDocs) if self.info.externalDocs.url else None,
         }
 
-    def add_openapi_path_obj(self, route_type: str, endpoint: str, openapi_name: str, openapi_tags: list[str], handler: Callable):
+    def add_security_scheme(self, name: str, scheme: dict) -> None:
+        """Register a reusable security scheme (e.g. Bearer/API-key auth).
+
+        Populating ``components.securitySchemes`` is what makes Swagger UI's
+        "Authorize" button appear and work; without it the button is either
+        absent or opens an empty popup (see #1122, #1339).
+
+        @param name: str the key under ``components.securitySchemes`` (e.g. ``"BearerAuth"``).
+        @param scheme: dict the OpenAPI Security Scheme Object, e.g.
+            ``{"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}``.
+        """
+        if self.openapi_file_override:
+            return
+        self.openapi_spec["components"].setdefault("securitySchemes", {})[name] = scheme
+
+    @property
+    def _security_scheme_names(self) -> list[str]:
+        return list(self.openapi_spec.get("components", {}).get("securitySchemes", {}) or {})
+
+    def prune_empty_components(self) -> None:
+        """Drop empty ``components`` buckets so the generated spec stays clean.
+
+        In particular an empty ``securitySchemes: {}`` makes Swagger UI render an
+        empty "Available authorizations" popup; omitting it removes the button
+        entirely until the user actually configures a scheme (#1122, #1339).
+        """
+        if self.openapi_file_override:
+            return
+        components = self.openapi_spec.get("components")
+        if isinstance(components, dict):
+            for key in list(components):
+                if not components[key]:
+                    del components[key]
+
+    def add_openapi_path_obj(
+        self,
+        route_type: str,
+        endpoint: str,
+        openapi_name: str,
+        openapi_tags: list[str],
+        handler: Callable,
+        auth_required: bool = False,
+        meta: "RouteOpenAPIMeta | None" = None,
+    ):
         """
         Adds the given path to openapi spec
 
@@ -179,9 +281,17 @@ class OpenAPI:
         @param openapi_name: str the name of the endpoint
         @param openapi_tags: list[str] for grouping of endpoints
         @param handler: Callable the handler function for the endpoint
+        @param auth_required: bool whether the route requires authentication (adds a security requirement)
+        @param meta: RouteOpenAPIMeta | None per-route OpenAPI metadata from the decorator
         """
 
         if self.openapi_file_override:
+            return
+
+        if meta is None:
+            meta = RouteOpenAPIMeta()
+
+        if not meta.include_in_schema:
             return
 
         query_params = None
@@ -225,8 +335,23 @@ class OpenAPI:
             if signature.return_annotation is not Signature.empty:
                 return_annotation = signature.return_annotation
 
+        # An explicit response_model wins over the handler's return annotation.
+        if meta.response_model is not None:
+            return_annotation = meta.response_model
+
+        summary = meta.summary if meta.summary is not None else openapi_name
+        description = meta.description if meta.description is not None else openapi_description
+
         modified_endpoint, path_obj = self.get_path_obj(
-            endpoint, openapi_name, openapi_description, openapi_tags, query_params, request_body, return_annotation
+            endpoint,
+            summary,
+            description,
+            openapi_tags,
+            query_params,
+            request_body,
+            return_annotation,
+            auth_required=auth_required,
+            meta=meta,
         )
 
         if modified_endpoint not in self.openapi_spec["paths"]:
@@ -276,6 +401,8 @@ class OpenAPI:
         query_params: str_typed_dict | None,
         request_body: str_typed_dict | None,
         return_annotation: str_typed_dict | None,
+        auth_required: bool = False,
+        meta: "RouteOpenAPIMeta | None" = None,
     ) -> tuple[str, dict]:
         """
         Get the "path" openapi object according to spec
@@ -287,10 +414,15 @@ class OpenAPI:
         @param query_params: TypedDict | None query params for the function
         @param request_body: TypedDict | None request body for the function
         @param return_annotation: TypedDict | None return type of the endpoint handler
+        @param auth_required: bool whether the route requires authentication
+        @param meta: RouteOpenAPIMeta | None per-route OpenAPI metadata (status_code, responses, ...)
 
         @return: (str, dict) a tuple containing the endpoint with path params wrapped in braces and the "path" openapi object
         according to spec
         """
+
+        if meta is None:
+            meta = RouteOpenAPIMeta()
 
         if not description:
             description = "No description provided"
@@ -301,6 +433,17 @@ class OpenAPI:
             "parameters": [],
             "tags": tags,
         }
+
+        if meta.operation_id is not None:
+            openapi_path_object["operationId"] = meta.operation_id
+
+        if meta.deprecated:
+            openapi_path_object["deprecated"] = True
+
+        # auth_required routes advertise every configured security scheme so the
+        # Swagger UI "Authorize" lock appears on them (#1122, #1339).
+        if auth_required and self._security_scheme_names:
+            openapi_path_object["security"] = [{scheme_name: []} for scheme_name in self._security_scheme_names]
 
         # robyn has paths like /:url/:etc whereas openapi requires path like /{url}/{path}
         # this function is used for converting path params to the required form
@@ -371,9 +514,49 @@ class OpenAPI:
             response_type = "application/json"
             response_schema = self.get_schema_object("response object", return_annotation)
 
-        openapi_path_object["responses"] = {"200": {"description": "Successful Response", "content": {response_type: {"schema": response_schema}}}}
+        success_status = str(meta.status_code) if meta.status_code is not None else "200"
+
+        openapi_path_object["responses"] = {success_status: {"description": "Successful Response", "content": {response_type: {"schema": response_schema}}}}
+
+        # Merge any user-declared additional responses (e.g. 404, 422) so a single
+        # operation can document multiple outcomes (#1257).
+        if meta.responses:
+            for status, response in self._build_responses(meta.responses).items():
+                openapi_path_object["responses"][status] = response
 
         return endpoint_with_path_params_wrapped_in_braces, openapi_path_object
+
+    def _build_responses(self, responses: dict[int | str, Any]) -> dict[str, dict]:
+        """Normalise user-supplied ``responses=`` into OpenAPI Response Objects.
+
+        Each value may be:
+          - a plain ``str`` (used as the response ``description``),
+          - a dict with an optional ``model`` key (a type/Pydantic model whose schema
+            becomes ``content.application/json.schema``), or
+          - a fully-formed OpenAPI Response Object (passed through unchanged).
+        """
+        built: dict[str, dict] = {}
+        for status, value in responses.items():
+            key = str(status)
+
+            if isinstance(value, str):
+                built[key] = {"description": value}
+                continue
+
+            if not isinstance(value, dict):
+                _logger.warning("OpenAPI response for status %s is not a str or dict — ignoring", key)
+                continue
+
+            response_obj = {k: v for k, v in value.items() if k != "model"}
+            response_obj.setdefault("description", "")
+
+            model = value.get("model")
+            if model is not None:
+                schema = self.get_schema_object("response object", model)
+                response_obj.setdefault("content", {})["application/json"] = {"schema": schema}
+
+            built[key] = response_obj
+        return built
 
     def get_openapi_type(self, typed_dict: str_typed_dict) -> str:
         """
@@ -382,18 +565,11 @@ class OpenAPI:
         @param typed_dict: TypedDict The TypedDict to be converted
         @return: str the type inferred
         """
-        type_mapping = {
-            int: "integer",
-            str: "string",
-            bool: "boolean",
-            float: "number",
-            dict: "object",
-            list: "array",
-        }
+        if typed_dict in _PRIMITIVE_TYPE_NAMES:
+            return _PRIMITIVE_TYPE_NAMES[typed_dict]
 
-        for type_name in type_mapping:
-            if typed_dict is type_name:
-                return type_mapping[type_name]
+        if typed_dict in _LEAF_TYPE_SCHEMAS:
+            return _LEAF_TYPE_SCHEMAS[typed_dict]["type"]
 
         # default to "string" if type is not found
         return "string"
@@ -411,29 +587,53 @@ class OpenAPI:
             "title": parameter.capitalize(),
         }
 
-        type_mapping: dict = {
-            int: "integer",
-            str: "string",
-            bool: "boolean",
-            float: "number",
-            dict: "object",
-            list: "array",
-        }
+        # Primitive scalars (int, str, bool, float, dict, list).
+        if param_type in _PRIMITIVE_TYPE_NAMES:
+            properties["type"] = _PRIMITIVE_TYPE_NAMES[param_type]
+            return properties
 
-        for type_name in type_mapping:
-            if param_type is type_name:
-                properties["type"] = type_mapping[type_name]
-                return properties
+        # Special stdlib leaf types (datetime, date, UUID, Decimal, bytes, ...).
+        # Pydantic-free handlers can return these without crashing or rendering
+        # as a bare object (#1124).
+        if isinstance(param_type, type) and param_type in _LEAF_TYPE_SCHEMAS:
+            properties.update(_LEAF_TYPE_SCHEMAS[param_type])
+            return properties
+
+        # typing.Any -> any value, no constraints.
+        if param_type is Any:
+            return properties
 
         origin = get_origin(param_type)
         args = get_args(param_type)
 
-        # Check if it's a generic type (like list[Object])
-        if origin is list:
+        # typing.Literal[...] -> an enum of literal values.
+        if origin is typing.Literal:
+            properties["enum"] = list(args)
+            inferred = type(args[0]) if args else str
+            properties["type"] = _PRIMITIVE_TYPE_NAMES.get(inferred, "string")
+            return properties
+
+        # enum.Enum subclass -> enum of member values.
+        if isinstance(param_type, type) and issubclass(param_type, enum.Enum):
+            members = list(param_type)
+            properties["enum"] = [member.value for member in members]
+            if members:
+                properties["type"] = _PRIMITIVE_TYPE_NAMES.get(type(members[0].value), "string")
+            return properties
+
+        # Sequence generics (list[X], tuple[X, ...], set[X]) -> array.
+        if origin in (list, tuple, set, frozenset):
             properties["type"] = "array"
             if args:
                 item_type = args[0]
                 properties["items"] = self.get_schema_object(f"{parameter}_item", item_type)
+            return properties
+
+        # Mapping generics (dict[str, V]) -> object with typed additionalProperties.
+        if origin is dict:
+            properties["type"] = "object"
+            if len(args) == 2:
+                properties["additionalProperties"] = self.get_schema_object(f"{parameter}_value", args[1])
             return properties
 
         is_union = origin in (typing.Union, types.UnionType)
@@ -443,8 +643,10 @@ class OpenAPI:
 
             any_of: list[dict] = []
             for arg in non_none_args:
-                if arg in type_mapping:
-                    any_of.append({"type": type_mapping[arg]})
+                if arg in _PRIMITIVE_TYPE_NAMES:
+                    any_of.append({"type": _PRIMITIVE_TYPE_NAMES[arg]})
+                elif isinstance(arg, type) and arg in _LEAF_TYPE_SCHEMAS:
+                    any_of.append(dict(_LEAF_TYPE_SCHEMAS[arg]))
                 else:
                     any_of.append(self.get_schema_object(parameter, arg))
             if nullable:
@@ -464,8 +666,14 @@ class OpenAPI:
             properties["type"] = "object"
             properties["properties"] = {}
             if hasattr(param_type, "__annotations__"):
-                for e in param_type.__annotations__:
-                    properties["properties"][e] = self.get_schema_object(e, param_type.__annotations__[e])
+                # get_type_hints resolves PEP 563 string annotations (e.g. "list[int]");
+                # fall back to the raw __annotations__ if they can't be resolved.
+                try:
+                    annotations = typing.get_type_hints(param_type)
+                except Exception:
+                    annotations = dict(param_type.__annotations__)
+                for field_name, field_type in annotations.items():
+                    properties["properties"][field_name] = self.get_schema_object(field_name, field_type)
             return properties
 
         properties["type"] = "object"
