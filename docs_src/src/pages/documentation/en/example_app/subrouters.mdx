@@ -9,7 +9,7 @@ As the application grew, Batman needed a way to organize his routes better. He d
 from robyn import SubRouter
 
 # Create a subrouter for crime-related routes
-crime_router = SubRouter(__file__, prefix="/crimes")
+crime_router = SubRouter(prefix="/crimes")
 
 @crime_router.get("/list")
 def list_crimes():
@@ -21,7 +21,7 @@ def report_crime(request):
     return {"id": create_crime_report(crime_data)}
 
 # Create a subrouter for suspect-related routes
-suspect_router = SubRouter(__file__, prefix="/suspects")
+suspect_router = SubRouter(prefix="/suspects")
 
 @suspect_router.get("/list")
 def list_suspects():

@@ -2,6 +2,7 @@ import inspect
 import logging
 import os
 import socket
+import warnings
 from abc import ABC
 from collections.abc import Callable
 from pathlib import Path
@@ -66,6 +67,22 @@ def _normalize_endpoint(endpoint: str | None, treat_empty_as_root: bool = False)
         endpoint = "/" + endpoint
 
     return endpoint
+
+
+def _looks_like_module_reference(value: object) -> bool:
+    """Heuristic to tell a legacy ``__name__``/``__file__`` argument apart from a
+    modern route prefix, used only to keep the old SubRouter signature working.
+
+    A module name (``__name__``) is ``"__main__"`` or a dotted path like
+    ``"pkg.mod"``; ``__file__`` is a path to an existing ``.py`` file. A route
+    prefix (``"/users"``) is neither.
+    """
+    if not isinstance(value, str):
+        return False
+    if value.startswith("/"):
+        # Could be a prefix ("/users") or __file__ ("/abs/path/app.py").
+        return value.endswith(".py") and os.path.isfile(value)
+    return value == "__main__" or "." in value
 
 
 config = Config()
@@ -756,8 +773,16 @@ class BaseRobyn(ABC):
         if parent_prefix == "/":
             parent_prefix = ""
 
+        # Router-level tags (#554 modern syntax) are applied to every route the
+        # included router contributes, accumulating through nested includes.
+        included_tags = getattr(router, "tags", None) or []
         for route in router.router.routes:
-            self.router.routes.append(route._replace(route=f"{parent_prefix}{route.route}"))
+            new_route = f"{parent_prefix}{route.route}"
+            if included_tags:
+                merged_tags = list(included_tags) + [tag for tag in route.openapi_tags if tag not in included_tags]
+                self.router.routes.append(route._replace(route=new_route, openapi_tags=merged_tags))
+            else:
+                self.router.routes.append(route._replace(route=new_route))
 
         self.middleware_router.global_middlewares.extend(router.middleware_router.global_middlewares)
         for route_middleware in router.middleware_router.route_middlewares:
@@ -898,11 +923,70 @@ class Robyn(BaseRobyn):
 
 
 class SubRouter(BaseRobyn):
-    def __init__(self, file_object: str = "", prefix: str = "", config: Config = Config(), openapi: OpenAPI = OpenAPI()) -> None:
-        # file_object is optional (#554): a SubRouter doesn't need __name__/__file__
-        # since it never serves its own directory or loads its own OpenAPI file.
-        super().__init__(file_object=file_object, config=config, openapi=openapi)
+    """A group of routes mounted under a shared prefix.
+
+    Modern usage (no module name required):
+
+        users = SubRouter(prefix="/users", tags=["users"])
+
+        @users.get("/")
+        def list_users(): ...
+
+        app.include_router(users)
+
+    ``prefix`` may also be passed positionally (``SubRouter("/users")``), and
+    ``tags`` are applied to every route the SubRouter contributes to the OpenAPI
+    spec. The legacy ``SubRouter(__name__, prefix=...)`` form still works but is
+    deprecated — the module argument is no longer needed and is ignored.
+    """
+
+    def __init__(
+        self,
+        *args,
+        prefix: str = "",
+        tags: list[str] | None = None,
+        config: Config = Config(),
+        openapi: OpenAPI = OpenAPI(),
+        file_object: str | None = None,
+    ) -> None:
+        # `prefix` is the only argument the modern API needs and may be passed
+        # positionally (``SubRouter("/users")``) or by keyword
+        # (``SubRouter(prefix="/users")``).
+        #
+        # Back-compat: the original signature took the module name or __file__ as
+        # the first positional argument. We accept *args first (rather than a
+        # named `prefix`) so that ``SubRouter(__name__, prefix="/x")`` doesn't
+        # raise "multiple values for argument 'prefix'". The module reference is
+        # no longer needed; detect the legacy shapes, ignore it and warn.
+        legacy = file_object is not None
+        if args:
+            if prefix:
+                # prefix arrived by keyword, so a positional is the legacy module
+                # reference: SubRouter(__name__, prefix="/x")
+                file_object = args[0]
+                legacy = True
+            elif len(args) >= 2:
+                # fully positional legacy form: SubRouter(__file__, "/x")
+                file_object, prefix = args[0], args[1]
+                legacy = True
+            elif _looks_like_module_reference(args[0]):
+                # lone legacy positional with no prefix: SubRouter(__name__)
+                file_object = args[0]
+                legacy = True
+            else:
+                # modern positional prefix: SubRouter("/users")
+                prefix = args[0]
+
+        if legacy:
+            warnings.warn(
+                "Passing a module name/__file__ to SubRouter is deprecated and ignored. Use SubRouter(prefix=...) instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
+        super().__init__(file_object=file_object or "", config=config, openapi=openapi)
         self.prefix = prefix
+        self.tags: list[str] = list(tags) if tags else []
 
     def add_route(self, route_type: HttpMethod | str, endpoint: str, handler: Callable, *args, **kwargs):  # type: ignore[override]
         """
