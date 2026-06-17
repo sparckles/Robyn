@@ -67,7 +67,7 @@ Batman was excited to learn that he could add events as functions as well as dec
 
   Every before request middleware should accept a request object and return a request object. Every after-request middleware should accept a response object and return a response object on happy case scenario. After-request middlewares can also optionally accept the request object as the first parameter to access request data.
 
-  The execution of the before request middleware is stopped if any of the before request middleware returns a response object. The response object is returned to the client without executing the after request middleware or the main entry point code.
+  The `before_request` chain stops as soon as one of its middlewares returns a response object: the remaining `before_request` middlewares and the route handler (the main entry point) are skipped. The `after_request` middlewares, however, still run on that response before it is returned to the client — so use them for work that must always happen (e.g. logging, headers), even on a short-circuited request.
 
 
   
@@ -116,7 +116,7 @@ Batman was excited to learn that he could add events as functions as well as dec
 
   Batman sometimes needed more than one thing to happen before a request — say, logging *and* input sanitisation — and often alongside authentication. Robyn lets you stack as many `before_request` and `after_request` handlers on the same route as you like; they run in the order they were registered.
 
-  The `before_request` chain runs top to bottom and stops early if any handler returns a `Response` (the route handler and the remaining middlewares are then skipped). The `after_request` chain runs over the response, also in registration order.
+  The `before_request` chain runs top to bottom and stops early if a handler returns a `Response` — the remaining `before_request` middlewares and the route handler are then skipped. The `after_request` chain always runs over the outgoing response in registration order, whether that response came from the route handler or from an early-returning `before_request`.
 
   Because `auth_required=True` is itself a `before_request` hook, it composes with your own middlewares: authentication runs first, then your custom filters.
 
