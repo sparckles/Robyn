@@ -106,6 +106,49 @@ export const description =
   </Col>
 </Row>
 
+## 同一路由上的多个中间件
+
+<Row>
+  <Col>
+
+蝙蝠侠有时需要在请求之前执行不止一件事——比如同时进行日志记录*和*输入清洗，并且常常还要配合身份认证。Robyn 允许你在同一个路由上叠加任意多个 `before_request` 和 `after_request` 处理函数；它们会按照注册的顺序依次执行。
+
+`before_request` 链自上而下执行，如果某个处理函数返回了 `Response`，则提前中止（此时路由处理函数和后续的中间件都会被跳过）。`after_request` 链随后对响应执行，同样按注册顺序进行。
+
+由于 `auth_required=True` 本身就是一个 `before_request` 钩子，它可以和你自己的中间件组合使用：身份认证先执行，然后才是你的自定义过滤器。
+
+  </Col>
+  <Col sticky>
+
+    <CodeGroup title="多个中间件" tag="GET" label="/index">
+
+    ```python
+    from robyn import Request, Response
+
+    @app.get("/index", auth_required=True)   # 1. 先执行身份认证
+    async def index(request: Request):
+        return "Index Page"
+
+    @app.before_request("/index")            # 2. 然后执行这个
+    async def log_request(request: Request):
+        print("logging:", request.url.path)
+        return request
+
+    @app.before_request("/index")            # 3. 再执行这个——全部按顺序运行
+    async def sanitize(request: Request):
+        return request
+
+    @app.after_request("/index")
+    async def add_header(response: Response):
+        response.headers.set("x-processed", "true")
+        return response
+    ```
+
+    </CodeGroup>
+
+  </Col>
+</Row>
+
 ---
 
 ## 下一步

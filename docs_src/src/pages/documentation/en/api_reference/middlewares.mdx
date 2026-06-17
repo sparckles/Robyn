@@ -109,6 +109,49 @@ Batman was excited to learn that he could add events as functions as well as dec
   </Col>
 </Row>
 
+## Multiple middlewares on the same route
+
+<Row>
+  <Col>
+
+  Batman sometimes needed more than one thing to happen before a request — say, logging *and* input sanitisation — and often alongside authentication. Robyn lets you stack as many `before_request` and `after_request` handlers on the same route as you like; they run in the order they were registered.
+
+  The `before_request` chain runs top to bottom and stops early if any handler returns a `Response` (the route handler and the remaining middlewares are then skipped). The `after_request` chain runs over the response, also in registration order.
+
+  Because `auth_required=True` is itself a `before_request` hook, it composes with your own middlewares: authentication runs first, then your custom filters.
+
+  </Col>
+  <Col sticky>
+
+    <CodeGroup title="Multiple middlewares" tag="GET" label="/index">
+
+    ```python
+    from robyn import Request, Response
+
+    @app.get("/index", auth_required=True)   # 1. auth runs first
+    async def index(request: Request):
+        return "Index Page"
+
+    @app.before_request("/index")            # 2. then this
+    async def log_request(request: Request):
+        print("logging:", request.url.path)
+        return request
+
+    @app.before_request("/index")            # 3. then this — all run, in order
+    async def sanitize(request: Request):
+        return request
+
+    @app.after_request("/index")
+    async def add_header(response: Response):
+        response.headers.set("x-processed", "true")
+        return response
+    ```
+
+    </CodeGroup>
+
+  </Col>
+</Row>
+
 ---
 
 
