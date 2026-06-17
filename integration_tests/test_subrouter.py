@@ -27,3 +27,26 @@ def test_sub_router_web_socket(session):
     assert ws.recv() == "Hello world, from ws"
     ws.send("My name is?")
     assert ws.recv() == "Message"
+
+
+@pytest.mark.benchmark
+def test_nested_sub_router_get(session):
+    # nested SubRouter prefixes must accumulate: /sub_router + /nested + /foo (#865, #1394)
+    response = generic_http_helper("get", "sub_router/nested/foo")
+    assert response.json() == {"message": "nested foo"}
+
+
+@pytest.mark.benchmark
+def test_nested_sub_router_add_route(session):
+    # route registered via add_route on the nested SubRouter must also be prefixed (#1256)
+    response = generic_http_helper("get", "sub_router/nested/added")
+    assert response.json() == {"message": "nested added"}
+
+
+@pytest.mark.benchmark
+def test_nested_sub_router_web_socket(session):
+    BASE_URL = "ws://127.0.0.1:8080"
+    ws = create_connection(f"{BASE_URL}/sub_router/nested/ws")
+    assert ws.recv() == "Hello world, from nested ws"
+    ws.send("ping")
+    assert ws.recv() == "nested message"
