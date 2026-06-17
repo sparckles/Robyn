@@ -529,8 +529,8 @@ async fn index(
     let mut early_response: Option<Response> = None;
     if !before_middlewares.is_empty() || route_before.is_some() {
         let mut all_before = before_middlewares;
-        if let Some((function, route_params)) = route_before {
-            all_before.push(function);
+        if let Some((functions, route_params)) = route_before {
+            all_before.extend(functions);
             request.path_params = route_params;
         }
         for before_middleware in all_before {
@@ -604,8 +604,8 @@ async fn index(
 
     if !after_middlewares.is_empty() || route_after.is_some() {
         let mut all_after = after_middlewares;
-        if let Some((function, _)) = route_after {
-            all_after.push(function);
+        if let Some((functions, _)) = route_after {
+            all_after.extend(functions);
         }
         for after_middleware in all_after {
             if let ResponseType::Standard(std_response) = response {
