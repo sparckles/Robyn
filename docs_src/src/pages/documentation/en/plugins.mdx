@@ -11,7 +11,7 @@ export const sections = [
 Robyn is a versatile and extensible web framework that allows anyone to make plugins over the top of Robyn.
 Plugins in Robyn allow you to enhance and customize the framework's functionality to suit your specific needs. Here are some noteworthy plugins that can supercharge your Robyn-based projects:
 
-### Rate Limit Plugin
+## Rate Limit Plugin
 
 - Description: This plugin enables you to implement rate limiting for your Robyn application's routes. It helps prevent abuse, and brute-force attacks and ensures fair usage of your resources.
 - GitHub repository: [robyn-rate-limits](https://github.com/IdoKendo/robyn_rate_limits)
@@ -42,7 +42,7 @@ In this example, robyn-rate-limits is used to enforce a rate limit of 3 requests
 
 The plugin integrates seamlessly with the Robyn web framework, enhancing the security and stability of your application by preventing excessive requests from a single client.
 
-### Robyn Config
+## Robyn Config
 
 - Description: A CLI companion for bootstrapping and maintaining production-ready Robyn applications. It can create new projects, add business entities, scaffold an admin panel, and wire an observability stack into an existing app.
 - GitHub repository: [robyn-config](https://github.com/Lehsqa/robyn-config)
@@ -52,9 +52,9 @@ The plugin integrates seamlessly with the Robyn web framework, enhancing the sec
   Or as a Robyn optional dependency:
   `python -m pip install robyn[robyn-config]`
 
-- Python support: Python 3.11 or newer.
+- Python support: Python 3.10 or newer.
 
-#### Create a Project
+### Create a Project
 
 ```bash
 # DDD + SQLAlchemy with uv dependency locking (default)
@@ -77,7 +77,7 @@ It also lets you choose the database layer and package manager:
 - **SQLAlchemy** or **Tortoise ORM** for persistence.
 - **uv** by default, or **poetry** with `--package-manager poetry`.
 
-#### Add Business Logic
+### Add Business Logic
 
 Inside a generated project, add a new entity and let `robyn-config` place the files in the correct design-specific layers:
 
@@ -88,7 +88,7 @@ robyn-config add product
 
 This generates the model, repository, route/controller code, and application wiring for the selected architecture. Custom generation paths can be configured in `[tool.robyn-config.add]` inside the generated project's `pyproject.toml`.
 
-#### Add an Admin Panel
+### Add an Admin Panel
 
 ```bash
 cd my-service
@@ -143,7 +143,7 @@ The admin panel scaffolding adds an ORM-aware admin module, registers it with th
   </figure>
 </div>
 
-#### Add Monitoring
+### Add Monitoring
 
 ```bash
 cd my-service
@@ -179,7 +179,7 @@ The monitoring command adds a `/metrics` endpoint, installs `prometheus-client`,
   </figure>
 </div>
 
-#### Validate Generated Projects
+### Validate Generated Projects
 
 After generating or modifying a project, run the checks that match the generated package manager:
 
