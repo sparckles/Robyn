@@ -337,6 +337,12 @@ The parameter injection system works in two phases:
 <Row>
   <Col>
     SubRouters help organize large applications by grouping related routes with common prefixes.
+
+    A SubRouter only needs a `prefix` (which may be passed positionally, e.g. `SubRouter("/api/v1")`). You can also pass `tags` to label every route the SubRouter contributes in the OpenAPI spec. Nested SubRouters accumulate their parents' prefixes and tags.
+
+    <Note>
+      Earlier versions required the module name as the first argument (`SubRouter(__name__, prefix="/api/v1")`). That argument is no longer needed; it is deprecated and ignored if passed.
+    </Note>
   </Col>
   <Col sticky>
     <CodeGroup title="SubRouter Organization">
@@ -346,7 +352,7 @@ The parameter injection system works in two phases:
     app = Robyn(__file__)
     
     # API v1 routes
-    api_v1 = SubRouter(__file__, prefix="/api/v1")
+    api_v1 = SubRouter(prefix="/api/v1")
     
     @api_v1.get("/users")
     def list_users():
@@ -361,7 +367,7 @@ The parameter injection system works in two phases:
         return {"created": True, "data": body}
     
     # Admin routes
-    admin = SubRouter(__file__, prefix="/admin")
+    admin = SubRouter(prefix="/admin")
     
     @admin.get("/dashboard")
     def admin_dashboard():
@@ -395,7 +401,7 @@ The parameter injection system works in two phases:
     from robyn.authentication import AuthenticationHandler
     
     # Admin routes with authentication
-    admin = SubRouter(__file__, prefix="/admin")
+    admin = SubRouter(prefix="/admin")
     
     class AdminAuth(AuthenticationHandler):
         def authenticate(self, request):

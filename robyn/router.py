@@ -1,6 +1,5 @@
 import inspect
 import logging
-from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping
 from functools import wraps
 from types import CoroutineType
@@ -67,9 +66,13 @@ class GlobalMiddleware(NamedTuple):
     function: FunctionInfo
 
 
-class BaseRouter(ABC):
-    @abstractmethod
-    def add_route(*args) -> Callable | CoroutineType | dict: ...
+class BaseRouter:
+    """Common base for the route registries (HTTP, middleware, websocket).
+
+    Intentionally empty: each registry exposes ``add_route`` with a
+    deliberately different signature, so there is no shared abstract
+    contract to enforce here (#1035).
+    """
 
 
 class Router(BaseRouter):
