@@ -9,9 +9,8 @@ from typing import List
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
+from robyn._runtime import GRACEFUL_SHUTDOWN_TIMEOUT
 from robyn.logger import Colors, logger
-
-GRACEFUL_SHUTDOWN_TIMEOUT = 10
 
 
 def compile_rust_files(directory_path: str) -> list[str]:
@@ -158,8 +157,7 @@ class EventHandler(FileSystemEventHandler):
         clean_rust_binaries(self.built_rust_binaries)
         self.built_rust_binaries = compile_rust_files(self.directory_path)
 
-        prev_process = self.process
-        if prev_process:
+        if self.process:
             self.wait_for_server_shutdown()
 
         self.process = subprocess.Popen(

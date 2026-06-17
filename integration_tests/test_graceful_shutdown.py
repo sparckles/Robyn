@@ -36,6 +36,8 @@ def _wait_for_server(port: int, process: subprocess.Popen[bytes]) -> None:
 
 
 def test_sigterm_runs_shutdown_handler(tmp_path):
+    # Multi-process SIGTERM coverage is left as follow-up because this regression
+    # targets the default single-process fixture path from issue #1324.
     port = _get_free_port()
     sentinel_file = tmp_path / "shutdown.txt"
     app_file = tmp_path / "graceful_shutdown_app.py"

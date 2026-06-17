@@ -6,13 +6,12 @@ import webbrowser
 
 from multiprocess import Process  # type: ignore
 
+from robyn._runtime import GRACEFUL_SHUTDOWN_TIMEOUT
 from robyn.events import Events
 from robyn.logger import logger
 from robyn.robyn import FunctionInfo, Headers, Server, SocketHeld
 from robyn.router import GlobalMiddleware, Route, RouteMiddleware
 from robyn.types import Directory
-
-GRACEFUL_SHUTDOWN_TIMEOUT = 10
 
 
 def _raise_keyboard_interrupt(_sig, _frame):
