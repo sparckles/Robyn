@@ -11,11 +11,12 @@ from robyn._param_utils import QueryParamValidationError, parse_route_param_name
 from robyn.authentication import AuthenticationHandler, AuthenticationNotConfiguredError
 from robyn.dependency_injection import DependencyMap
 from robyn.jsonify import jsonify
-from robyn.openapi import OpenAPI
+from robyn.openapi import OpenAPI, RouteOpenAPIMeta
 from robyn.pydantic_support import (
     PydanticBodyValidationError,
     check_pydantic_installed_for_handler,
     detect_pydantic_params,
+    is_pydantic_model,
     serialize_pydantic_response,
     validate_pydantic_body,
 )
@@ -51,6 +52,7 @@ class Route(NamedTuple):
     auth_required: bool
     openapi_name: str
     openapi_tags: list[str]
+    openapi_metadata: RouteOpenAPIMeta = RouteOpenAPIMeta()
 
 
 class RouteMiddleware(NamedTuple):
@@ -143,6 +145,43 @@ class Router(BaseRouter):
             description=str(res).encode("utf-8"),
         )
 
+    def _apply_response_model(self, result, response_model, default_status_code):
+        """Validate/serialize a dict return through a Pydantic ``response_model``.
+
+        When ``response_model`` is a Pydantic model and the handler returned a
+        plain dict, the dict is validated and re-serialized through the model so
+        the wire response matches the documented schema. Explicit
+        ``Response``/``StreamingResponse`` returns and non-Pydantic models are left
+        untouched.
+        """
+        if response_model is None or not is_pydantic_model(response_model):
+            return result
+        if isinstance(result, (Response, StreamingResponse)):
+            return result
+        if isinstance(result, dict):
+            validated = response_model.model_validate(result)
+            return Response(
+                status_code=default_status_code or status_codes.HTTP_200_OK,
+                headers=_JSON_HEADERS,
+                description=validated.model_dump_json(),
+            )
+        return result
+
+    def _coerce_status_code(self, formatted, default_status_code):
+        """Apply the route's default ``status_code`` to a non-Response return.
+
+        Only plain returns (dict/list/str/bytes) are wrapped — when a handler
+        returns an explicit ``Response``/``StreamingResponse`` its own status code
+        always wins.
+        """
+        if default_status_code is None or isinstance(formatted, (Response, StreamingResponse)):
+            return formatted
+        if isinstance(formatted, (dict, list)):
+            return Response(status_code=default_status_code, headers=_JSON_HEADERS, description=jsonify(formatted))
+        if isinstance(formatted, bytes):
+            return Response(status_code=default_status_code, headers=_TEXT_HEADERS, description=formatted)
+        return Response(status_code=default_status_code, headers=_TEXT_HEADERS, description=str(formatted).encode("utf-8"))
+
     def add_route(  # type: ignore
         self,
         route_type: HttpMethod,
@@ -154,9 +193,15 @@ class Router(BaseRouter):
         openapi_tags: list[str],
         exception_handler: Callable | None,
         injected_dependencies: dict,
+        openapi_metadata: RouteOpenAPIMeta | None = None,
     ) -> Callable | CoroutineType:
         # Pre-compute handler signature ONCE at registration time.
         # This avoids calling inspect.signature() on every request.
+        if openapi_metadata is None:
+            openapi_metadata = RouteOpenAPIMeta()
+        default_status_code = openapi_metadata.status_code
+        response_model = openapi_metadata.response_model
+
         route_param_names = parse_route_param_names(endpoint)
         handler_params = inspect.signature(handler).parameters
         handler_param_names = set(handler_params.keys())
@@ -290,9 +335,12 @@ class Router(BaseRouter):
         @wraps(handler)
         async def async_inner_handler(*args, **kwargs):
             try:
-                response = self._format_response(
-                    await wrapped_handler(*args, **kwargs),
-                )
+                result = await wrapped_handler(*args, **kwargs)
+                if response_model is not None or default_status_code is not None:
+                    result = self._apply_response_model(result, response_model, default_status_code)
+                    response = self._coerce_status_code(self._format_response(result), default_status_code)
+                else:
+                    response = self._format_response(result)
             except QueryParamValidationError as err:
                 response = Response(
                     status_code=status_codes.HTTP_400_BAD_REQUEST,
@@ -316,9 +364,12 @@ class Router(BaseRouter):
         @wraps(handler)
         def inner_handler(*args, **kwargs):
             try:
-                response = self._format_response(
-                    wrapped_handler(*args, **kwargs),
-                )
+                result = wrapped_handler(*args, **kwargs)
+                if response_model is not None or default_status_code is not None:
+                    result = self._apply_response_model(result, response_model, default_status_code)
+                    response = self._coerce_status_code(self._format_response(result), default_status_code)
+                else:
+                    response = self._format_response(result)
             except QueryParamValidationError as err:
                 response = Response(
                     status_code=status_codes.HTTP_400_BAD_REQUEST,
@@ -356,7 +407,7 @@ class Router(BaseRouter):
                 params,
                 new_injected_dependencies,
             )
-            self.routes.append(Route(route_type, endpoint, function, is_const, auth_required, openapi_name, openapi_tags))
+            self.routes.append(Route(route_type, endpoint, function, is_const, auth_required, openapi_name, openapi_tags, openapi_metadata))
             return async_inner_handler
         else:
             function = FunctionInfo(
@@ -366,12 +417,20 @@ class Router(BaseRouter):
                 params,
                 new_injected_dependencies,
             )
-            self.routes.append(Route(route_type, endpoint, function, is_const, auth_required, openapi_name, openapi_tags))
+            self.routes.append(Route(route_type, endpoint, function, is_const, auth_required, openapi_name, openapi_tags, openapi_metadata))
             return inner_handler
 
     def prepare_routes_openapi(self, openapi: OpenAPI, included_routers: list) -> None:
         for route in self.routes:
-            openapi.add_openapi_path_obj(lower_http_method(route.route_type), route.route, route.openapi_name, route.openapi_tags, route.function.handler)
+            openapi.add_openapi_path_obj(
+                lower_http_method(route.route_type),
+                route.route,
+                route.openapi_name,
+                route.openapi_tags,
+                route.function.handler,
+                auth_required=route.auth_required,
+                meta=route.openapi_metadata,
+            )
 
         # TODO! after include_routes does not immediately merge all the routes
         # for router in included_routers:

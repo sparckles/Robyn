@@ -193,6 +193,106 @@ def create_user(user: UserCreate) -> dict:
 
 For the full guide on Pydantic validation, nested models, error responses, and OpenAPI integration, see the dedicated [Pydantic Integration](/documentation/en/api_reference/pydantic) page.
 
+## Documenting routes (status codes, deprecation, extra responses)
+
+Every route decorator (`@app.get`, `@app.post`, … and the `SubRouter` equivalents) accepts a set of flags so you can document — and in some cases change the runtime behaviour of — a route directly from the decorator:
+
+- `status_code` — the default success status code. It is reflected in the spec (e.g. `201` instead of `200`) **and** applied at runtime to plain returns (dict/list/str/bytes). An explicit `Response(...)` return always keeps its own status.
+- `response_model` — a type (typically a Pydantic model) used as the success response schema. When the handler returns a dict, it is validated and re-serialized through the model so the wire response matches the docs.
+- `responses` — additional documented responses keyed by status code. Each value may be a plain description string, a `{"description": ..., "model": SomeType}` dict, or a full OpenAPI response object.
+- `deprecated=True` — marks the operation deprecated (rendered with strikethrough in Swagger UI).
+- `include_in_schema=False` — hides the route from the spec entirely (useful for health checks and internal endpoints).
+
+<CodeGroup title="Route documentation flags">
+
+```python
+from robyn.types import JSONResponse
+
+
+class UserResponse(JSONResponse):
+    id: int
+    name: str
+
+
+class ErrorResponse(JSONResponse):
+    message: str
+
+
+@app.post(
+    "/users",
+    status_code=201,
+    response_model=UserResponse,
+    responses={
+        404: "User not found",
+        422: {"description": "Validation error", "model": ErrorResponse},
+    },
+    openapi_tags=["Users"],
+)
+def create_user(body: UserResponse) -> UserResponse:
+    """Create a user (responds with 201)"""
+    return {"id": 1, "name": "Bruce"}
+
+
+@app.get("/legacy", deprecated=True)
+def legacy():
+    """Old endpoint kept for backwards-compat"""
+    return "use /users instead"
+
+
+@app.get("/healthz", include_in_schema=False)
+def healthz():
+    return "ok"
+```
+
+</CodeGroup>
+
+## Authentication & the Swagger "Authorize" button
+
+When you call `app.configure_authentication(...)`, Robyn automatically registers a matching security scheme (`BearerAuth` for a `BearerGetter`) so Swagger UI's **Authorize** button works out of the box. Routes declared with `auth_required=True` advertise that requirement in the spec, so they render with a lock icon and send the credential when you try them out.
+
+You can also declare schemes explicitly via `Components(securitySchemes=...)`:
+
+<CodeGroup title="Security schemes">
+
+```python
+from robyn.openapi import OpenAPI, OpenAPIInfo, Components
+
+app = Robyn(
+    __file__,
+    openapi=OpenAPI(
+        info=OpenAPIInfo(
+            components=Components(
+                securitySchemes={
+                    "BearerAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"},
+                }
+            )
+        )
+    ),
+)
+
+
+@app.get("/me", auth_required=True)
+def me(request):
+    """Requires a Bearer token — shows a lock in Swagger UI"""
+    return "secret"
+```
+
+</CodeGroup>
+
+If no security scheme is configured, Robyn no longer emits an empty `securitySchemes` object, so the **Authorize** button stays hidden instead of opening an empty popup.
+
+## A note on auto-generated parameters
+
+Robyn builds the OpenAPI spec by **inspecting your handler's type annotations** — not its body. Reading values dynamically via `request.query_params`, `request.json()`, or `request.path_params` produces working endpoints, but Robyn has nothing to introspect, so those parameters won't appear in `/docs`.
+
+To document them, annotate the handler with typed params instead:
+
+- Query params: a subclass of `QueryParams` (e.g. `query_params: MyQueryParams`)
+- Request body: a subclass of `Body`/`JsonBody`, a `TypedDict`, or a Pydantic `BaseModel`
+- Path params: derived automatically from the route string (`/users/:id`)
+
+Stdlib return/field types such as `datetime`, `date`, `UUID`, `Decimal`, `Enum`, and `Literal` are mapped to their proper JSON Schema `type`/`format`, and container types like `list[str]` and `Optional[str]` render correctly.
+
 
 ## What's next?
 
