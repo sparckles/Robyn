@@ -2,7 +2,6 @@ import pytest
 
 from integration_tests.helpers.http_methods_helpers import get
 
-
 # --- SubRouter with its own async authenticate() handler (#1157, #1296) ---
 
 
