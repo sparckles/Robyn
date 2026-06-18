@@ -9,7 +9,11 @@ use pyo3::{Bound, Python};
 use crate::routers::Router;
 use crate::types::function_info::{FunctionInfo, MiddlewareType};
 
-type RouteMap = RwLock<MatchItRouter<FunctionInfo>>;
+// A route may carry more than one middleware of the same kind (e.g. an
+// `auth_required` handler plus a custom `@before_request`), so each route
+// template maps to a *list* of middlewares run in registration order (#1158,
+// #828). matchit stores a single value per template, hence the Vec.
+type RouteMap = RwLock<MatchItRouter<Vec<FunctionInfo>>>;
 
 pub struct MiddlewareRouter {
     globals: HashMap<MiddlewareType, RwLock<Vec<FunctionInfo>>>,
@@ -17,7 +21,7 @@ pub struct MiddlewareRouter {
     has_middleware: AtomicBool,
 }
 
-impl Router<(FunctionInfo, HashMap<String, String>), MiddlewareType> for MiddlewareRouter {
+impl Router<(Vec<FunctionInfo>, HashMap<String, String>), MiddlewareType> for MiddlewareRouter {
     fn add_route<'py>(
         &self,
         _py: Python,
@@ -27,8 +31,16 @@ impl Router<(FunctionInfo, HashMap<String, String>), MiddlewareType> for Middlew
         _event_loop: Option<Bound<'py, pyo3::PyAny>>,
     ) -> Result<(), Error> {
         let table = self.routes.get(route_type).context("No relevant map")?;
+        let mut table = table.write().unwrap();
 
-        table.write().unwrap().insert(route.to_string(), function)?;
+        // Append to the existing chain if this route template is already
+        // registered, otherwise start a new one. Registering the same route
+        // template twice used to panic on the matchit insert conflict (#1158).
+        if table.at(route).is_ok() {
+            table.at_mut(route).unwrap().value.push(function);
+        } else {
+            table.insert(route.to_string(), vec![function])?;
+        }
         self.has_middleware.store(true, Ordering::Release);
 
         Ok(())
@@ -38,7 +50,7 @@ impl Router<(FunctionInfo, HashMap<String, String>), MiddlewareType> for Middlew
         &self,
         route_method: &MiddlewareType,
         route: &str,
-    ) -> Option<(FunctionInfo, HashMap<String, String>)> {
+    ) -> Option<(Vec<FunctionInfo>, HashMap<String, String>)> {
         let table = self.routes.get(route_method)?;
 
         let table_lock = table.read().ok()?;
@@ -48,9 +60,9 @@ impl Router<(FunctionInfo, HashMap<String, String>), MiddlewareType> for Middlew
             route_params.insert(key.to_string(), value.to_string());
         }
 
-        let function_info = Python::with_gil(|_| res.value.to_owned());
+        let functions = Python::with_gil(|_| res.value.to_owned());
 
-        Some((function_info, route_params))
+        Some((functions, route_params))
     }
 }
 

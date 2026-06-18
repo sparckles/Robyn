@@ -33,6 +33,28 @@ def test_response_in_before_middleware(session):
 
 
 @pytest.mark.benchmark
+def test_multiple_middlewares_on_same_route(session):
+    """#1158 / #828: stacking multiple before/after middlewares on the same
+    route must chain (and not panic at startup)."""
+    r = get("/sync/multiple_middlewares")
+    # both after_request handlers ran
+    assert r.headers.get("after1") == "1"
+    assert r.headers.get("after2") == "2"
+    # and the handler asserted both before_request handlers ran
+    assert r.text == "sync multiple middlewares"
+
+
+@pytest.mark.benchmark
+def test_after_request_runs_when_before_request_short_circuits(session):
+    """When before_request returns a Response, the handler is skipped but the
+    after_request chain still runs on that response."""
+    r = get("/sync/short_circuit", should_check_response=False)
+    assert r.status_code == 403
+    assert r.text == "blocked"  # early response body, handler did not run
+    assert r.headers.get("after_on_block") == "yes"  # after_request still ran
+
+
+@pytest.mark.benchmark
 @pytest.mark.parametrize(
     "route",
     [

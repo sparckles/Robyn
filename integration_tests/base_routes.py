@@ -271,6 +271,58 @@ def sync_middlewares_401():
     pass
 
 
+# Multiple middlewares of the same kind on the same route (#1158, #828):
+# stacking before_request/after_request handlers must chain, not conflict.
+@app.before_request("/sync/multiple_middlewares")
+def multi_before_1(request: Request):
+    request.headers.set("before1", "1")
+    return request
+
+
+@app.before_request("/sync/multiple_middlewares")
+def multi_before_2(request: Request):
+    request.headers.set("before2", "2")
+    return request
+
+
+@app.after_request("/sync/multiple_middlewares")
+def multi_after_1(response: Response):
+    response.headers.set("after1", "1")
+    return response
+
+
+@app.after_request("/sync/multiple_middlewares")
+def multi_after_2(response: Response):
+    response.headers.set("after2", "2")
+    return response
+
+
+@app.get("/sync/multiple_middlewares")
+def sync_multiple_middlewares(request: Request):
+    # both before_request handlers must have run
+    assert request.headers.get("before1") == "1"
+    assert request.headers.get("before2") == "2"
+    return "sync multiple middlewares"
+
+
+# When a before_request short-circuits with a Response, the route handler is
+# skipped but after_request still runs on that response (documented behaviour).
+@app.before_request("/sync/short_circuit")
+def short_circuit_before(request: Request):
+    return Response(403, Headers({}), "blocked")
+
+
+@app.after_request("/sync/short_circuit")
+def short_circuit_after(response: Response):
+    response.headers.set("after_on_block", "yes")
+    return response
+
+
+@app.get("/sync/short_circuit")
+def short_circuit_handler():
+    return "handler should not run"
+
+
 # --- ContextVar propagation (regression test for #1380) ---
 
 _ctxvar_middleware_value: contextvars.ContextVar = contextvars.ContextVar("ctxvar_middleware_value", default="default")
