@@ -50,7 +50,7 @@ impl Router<(FunctionInfo, HashMap<String, String>), HttpMethod> for HttpRouter 
                 route_params.insert(key.to_string(), value.to_string());
             }
 
-            let function_info = Python::with_gil(|_| res.value.to_owned());
+            let function_info = Python::attach(|_| res.value.to_owned());
             return Some((function_info, route_params));
         }
 

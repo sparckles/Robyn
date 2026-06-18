@@ -13,8 +13,8 @@ pub fn execute_ws_function(
     ws: &WebSocketConnector,
 ) {
     if function.is_async {
-        let fut = match Python::with_gil(|py| {
-            let handler = function.handler.bind(py).downcast()?;
+        let fut = match Python::attach(|py| {
+            let handler = function.handler.bind(py).cast()?;
             let result = handler.call1((ws.clone(),))?;
             pyo3_async_runtimes::into_future_with_locals(task_locals, result)
         }) {
@@ -26,7 +26,7 @@ pub fn execute_ws_function(
         };
         let f = async move {
             match fut.await {
-                Ok(output) => Python::with_gil(|py| match output.extract::<Option<String>>(py) {
+                Ok(output) => Python::attach(|py| match output.extract::<Option<String>>(py) {
                     Ok(msg) => msg,
                     Err(e) => {
                         log::error!("Failed to extract WebSocket handler result: {}", e);
@@ -47,8 +47,8 @@ pub fn execute_ws_function(
         });
         ctx.spawn(f);
     } else {
-        Python::with_gil(|py| {
-            let handler = match function.handler.bind(py).downcast() {
+        Python::attach(|py| {
+            let handler = match function.handler.bind(py).cast() {
                 Ok(h) => h,
                 Err(e) => {
                     log::error!("Failed to get sync WebSocket handler: {}", e);

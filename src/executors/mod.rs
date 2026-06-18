@@ -87,10 +87,10 @@ fn extract_response_type_fast(output: &Bound<'_, PyAny>) -> PyResult<ResponseTyp
     let py = output.py();
 
     // 1. PyResponse pyclass downcast — zero getattr calls.
-    //    `downcast_exact` (not `downcast`) so that user `Response` subclasses
+    //    `cast_exact` (not `downcast`) so that user `Response` subclasses
     //    with overridden properties fall through to the getattr-based slow
     //    path below, preserving their custom read semantics.
-    if let Ok(py_resp) = output.downcast_exact::<PyResponse>() {
+    if let Ok(py_resp) = output.cast_exact::<PyResponse>() {
         let borrowed = py_resp.borrow();
         let description =
             crate::types::get_description_from_pyobject(borrowed.description.bind(py))?;
@@ -110,10 +110,10 @@ fn extract_response_type_fast(output: &Bound<'_, PyAny>) -> PyResult<ResponseTyp
     //    Uses subclass-aware `downcast` to match the Python router's
     //    `isinstance(res, (dict, list, ...))` check; orjson serializes
     //    dict/list subclasses as their base type by default.
-    if output.downcast::<PyDict>().is_ok() || output.downcast::<PyList>().is_ok() {
+    if output.cast::<PyDict>().is_ok() || output.cast::<PyList>().is_ok() {
         let dumps = orjson_dumps(py)?;
         let encoded = dumps.call1((output,))?;
-        let bytes = encoded.downcast::<PyBytes>()?.as_bytes().to_vec();
+        let bytes = encoded.cast::<PyBytes>()?.as_bytes().to_vec();
         return Ok(ResponseType::Standard(response_from_bytes(
             bytes,
             json_headers(),
@@ -122,14 +122,14 @@ fn extract_response_type_fast(output: &Bound<'_, PyAny>) -> PyResult<ResponseTyp
 
     // 3. Bare str/bytes — `downcast` (subclass-aware) to match the Python
     //    router's `isinstance` gate.
-    if let Ok(s) = output.downcast::<PyString>() {
+    if let Ok(s) = output.cast::<PyString>() {
         let bytes = s.to_string().into_bytes();
         return Ok(ResponseType::Standard(response_from_bytes(
             bytes,
             text_plain_headers(),
         )));
     }
-    if let Ok(b) = output.downcast::<PyBytes>() {
+    if let Ok(b) = output.cast::<PyBytes>() {
         let bytes = b.as_bytes().to_vec();
         return Ok(ResponseType::Standard(response_from_bytes(
             bytes,
@@ -162,7 +162,7 @@ where
     T: Clone + for<'py> IntoPyObject<'py>,
     for<'py> <T as IntoPyObject<'py>>::Error: std::fmt::Debug,
 {
-    let handler = function.handler.bind(py).downcast()?;
+    let handler = function.handler.bind(py).cast()?;
 
     // 0-param handlers: skip Request→Python conversion entirely
     if function.number_of_params == 0 {
@@ -279,7 +279,7 @@ where
     for<'py> <T as IntoPyObject<'py>>::Error: std::fmt::Debug,
 {
     if function.is_async {
-        let output: Py<PyAny> = Python::with_gil(|py| -> PyResult<_> {
+        let output: Py<PyAny> = Python::attach(|py| -> PyResult<_> {
             let coroutine = get_function_output(function, py, input)?;
             let awaitable = match context {
                 Some(ctx) => wrap_coro_in_context(py, ctx.bind(py), coroutine)?,
@@ -289,7 +289,7 @@ where
         })?
         .await?;
 
-        Python::with_gil(|py| -> Result<MiddlewareReturn> {
+        Python::attach(|py| -> Result<MiddlewareReturn> {
             // Try response extraction first, then request
             match output.extract::<Response>(py) {
                 Ok(response) => Ok(MiddlewareReturn::Response(response)),
@@ -300,7 +300,7 @@ where
             }
         })
     } else {
-        Python::with_gil(|py| -> Result<MiddlewareReturn> {
+        Python::attach(|py| -> Result<MiddlewareReturn> {
             let output = match context {
                 Some(ctx) => get_function_output_in_context(function, py, ctx.bind(py), input)?,
                 None => get_function_output(function, py, input)?,
@@ -332,7 +332,7 @@ where
     for<'py> <T as IntoPyObject<'py>>::Error: std::fmt::Debug,
     for<'py> <U as IntoPyObject<'py>>::Error: std::fmt::Debug,
 {
-    let handler = function.handler.bind(py).downcast()?;
+    let handler = function.handler.bind(py).cast()?;
 
     if function.number_of_params == 0 {
         return handler.call0();
@@ -471,7 +471,7 @@ pub async fn execute_after_middleware_function(
     context: Option<&Py<PyAny>>,
 ) -> Result<MiddlewareReturn> {
     if function.is_async {
-        let output: Py<PyAny> = Python::with_gil(|py| -> PyResult<_> {
+        let output: Py<PyAny> = Python::attach(|py| -> PyResult<_> {
             let coroutine = get_function_output_with_two_args(function, py, request, response)?;
             let awaitable = match context {
                 Some(ctx) => wrap_coro_in_context(py, ctx.bind(py), coroutine)?,
@@ -481,7 +481,7 @@ pub async fn execute_after_middleware_function(
         })?
         .await?;
 
-        Python::with_gil(|py| -> Result<MiddlewareReturn> {
+        Python::attach(|py| -> Result<MiddlewareReturn> {
             // Try response extraction first, then request
             match output.extract::<Response>(py) {
                 Ok(response) => Ok(MiddlewareReturn::Response(response)),
@@ -492,7 +492,7 @@ pub async fn execute_after_middleware_function(
             }
         })
     } else {
-        Python::with_gil(|py| -> Result<MiddlewareReturn> {
+        Python::attach(|py| -> Result<MiddlewareReturn> {
             let output = match context {
                 Some(ctx) => get_function_output_with_two_args_in_context(
                     function,
@@ -522,7 +522,7 @@ pub async fn execute_http_function(
     context: Option<&Py<PyAny>>,
 ) -> PyResult<ResponseType> {
     if function.is_async {
-        let output = Python::with_gil(|py| -> PyResult<_> {
+        let output = Python::attach(|py| -> PyResult<_> {
             let coroutine = get_function_output(function, py, request)?;
             let awaitable = match context {
                 Some(ctx) => wrap_coro_in_context(py, ctx.bind(py), coroutine)?,
@@ -532,9 +532,9 @@ pub async fn execute_http_function(
         })?
         .await?;
 
-        Python::with_gil(|py| extract_response_type(output, py))
+        Python::attach(|py| extract_response_type(output, py))
     } else {
-        Python::with_gil(|py| {
+        Python::attach(|py| {
             let output = match context {
                 Some(ctx) => get_function_output_in_context(function, py, ctx.bind(py), request)?,
                 None => get_function_output(function, py, request)?,
@@ -560,7 +560,7 @@ pub async fn execute_startup_handler(
 ) -> Result<()> {
     if let Some(function) = event_handler {
         if function.is_async {
-            Python::with_gil(|py| {
+            Python::attach(|py| {
                 pyo3_async_runtimes::into_future_with_locals(
                     task_locals,
                     function.handler.bind(py).call0()?,
@@ -568,7 +568,7 @@ pub async fn execute_startup_handler(
             })?
             .await?;
         } else {
-            Python::with_gil(|py| function.handler.call0(py))?;
+            Python::attach(|py| function.handler.call0(py))?;
         }
     }
     Ok(())

@@ -3,6 +3,10 @@
 // Licensed under the BSD 3-Clause License
 // See: https://github.com/emmett-framework/granian/blob/master/LICENSE
 
+// Adapted runtime scaffolding: some helpers aren't wired up on every code path
+// yet, so allow dead code at the module level rather than scattering attributes.
+#![allow(dead_code)]
+
 use futures::FutureExt;
 use pyo3::{prelude::*, IntoPyObjectExt};
 use std::{future::Future, sync::Arc, sync::OnceLock};

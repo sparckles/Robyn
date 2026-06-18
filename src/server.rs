@@ -118,7 +118,7 @@ impl Server {
         let excluded_response_headers_paths = self.excluded_response_headers_paths.clone();
 
         let _ = TASK_LOCALS.get_or_try_init(|| {
-            Python::with_gil(|py| {
+            Python::attach(|py| {
                 pyo3_async_runtimes::TaskLocals::new(event_loop.clone().into()).copy_context(py)
             })
         });
@@ -135,7 +135,7 @@ impl Server {
 
         thread::spawn(move || {
             actix_web::rt::System::new().block_on(async move {
-                let task_locals = Python::with_gil(|py| TASK_LOCALS.get().unwrap().clone_ref(py));
+                let task_locals = Python::attach(|_py| TASK_LOCALS.get().unwrap().clone());
                 execute_startup_handler(startup_handler, &task_locals)
                     .await
                     .unwrap();
@@ -203,7 +203,7 @@ impl Server {
                             web::get().to(move |stream: web::Payload, req: HttpRequest| {
                                 let endpoint_copy = endpoint_for_closure.clone();
                                 let task_locals =
-                                    Python::with_gil(|py| TASK_LOCALS.get().unwrap().clone_ref(py));
+                                    Python::attach(|_py| TASK_LOCALS.get().unwrap().clone());
                                 start_web_socket(
                                     req,
                                     stream,
@@ -253,7 +253,7 @@ impl Server {
                                 // Normal path: dynamic routes (and const routes when middlewares exist) require Python
                                 let req_ref = req.clone();
                                 let task_locals =
-                                    Python::with_gil(|py| TASK_LOCALS.get().unwrap().clone_ref(py));
+                                    Python::attach(|_py| TASK_LOCALS.get().unwrap().clone());
                                 let response = pyo3_async_runtimes::tokio::scope_local(
                                     task_locals,
                                     async move {
@@ -290,20 +290,19 @@ impl Server {
         if event_loop.is_err() {
             if let Some(function) = shutdown_handler {
                 if function.is_async {
-                    let task_locals =
-                        Python::with_gil(|py| TASK_LOCALS.get().unwrap().clone_ref(py));
+                    let task_locals = Python::attach(|_py| TASK_LOCALS.get().unwrap().clone());
 
                     pyo3_async_runtimes::tokio::run_until_complete(
                         task_locals.event_loop(_py),
                         pyo3_async_runtimes::into_future_with_locals(
-                            &task_locals.clone_ref(_py),
+                            &task_locals.clone(),
                             function.handler.bind(_py).call0()?,
                         )
                         .unwrap(),
                     )
                     .unwrap();
                 } else {
-                    Python::with_gil(|py| function.handler.call0(py))?;
+                    Python::attach(|py| function.handler.call0(py))?;
                 }
             }
 
@@ -429,7 +428,7 @@ impl Server {
 
         endpoint_prefixed_with_method.push_str(route);
 
-        Python::with_gil(|py| {
+        Python::attach(|py| {
             self.middleware_router
                 .add_route(
                     py,
@@ -512,7 +511,7 @@ async fn index(
     // (which run via `ctx.run(...)`): without a fresh context, a `ContextVar`
     // written inside a handler would persist in the worker thread's current
     // context and leak into the next request on that thread.
-    let request_context: Py<PyAny> = match Python::with_gil(crate::asyncio::new_context) {
+    let request_context: Py<PyAny> = match Python::attach(crate::asyncio::new_context) {
         Ok(ctx) => ctx,
         Err(e) => {
             error!("Failed to create request contextvars context: {}", e);
@@ -644,7 +643,7 @@ async fn index(
 }
 
 fn get_traceback(error: &PyErr) -> String {
-    Python::with_gil(|py| -> String {
+    Python::attach(|py| -> String {
         if let Some(traceback) = error.traceback(py) {
             let msg = match traceback.format() {
                 Ok(msg) => format!("\n{msg} {error}"),

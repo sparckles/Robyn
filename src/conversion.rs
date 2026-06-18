@@ -3,6 +3,9 @@
 // Licensed under the BSD 3-Clause License
 // See: https://github.com/emmett-framework/granian/blob/master/LICENSE
 
+// Adapted scaffolding: not every conversion variant is constructed yet.
+#![allow(dead_code)]
+
 use pyo3::prelude::*;
 pub(crate) enum FutureResultToPy {
     None,

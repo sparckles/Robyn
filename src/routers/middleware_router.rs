@@ -60,7 +60,7 @@ impl Router<(Vec<FunctionInfo>, HashMap<String, String>), MiddlewareType> for Mi
             route_params.insert(key.to_string(), value.to_string());
         }
 
-        let functions = Python::with_gil(|_| res.value.to_owned());
+        let functions = Python::attach(|_| res.value.to_owned());
 
         Some((functions, route_params))
     }

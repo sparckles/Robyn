@@ -107,9 +107,9 @@ impl Url {
 }
 
 pub fn get_body_from_pyobject(body: &Bound<'_, PyAny>) -> PyResult<Vec<u8>> {
-    if let Ok(s) = body.downcast::<PyString>() {
+    if let Ok(s) = body.cast::<PyString>() {
         Ok(s.to_string().into_bytes())
-    } else if let Ok(b) = body.downcast::<PyBytes>() {
+    } else if let Ok(b) = body.cast::<PyBytes>() {
         Ok(b.as_bytes().to_vec())
     } else {
         debug!("Could not convert specified body to bytes");
@@ -118,9 +118,9 @@ pub fn get_body_from_pyobject(body: &Bound<'_, PyAny>) -> PyResult<Vec<u8>> {
 }
 
 pub fn get_description_from_pyobject(description: &Bound<'_, PyAny>) -> PyResult<Vec<u8>> {
-    if let Ok(s) = description.downcast::<PyString>() {
+    if let Ok(s) = description.cast::<PyString>() {
         Ok(s.to_string().into_bytes())
-    } else if let Ok(b) = description.downcast::<PyBytes>() {
+    } else if let Ok(b) = description.cast::<PyBytes>() {
         Ok(b.as_bytes().to_vec())
     } else {
         debug!("Could not convert specified response description to bytes");
@@ -129,7 +129,7 @@ pub fn get_description_from_pyobject(description: &Bound<'_, PyAny>) -> PyResult
 }
 
 pub fn check_body_type(py: Python, body: &Py<PyAny>) -> PyResult<()> {
-    if body.downcast_bound::<PyString>(py).is_err() && body.downcast_bound::<PyBytes>(py).is_err() {
+    if body.cast_bound::<PyString>(py).is_err() && body.cast_bound::<PyBytes>(py).is_err() {
         return Err(PyValueError::new_err(
             "Could not convert specified body to bytes",
         ));
@@ -138,7 +138,7 @@ pub fn check_body_type(py: Python, body: &Py<PyAny>) -> PyResult<()> {
 }
 
 pub fn check_description_type(py: Python, body: &Py<PyAny>) -> PyResult<()> {
-    if body.downcast_bound::<PyString>(py).is_err() && body.downcast_bound::<PyBytes>(py).is_err() {
+    if body.cast_bound::<PyString>(py).is_err() && body.cast_bound::<PyBytes>(py).is_err() {
         return Err(PyValueError::new_err(
             "Could not convert specified response description to bytes",
         ));
