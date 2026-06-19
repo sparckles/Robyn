@@ -139,6 +139,35 @@ The parameter injection system works in two phases:
   </Col>
 </Row>
 
+### Catch-all (wildcard) routes
+
+<Row>
+  <Col>
+    A `*name` segment is a **catch-all**: unlike `:name` (which matches a single
+    path segment), it matches the **rest of the path**, including multiple
+    `/`-separated levels. The captured remainder is available in
+    `request.path_params` under that name.
+
+    This is useful for single-page-app fallbacks, API gateways/proxies, and
+    serving nested file paths.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Catch-all routes">
+    ```python
+    @app.get("/files/*path")
+    async def read_file(request):
+        # GET /files/img/2024/logo.png  ->  path == "img/2024/logo.png"
+        return {"path": request.path_params["path"]}
+
+    # SPA fallback: handle any unmatched sub-path under /app
+    @app.get("/app/*path")
+    async def spa(request):
+        return {"route": request.path_params["path"]}
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
 ### Route Constraints and Validation
 
 <Row>
