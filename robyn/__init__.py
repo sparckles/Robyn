@@ -802,6 +802,27 @@ class BaseRobyn(ABC):
 
         self.dependencies.merge_dependencies(router)
 
+        # Let the freshly-included SubRouter (and its nested SubRouters) inherit
+        # an authentication handler if they don't have their own (#1026), so
+        # auth_required routes on them work without a per-SubRouter
+        # configure_authentication() call.
+        self._propagate_authentication_handler()
+
+    def _propagate_authentication_handler(self) -> None:
+        """Share this router's authentication handler with included SubRouters
+        that don't have their own, recursing into nested SubRouters.
+
+        A SubRouter that configured its own handler keeps it (and passes *that*
+        one down to its descendants); SubRouters without a handler inherit the
+        nearest ancestor's. Idempotent, so it's safe to call from both
+        ``configure_authentication`` and ``include_router`` regardless of order.
+        """
+        for router in self.included_routers:
+            if router.authentication_handler is None and self.authentication_handler is not None:
+                router.authentication_handler = self.authentication_handler
+                router.middleware_router.set_authentication_handler(self.authentication_handler)
+            router._propagate_authentication_handler()
+
     def configure_authentication(self, authentication_handler: AuthenticationHandler):
         """
         Configures the authentication handler for the application.
@@ -810,6 +831,9 @@ class BaseRobyn(ABC):
         """
         self.authentication_handler = authentication_handler
         self.middleware_router.set_authentication_handler(authentication_handler)
+
+        # Propagate to any already-included SubRouters lacking their own handler.
+        self._propagate_authentication_handler()
 
         # Auto-register a matching OpenAPI security scheme so Swagger UI's
         # "Authorize" button works out of the box for auth_required routes

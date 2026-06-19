@@ -66,8 +66,13 @@ class AuthenticationHandler(ABC):
     def authenticate(self, request: Request) -> Identity | None:
         """
         Authenticates the user.
+
+        May be implemented as a regular method or as an ``async def`` coroutine;
+        when async, Robyn awaits it automatically, so the authentication logic
+        can use async ORMs, HTTP clients, or any other async I/O.
+
         :param request: The request object.
-        :return: The identity of the user.
+        :return: The identity of the user, or ``None`` to reject the request.
         """
         raise NotImplementedError()
 

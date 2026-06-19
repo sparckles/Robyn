@@ -485,16 +485,24 @@ class MiddlewareRouter(BaseRouter):
     def add_auth_middleware(self, endpoint: str, route_type: HttpMethod):
         """
         This method adds an authentication middleware to the specified endpoint.
+
+        The wrapper is async so that ``AuthenticationHandler.authenticate()`` may
+        be either a regular method or an ``async def`` coroutine — the latter
+        lets authentication use async ORMs / HTTP clients (#1157, #1296). A
+        synchronous ``authenticate()`` is awaited only if it returns an
+        awaitable, so it carries no extra cost.
         """
 
         injected_dependencies: dict = {}
 
         def decorator(handler):
             @wraps(handler)
-            def inner_handler(request: Request, *args):
+            async def inner_handler(request: Request, *args):
                 if not self.authentication_handler:
                     raise AuthenticationNotConfiguredError()
                 identity = self.authentication_handler.authenticate(request)
+                if inspect.isawaitable(identity):
+                    identity = await identity
                 if identity is None:
                     return self.authentication_handler.unauthorized_response
                 request.identity = identity
