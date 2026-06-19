@@ -5,12 +5,12 @@ use uuid::Uuid;
 
 use std::collections::HashMap;
 
+use super::WsPayload;
 use crate::websockets::WebSocketConnector;
 
 #[derive(Default)]
 #[pyclass]
 pub struct WebSocketRegistry {
-    // A map of client IDs to their Actor addresses.
     clients: HashMap<Uuid, Addr<WebSocketConnector>>,
 }
 
@@ -39,14 +39,13 @@ impl Handler<Register> for WebSocketRegistry {
     }
 }
 
-// New message for sending text to a specific client
-pub struct SendText {
+pub struct SendMessage {
     pub recipient_id: Uuid,
-    pub message: String,
+    pub payload: WsPayload,
     pub sender_id: Uuid,
 }
 
-impl Message for SendText {
+impl Message for SendMessage {
     type Result = ();
 }
 
@@ -62,10 +61,10 @@ impl WebSocketRegistry {
     }
 }
 
-impl Handler<SendText> for WebSocketRegistry {
+impl Handler<SendMessage> for WebSocketRegistry {
     type Result = ();
 
-    fn handle(&mut self, msg: SendText, _ctx: &mut Self::Context) {
+    fn handle(&mut self, msg: SendMessage, _ctx: &mut Self::Context) {
         let recipient_id = msg.recipient_id;
 
         if let Some(client_addr) = self.clients.get(&recipient_id) {
@@ -77,7 +76,7 @@ impl Handler<SendText> for WebSocketRegistry {
 }
 
 pub struct SendMessageToAll {
-    pub message: String,
+    pub payload: WsPayload,
     pub sender_id: Uuid,
 }
 
@@ -90,9 +89,9 @@ impl Handler<SendMessageToAll> for WebSocketRegistry {
 
     fn handle(&mut self, msg: SendMessageToAll, _ctx: &mut Self::Context) {
         for (id, client) in &self.clients {
-            client.do_send(SendText {
+            client.do_send(SendMessage {
                 recipient_id: *id,
-                message: msg.message.clone(),
+                payload: msg.payload.clone(),
                 sender_id: msg.sender_id,
             });
         }
@@ -112,10 +111,9 @@ impl Handler<Close> for WebSocketRegistry {
 
     fn handle(&mut self, msg: Close, _ctx: &mut Self::Context) {
         if let Some(client) = self.clients.remove(&msg.id) {
-            // Send a close message to the client before removing it
-            client.do_send(SendText {
+            client.do_send(SendMessage {
                 recipient_id: msg.id,
-                message: "Connection closed".to_string(),
+                payload: WsPayload::Text("Connection closed".to_string()),
                 sender_id: msg.id,
             });
         }
