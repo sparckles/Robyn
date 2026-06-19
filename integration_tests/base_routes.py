@@ -323,6 +323,35 @@ def short_circuit_handler():
     return "handler should not run"
 
 
+# A before_request may return a bare value that is cast to a short-circuiting
+# Response, instead of constructing a full Response object (#793).
+@app.before_request("/sync/before/bare_dict")
+def before_bare_dict(request: Request):
+    return {"blocked": True}  # bare dict -> JSON 200 response
+
+
+@app.before_request("/sync/before/bare_tuple")
+def before_bare_tuple(request: Request):
+    return ("denied", {}, 403)  # (description, headers, status_code) -> 403
+
+
+@app.get("/sync/before/bare_dict")
+def after_bare_dict():
+    return "should not reach"
+
+
+@app.get("/sync/before/bare_tuple")
+def after_bare_tuple():
+    return "should not reach"
+
+
+# An OPTIONS route registered under a static mount (/test_dir) must reach the
+# router rather than being swallowed by the static file service (#1130).
+@app.options("/test_dir/preflight")
+def options_under_static_mount():
+    return "options-under-static"
+
+
 # --- ContextVar propagation (regression test for #1380) ---
 
 _ctxvar_middleware_value: contextvars.ContextVar = contextvars.ContextVar("ctxvar_middleware_value", default="default")
