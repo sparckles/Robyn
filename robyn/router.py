@@ -444,6 +444,35 @@ class Router(BaseRouter):
         return self.routes
 
 
+def _cast_before_request_return(result):
+    """Cast a ``before_request`` hook's return value.
+
+    Returning a ``Request`` continues processing; returning a ``Response``
+    short-circuits. A bare value (dict/list/str/bytes/3-tuple) is cast to a
+    short-circuiting ``Response`` so users don't have to construct a full
+    ``Response`` object themselves (#793). ``None`` and ``Request``/``Response``
+    are passed through unchanged.
+    """
+    if result is None or isinstance(result, (Request, Response, StreamingResponse)):
+        return result
+    if isinstance(result, (dict, list)):
+        return Response(status_code=status_codes.HTTP_200_OK, headers=_JSON_HEADERS, description=jsonify(result))
+    if isinstance(result, bytes):
+        return Response(status_code=status_codes.HTTP_200_OK, headers=_TEXT_HEADERS, description=result)
+    if isinstance(result, tuple):
+        if len(result) != 3:
+            raise ValueError("A tuple returned from before_request must have 3 elements: (description, headers, status_code)")
+        description, headers, status_code = result
+        if isinstance(description, (dict, list)):
+            body = jsonify(description)
+        elif isinstance(description, bytes):
+            body = description
+        else:
+            body = str(description).encode("utf-8")
+        return Response(status_code=status_code, headers=Headers(headers), description=body)
+    return Response(status_code=status_codes.HTTP_200_OK, headers=_TEXT_HEADERS, description=str(result).encode("utf-8"))
+
+
 class MiddlewareRouter(BaseRouter):
     def __init__(self, dependencies: DependencyMap = DependencyMap()) -> None:
         super().__init__()
@@ -543,14 +572,21 @@ class MiddlewareRouter(BaseRouter):
         # no dependency injection here
         injected_dependencies: dict = {}
 
+        # before_request hooks may return a bare value (dict/str/...) that gets
+        # cast to a short-circuiting Response (#793); after_request hooks return
+        # a Response and are passed through unchanged.
+        cast_return = middleware_type == MiddlewareType.BEFORE_REQUEST
+
         def inner(handler):
             @wraps(handler)
             async def async_inner_handler(*args, **kwargs):
-                return await handler(*args, **kwargs)
+                result = await handler(*args, **kwargs)
+                return _cast_before_request_return(result) if cast_return else result
 
             @wraps(handler)
             def inner_handler(*args, **kwargs):
-                return handler(*args, **kwargs)
+                result = handler(*args, **kwargs)
+                return _cast_before_request_return(result) if cast_return else result
 
             if endpoint is not None:
                 if inspect.iscoroutinefunction(handler):

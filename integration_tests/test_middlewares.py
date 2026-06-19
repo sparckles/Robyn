@@ -45,6 +45,22 @@ def test_multiple_middlewares_on_same_route(session):
 
 
 @pytest.mark.benchmark
+def test_before_request_bare_dict_short_circuits(session):
+    """#793: a bare dict returned from before_request is cast to a JSON Response."""
+    r = get("/sync/before/bare_dict", should_check_response=False)
+    assert r.status_code == 200
+    assert r.json() == {"blocked": True}
+
+
+@pytest.mark.benchmark
+def test_before_request_bare_tuple_short_circuits(session):
+    """#793: a (body, headers, status) tuple from before_request sets the status."""
+    r = get("/sync/before/bare_tuple", should_check_response=False)
+    assert r.status_code == 403
+    assert r.text == "denied"
+
+
+@pytest.mark.benchmark
 def test_after_request_runs_when_before_request_short_circuits(session):
     """When before_request returns a Response, the handler is skipped but the
     after_request chain still runs on that response."""

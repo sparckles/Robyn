@@ -155,7 +155,15 @@ impl Server {
                     // 3. Just serves the file without any redirection to sub links
                     for directory in directories.iter() {
                         let mut files = Files::new(&directory.route, &directory.directory_path)
-                            .method_guard(guard::fn_guard(|_| true))
+                            // Use a routing-level guard (not method_guard) so an
+                            // OPTIONS request falls THROUGH to the router instead of
+                            // being answered by the file service. This lets an
+                            // OPTIONS route / CORS preflight registered on a path
+                            // under a static mount actually be reached (#1130).
+                            // method_guard would short-circuit with a 4xx here.
+                            .guard(guard::fn_guard(|ctx| {
+                                ctx.head().method != actix_web::http::Method::OPTIONS
+                            }))
                             .redirect_to_slash_directory();
                         if let Some(index_file) = &directory.index_file {
                             files = files.index_file(index_file);
