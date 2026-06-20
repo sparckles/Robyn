@@ -25,6 +25,7 @@ from robyn.reloader import compile_rust_files
 from robyn.responses import SSEMessage, SSEResponse, StreamingResponse, html, serve_file, serve_html
 from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, WebSocketConnector, get_version
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
+from robyn.session import Session, SessionManager
 from robyn.testing import TestClient
 from robyn.types import Directory, JsonBody, RequestBody, RequestMethod, RequestURL
 from robyn.ws import WebSocketAdapter, WebSocketDisconnect, create_websocket_decorator
@@ -136,6 +137,7 @@ class BaseRobyn(ABC):
         self.event_handlers: dict = {}
         self.exception_handler: Callable | None = None
         self.authentication_handler: AuthenticationHandler | None = None
+        self.session_manager: SessionManager | None = None
         self.included_routers: list[SubRouter] = []
         self._mcp_app: MCPApp | None = None
         self._added_routes: set[str] = set()
@@ -850,6 +852,69 @@ class BaseRobyn(ABC):
                     {"type": "apiKey", "in": "header", "name": "Authorization"},
                 )
 
+    def configure_sessions(
+        self,
+        secret_key: str,
+        *,
+        cookie_name: str = "session",
+        max_age: int | None = 14 * 24 * 60 * 60,
+        path: str = "/",
+        domain: str | None = None,
+        secure: bool = False,
+        http_only: bool = True,
+        same_site: str = "Lax",
+    ) -> SessionManager:
+        """
+        Enable signed-cookie sessions for the application.
+
+        Registers global ``before_request`` / ``after_request`` middleware that
+        load the session from the incoming cookie and write it back to the
+        response (only when the session was modified). Inside any handler, read
+        or write the session via ``request.session`` (a dict-like
+        :class:`Session`).
+
+        The session is stored client-side in a tamper-proof signed cookie, so no
+        server-side store is needed. The payload is signed, not encrypted — do
+        not store secrets in it.
+
+        :param secret_key: key used to sign the session cookie. Keep it secret and stable across restarts.
+        :param cookie_name: name of the session cookie (default ``"session"``).
+        :param max_age: session lifetime in seconds, also used as the cookie ``Max-Age``. ``None`` for a browser-session cookie.
+        :param path: cookie ``Path`` attribute.
+        :param domain: cookie ``Domain`` attribute.
+        :param secure: only send the cookie over HTTPS.
+        :param http_only: hide the cookie from JavaScript (recommended).
+        :param same_site: ``"Strict"``, ``"Lax"`` or ``"None"``.
+        :returns: the configured :class:`SessionManager`.
+        """
+        manager = SessionManager(
+            secret_key,
+            cookie_name=cookie_name,
+            max_age=max_age,
+            path=path,
+            domain=domain,
+            secure=secure,
+            http_only=http_only,
+            same_site=same_site,
+        )
+        self.session_manager = manager
+
+        @self.before_request()
+        def _robyn_load_session(request: Request):
+            # request.session is shared by reference through the request phases,
+            # so handler mutations are visible when we save it below.
+            request.session = manager.load(request)
+            return request
+
+        @self.after_request()
+        def _robyn_save_session(request: Request, response: Response):
+            session = request.session
+            if session is not None:
+                manager.save(session, response)
+            return response
+
+        return manager
+
     @property
     def mcp(self):
         """
@@ -1120,4 +1185,6 @@ __all__ = [
     "RequestMethod",
     "RequestBody",
     "RequestURL",
+    "Session",
+    "SessionManager",
 ]

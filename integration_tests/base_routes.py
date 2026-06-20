@@ -810,6 +810,30 @@ def cookie_overwrite():
     return response
 
 
+# signed-cookie sessions (configured in main() via app.configure_sessions)
+@app.get("/sessions/get")
+def session_get(request):
+    return {"value": request.session.get("value")}
+
+
+@app.post("/sessions/set")
+def session_set(request):
+    request.session["value"] = request.json().get("value")
+    return {"stored": request.session["value"]}
+
+
+@app.get("/sessions/counter")
+async def session_counter(request):
+    request.session["count"] = request.session.get("count", 0) + 1
+    return {"count": request.session["count"]}
+
+
+@app.get("/sessions/clear")
+def session_clear(request):
+    request.session.clear()
+    return {"cleared": True}
+
+
 # --- POST ---
 
 # dict
@@ -1882,6 +1906,10 @@ def main():
             return None
 
     app.configure_authentication(BasicAuthHandler(token_getter=BearerGetter()))
+
+    # Signed-cookie sessions, used by the /sessions/* routes and test_sessions.py.
+    # Distinct cookie name so it never collides with the /cookie/* tests.
+    app.configure_sessions(secret_key="integration-test-secret", cookie_name="robyn_session")
 
     # Read port from environment variable if set, otherwise default to 8080
     port = int(os.getenv("ROBYN_PORT", "8080"))
