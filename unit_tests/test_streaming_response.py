@@ -70,3 +70,26 @@ def test_wrapper_supports_bytes_chunks():
 
     wrapper = AsyncGeneratorWrapper(gen())
     assert list(wrapper) == [b"\x00\x01", b"\x02"]
+
+
+def test_owned_loop_thread_is_cleaned_up_when_dropped_early():
+    """The background loop thread must not leak if the stream is abandoned
+    before exhaustion (e.g. a client disconnect)."""
+    import gc
+
+    async def gen():
+        yield "a"
+        yield "b"
+        yield "c"
+
+    wrapper = AsyncGeneratorWrapper(gen())  # sync context -> owns a background loop
+    assert wrapper._owns_loop is True
+    thread = wrapper._thread
+    assert thread.is_alive()
+
+    assert next(wrapper) == "a"  # consume one chunk, then abandon the rest
+    del wrapper
+    gc.collect()
+
+    thread.join(timeout=3)
+    assert not thread.is_alive()
