@@ -4,6 +4,7 @@ import datetime
 import json
 import os
 import pathlib
+import tempfile
 import time
 from collections import defaultdict
 from typing import TypedDict
@@ -179,14 +180,31 @@ async def empty_websocket_on_close(websocket):
 
 # ===== Lifecycle handlers =====
 
+# Observable runtime markers so tests can assert the events actually fired
+# (#470), not merely that the handlers were registered.
+lifecycle_state = {"startup_completed": False}
+
 
 async def startup_handler():
+    lifecycle_state["startup_completed"] = True
     print("Starting up")
 
 
 @app.shutdown_handler
 def shutdown_handler():
+    # Write a marker on graceful shutdown so a test can confirm the event fired.
+    # The default integration harness stops the server with SIGKILL (which cannot
+    # be caught), so this only runs when the process is asked to stop gracefully.
+    marker = os.environ.get("ROBYN_SHUTDOWN_MARKER")
+    if marker:
+        with open(marker, "w") as marker_file:
+            marker_file.write("shut down")
     print("Shutting down")
+
+
+@app.get("/lifecycle/startup")
+def lifecycle_startup_status():
+    return {"startup_completed": lifecycle_state["startup_completed"]}
 
 
 # ===== Middlewares =====
@@ -716,6 +734,24 @@ def sync_multipart_file(request: Request):
     files = request.files
     file_names = files.keys()
     return {"file_names": list(file_names)}
+
+
+@app.post("/sync/multipart-file/save")
+def sync_multipart_file_save(request: Request):
+    # Persist every uploaded file to disk and report where it landed plus its
+    # size, so a test can read the saved bytes back and assert they round-trip
+    # intact (#495).
+    upload_dir = os.path.join(tempfile.gettempdir(), "robyn_upload_test")
+    os.makedirs(upload_dir, exist_ok=True)
+
+    saved = {}
+    for file_name, content in request.files.items():
+        destination = os.path.join(upload_dir, file_name)
+        with open(destination, "wb") as saved_file:
+            saved_file.write(content)
+        saved[file_name] = {"path": destination, "size": len(content)}
+
+    return saved
 
 
 # Queries

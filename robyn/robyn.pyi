@@ -326,6 +326,22 @@ class Headers:
         """
         pass
 
+    def to_dict(self) -> dict[str, str]:
+        """
+        Returns all headers as a flat dictionary mapping each header name to its
+        value. Headers that appear more than once have their values joined with
+        ", " (per RFC 7230).
+
+        This is handy when you want the regular ``dict`` ergonomics, e.g. supplying
+        a default for a missing header::
+
+            content_type = request.headers.to_dict().get("content-type", "text/plain")
+
+        Returns:
+            dict[str, str]: All present headers as a flat dictionary.
+        """
+        pass
+
     def populate_from_dict(self, headers: dict[str, str]) -> None:
         """
         Populates the headers from a dictionary.

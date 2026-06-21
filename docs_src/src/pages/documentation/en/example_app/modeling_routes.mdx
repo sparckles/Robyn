@@ -86,6 +86,8 @@ def delete_crime(db: Session, crime_id: int):
 
 Batman created various endpoints to manage crime data. These endpoints allowed the Gotham City Police Department to add, update, and retrieve crime data.
 
+> **A note on `def` vs `async def`.** The CRUD helpers above use **synchronous** SQLAlchemy, so the handlers below are deliberately plain `def` functions. Robyn runs synchronous handlers in a worker thread, which means a blocking database call there never stalls the event loop. If you would rather write `async def` handlers, pair them with an **async** database driver (for example SQLAlchemy's `asyncio` extension via `create_async_engine` and `await session.execute(...)`) so the database I/O is genuinely non-blocking. The one combination to avoid is a blocking, synchronous DB call inside an `async def` handler — that ties up the event loop for every other request.
+
 ```python {{ title: 'Setting up Routes' }}
 # __main__.py
 from robyn import Robyn
@@ -95,7 +97,7 @@ from sqlalchemy.orm import Session
 app = Robyn(__file__)
 
 @app.post("/crimes")
-async def add_crime(request):
+def add_crime(request):
     with SessionLocal() as db:
         crime = request.json()
         insertion = crud.create_crime(db, crime)
@@ -109,7 +111,7 @@ async def add_crime(request):
     }
 
 @app.get("/crimes")
-async def get_crimes(request):
+def get_crimes(request):
     with SessionLocal() as db:
         skip = request.query_params.get("skip", "0")
         limit = request.query_params.get("limit", "100")
@@ -118,7 +120,7 @@ async def get_crimes(request):
     return crimes
 
 @app.get("/crimes/:crime_id", auth_required=True)
-async def get_crime(request):
+def get_crime(request):
     crime_id = int(request.path_params.get("crime_id"))
     with SessionLocal() as db:
         crime = crud.get_crime(db, crime_id=crime_id)
@@ -129,7 +131,7 @@ async def get_crime(request):
     return crime
 
 @app.put("/crimes/:crime_id")
-async def update_crime(request):
+def update_crime(request):
     crime = request.json()
     crime_id = int(request.path_params.get("crime_id"))
     with SessionLocal() as db:
@@ -139,7 +141,7 @@ async def update_crime(request):
     return updated_crime
 
 @app.delete("/crimes/{crime_id}")
-async def delete_crime(request):
+def delete_crime(request):
     crime_id = int(request.path_params.get("crime_id"))
     with SessionLocal() as db:
         success = crud.delete_crime(db, crime_id=crime_id)

@@ -81,6 +81,8 @@ def delete_crime(db: Session, crime_id: int):
 
 蝙蝠侠为管理犯罪数据创建了多个 API 接口。这些接口允许哥谭市警察局添加、更新和查询犯罪记录。
 
+> **关于 `def` 与 `async def`。** 上面的 CRUD 辅助函数使用的是**同步** SQLAlchemy，因此下面的处理器特意写成普通的 `def` 函数。Robyn 会在工作线程中运行同步处理器，这样其中的阻塞式数据库调用就不会阻塞事件循环。如果你更喜欢 `async def` 处理器，请搭配**异步**数据库驱动（例如 SQLAlchemy 的 `asyncio` 扩展，使用 `create_async_engine` 和 `await session.execute(...)`），让数据库 I/O 真正实现非阻塞。唯一要避免的组合，是在 `async def` 处理器中执行阻塞式的同步数据库调用——那会让事件循环为其他所有请求停滞。
+
 ```python {{ title: 'Setting up Routes' }}
 # __main__.py
 from robyn import Robyn
@@ -90,7 +92,7 @@ from sqlalchemy.orm import Session
 app = Robyn(__file__)
 
 @app.post("/crimes")
-async def add_crime(request):
+def add_crime(request):
     with SessionLocal() as db:
         crime = request.json()
         insertion = crud.create_crime(db, crime)
@@ -104,7 +106,7 @@ async def add_crime(request):
     }
 
 @app.get("/crimes")
-async def get_crimes(request):
+def get_crimes(request):
     with SessionLocal() as db:
         skip = request.query_params.get("skip", "0")
         limit = request.query_params.get("limit", "100")
@@ -113,7 +115,7 @@ async def get_crimes(request):
     return crimes
 
 @app.get("/crimes/:crime_id", auth_required=True)
-async def get_crime(request):
+def get_crime(request):
     crime_id = int(request.path_params.get("crime_id"))
     with SessionLocal() as db:
         crime = crud.get_crime(db, crime_id=crime_id)
@@ -124,7 +126,7 @@ async def get_crime(request):
     return crime
 
 @app.put("/crimes/:crime_id")
-async def update_crime(request):
+def update_crime(request):
     crime = request.json()
     crime_id = int(request.path_params.get("crime_id"))
     with SessionLocal() as db:
@@ -134,7 +136,7 @@ async def update_crime(request):
     return updated_crime
 
 @app.delete("/crimes/{crime_id}")
-async def delete_crime(request):
+def delete_crime(request):
     crime_id = int(request.path_params.get("crime_id"))
     with SessionLocal() as db:
         success = crud.delete_crime(db, crime_id=crime_id)
