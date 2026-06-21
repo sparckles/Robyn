@@ -256,6 +256,16 @@ def test_non_numeric_exp_is_treated_as_invalid():
     assert dict(manager.loads(forged)) == {}
 
 
+@pytest.mark.parametrize("token", ["NaN", "Infinity", "-Infinity"])
+def test_non_finite_exp_is_treated_as_invalid(token):
+    # json.loads accepts NaN/Infinity as floats, and a plain ``exp < now``
+    # comparison never expires them — so a non-finite exp must be rejected
+    # rather than trusted as a never-expiring session.
+    manager = SessionManager("k")
+    forged = manager._signer.sign(('{"d":{"a":1},"exp":%s}' % token).encode("utf-8"))
+    assert dict(manager.loads(forged)) == {}
+
+
 # --- request.session attribute (real Rust Request) -------------------------
 
 

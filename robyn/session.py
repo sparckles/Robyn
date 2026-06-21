@@ -30,6 +30,7 @@ import hashlib
 import hmac
 import json
 import logging
+import math
 import time
 from collections.abc import MutableMapping
 from typing import Any, Optional
@@ -217,9 +218,11 @@ class SessionManager:
         if not isinstance(envelope, dict) or not isinstance(envelope.get("d"), dict):
             return Session()
         exp = envelope.get("exp")
-        # exp must be numeric; a non-numeric value (corrupt/forged-but-unsigned
-        # payload that somehow parsed) is treated as invalid rather than raising.
-        if exp is not None and (not isinstance(exp, (int, float)) or isinstance(exp, bool) or exp < time.time()):
+        # exp must be a finite number. A non-numeric value, a bool, or a
+        # non-finite float (NaN/Infinity — which json.loads accepts and which
+        # slip past a plain ``exp < now`` comparison) is treated as invalid
+        # rather than raising or being trusted as a never-expiring session.
+        if exp is not None and (not isinstance(exp, (int, float)) or isinstance(exp, bool) or not math.isfinite(exp) or exp < time.time()):
             return Session()
         return Session(envelope["d"])
 
