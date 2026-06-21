@@ -1,4 +1,4 @@
-from robyn.robyn import Headers
+from robyn.robyn import Headers, QueryParams
 
 
 def test_to_dict_returns_flat_dict():
@@ -30,3 +30,50 @@ def test_to_dict_supports_get_with_default():
 def test_to_dict_empty_headers():
     headers = Headers(None)
     assert headers.to_dict() == {}
+
+
+# --- dict-like accessors (#1192) -------------------------------------------
+
+
+def test_headers_keys_values_items():
+    headers = Headers({"Content-Type": "application/json", "Accept": "text/html"})
+
+    assert sorted(headers.keys()) == ["accept", "content-type"]
+    assert sorted(headers.values()) == ["application/json", "text/html"]
+    assert sorted(headers.items()) == [
+        ("accept", "text/html"),
+        ("content-type", "application/json"),
+    ]
+
+
+def test_headers_items_use_last_value():
+    headers = Headers({"X-Trace": ["a", "b"]})
+    # keys()/values()/items() collapse to the last value, like get()
+    assert headers.get("X-Trace") == "b"
+    assert headers.items() == [("x-trace", "b")]
+    assert headers.values() == ["b"]
+
+
+def test_headers_multi_items_preserves_duplicates():
+    headers = Headers({"X-Trace": ["a", "b"]})
+    assert sorted(headers.multi_items()) == [("x-trace", "a"), ("x-trace", "b")]
+
+
+def test_query_params_keys_values_items():
+    params = QueryParams()
+    params.set("q", "robyn")
+    params.set("page", "1")
+
+    assert sorted(params.keys()) == ["page", "q"]
+    assert sorted(params.values()) == ["1", "robyn"]
+    assert sorted(params.items()) == [("page", "1"), ("q", "robyn")]
+
+
+def test_query_params_multi_items_preserves_duplicates():
+    params = QueryParams()
+    params.set("tag", "a")
+    params.set("tag", "b")
+
+    # items() collapses to the last value; multi_items() keeps every value
+    assert params.items() == [("tag", "b")]
+    assert sorted(params.multi_items()) == [("tag", "a"), ("tag", "b")]

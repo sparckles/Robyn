@@ -170,6 +170,36 @@ class QueryParams:
         """
         pass
 
+    def keys(self) -> list[str]:
+        """
+        Returns:
+            A list of all query parameter names.
+        """
+        pass
+
+    def values(self) -> list[str]:
+        """
+        Returns:
+            The last value of each query parameter (consistent with ``get``).
+        """
+        pass
+
+    def items(self) -> list[tuple[str, str]]:
+        """
+        Returns:
+            ``(key, value)`` pairs using the last value of each key (consistent
+            with ``get``), one pair per key.
+        """
+        pass
+
+    def multi_items(self) -> list[tuple[str, str]]:
+        """
+        Returns:
+            ``(key, value)`` pairs for every value, preserving duplicate keys
+            (e.g. ``?tag=a&tag=b`` -> ``[("tag", "a"), ("tag", "b")]``).
+        """
+        pass
+
     def __contains__(self, key: str) -> bool:
         pass
 
@@ -339,6 +369,36 @@ class Headers:
 
         Returns:
             dict[str, str]: All present headers as a flat dictionary.
+        """
+        pass
+
+    def keys(self) -> list[str]:
+        """
+        Returns:
+            A list of all header names.
+        """
+        pass
+
+    def values(self) -> list[str]:
+        """
+        Returns:
+            The last value of each header (consistent with ``get``).
+        """
+        pass
+
+    def items(self) -> list[tuple[str, str]]:
+        """
+        Returns:
+            ``(name, value)`` pairs using the last value of each header
+            (consistent with ``get``), one pair per header name.
+        """
+        pass
+
+    def multi_items(self) -> list[tuple[str, str]]:
+        """
+        Returns:
+            ``(name, value)`` pairs for every value, preserving headers that
+            appear more than once.
         """
         pass
 
