@@ -1,7 +1,9 @@
 import asyncio
 import mimetypes
 import os
-from typing import AsyncGenerator, Generator
+import threading
+import weakref
+from typing import AsyncGenerator, Generator, Optional, Union
 
 from robyn.robyn import Headers, Response
 
@@ -63,13 +65,57 @@ def serve_file(file_path: str, file_name: str | None = None) -> FileResponse:
 
 
 class AsyncGeneratorWrapper:
-    """Optimized true-streaming wrapper for async generators"""
+    """Drive an async generator through Robyn's synchronous streaming protocol.
 
-    def __init__(self, async_gen: AsyncGenerator[str, None]):
-        self.async_gen = async_gen
-        self._loop = None
-        self._iterator = None
+    The generator is driven on the event loop that was running when the
+    ``StreamingResponse`` was constructed — i.e. the handler's loop. That keeps
+    any async resources created in the handler (DB sessions, HTTP clients) on
+    the loop they are bound to, so ``await``-ing them inside the generator works
+    instead of raising "attached to a different loop" (#1219). When constructed
+    outside an async context (a sync handler), a dedicated background loop is
+    used instead.
+
+    Errors raised by the generator are propagated (not swallowed), so a failing
+    stream surfaces the real traceback in the server logs rather than silently
+    truncating.
+    """
+
+    def __init__(self, async_gen: AsyncGenerator[Union[str, bytes], None]):
+        self._async_gen = async_gen
+        self._iterator: Optional[AsyncGenerator] = None
         self._exhausted = False
+        self._owns_loop = False
+        self._thread: Optional[threading.Thread] = None
+        self._finalizer: Optional[weakref.finalize] = None
+        try:
+            # Constructed inside an async handler -> reuse its running loop.
+            self._loop = asyncio.get_running_loop()
+        except RuntimeError:
+            # Constructed in a sync handler -> drive on a dedicated background
+            # loop. The thread target and finalizer must NOT capture ``self``, or
+            # the running thread would keep the wrapper alive forever and the
+            # finalizer could never fire.
+            self._loop = asyncio.new_event_loop()
+            self._owns_loop = True
+            self._thread = threading.Thread(target=self._run_loop, args=(self._loop,), daemon=True)
+            self._thread.start()
+            # Guarantee the background loop is stopped even if iteration ends
+            # early (client disconnect, unsupported chunk type) and _finish() is
+            # never reached — otherwise the daemon loop thread would leak.
+            self._finalizer = weakref.finalize(self, self._stop_loop, self._loop)
+
+    @staticmethod
+    def _run_loop(loop):
+        asyncio.set_event_loop(loop)
+        try:
+            loop.run_forever()
+        finally:
+            loop.close()
+
+    @staticmethod
+    def _stop_loop(loop):
+        if not loop.is_closed():
+            loop.call_soon_threadsafe(loop.stop)
 
     def __iter__(self):
         return self
@@ -78,53 +124,35 @@ class AsyncGeneratorWrapper:
         if self._exhausted:
             raise StopIteration
 
-        # Initialize the loop and iterator only once
         if self._iterator is None:
-            self._init_async_iterator()
+            self._iterator = self._async_gen.__aiter__()
 
+        # Schedule one step on the owning loop and block until it yields a value.
+        # run_coroutine_threadsafe is safe to call from the worker thread Robyn
+        # drives the stream on, and works whether or not we own the loop.
+        future = asyncio.run_coroutine_threadsafe(self._iterator.__anext__(), self._loop)
         try:
-            # Get the next value from the async generator
-            # This is the key optimization - we don't buffer, we get one value at a time
-            return self._get_next_value()
-        except StopIteration:
-            self._exhausted = True
+            return future.result()
+        except StopAsyncIteration:
+            self._finish()
+            raise StopIteration
+        except BaseException:
+            # Surface real errors instead of silently ending the stream.
+            self._finish()
             raise
 
-    def _init_async_iterator(self):
-        """Initialize the async iterator with proper loop handling"""
-        try:
-            # Try to get the running event loop
-            self._loop = asyncio.get_running_loop()
-        except RuntimeError:
-            # No running loop, create a new one
-            self._loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(self._loop)
-
-        # Create the async iterator
-        self._iterator = self.async_gen.__aiter__()
-
-    def _get_next_value(self):
-        """Get the next value from async generator without buffering"""
-        try:
-            # Create a coroutine to get the next value
-            async def get_next():
-                return await self._iterator.__anext__()
-
-            # Run the coroutine to get the next value
-            return self._loop.run_until_complete(get_next())
-        except StopAsyncIteration:
-            # Convert StopAsyncIteration to StopIteration for sync generator protocol
-            raise StopIteration
-        except Exception as e:
-            # Log error and stop iteration
-            print(f"Error in async generator: {e}")
-            raise StopIteration
+    def _finish(self):
+        self._exhausted = True
+        if self._finalizer is not None:
+            # Stops the background loop now; idempotent and also runs on GC if
+            # the stream is dropped before exhaustion.
+            self._finalizer()
 
 
 class StreamingResponse:
     def __init__(
         self,
-        content: Generator[str, None, None] | AsyncGenerator[str, None],
+        content: Generator[str | bytes, None, None] | AsyncGenerator[str | bytes, None],
         status_code: int | None = None,
         headers: Headers | None = None,
         media_type: str = "text/event-stream",
@@ -149,7 +177,7 @@ class StreamingResponse:
 
 
 def SSEResponse(
-    content: Generator[str, None, None] | AsyncGenerator[str, None],
+    content: Generator[str | bytes, None, None] | AsyncGenerator[str | bytes, None],
     status_code: int | None = None,
     headers: Headers | None = None,
 ) -> StreamingResponse:

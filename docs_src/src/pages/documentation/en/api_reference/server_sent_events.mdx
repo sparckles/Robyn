@@ -189,6 +189,68 @@ async def stream_api_events(request):
 
 ---
 
+## Streaming raw bytes (binary data & file downloads)
+
+Not everything Batman streams is an SSE event. To stream **arbitrary bytes** — a large file, a generated archive, an `application/octet-stream` body — he uses `StreamingResponse` directly and yields chunks, without loading the whole payload into memory. Each chunk may be `bytes` (sent as-is) or `str` (UTF-8 encoded).
+
+<Row>
+<Col>
+A sync generator yielding `bytes` chunks, served as a binary download:
+</Col>
+<Col sticky>
+<CodeGroup title="Request" tag="GET" label="/download">
+
+```python
+from robyn import Robyn, StreamingResponse, Headers
+
+app = Robyn(__file__)
+
+@app.get("/download")
+def download(request):
+    def file_chunks():
+        with open("large_file.bin", "rb") as f:
+            while chunk := f.read(8192):
+                yield chunk  # each chunk is `bytes`
+
+    return StreamingResponse(
+        file_chunks(),
+        media_type="application/octet-stream",
+        headers=Headers({
+            "Content-Type": "application/octet-stream",
+            "Content-Disposition": "attachment; filename=large_file.bin",
+        }),
+    )
+```
+
+</CodeGroup>
+</Col>
+</Row>
+
+<Row>
+<Col>
+`StreamingResponse` accepts both sync and async generators. When you use an **async generator**, it runs on the same event loop as your handler, so you can safely `await` async resources — an async database session, an HTTP client — **inside** the generator:
+</Col>
+<Col sticky>
+<CodeGroup title="Request" tag="GET" label="/export">
+
+```python
+@app.get("/export")
+async def export(request):
+    async def rows():
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(select(Record))  # await works here
+            for row in result.scalars():
+                yield f"{row.id},{row.name}\n".encode()
+
+    return StreamingResponse(rows(), media_type="text/csv")
+```
+
+</CodeGroup>
+</Col>
+</Row>
+
+---
+
 ## What's next?
 
 Batman has mastered Server-Sent Events and can now stream real-time updates to his crime dashboard. While SSE is perfect for one-way communication from server to client, Batman realizes he needs bidirectional communication for more interactive features like real-time chat with his allies.
