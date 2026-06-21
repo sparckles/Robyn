@@ -31,6 +31,10 @@ jobs:
       run: |
         uv pip install ruff isort black
     - name: Run linters
+      # Invoke the tools directly rather than via `uv run`, which would sync the
+      # project and compile the Rust extension (maturin -> cargo) just to lint
+      # pure-Python source. That build is unnecessary for static analysis and
+      # makes linting fail on transient crates.io network errors.
       run: |
-        uv run ruff check .
-        uv run isort --check-only --diff .
+        ruff check .
+        isort --check-only --diff .
