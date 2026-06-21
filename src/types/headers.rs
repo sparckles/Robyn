@@ -94,6 +94,52 @@ impl Headers {
         dict.into()
     }
 
+    pub fn to_dict(&self, py: Python) -> Py<PyDict> {
+        // return as a flat dict {key: value}; when a header appears multiple
+        // times its values are joined with ", " (per RFC 7230), mirroring the
+        // ergonomics of QueryParams.to_dict so callers can use `.get(key, default)`.
+        let dict = PyDict::new(py);
+        for iter in self.headers.iter() {
+            let (key, values) = iter.pair();
+            dict.set_item(key, values.join(", ")).unwrap();
+        }
+        dict.into()
+    }
+
+    pub fn keys(&self, py: Python) -> Py<PyList> {
+        let keys: Vec<String> = self.headers.iter().map(|e| e.key().clone()).collect();
+        PyList::new(py, keys).expect("keys failed").into()
+    }
+
+    pub fn values(&self, py: Python) -> Py<PyList> {
+        // last value per header, consistent with get()
+        let values: Vec<String> = self
+            .headers
+            .iter()
+            .filter_map(|e| e.value().last().cloned())
+            .collect();
+        PyList::new(py, values).expect("values failed").into()
+    }
+
+    pub fn items(&self) -> Vec<(String, String)> {
+        // (name, last value) pairs, consistent with get()
+        self.headers
+            .iter()
+            .filter_map(|e| e.value().last().map(|v| (e.key().clone(), v.clone())))
+            .collect()
+    }
+
+    pub fn multi_items(&self) -> Vec<(String, String)> {
+        // (name, value) for every value, preserving duplicate header names
+        let mut items = Vec::new();
+        for entry in self.headers.iter() {
+            for value in entry.value() {
+                items.push((entry.key().clone(), value.clone()));
+            }
+        }
+        items
+    }
+
     pub fn contains(&self, key: String) -> bool {
         self.headers.contains_key(&key.to_lowercase())
     }

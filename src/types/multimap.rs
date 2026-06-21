@@ -51,6 +51,37 @@ impl QueryParams {
         self.queries.get(&key).cloned()
     }
 
+    pub fn keys(&self) -> Vec<String> {
+        self.queries.keys().cloned().collect()
+    }
+
+    pub fn values(&self) -> Vec<String> {
+        // last value per key, consistent with get()
+        self.queries
+            .values()
+            .filter_map(|values| values.last().cloned())
+            .collect()
+    }
+
+    pub fn items(&self) -> Vec<(String, String)> {
+        // (key, last value) pairs, consistent with get()
+        self.queries
+            .iter()
+            .filter_map(|(key, values)| values.last().map(|v| (key.clone(), v.clone())))
+            .collect()
+    }
+
+    pub fn multi_items(&self) -> Vec<(String, String)> {
+        // (key, value) for every value, preserving duplicate keys
+        let mut items = Vec::new();
+        for (key, values) in self.queries.iter() {
+            for value in values {
+                items.push((key.clone(), value.clone()));
+            }
+        }
+        items
+    }
+
     pub fn extend(&mut self, other: &mut Self) {
         for (key, values) in other.queries.iter_mut() {
             for value in values.iter() {
