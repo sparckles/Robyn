@@ -154,6 +154,18 @@ def echo_websocket_on_close(websocket):
     return ""
 
 
+# --- WebSocket binary echo endpoint (#1148) ---
+@app.websocket("/web_socket_binary")
+async def binary_websocket_endpoint(websocket):
+    try:
+        while True:
+            data = await websocket.receive_bytes()
+            # Echo the raw bytes straight back as a binary frame.
+            await websocket.send_bytes(data)
+    except WebSocketDisconnect:
+        pass
+
+
 # --- WebSocket with empty returns ---
 @app.websocket("/web_socket_empty_returns")
 async def empty_websocket_endpoint(websocket):

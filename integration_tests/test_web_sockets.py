@@ -1,7 +1,7 @@
 import json
 
 import pytest
-from websocket import create_connection
+from websocket import ABNF, create_connection
 
 BASE_URL = "ws://127.0.0.1:8080"
 
@@ -103,3 +103,17 @@ def test_websocket_empty_returns(session):
     # We can verify this by closing the connection gracefully
     ws.close()
     # If we got here without exceptions, the test passed
+
+
+def test_websocket_binary_echo(session):
+    """Binary frames reach the handler as raw bytes and can be echoed back as a
+    binary frame, including arbitrary non-UTF-8 payloads (#1148)."""
+    ws = create_connection(f"{BASE_URL}/web_socket_binary")
+    try:
+        payload = b"\x00\x01\x02\xff\xfe robyn binary \x80\x81"
+        ws.send_binary(payload)
+        opcode, data = ws.recv_data()
+        assert opcode == ABNF.OPCODE_BINARY
+        assert data == payload
+    finally:
+        ws.close()

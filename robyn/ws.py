@@ -33,9 +33,9 @@ class WebSocketAdapter:
         self._connector = websocket_connector
         self._channel = channel
 
-    async def receive_text(self) -> str:
-        """Receive the next text message. Blocks until a message arrives.
-        Raises WebSocketDisconnect when the connection is closed."""
+    async def _receive(self):
+        """Receive the next raw message — ``str`` for text frames, ``bytes`` for
+        binary frames. Raises WebSocketDisconnect when the connection is closed."""
         if self._channel is None:
             raise WebSocketDisconnect(reason="No message channel available")
         result = await self._channel.receive()
@@ -43,32 +43,43 @@ class WebSocketAdapter:
             raise WebSocketDisconnect()
         return result
 
+    async def receive_text(self) -> str:
+        """Receive the next message as text. Blocks until a message arrives.
+        A binary frame is decoded as UTF-8. Raises WebSocketDisconnect when the
+        connection is closed."""
+        result = await self._receive()
+        return result if isinstance(result, str) else bytes(result).decode("utf-8")
+
     async def receive_bytes(self) -> bytes:
-        """Receive binary data (decoded from text)."""
-        text = await self.receive_text()
-        return text.encode("utf-8")
+        """Receive the next message as raw bytes. A text frame is encoded as
+        UTF-8. Raises WebSocketDisconnect when the connection is closed."""
+        result = await self._receive()
+        return result if isinstance(result, (bytes, bytearray)) else result.encode("utf-8")
 
     async def receive_json(self):
-        """Receive and decode JSON data.
+        """Receive and decode JSON data (from a text or binary frame).
         Raises WebSocketDisconnect when the connection is closed."""
-        text = await self.receive_text()
-        return orjson.loads(text)
+        return orjson.loads(await self._receive())
 
     async def send_text(self, data: str):
         """Send text data to this WebSocket client."""
         await self._connector.async_send_to(self._connector.id, data)
 
     async def send_bytes(self, data: bytes):
-        """Send binary data (as text) to this WebSocket client."""
-        await self._connector.async_send_to(self._connector.id, data.decode("utf-8"))
+        """Send a binary frame to this WebSocket client."""
+        await self._connector.async_send_bytes_to(self._connector.id, data)
 
     async def send_json(self, data):
         """Send JSON data to this WebSocket client."""
         await self.send_text(orjson.dumps(data).decode())
 
-    async def broadcast(self, data: str):
-        """Broadcast text data to all connected WebSocket clients on this endpoint."""
-        await self._connector.async_broadcast(data)
+    async def broadcast(self, data):
+        """Broadcast to all connected WebSocket clients on this endpoint.
+        ``bytes`` are sent as a binary frame, ``str`` as a text frame."""
+        if isinstance(data, (bytes, bytearray)):
+            await self._connector.async_broadcast_bytes(bytes(data))
+        else:
+            await self._connector.async_broadcast(data)
 
     async def close(self):
         """Close the WebSocket connection."""
