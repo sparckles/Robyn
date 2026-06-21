@@ -233,6 +233,10 @@ export const navigation = [
         title: 'Getting Started',
       },
       {
+        href: '/documentation/en/api_reference/cheatsheet',
+        title: 'Cheatsheet',
+      },
+      {
         href: '/documentation/en/api_reference/response-objects',
         title: 'Response Objects',
       },

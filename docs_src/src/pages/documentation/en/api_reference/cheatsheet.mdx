@@ -1,0 +1,334 @@
+export const description =
+  'A single-page Robyn cheatsheet: copy-paste snippets for the most common tasks — routing, requests, responses, middleware, auth, websockets, streaming, static files, templating, and scaling.'
+
+## Cheatsheet
+
+A quick, copy-paste reference for the most common Robyn tasks. Every snippet targets the current release. For the full story on any topic, follow the links in the navigation sidebar.
+
+### Install and run a minimal app
+
+```python {{ title: 'app.py' }}
+# pip install robyn
+from robyn import Robyn
+
+app = Robyn(__file__)
+
+@app.get("/")
+def index():
+    return "Hello, world"
+
+app.start(host="0.0.0.0", port=8080)  # host defaults to 127.0.0.1
+```
+
+### Routes for every HTTP method
+
+```python
+@app.get("/items")
+def list_items(): ...
+
+@app.post("/items")
+def create_item(): ...
+
+@app.put("/items/:id")
+def replace_item(): ...
+
+@app.patch("/items/:id")
+def update_item(): ...
+
+@app.delete("/items/:id")
+def delete_item(): ...
+
+# also available: @app.head, @app.options, @app.connect, @app.trace
+```
+
+### Path parameters (single, optional, catch-all)
+
+```python
+@app.get("/users/:id")
+def get_user(request):
+    return {"id": request.path_params["id"]}
+
+@app.get("/posts/:id/:slug?")            # optional trailing segment
+def get_post(request):
+    return request.path_params.get("slug", "")
+
+@app.get("/files/*path")                 # catch-all: matches the rest of the path
+def read_file(request):
+    return {"path": request.path_params["path"]}   # e.g. "img/2024/logo.png"
+```
+
+### Query parameters
+
+```python
+@app.get("/search")
+def search(request):
+    q = request.query_params.get("q", "")          # last value, with a default
+    tags = request.query_params.get_all("tags")    # every value -> list[str]
+    return {"q": q, "tags": tags}
+```
+
+### Read request data
+
+```python
+@app.post("/inspect")
+def inspect(request):
+    data = request.json()                  # parsed JSON body -> dict / list
+    raw = request.body                     # raw body (str | bytes)
+    form = request.form_data               # dict[str, str]
+    files = request.files                  # dict[str, bytes]
+    content_type = request.headers.get("Content-Type")
+    return {
+        "method": request.method,
+        "path": request.url.path,
+        "ip": request.ip_addr,
+    }
+```
+
+### Return responses
+
+```python
+from robyn import Response, status_codes
+
+@app.get("/text")
+def text():
+    return "plain text"
+
+@app.get("/json")
+def json_body():
+    return {"key": "value"}            # dict / list is serialized to JSON automatically
+
+@app.get("/custom")
+def custom():
+    return Response(
+        status_code=status_codes.HTTP_201_CREATED,
+        headers={"Content-Type": "text/plain"},
+        body="created",               # `description=` is also accepted (legacy alias)
+    )
+```
+
+### Redirect
+
+```python
+from robyn import Response
+
+@app.get("/old")
+def old():
+    return Response(status_code=307, headers={"Location": "/new"}, body="")
+```
+
+### Set a cookie
+
+```python
+from robyn import Response, Headers
+
+@app.get("/login")
+def login():
+    response = Response(status_code=200, headers=Headers({}), body="ok")
+    response.set_cookie(
+        key="session", value="abc123", max_age=3600,
+        path="/", http_only=True, secure=True, same_site="Strict",
+    )
+    return response
+```
+
+### Middleware (before / after request)
+
+```python
+@app.before_request()                  # global; pass a path for a per-route hook
+def add_trace(request):
+    request.headers.set("x-trace", "1")
+    return request
+
+@app.after_request("/")                # per-route; may take (request, response)
+def stamp(request, response):
+    response.headers.set("x-served", "robyn")
+    return response
+```
+
+### Authentication
+
+```python
+from robyn import Request
+from robyn.authentication import AuthenticationHandler, BearerGetter, Identity
+
+class Auth(AuthenticationHandler):
+    def authenticate(self, request: Request) -> Identity | None:
+        token = self.token_getter.get_token(request)   # reads "Bearer <token>"
+        if token == "valid":
+            return Identity(claims={"user": "bruce"})
+        return None
+
+app.configure_authentication(Auth(token_getter=BearerGetter()))
+
+@app.get("/me", auth_required=True)
+def me(request):
+    return request.identity.claims     # populated once authenticated
+```
+
+### SubRouters
+
+```python
+from robyn import SubRouter
+
+api = SubRouter(prefix="/api/v1")
+
+@api.get("/users")
+def list_users():
+    return {"users": []}
+
+app.include_router(api)                # routes mounted at /api/v1/users
+```
+
+### WebSockets
+
+```python
+@app.websocket("/ws")
+async def ws(websocket):
+    while True:
+        message = await websocket.receive_text()
+        await websocket.send_text(f"echo: {message}")   # also: send_json(obj)
+        await websocket.broadcast("to everyone")         # every client on /ws
+
+@ws.on_connect
+def on_connect(websocket):
+    return "Welcome!"
+
+@ws.on_close
+def on_close(websocket):
+    return "Goodbye"
+```
+
+### Streaming and Server-Sent Events
+
+```python
+from robyn import StreamingResponse, SSEResponse, SSEMessage
+
+@app.get("/sse")
+def sse(request):
+    def events():
+        for i in range(3):
+            yield SSEMessage(f"tick {i}", event="tick", id=str(i))
+    return SSEResponse(events())       # text/event-stream
+
+@app.get("/stream")
+def stream(request):
+    def chunks():
+        yield b"chunk-1"
+        yield b"chunk-2"
+    return StreamingResponse(chunks(), media_type="application/octet-stream")
+```
+
+### Static files
+
+```python
+from robyn import serve_file, serve_html
+
+app.serve_directory(
+    route="/static",
+    directory_path="./assets",
+    index_file="index.html",
+    show_files_listing=False,
+)
+
+@app.get("/download")
+def download():
+    return serve_file("./report.pdf", file_name="report.pdf")   # as an attachment
+
+@app.get("/page")
+def page():
+    return serve_html("./templates/index.html")
+```
+
+### Templating (Jinja2)
+
+```python
+from robyn.templating import JinjaTemplate
+
+template = JinjaTemplate("./templates")
+
+@app.get("/hello")
+def hello():
+    return template.render_template(template_name="hello.html", name="Bruce")
+```
+
+### Raise an HTTP error
+
+```python
+from robyn.exceptions import HTTPException     # note: robyn.exceptions, not robyn
+
+@app.get("/users/:id")
+def get_user(request):
+    if not request.path_params["id"].isdigit():
+        raise HTTPException(400, "id must be numeric")   # (status_code, detail)
+    return {"id": request.path_params["id"]}
+```
+
+### Const requests (computed once, cached in Rust)
+
+```python
+@app.get("/health", const=True)
+def health():
+    return {"status": "healthy"}
+```
+
+### Dependency injection
+
+```python
+app.inject_global(DB="global-db")      # available to every route
+app.inject(CACHE="router-cache")       # available to this router's routes
+
+@app.get("/data")
+def data(request, global_dependencies, router_dependencies):
+    return {
+        "db": global_dependencies["DB"],
+        "cache": router_dependencies["CACHE"],
+    }
+```
+
+### CORS
+
+```python
+from robyn import Robyn, ALLOW_CORS
+
+app = Robyn(__file__)
+ALLOW_CORS(app, origins=["http://localhost:3000"])   # or origins="*"
+```
+
+### OpenAPI / Swagger
+
+```python
+@app.get("/users", openapi_name="List Users", openapi_tags=["Users"])
+def list_users():
+    return {"users": []}
+
+# Swagger UI is served at /docs and the spec at /openapi.json
+```
+
+### Lifecycle events
+
+```python
+@app.startup_handler
+async def on_startup():
+    print("starting up")
+
+@app.shutdown_handler
+def on_shutdown():
+    print("shutting down")
+```
+
+### Scaling and CLI flags
+
+```bash
+python app.py --processes 4 --workers 2    # spread across cores / threads
+python app.py --fast                       # auto-tune processes, workers and log level
+python app.py --dev                        # auto-reload on change (single process)
+python app.py --log-level WARNING          # DEBUG / INFO / WARNING / ERROR
+```
+
+---
+
+## What's next?
+
+- [Getting Started](/documentation/en/api_reference/getting_started) — the guided introduction
+- [The Request Object](/documentation/en/api_reference/request_object) and [Response Objects](/documentation/en/api_reference/response-objects)
+- [Advanced Routing](/documentation/en/api_reference/advanced_routing) — path params, wildcards and ordering
