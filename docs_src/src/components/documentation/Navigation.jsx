@@ -233,6 +233,10 @@ export const navigation = [
         title: 'Getting Started',
       },
       {
+        href: '/documentation/en/api_reference/cheatsheet',
+        title: 'Cheatsheet',
+      },
+      {
         href: '/documentation/en/api_reference/response-objects',
         title: 'Response Objects',
       },
@@ -454,6 +458,7 @@ const translations = {
     titles: navigationTitles.en,
     links: {
       'Getting Started': 'Getting Started',
+      Cheatsheet: 'Cheatsheet',
       'Modeling Routes': 'Modeling Routes',
       'Authentication and Authorization': 'Authentication and Authorization',
       Middlewares: 'Middlewares',
@@ -505,6 +510,7 @@ const translations = {
     titles: navigationTitles.zh,
     links: {
       'Getting Started': '开始',
+      Cheatsheet: '速查表',
       'Modeling Routes': '路由建模',
       'Authentication and Authorization': '身份验证',
       'Middlewares': '身份验证中间件',
