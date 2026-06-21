@@ -746,10 +746,15 @@ def sync_multipart_file_save(request: Request):
 
     saved = {}
     for file_name, content in request.files.items():
-        destination = os.path.join(upload_dir, file_name)
+        # Never trust a client-supplied filename: strip any directory components
+        # so absolute paths or ".." segments can't escape upload_dir.
+        safe_name = os.path.basename(file_name)
+        if not safe_name or safe_name in (".", ".."):
+            continue
+        destination = os.path.join(upload_dir, safe_name)
         with open(destination, "wb") as saved_file:
             saved_file.write(content)
-        saved[file_name] = {"path": destination, "size": len(content)}
+        saved[safe_name] = {"path": destination, "size": len(content)}
 
     return saved
 
