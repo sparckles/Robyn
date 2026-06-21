@@ -129,7 +129,20 @@ fn create_python_stream(
                 let gen = generator.bind(py);
 
                 match gen.call_method0("__next__") {
-                    Ok(value) => value.extract::<String>().ok().map(|s| (s, generator)),
+                    Ok(value) => {
+                        // Accept both `bytes` (used as-is) and `str` (UTF-8 encoded)
+                        // chunks, so binary streaming works too (#1236).
+                        if let Ok(py_bytes) = value.downcast::<PyBytes>() {
+                            Some((py_bytes.as_bytes().to_vec(), generator))
+                        } else if let Ok(s) = value.extract::<String>() {
+                            Some((s.into_bytes(), generator))
+                        } else {
+                            log::error!(
+                                "StreamingResponse generator yielded a value that is neither str nor bytes; ending stream"
+                            );
+                            None
+                        }
+                    }
                     Err(e) => {
                         if !e.is_instance_of::<pyo3::exceptions::PyStopIteration>(py) {
                             log::error!("Generator error: {}", e);
@@ -141,7 +154,7 @@ fn create_python_stream(
         })
         .await
         {
-            Ok(Some((string_value, generator))) => Some((Ok(Bytes::from(string_value)), generator)),
+            Ok(Some((bytes_value, generator))) => Some((Ok(Bytes::from(bytes_value)), generator)),
             _ => None,
         }
     }))
