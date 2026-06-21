@@ -91,17 +91,40 @@ class Session(MutableMapping):
     A dict-like session object.
 
     Behaves like a normal ``dict`` (``session["k"] = v``, ``session.get("k")``,
-    ``del session["k"]``, ``in``, iteration, ``update``, ``pop`` ...). Any
-    mutation flips :attr:`modified`, which is what tells Robyn to re-write the
-    cookie after the handler returns.
+    ``del session["k"]``, ``in``, iteration, ``update``, ``pop`` ...).
+
+    Robyn re-writes the cookie after the handler only when the session changed.
+    Top-level mutations flip :attr:`modified` directly; *nested* mutations (e.g.
+    ``session["items"].append(x)``) are still caught because :meth:`is_modified`
+    also compares the current contents against a snapshot taken at load time. You
+    can also force a write by setting ``session.modified = True``.
     """
 
-    __slots__ = ("_data", "modified")
+    __slots__ = ("_data", "modified", "_snapshot")
 
     def __init__(self, data: Optional[dict] = None) -> None:
         self._data: dict = dict(data) if data else {}
-        #: True once the session has been mutated during this request.
+        #: True once the session has been explicitly mutated during this request.
         self.modified: bool = False
+        # Canonical snapshot of the loaded data, used to detect nested mutations
+        # that bypass __setitem__/__delitem__.
+        self._snapshot: Optional[str] = self._canonical()
+
+    def _canonical(self) -> Optional[str]:
+        """Order-independent JSON of the data, or None if it is not serializable."""
+        try:
+            return json.dumps(self._data, sort_keys=True, separators=(",", ":"))
+        except TypeError:
+            # Non-serializable content -> treat as changed so save() runs and
+            # surfaces a clear error rather than silently dropping the write.
+            return None
+
+    def is_modified(self) -> bool:
+        """True if the session changed this request (top-level or nested)."""
+        if self.modified:
+            return True
+        current = self._canonical()
+        return current is None or current != self._snapshot
 
     def __getitem__(self, key: str) -> Any:
         return self._data[key]
@@ -164,6 +187,10 @@ class SessionManager:
         self.secure = secure
         self.http_only = http_only
         self.same_site = _normalize_same_site(same_site)
+        # Browsers reject SameSite=None cookies that are not also Secure, which
+        # silently breaks the session. Fail loudly at configuration time instead.
+        if self.same_site == "None" and not self.secure:
+            raise ValueError("same_site='None' requires secure=True (browsers reject SameSite=None cookies without the Secure attribute)")
 
     # -- serialization ---------------------------------------------------
 
@@ -190,7 +217,9 @@ class SessionManager:
         if not isinstance(envelope, dict) or not isinstance(envelope.get("d"), dict):
             return Session()
         exp = envelope.get("exp")
-        if exp is not None and exp < time.time():
+        # exp must be numeric; a non-numeric value (corrupt/forged-but-unsigned
+        # payload that somehow parsed) is treated as invalid rather than raising.
+        if exp is not None and (not isinstance(exp, (int, float)) or isinstance(exp, bool) or exp < time.time()):
             return Session()
         return Session(envelope["d"])
 
@@ -204,8 +233,8 @@ class SessionManager:
         return self.loads(raw)
 
     def save(self, session: Session, response) -> None:
-        """Write ``session`` back onto ``response`` as a cookie, if it was modified."""
-        if not session.modified:
+        """Write ``session`` back onto ``response`` as a cookie, if it changed."""
+        if not session.is_modified():
             return
         if len(session) == 0:
             # Session was emptied/cleared -> expire the cookie in the browser.

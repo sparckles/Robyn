@@ -886,7 +886,14 @@ class BaseRobyn(ABC):
         :param http_only: hide the cookie from JavaScript (recommended).
         :param same_site: ``"Strict"``, ``"Lax"`` or ``"None"``.
         :returns: the configured :class:`SessionManager`.
+        :raises RuntimeError: if sessions are already configured on this app.
         """
+        if self.session_manager is not None:
+            raise RuntimeError(
+                "Sessions are already configured on this app; configure_sessions() may only be called once "
+                "(calling it again would register duplicate session middleware)."
+            )
+
         manager = SessionManager(
             secret_key,
             cookie_name=cookie_name,

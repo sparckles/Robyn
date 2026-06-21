@@ -200,12 +200,60 @@ def test_save_emptied_session_expires_cookie():
 
 @pytest.mark.parametrize("value,expected", [("lax", "Lax"), ("STRICT", "Strict"), ("none", "None")])
 def test_same_site_is_normalized(value, expected):
-    assert SessionManager("k", same_site=value).same_site == expected
+    # secure=True so the SameSite=None case is accepted (see guard below).
+    assert SessionManager("k", same_site=value, secure=True).same_site == expected
 
 
 def test_invalid_same_site_raises():
     with pytest.raises(ValueError):
         SessionManager("k", same_site="bogus")
+
+
+def test_same_site_none_requires_secure():
+    with pytest.raises(ValueError):
+        SessionManager("k", same_site="None")  # secure defaults to False
+    # Allowed when secure=True.
+    assert SessionManager("k", same_site="None", secure=True).same_site == "None"
+
+
+# --- change detection: nested mutations & exp guard ------------------------
+
+
+def test_unmodified_session_is_not_modified():
+    assert SessionManager("k").loads(SessionManager("k").dumps(Session({"a": 1}))).is_modified() is False
+
+
+def test_nested_mutation_is_detected():
+    session = Session({"items": [1]})
+    assert session.is_modified() is False
+    session["items"].append(2)  # bypasses __setitem__, modified flag stays False
+    assert session.modified is False
+    assert session.is_modified() is True
+
+
+def test_nested_mutation_triggers_save():
+    manager = SessionManager("k", cookie_name="robyn_session")
+    session = Session({"items": [1]})
+    session["items"].append(2)
+    response = _FakeResponse()
+    manager.save(session, response)
+    assert "robyn_session" in response.cookies
+    assert dict(manager.loads(response.cookies["robyn_session"][0])) == {"items": [1, 2]}
+
+
+def test_key_reorder_is_not_a_false_positive():
+    session = Session({"a": 1, "b": 2})
+    # Rebuilding the same data in a different order must not count as a change.
+    session._data = {"b": 2, "a": 1}
+    assert session.is_modified() is False
+
+
+def test_non_numeric_exp_is_treated_as_invalid():
+    import json
+
+    manager = SessionManager("k")
+    forged = manager._signer.sign(json.dumps({"d": {"a": 1}, "exp": "whenever"}).encode("utf-8"))
+    assert dict(manager.loads(forged)) == {}
 
 
 # --- request.session attribute (real Rust Request) -------------------------
