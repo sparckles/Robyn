@@ -3,7 +3,7 @@ pub mod registry;
 use crate::executors::web_socket_executors::execute_ws_function;
 use crate::types::function_info::FunctionInfo;
 use crate::types::multimap::QueryParams;
-use registry::{Close, SendMessageToAll, SendText};
+use registry::{Close, SendBinary, SendBinaryToAll, SendMessageToAll, SendText};
 
 use actix::prelude::*;
 use actix::{Actor, AsyncContext, StreamHandler};
@@ -24,26 +24,40 @@ use crate::runtime;
 use registry::{Register, WebSocketRegistry};
 use std::collections::HashMap;
 
+/// A single WebSocket payload — UTF-8 text or raw binary bytes.
+pub enum WsPayload {
+    Text(String),
+    Binary(Vec<u8>),
+}
+
 /// A Rust-backed channel receiver exposed to Python.
 /// Python handlers call `await channel.receive()` to get the next message.
-/// Returns the message string, or None when the connection is closed.
+/// Returns a `str` for text frames, `bytes` for binary frames, or None when
+/// the connection is closed.
 #[pyclass]
 pub struct WebSocketChannel {
-    receiver: Arc<tokio::sync::Mutex<mpsc::UnboundedReceiver<Option<String>>>>,
+    receiver: Arc<tokio::sync::Mutex<mpsc::UnboundedReceiver<Option<WsPayload>>>>,
 }
 
 #[pymethods]
 impl WebSocketChannel {
     /// Await the next message from the WebSocket.
-    /// Returns the message string, or None if the connection was closed.
+    /// Returns a `str` (text frame) or `bytes` (binary frame), or None if the
+    /// connection was closed.
     fn receive<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let receiver = self.receiver.clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             let mut rx = receiver.lock().await;
-            match rx.recv().await {
-                Some(Some(msg)) => Ok(Some(msg)),
-                Some(None) | None => Ok(None),
-            }
+            let next = rx.recv().await;
+            Python::with_gil(|py| match next {
+                Some(Some(WsPayload::Text(text))) => {
+                    Ok(Some(text.into_pyobject(py)?.into_any().unbind()))
+                }
+                Some(Some(WsPayload::Binary(bytes))) => Ok(Some(
+                    pyo3::types::PyBytes::new(py, &bytes).into_any().unbind(),
+                )),
+                Some(None) | None => Ok(None::<Py<PyAny>>),
+            })
         })
     }
 }
@@ -57,7 +71,7 @@ pub struct WebSocketConnector {
     pub registry_addr: Addr<WebSocketRegistry>,
     pub query_params: QueryParams,
     /// Sender side of the message channel (stays in the Actix actor).
-    pub message_sender: Option<mpsc::UnboundedSender<Option<String>>>,
+    pub message_sender: Option<mpsc::UnboundedSender<Option<WsPayload>>>,
     /// Receiver side exposed to Python via WebSocketChannel.
     pub message_channel: Option<Py<WebSocketChannel>>,
 }
@@ -73,7 +87,7 @@ impl Actor for WebSocketConnector {
             addr: addr.clone(),
         });
 
-        let (tx, rx) = mpsc::unbounded_channel::<Option<String>>();
+        let (tx, rx) = mpsc::unbounded_channel::<Option<WsPayload>>();
         self.message_sender = Some(tx);
         self.message_channel = Python::with_gil(|py| {
             Some(
@@ -138,6 +152,16 @@ impl Handler<SendText> for WebSocketConnector {
     }
 }
 
+impl Handler<SendBinary> for WebSocketConnector {
+    type Result = ();
+
+    fn handle(&mut self, msg: SendBinary, ctx: &mut Self::Context) {
+        if self.id == msg.recipient_id {
+            ctx.binary(msg.data);
+        }
+    }
+}
+
 /// Handler for ws::Message message
 impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebSocketConnector {
     fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
@@ -152,22 +176,15 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebSocketConnecto
             Ok(ws::Message::Text(text)) => {
                 debug!("Text message received {:?}", text);
                 if let Some(ref sender) = self.message_sender {
-                    let _ = sender.send(Some(text.to_string()));
+                    let _ = sender.send(Some(WsPayload::Text(text.to_string())));
                 }
             }
             Ok(ws::Message::Binary(bin)) => {
+                debug!("Binary message received ({} bytes)", bin.len());
                 if let Some(ref sender) = self.message_sender {
-                    match String::from_utf8(bin.to_vec()) {
-                        Ok(text) => {
-                            let _ = sender.send(Some(text));
-                        }
-                        Err(_) => {
-                            debug!("Received non-UTF-8 binary WebSocket frame, echoing back");
-                            ctx.binary(bin);
-                        }
-                    }
-                } else {
-                    ctx.binary(bin);
+                    // Forward the raw bytes to the Python handler as-is, so
+                    // arbitrary (non-UTF-8) binary frames are delivered intact.
+                    let _ = sender.send(Some(WsPayload::Binary(bin.to_vec())));
                 }
             }
             Ok(ws::Message::Close(_close_reason)) => {
@@ -255,6 +272,84 @@ impl WebSocketConnector {
             match registry.try_send(SendMessageToAll { message, sender_id }) {
                 Ok(_) => log::debug!("Broadcast sent successfully"),
                 Err(e) => log::error!("Failed to broadcast message: {}", e),
+            }
+            Ok(())
+        })?;
+
+        Ok(awaitable.into_pyobject(py)?.into_any().into())
+    }
+
+    pub fn sync_send_bytes_to(&self, recipient_id: String, data: Vec<u8>) {
+        let recipient_id = match Uuid::parse_str(&recipient_id) {
+            Ok(id) => id,
+            Err(e) => {
+                log::error!("Invalid recipient_id '{}': {}", recipient_id, e);
+                return;
+            }
+        };
+
+        match self.registry_addr.try_send(SendBinary {
+            data,
+            sender_id: self.id,
+            recipient_id,
+        }) {
+            Ok(_) => log::debug!("Binary message sent successfully"),
+            Err(e) => log::error!("Failed to send binary message: {}", e),
+        }
+    }
+
+    pub fn async_send_bytes_to(
+        &self,
+        py: Python,
+        recipient_id: String,
+        data: Vec<u8>,
+    ) -> PyResult<Py<PyAny>> {
+        let registry = self.registry_addr.clone();
+        let recipient_id = match Uuid::parse_str(&recipient_id) {
+            Ok(id) => id,
+            Err(e) => {
+                return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                    "Invalid recipient_id '{}': {}",
+                    recipient_id, e
+                )));
+            }
+        };
+        let sender_id = self.id;
+
+        let awaitable = runtime::future_into_py(py, async move {
+            match registry.try_send(SendBinary {
+                data,
+                sender_id,
+                recipient_id,
+            }) {
+                Ok(_) => log::debug!("Binary message sent successfully"),
+                Err(e) => log::error!("Failed to send binary message: {}", e),
+            }
+            Ok(())
+        })?;
+
+        Ok(awaitable.into_pyobject(py)?.into_any().into())
+    }
+
+    pub fn sync_broadcast_bytes(&self, data: Vec<u8>) {
+        let registry = self.registry_addr.clone();
+        match registry.try_send(SendBinaryToAll {
+            data,
+            sender_id: self.id,
+        }) {
+            Ok(_) => log::debug!("Binary broadcast sent successfully"),
+            Err(e) => log::error!("Failed to broadcast binary message: {}", e),
+        }
+    }
+
+    pub fn async_broadcast_bytes(&self, py: Python, data: Vec<u8>) -> PyResult<Py<PyAny>> {
+        let registry = self.registry_addr.clone();
+        let sender_id = self.id;
+
+        let awaitable = runtime::future_into_py(py, async move {
+            match registry.try_send(SendBinaryToAll { data, sender_id }) {
+                Ok(_) => log::debug!("Binary broadcast sent successfully"),
+                Err(e) => log::error!("Failed to broadcast binary message: {}", e),
             }
             Ok(())
         })?;

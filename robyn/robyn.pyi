@@ -584,6 +584,40 @@ class WebSocketConnector:
             message (str): The message to send
         """
         pass
+    async def async_send_bytes_to(self, recipient_id: str, data: bytes) -> None:
+        """
+        Sends a binary frame to a specific client.
+
+        Args:
+            recipient_id (str): The id of the recipient
+            data (bytes): The binary payload to send
+        """
+        pass
+    def sync_send_bytes_to(self, recipient_id: str, data: bytes) -> None:
+        """
+        Sends a binary frame to a specific client.
+
+        Args:
+            recipient_id (str): The id of the recipient
+            data (bytes): The binary payload to send
+        """
+        pass
+    async def async_broadcast_bytes(self, data: bytes) -> None:
+        """
+        Broadcasts a binary frame to all clients.
+
+        Args:
+            data (bytes): The binary payload to broadcast
+        """
+        pass
+    def sync_broadcast_bytes(self, data: bytes) -> None:
+        """
+        Broadcasts a binary frame to all clients.
+
+        Args:
+            data (bytes): The binary payload to broadcast
+        """
+        pass
     def close(self) -> None:
         """
         Closes the connection.

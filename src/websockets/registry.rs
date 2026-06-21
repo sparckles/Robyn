@@ -99,6 +99,55 @@ impl Handler<SendMessageToAll> for WebSocketRegistry {
     }
 }
 
+// Send binary data to a specific client
+pub struct SendBinary {
+    pub recipient_id: Uuid,
+    pub data: Vec<u8>,
+    pub sender_id: Uuid,
+}
+
+impl Message for SendBinary {
+    type Result = ();
+}
+
+impl Handler<SendBinary> for WebSocketRegistry {
+    type Result = ();
+
+    fn handle(&mut self, msg: SendBinary, _ctx: &mut Self::Context) {
+        let recipient_id = msg.recipient_id;
+
+        if let Some(client_addr) = self.clients.get(&recipient_id) {
+            client_addr.do_send(msg);
+        } else {
+            log::warn!("No client found for id: {}", recipient_id);
+        }
+    }
+}
+
+// Broadcast binary data to every connected client
+pub struct SendBinaryToAll {
+    pub data: Vec<u8>,
+    pub sender_id: Uuid,
+}
+
+impl Message for SendBinaryToAll {
+    type Result = ();
+}
+
+impl Handler<SendBinaryToAll> for WebSocketRegistry {
+    type Result = ();
+
+    fn handle(&mut self, msg: SendBinaryToAll, _ctx: &mut Self::Context) {
+        for (id, client) in &self.clients {
+            client.do_send(SendBinary {
+                recipient_id: *id,
+                data: msg.data.clone(),
+                sender_id: msg.sender_id,
+            });
+        }
+    }
+}
+
 pub struct Close {
     pub id: Uuid,
 }
