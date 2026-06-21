@@ -1,0 +1,85 @@
+export const description =
+  'On this page, you’ll learn how to store per-user state across requests using Robyn’s signed-cookie sessions.'
+
+Once the Gotham Police Department could authenticate, Batman wanted each officer's dashboard to remember small bits of state between requests — the theme they picked, a CSRF token, the last case they viewed — without standing up a database for it. So he reached for Robyn's sessions.
+
+## Sessions
+
+Robyn provides signed-cookie sessions. The session is a small dictionary that is stored on the client inside a tamper-proof cookie (an HMAC-SHA256 signature over the data). No server-side store is required, and the signature means a client cannot modify the contents without invalidating it.
+
+<b>
+  Note: the session is signed, not encrypted. The data is encoded, so the client can read it — never store secrets (passwords, raw tokens) in the session.
+</b>
+
+Enable sessions once on your app with `configure_sessions`, then read or write the session inside any handler through `request.session` — exactly like `request.identity` for authentication.
+
+<Row>
+<Col>
+Call `configure_sessions` with a `secret_key`. Keep this key secret and stable across restarts and across all your worker processes — it is what signs and verifies every session cookie.
+</Col>
+  <Col sticky>
+    <CodeGroup title="Setup">
+
+    ```python
+    from robyn import Robyn
+
+    app = Robyn(__file__)
+
+    app.configure_sessions(secret_key="keep-me-secret")
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+<Row>
+<Col>
+Inside a handler, `request.session` is a dictionary-like `Session` object. Read it like a `dict`, and mutate it like a `dict`. Robyn writes the updated session back to the response cookie automatically — but only when the session was actually modified, so read-only requests do not send a `Set-Cookie`.
+</Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/visits">
+
+    ```python
+    @app.get("/visits")
+    def visits(request):
+        request.session["count"] = request.session.get("count", 0) + 1
+        return f"You have visited {request.session['count']} times"
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+<Row>
+<Col>
+To log a user out, or otherwise drop their state, clear the session. Emptying the session expires the cookie in the browser.
+</Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="POST" label="/logout">
+
+    ```python
+    @app.post("/logout")
+    def logout(request):
+        request.session.clear()
+        return "logged out"
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+## Configuration
+
+`configure_sessions` accepts the following keyword arguments to control the cookie:
+
+- `secret_key` (required) — key used to sign the cookie.
+- `cookie_name` — name of the session cookie. Defaults to `"session"`.
+- `max_age` — session lifetime in seconds, also used as the cookie `Max-Age`. Defaults to 14 days. Pass `None` for a cookie that lasts only for the browser session.
+- `path` — cookie `Path`. Defaults to `"/"`.
+- `domain` — cookie `Domain`. Defaults to `None`.
+- `secure` — only send the cookie over HTTPS. Defaults to `False`; set it to `True` in production.
+- `http_only` — hide the cookie from JavaScript. Defaults to `True`.
+- `same_site` — `"Strict"`, `"Lax"`, or `"None"`. Defaults to `"Lax"`.
+
+## How it works
+
+Under the hood, `configure_sessions` registers a global `before_request` middleware that loads and verifies the cookie into a `Session` and attaches it to `request.session`, and a global `after_request` middleware that signs and writes the session back to the response when it has been modified. Because `request.session` is the same object across the `before_request`, handler, and `after_request` phases, your in-handler changes are exactly what gets written back.
+
+If you want explicit control instead of the automatic middleware, you can use the `SessionManager` directly with `manager.load(request)` and `manager.save(session, response)`.

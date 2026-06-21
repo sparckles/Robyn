@@ -253,6 +253,10 @@ export const navigation = [
         title: 'Authentication',
       },
       {
+        href: '/documentation/en/api_reference/sessions',
+        title: 'Sessions',
+      },
+      {
         href: '/documentation/en/api_reference/const_requests',
         title: 'Const Requests and Multi Core Scaling',
       },

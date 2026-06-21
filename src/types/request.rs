@@ -27,6 +27,10 @@ pub struct Request {
     pub identity: Option<Identity>,
     pub form_data: Option<HashMap<String, String>>,
     pub files: Option<HashMap<String, Vec<u8>>>,
+    // A Python session object (robyn.session.Session) shared by reference across
+    // the before_request / handler / after_request phases, so in-handler mutations
+    // are visible when the cookie is written back. Set by configure_sessions().
+    pub session: Option<Py<PyAny>>,
 }
 
 impl<'py> IntoPyObject<'py> for Request {
@@ -81,6 +85,7 @@ impl<'py> IntoPyObject<'py> for Request {
             identity: self.identity,
             form_data,
             files,
+            session: self.session,
         };
         Ok(Py::new(py, request)?.into_bound(py).into_any())
     }
@@ -189,6 +194,7 @@ impl Request {
             identity: None,
             form_data: Some(form_data),
             files: Some(files),
+            session: None,
         })
     }
 }
@@ -216,11 +222,14 @@ pub struct PyRequest {
     pub form_data: Py<PyDict>,
     #[pyo3(get, set)]
     pub files: Py<PyDict>,
+    #[pyo3(get, set)]
+    pub session: Option<Py<PyAny>>,
 }
 
 #[pymethods]
 impl PyRequest {
     #[new]
+    #[pyo3(signature = (query_params, headers, path_params, body, method, url, form_data, files, identity, ip_addr, session=None))]
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         query_params: QueryParams,
@@ -233,6 +242,7 @@ impl PyRequest {
         files: Py<PyDict>,
         identity: Option<Identity>,
         ip_addr: Option<String>,
+        session: Option<Py<PyAny>>,
     ) -> Self {
         Self {
             query_params,
@@ -245,6 +255,7 @@ impl PyRequest {
             form_data,
             files,
             ip_addr,
+            session,
         }
     }
 

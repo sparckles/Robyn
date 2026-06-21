@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Callable, overload
+from typing import Any, Callable, overload
 
 def get_version() -> str:
     pass
@@ -378,6 +378,8 @@ class Request:
         files (dict[str, bytes]): The files of the request. e.g. {"file": b"file"}
         ip_addr (str | None): The IP Address of the client
         identity (Identity | None): The identity of the client
+        session (Any | None): The session for the request (a robyn.session.Session),
+            populated when app.configure_sessions(...) is enabled.
     """
 
     query_params: QueryParams
@@ -390,6 +392,7 @@ class Request:
     files: dict[str, bytes]
     ip_addr: str | None
     identity: Identity | None
+    session: Any | None
 
     def json(self) -> dict | list:
         """
