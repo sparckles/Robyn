@@ -57,3 +57,14 @@ def test_reload_forwards_extra_flags_and_strips_dev(tmp_path):
     )
 
     assert command == [sys.executable, app_path, "--processes", "4", "--log-level", "WARN"]
+
+
+def test_reload_drops_only_the_first_app_token(tmp_path):
+    """Only the first app-file token is stripped; a later arg resolving to the same path survives."""
+    app = tmp_path / "app.py"
+    app.write_text("")
+    app_path = os.path.realpath(str(app))
+
+    command = _capture_reload_command(app_path, ["robyn", app_path, "--dev", "--watch", app_path])
+
+    assert command == [sys.executable, app_path, "--watch", app_path]

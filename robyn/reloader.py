@@ -126,6 +126,12 @@ class EventHandler(FileSystemEventHandler):
             os.kill(self.process.pid, signal.SIGTERM)  # Stop the subprocess using os.kill()
 
     def reload(self) -> None:
+        """Restart the app subprocess, relaunching from the resolved app file path.
+
+        Reloading works regardless of how Robyn was started (console script,
+        ``python -m robyn ...``, or as a module) because the relaunch uses the
+        resolved absolute file path rather than rebuilding it from argv. See #654.
+        """
         self.stop_server()
         print("Reloading the server")
 
@@ -133,13 +139,22 @@ class EventHandler(FileSystemEventHandler):
         new_env["IS_RELOADER_RUNNING"] = "True"  # This is used to check if a reloader is already running
         # IS_RELOADER_RUNNING is specifically used for IPC between the reloader and the server
 
-        # Relaunch from the resolved absolute path of the app file so hot reload works
-        # regardless of how Robyn was started -- console script, `python -m robyn ...`,
-        # or as a module (`python -m your_app`). Rebuilding the command from sys.argv[1:]
-        # previously dropped the launch form (breaking module invocation) and reused the
-        # file token as typed (breaking relative paths / a changed cwd). See issue #654.
+        # Forward the original CLI flags to the restarted process, but strip the
+        # `--dev` flag and the single app-file token -- it is replaced below by the
+        # resolved absolute path so hot reload works regardless of how Robyn was
+        # started (console script, `python -m robyn ...`, or as a module). Only the
+        # first matching token is dropped, so a later user arg that happens to
+        # resolve to the same path is preserved. See issue #654.
         app_file = os.path.realpath(self.file_path)
-        forwarded_args = [arg for arg in sys.argv[1:] if not arg.startswith("--dev") and os.path.realpath(arg) != app_file]
+        forwarded_args = []
+        removed_app_token = False
+        for arg in sys.argv[1:]:
+            if arg == "--dev":
+                continue
+            if not removed_app_token and os.path.realpath(arg) == app_file:
+                removed_app_token = True
+                continue
+            forwarded_args.append(arg)
 
         clean_rust_binaries(self.built_rust_binaries)
         self.built_rust_binaries = compile_rust_files(self.directory_path)
