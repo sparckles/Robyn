@@ -133,7 +133,13 @@ class EventHandler(FileSystemEventHandler):
         new_env["IS_RELOADER_RUNNING"] = "True"  # This is used to check if a reloader is already running
         # IS_RELOADER_RUNNING is specifically used for IPC between the reloader and the server
 
-        arguments = [arg for arg in sys.argv[1:] if not arg.startswith("--dev")]
+        # Relaunch from the resolved absolute path of the app file so hot reload works
+        # regardless of how Robyn was started -- console script, `python -m robyn ...`,
+        # or as a module (`python -m your_app`). Rebuilding the command from sys.argv[1:]
+        # previously dropped the launch form (breaking module invocation) and reused the
+        # file token as typed (breaking relative paths / a changed cwd). See issue #654.
+        app_file = os.path.realpath(self.file_path)
+        forwarded_args = [arg for arg in sys.argv[1:] if not arg.startswith("--dev") and os.path.realpath(arg) != app_file]
 
         clean_rust_binaries(self.built_rust_binaries)
         self.built_rust_binaries = compile_rust_files(self.directory_path)
@@ -143,7 +149,7 @@ class EventHandler(FileSystemEventHandler):
             prev_process.kill()
 
         self.process = subprocess.Popen(
-            [sys.executable, *arguments],
+            [sys.executable, app_file, *forwarded_args],
             env=new_env,
         )
 
