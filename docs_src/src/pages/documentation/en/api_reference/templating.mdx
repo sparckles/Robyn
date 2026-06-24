@@ -58,6 +58,29 @@ Batman was excited to learn that he could add events as functions as well as dec
 </Row>
 
 
+## A quick `render` shortcut
+
+Batman didn't always want to construct a `JinjaTemplate` by hand. Robyn told him that for the common case — a `templates` folder next to his application file — he can use the `render` shortcut instead.
+
+<Row>
+<Col>
+`render` resolves the `templates` directory relative to the file that calls it, so there is no need to wire up paths with `pathlib`. If you keep your templates elsewhere, point at it with the `templates_dir` argument.
+</Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/template_render">
+
+    ```python
+    from robyn.templating import render
+
+    @app.get("/template_render")
+    def template_render():
+        return render("test.html", framework="Robyn", templating_engine="Jinja2")
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+
 ## Supporting Custom Templating Engines
 
 Batman was also super excited to know that Robyn allows the support of custom templating engines.

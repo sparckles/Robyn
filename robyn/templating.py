@@ -1,4 +1,7 @@
+import inspect
+import os
 from abc import ABC, abstractmethod
+from functools import lru_cache
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
@@ -71,4 +74,42 @@ class JinjaTemplate(TemplateInterface):
         )
 
 
-__all__ = ["TemplateInterface", "JinjaTemplate"]
+@lru_cache(maxsize=None)
+def _cached_jinja_template(directory: str) -> JinjaTemplate:
+    """Builds and caches a JinjaTemplate per directory so repeated render() calls reuse the environment."""
+    return JinjaTemplate(directory)
+
+
+def render(template_name: str, *, templates_dir: str = "templates", **kwargs) -> Response:
+    """Renders a template from a local ``templates`` directory.
+
+    Convenience wrapper around :class:`JinjaTemplate` that resolves ``templates_dir``
+    relative to the file calling ``render`` (defaulting to a ``templates`` folder next
+    to it), so simple apps don't have to construct a :class:`JinjaTemplate` by hand::
+
+        from robyn.templating import render
+
+        @app.get("/frontend")
+        async def get_frontend(request):
+            return render("index.html", framework="Robyn")
+
+    Args:
+        template_name (str): The template file to render, e.g. ``"index.html"``.
+        templates_dir (str): Directory holding the templates. Resolved relative to the
+            caller's file when not absolute. Defaults to ``"templates"``.
+        **kwargs: Variables passed to the template.
+
+    Returns:
+        Response: The rendered template as a Robyn Response object.
+    """
+    if not os.path.isabs(templates_dir):
+        frame = inspect.currentframe()
+        caller = frame.f_back if frame is not None else None
+        caller_file = caller.f_globals.get("__file__") if caller is not None else None
+        base_dir = os.path.dirname(os.path.abspath(caller_file)) if caller_file else os.getcwd()
+        templates_dir = os.path.join(base_dir, templates_dir)
+
+    return _cached_jinja_template(templates_dir).render_template(template_name, **kwargs)
+
+
+__all__ = ["TemplateInterface", "JinjaTemplate", "render"]
