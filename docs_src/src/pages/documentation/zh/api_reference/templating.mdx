@@ -1,5 +1,5 @@
 export const description =
-  '在此页面中，我们将深入探讨如何通过不同的接口实现符合预期的交互。'
+  '在此页面中，我们将深入探讨如何在 Robyn 中使用 Jinja2 或自定义模板引擎渲染 HTML 模板。'
 
 ## 模板
 
@@ -55,6 +55,30 @@ export const description =
 
   </Col>
 </Row>
+
+## 快捷的 `render` 函数
+
+蝙蝠侠并不总是想手动构造 `JinjaTemplate`。Robyn 告诉他，对于常见场景——应用文件旁边有一个 `templates` 文件夹——可以直接使用 `render` 快捷函数。
+
+<Row>
+<Col>
+`render` 会相对于调用它的文件解析 `templates` 目录，因此无需再用 `pathlib` 拼接路径。它默认使用 Jinja2 渲染；可以通过 `templates_dir` 指向其他文件夹，或通过 `template_engine` 传入自定义的 `TemplateInterface` 来使用其他模板引擎。
+</Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/template_render">
+
+    ```python
+    from robyn.templating import render
+
+    @app.get("/template_render")
+    def template_render():
+        # Jinja2 是默认的模板引擎
+        return render("test.html", name="Batman")
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
 
 ## 自定义模板引擎
 
