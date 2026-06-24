@@ -42,3 +42,20 @@ def test_render_autoescapes_html(tmp_path):
 
     assert "<script>" not in response.description
     assert "&lt;script&gt;" in response.description
+
+
+def test_render_uses_custom_template_engine(tmp_path):
+    """A custom TemplateInterface can be supplied via template_engine; Jinja stays the default."""
+    from robyn.robyn import Headers, Response
+    from robyn.templating import TemplateInterface
+
+    class EchoEngine(TemplateInterface):
+        def __init__(self, directory):
+            self.directory = directory
+
+        def render_template(self, template_name, **kwargs):
+            return Response(status_code=200, headers=Headers({}), description=f"{template_name}|{kwargs.get('who')}")
+
+    response = render("x.html", templates_dir=str(tmp_path), template_engine=EchoEngine, who="Batman")
+
+    assert response.description == "x.html|Batman"

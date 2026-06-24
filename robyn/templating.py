@@ -75,28 +75,38 @@ class JinjaTemplate(TemplateInterface):
 
 
 @lru_cache(maxsize=None)
-def _cached_jinja_template(directory: str) -> JinjaTemplate:
-    """Builds and caches a JinjaTemplate per directory so repeated render() calls reuse the environment."""
-    return JinjaTemplate(directory)
+def _cached_template_engine(engine: type[TemplateInterface], directory: str) -> TemplateInterface:
+    """Instantiates and caches a templating engine per (engine, directory) so render() reuses it."""
+    return engine(directory)
 
 
-def render(template_name: str, *, templates_dir: str = "templates", **kwargs) -> Response:
+def render(
+    template_name: str,
+    *,
+    templates_dir: str = "templates",
+    template_engine: type[TemplateInterface] = JinjaTemplate,
+    **kwargs,
+) -> Response:
     """Renders a template from a local ``templates`` directory.
 
-    Convenience wrapper around :class:`JinjaTemplate` that resolves ``templates_dir``
-    relative to the file calling ``render`` (defaulting to a ``templates`` folder next
-    to it), so simple apps don't have to construct a :class:`JinjaTemplate` by hand::
+    Convenience wrapper that resolves ``templates_dir`` relative to the file calling
+    ``render`` (defaulting to a ``templates`` folder next to it) and renders it with a
+    templating engine -- Jinja2 by default, or any :class:`TemplateInterface` passed via
+    ``template_engine`` -- so simple apps don't have to construct one by hand::
 
         from robyn.templating import render
 
         @app.get("/frontend")
         async def get_frontend(request):
-            return render("index.html", framework="Robyn")
+            return render("index.html", name="Batman")
 
     Args:
         template_name (str): The template file to render, e.g. ``"index.html"``.
         templates_dir (str): Directory holding the templates. Resolved relative to the
             caller's file when not absolute. Defaults to ``"templates"``.
+        template_engine (type[TemplateInterface]): The templating engine to render with.
+            Defaults to :class:`JinjaTemplate` (Jinja2). Pass a custom
+            :class:`TemplateInterface` subclass to use a different engine.
         **kwargs: Variables passed to the template.
 
     Returns:
@@ -109,7 +119,7 @@ def render(template_name: str, *, templates_dir: str = "templates", **kwargs) ->
         base_dir = os.path.dirname(os.path.abspath(caller_file)) if caller_file else os.getcwd()
         templates_dir = os.path.join(base_dir, templates_dir)
 
-    return _cached_jinja_template(templates_dir).render_template(template_name, **kwargs)
+    return _cached_template_engine(template_engine, templates_dir).render_template(template_name, **kwargs)
 
 
 __all__ = ["TemplateInterface", "JinjaTemplate", "render"]

@@ -64,7 +64,7 @@ Batman didn't always want to construct a `JinjaTemplate` by hand. Robyn told him
 
 <Row>
 <Col>
-`render` resolves the `templates` directory relative to the file that calls it, so there is no need to wire up paths with `pathlib`. If you keep your templates elsewhere, point at it with the `templates_dir` argument.
+`render` resolves the `templates` directory relative to the file that calls it, so there is no need to wire up paths with `pathlib`. It renders with Jinja2 by default; pass a different `templates_dir` to point at another folder, or a custom `TemplateInterface` via `template_engine` to use a different templating engine.
 </Col>
   <Col sticky>
     <CodeGroup title="Request" tag="GET" label="/template_render">
@@ -74,7 +74,8 @@ Batman didn't always want to construct a `JinjaTemplate` by hand. Robyn told him
 
     @app.get("/template_render")
     def template_render():
-        return render("test.html", framework="Robyn", templating_engine="Jinja2")
+        # Jinja2 is the default templating engine
+        return render("test.html", name="Batman")
     ```
     </CodeGroup>
   </Col>
