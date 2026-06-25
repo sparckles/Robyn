@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, overload
+from typing import Any, Callable, List, overload
+
+from robyn.robyn import UploadedFile
 
 def get_version() -> str:
     pass
@@ -465,7 +467,7 @@ class Request:
     method: str
     url: Url
     form_data: dict[str, str]
-    files: dict[str, bytes]
+    files: dict[str, List[UploadedFile]]
     ip_addr: str | None
     identity: Identity | None
     session: Any | None
