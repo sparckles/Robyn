@@ -1,9 +1,17 @@
+export const description =
+  'Robyn plugins, including rate limiting and robyn-config for project scaffolding, admin panels, and observability.'
+
+export const sections = [
+  { title: 'Rate Limit Plugin', id: 'rate-limit-plugin' },
+  { title: 'Robyn Config', id: 'robyn-config' },
+]
+
 ## Plugins
 
 Robyn is a versatile and extensible web framework that allows anyone to make plugins over the top of Robyn.
 Plugins in Robyn allow you to enhance and customize the framework's functionality to suit your specific needs. Here are some noteworthy plugins that can supercharge your Robyn-based projects:
 
-### Rate Limit Plugin
+## Rate Limit Plugin
 
 - Description: This plugin enables you to implement rate limiting for your Robyn application's routes. It helps prevent abuse, and brute-force attacks and ensures fair usage of your resources.
 - GitHub repository: [robyn-rate-limits](https://github.com/IdoKendo/robyn_rate_limits)
@@ -33,6 +41,164 @@ app.start(port=8080)
 In this example, robyn-rate-limits is used to enforce a rate limit of 3 requests per 100-seconds window for specific routes. If a client exceeds this limit, they will receive a "Too many requests" message.
 
 The plugin integrates seamlessly with the Robyn web framework, enhancing the security and stability of your application by preventing excessive requests from a single client.
+
+## Robyn Config
+
+- Description: A CLI companion for bootstrapping and maintaining production-ready Robyn applications. It can create new projects, add business entities, scaffold an admin panel, and wire an observability stack into an existing app.
+- GitHub repository: [robyn-config](https://github.com/Lehsqa/robyn-config)
+- Installation:
+  `python -m pip install robyn-config`
+
+  Or as a Robyn optional dependency:
+  `python -m pip install robyn[robyn-config]`
+
+- Python support: Python 3.10 or newer.
+
+### Create a Project
+
+```bash
+# DDD + SQLAlchemy with uv dependency locking (default)
+robyn-config create my-service --design ddd --orm sqlalchemy ./my-service
+
+# MVC + Tortoise ORM with poetry dependency locking
+robyn-config create newsletter --design mvc --orm tortoise --package-manager poetry ./newsletter
+
+# Interactive project setup
+robyn-config create -i
+```
+
+`robyn-config create` gives you explicit choices for the two main architecture branches:
+
+- **DDD** for domain, application, infrastructure, and presentation layers.
+- **MVC** for views, repositories, models, and URL routing.
+
+It also lets you choose the database layer and package manager:
+
+- **SQLAlchemy** or **Tortoise ORM** for persistence.
+- **uv** by default, or **poetry** with `--package-manager poetry`.
+
+### Add Business Logic
+
+Inside a generated project, add a new entity and let `robyn-config` place the files in the correct design-specific layers:
+
+```bash
+cd my-service
+robyn-config add product
+```
+
+This generates the model, repository, route/controller code, and application wiring for the selected architecture. Custom generation paths can be configured in `[tool.robyn-config.add]` inside the generated project's `pyproject.toml`.
+
+### Add an Admin Panel
+
+```bash
+cd my-service
+robyn-config adminpanel
+
+# Override the default admin/admin bootstrap credentials
+robyn-config adminpanel --username superadmin --password super-secret-password ./my-service
+```
+
+The admin panel scaffolding adds an ORM-aware admin module, registers it with the application, discovers available project models, and exposes CRUD views for those models.
+
+<div className="not-prose my-8 grid gap-4 md:grid-cols-2">
+  <figure className="overflow-hidden rounded-lg border border-white/10 bg-zinc-950">
+    <img
+      src="/images/robyn-config/admin/login.png"
+      alt="Robyn Config admin login screen"
+      className="w-full"
+    />
+    <figcaption className="px-4 py-3 text-sm text-zinc-400">
+      Admin login
+    </figcaption>
+  </figure>
+  <figure className="overflow-hidden rounded-lg border border-white/10 bg-zinc-950">
+    <img
+      src="/images/robyn-config/admin/home.png"
+      alt="Robyn Config admin home dashboard"
+      className="w-full"
+    />
+    <figcaption className="px-4 py-3 text-sm text-zinc-400">
+      Admin dashboard
+    </figcaption>
+  </figure>
+  <figure className="overflow-hidden rounded-lg border border-white/10 bg-zinc-950">
+    <img
+      src="/images/robyn-config/admin/model_list.png"
+      alt="Robyn Config admin model table"
+      className="w-full"
+    />
+    <figcaption className="px-4 py-3 text-sm text-zinc-400">
+      Model listing
+    </figcaption>
+  </figure>
+  <figure className="overflow-hidden rounded-lg border border-white/10 bg-zinc-950">
+    <img
+      src="/images/robyn-config/admin/model_edit.png"
+      alt="Robyn Config admin model editor"
+      className="w-full"
+    />
+    <figcaption className="px-4 py-3 text-sm text-zinc-400">
+      Model editor
+    </figcaption>
+  </figure>
+</div>
+
+### Add Monitoring
+
+```bash
+cd my-service
+robyn-config monitoring
+
+# Start the application stack and observability stack
+docker compose up -d
+docker compose -f docker-compose.monitoring.yml up -d
+```
+
+The monitoring command adds a `/metrics` endpoint, installs `prometheus-client`, and provisions Docker Compose assets for Grafana Alloy, Loki, Prometheus, and Grafana. Grafana is available at `http://localhost:3000` with dashboards for logs and process metrics.
+
+<div className="not-prose my-8 grid gap-4 md:grid-cols-2">
+  <figure className="overflow-hidden rounded-lg border border-white/10 bg-zinc-950">
+    <img
+      src="/images/robyn-config/monitoring/logs.png"
+      alt="Robyn Config Grafana logs dashboard"
+      className="w-full"
+    />
+    <figcaption className="px-4 py-3 text-sm text-zinc-400">
+      Logs dashboard
+    </figcaption>
+  </figure>
+  <figure className="overflow-hidden rounded-lg border border-white/10 bg-zinc-950">
+    <img
+      src="/images/robyn-config/monitoring/metrics.png"
+      alt="Robyn Config Grafana metrics dashboard"
+      className="w-full"
+    />
+    <figcaption className="px-4 py-3 text-sm text-zinc-400">
+      Metrics dashboard
+    </figcaption>
+  </figure>
+</div>
+
+### Validate Generated Projects
+
+After generating or modifying a project, run the checks that match the generated package manager:
+
+```bash
+# uv projects
+uv run pytest
+uv run ruff check .
+
+# poetry projects
+poetry run pytest
+poetry run ruff check .
+```
+
+For monitoring, confirm the application exposes Prometheus metrics and that Grafana has data:
+
+```bash
+curl http://localhost:8000/metrics
+curl -I http://localhost:3000
+```
 
 ## What's next?
 
