@@ -1,5 +1,5 @@
 export const description =
-  'On this page, we’ll dive into the different conversation endpoints you can use to manage conversations programmatically.'
+  'On this page, we’ll dive into rendering HTML templates in Robyn with Jinja2 or a custom templating engine.'
 
 
 
@@ -53,6 +53,30 @@ Batman was excited to learn that he could add events as functions as well as dec
          Hello {{ framework }}! You're using {{ templating_engine }}.
         </body>
       ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+
+## A quick `render` shortcut
+
+Batman didn't always want to construct a `JinjaTemplate` by hand. Robyn told him that for the common case — a `templates` folder next to his application file — he can use the `render` shortcut instead.
+
+<Row>
+<Col>
+`render` resolves the `templates` directory relative to the file that calls it, so there is no need to wire up paths with `pathlib`. It renders with Jinja2 by default; pass a different `templates_dir` to point at another folder, or a custom `TemplateInterface` via `template_engine` to use a different templating engine.
+</Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/template_render">
+
+    ```python
+    from robyn.templating import render
+
+    @app.get("/template_render")
+    def template_render():
+        # Jinja2 is the default templating engine
+        return render("index.html", name="Batman")
+    ```
     </CodeGroup>
   </Col>
 </Row>
