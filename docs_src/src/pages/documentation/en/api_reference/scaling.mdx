@@ -69,6 +69,30 @@ Within each process, multiple worker threads provide concurrency:
   </Col>
 </Row>
 
+### Programmatic Configuration
+
+<Row>
+  <Col>
+    **Configure in code**: Every scaling option available on the CLI can also be passed directly to `app.start()`, so you can run Robyn without the CLI — from a script, an embedded process, or a test fixture. Explicit arguments take precedence over CLI flags, and `fast` only fills in the values you don't set yourself. Dev mode (hot reload) stays CLI-only, since it relies on the file-watching reloader.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Programmatic Scaling">
+    ```python
+    from robyn import Robyn
+
+    app = Robyn(__file__)
+
+    if __name__ == "__main__":
+        # Equivalent to: python app.py --processes 4 --workers 2 --log-level WARN
+        app.start(host="0.0.0.0", port=8080, processes=4, workers=2, log_level="WARN")
+
+        # Or let fast mode pick optimal processes/workers/log level
+        # app.start(fast=True)
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
 ### Advanced Configuration
 
 <Row>
