@@ -21,7 +21,7 @@ impl Headers {
                 for (key, value) in default_headers {
                     let key = key.to_string().to_lowercase();
 
-                    let new_value = value.downcast::<PyList>();
+                    let new_value = value.cast::<PyList>();
 
                     if let Ok(new_value) = new_value {
                         let value: Vec<String> = new_value.iter().map(|x| x.to_string()).collect();
@@ -147,7 +147,7 @@ impl Headers {
     pub fn populate_from_dict(&mut self, headers: &Bound<PyDict>) {
         for (key, value) in headers.iter() {
             let key = key.to_string().to_lowercase();
-            let new_value = value.downcast::<PyList>();
+            let new_value = value.cast::<PyList>();
 
             if let Ok(new_value) = new_value {
                 let value: Vec<String> = new_value.iter().map(|x| x.to_string()).collect();

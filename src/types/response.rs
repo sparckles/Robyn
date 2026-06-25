@@ -125,7 +125,7 @@ fn create_python_stream(
 ) -> Pin<Box<dyn Stream<Item = Result<Bytes, actix_web::Error>> + Send>> {
     Box::pin(futures::stream::unfold(generator, |generator| async move {
         match tokio::task::spawn_blocking(move || {
-            Python::with_gil(|py| {
+            Python::attach(|py| {
                 let gen = generator.bind(py);
 
                 match gen.call_method0("__next__") {
@@ -296,7 +296,7 @@ impl PyStreamingResponse {
         let media_type = media_type.unwrap_or_else(|| "text/event-stream".to_string());
 
         let headers_output: Py<Headers> = if let Some(headers) = headers {
-            if let Ok(headers_dict) = headers.downcast::<PyDict>() {
+            if let Ok(headers_dict) = headers.cast::<PyDict>() {
                 let headers = Headers::new(Some(headers_dict));
                 Py::new(py, headers)?
             } else if let Ok(headers) = headers.extract::<Py<Headers>>() {
@@ -364,7 +364,7 @@ impl PyResponse {
         check_body_type(py, &description)?;
 
         let headers_output: Py<Headers> = if let Some(headers) = headers {
-            if let Ok(headers_dict) = headers.downcast::<PyDict>() {
+            if let Ok(headers_dict) = headers.cast::<PyDict>() {
                 // Here you'd have logic to create a Headers instance from a PyDict
                 // For simplicity, let's assume you have a method `from_dict` on Headers for this
                 let headers = Headers::new(Some(headers_dict)); // Hypothetical method

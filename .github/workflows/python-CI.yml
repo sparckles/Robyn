@@ -41,7 +41,7 @@ jobs:
     name: ${{ matrix.os }} tests with python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v6
         with:
@@ -53,4 +53,23 @@ jobs:
         with:
           python-versions: ${{ matrix.python-version }}
       - name: Test with Nox
+        if: runner.os != 'Windows'
         run: nox --non-interactive --error-on-missing-interpreter -p ${{ matrix.python-version }}
+      # Windows extension-module builds intermittently hit a transient linker
+      # failure (LNK1181: cannot open input file 'pythonXY.lib') from the hosted
+      # toolchain. Retry so a one-off linker hiccup doesn't fail the whole run.
+      - name: Test with Nox (Windows, retry transient linker failures)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          for attempt in 1 2 3; do
+            echo "::group::nox attempt $attempt"
+            if nox --non-interactive --error-on-missing-interpreter -p ${{ matrix.python-version }}; then
+              echo "::endgroup::"
+              exit 0
+            fi
+            echo "::endgroup::"
+            echo "nox attempt $attempt failed; retrying..."
+          done
+          echo "nox failed after 3 attempts"
+          exit 1

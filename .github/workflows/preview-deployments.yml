@@ -18,6 +18,7 @@ jobs:
   macos:
     runs-on: macos-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
@@ -48,11 +49,20 @@ jobs:
   windows:
     runs-on: windows-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         target: [x64, x86]
     steps:
       - uses: actions/checkout@v4
+      # The Microsoft Store python alias stubs intermittently raise EACCES when a
+      # Node-based action probes PATH for python3, failing the whole job. Remove
+      # them; setup-python below installs the real interpreter on PATH.
+      - name: Remove Windows Store python aliases (avoids flaky EACCES)
+        shell: pwsh
+        run: |
+          Remove-Item "$env:LOCALAPPDATA\Microsoft\WindowsApps\python.exe" -Force -ErrorAction SilentlyContinue
+          Remove-Item "$env:LOCALAPPDATA\Microsoft\WindowsApps\python3.exe" -Force -ErrorAction SilentlyContinue
       - name: Install uv
         uses: astral-sh/setup-uv@v3
       - uses: actions/setup-python@v6
@@ -74,6 +84,7 @@ jobs:
   linux:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         target: [x86_64, i686]

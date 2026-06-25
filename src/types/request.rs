@@ -267,9 +267,9 @@ impl PyRequest {
     }
 
     pub fn json(&self, py: Python) -> PyResult<Py<PyAny>> {
-        let parsed: Value = if let Ok(python_string) = self.body.downcast_bound::<PyString>(py) {
+        let parsed: Value = if let Ok(python_string) = self.body.cast_bound::<PyString>(py) {
             serde_json::from_str(python_string.extract()?)
-        } else if let Ok(python_bytes) = self.body.downcast_bound::<PyBytes>(py) {
+        } else if let Ok(python_bytes) = self.body.cast_bound::<PyBytes>(py) {
             serde_json::from_slice(python_bytes.as_bytes())
         } else {
             return Err(PyValueError::new_err("Invalid JSON body"));

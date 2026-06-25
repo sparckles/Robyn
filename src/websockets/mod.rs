@@ -89,7 +89,7 @@ impl Actor for WebSocketConnector {
 
         let (tx, rx) = mpsc::unbounded_channel::<Option<WsPayload>>();
         self.message_sender = Some(tx);
-        self.message_channel = Python::with_gil(|py| {
+        self.message_channel = Python::attach(|py| {
             Some(
                 Py::new(
                     py,
@@ -122,7 +122,7 @@ impl Actor for WebSocketConnector {
 
 impl Clone for WebSocketConnector {
     fn clone(&self) -> Self {
-        let task_locals_clone = Python::with_gil(|py| self.task_locals.clone_ref(py));
+        let task_locals_clone = Python::attach(|_py| self.task_locals.clone());
 
         Self {
             id: self.id,
@@ -131,7 +131,7 @@ impl Clone for WebSocketConnector {
             registry_addr: self.registry_addr.clone(),
             query_params: self.query_params.clone(),
             message_sender: self.message_sender.clone(),
-            message_channel: Python::with_gil(|py| {
+            message_channel: Python::attach(|py| {
                 self.message_channel.as_ref().map(|c| c.clone_ref(py))
             }),
         }
