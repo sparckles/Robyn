@@ -115,7 +115,11 @@ def render(
     if not os.path.isabs(templates_dir):
         frame = inspect.currentframe()
         caller = frame.f_back if frame is not None else None
-        caller_file = caller.f_globals.get("__file__") if caller is not None else None
+        try:
+            caller_file = caller.f_globals.get("__file__") if caller is not None else None
+        finally:
+            # Drop the frame references promptly to avoid a reference cycle (see inspect docs).
+            del frame, caller
         base_dir = os.path.dirname(os.path.abspath(caller_file)) if caller_file else os.getcwd()
         templates_dir = os.path.join(base_dir, templates_dir)
 
