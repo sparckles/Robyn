@@ -1,6 +1,9 @@
 import asyncio
+import math
+import os
 import signal
 import sys
+import time
 import webbrowser
 
 from multiprocess import Process  # type: ignore
@@ -10,6 +13,26 @@ from robyn.logger import logger
 from robyn.robyn import FunctionInfo, Headers, Server, SocketHeld
 from robyn.router import GlobalMiddleware, Route, RouteMiddleware
 from robyn.types import Directory
+
+
+def _raise_keyboard_interrupt(_sig, _frame):
+    """SIGTERM handler that re-uses the working SIGINT/Ctrl+C shutdown path."""
+    raise KeyboardInterrupt
+
+
+def _graceful_shutdown_timeout() -> float:
+    """Seconds to wait for workers to exit on shutdown before force-killing them.
+
+    Configurable via the ROBYN_GRACEFUL_SHUTDOWN_TIMEOUT environment variable.
+    """
+    try:
+        timeout = float(os.getenv("ROBYN_GRACEFUL_SHUTDOWN_TIMEOUT", "10"))
+    except ValueError:
+        return 10.0
+    if not math.isfinite(timeout):
+        # A non-finite timeout (inf/nan) would leave the force-kill fallback unreachable.
+        return 10.0
+    return max(0.0, timeout)
 
 
 def run_processes(
@@ -49,10 +72,32 @@ def run_processes(
         keep_alive_timeout,
     )
 
+    shutting_down = False
+
     def terminating_signal_handler(_sig, _frame):
+        nonlocal shutting_down
+        if shutting_down:
+            # On a second signal, restore the default disposition and re-send it so a user
+            # can force-stop a shutdown that is taking too long.
+            signal.signal(_sig, signal.SIG_DFL)
+            os.kill(os.getpid(), _sig)
+            return
+        shutting_down = True
         logger.info("Terminating server!!", bold=True)
+
+        # Ask each worker to shut down gracefully (SIGTERM -> KeyboardInterrupt in the
+        # worker, see spawn_process), so registered shutdown handlers run. Force-kill
+        # only the workers that overrun the timeout.
         for process in process_pool:
-            process.kill()
+            process.terminate()
+
+        deadline = time.monotonic() + _graceful_shutdown_timeout()
+        for process in process_pool:
+            process.join(max(0.0, deadline - time.monotonic()))
+
+        for process in process_pool:
+            if process.is_alive():
+                process.kill()
 
     signal.signal(signal.SIGINT, terminating_signal_handler)
     signal.signal(signal.SIGTERM, terminating_signal_handler)
@@ -177,6 +222,14 @@ def spawn_process(
     """
 
     loop = initialize_event_loop()
+
+    # Make SIGTERM behave like Ctrl+C: raise KeyboardInterrupt in the main thread so it
+    # propagates out of the blocking Rust `server.start()` loop and lets registered
+    # shutdown handlers run before exit. Without this, SIGTERM (multiprocessing
+    # terminate(), `docker stop`, Kubernetes) is ignored by the Python side and the
+    # process hangs until SIGKILL. POSIX only -- Windows has no SIGTERM delivery. See #1324.
+    if not sys.platform.startswith("win32"):
+        signal.signal(signal.SIGTERM, _raise_keyboard_interrupt)
 
     server = Server()
 
