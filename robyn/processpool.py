@@ -1,4 +1,5 @@
 import asyncio
+import math
 import os
 import signal
 import sys
@@ -25,9 +26,13 @@ def _graceful_shutdown_timeout() -> float:
     Configurable via the ROBYN_GRACEFUL_SHUTDOWN_TIMEOUT environment variable.
     """
     try:
-        return max(0.0, float(os.getenv("ROBYN_GRACEFUL_SHUTDOWN_TIMEOUT", "10")))
+        timeout = float(os.getenv("ROBYN_GRACEFUL_SHUTDOWN_TIMEOUT", "10"))
     except ValueError:
         return 10.0
+    if not math.isfinite(timeout):
+        # A non-finite timeout (inf/nan) would leave the force-kill fallback unreachable.
+        return 10.0
+    return max(0.0, timeout)
 
 
 def run_processes(
@@ -72,7 +77,10 @@ def run_processes(
     def terminating_signal_handler(_sig, _frame):
         nonlocal shutting_down
         if shutting_down:
-            # A second signal during shutdown -- let the default disposition hard-stop us.
+            # On a second signal, restore the default disposition and re-send it so a user
+            # can force-stop a shutdown that is taking too long.
+            signal.signal(_sig, signal.SIG_DFL)
+            os.kill(os.getpid(), _sig)
             return
         shutting_down = True
         logger.info("Terminating server!!", bold=True)

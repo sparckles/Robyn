@@ -32,24 +32,23 @@ def _wait_until_serving(proc: subprocess.Popen, port: int, timeout: float = 25.0
 @pytest.mark.skipif(sys.platform.startswith("win32"), reason="SIGTERM is not delivered on Windows")
 def test_sigterm_triggers_graceful_shutdown():
     """SIGTERM should stop the server cleanly and run shutdown handlers (regression for #1324)."""
-    sentinel = tempfile.mktemp(prefix="robyn_graceful_")
-    port = _free_port()
-    proc = subprocess.Popen([sys.executable, APP, sentinel, str(port)])
-    try:
-        assert _wait_until_serving(proc, port), "server failed to start"
-
-        proc.terminate()  # SIGTERM
+    with tempfile.TemporaryDirectory(prefix="robyn_graceful_") as tmpdir:
+        sentinel = os.path.join(tmpdir, "shutdown.sentinel")
+        port = _free_port()
+        proc = subprocess.Popen([sys.executable, APP, sentinel, str(port)])
         try:
-            returncode = proc.wait(timeout=15)
-        except subprocess.TimeoutExpired:
-            proc.kill()
-            pytest.fail("server hung after SIGTERM instead of shutting down (#1324)")
+            assert _wait_until_serving(proc, port), "server failed to start"
 
-        assert returncode == 0, f"expected a clean exit on SIGTERM, got returncode={returncode}"
-        assert os.path.exists(sentinel), "shutdown handler did not run on SIGTERM"
-    finally:
-        if proc.poll() is None:
-            proc.kill()
-            proc.wait(timeout=5)
-        if os.path.exists(sentinel):
-            os.remove(sentinel)
+            proc.terminate()  # SIGTERM
+            try:
+                returncode = proc.wait(timeout=15)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                pytest.fail("server hung after SIGTERM instead of shutting down (#1324)")
+
+            assert returncode == 0, f"expected a clean exit on SIGTERM, got returncode={returncode}"
+            assert os.path.exists(sentinel), "shutdown handler did not run on SIGTERM"
+        finally:
+            if proc.poll() is None:
+                proc.kill()
+                proc.wait(timeout=5)
