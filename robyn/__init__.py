@@ -1008,7 +1008,12 @@ class Robyn(BaseRobyn):
             logging.basicConfig(level=self.config.log_level, force=True)
 
         if open_browser is None:
-            open_browser = bool(os.getenv("ROBYN_BROWSER_OPEN", self.config.open_browser))
+            raw_open_browser = os.getenv("ROBYN_BROWSER_OPEN")
+            if raw_open_browser is None:
+                open_browser = bool(self.config.open_browser)
+            else:
+                # Parse as a real boolean -- bool("false")/bool("0") would otherwise be True.
+                open_browser = raw_open_browser.strip().lower() in {"1", "true", "yes", "on"}
 
         if _check_port:
             while self.is_port_in_use(port):

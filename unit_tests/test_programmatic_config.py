@@ -53,3 +53,35 @@ def test_start_without_overrides_leaves_config_untouched():
     assert app.config.processes == 1
     assert app.config.workers == 1
     assert mock_run.call_count == 1
+
+
+# run_processes(host, port, ..., open_browser, ...) -> open_browser is positional index 13
+_OPEN_BROWSER_ARG = 13
+
+
+def test_open_browser_env_false_is_parsed_as_false(monkeypatch):
+    """ROBYN_BROWSER_OPEN='false' must not open the browser (real boolean parsing, not bool('false'))."""
+    app = _make_app()
+    monkeypatch.setenv("ROBYN_BROWSER_OPEN", "false")
+    with patch("robyn.run_processes") as mock_run:
+        app.start(_check_port=False)
+
+    assert mock_run.call_args.args[_OPEN_BROWSER_ARG] is False
+
+
+def test_open_browser_env_true_is_parsed_as_true(monkeypatch):
+    app = _make_app()
+    monkeypatch.setenv("ROBYN_BROWSER_OPEN", "true")
+    with patch("robyn.run_processes") as mock_run:
+        app.start(_check_port=False)
+
+    assert mock_run.call_args.args[_OPEN_BROWSER_ARG] is True
+
+
+def test_open_browser_explicit_arg_overrides_env(monkeypatch):
+    app = _make_app()
+    monkeypatch.setenv("ROBYN_BROWSER_OPEN", "true")
+    with patch("robyn.run_processes") as mock_run:
+        app.start(_check_port=False, open_browser=False)
+
+    assert mock_run.call_args.args[_OPEN_BROWSER_ARG] is False
