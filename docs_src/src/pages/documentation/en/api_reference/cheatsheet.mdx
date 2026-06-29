@@ -75,7 +75,7 @@ def inspect(request):
     data = request.json()                  # parsed JSON body -> dict / list
     raw = request.body                     # raw body (str | bytes)
     form = request.form_data               # dict[str, str]
-    files = request.files                  # dict[str, bytes]
+    files = request.files                  # dict[str, [UploadedFile]]
     content_type = request.headers.get("Content-Type")
     return {
         "method": request.method,
