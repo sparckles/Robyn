@@ -110,7 +110,8 @@ impl Responder for StreamingResponse {
             .append_header(("X-Accel-Buffering", "no")) // Disable nginx buffering
             .append_header(("Cache-Control", "no-cache, no-store, must-revalidate"))
             .append_header(("Pragma", "no-cache"))
-            .append_header(("Expires", "0"));
+            .append_header(("Expires", "0"))
+            .append_header(("Content-Encoding", "identity")); // opt out of ROBYN_COMPRESSION, which would buffer chunks
 
         // Create the optimized stream from the Python generator
         let stream = create_python_stream(self.content_generator);

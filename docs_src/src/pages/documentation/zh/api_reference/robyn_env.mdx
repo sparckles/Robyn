@@ -21,6 +21,9 @@ export const description = '在本节中，我们将学习如何通过配置文�
 - `ROBYN_MAX_PAYLOAD_SIZE`：设置 HTTP 请求和 WebSocket 消息的最大负载大小（以字节为单位）。
   - 默认值：1000000 bytes
   - 示例：`ROBYN_MAX_PAYLOAD_SIZE=1000000`
+- `ROBYN_COMPRESSION`：根据请求的 `Accept-Encoding` 头，自动对响应进行 gzip/brotli/zstd 压缩。流式响应（SSE）始终不会被压缩，以保证实时性。
+  - 默认值：`False`
+  - 示例：`ROBYN_COMPRESSION=True`
 
 您可以使用 `robyn.env` 文件自动加载这些环境变量。
 
@@ -44,6 +47,7 @@ RANDOM_ENV=123
 ROBYN_BROWSER_OPEN=True
 ROBYN_DEV_MODE=True
 ROBYN_MAX_PAYLOAD_SIZE=1000000
+ROBYN_COMPRESSION=True
 ```
 
 随着 Web 应用程序的顺利部署和运行，蝙蝠侠拥有了一个强大的新工具。Robyn 框架为他提供了创建高效打击犯罪应用所需的灵活性、可扩展性和高性能，使他在保护哥谭市的战斗中获得了技术上的优势。
