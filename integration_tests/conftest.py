@@ -43,12 +43,14 @@ def start_server(domain: str, port: int, is_dev: bool = False, extra_env: dict[s
     if is_dev:
         command.append("--dev")
 
-    # Ensure environment variables are properly set for the subprocess
+    # Ensure environment variables are properly set for the subprocess. extra_env
+    # is applied first so it can never override the domain/port this fixture
+    # is about to poll for readiness.
     env = os.environ.copy()
-    env["ROBYN_HOST"] = domain
-    env["ROBYN_PORT"] = str(port)
     if extra_env:
         env.update(extra_env)
+    env["ROBYN_HOST"] = domain
+    env["ROBYN_PORT"] = str(port)
 
     process = spawn_process(command, env)
 
@@ -78,7 +80,9 @@ def session():
     domain = "127.0.0.1"
     port = 8080
     os.environ["ROBYN_HOST"] = domain
-    process = start_server(domain, port)
+    # Explicitly disable compression so this default server isn't affected by
+    # a ROBYN_COMPRESSION already set in the developer's or CI's shell
+    process = start_server(domain, port, extra_env={"ROBYN_COMPRESSION": "0"})
     yield
     kill_process(process)
 
