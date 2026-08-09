@@ -3,6 +3,7 @@
 # Robyn
 
 [![Twitter](https://badgen.net/badge/icon/twitter?icon=twitter&label)](https://twitter.com/Robyn_oss)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Robyn-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/company/robyn-framework/)
 [![Downloads](https://static.pepy.tech/personalized-badge/Robyn?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Downloads)](https://pepy.tech/project/Robyn)
 [![GitHub tag](https://img.shields.io/github/tag/sparckles/Robyn?include_prereleases=&sort=semver&color=black)](https://github.com/sparckles/Robyn/releases/)
 [![License](https://img.shields.io/badge/License-BSD_2.0-black)](https://github.com/sparckles/Robyn/blob/main/LICENSE)
@@ -13,7 +14,7 @@
 [![Discord](https://img.shields.io/discord/999782964143603713?label=discord&logo=discord&logoColor=white&style=for-the-badge&color=blue)](https://discord.gg/rkERZ5eNU8)
 [![Gurubase](https://img.shields.io/badge/Gurubase-Ask%20Robyn%20Guru-006BFF?style=for-the-badge)](https://gurubase.io/g/robyn)
 
-Robyn is a High-Performance, Community-Driven, and Innovator Friendly Web Framework with a Rust runtime. You can learn more by checking our [community resources](https://robyn.tech/documentation/en/community-resources#talks)!
+Robyn is a High-Performance, Community-Driven, and Innovator Friendly Web Framework with a Rust runtime. You can learn more by checking our [community resources](https://robyn.tech/documentation/en/community-resources#talks) and following us on [LinkedIn](https://www.linkedin.com/company/robyn-framework/)!
 
 <img width="652" alt="image" src="https://github.com/sparckles/Robyn/assets/29942790/4a2bba61-24e7-4ee2-8884-19b40204bfcd">
 
