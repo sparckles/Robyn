@@ -38,3 +38,33 @@ def test_env_population(env_file):
     HOST = os.environ["ROBYN_HOST"]
     assert PORT == "8080"
     assert HOST == "127.0.0.1"
+
+
+def test_parser_skips_blank_and_malformed_lines(tmp_path):
+    env_path = tmp_path / "robyn.env"
+    # Blank line, whitespace-only line, comment and a valueless line must not
+    # crash the parser or produce malformed pairs.
+    env_path.write_text("ROBYN_PORT=8080\n\n   \n# a comment\nNO_EQUALS\nROBYN_HOST=127.0.0.1\n")
+    result = list(parser(config_path=env_path))
+    assert result == [["ROBYN_PORT", "8080"], ["ROBYN_HOST", "127.0.0.1"]]
+
+
+def test_parser_preserves_equals_in_value(tmp_path):
+    env_path = tmp_path / "robyn.env"
+    env_path.write_text("SECRET_KEY=abc=123==\n")
+    result = list(parser(config_path=env_path))
+    assert result == [["SECRET_KEY", "abc=123=="]]
+
+
+def test_load_vars_with_blank_line_does_not_crash(tmp_path):
+    env_path = tmp_path / "robyn.env"
+    env_path.write_text("ROBYN_PORT=8081\n\nROBYN_HOST=0.0.0.0\n")
+    for key in ("ROBYN_PORT", "ROBYN_HOST"):
+        os.environ.pop(key, None)
+    try:
+        load_vars(variables=parser(config_path=env_path))
+        assert os.environ["ROBYN_PORT"] == "8081"
+        assert os.environ["ROBYN_HOST"] == "0.0.0.0"
+    finally:
+        for key in ("ROBYN_PORT", "ROBYN_HOST"):
+            os.environ.pop(key, None)
