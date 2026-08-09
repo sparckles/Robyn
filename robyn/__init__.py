@@ -961,6 +961,11 @@ class Robyn(BaseRobyn):
         _check_port: bool = True,
         client_timeout: int = 30,
         keep_alive_timeout: int = 20,
+        processes: int | None = None,
+        workers: int | None = None,
+        fast: bool | None = None,
+        log_level: str | None = None,
+        open_browser: bool | None = None,
     ):
         """
         Starts the server
@@ -970,13 +975,45 @@ class Robyn(BaseRobyn):
         :param _check_port bool: represents if the port should be checked if it is already in use
         :param client_timeout int: timeout for client connections in seconds (default: 30)
         :param keep_alive_timeout int: timeout for keep-alive connections in seconds (default: 20)
+        :param processes int | None: number of processes to run; overrides the CLI ``--processes`` value when set
+        :param workers int | None: number of workers per process; overrides the CLI ``--workers`` value when set
+        :param fast bool | None: enable fast mode (optimal processes/workers/log level). Explicit
+            ``processes``/``workers``/``log_level`` arguments still take precedence.
+        :param log_level str | None: log level (e.g. ``"WARN"``); overrides the CLI ``--log-level`` value when set
+        :param open_browser bool | None: open the browser on a successful start; overrides config when set
+
+        Note: dev mode (hot reload) is intentionally not configurable here -- it relies on the
+        file-watching reloader and is only available through the Robyn CLI (``robyn app.py --dev``).
         """
 
         host = os.getenv("ROBYN_HOST", host)
         port = int(os.getenv("ROBYN_PORT", port))
         client_timeout = int(os.getenv("ROBYN_CLIENT_TIMEOUT", client_timeout))
         keep_alive_timeout = int(os.getenv("ROBYN_KEEP_ALIVE_TIMEOUT", keep_alive_timeout))
-        open_browser = bool(os.getenv("ROBYN_BROWSER_OPEN", self.config.open_browser))
+
+        # Programmatic overrides: explicit start() arguments take precedence over CLI flags.
+        # `fast` only fills in the values the caller did not set explicitly.
+        if fast:
+            cpu_count = os.cpu_count() or 1
+            processes = processes if processes is not None else (cpu_count * 2) + 1
+            workers = workers if workers is not None else 2
+            log_level = log_level if log_level is not None else "WARNING"
+
+        if processes is not None:
+            self.config.processes = processes
+        if workers is not None:
+            self.config.workers = workers
+        if log_level is not None:
+            self.config.log_level = log_level
+            logging.basicConfig(level=self.config.log_level, force=True)
+
+        if open_browser is None:
+            raw_open_browser = os.getenv("ROBYN_BROWSER_OPEN")
+            if raw_open_browser is None:
+                open_browser = bool(self.config.open_browser)
+            else:
+                # Parse as a real boolean -- bool("false")/bool("0") would otherwise be True.
+                open_browser = raw_open_browser.strip().lower() in {"1", "true", "yes", "on"}
 
         if _check_port:
             while self.is_port_in_use(port):

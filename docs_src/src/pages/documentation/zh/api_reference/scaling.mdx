@@ -16,6 +16,33 @@
   </Col>
 </Row>
 
+## 以代码方式配置
+
+CLI 上可用的扩展选项同样可以直接传给 `app.start()`，因此无需 CLI 也能运行 Robyn —— 例如在脚本、嵌入式进程或测试 fixture 中。显式传入的参数优先级高于 CLI 标志；`fast` 只会补全你未显式设置的值。开发模式（热重载）依赖文件监听的 reloader，仍仅在 CLI 中可用。
+
+<Row>
+  <Col>
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request">
+
+      ```python
+      from robyn import Robyn
+
+      app = Robyn(__file__)
+
+      if __name__ == "__main__":
+          # 等价于：python app.py --processes 4 --workers 2 --log-level WARN
+          app.start(host="0.0.0.0", port=8080, processes=4, workers=2, log_level="WARN")
+
+          # 或者让 fast 模式自动选择最优的 processes/workers/日志级别
+          # app.start(fast=True)
+      ```
+    </CodeGroup>
+
+  </Col>
+</Row>
+
 ---
 
 ## 下一步
