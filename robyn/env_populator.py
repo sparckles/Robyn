@@ -14,9 +14,10 @@ def parser(config_path=None, project_root=""):
     if config_path.exists():
         with open(config_path, "r") as f:
             for line in f:
-                if line.startswith("#"):
+                stripped = line.strip()
+                if not stripped or stripped.startswith("#") or "=" not in stripped:
                     continue
-                yield line.strip().split("=")
+                yield stripped.split("=", 1)
 
 
 # check for the environment variables set in cli and if not set them
