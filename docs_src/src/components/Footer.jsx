@@ -53,6 +53,12 @@ export function Footer() {
                   <NavLink href="https://discord.gg/rkERZ5eNU8" target="_blank">
                     Discord
                   </NavLink>
+                  <NavLink
+                    href="https://www.linkedin.com/company/robyn-framework/"
+                    target="_blank"
+                  >
+                    LinkedIn
+                  </NavLink>
                 </div>
                 <p className="text-sm text-zinc-500">
                   &copy; {new Date().getFullYear()} Sparckles OSS. All rights
