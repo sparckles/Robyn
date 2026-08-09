@@ -9,6 +9,7 @@ from typing import List
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
+from robyn._runtime import GRACEFUL_SHUTDOWN_TIMEOUT
 from robyn.logger import Colors, logger
 
 
@@ -92,6 +93,7 @@ def setup_reloader(directory_path: str, file_path: str) -> None:
 
     def terminating_signal_handler(_sig, _frame):
         event_handler.stop_server()
+        event_handler.wait_for_server_shutdown()
         logger.info("Terminating reloader", bold=True)
         observer.stop()
         observer.join()
@@ -109,7 +111,7 @@ def setup_reloader(directory_path: str, file_path: str) -> None:
     finally:
         observer.stop()
         observer.join()
-        event_handler.process.wait()
+        event_handler.wait_for_server_shutdown()
 
 
 class EventHandler(FileSystemEventHandler):
@@ -123,7 +125,24 @@ class EventHandler(FileSystemEventHandler):
 
     def stop_server(self) -> None:
         if self.process:
-            os.kill(self.process.pid, signal.SIGTERM)  # Stop the subprocess using os.kill()
+            try:
+                self.process.terminate()
+            except ProcessLookupError:
+                pass
+
+    def wait_for_server_shutdown(self) -> None:
+        if not self.process:
+            return
+
+        try:
+            self.process.wait(timeout=GRACEFUL_SHUTDOWN_TIMEOUT)
+        except subprocess.TimeoutExpired:
+            logger.warn("Server process %s did not exit gracefully, force killing it.", self.process.pid)
+            try:
+                self.process.kill()
+            except ProcessLookupError:
+                pass
+            self.process.wait()
 
     def reload(self) -> None:
         """Restart the app subprocess, relaunching from the resolved app file path.
@@ -159,9 +178,8 @@ class EventHandler(FileSystemEventHandler):
         clean_rust_binaries(self.built_rust_binaries)
         self.built_rust_binaries = compile_rust_files(self.directory_path)
 
-        prev_process = self.process
-        if prev_process:
-            prev_process.kill()
+        if self.process:
+            self.wait_for_server_shutdown()
 
         self.process = subprocess.Popen(
             [sys.executable, app_file, *forwarded_args],
