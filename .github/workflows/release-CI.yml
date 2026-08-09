@@ -14,14 +14,19 @@ on:
   
 env:
   UV_SYSTEM_PYTHON: 1
+
+permissions:
+  contents: read
+
 jobs:
   macos:
-    runs-on: macos-latest
+    runs-on: macos-15
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install uv
         uses: astral-sh/setup-uv@v3
       - uses: actions/setup-python@v6
@@ -29,41 +34,46 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-apple-darwin
+          targets: x86_64-apple-darwin aarch64-apple-darwin
       - name: Build wheels - x86_64
         uses: PyO3/maturin-action@v1
         with:
           target: x86_64
           args: -i python --release --out dist
-      - name: Build wheels - universal2
+      - name: Build wheels - aarch64
         uses: PyO3/maturin-action@v1
         with:
-          target: universal2-apple-darwin
+          target: aarch64
           args: -i python --release --out dist
-      - name: Install build wheel - universal2
+      - name: Install build wheel
         run: |
-          uv pip install --force-reinstall dist/robyn*_universal2.whl
+          uv pip install --force-reinstall dist/robyn*arm64.whl
           cd ~ && python -c 'import robyn'
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-${{ github.job }}-universal-${{ matrix.python-version }}
+          name: wheels-${{ github.job }}-${{ matrix.python-version }}
           path: dist
+
   windows:
-    runs-on: windows-latest
+    runs-on: windows-2025
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         target: [x64, x86]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install uv
         uses: astral-sh/setup-uv@v3
-      - uses: actions/setup-python@v6
+      - name: Install Python
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
-          architecture: ${{ matrix.target }}
+          architecture: ${{ matrix.target == 'x86' && 'x86' || 'x64' }}
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target == 'x86' && 'i686-pc-windows-msvc' || '' }}
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
@@ -79,92 +89,143 @@ jobs:
         with:
           name: wheels-${{ github.job }}-${{ matrix.target }}-${{ matrix.python-version }}
           path: dist
-  linux:
-    runs-on: ubuntu-latest
+
+  windows-arm64:
+    runs-on: windows-11-arm
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
-        target: [x86_64, i686]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
     steps:
-      - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@v4
       - name: Install uv
         uses: astral-sh/setup-uv@v3
-      - uses: actions/setup-python@v6
+      - name: Install Python
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Build Wheels
+          architecture: arm64
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
-          target: ${{ matrix.target }}
-          manylinux: auto
-          args: -i python${{ matrix.python-version }} --release --out dist
+          target: aarch64
+          args: -i python --release --out dist
       - name: Install build wheel
-        if: matrix.target == 'x86_64'
+        shell: bash
         run: |
           uv pip install --force-reinstall dist/robyn*.whl
           cd ~ && python -c 'import robyn'
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-${{ github.job }}-${{ matrix.target }}-${{ matrix.python-version }}
+          name: wheels-${{ github.job }}-arm64-${{ matrix.python-version }}
           path: dist
-  linux-cross:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.enable_linux_cross)
+
+  manylinux:
+    runs-on: ubuntu-24.04
     strategy:
+      fail-fast: false
       matrix:
-        python:
-          [
-            { version: "3.10", abi: "cp310-cp310" },
-            { version: "3.11", abi: "cp311-cp311" },
-            { version: "3.12", abi: "cp312-cp312" },
-            { version: "3.13", abi: "cp313-cp313" },
-          ]
-        target: [aarch64, armv7]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        target: [x86_64, i686, aarch64, armv7]
+        include:
+          - target: x86_64
+            manylinux: manylinux_2_28
+          - target: i686
+            manylinux: manylinux_2_28
+          - target: aarch64
+            manylinux: manylinux_2_28
+          - target: armv7
+            manylinux: manylinux_2_31
     steps:
-      - uses: actions/checkout@v3
-      - name: Build Wheels
+      - uses: actions/checkout@v4
+      - name: Set up QEMU
+        if: matrix.target == 'aarch64' || matrix.target == 'armv7'
+        uses: docker/setup-qemu-action@v3
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Build Wheels (manylinux)
         uses: PyO3/maturin-action@v1
-        env:
-          PYO3_CROSS_LIB_DIR: /opt/python/${{ matrix.python.abi }}/lib
         with:
           target: ${{ matrix.target }}
-          manylinux: auto
-          maturin-version: "v1.12.0"
-          args: -i python${{matrix.python.version}} --release --out dist
-      - uses: uraimo/run-on-arch-action@v2
-        name: Install build wheel
-        with:
-          arch: ${{ matrix.target }}
-          distro: ubuntu22.04
-          githubToken: ${{ github.token }}
-          # Mount the dist directory as /artifacts in the container
-          dockerRunArgs: |
-            --volume "${PWD}/dist:/artifacts"
-          install: |
-            apt update -y
-            apt install -y software-properties-common
-            add-apt-repository -y ppa:deadsnakes/ppa
-            apt update -y
-            apt install -y gcc musl-dev python3-dev python${{ matrix.python.version }} python${{ matrix.python.version }}-venv
-          run: |
-            ls -lrth /artifacts
-            python${{ matrix.python.version }} -m venv venv
-            source venv/bin/activate
-            python -m pip install --upgrade pip setuptools wheel
-            python -m pip install --force-reinstall /artifacts/robyn*.whl
-            cd ~ && python -c 'import robyn'
+          manylinux: ${{ matrix.manylinux }}
+          args: --zig -i python${{ matrix.python-version }} --release --out dist
+      - name: Test wheel (Slim)
+        run: |
+          if [ "${{ matrix.target }}" = "x86_64" ]; then
+            PLATFORM="linux/amd64"
+          elif [ "${{ matrix.target }}" = "i686" ]; then
+            PLATFORM="linux/386"
+          elif [ "${{ matrix.target }}" = "aarch64" ]; then
+            PLATFORM="linux/arm64"
+          elif [ "${{ matrix.target }}" = "armv7" ]; then
+            PLATFORM="linux/arm/v7"
+          fi
+          
+          docker run --rm --platform $PLATFORM -v ${{ github.workspace }}/dist:/artifacts python:${{ matrix.python-version }}-slim sh -c "\
+            apt-get update && apt-get install -y build-essential && \
+            pip install --force-reinstall /artifacts/robyn*.whl && \
+            cd ~ && python -c 'import robyn'"
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-${{ github.job }}-${{ matrix.target }}-${{ matrix.python.version }}-${{ matrix.python.abi }}
+          name: wheels-${{ github.job }}-${{ matrix.target }}-${{ matrix.python-version }}
           path: dist
+
+  musllinux:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        target: [x86_64, i686, aarch64, armv7]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up QEMU
+        if: matrix.target == 'aarch64' || matrix.target == 'armv7'
+        uses: docker/setup-qemu-action@v3
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Build Wheels (musl)
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          manylinux: musllinux_1_2
+          args: --zig -i python${{ matrix.python-version }} --release --out dist
+      - name: Test wheel (Alpine)
+        run: |
+          if [ "${{ matrix.target }}" = "x86_64" ]; then
+            PLATFORM="linux/amd64"
+          elif [ "${{ matrix.target }}" = "i686" ]; then
+            PLATFORM="linux/386"
+          elif [ "${{ matrix.target }}" = "aarch64" ]; then
+            PLATFORM="linux/arm64"
+          elif [ "${{ matrix.target }}" = "armv7" ]; then
+            PLATFORM="linux/arm/v7"
+          fi
+          
+          docker run --rm --platform $PLATFORM -v ${{ github.workspace }}/dist:/artifacts python:${{ matrix.python-version }}-alpine sh -c "\
+            apk add --no-cache build-base autoconf automake libtool && \
+            pip install --force-reinstall /artifacts/robyn*.whl && \
+            cd ~ && python -c 'import robyn'"
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ github.job }}-${{ matrix.target }}-${{ matrix.python-version }}
+          path: dist
+
   merge:
     name: Building Single Artifact
-    runs-on: ubuntu-latest
-    needs: [macos, windows, linux, linux-cross]
-    if: always() && needs.macos.result == 'success' && needs.windows.result == 'success' && needs.linux.result == 'success' && (needs.linux-cross.result == 'success' || needs.linux-cross.result == 'skipped')
+    runs-on: ubuntu-24.04
+    needs: [macos, windows, windows-arm64, manylinux, musllinux]
+    if: always() && needs.macos.result == 'success' && needs.windows.result == 'success' && needs.windows-arm64.result == 'success' && needs.manylinux.result == 'success' && needs.musllinux.result == 'success'
     steps:
       - name: Downloading all Artifacts
         uses: actions/download-artifact@v4
@@ -183,8 +244,8 @@ jobs:
 
   release:
     name: Release
-    runs-on: ubuntu-latest
-    needs: [macos, windows, linux, linux-cross, merge]
+    runs-on: ubuntu-24.04
+    needs: [macos, windows, windows-arm64, manylinux, musllinux, merge]
     if: always() && needs.merge.result == 'success'
     steps:
       - uses: actions/download-artifact@v4
