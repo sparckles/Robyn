@@ -36,6 +36,10 @@ const modeScript = `
   }
 `
 
+const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL || 'https://robyn.tech'
+).replace(/\/+$/, '')
+
 export default function Document({ __NEXT_DATA__ }) {
   const locale = __NEXT_DATA__?.locale || 'en'
 
@@ -46,14 +50,16 @@ export default function Document({ __NEXT_DATA__ }) {
         <link
           rel="alternate"
           type="application/rss+xml"
-          href={`${process.env.NEXT_PUBLIC_SITE_URL}/rss/feed.xml`}
+          href={`${SITE_URL}/rss/feed.xml`}
         />
         <link
           rel="alternate"
           type="application/feed+json"
-          href={`${process.env.NEXT_PUBLIC_SITE_URL}/rss/feed.json`}
+          href={`${SITE_URL}/rss/feed.json`}
         />
-        <link rel="icon" type="image/png" href="/robynog.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/site.webmanifest" />
         <meta name="theme-color" content="#000000" />
       </Head>
