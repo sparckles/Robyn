@@ -3,7 +3,7 @@ import { useRouter } from 'next/router'
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://robyn.tech').replace(/\/+$/, '')
 const DEFAULT_OG_IMAGE = `${SITE_URL}/robynog.png`
-const TWITTER_HANDLE = '@robaborobyn'
+const TWITTER_HANDLE = '@robyn_oss'
 const SITE_NAME = 'Robyn Framework'
 
 function escapeJsonLd(obj) {
@@ -120,6 +120,14 @@ export function SoftwareApplicationJsonLd() {
     license: 'https://opensource.org/licenses/BSD-2-Clause',
     operatingSystem: 'Cross-platform',
     runtimePlatform: 'Python 3.10+',
+    keywords: [
+      'Python web framework',
+      'async web framework',
+      'Rust runtime',
+      'REST API',
+      'WebSockets',
+      'high performance',
+    ],
     author: OrganizationJsonLd(),
     offers: {
       '@type': 'Offer',
@@ -139,6 +147,9 @@ export function OrganizationJsonLd() {
     sameAs: [
       'https://github.com/sparckles/robyn',
       'https://discord.gg/rkERZ5eNU8',
+      'https://www.linkedin.com/company/robyn-framework/',
+      'https://twitter.com/robyn_oss',
+      'https://pypi.org/project/robyn/',
     ],
   }
 }

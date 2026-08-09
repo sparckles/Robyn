@@ -29,7 +29,7 @@ const nextConfig = {
       {
         source: '/documentation',
         destination: '/documentation/en',
-        permanent: false,
+        permanent: true,
       },
     ]
   },
