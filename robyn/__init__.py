@@ -976,7 +976,7 @@ class Robyn(BaseRobyn):
         port = int(os.getenv("ROBYN_PORT", port))
         client_timeout = int(os.getenv("ROBYN_CLIENT_TIMEOUT", client_timeout))
         keep_alive_timeout = int(os.getenv("ROBYN_KEEP_ALIVE_TIMEOUT", keep_alive_timeout))
-        open_browser = bool(os.getenv("ROBYN_BROWSER_OPEN", self.config.open_browser))
+        open_browser = os.getenv("ROBYN_BROWSER_OPEN", str(self.config.open_browser)).strip().lower() in ("1", "true", "yes")
 
         if _check_port:
             while self.is_port_in_use(port):
