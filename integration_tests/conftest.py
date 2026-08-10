@@ -5,19 +5,18 @@ import signal
 import socket
 import subprocess
 import time
-from typing import List
 
 import pytest
 
 from integration_tests.helpers.network_helpers import get_network_host
 
 
-def spawn_process(command: List[str]) -> subprocess.Popen:
+def spawn_process(command: list[str], env: dict[str, str] | None = None) -> subprocess.Popen:
     if platform.system() == "Windows":
         command[0] = "python"
-        process = subprocess.Popen(command, shell=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+        process = subprocess.Popen(command, shell=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP, env=env)
         return process
-    process = subprocess.Popen(command, preexec_fn=os.setsid)
+    process = subprocess.Popen(command, preexec_fn=os.setsid, env=env)
     return process
 
 
@@ -33,7 +32,7 @@ def kill_process(process: subprocess.Popen) -> None:
         pass
 
 
-def start_server(domain: str, port: int, is_dev: bool = False) -> subprocess.Popen:
+def start_server(domain: str, port: int, is_dev: bool = False, extra_env: dict[str, str] | None = None) -> subprocess.Popen:
     """
     Call this method to wait for the server to start
     """
@@ -44,12 +43,16 @@ def start_server(domain: str, port: int, is_dev: bool = False) -> subprocess.Pop
     if is_dev:
         command.append("--dev")
 
-    # Ensure environment variables are properly set for the subprocess
+    # Ensure environment variables are properly set for the subprocess. extra_env
+    # is applied first so it can never override the domain/port this fixture
+    # is about to poll for readiness.
     env = os.environ.copy()
+    if extra_env:
+        env.update(extra_env)
     env["ROBYN_HOST"] = domain
     env["ROBYN_PORT"] = str(port)
 
-    process = spawn_process(command)
+    process = spawn_process(command, env)
 
     # Wait for the server to be reachable
     timeout = 15  # The maximum time we will wait for an answer
@@ -77,7 +80,9 @@ def session():
     domain = "127.0.0.1"
     port = 8080
     os.environ["ROBYN_HOST"] = domain
-    process = start_server(domain, port)
+    # Explicitly disable compression so this default server isn't affected by
+    # a ROBYN_COMPRESSION already set in the developer's or CI's shell
+    process = start_server(domain, port, extra_env={"ROBYN_COMPRESSION": "0"})
     yield
     kill_process(process)
 
@@ -109,6 +114,17 @@ def dev_session():
     os.environ["ROBYN_PORT"] = str(port)
     # This doesn't test is_dev=True!!!!
     process = start_server(domain, port)
+    yield
+    kill_process(process)
+
+
+@pytest.fixture(scope="session")
+def compression_session():
+    domain = "127.0.0.1"
+    port = 8084
+    # extra_env keeps the flag scoped to this server; mutating os.environ would
+    # leak compression into every session server started after this fixture
+    process = start_server(domain, port, extra_env={"ROBYN_COMPRESSION": "1"})
     yield
     kill_process(process)
 

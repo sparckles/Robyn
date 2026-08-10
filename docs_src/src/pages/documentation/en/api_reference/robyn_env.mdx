@@ -22,6 +22,9 @@ Batman wanted to configure the server through an environment file. Changing code
  - `ROBYN_MAX_PAYLOAD_SIZE`: Sets the maximum payload size for HTTP requests and WebSocket messages in bytes.
     - Default: `1000000` bytes
     - Example: `ROBYN_MAX_PAYLOAD_SIZE=1000000`
+ - `ROBYN_COMPRESSION`: Enables automatic gzip/brotli/zstd compression of responses, negotiated via the request's `Accept-Encoding` header. Streaming responses (SSE) always opt out of compression to preserve real-time delivery.
+    - Default: `False`
+    - Example: `ROBYN_COMPRESSION=True`
 
 You can have a `robyn.env` file to load them automatically in your environment.
 
@@ -45,6 +48,7 @@ RANDOM_ENV=123
 ROBYN_BROWSER_OPEN=True
 ROBYN_DEV_MODE=True
 ROBYN_MAX_PAYLOAD_SIZE=1000000
+ROBYN_COMPRESSION=True
 ```
 
 With the web application deployed and running smoothly, Batman had a powerful new tool at his disposal. The Robyn framework had provided him with the flexibility, scalability, and performance needed to create an effective crime-fighting application, giving him a technological edge in his ongoing battle to protect Gotham City.
