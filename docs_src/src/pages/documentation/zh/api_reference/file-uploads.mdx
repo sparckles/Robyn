@@ -47,8 +47,7 @@ export const description =
 
     @app.post("/sync/multipart-file")
     def sync_multipart_file(request: Request):
-        files = request.files
-        file_names = files.keys()
+        file_names = set(file.name for field_name, files in request.files.items() for file in files)
         return {"file_names": list(file_names)}
     ```
 

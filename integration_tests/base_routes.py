@@ -743,8 +743,7 @@ async def file_download_async():
 
 @app.post("/sync/multipart-file")
 def sync_multipart_file(request: Request):
-    files = request.files
-    file_names = files.keys()
+    file_names = set(file.name for _, files in request.files.items() for file in files)
     return {"file_names": list(file_names)}
 
 
@@ -757,16 +756,17 @@ def sync_multipart_file_save(request: Request):
     os.makedirs(upload_dir, exist_ok=True)
 
     saved = {}
-    for file_name, content in request.files.items():
-        # Never trust a client-supplied filename: strip any directory components
-        # so absolute paths or ".." segments can't escape upload_dir.
-        safe_name = os.path.basename(file_name)
-        if not safe_name or safe_name in (".", ".."):
-            continue
-        destination = os.path.join(upload_dir, safe_name)
-        with open(destination, "wb") as saved_file:
-            saved_file.write(content)
-        saved[safe_name] = {"path": destination, "size": len(content)}
+    for field_name, files in request.files.items():
+        for file in files:
+            # Never trust a client-supplied filename: strip any directory components
+            # so absolute paths or ".." segments can't escape upload_dir.
+            safe_name = os.path.basename(file.name)
+            if not safe_name or safe_name in (".", ".."):
+                continue
+            destination = os.path.join(upload_dir, safe_name)
+            with open(destination, "wb") as saved_file:
+                saved_file.write(file.content)
+            saved[safe_name] = {"path": destination, "size": len(file.content)}
 
     return saved
 

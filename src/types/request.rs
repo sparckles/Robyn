@@ -5,13 +5,69 @@ use actix_web::{
 };
 use futures_util::StreamExt as _;
 use pyo3::types::{PyBytes, PyDict, PyList, PyString};
-use pyo3::{exceptions::PyValueError, prelude::*, IntoPyObject};
+use pyo3::{exceptions::{PyTypeError, PyValueError}, prelude::*, IntoPyObject};
 use serde_json::Value;
 use std::collections::HashMap;
 
 use crate::types::{check_body_type, get_body_from_pyobject, Url};
 
 use super::{headers::Headers, identity::Identity, multimap::QueryParams};
+
+#[pyclass(name = "UploadedFile")]
+#[derive(Clone, Debug)]
+pub struct PyUploadedFile {
+    #[pyo3(get)]
+    pub name: String,
+    #[pyo3(get)]
+    pub content: Py<PyBytes>,
+}
+
+#[pymethods]
+impl PyUploadedFile {
+    #[new]
+    pub fn new(name: String, content: Vec<u8>, py: Python) -> Self {
+        Self {
+            name,
+            content: PyBytes::new(py, &content).into(),
+        }
+    }
+    fn __repr__(&self, py: Python) -> PyResult<String> {
+        let content_bound = self.content.bind(py);
+        let len = content_bound.len()?;
+        Ok(format!(
+            "UploadedFile(name={}, content=<{}> bytes)",
+            self.name, len
+        ))
+    }
+}
+
+pub fn get_files_from_pyobject(value: &Bound<'_, PyAny>) -> PyResult<Option<HashMap<String, Vec<(String, Vec<u8>)>>>> {
+    if let Ok(dict) = value.downcast::<PyDict>() {
+        let mut files = HashMap::new();
+
+        for (key, val) in dict.iter() {
+            if let Ok(key_str) = key.extract::<String>() {
+                if let Ok(list) = val.downcast::<PyList>() {
+                    let mut file_list = Vec::new();
+
+                    for item in list.iter() {
+                        if let Ok(uploaded_file) = item.downcast::<PyUploadedFile>() {
+                            let filename = uploaded_file.borrow().name.clone();
+                            let content = uploaded_file.borrow().content.bind(item.py()).as_bytes().to_vec();
+                            file_list.push((filename, content));
+                        } else if let Ok(tuple) = item.extract::<(String, Vec<u8>)>() {
+                            file_list.push(tuple);
+                        }
+                    }
+                    files.insert(key_str, file_list);
+                }
+            }
+        }
+        Ok(Some(files))
+    } else {
+        Ok(None)
+    }
+}
 
 #[derive(Default, Debug, Clone, FromPyObject)]
 pub struct Request {
@@ -26,7 +82,8 @@ pub struct Request {
     pub ip_addr: Option<String>,
     pub identity: Option<Identity>,
     pub form_data: Option<HashMap<String, String>>,
-    pub files: Option<HashMap<String, Vec<u8>>>,
+    #[pyo3(from_py_with = get_files_from_pyobject)]
+    pub files: Option<HashMap<String, Vec<(String, Vec<u8>)>>>,
     // A Python session object (robyn.session.Session) shared by reference across
     // the before_request / handler / after_request phases, so in-handler mutations
     // are visible when the cookie is written back. Set by configure_sessions().
@@ -65,9 +122,12 @@ impl<'py> IntoPyObject<'py> for Request {
         let files: Py<PyDict> = match self.files {
             Some(data) if !data.is_empty() => {
                 let dict = PyDict::new(py);
-                for (key, value) in data {
-                    let bytes = PyBytes::new(py, &value);
-                    dict.set_item(key, bytes)?;
+                for (field_name, file_list) in data {
+                    let list = PyList::new::<Bound<'_, PyAny>, _>(py, [])?;
+                    for (filename, content) in file_list {
+                        list.append(Py::new(py, PyUploadedFile::new(filename, content, py))?)?;
+                    }
+                    dict.set_item(field_name, list)?;
                 }
                 dict.into()
             }
@@ -93,7 +153,7 @@ impl<'py> IntoPyObject<'py> for Request {
 
 async fn handle_multipart(
     mut payload: Multipart,
-    files: &mut HashMap<String, Vec<u8>>,
+    files: &mut HashMap<String, Vec<(String, Vec<u8>)>>,
     form_data: &mut HashMap<String, String>,
     body: &mut Vec<u8>,
 ) -> Result<(), Error> {
@@ -115,7 +175,7 @@ async fn handle_multipart(
         body.extend_from_slice(&data);
 
         if let Some(name) = file_name {
-            files.insert(name, data);
+            files.entry(field_name.to_string()).or_insert_with(Vec::new).push((name, data));
         } else if let Ok(text) = String::from_utf8(data) {
             form_data.insert(field_name.to_string(), text);
         }
@@ -132,7 +192,7 @@ impl Request {
     ) -> Result<Self, Error> {
         let mut query_params: QueryParams = QueryParams::new();
         let mut form_data: HashMap<String, String> = HashMap::new();
-        let mut files = HashMap::new();
+        let mut files: HashMap<String, Vec<(String, Vec<u8>)>> = HashMap::new();
 
         if !req.query_string().is_empty() {
             let split = req.query_string().split('&');

@@ -23,7 +23,7 @@ from robyn.openapi import OpenAPI, RouteOpenAPIMeta
 from robyn.processpool import run_processes
 from robyn.reloader import compile_rust_files
 from robyn.responses import SSEMessage, SSEResponse, StreamingResponse, html, serve_file, serve_html
-from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, WebSocketConnector, get_version
+from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, WebSocketConnector, get_version, UploadedFile
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.session import Session, SessionManager
 from robyn.testing import TestClient
@@ -1194,4 +1194,5 @@ __all__ = [
     "RequestURL",
     "Session",
     "SessionManager",
+    "UploadedFile",
 ]
