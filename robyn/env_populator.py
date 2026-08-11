@@ -15,16 +15,13 @@ def parser(config_path=None, project_root=""):
         with open(config_path, "r") as f:
             for line in f:
                 line = line.strip()
-                # Skip blank lines and comments so they do not yield a
-                # malformed (key-only) pair that crashes load_vars().
                 if not line or line.startswith("#"):
                     continue
-                if "=" not in line:
+                key, sep, value = line.partition("=")
+                if not sep or not key:
                     logger.warning(" Ignoring malformed robyn.env line: %r", line)
                     continue
-                # maxsplit=1 so values containing '=' (e.g. base64 secrets)
-                # are preserved instead of being truncated at the first '='.
-                yield line.split("=", 1)
+                yield [key, value]
 
 
 # check for the environment variables set in cli and if not set them
