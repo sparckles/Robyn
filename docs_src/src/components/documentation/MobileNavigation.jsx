@@ -8,21 +8,15 @@ import { Navigation } from '@/components/documentation/Navigation'
 
 function MenuIcon(props) {
   return (
-    <button
-      type="button"
-      aria-label="Toggle dark mode"
-      className="group rounded-full bg-zinc-800/90 px-3 py-2 shadow-lg shadow-zinc-800/5  ring-1 ring-white/10 backdrop-blur transition hover:ring-white/20"
+    <svg
+      viewBox="0 0 10 9"
+      fill="none"
+      strokeLinecap="round"
+      aria-hidden="true"
+      {...props}
     >
-      <svg
-        viewBox="0 0 10 9"
-        fill="none"
-        strokeLinecap="round"
-        aria-hidden="true"
-        {...props}
-      >
-        <path d="M.5 1h9M.5 8h9M.5 4.5h9" />
-      </svg>
-    </button>
+      <path d="M.5 1h9M.5 8h9M.5 4.5h9" />
+    </svg>
   )
 }
 

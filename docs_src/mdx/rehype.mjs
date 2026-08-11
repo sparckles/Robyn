@@ -7,7 +7,6 @@ import * as acorn from 'acorn'
 import { slugifyWithCounter } from '@sindresorhus/slugify'
 import rehypeSlug from 'rehype-slug'
 import { remarkRehypeWrap } from 'remark-rehype-wrap'
-import rehypeAutolinkHeadings from 'rehype-autolink-headings'
 
 function rehypeParseCodeBlocks() {
   return (tree) => {
@@ -116,7 +115,6 @@ function getSections(node) {
 
 export const rehypePlugins = [
   rehypeSlug,
-  [rehypeAutolinkHeadings, { behavior: 'wrap', test: ['h2'] }],
   [
     remarkRehypeWrap,
     {
