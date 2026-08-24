@@ -22,7 +22,7 @@ from robyn.mcp import MCPApp
 from robyn.openapi import OpenAPI, RouteOpenAPIMeta
 from robyn.processpool import run_processes
 from robyn.reloader import compile_rust_files
-from robyn.responses import SSEMessage, SSEResponse, StreamingResponse, html, serve_file, serve_html
+from robyn.responses import RedirectResponse, SSEMessage, SSEResponse, StreamingResponse, html, serve_file, serve_html
 from robyn.robyn import FunctionInfo, Headers, HttpMethod, Request, Response, WebSocketConnector, get_version
 from robyn.router import MiddlewareRouter, MiddlewareType, Router, WebSocketRouter
 from robyn.session import Session, SessionManager
@@ -1179,6 +1179,7 @@ __all__ = [
     "StreamingResponse",
     "SSEResponse",
     "SSEMessage",
+    "RedirectResponse",
     "ALLOW_CORS",
     "SubRouter",
     "AuthenticationHandler",

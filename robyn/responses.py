@@ -7,6 +7,8 @@ from typing import AsyncGenerator, Generator, Optional, Union
 
 from robyn.robyn import Headers, Response
 
+_REDIRECT_STATUS_CODES = frozenset({301, 302, 303, 307, 308})
+
 
 class FileResponse:
     def __init__(
@@ -19,6 +21,33 @@ class FileResponse:
         self.description = ""
         self.status_code = status_code or 200
         self.headers = headers or Headers({"Content-Disposition": "attachment"})
+
+
+class RedirectResponse(Response):
+    """Convenience response that issues an HTTP redirect.
+
+    Args:
+        url: The target URL to redirect to.
+        status_code: HTTP status code (default 307 Temporary Redirect).
+            Common values: 301 (permanent), 302 (found), 303 (see other), 307 (temporary), 308 (permanent redirect).
+        headers: Optional additional headers.
+    """
+
+    def __init__(
+        self,
+        url: str,
+        status_code: int = 307,
+        headers: Optional[Headers] = None,
+    ):
+        if status_code not in _REDIRECT_STATUS_CODES:
+            raise ValueError(f"Invalid redirect status code {status_code}. Must be one of: {sorted(_REDIRECT_STATUS_CODES)}")
+        redirect_headers = headers or Headers({})
+        redirect_headers.set("Location", url)
+        super().__init__(
+            status_code=status_code,
+            headers=redirect_headers,
+            description="",
+        )
 
 
 def html(html: str) -> Response:
