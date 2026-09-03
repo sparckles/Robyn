@@ -110,10 +110,13 @@ async def create_post(request: Request):
 
     rusty-req uses `params` as the JSON body for POST/PUT/PATCH.
     """
+    payload = request.json()
+    if not isinstance(payload, dict):
+        return {"error": "JSON body must be an object"}, 400
     raw = await rusty_req.fetch_single(
         url=f"{UPSTREAM}/posts",
         method="POST",
-        params=request.json(),
+        params=payload,
         headers={"Accept": "application/json"},
     )
     result = parse_result(raw)
