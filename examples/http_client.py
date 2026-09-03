@@ -79,19 +79,20 @@ def parse_result(raw: dict[str, Any]) -> dict[str, Any]:
 
 @app.get("/")
 def index():
+    """List the sample routes."""
     return {
         "message": "Outbound HTTP from a Robyn handler",
         "endpoints": {
             "GET /todo/:id": "Single GET",
             "POST /posts": "Forward the JSON body upstream",
             "GET /fan-out": "Several requests in parallel",
-            "GET /fetch?url=": "GET an arbitrary URL",
         },
     }
 
 
 @app.get("/todo/:id")
 async def get_todo(request: Request):
+    """Fetch one todo from the upstream API."""
     todo_id = request.path_params["id"]
     raw = await rusty_req.fetch_single(
         url=f"{UPSTREAM}/todos/{todo_id}",
@@ -105,7 +106,10 @@ async def get_todo(request: Request):
 
 @app.post("/posts")
 async def create_post(request: Request):
-    # rusty-req uses `params` as the JSON body for POST/PUT/PATCH.
+    """Forward the incoming JSON body to the upstream API.
+
+    rusty-req uses `params` as the JSON body for POST/PUT/PATCH.
+    """
     raw = await rusty_req.fetch_single(
         url=f"{UPSTREAM}/posts",
         method="POST",
@@ -113,13 +117,18 @@ async def create_post(request: Request):
         headers={"Accept": "application/json"},
     )
     result = parse_result(raw)
+    if not result["ok"]:
+        return {"error": result["exception"] or result["text"], "status": result["status"]}, 502
     return {"status": result["status"], "upstream": result["body"]}
 
 
 @app.get("/fan-out")
 async def fan_out():
-    # fetch_requests runs the batch concurrently. SELECT_ALL returns
-    # results as they finish; JOIN_ALL waits for the whole batch.
+    """Send several upstream GETs concurrently.
+
+    fetch_requests runs the batch concurrently. SELECT_ALL returns
+    results as they finish; JOIN_ALL waits for the whole batch.
+    """
     raw_results = await rusty_req.fetch_requests(
         [
             RequestItem(url=f"{UPSTREAM}/todos/1", method="GET", tag="todo-1", timeout=5.0),
@@ -141,22 +150,6 @@ async def fan_out():
             }
             for item in results
         ],
-    }
-
-
-@app.get("/fetch")
-async def fetch_url(request: Request):
-    url = request.query_params.get("url")
-    if not url:
-        return {"error": "query parameter 'url' is required"}, 400
-    raw = await rusty_req.fetch_single(url=url, method="GET")
-    result = parse_result(raw)
-    return {
-        "url": url,
-        "status": result["status"],
-        "ok": result["ok"],
-        "body": result["body"],
-        "exception": result["exception"],
     }
 
 
