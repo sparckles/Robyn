@@ -91,7 +91,9 @@ def session():
 def default_session():
     domain = "127.0.0.1"
     port = 8080
-    process = start_server(domain, port)
+    # Explicitly disable compression so this default server isn't affected by
+    # a ROBYN_COMPRESSION already set in the developer's or CI's shell
+    process = start_server(domain, port, extra_env={"ROBYN_COMPRESSION": "0"})
     yield
     kill_process(process)
 
@@ -101,7 +103,9 @@ def global_session():
     domain = get_network_host()
     port = 8080
     os.environ["ROBYN_HOST"] = domain
-    process = start_server(domain, port)
+    # Explicitly disable compression so this default server isn't affected by
+    # a ROBYN_COMPRESSION already set in the developer's or CI's shell
+    process = start_server(domain, port, extra_env={"ROBYN_COMPRESSION": "0"})
     yield
     kill_process(process)
 
@@ -113,7 +117,9 @@ def dev_session():
     os.environ["ROBYN_HOST"] = domain
     os.environ["ROBYN_PORT"] = str(port)
     # This doesn't test is_dev=True!!!!
-    process = start_server(domain, port)
+    # Explicitly disable compression so this default server isn't affected by
+    # a ROBYN_COMPRESSION already set in the developer's or CI's shell
+    process = start_server(domain, port, extra_env={"ROBYN_COMPRESSION": "0"})
     yield
     kill_process(process)
 
@@ -135,7 +141,9 @@ def test_session():
     port = 8080
     os.environ["ROBYN_HOST"] = domain
     os.environ["ROBYN_PORT"] = str(port)
-    process = start_server(domain, port, is_dev=True)
+    # Explicitly disable compression so this default server isn't affected by
+    # a ROBYN_COMPRESSION already set in the developer's or CI's shell
+    process = start_server(domain, port, is_dev=True, extra_env={"ROBYN_COMPRESSION": "0"})
     yield
     kill_process(process)
 
