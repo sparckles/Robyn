@@ -39,6 +39,8 @@ use pyo3_async_runtimes::TaskLocals;
 const MAX_PAYLOAD_SIZE: &str = "ROBYN_MAX_PAYLOAD_SIZE";
 const DEFAULT_MAX_PAYLOAD_SIZE: usize = 1_000_000; // 1Mb
 
+const COMPRESSION: &str = "ROBYN_COMPRESSION";
+
 static STARTED: AtomicBool = AtomicBool::new(false);
 
 #[derive(Clone)]
@@ -132,6 +134,10 @@ impl Server {
                     "Failed to parse environment variable {MAX_PAYLOAD_SIZE} - {e}"
                 ))
             })?;
+
+        let compression_enabled = env::var(COMPRESSION)
+            .map(|v| matches!(v.trim().to_lowercase().as_str(), "1" | "true"))
+            .unwrap_or(false);
 
         thread::spawn(move || {
             actix_web::rt::System::new().block_on(async move {
@@ -281,6 +287,10 @@ impl Server {
                                 .await;
                                 response.respond_to(&req_ref)
                             },
+                        ))
+                        .wrap(middleware::Condition::new(
+                            compression_enabled,
+                            middleware::Compress::default(),
                         ))
                 })
                 .keep_alive(KeepAlive::Os)

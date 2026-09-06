@@ -463,6 +463,11 @@ async def async_str_const_get():
     return "async str const get"
 
 
+@app.get("/sync/str/large")
+def sync_str_large_get():
+    return "compress me " * 5000
+
+
 # dict
 
 
