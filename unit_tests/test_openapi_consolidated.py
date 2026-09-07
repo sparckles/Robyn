@@ -99,7 +99,7 @@ def test_schema_body_with_containers_and_datetime():
     class ActionItemsRequest(Body):
         action_items: str
         emails: list[str]
-        meeting_summary: typing.Optional[str]
+        meeting_summary: str | None
         scheduled_for: datetime.datetime
 
     api = OpenAPI()

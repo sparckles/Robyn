@@ -9,21 +9,21 @@ no pydantic imports at module scope.
 """
 
 import inspect
-from typing import Any, Optional, Tuple
+from typing import Any
 
 import orjson
 
 __all__ = [
-    "is_pydantic_available",
-    "is_pydantic_model",
-    "detect_pydantic_params",
-    "validate_pydantic_body",
-    "get_pydantic_openapi_schema",
-    "serialize_pydantic_response",
-    "check_pydantic_installed_for_handler",
+    "MultiplePydanticBodyError",
     "PydanticBodyValidationError",
     "PydanticNotInstalledError",
-    "MultiplePydanticBodyError",
+    "check_pydantic_installed_for_handler",
+    "detect_pydantic_params",
+    "get_pydantic_openapi_schema",
+    "is_pydantic_available",
+    "is_pydantic_model",
+    "serialize_pydantic_response",
+    "validate_pydantic_body",
 ]
 
 _BaseModel = None
@@ -113,7 +113,7 @@ def _sanitize_errors(errors: list) -> list:
     return sanitized
 
 
-def validate_pydantic_body(model_class, body: Any) -> Tuple[Any, Optional[dict]]:
+def validate_pydantic_body(model_class, body: Any) -> tuple[Any, dict | None]:
     """Validate request body against a Pydantic model.
 
     Uses model_validate_json for maximum performance — single-pass
@@ -137,7 +137,7 @@ def validate_pydantic_body(model_class, body: Any) -> Tuple[Any, Optional[dict]]
         }
 
 
-def get_pydantic_openapi_schema(model_class) -> Tuple[dict, dict]:
+def get_pydantic_openapi_schema(model_class) -> tuple[dict, dict]:
     """Get OpenAPI-compatible JSON Schema from a Pydantic model.
 
     Uses ref_template so nested model references point to
@@ -157,7 +157,7 @@ def get_pydantic_openapi_schema(model_class) -> Tuple[dict, dict]:
     return full_schema, component_schemas
 
 
-def serialize_pydantic_response(res) -> Optional[str]:
+def serialize_pydantic_response(res) -> str | None:
     """Serialize a Pydantic model (or list of models) to a JSON string.
 
     Returns None when *res* is not a Pydantic type so the caller can fall

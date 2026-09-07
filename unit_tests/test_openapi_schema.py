@@ -15,7 +15,7 @@ def test_schema_basic_types():
 
 def test_schema_typing_list():
     api = OpenAPI()
-    schema = api.get_schema_object("test", typing.List[str])
+    schema = api.get_schema_object("test", list[str])
     assert schema["type"] == "array"
     assert schema["items"] == {"title": "Test_item", "type": "string"}
 
@@ -33,7 +33,7 @@ def test_schema_list_of_custom_class():
         count: int
 
     api = OpenAPI()
-    schema = api.get_schema_object("test", typing.List[Item])
+    schema = api.get_schema_object("test", list[Item])
     assert schema["type"] == "array"
     assert schema["items"]["type"] == "object"
     assert "name" in schema["items"]["properties"]
@@ -98,7 +98,7 @@ def test_schema_pep604_optional():
 
 def test_schema_nested_optional_list():
     api = OpenAPI()
-    schema = api.get_schema_object("test", typing.Optional[typing.List[str]])
+    schema = api.get_schema_object("test", typing.Optional[list[str]])
     assert "anyOf" in schema
     assert {"type": "null"} in schema["anyOf"]
     non_null = [s for s in schema["anyOf"] if s != {"type": "null"}]

@@ -5,14 +5,13 @@ import signal
 import socket
 import subprocess
 import time
-from typing import List
 
 import pytest
 
 from integration_tests.helpers.network_helpers import get_network_host
 
 
-def spawn_process(command: List[str]) -> subprocess.Popen:
+def spawn_process(command: list[str]) -> subprocess.Popen:
     if platform.system() == "Windows":
         command[0] = "python"
         process = subprocess.Popen(command, shell=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)

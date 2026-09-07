@@ -1,17 +1,13 @@
-from __future__ import annotations
-
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, overload
+from typing import Any, overload
 
-def get_version() -> str:
-    pass
+def get_version() -> str: ...
 
 class SocketHeld:
-    def __init__(self, url: str, port: int):
-        pass
-    def try_clone(self) -> SocketHeld:
-        pass
+    def __init__(self, url: str, port: int): ...
+    def try_clone(self) -> SocketHeld: ...
 
 class MiddlewareType(Enum):
     """
@@ -106,7 +102,6 @@ class QueryParams:
             key (str): The key of the query parameter
             value (str): The value of the query parameter
         """
-        pass
 
     def get(self, key: str, default: str | None = None) -> str | None:
         """
@@ -116,14 +111,12 @@ class QueryParams:
             key (str): The key of the query parameter
             default (str | None): The default value if the key does not exist
         """
-        pass
 
     def empty(self) -> bool:
         """
         Returns:
             True if the query params are empty, False otherwise
         """
-        pass
 
     def contains(self, key: str) -> bool:
         """
@@ -133,7 +126,6 @@ class QueryParams:
         Args:
             key (str): The key of the query parameter
         """
-        pass
 
     def get_first(self, key: str) -> str | None:
         """
@@ -143,7 +135,6 @@ class QueryParams:
             key (str): The key of the query parameter
 
         """
-        pass
 
     def get_all(self, key: str) -> list[str] | None:
         """
@@ -152,7 +143,6 @@ class QueryParams:
         Args:
             key (str): The key of the query parameter
         """
-        pass
 
     def extend(self, other: QueryParams) -> None:
         """
@@ -161,28 +151,24 @@ class QueryParams:
         Args:
             other (QueryParams): The other QueryParams object
         """
-        pass
 
     def to_dict(self) -> dict[str, list[str]]:
         """
         Returns:
             The query params as a dictionary
         """
-        pass
 
     def keys(self) -> list[str]:
         """
         Returns:
             A list of all query parameter names.
         """
-        pass
 
     def values(self) -> list[str]:
         """
         Returns:
             The last value of each query parameter (consistent with ``get``).
         """
-        pass
 
     def items(self) -> list[tuple[str, str]]:
         """
@@ -190,7 +176,6 @@ class QueryParams:
             ``(key, value)`` pairs using the last value of each key (consistent
             with ``get``), one pair per key.
         """
-        pass
 
     def multi_items(self) -> list[tuple[str, str]]:
         """
@@ -198,13 +183,8 @@ class QueryParams:
             ``(key, value)`` pairs for every value, preserving duplicate keys
             (e.g. ``?tag=a&tag=b`` -> ``[("tag", "a"), ("tag", "b")]``).
         """
-        pass
 
-    def __contains__(self, key: str) -> bool:
-        pass
-
-    def __repr__(self) -> str:
-        pass
+    def __contains__(self, key: str) -> bool: ...
 
 @dataclass
 class Cookie:
@@ -232,21 +212,18 @@ class Cookie:
     same_site: str | None = None
 
     @staticmethod
-    def deleted() -> "Cookie":
+    def deleted() -> Cookie:
         """
         Create a cookie configured for deletion (expires immediately with max_age=0).
 
         Returns:
             Cookie: A cookie that will be deleted by the browser
         """
-        pass
 
 class Cookies:
     """A collection of cookies keyed by name."""
 
-    def __init__(self) -> None:
-        pass
-
+    def __init__(self) -> None: ...
     def set(self, name: str, cookie: Cookie) -> None:
         """
         Sets a cookie with the given name.
@@ -255,7 +232,6 @@ class Cookies:
             name (str): The name of the cookie
             cookie (Cookie): The cookie object
         """
-        pass
 
     def get(self, name: str) -> Cookie | None:
         """
@@ -264,7 +240,6 @@ class Cookies:
         Args:
             name (str): The name of the cookie
         """
-        pass
 
     def remove(self, name: str) -> None:
         """
@@ -273,7 +248,6 @@ class Cookies:
         Args:
             name (str): The name of the cookie
         """
-        pass
 
     def delete(self, name: str) -> None:
         """
@@ -283,59 +257,35 @@ class Cookies:
         Args:
             name (str): The name of the cookie to delete
         """
-        pass
 
     def is_empty(self) -> bool:
         """
         Returns:
             True if there are no cookies, False otherwise
         """
-        pass
 
     def keys(self) -> list[str]:
         """
         Returns:
             A list of all cookie names
         """
-        pass
 
-    def __setitem__(self, name: str, cookie: Cookie) -> None:
-        pass
-
-    def __getitem__(self, name: str) -> Cookie | None:
-        pass
-
-    def __contains__(self, name: str) -> bool:
-        pass
-
-    def __len__(self) -> int:
-        pass
-
-    def __iter__(self) -> "CookiesIter":
-        pass
-
-    def __repr__(self) -> str:
-        pass
+    def __setitem__(self, name: str, cookie: Cookie) -> None: ...
+    def __getitem__(self, name: str) -> Cookie | None: ...
+    def __contains__(self, name: str) -> bool: ...
+    def __len__(self) -> int: ...
+    def __iter__(self) -> CookiesIter: ...
 
 class CookiesIter:
     """Iterator for Cookies collection."""
 
-    def __iter__(self) -> "CookiesIter":
-        pass
-
-    def __next__(self) -> str:
-        pass
+    def __iter__(self) -> CookiesIter: ...
+    def __next__(self) -> str: ...
 
 class Headers:
-    def __init__(self, default_headers: dict | None) -> None:
-        pass
-
-    def __getitem__(self, key: str) -> str | None:
-        pass
-
-    def __setitem__(self, key: str, value: str) -> None:
-        pass
-
+    def __init__(self, default_headers: dict | None) -> None: ...
+    def __getitem__(self, key: str) -> str | None: ...
+    def __setitem__(self, key: str, value: str) -> None: ...
     def set(self, key: str, value: str) -> None:
         """
         Sets the value of the header with the given key.
@@ -345,7 +295,6 @@ class Headers:
             key (str): The key of the header
             value (str): The value of the header
         """
-        pass
 
     def get(self, key: str) -> str | None:
         """
@@ -354,7 +303,6 @@ class Headers:
         Args:
             key (str): The key of the header
         """
-        pass
 
     def to_dict(self) -> dict[str, str]:
         """
@@ -370,21 +318,18 @@ class Headers:
         Returns:
             dict[str, str]: All present headers as a flat dictionary.
         """
-        pass
 
     def keys(self) -> list[str]:
         """
         Returns:
             A list of all header names.
         """
-        pass
 
     def values(self) -> list[str]:
         """
         Returns:
             The last value of each header (consistent with ``get``).
         """
-        pass
 
     def items(self) -> list[tuple[str, str]]:
         """
@@ -392,7 +337,6 @@ class Headers:
             ``(name, value)`` pairs using the last value of each header
             (consistent with ``get``), one pair per header name.
         """
-        pass
 
     def multi_items(self) -> list[tuple[str, str]]:
         """
@@ -400,7 +344,6 @@ class Headers:
             ``(name, value)`` pairs for every value, preserving headers that
             appear more than once.
         """
-        pass
 
     def populate_from_dict(self, headers: dict[str, str]) -> None:
         """
@@ -409,7 +352,6 @@ class Headers:
         Args:
             headers (dict[str, str]): The dictionary of headers
         """
-        pass
 
     def contains(self, key: str) -> bool:
         """
@@ -419,7 +361,6 @@ class Headers:
         Args:
             key (str): The key of the header
         """
-        pass
 
     def append(self, key: str, value: str) -> None:
         """
@@ -429,14 +370,12 @@ class Headers:
             key (str): The key of the header
             value (str): The value of the header
         """
-        pass
 
     def is_empty(self) -> bool:
         """
         Returns:
             True if the headers are empty, False otherwise
         """
-        pass
 
 @dataclass
 class Request:
@@ -487,7 +426,6 @@ class Request:
         Raises:
             ValueError: If the body is not valid JSON.
         """
-        pass
 
 @dataclass
 class Response:
@@ -512,17 +450,11 @@ class Response:
     cookies: Cookies = None  # Initialized automatically
 
     @overload
-    def __init__(self, status_code: int, headers: Headers | dict | None, description: str | bytes) -> None:
-        pass
-
+    def __init__(self, status_code: int, headers: Headers | dict | None, description: str | bytes) -> None: ...
     @overload
-    def __init__(self, status_code: int, headers: Headers | dict | None = None, *, description: str | bytes) -> None:
-        pass
-
+    def __init__(self, status_code: int, headers: Headers | dict | None = None, *, description: str | bytes) -> None: ...
     @overload
-    def __init__(self, status_code: int, headers: Headers | dict | None = None, *, body: str | bytes) -> None:
-        pass
-
+    def __init__(self, status_code: int, headers: Headers | dict | None = None, *, body: str | bytes) -> None: ...
     def set_cookie(
         self,
         key: str,
@@ -550,7 +482,6 @@ class Response:
             http_only (bool): Not accessible via JavaScript
             same_site (str | None): "Strict", "Lax", or "None"
         """
-        pass
 
 class Server:
     """
@@ -558,45 +489,34 @@ class Server:
 
     This object is used to create a Robyn server and add routes, middlewares, etc.
     """
-    def __init__(self) -> None:
-        pass
+    def __init__(self) -> None: ...
     def add_directory(
         self,
         route: str,
         directory_path: str,
         show_files_listing: bool,
         index_file: str | None,
-    ) -> None:
-        pass
-    def apply_request_headers(self, headers: Headers) -> None:
-        pass
-    def apply_response_headers(self, headers: Headers) -> None:
-        pass
-    def set_response_headers_exclude_paths(self, excluded_response_headers_paths: list[str] | None = None):
-        pass
-
+    ) -> None: ...
+    def apply_request_headers(self, headers: Headers) -> None: ...
+    def apply_response_headers(self, headers: Headers) -> None: ...
+    def set_response_headers_exclude_paths(self, excluded_response_headers_paths: list[str] | None = None): ...
     def add_route(
         self,
         route_type: HttpMethod,
         route: str,
         function: FunctionInfo,
         is_const: bool,
-    ) -> None:
-        pass
-    def add_global_middleware(self, middleware_type: MiddlewareType, function: FunctionInfo) -> None:
-        pass
+    ) -> None: ...
+    def add_global_middleware(self, middleware_type: MiddlewareType, function: FunctionInfo) -> None: ...
     def add_middleware_route(
         self,
         middleware_type: MiddlewareType,
         route: str,
         function: FunctionInfo,
         route_type: HttpMethod,
-    ) -> None:
-        pass
-    def add_startup_handler(self, function: FunctionInfo) -> None:
-        pass
-    def add_shutdown_handler(self, function: FunctionInfo) -> None:
-        pass
+    ) -> None: ...
+    def add_startup_handler(self, function: FunctionInfo) -> None: ...
+    def add_shutdown_handler(self, function: FunctionInfo) -> None: ...
     def add_web_socket_route(
         self,
         route: str,
@@ -604,10 +524,8 @@ class Server:
         close_route: FunctionInfo,
         message_route: FunctionInfo,
         use_channel: bool,
-    ) -> None:
-        pass
-    def start(self, socket: SocketHeld, workers: int, client_timeout: int, keep_alive_timeout: int) -> None:
-        pass
+    ) -> None: ...
+    def start(self, socket: SocketHeld, workers: int, client_timeout: int, keep_alive_timeout: int) -> None: ...
 
 class WebSocketConnector:
     """
@@ -633,7 +551,6 @@ class WebSocketConnector:
         Args:
             message (str): The message to broadcast
         """
-        pass
     async def async_send_to(self, sender_id: str, message: str) -> None:
         """
         Sends a message to a specific client.
@@ -642,7 +559,6 @@ class WebSocketConnector:
             sender_id (str): The id of the sender
             message (str): The message to send
         """
-        pass
     def sync_broadcast(self, message: str) -> None:
         """
         Broadcasts a message to all clients.
@@ -650,7 +566,6 @@ class WebSocketConnector:
         Args:
             message (str): The message to broadcast
         """
-        pass
     def sync_send_to(self, sender_id: str, message: str) -> None:
         """
         Sends a message to a specific client.
@@ -659,7 +574,6 @@ class WebSocketConnector:
             sender_id (str): The id of the sender
             message (str): The message to send
         """
-        pass
     async def async_send_bytes_to(self, recipient_id: str, data: bytes) -> None:
         """
         Sends a binary frame to a specific client.
@@ -668,7 +582,6 @@ class WebSocketConnector:
             recipient_id (str): The id of the recipient
             data (bytes): The binary payload to send
         """
-        pass
     def sync_send_bytes_to(self, recipient_id: str, data: bytes) -> None:
         """
         Sends a binary frame to a specific client.
@@ -677,7 +590,6 @@ class WebSocketConnector:
             recipient_id (str): The id of the recipient
             data (bytes): The binary payload to send
         """
-        pass
     async def async_broadcast_bytes(self, data: bytes) -> None:
         """
         Broadcasts a binary frame to all clients.
@@ -685,7 +597,6 @@ class WebSocketConnector:
         Args:
             data (bytes): The binary payload to broadcast
         """
-        pass
     def sync_broadcast_bytes(self, data: bytes) -> None:
         """
         Broadcasts a binary frame to all clients.
@@ -693,9 +604,7 @@ class WebSocketConnector:
         Args:
             data (bytes): The binary payload to broadcast
         """
-        pass
     def close(self) -> None:
         """
         Closes the connection.
         """
-        pass
