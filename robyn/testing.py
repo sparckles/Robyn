@@ -30,7 +30,7 @@ import asyncio
 import json
 import re
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 from robyn.robyn import Headers, MiddlewareType, QueryParams, Request, Response, Url
 
@@ -69,7 +69,7 @@ _CATCHALL_RE = re.compile(r"\*([^/]*)")
 
 def _compile_route_pattern(route: str) -> re.Pattern:
     """Compile a Robyn route pattern (``/user/:id``) into a regex."""
-    parts: List[str] = []
+    parts: list[str] = []
     for segment in route.strip("/").split("/"):
         if segment.startswith(":"):
             name = segment[1:]
@@ -89,12 +89,12 @@ class _RouteTable:
     """Ordered list of (pattern, value) with first-match semantics."""
 
     def __init__(self) -> None:
-        self._entries: List[Tuple[re.Pattern, Any]] = []
+        self._entries: list[tuple[re.Pattern, Any]] = []
 
     def add(self, path_pattern: str, value: Any) -> None:
         self._entries.append((_compile_route_pattern(path_pattern), value))
 
-    def match(self, path: str) -> Tuple[Optional[Any], Dict[str, str]]:
+    def match(self, path: str) -> tuple[Any | None, dict[str, str]]:
         for compiled, value in self._entries:
             m = compiled.match(path)
             if m:
@@ -131,11 +131,11 @@ class TestClient:
         self.app = app
         self._loop = asyncio.new_event_loop()
 
-        self._http_routes: Dict[str, _RouteTable] = {}
+        self._http_routes: dict[str, _RouteTable] = {}
         self._global_before: list = []
         self._global_after: list = []
-        self._mw_before: Dict[str, _RouteTable] = {}
-        self._mw_after: Dict[str, _RouteTable] = {}
+        self._mw_before: dict[str, _RouteTable] = {}
+        self._mw_after: dict[str, _RouteTable] = {}
 
         self._build()
 
@@ -184,11 +184,11 @@ class TestClient:
         self,
         method: str,
         path: str,
-        body: Union[str, bytes, None] = None,
-        headers: Optional[Dict[str, str]] = None,
-        query_params: Optional[Dict[str, str]] = None,
-        form_data: Optional[Dict[str, str]] = None,
-        files: Optional[Dict[str, bytes]] = None,
+        body: str | bytes | None = None,
+        headers: dict[str, str] | None = None,
+        query_params: dict[str, str] | None = None,
+        form_data: dict[str, str] | None = None,
+        files: dict[str, bytes] | None = None,
     ) -> Request:
         qp = QueryParams()
         if query_params:
@@ -197,7 +197,7 @@ class TestClient:
 
         h = Headers(headers or {})
 
-        body_val: Union[str, bytes] = ""
+        body_val: str | bytes = ""
         if body is not None:
             body_val = body if isinstance(body, bytes) else body.encode("utf-8")
 

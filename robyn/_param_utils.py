@@ -8,7 +8,7 @@ Used by both robyn/router.py (HTTP handlers) and robyn/ws.py (WebSocket handlers
 import inspect
 import logging
 import types
-from typing import Any, Dict, Optional, Set, Tuple, Union, get_args, get_origin
+from typing import Any, Union, get_args, get_origin
 
 _logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ class QueryParamValidationError(Exception):
     """Raised when a query or path parameter cannot be coerced to the expected type,
     or when a required parameter is missing."""
 
-    def __init__(self, param_name: str, value: Optional[str], expected_type: type, message: Optional[str] = None):
+    def __init__(self, param_name: str, value: str | None, expected_type: type, message: str | None = None):
         self.param_name = param_name
         self.value = value
         self.expected_type = expected_type
@@ -36,7 +36,7 @@ class QueryParamValidationError(Exception):
         super().__init__(self.detail)
 
 
-def unwrap_optional(annotation) -> Tuple[Any, bool]:
+def unwrap_optional(annotation) -> tuple[Any, bool]:
     """
     If annotation is Optional[T] (i.e. T | None / Union[T, None]), return (T, True).
     Handles both typing.Union and PEP 604 union syntax (X | Y).
@@ -91,11 +91,11 @@ def coerce_value(value: str, target_type: type, param_name: str):
 
 
 def resolve_individual_params(
-    unresolved_params: Dict[str, inspect.Parameter],
+    unresolved_params: dict[str, inspect.Parameter],
     query_params,
-    path_params: Optional[Dict[str, str]],
-    route_param_names: Set[str],
-) -> Dict[str, Any]:
+    path_params: dict[str, str] | None,
+    route_param_names: set[str],
+) -> dict[str, Any]:
     """
     Resolve handler parameters as individual path or query parameters.
 
@@ -167,7 +167,7 @@ def resolve_individual_params(
     return resolved
 
 
-def parse_route_param_names(endpoint: str) -> Set[str]:
+def parse_route_param_names(endpoint: str) -> set[str]:
     """
     Extract parameter names from a route endpoint pattern.
     e.g. "/users/:id/posts/:post_id" -> {"id", "post_id"}

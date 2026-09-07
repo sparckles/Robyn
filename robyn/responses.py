@@ -3,7 +3,7 @@ import mimetypes
 import os
 import threading
 import weakref
-from typing import AsyncGenerator, Generator, Optional, Union
+from collections.abc import AsyncGenerator, Generator
 
 from robyn.robyn import Headers, Response
 
@@ -80,13 +80,13 @@ class AsyncGeneratorWrapper:
     truncating.
     """
 
-    def __init__(self, async_gen: AsyncGenerator[Union[str, bytes], None]):
+    def __init__(self, async_gen: AsyncGenerator[str | bytes, None]):
         self._async_gen = async_gen
-        self._iterator: Optional[AsyncGenerator] = None
+        self._iterator: AsyncGenerator | None = None
         self._exhausted = False
         self._owns_loop = False
-        self._thread: Optional[threading.Thread] = None
-        self._finalizer: Optional[weakref.finalize] = None
+        self._thread: threading.Thread | None = None
+        self._finalizer: weakref.finalize | None = None
         try:
             # Constructed inside an async handler -> reuse its running loop.
             self._loop = asyncio.get_running_loop()

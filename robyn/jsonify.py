@@ -1,9 +1,9 @@
-from typing import Any, Dict, List, Union
+from typing import Any
 
 import orjson
 
 
-def jsonify(data: Union[Dict[str, Any], List[Any]]) -> str:
+def jsonify(data: dict[str, Any] | list[Any]) -> str:
     """
     This function serializes input data to a json string
 
