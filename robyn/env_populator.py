@@ -13,15 +13,17 @@ def parser(config_path=None, project_root=""):
 
     if config_path.exists():
         with open(config_path, "r") as f:
-            for line in f:
+            for line_number, line in enumerate(f, start=1):
                 line = line.strip()
                 if not line or line.startswith("#"):
                     continue
                 key, sep, value = line.partition("=")
+                key = key.strip()
                 if not sep or not key:
-                    logger.warning(" Ignoring malformed robyn.env line: %r", line)
+                    # Never echo the line itself: it may contain a secret.
+                    logger.warning(" Ignoring malformed line %d in %s", line_number, config_path)
                     continue
-                yield [key, value]
+                yield [key, value.strip()]
 
 
 # check for the environment variables set in cli and if not set them
@@ -37,4 +39,4 @@ def load_vars(variables=None, project_root=""):
             continue
         else:
             os.environ[var[0]] = var[1]
-            logger.info(" Variable %s set to %s", var[0], var[1])
+            logger.info(" Variable %s set", var[0])
