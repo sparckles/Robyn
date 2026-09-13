@@ -1,13 +1,20 @@
 import argparse
+import logging
 import os
 
-# Python logging accepts both names. Rust env_logger historically used WARN.
-_PRODUCTION_LOG_LEVELS = {"warn", "warning"}
 
+def is_production_log_level(log_level: str | int | None) -> bool:
+    """Return True when the process should run without the verbose startup banner.
 
-def is_production_log_level(log_level: str | None) -> bool:
-    """Return True when the process should run without the verbose startup banner."""
-    return (log_level or "").lower() in _PRODUCTION_LOG_LEVELS
+    Any level at or above WARNING counts as production. Python logging spells
+    that level both ``WARN`` and ``WARNING``, and ``ERROR``/``CRITICAL`` are
+    quieter still, so all of them qualify.
+    """
+    if isinstance(log_level, int):
+        level = log_level
+    else:
+        level = logging.getLevelName(str(log_level or "").upper())
+    return isinstance(level, int) and level >= logging.WARNING
 
 
 class Config:
@@ -135,3 +142,6 @@ class Config:
             self.log_level = "DEBUG"
         elif self.log_level is None:
             self.log_level = "INFO"
+
+        # logging.basicConfig only accepts upper-case level names.
+        self.log_level = self.log_level.upper()
