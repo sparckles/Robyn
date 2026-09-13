@@ -1,46 +1,43 @@
-import importlib.util
+import logging
 import sys
-import unittest
-from pathlib import Path
 from unittest.mock import patch
 
-_ROOT = Path(__file__).resolve().parents[1]
-_PARSER = _ROOT / "robyn" / "argument_parser.py"
-_spec = importlib.util.spec_from_file_location("robyn_argument_parser", _PARSER)
-_parser = importlib.util.module_from_spec(_spec)
-assert _spec.loader is not None
-_spec.loader.exec_module(_parser)
+import pytest
 
-is_production_log_level = _parser.is_production_log_level
-Config = _parser.Config
+from robyn.argument_parser import Config, is_production_log_level
 
 
-class LogLevelTests(unittest.TestCase):
-    def test_warning_and_warn_are_production_levels(self):
-        self.assertTrue(is_production_log_level("WARNING"))
-        self.assertTrue(is_production_log_level("WARN"))
-        self.assertTrue(is_production_log_level("warning"))
-        self.assertTrue(is_production_log_level("warn"))
-
-    def test_info_and_debug_are_not_production_levels(self):
-        self.assertFalse(is_production_log_level("INFO"))
-        self.assertFalse(is_production_log_level("DEBUG"))
-        self.assertFalse(is_production_log_level(None))
-
-    def test_cli_warning_matches_cli_warn(self):
-        with patch.object(sys, "argv", ["robyn", "--log-level", "WARNING"]):
-            warning_config = Config()
-        with patch.object(sys, "argv", ["robyn", "--log-level", "WARN"]):
-            warn_config = Config()
-        self.assertTrue(is_production_log_level(warning_config.log_level))
-        self.assertTrue(is_production_log_level(warn_config.log_level))
-
-    def test_fast_mode_defaults_to_a_production_log_level(self):
-        with patch.object(sys, "argv", ["robyn", "--fast"]):
-            config = Config()
-        self.assertEqual(config.log_level, "WARNING")
-        self.assertTrue(is_production_log_level(config.log_level))
+@pytest.mark.parametrize("level", ["WARNING", "WARN", "warning", "warn", "ERROR", "CRITICAL", "FATAL", logging.WARNING, logging.ERROR])
+def test_production_log_levels(level):
+    assert is_production_log_level(level)
 
 
-if __name__ == "__main__":
-    unittest.main()
+@pytest.mark.parametrize("level", ["INFO", "DEBUG", "NOTSET", "info", "", None, "BOGUS", logging.INFO])
+def test_non_production_log_levels(level):
+    assert not is_production_log_level(level)
+
+
+@pytest.mark.parametrize("flag", ["WARNING", "WARN", "warning", "Error"])
+def test_cli_log_level_is_normalised_and_accepted_by_logging(flag):
+    with patch.object(sys, "argv", ["robyn", "--log-level", flag]):
+        config = Config()
+    assert config.log_level == flag.upper()
+    assert is_production_log_level(config.log_level)
+    # logging.basicConfig rejects lower-case names; the normalised value must not.
+    logging.getLogger("robyn.test").setLevel(config.log_level)
+
+
+def test_fast_mode_defaults_to_a_production_log_level():
+    with patch.object(sys, "argv", ["robyn", "--fast"]):
+        config = Config()
+    assert config.log_level == "WARNING"
+    assert is_production_log_level(config.log_level)
+
+
+def test_default_and_dev_log_levels_are_verbose():
+    with patch.object(sys, "argv", ["robyn"]):
+        assert Config().log_level == "INFO"
+    with patch.object(sys, "argv", ["robyn", "--dev"]):
+        assert Config().log_level == "DEBUG"
+    assert not is_production_log_level("INFO")
+    assert not is_production_log_level("DEBUG")
