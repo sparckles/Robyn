@@ -31,6 +31,7 @@ import json
 import re
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple, Union
+from urllib.parse import unquote
 
 from robyn.robyn import Headers, MiddlewareType, QueryParams, Request, Response, Url
 
@@ -98,7 +99,8 @@ class _RouteTable:
         for compiled, value in self._entries:
             m = compiled.match(path)
             if m:
-                return value, {k: v for k, v in m.groupdict().items() if v is not None}
+                # Decode after matching, exactly like the Rust router does.
+                return value, {k: unquote(v) for k, v in m.groupdict().items() if v is not None}
         return None, {}
 
 

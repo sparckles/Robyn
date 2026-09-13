@@ -1,3 +1,5 @@
+import json
+
 import pytest
 import requests
 from requests import Response
@@ -52,6 +54,73 @@ def test_queries(function_type: str, session):
 
     r = get(f"/{function_type}/queries")
     assert r.json() == {}
+
+
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+@pytest.mark.parametrize(
+    "query, expected",
+    [
+        ("v=a%20b", {"v": ["a b"]}),
+        ("first%20name=Ada+Lovelace", {"first name": ["Ada Lovelace"]}),
+        ("v=a+b&plus%2Bkey=%2B", {"v": ["a b"], "plus+key": ["+"]}),
+        ("a%26b=x%3Dy%26z%3F%23", {"a&b": ["x=y&z?#"]}),
+        ("%E5%90%8D=%E6%9D%B1%E4%BA%AC%F0%9F%98%80", {"名": ["東京😀"]}),
+        ("v=%2520%252B", {"v": ["%20%2B"]}),
+        ("v=first&v=second&v=second", {"v": ["first", "second", "second"]}),
+        ("empty=&flag", {"empty": [""], "flag": [""]}),
+        ("=first&=second", {"": ["first", "second"]}),
+        ("&v=one&&v=two&", {"v": ["one", "two"]}),
+        ("=first&&=second", {"": ["first", "second"]}),
+        ("v=%FF", {"v": ["\ufffd"]}),
+    ],
+)
+def test_queries_decode_parameters(function_type: str, query: str, expected: dict, session):
+    response = get(f"/{function_type}/queries?{query}")
+    assert json.loads(response.content) == expected
+
+
+def test_decoded_query_accessors_preserve_duplicate_values(session):
+    response = get("/queries/accessors?first%20name=Ada+Lovelace&first+name=Grace%2BHopper&first%20name=Grace%2BHopper")
+    values = ["Ada Lovelace", "Grace+Hopper", "Grace+Hopper"]
+    assert response.json() == {
+        "get": values[-1],
+        "get_first": values[0],
+        "get_all": values,
+        "items": {"first name": values[-1]},
+        "to_dict": {"first name": values},
+    }
+
+
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+@pytest.mark.parametrize(
+    "encoded, expected",
+    [
+        ("attempt%3A1", "attempt:1"),
+        ("a%20b", "a b"),
+        ("a+b", "a+b"),
+        ("a%2Bb", "a+b"),
+        ("a%2Fb", "a/b"),
+        ("%252F", "%2F"),
+        ("%E6%9D%B1%E4%BA%AC%F0%9F%98%80", "東京😀"),
+        ("%FF", "\ufffd"),
+    ],
+)
+def test_path_parameters_decode_after_matching(function_type: str, encoded: str, expected: str, session):
+    response = get(f"/{function_type}/param/{encoded}")
+    assert response.content.decode("utf-8") == expected
+
+
+@pytest.mark.parametrize("function_type", ["sync", "async"])
+def test_catchall_path_parameters_decode_after_matching(function_type: str, session):
+    response = get(f"/{function_type}/extra/a%2Fb/c%20d+e/%252F")
+    assert response.content.decode("utf-8") == "a/b/c d+e/%2F"
+
+
+@pytest.mark.parametrize("encoded, expected", [("a%2Fb", "a/b"), ("a+b", "a+b"), ("%252F", "%2F"), ("%E6%9D%B1%E4%BA%AC", "東京")])
+def test_middleware_and_handler_receive_decoded_path_parameters(encoded: str, expected: str, session):
+    path = f"/params/decoded/{encoded}"
+    response = get(path)
+    assert response.json() == {"before": expected, "handler": expected, "path": path}
 
 
 @pytest.mark.benchmark

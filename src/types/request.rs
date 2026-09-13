@@ -130,20 +130,9 @@ impl Request {
         mut payload: web::Payload,
         global_headers: &Headers,
     ) -> Result<Self, Error> {
-        let mut query_params: QueryParams = QueryParams::new();
+        let query_params = QueryParams::from_query_string(req.query_string());
         let mut form_data: HashMap<String, String> = HashMap::new();
         let mut files = HashMap::new();
-
-        if !req.query_string().is_empty() {
-            let split = req.query_string().split('&');
-            for s in split {
-                let path_params = s.split_once('=').unwrap_or((s, ""));
-                let key = path_params.0.to_string();
-                let value = path_params.1.to_string();
-
-                query_params.set(key, value);
-            }
-        }
 
         let mut headers = Headers::from_actix_headers(req.headers());
         headers.extend(global_headers);

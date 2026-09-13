@@ -6,7 +6,7 @@ use anyhow::{Context, Error, Result};
 use matchit::Router as MatchItRouter;
 use pyo3::{Bound, Python};
 
-use crate::routers::Router;
+use crate::routers::{decode_route_params, Router};
 use crate::types::function_info::{FunctionInfo, MiddlewareType};
 
 // A route may carry more than one middleware of the same kind (e.g. an
@@ -55,10 +55,7 @@ impl Router<(Vec<FunctionInfo>, HashMap<String, String>), MiddlewareType> for Mi
 
         let table_lock = table.read().ok()?;
         let res = table_lock.at(route).ok()?;
-        let mut route_params = HashMap::new();
-        for (key, value) in res.params.iter() {
-            route_params.insert(key.to_string(), value.to_string());
-        }
+        let route_params = decode_route_params(&res.params);
 
         let functions = Python::with_gil(|_| res.value.to_owned());
 

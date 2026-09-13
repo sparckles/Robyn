@@ -140,6 +140,16 @@ def test_easy_access_ws_with_params(session):
     ws.close()
 
 
+def test_easy_access_ws_query_params_are_decoded(session):
+    ws = create_connection(f"{WS_BASE_URL}/web_socket_easy_access?room=caf%C3%A9+bar&page=7")
+    assert ws.recv() == "connected to café bar"
+
+    ws.send("hello")
+    assert ws.recv() == "room=café bar page=7 msg=hello"
+
+    ws.close()
+
+
 def test_easy_access_ws_with_defaults(session):
     ws = create_connection(f"{WS_BASE_URL}/web_socket_easy_access")
     connect_msg = ws.recv()

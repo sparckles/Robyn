@@ -119,6 +119,18 @@ impl QueryParams {
         multimap
     }
 
+    /// Parse a raw query string with form-encoding rules: `+` is a space,
+    /// percent escapes are decoded once as UTF-8 (invalid bytes become
+    /// U+FFFD), repeated keys keep every value in order, and empty fields
+    /// such as the trailing `&` in `?a=1&` are skipped.
+    pub fn from_query_string(query: &str) -> Self {
+        let mut multimap = QueryParams::new();
+        for (key, value) in form_urlencoded::parse(query.as_bytes()) {
+            multimap.set(key.into_owned(), value.into_owned());
+        }
+        multimap
+    }
+
     pub fn from_py_dict(py: Python, dict: Py<PyDict>) -> Self {
         let mut multimap = QueryParams::new();
         for (key, value) in dict.bind(py).iter() {
