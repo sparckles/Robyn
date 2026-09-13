@@ -11,7 +11,7 @@ from typing import Any
 import multiprocess as mp  # type: ignore
 
 from robyn import status_codes
-from robyn.argument_parser import Config
+from robyn.argument_parser import Config, is_production_log_level
 from robyn.authentication import AuthenticationHandler
 from robyn.dependency_injection import DependencyMap
 from robyn.env_populator import load_vars
@@ -121,9 +121,9 @@ class BaseRobyn(ABC):
 
         logging.basicConfig(level=self.config.log_level)
 
-        if self.config.log_level.lower() != "warn":
+        if not is_production_log_level(self.config.log_level):
             logger.info(
-                "SERVER IS RUNNING IN VERBOSE/DEBUG MODE. Set --log-level to WARN to run in production mode.",
+                "SERVER IS RUNNING IN VERBOSE/DEBUG MODE. Set --log-level to WARNING to run in production mode.",
                 color=Colors.BLUE,
             )
 

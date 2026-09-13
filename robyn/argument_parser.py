@@ -1,6 +1,14 @@
 import argparse
 import os
 
+# Python logging accepts both names. Rust env_logger historically used WARN.
+_PRODUCTION_LOG_LEVELS = {"warn", "warning"}
+
+
+def is_production_log_level(log_level: str | None) -> bool:
+    """Return True when the process should run without the verbose startup banner."""
+    return (log_level or "").lower() in _PRODUCTION_LOG_LEVELS
+
 
 class Config:
     def __init__(self) -> None:
