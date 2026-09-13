@@ -1,5 +1,4 @@
 use parking_lot::RwLock;
-use percent_encoding::percent_decode_str;
 use pyo3::{Bound, Python};
 use std::collections::HashMap;
 
@@ -7,7 +6,7 @@ use matchit::Router as MatchItRouter;
 
 use anyhow::{Context, Result};
 
-use crate::routers::Router;
+use crate::routers::{decode_route_params, Router};
 use crate::types::function_info::FunctionInfo;
 use crate::types::HttpMethod;
 
@@ -46,14 +45,7 @@ impl Router<(FunctionInfo, HashMap<String, String>), HttpMethod> for HttpRouter 
 
         // Trying route matching just once.
         if let Ok(res) = table_lock.at(route) {
-            let mut route_params = HashMap::new();
-            // Decode captures after matching so encoded slashes stay within one segment.
-            for (key, value) in res.params.iter() {
-                route_params.insert(
-                    key.to_string(),
-                    percent_decode_str(value).decode_utf8_lossy().into_owned(),
-                );
-            }
+            let route_params = decode_route_params(&res.params);
 
             let function_info = Python::with_gil(|_| res.value.to_owned());
             return Some((function_info, route_params));

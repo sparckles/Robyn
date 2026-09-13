@@ -411,18 +411,7 @@ pub async fn start_web_socket(
 ) -> Result<HttpResponse, Error> {
     let registry_addr = get_or_init_registry_for_endpoint(endpoint);
 
-    let mut query_params = QueryParams::new();
-
-    if !req.query_string().is_empty() {
-        let split = req.query_string().split('&');
-        for s in split {
-            let path_params = s.split_once('=').unwrap_or((s, ""));
-            let key = path_params.0.to_string();
-            let value = path_params.1.to_string();
-
-            query_params.set(key, value);
-        }
-    }
+    let query_params = QueryParams::from_query_string(req.query_string());
 
     ws::WsResponseBuilder::new(
         WebSocketConnector {

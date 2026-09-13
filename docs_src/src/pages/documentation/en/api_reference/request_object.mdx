@@ -78,7 +78,9 @@ Repeated query parameters keep all their values in order. `get()` and `items()` 
 
 Path parameter values are percent-decoded after route matching, including in route middleware. A literal `+` in a path stays `+`. For a route `/items/:id`, `/items/a%2Fb` produces `request.path_params["id"] == "a/b"` while `request.url.path` remains `/items/a%2Fb`. An encoded slash therefore stays within its matched parameter. Decoding happens once: `%252F` becomes `%2F`.
 
-Invalid UTF-8 byte sequences are replaced with `U+FFFD`. Invalid or incomplete percent escapes remain literal.
+Because decoding happens after matching, a single `:param` capture can contain `/` or `..` once decoded, just like a `*catch-all`. Sanitize path parameters before using them to build filesystem paths.
+
+Invalid UTF-8 byte sequences are replaced with `U+FFFD`. Invalid or incomplete percent escapes remain literal. WebSocket `query_params` follow the same rules.
 
 ## Parsing JSON Body
 

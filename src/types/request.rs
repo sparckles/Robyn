@@ -130,19 +130,9 @@ impl Request {
         mut payload: web::Payload,
         global_headers: &Headers,
     ) -> Result<Self, Error> {
-        let mut query_params: QueryParams = QueryParams::new();
+        let query_params = QueryParams::from_query_string(req.query_string());
         let mut form_data: HashMap<String, String> = HashMap::new();
         let mut files = HashMap::new();
-
-        if !req.query_string().is_empty() {
-            // Preserve empty fields as well as repeated keys when decoding form data.
-            for field in req.query_string().split('&') {
-                let (key, value) = form_urlencoded::parse(field.as_bytes())
-                    .next()
-                    .unwrap_or_default();
-                query_params.set(key.into_owned(), value.into_owned());
-            }
-        }
 
         let mut headers = Headers::from_actix_headers(req.headers());
         headers.extend(global_headers);

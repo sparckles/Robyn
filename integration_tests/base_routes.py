@@ -650,14 +650,14 @@ async def async_param(request: Request):
 
 @app.before_request("/params/decoded/:value")
 def capture_decoded_path_param(request: Request):
-    request.body = request.path_params["value"]
+    request.headers.set("decoded-value", request.path_params["value"])
     return request
 
 
 @app.get("/params/decoded/:value")
 def decoded_path_params(request: Request):
     return {
-        "before": request.body,
+        "before": request.headers.get("decoded-value"),
         "handler": request.path_params["value"],
         "path": request.url.path,
     }

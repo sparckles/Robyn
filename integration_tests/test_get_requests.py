@@ -69,8 +69,8 @@ def test_queries(function_type: str, session):
         ("v=first&v=second&v=second", {"v": ["first", "second", "second"]}),
         ("empty=&flag", {"empty": [""], "flag": [""]}),
         ("=first&=second", {"": ["first", "second"]}),
-        ("&v=one&&v=two&", {"": ["", "", ""], "v": ["one", "two"]}),
-        ("=first&&=second", {"": ["first", "", "second"]}),
+        ("&v=one&&v=two&", {"v": ["one", "two"]}),
+        ("=first&&=second", {"": ["first", "second"]}),
         ("v=%FF", {"v": ["\ufffd"]}),
     ],
 )
