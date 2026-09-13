@@ -648,6 +648,21 @@ async def async_param(request: Request):
     return id
 
 
+@app.before_request("/params/decoded/:value")
+def capture_decoded_path_param(request: Request):
+    request.body = request.path_params["value"]
+    return request
+
+
+@app.get("/params/decoded/:value")
+def decoded_path_params(request: Request):
+    return {
+        "before": request.body,
+        "handler": request.path_params["value"],
+        "path": request.url.path,
+    }
+
+
 @app.get("/sync/extra/*extra")
 def sync_param_extra(request: Request):
     extra = request.path_params["extra"]
@@ -784,6 +799,18 @@ def sync_queries(request: Request):
 async def async_query(request: Request):
     query_data = request.query_params.to_dict()
     return jsonify(query_data)
+
+
+@app.get("/queries/accessors")
+def query_param_accessors(request: Request):
+    query = request.query_params
+    return {
+        "get": query.get("first name", None),
+        "get_first": query.get_first("first name"),
+        "get_all": query.get_all("first name"),
+        "items": dict(query.items()),
+        "to_dict": query.to_dict(),
+    }
 
 
 # Status code

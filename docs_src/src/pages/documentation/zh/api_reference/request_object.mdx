@@ -63,6 +63,16 @@ identity (Optional[Identity])：客户端的身份
   </Col>
 </Row>
 
+## 查询参数和路径参数的解码
+
+查询参数的名称和值会按 UTF-8 进行一次百分号解码。在查询字符串中，`+` 会转换为空格，`%2B` 会转换为字面量 `+`。例如，`?first%20name=Ada+Lovelace` 对应的 `request.query_params.to_dict()` 为 `{"first name": ["Ada Lovelace"]}`。
+
+重复查询参数的所有值都会按顺序保留。`get()` 和 `items()` 返回每个解码后名称的最后一个值；`get_all()` 和 `to_dict()` 保留所有值。
+
+路径参数值会在路由匹配之后进行百分号解码，路由中间件也遵循相同行为。路径中的字面量 `+` 保持不变。对于路由 `/items/:id`，请求 `/items/a%2Fb` 会得到 `request.path_params["id"] == "a/b"`，而 `request.url.path` 仍为 `/items/a%2Fb`。因此，编码后的斜杠不会改变已经匹配的路径分段。解码仅执行一次：`%252F` 会变为 `%2F`。
+
+无效的 UTF-8 字节序列会被替换为 `U+FFFD`。无效或不完整的百分号转义会保留原样。
+
 ## 解析 JSON 请求体
 
 `request.json()` 方法将请求体解析为 JSON，并返回一个保留完整类型的 Python `dict` 或 `list`（JSON 对象返回 `dict`，JSON 数组返回 `list`）：

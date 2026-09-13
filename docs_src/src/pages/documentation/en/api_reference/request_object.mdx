@@ -70,6 +70,16 @@ identity (Optional[Identity]): The identity of the client
   </Col>
 </Row>
 
+## Query and Path Parameter Decoding
+
+Query parameter names and values are percent-decoded once using UTF-8. In query strings, `+` becomes a space and `%2B` becomes a literal `+`. For example, `?first%20name=Ada+Lovelace` produces `{"first name": ["Ada Lovelace"]}` from `request.query_params.to_dict()`.
+
+Repeated query parameters keep all their values in order. `get()` and `items()` return the last value for each decoded key; `get_all()` and `to_dict()` preserve every value.
+
+Path parameter values are percent-decoded after route matching, including in route middleware. A literal `+` in a path stays `+`. For a route `/items/:id`, `/items/a%2Fb` produces `request.path_params["id"] == "a/b"` while `request.url.path` remains `/items/a%2Fb`. An encoded slash therefore stays within its matched parameter. Decoding happens once: `%252F` becomes `%2F`.
+
+Invalid UTF-8 byte sequences are replaced with `U+FFFD`. Invalid or incomplete percent escapes remain literal.
+
 ## Parsing JSON Body
 
 The `request.json()` method parses the request body as JSON and returns a Python `dict` with full type preservation:
@@ -271,4 +281,3 @@ Robyn ships convenience type aliases that describe the runtime types of the requ
 Now, Batman wanted to understand the configuration of the Robyn server. He was then introduced to the concept of Robyn env files.
 
 - [Robyn Env](/documentation/en/api_reference/robyn_env)
-

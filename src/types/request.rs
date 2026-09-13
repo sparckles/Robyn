@@ -135,13 +135,12 @@ impl Request {
         let mut files = HashMap::new();
 
         if !req.query_string().is_empty() {
-            let split = req.query_string().split('&');
-            for s in split {
-                let path_params = s.split_once('=').unwrap_or((s, ""));
-                let key = path_params.0.to_string();
-                let value = path_params.1.to_string();
-
-                query_params.set(key, value);
+            // Preserve empty fields as well as repeated keys when decoding form data.
+            for field in req.query_string().split('&') {
+                let (key, value) = form_urlencoded::parse(field.as_bytes())
+                    .next()
+                    .unwrap_or_default();
+                query_params.set(key.into_owned(), value.into_owned());
             }
         }
 
