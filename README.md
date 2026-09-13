@@ -106,7 +106,7 @@ $ python3 app.py --open-browser
 
 You can add more routes to your API. Check out the routes in [this file](https://github.com/sparckles/Robyn/blob/main/integration_tests/base_routes.py) as examples.
 
-To call another HTTP API from a handler, see [`examples/http_client.py`](https://github.com/sparckles/Robyn/blob/main/examples/http_client.py). Robyn does not bundle an outbound client; that example uses [rusty-req](https://github.com/KAY53N/rusty-req) (`pip install rusty-req`).
+Robyn does not bundle an outbound HTTP client. Any async client works from an `async` handler; [`examples/http_client.py`](https://github.com/sparckles/Robyn/blob/main/examples/http_client.py) shows the pattern.
 
 ### 🐍 Python Version Support
 
