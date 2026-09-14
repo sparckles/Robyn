@@ -29,7 +29,9 @@ jobs:
 
     - name: Install dependencies with uv
       run: |
-        uv pip install ruff isort black
+        # Same ruff as .pre-commit-config.yaml and the isort pin in pyproject.toml,
+        # so CI cannot drift from what contributors run locally.
+        uv pip install "ruff==0.14.13" "isort==5.11.5"
     - name: Run linters
       # Invoke the tools directly rather than via `uv run`, which would sync the
       # project and compile the Rust extension (maturin -> cargo) just to lint

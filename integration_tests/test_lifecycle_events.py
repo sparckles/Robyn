@@ -1,6 +1,7 @@
 import os
 import pathlib
 import signal
+import socket
 import subprocess
 import tempfile
 import time
@@ -29,7 +30,11 @@ def test_shutdown_event_fires():
     # the shutdown handler wrote its marker file (#470). The default harness stops
     # servers with SIGKILL (uncatchable), so shutdown can only be observed here.
     domain = "127.0.0.1"
-    port = 8082
+    # Pick a free port: a fixed one collides with whatever else the developer
+    # runs locally, and the server then dies with "Address already in use".
+    with socket.socket() as probe:
+        probe.bind((domain, 0))
+        port = probe.getsockname()[1]
     marker_path = os.path.join(tempfile.gettempdir(), "robyn_shutdown_marker.txt")
     if os.path.exists(marker_path):
         os.remove(marker_path)

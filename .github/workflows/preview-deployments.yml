@@ -180,6 +180,11 @@ jobs:
           manylinux: musllinux_1_2
           args: --zig -i python${{ matrix.python-version }} --release --out dist
       - name: Test wheel (Alpine)
+        # orjson (a hard runtime dependency) publishes no musllinux wheels for
+        # i686 or armv7, so pip tries to compile it from source inside the
+        # Alpine container and fails without a Rust toolchain. The robyn wheel
+        # itself builds fine; only the install smoke test is skipped there.
+        if: matrix.target == 'x86_64' || matrix.target == 'aarch64'
         run: |
           if [ "${{ matrix.target }}" = "x86_64" ]; then
             PLATFORM="linux/amd64"
