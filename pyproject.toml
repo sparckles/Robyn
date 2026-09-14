@@ -118,6 +118,11 @@ test_server = { callable = "integration_tests.base_routes:main" }
 line-length = 160
 exclude = ["src/*", ".git", "docs"]
 
+[tool.ruff.lint]
+# Pin the rule set explicitly. ruff 0.16 widened its default selection from
+# these 59 rules to ~400, which turned every lint run red overnight.
+select = ["E4", "E7", "E9", "F"]
+
 [tool.ruff.lint.mccabe]
 max-complexity = 10
 
