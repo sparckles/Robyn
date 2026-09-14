@@ -813,6 +813,35 @@ async def redirect_route():
     return "This is the redirected route"
 
 
+# (body, headers, status_code) tuples from route handlers
+
+
+@app.get("/tuple/dict")
+def tuple_dict():
+    return {"key": "value"}, {"X-Custom": "yes"}, 201
+
+
+@app.get("/tuple/str")
+def tuple_str():
+    return "created", Headers({"X-Custom": "yes"}), 201
+
+
+@app.get("/tuple/bytes")
+async def tuple_bytes():
+    return b"\x00\x01", {}, 206
+
+
+@app.get("/tuple/response")
+def tuple_response():
+    inner = Response(status_code=200, headers=Headers({"Content-Type": "text/html"}), description="<b>x</b>")
+    return inner, {"X-Custom": "yes"}, 418
+
+
+@app.get("/tuple/content_type")
+async def tuple_content_type():
+    return {"detail": "bad"}, {"Content-Type": "application/problem+json"}, 400
+
+
 @app.get("/sync/raise")
 def sync_raise():
     raise Exception()

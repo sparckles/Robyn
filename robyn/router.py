@@ -95,15 +95,31 @@ class Router(BaseRouter):
         formatted = self._format_response(description)
         if isinstance(formatted, StreamingResponse):
             raise ValueError("StreamingResponse is not supported in tuple responses")
-        description = formatted.description
-        new_headers: Headers = Headers(headers)
-        if new_headers.contains("Content-Type"):
-            headers.set("Content-Type", new_headers.get("Content-Type"))
+
+        # `_format_response` leaves dict/list/str/bytes bare so the Rust executor
+        # can serialise them itself. A tuple has to become a full Response here,
+        # so finish that job with the same content types the executor would use.
+        if isinstance(formatted, Response):
+            body = formatted.description
+            content_type = formatted.headers.get("Content-Type")
+        elif isinstance(formatted, (dict, list)):
+            body = jsonify(formatted)
+            content_type = "application/json"
+        elif isinstance(formatted, str):
+            body = formatted
+            content_type = "text/plain"
+        else:
+            body = formatted
+            content_type = "application/octet-stream"
+
+        response_headers = headers if isinstance(headers, Headers) else Headers(dict(headers or {}))
+        if content_type and not response_headers.contains("Content-Type"):
+            response_headers.set("Content-Type", content_type)
 
         return Response(
             status_code=status_code,
-            headers=headers,
-            description=description,
+            headers=response_headers,
+            description=body,
         )
 
     def _format_response(
