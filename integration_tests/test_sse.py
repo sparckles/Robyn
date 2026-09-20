@@ -11,7 +11,6 @@ from robyn.responses import SSEMessage, SSEResponse, StreamingResponse
 def test_sse_basic_headers(session):
     """Test that SSE endpoints return correct headers"""
     with requests.get(f"{BASE_URL}/sse/basic", stream=True) as response:
-
         assert response.status_code == 200
         assert response.headers.get("Content-Type") == "text/event-stream"
         # Accept either clean optimized headers or legacy compatibility
@@ -197,7 +196,6 @@ def test_sse_empty_stream(session):
 def test_sse_custom_headers(session):
     """Test SSE endpoint with custom headers; SSE responses should not include default CORS headers for cross-origin EventSource support"""
     with requests.get(f"{BASE_URL}/sse/with_headers", stream=True) as response:
-
         assert response.status_code == 200
         assert response.headers.get("X-Custom-Header") == "custom-value"
         assert response.headers.get("Content-Type") == "text/event-stream"
@@ -211,7 +209,6 @@ def test_sse_custom_headers(session):
 def test_sse_custom_status_code(session):
     """Test SSE endpoint with custom status code"""
     with requests.get(f"{BASE_URL}/sse/status_code", stream=True) as response:
-
         assert response.status_code == 201
         assert response.headers.get("Content-Type") == "text/event-stream"
 
@@ -220,7 +217,6 @@ def test_sse_custom_status_code(session):
 def test_sse_middleware_compatibility(session):
     """Test that SSE endpoints work with global middleware"""
     with requests.get(f"{BASE_URL}/sse/basic", stream=True) as response:
-
         # Should have global response headers from middleware
         assert response.headers.get("server") == "robyn"
 
@@ -401,7 +397,6 @@ def test_sse_streaming_async_real_time(session):
 def test_sse_optimization_headers(session):
     """Test that optimized SSE headers are present"""
     with requests.get(f"{BASE_URL}/sse/streaming_sync", stream=True) as response:
-
         assert response.status_code == 200
 
         # Check for optimization headers
