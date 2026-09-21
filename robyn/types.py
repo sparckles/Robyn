@@ -47,15 +47,11 @@ class JSONResponse(TypedDict):
     A type alias for openapi response bodies. This class should be inherited by the response class type definition.
     """
 
-    pass
-
 
 class Body:
     """
     A type alias for openapi request bodies. This class should be inherited by the request body class annotation.
     """
-
-    pass
 
 
 class JsonBody:
@@ -90,21 +86,19 @@ class JsonBody:
         yourself inside a try/except block.
     """
 
-    pass
-
 
 __all__ = [
-    "JSONResponse",
     "Body",
-    "JsonBody",
-    "QueryParamValidationError",
     "Directory",
-    "PathParams",
-    "Method",
-    "FormData",
     "Files",
+    "FormData",
     "IPAddress",
-    "RequestMethod",
+    "JSONResponse",
+    "JsonBody",
+    "Method",
+    "PathParams",
+    "QueryParamValidationError",
     "RequestBody",
+    "RequestMethod",
     "RequestURL",
 ]
