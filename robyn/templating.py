@@ -1,7 +1,7 @@
 import inspect
 import os
 from abc import ABC, abstractmethod
-from functools import lru_cache
+from functools import cache
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
@@ -74,7 +74,7 @@ class JinjaTemplate(TemplateInterface):
         )
 
 
-@lru_cache(maxsize=None)
+@cache
 def _cached_template_engine(engine: type[TemplateInterface], directory: str) -> TemplateInterface:
     """Instantiates and caches a templating engine per (engine, directory) so render() reuses it."""
     return engine(directory)
@@ -126,4 +126,4 @@ def render(
     return _cached_template_engine(template_engine, templates_dir).render_template(template_name, **kwargs)
 
 
-__all__ = ["TemplateInterface", "JinjaTemplate", "render"]
+__all__ = ["JinjaTemplate", "TemplateInterface", "render"]
