@@ -66,17 +66,14 @@ class MemoryProvider(ABC):
     @abstractmethod
     async def store(self, user_id: str, data: dict[str, Any]) -> None:
         """Store data in memory"""
-        pass
 
     @abstractmethod
     async def retrieve(self, user_id: str, query: str | None = None) -> list[dict[str, Any]]:
         """Retrieve data from memory"""
-        pass
 
     @abstractmethod
     async def clear(self, user_id: str) -> None:
         """Clear memory for a user"""
-        pass
 
 
 class InMemoryProvider(MemoryProvider):
@@ -132,7 +129,6 @@ class AgentRunner(ABC):
     @abstractmethod
     async def run(self, query: str, **kwargs) -> dict[str, Any]:
         """Execute the agent with the given query"""
-        pass
 
 
 class SimpleRunner(AgentRunner):
