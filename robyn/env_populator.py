@@ -14,9 +14,14 @@ def parser(config_path=None, project_root=""):
     if config_path.exists():
         with open(config_path, "r") as f:
             for line in f:
-                if line.startswith("#"):
+                line = line.strip()
+                if not line or line.startswith("#"):
                     continue
-                yield line.strip().split("=")
+                key, sep, value = line.partition("=")
+                if not sep or not key:
+                    logger.warning(" Ignoring malformed robyn.env line: %r", line)
+                    continue
+                yield [key, value]
 
 
 # check for the environment variables set in cli and if not set them
