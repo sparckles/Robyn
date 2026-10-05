@@ -33,7 +33,7 @@ import logging
 import math
 import time
 from collections.abc import MutableMapping
-from typing import Any, Optional
+from typing import Any
 
 _logger = logging.getLogger(__name__)
 
@@ -71,7 +71,7 @@ class _Signer:
         value = _b64encode(payload)
         return f"{value}.{self._signature(value.encode('ascii'))}"
 
-    def unsign(self, signed: str) -> Optional[bytes]:
+    def unsign(self, signed: str) -> bytes | None:
         """Verify and decode ``signed``; return the payload bytes, or None if invalid."""
         try:
             value, signature = signed.rsplit(".", 1)
@@ -101,17 +101,17 @@ class Session(MutableMapping):
     can also force a write by setting ``session.modified = True``.
     """
 
-    __slots__ = ("_data", "modified", "_snapshot")
+    __slots__ = ("_data", "_snapshot", "modified")
 
-    def __init__(self, data: Optional[dict] = None) -> None:
+    def __init__(self, data: dict | None = None) -> None:
         self._data: dict = dict(data) if data else {}
         #: True once the session has been explicitly mutated during this request.
         self.modified: bool = False
         # Canonical snapshot of the loaded data, used to detect nested mutations
         # that bypass __setitem__/__delitem__.
-        self._snapshot: Optional[str] = self._canonical()
+        self._snapshot: str | None = self._canonical()
 
-    def _canonical(self) -> Optional[str]:
+    def _canonical(self) -> str | None:
         """Order-independent JSON of the data, or None if it is not serializable."""
         try:
             return json.dumps(self._data, sort_keys=True, separators=(",", ":"))
@@ -171,9 +171,9 @@ class SessionManager:
         secret_key: str,
         *,
         cookie_name: str = "session",
-        max_age: Optional[int] = 14 * 24 * 60 * 60,
+        max_age: int | None = 14 * 24 * 60 * 60,
         path: str = "/",
-        domain: Optional[str] = None,
+        domain: str | None = None,
         secure: bool = False,
         http_only: bool = True,
         same_site: str = "Lax",
@@ -270,7 +270,7 @@ class SessionManager:
         )
 
 
-def _normalize_same_site(value: Optional[str]) -> Optional[str]:
+def _normalize_same_site(value: str | None) -> str | None:
     """Normalize SameSite to the capitalization Robyn's cookie layer expects."""
     if value is None:
         return None
@@ -280,7 +280,7 @@ def _normalize_same_site(value: Optional[str]) -> Optional[str]:
     return normalized
 
 
-def _read_cookie(request, name: str) -> Optional[str]:
+def _read_cookie(request, name: str) -> str | None:
     """Extract a single cookie value from the request's ``Cookie`` header."""
     header = request.headers.get("Cookie")
     if not header:
