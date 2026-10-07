@@ -1636,6 +1636,32 @@ async def sse_async(request):
     return SSEResponse(async_event_generator())
 
 
+sse_disconnect_state = {"cleaned_up": False}
+
+
+@app.get("/sse/disconnect_cleanup")
+async def sse_disconnect_cleanup(request):
+    """Endless async SSE stream with an awaiting ``finally``; a test disconnects
+    mid-stream and checks the cleanup still runs to completion."""
+    sse_disconnect_state["cleaned_up"] = False
+
+    async def event_generator():
+        try:
+            while True:
+                yield SSEMessage("tick")
+                await asyncio.sleep(0.05)
+        finally:
+            await asyncio.sleep(0)  # async cleanup, e.g. `await session.close()`
+            sse_disconnect_state["cleaned_up"] = True
+
+    return SSEResponse(event_generator())
+
+
+@app.get("/sse/disconnect_cleanup/status")
+def sse_disconnect_cleanup_status():
+    return {"cleaned_up": sse_disconnect_state["cleaned_up"]}
+
+
 @app.get("/stream/bytes")
 def stream_bytes(request):
     """Stream raw binary chunks (sync generator) — regression test for #1236."""

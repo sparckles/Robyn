@@ -86,7 +86,6 @@ class AsyncGeneratorWrapper:
         self._exhausted = False
         self._owns_loop = False
         self._thread: Optional[threading.Thread] = None
-        self._finalizer: Optional[weakref.finalize] = None
         try:
             # Constructed inside an async handler -> reuse its running loop.
             self._loop = asyncio.get_running_loop()
@@ -99,10 +98,13 @@ class AsyncGeneratorWrapper:
             self._owns_loop = True
             self._thread = threading.Thread(target=self._run_loop, args=(self._loop,), daemon=True)
             self._thread.start()
-            # Guarantee the background loop is stopped even if iteration ends
-            # early (client disconnect, unsupported chunk type) and _finish() is
-            # never reached — otherwise the daemon loop thread would leak.
-            self._finalizer = weakref.finalize(self, self._stop_loop, self._loop)
+        # If iteration ends early (client disconnect, unsupported chunk type) and
+        # _finish() is never reached, close the generator on its loop so that
+        # ``await``s in its ``finally`` / ``async with`` cleanup can run, then
+        # stop the background loop if we own it. Otherwise the generator is
+        # finalized synchronously on whichever thread drops it, its cleanup
+        # aborts at the first ``await``, and an owned loop thread would leak.
+        self._finalizer = weakref.finalize(self, self._close, async_gen, self._loop, self._owns_loop)
 
     @staticmethod
     def _run_loop(loop):
@@ -113,9 +115,14 @@ class AsyncGeneratorWrapper:
             loop.close()
 
     @staticmethod
-    def _stop_loop(loop):
-        if not loop.is_closed():
-            loop.call_soon_threadsafe(loop.stop)
+    def _close(async_gen, loop, owns_loop):
+        if loop.is_closed():
+            return
+        # Don't wait for the result: this can run on any thread, including the
+        # loop's own. aclose() is a no-op for an exhausted generator.
+        future = asyncio.run_coroutine_threadsafe(async_gen.aclose(), loop)
+        if owns_loop:
+            future.add_done_callback(lambda _: loop.call_soon_threadsafe(loop.stop))
 
     def __iter__(self):
         return self
@@ -143,10 +150,9 @@ class AsyncGeneratorWrapper:
 
     def _finish(self):
         self._exhausted = True
-        if self._finalizer is not None:
-            # Stops the background loop now; idempotent and also runs on GC if
-            # the stream is dropped before exhaustion.
-            self._finalizer()
+        # Stops the background loop now; idempotent and also runs on GC if the
+        # stream is dropped before exhaustion.
+        self._finalizer()
 
 
 class StreamingResponse:
