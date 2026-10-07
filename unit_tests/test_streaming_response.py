@@ -93,3 +93,65 @@ def test_owned_loop_thread_is_cleaned_up_when_dropped_early():
 
     thread.join(timeout=3)
     assert not thread.is_alive()
+
+
+def test_abandoned_stream_runs_async_cleanup_on_handler_loop():
+    """A client disconnect drops the wrapper before the generator is exhausted.
+    The generator's ``finally`` must still run to completion on the handler's
+    loop, including any ``await`` in it (e.g. returning a DB connection)."""
+
+    async def main():
+        handler_loop = asyncio.get_running_loop()
+        cleaned_up = asyncio.Event()
+        cleanup_loop = {}
+
+        async def gen():
+            try:
+                yield "a"
+                yield "b"
+            finally:
+                await asyncio.sleep(0)  # async cleanup, e.g. `await session.close()`
+                cleanup_loop["loop"] = asyncio.get_running_loop()
+                cleaned_up.set()
+
+        holder = [AsyncGeneratorWrapper(gen())]
+
+        def consume_one_then_disconnect():
+            # Like the Rust driver: the worker thread holds the only reference
+            # and drops it after the client goes away.
+            wrapper = holder.pop()
+            assert next(wrapper) == "a"
+
+        await asyncio.to_thread(consume_one_then_disconnect)
+        await asyncio.wait_for(cleaned_up.wait(), timeout=3)
+        return handler_loop, cleanup_loop["loop"]
+
+    handler_loop, cleanup_loop = asyncio.run(main())
+    assert cleanup_loop is handler_loop
+
+
+def test_abandoned_stream_runs_async_cleanup_on_background_loop():
+    """Same as above for sync handlers: the generator's async cleanup completes
+    on the background loop before that loop is stopped."""
+    import gc
+    import threading
+
+    cleaned_up = threading.Event()
+
+    async def gen():
+        try:
+            yield "a"
+            yield "b"
+        finally:
+            await asyncio.sleep(0)
+            cleaned_up.set()
+
+    wrapper = AsyncGeneratorWrapper(gen())  # sync context -> owns a background loop
+    thread = wrapper._thread
+    assert next(wrapper) == "a"
+    del wrapper
+    gc.collect()
+
+    assert cleaned_up.wait(timeout=3)
+    thread.join(timeout=3)
+    assert not thread.is_alive()

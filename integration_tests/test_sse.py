@@ -1,4 +1,5 @@
 import json
+import time
 
 import pytest
 import requests
@@ -146,6 +147,22 @@ def test_sse_async_endpoint(session):
     assert len(data_lines) >= 3
     for i in range(3):
         assert f"Async message {i}" in data_lines
+
+
+def test_sse_disconnect_runs_async_generator_cleanup(session):
+    """A client disconnecting mid-stream must not skip ``await``s in the async
+    generator's ``finally`` (e.g. returning a DB connection to its pool)."""
+    with requests.get(f"{BASE_URL}/sse/disconnect_cleanup", stream=True, timeout=5) as response:
+        response.raise_for_status()
+        assert next(response.iter_lines(decode_unicode=True)) == "data: tick"
+    # Leaving the block closes the connection mid-stream.
+
+    deadline = time.time() + 5
+    while time.time() < deadline:
+        if requests.get(f"{BASE_URL}/sse/disconnect_cleanup/status", timeout=5).json()["cleaned_up"]:
+            return
+        time.sleep(0.1)
+    pytest.fail("async generator cleanup did not complete after the client disconnected")
 
 
 @pytest.mark.benchmark
