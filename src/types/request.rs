@@ -1,8 +1,5 @@
 use actix_multipart::Multipart;
-use actix_web::{
-    web::{self, BytesMut},
-    Error, HttpRequest,
-};
+use actix_web::{web, Error, FromRequest, HttpRequest};
 use futures_util::StreamExt as _;
 use pyo3::types::{PyBytes, PyDict, PyList, PyString};
 use pyo3::{exceptions::PyValueError, prelude::*, IntoPyObject};
@@ -127,7 +124,7 @@ async fn handle_multipart(
 impl Request {
     pub async fn from_actix_request(
         req: &HttpRequest,
-        mut payload: web::Payload,
+        payload: web::Payload,
         global_headers: &Headers,
     ) -> Result<Self, Error> {
         let mut query_params: QueryParams = QueryParams::new();
@@ -160,12 +157,9 @@ impl Request {
 
             body_local
         } else {
-            let mut body_local = BytesMut::new();
-            while let Some(chunk) = payload.next().await {
-                let chunk = chunk.expect("Failed to read chunk from payload");
-                body_local.extend_from_slice(&chunk);
-            }
-            body_local.freeze().to_vec()
+            // The Bytes extractor enforces the configured PayloadConfig limit.
+            let mut payload = payload.into_inner();
+            web::Bytes::from_request(req, &mut payload).await?.to_vec()
         };
 
         let route_path = {
