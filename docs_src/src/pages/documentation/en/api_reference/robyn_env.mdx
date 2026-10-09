@@ -22,6 +22,7 @@ Batman wanted to configure the server through an environment file. Changing code
  - `ROBYN_MAX_PAYLOAD_SIZE`: Sets the maximum payload size for HTTP requests and WebSocket messages in bytes.
     - Default: `1000000` bytes
     - Example: `ROBYN_MAX_PAYLOAD_SIZE=1000000`
+    - Non-multipart HTTP bodies larger than this limit receive `413 Payload Too Large`, including chunked requests. A body exactly at the limit is accepted.
 
 You can have a `robyn.env` file to load them automatically in your environment.
 
@@ -56,4 +57,3 @@ Batman - Thanks, Robyn. Now tell me more.
 Robyn - Let us learn about the Middlewares and events now!
 
 - [Middlewares](/documentation/en/api_reference/middlewares)
-

@@ -504,7 +504,15 @@ async fn index(
             Ok(r) => r,
             Err(e) => {
                 error!("Failed to parse request for `{}`: {}", req.path(), e);
-                return ResponseType::Standard(Response::internal_server_error(None));
+                let status = e.as_response_error().status_code();
+                let mut response = Response::internal_server_error(None);
+                response.status_code = status.as_u16();
+                response.description = status
+                    .canonical_reason()
+                    .unwrap_or("Request error")
+                    .as_bytes()
+                    .to_vec();
+                return ResponseType::Standard(response);
             }
         };
 
