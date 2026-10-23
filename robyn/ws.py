@@ -7,9 +7,19 @@ import logging
 import orjson
 
 from robyn._param_utils import QueryParamValidationError, resolve_individual_params
-from robyn.robyn import FunctionInfo, QueryParams, WebSocketConnector
+from robyn.robyn import FunctionInfo, Headers, QueryParams, WebSocketConnector
 
 _logger = logging.getLogger(__name__)
+
+
+def _signature_params(func):
+    """Parameters of ``func`` with postponed annotations (PEP 563) resolved, so
+    ``from __future__ import annotations`` modules still match ``Headers`` etc.
+    Falls back to the raw signature when an annotation cannot be resolved."""
+    try:
+        return inspect.signature(func, eval_str=True).parameters
+    except (NameError, AttributeError, TypeError, SyntaxError):
+        return inspect.signature(func).parameters
 
 
 class WebSocketDisconnect(Exception):
@@ -95,6 +105,11 @@ class WebSocketAdapter:
         """Access query parameters from the connection URL."""
         return self._connector.query_params
 
+    @property
+    def headers(self) -> Headers:
+        """Headers of the HTTP upgrade request that opened this connection."""
+        return self._connector.headers
+
 
 # Global storage for connection state (per-connection queues and tasks)
 _connection_tasks: dict[str, asyncio.Task] = {}
@@ -138,6 +153,7 @@ def create_websocket_decorator(app_instance):
                 Handles:
                   - global_dependencies / router_dependencies (DI)
                   - query_params (whole QueryParams object, by name or type annotation)
+                  - headers (upgrade request Headers object, by name or type annotation)
                   - individual query params (everything else, with type coercion)
                 """
                 injected = app_instance.dependencies.get_dependency_map(app_instance)
@@ -162,6 +178,11 @@ def create_websocket_decorator(app_instance):
                     # Whole QueryParams object (by type annotation or reserved name)
                     if param.annotation is QueryParams or param_name == "query_params":
                         resolved[param_name] = adapter.query_params
+                        continue
+
+                    # Upgrade request headers (by type annotation or reserved name)
+                    if param.annotation is Headers or param_name == "headers":
+                        resolved[param_name] = adapter.headers
                         continue
 
                     # Everything else: individual query param
@@ -191,7 +212,7 @@ def create_websocket_decorator(app_instance):
 
                 # Build resolved kwargs for the main handler
                 try:
-                    handler_params = inspect.signature(handler).parameters
+                    handler_params = _signature_params(handler)
                     handler_kwargs = _resolve_ws_params(handler_params, adapter)
                 except QueryParamValidationError as e:
                     _logger.warning("WebSocket connection rejected for %s: %s", endpoint, e.detail)
@@ -217,7 +238,7 @@ def create_websocket_decorator(app_instance):
                 if _on_connect_fn is not None:
                     connect_adapter = WebSocketAdapter(ws, channel)
                     try:
-                        connect_params = inspect.signature(_on_connect_fn).parameters
+                        connect_params = _signature_params(_on_connect_fn)
                         connect_kwargs = _resolve_ws_params(connect_params, connect_adapter)
                     except QueryParamValidationError as e:
                         _logger.warning("WebSocket on_connect rejected for %s: %s", endpoint, e.detail)
@@ -263,7 +284,7 @@ def create_websocket_decorator(app_instance):
                 if _on_close_fn is not None:
                     close_adapter = WebSocketAdapter(ws, None)
                     try:
-                        close_params = inspect.signature(_on_close_fn).parameters
+                        close_params = _signature_params(_on_close_fn)
                         close_kwargs = _resolve_ws_params(close_params, close_adapter)
                     except QueryParamValidationError as e:
                         _logger.warning("WebSocket on_close param error for %s: %s", endpoint, e.detail)

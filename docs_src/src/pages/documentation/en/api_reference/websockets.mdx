@@ -218,6 +218,45 @@ To handle real-time bidirectional communication, Batman learned how to work with
 
 ---
 
+## Request Headers {{ tag: 'headers', label: 'headers' }}
+
+<Row>
+  <Col>
+    The headers of the HTTP upgrade request that opened the connection are available via `websocket.headers`. This is useful for reading authentication tokens, forwarded client information, or anything else a proxy or gateway attached to the request.
+
+    You can also declare a parameter named `headers`, or annotated with `Headers`, in your handler, `on_connect`, and `on_close` signatures and Robyn will inject it. Header names are lowercase.
+
+    <Note>
+      Headers are read-only context from the original request. Validate them yourself (for example in `on_connect`) before trusting them.
+    </Note>
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request Headers" tag="WebSocket" label="/ws">
+
+      ```python {{ title: 'Handler' }}
+      from robyn import Headers
+
+      @app.websocket("/ws")
+      async def handler(websocket, headers: Headers):
+          user = headers.get("x-user-id")
+
+          while True:
+              msg = await websocket.receive_text()
+              await websocket.send_text(f"{user}: {msg}")
+      ```
+
+      ```python {{ title: 'Callbacks' }}
+      @handler.on_connect
+      def on_connect(websocket):
+          token = websocket.headers.get("authorization")
+          return "authorized" if token else "anonymous"
+      ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+
 ## Closing Connections {{ tag: 'close', label: 'close' }}
 
 <Row>
@@ -255,7 +294,7 @@ To handle real-time bidirectional communication, Batman learned how to work with
     - `on_connect` is called when a new client connects. Its return value is sent to the client as the first message.
     - `on_close` is called when the connection closes. Its return value is sent to the client as the final message.
 
-    Both callbacks receive a `websocket` object with access to `id` and `query_params`. Both are optional.
+    Both callbacks receive a `websocket` object with access to `id`, `query_params` and `headers`. Both are optional.
   </Col>
   <Col sticky>
     <CodeGroup title="Callbacks" tag="WebSocket" label="/chat">
@@ -299,6 +338,7 @@ To handle real-time bidirectional communication, Batman learned how to work with
     | `await websocket.close()` | Close the connection server-side |
     | `websocket.id` | Connection UUID string |
     | `websocket.query_params` | Query parameters from the connection URL |
+    | `websocket.headers` | Headers of the HTTP upgrade request |
   </Col>
 </Row>
 
