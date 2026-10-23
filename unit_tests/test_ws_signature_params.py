@@ -22,8 +22,14 @@ def test_unresolvable_annotation_falls_back_to_raw_signature():
     assert _signature_params(handler)["value"].annotation == "DoesNotExist"
 
 
-def test_framework_annotations_still_resolved_next_to_unresolvable_one():
-    def handler(websocket: WebSocketAdapter, upgrade_headers: Headers, params: QueryParams, value: DoesNotExist):  # noqa: F821
+def test_valid_annotations_still_resolved_next_to_unresolvable_one():
+    def handler(
+        websocket: WebSocketAdapter,
+        upgrade_headers: Headers,
+        params: QueryParams,
+        page: int,
+        value: DoesNotExist = None,  # noqa: F821
+    ):
         pass
 
     params = _signature_params(handler)
@@ -31,4 +37,6 @@ def test_framework_annotations_still_resolved_next_to_unresolvable_one():
     assert params["websocket"].annotation is WebSocketAdapter
     assert params["upgrade_headers"].annotation is Headers
     assert params["params"].annotation is QueryParams
+    assert params["page"].annotation is int
     assert params["value"].annotation == "DoesNotExist"
+    assert params["value"].default is None

@@ -15,21 +15,19 @@ _logger = logging.getLogger(__name__)
 def _signature_params(func):
     """Parameters of ``func`` with postponed annotations (PEP 563) resolved, so
     ``from __future__ import annotations`` modules still match ``Headers`` etc.
-    If any annotation cannot be resolved, the raw signature is used, but the
-    framework types (``Headers``, ``QueryParams``, ``WebSocketAdapter``) are still
-    recognised so one unresolved annotation does not break injection."""
-    try:
-        return inspect.signature(func, eval_str=True).parameters
-    except (NameError, AttributeError, TypeError, SyntaxError):
-        framework_types = {
-            "Headers": Headers,
-            "QueryParams": QueryParams,
-            "WebSocketAdapter": WebSocketAdapter,
-        }
-        return {
-            name: param.replace(annotation=framework_types.get(param.annotation, param.annotation))
-            for name, param in inspect.signature(func).parameters.items()
-        }
+    Each annotation is resolved independently: one that cannot be resolved is left
+    as the raw string and does not affect the others."""
+    globalns = getattr(inspect.unwrap(func), "__globals__", {})
+    params = {}
+    for name, param in inspect.signature(func).parameters.items():
+        annotation = param.annotation
+        if isinstance(annotation, str):
+            try:
+                annotation = eval(annotation, globalns)  # the user's own annotation, as inspect's eval_str does
+            except (NameError, AttributeError, TypeError, SyntaxError):
+                pass
+        params[name] = param.replace(annotation=annotation)
+    return params
 
 
 class WebSocketDisconnect(Exception):
