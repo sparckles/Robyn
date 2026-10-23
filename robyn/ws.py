@@ -15,11 +15,21 @@ _logger = logging.getLogger(__name__)
 def _signature_params(func):
     """Parameters of ``func`` with postponed annotations (PEP 563) resolved, so
     ``from __future__ import annotations`` modules still match ``Headers`` etc.
-    Falls back to the raw signature when an annotation cannot be resolved."""
+    If any annotation cannot be resolved, the raw signature is used, but the
+    framework types (``Headers``, ``QueryParams``, ``WebSocketAdapter``) are still
+    recognised so one unresolved annotation does not break injection."""
     try:
         return inspect.signature(func, eval_str=True).parameters
     except (NameError, AttributeError, TypeError, SyntaxError):
-        return inspect.signature(func).parameters
+        framework_types = {
+            "Headers": Headers,
+            "QueryParams": QueryParams,
+            "WebSocketAdapter": WebSocketAdapter,
+        }
+        return {
+            name: param.replace(annotation=framework_types.get(param.annotation, param.annotation))
+            for name, param in inspect.signature(func).parameters.items()
+        }
 
 
 class WebSocketDisconnect(Exception):
