@@ -108,6 +108,22 @@ def json_websocket_on_close(websocket):
     return "GoodBye world, from ws"
 
 
+# --- WebSocket exposing the upgrade request headers ---
+@app.websocket("/web_socket_headers")
+async def headers_websocket_endpoint(websocket, headers: Headers):
+    try:
+        while True:
+            _ = await websocket.receive_text()
+            await websocket.send_text(f"handler: {headers.get('x-test-header')} {websocket.headers.get('x-test-header')}")
+    except WebSocketDisconnect:
+        pass
+
+
+@headers_websocket_endpoint.on_connect
+async def headers_websocket_on_connect(websocket):
+    return f"connect: {websocket.headers.get('x-test-header')}"
+
+
 # --- WebSocket with dependency injection ---
 @app.websocket("/web_socket_di")
 async def di_websocket_endpoint(websocket, global_dependencies=None, router_dependencies=None):

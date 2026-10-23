@@ -616,6 +616,7 @@ class WebSocketConnector:
     Attributes:
         id (str): The id of the client
         query_params (QueryParams): The query parameters object
+        headers (Headers): The headers of the HTTP upgrade request
 
         async_broadcast (Callable): The function to broadcast a message to all clients
         async_send_to (Callable): The function to send a message to the client
@@ -625,6 +626,7 @@ class WebSocketConnector:
 
     id: str
     query_params: QueryParams
+    headers: Headers
 
     async def async_broadcast(self, message: str) -> None:
         """

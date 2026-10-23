@@ -2,6 +2,7 @@ pub mod registry;
 
 use crate::executors::web_socket_executors::execute_ws_function;
 use crate::types::function_info::FunctionInfo;
+use crate::types::headers::Headers;
 use crate::types::multimap::QueryParams;
 use registry::{Close, SendBinary, SendBinaryToAll, SendMessageToAll, SendText};
 
@@ -70,6 +71,8 @@ pub struct WebSocketConnector {
     pub task_locals: TaskLocals,
     pub registry_addr: Addr<WebSocketRegistry>,
     pub query_params: QueryParams,
+    /// Headers of the HTTP upgrade request that opened this connection.
+    pub headers: Headers,
     /// Sender side of the message channel (stays in the Actix actor).
     pub message_sender: Option<mpsc::UnboundedSender<Option<WsPayload>>>,
     /// Receiver side exposed to Python via WebSocketChannel.
@@ -130,6 +133,7 @@ impl Clone for WebSocketConnector {
             task_locals: task_locals_clone,
             registry_addr: self.registry_addr.clone(),
             query_params: self.query_params.clone(),
+            headers: self.headers.clone(),
             message_sender: self.message_sender.clone(),
             message_channel: Python::with_gil(|py| {
                 self.message_channel.as_ref().map(|c| c.clone_ref(py))
@@ -371,6 +375,11 @@ impl WebSocketConnector {
         self.query_params.clone()
     }
 
+    #[getter]
+    pub fn get_headers(&self) -> Headers {
+        self.headers.clone()
+    }
+
     /// Get the message channel for WebSocket handlers.
     #[getter]
     pub fn get_message_channel(&self, py: Python) -> Option<Py<WebSocketChannel>> {
@@ -431,6 +440,7 @@ pub async fn start_web_socket(
             id: Uuid::new_v4(),
             registry_addr,
             query_params,
+            headers: Headers::from_actix_headers(req.headers()),
             message_sender: None,
             message_channel: None,
         },
