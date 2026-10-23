@@ -7,7 +7,7 @@ import logging
 import orjson
 
 from robyn._param_utils import QueryParamValidationError, resolve_individual_params
-from robyn.robyn import FunctionInfo, QueryParams, WebSocketConnector
+from robyn.robyn import FunctionInfo, Headers, QueryParams, WebSocketConnector
 
 _logger = logging.getLogger(__name__)
 
@@ -95,6 +95,11 @@ class WebSocketAdapter:
         """Access query parameters from the connection URL."""
         return self._connector.query_params
 
+    @property
+    def headers(self) -> Headers:
+        """Headers of the HTTP upgrade request that opened this connection."""
+        return self._connector.headers
+
 
 # Global storage for connection state (per-connection queues and tasks)
 _connection_tasks: dict[str, asyncio.Task] = {}
@@ -138,6 +143,7 @@ def create_websocket_decorator(app_instance):
                 Handles:
                   - global_dependencies / router_dependencies (DI)
                   - query_params (whole QueryParams object, by name or type annotation)
+                  - headers (upgrade request Headers object, by name or type annotation)
                   - individual query params (everything else, with type coercion)
                 """
                 injected = app_instance.dependencies.get_dependency_map(app_instance)
@@ -162,6 +168,11 @@ def create_websocket_decorator(app_instance):
                     # Whole QueryParams object (by type annotation or reserved name)
                     if param.annotation is QueryParams or param_name == "query_params":
                         resolved[param_name] = adapter.query_params
+                        continue
+
+                    # Upgrade request headers (by type annotation or reserved name)
+                    if param.annotation is Headers or param_name == "headers":
+                        resolved[param_name] = adapter.headers
                         continue
 
                     # Everything else: individual query param

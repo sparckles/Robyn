@@ -75,6 +75,18 @@ def test_websocket_di(session):
     ws.close()
 
 
+def test_websocket_upgrade_request_headers(session):
+    """Test that the HTTP upgrade request headers are available on the WebSocket (#1446)."""
+    ws = create_connection(f"{BASE_URL}/web_socket_headers", header=["X-Test-Header: secret-value"])
+
+    assert ws.recv() == "connect: secret-value"
+
+    ws.send("test")
+    assert ws.recv() == "handler: secret-value secret-value"
+
+    ws.close()
+
+
 def test_websocket_large_payload(session):
     """Test that WebSocket can handle messages larger than the default 64KB frame size (#1269)"""
     ws = create_connection(f"{BASE_URL}/web_socket_echo")
