@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import functools
+
 from robyn.robyn import Headers, QueryParams
 from robyn.ws import WebSocketAdapter, _signature_params
 
@@ -51,3 +53,14 @@ def test_quoted_forward_reference_is_resolved():
     assert params["upgrade_headers"].annotation is Headers
     # unresolvable: the original (still quoted) annotation is left unchanged
     assert params["value"].annotation == "'DoesNotExist'"
+
+
+def test_partial_uses_underlying_function_globals():
+    def handler(websocket, prefix, upgrade_headers: Headers, page: int):
+        pass
+
+    params = _signature_params(functools.partial(handler, 1, 2))
+
+    assert list(params) == ["upgrade_headers", "page"]
+    assert params["upgrade_headers"].annotation is Headers
+    assert params["page"].annotation is int

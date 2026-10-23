@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import functools
 import inspect
 import logging
 
@@ -17,7 +18,12 @@ def _signature_params(func):
     ``from __future__ import annotations`` modules still match ``Headers`` etc.
     Each annotation is resolved independently: one that cannot be resolved is left
     as the raw string and does not affect the others."""
-    globalns = getattr(inspect.unwrap(func), "__globals__", {})
+    # Annotation globals come from the underlying function; the signature itself is
+    # taken from ``func`` unchanged so a partial's bound arguments stay effective.
+    annotation_func = func
+    while isinstance(annotation_func, functools.partial):
+        annotation_func = annotation_func.func
+    globalns = getattr(inspect.unwrap(annotation_func), "__globals__", {})
     params = {}
     for name, param in inspect.signature(func).parameters.items():
         annotation = param.annotation
