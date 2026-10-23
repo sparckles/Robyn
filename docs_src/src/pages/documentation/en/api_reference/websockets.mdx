@@ -248,8 +248,10 @@ To handle real-time bidirectional communication, Batman learned how to work with
       ```python {{ title: 'Callbacks' }}
       @handler.on_connect
       def on_connect(websocket):
+          # Presence of a header is not proof of identity: validate the
+          # token (signature, expiry, ...) before trusting it.
           token = websocket.headers.get("authorization")
-          return "authorized" if token else "anonymous"
+          return "token received" if token else "no token"
       ```
     </CodeGroup>
   </Col>
