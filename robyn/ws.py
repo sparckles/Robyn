@@ -21,12 +21,18 @@ def _signature_params(func):
     params = {}
     for name, param in inspect.signature(func).parameters.items():
         annotation = param.annotation
-        if isinstance(annotation, str):
+        resolved = annotation
+        # A quoted forward reference under PEP 563 is a string inside a string
+        # ("'Headers'"), so keep evaluating while the result is still a string.
+        for _ in range(3):
+            if not isinstance(resolved, str):
+                break
             try:
-                annotation = eval(annotation, globalns)  # the user's own annotation, as inspect's eval_str does
+                resolved = eval(resolved, globalns)  # the user's own annotation, as inspect's eval_str does
             except (NameError, AttributeError, TypeError, SyntaxError):
-                pass
-        params[name] = param.replace(annotation=annotation)
+                resolved = annotation
+                break
+        params[name] = param.replace(annotation=resolved if not isinstance(resolved, str) else annotation)
     return params
 
 

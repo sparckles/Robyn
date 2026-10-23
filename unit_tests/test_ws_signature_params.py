@@ -40,3 +40,14 @@ def test_valid_annotations_still_resolved_next_to_unresolvable_one():
     assert params["page"].annotation is int
     assert params["value"].annotation == "DoesNotExist"
     assert params["value"].default is None
+
+
+def test_quoted_forward_reference_is_resolved():
+    def handler(websocket, upgrade_headers: "Headers", value: "DoesNotExist"):  # noqa: F821
+        pass
+
+    params = _signature_params(handler)
+
+    assert params["upgrade_headers"].annotation is Headers
+    # unresolvable: the original (still quoted) annotation is left unchanged
+    assert params["value"].annotation == "'DoesNotExist'"
