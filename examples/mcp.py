@@ -46,7 +46,7 @@ def calculate_tool(args):
         result = eval(expression, {"__builtins__": {}}, {})
         return f"{expression} = {result}"
     except Exception as e:
-        return f"Error: {str(e)}"
+        return f"Error: {e!s}"
 
 
 @app.mcp.tool(
