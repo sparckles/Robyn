@@ -237,7 +237,7 @@ def create_websocket_decorator(app_instance):
             async def message_handler(ws, msg):
                 """Dummy message handler. In channel mode, Rust pushes messages
                 directly to the channel and never calls this."""
-                return None
+                return
 
             # --- Close handler (called by Rust on connection close) ---
             async def close_handler(ws):
@@ -251,7 +251,7 @@ def create_websocket_decorator(app_instance):
                 if task is not None:
                     try:
                         await asyncio.wait_for(task, timeout=5.0)
-                    except (asyncio.TimeoutError, asyncio.CancelledError):
+                    except (TimeoutError, asyncio.CancelledError):
                         if not task.done():
                             task.cancel()
                     except Exception:
