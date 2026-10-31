@@ -14,7 +14,7 @@ from robyn import status_codes
 from robyn.argument_parser import Config
 from robyn.authentication import AuthenticationHandler
 from robyn.dependency_injection import DependencyMap
-from robyn.env_populator import load_vars
+from robyn.env_populator import env_bool, load_vars
 from robyn.events import Events
 from robyn.jsonify import jsonify
 from robyn.logger import Colors, logger
@@ -976,7 +976,7 @@ class Robyn(BaseRobyn):
         port = int(os.getenv("ROBYN_PORT", port))
         client_timeout = int(os.getenv("ROBYN_CLIENT_TIMEOUT", client_timeout))
         keep_alive_timeout = int(os.getenv("ROBYN_KEEP_ALIVE_TIMEOUT", keep_alive_timeout))
-        open_browser = bool(os.getenv("ROBYN_BROWSER_OPEN", self.config.open_browser))
+        open_browser = env_bool(os.getenv("ROBYN_BROWSER_OPEN"), self.config.open_browser)
 
         if _check_port:
             while self.is_port_in_use(port):

@@ -4,6 +4,19 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+_TRUE_VALUES = ("1", "true", "yes")
+
+
+def env_bool(value, default=False):
+    """Parse a robyn.env-style boolean string.
+
+    bool("False") is True in Python, so ROBYN_BROWSER_OPEN=False used to enable
+    the setting. Unset values keep `default`.
+    """
+    if value is None:
+        return bool(default)
+    return str(value).strip().lower() in _TRUE_VALUES
+
 
 # parse the configuration file returning a list of tuples (key, value) containing the environment variables
 def parser(config_path=None, project_root=""):
