@@ -11,7 +11,6 @@ dist/
 
 # DS_Store
 *.DS_Store
-.vscode
 
 # pycharm
 .idea
@@ -63,3 +62,5 @@ docs_src/public/rss/
 
 #https://github.com/PyO3/maturin/issues/2141
 *.pyd
+config.bat
+node_modules
