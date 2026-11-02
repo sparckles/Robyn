@@ -181,13 +181,12 @@ async def empty_websocket_endpoint(websocket):
 @empty_websocket_endpoint.on_connect
 async def empty_websocket_on_connect(websocket):
     """Test async handler with no return"""
-    pass
 
 
 @empty_websocket_endpoint.on_close
 async def empty_websocket_on_close(websocket):
     """Test async handler with explicit None return"""
-    return None
+    return
 
 
 # ===== Lifecycle handlers =====
