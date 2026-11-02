@@ -44,3 +44,12 @@ def test_compression_skips_sse_streams(compression_session):
     with requests.get(f"{COMPRESSION_BASE_URL}/sse/basic", stream=True, headers={"Accept-Encoding": "gzip"}, timeout=TIMEOUT) as r:
         assert r.status_code == 200
         assert r.headers.get("Content-Encoding") == "identity"
+
+
+@pytest.mark.parametrize("base_url", [BASE_URL, COMPRESSION_BASE_URL])
+def test_streaming_keeps_handler_content_encoding(session, compression_session, base_url):
+    """A streaming handler that sets its own Content-Encoding keeps it."""
+    with requests.get(f"{base_url}/stream/gzip", stream=True, headers={"Accept-Encoding": "gzip"}, timeout=TIMEOUT) as r:
+        assert r.status_code == 200
+        assert r.headers.get("Content-Encoding") == "gzip"
+        assert r.content == b"already compressed"

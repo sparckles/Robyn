@@ -1,6 +1,7 @@
 import asyncio
 import contextvars
 import datetime
+import gzip
 import json
 import os
 import pathlib
@@ -1669,6 +1670,20 @@ async def stream_bytes_async(request):
         gen(),
         media_type="application/octet-stream",
         headers=Headers({"Content-Type": "application/octet-stream"}),
+    )
+
+
+@app.get("/stream/gzip")
+def stream_gzip(request):
+    """Stream pre-compressed data with the handler's own Content-Encoding."""
+
+    def gen():
+        yield gzip.compress(b"already compressed")
+
+    return StreamingResponse(
+        gen(),
+        media_type="application/octet-stream",
+        headers=Headers({"Content-Type": "application/octet-stream", "Content-Encoding": "gzip"}),
     )
 
 
