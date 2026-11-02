@@ -3,7 +3,6 @@
 # - most common return types
 # - sync and async
 
-from typing import Optional
 
 import pytest
 
@@ -36,8 +35,8 @@ from integration_tests.helpers.http_methods_helpers import get
 def test_basic_get(
     route: str,
     expected_text: str,
-    expected_header_key: Optional[str],
-    expected_header_value: Optional[str],
+    expected_header_key: str | None,
+    expected_header_value: str | None,
     session,
 ):
     res = get(route)
@@ -59,7 +58,7 @@ def test_basic_get(
 )
 def test_json_get(route: str, expected_json: dict, session):
     res = get(route)
-    for key in expected_json.keys():
+    for key in expected_json:
         assert key in res.json()
         assert res.json()[key] == expected_json[key]
 
@@ -94,6 +93,6 @@ def test_json_get(route: str, expected_json: dict, session):
 )
 def test_http_request_info_get(route: str, expected_json: dict, session):
     res = get(route)
-    for key in expected_json.keys():
+    for key in expected_json:
         assert key in res.json()
         assert res.json()[key] == expected_json[key]

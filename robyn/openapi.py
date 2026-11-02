@@ -321,15 +321,11 @@ class OpenAPI:
                 param_annotation = parameters[parameter].annotation
 
                 if inspect.isclass(param_annotation):
-                    if issubclass(param_annotation, JsonBody):
-                        request_body = param_annotation
-                    elif issubclass(param_annotation, Body):
+                    if issubclass(param_annotation, JsonBody) or issubclass(param_annotation, Body):
                         request_body = param_annotation
                     elif issubclass(param_annotation, QueryParams):
                         query_params = param_annotation
-                    elif is_pydantic_model(param_annotation):
-                        request_body = param_annotation
-                    elif is_typeddict(param_annotation):
+                    elif is_pydantic_model(param_annotation) or is_typeddict(param_annotation):
                         request_body = param_annotation
 
             if signature.return_annotation is not Signature.empty:
