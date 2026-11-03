@@ -43,7 +43,9 @@ def test_compression_skips_sse_streams(compression_session):
     """SSE responses opt out of compression so real-time delivery isn't buffered (#485)."""
     with requests.get(f"{COMPRESSION_BASE_URL}/sse/basic", stream=True, headers={"Accept-Encoding": "gzip"}, timeout=TIMEOUT) as r:
         assert r.status_code == 200
-        assert r.headers.get("Content-Encoding") == "identity"
+        # The internal opt-out header is stripped, since some clients reject `identity`
+        assert r.headers.get("Content-Encoding") is None
+        assert r.raw.read(5, decode_content=False) == b"data:"
 
 
 @pytest.mark.parametrize("base_url", [BASE_URL, COMPRESSION_BASE_URL])

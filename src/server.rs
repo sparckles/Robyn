@@ -13,7 +13,7 @@ use crate::types::cookie::Cookies;
 use crate::types::function_info::{FunctionInfo, MiddlewareType};
 use crate::types::headers::Headers;
 use crate::types::request::Request;
-use crate::types::response::{Response, ResponseType};
+use crate::types::response::{strip_compression_opt_out, Response, ResponseType};
 use crate::types::HttpMethod;
 use crate::types::MiddlewareReturn;
 use crate::websockets::start_web_socket;
@@ -27,6 +27,7 @@ use std::{env, thread};
 
 use actix_files::Files;
 use actix_http::KeepAlive;
+use actix_web::dev::Service;
 use actix_web::*;
 
 use log::error;
@@ -292,6 +293,15 @@ impl Server {
                             compression_enabled,
                             middleware::Compress::default(),
                         ))
+                        // Runs after Compress, so the streaming opt-out header never reaches clients
+                        .wrap_fn(|req, srv| {
+                            let fut = srv.call(req);
+                            async move {
+                                let mut res = fut.await?;
+                                strip_compression_opt_out(res.response_mut());
+                                Ok(res)
+                            }
+                        })
                 })
                 .keep_alive(KeepAlive::Os)
                 .workers(workers)
