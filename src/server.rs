@@ -13,7 +13,7 @@ use crate::types::cookie::Cookies;
 use crate::types::function_info::{FunctionInfo, MiddlewareType};
 use crate::types::headers::Headers;
 use crate::types::request::Request;
-use crate::types::response::{Response, ResponseType};
+use crate::types::response::{strip_compression_opt_out, Response, ResponseType};
 use crate::types::HttpMethod;
 use crate::types::MiddlewareReturn;
 use crate::websockets::start_web_socket;
@@ -27,6 +27,7 @@ use std::{env, thread};
 
 use actix_files::Files;
 use actix_http::KeepAlive;
+use actix_web::dev::Service;
 use actix_web::*;
 
 use log::error;
@@ -38,6 +39,8 @@ use pyo3_async_runtimes::TaskLocals;
 
 const MAX_PAYLOAD_SIZE: &str = "ROBYN_MAX_PAYLOAD_SIZE";
 const DEFAULT_MAX_PAYLOAD_SIZE: usize = 1_000_000; // 1Mb
+
+const COMPRESSION: &str = "ROBYN_COMPRESSION";
 
 static STARTED: AtomicBool = AtomicBool::new(false);
 
@@ -132,6 +135,10 @@ impl Server {
                     "Failed to parse environment variable {MAX_PAYLOAD_SIZE} - {e}"
                 ))
             })?;
+
+        let compression_enabled = env::var(COMPRESSION)
+            .map(|v| matches!(v.trim().to_lowercase().as_str(), "1" | "true"))
+            .unwrap_or(false);
 
         thread::spawn(move || {
             actix_web::rt::System::new().block_on(async move {
@@ -282,6 +289,19 @@ impl Server {
                                 response.respond_to(&req_ref)
                             },
                         ))
+                        .wrap(middleware::Condition::new(
+                            compression_enabled,
+                            middleware::Compress::default(),
+                        ))
+                        // Runs after Compress, so the streaming opt-out header never reaches clients
+                        .wrap_fn(|req, srv| {
+                            let fut = srv.call(req);
+                            async move {
+                                let mut res = fut.await?;
+                                strip_compression_opt_out(res.response_mut());
+                                Ok(res)
+                            }
+                        })
                 })
                 .keep_alive(KeepAlive::Os)
                 .workers(workers)

@@ -1,4 +1,8 @@
-use actix_http::{body::BoxBody, StatusCode};
+use actix_http::{
+    body::BoxBody,
+    header::{HeaderValue, CONTENT_ENCODING},
+    StatusCode,
+};
 use actix_web::{web::Bytes, HttpRequest, HttpResponse, HttpResponseBuilder, Responder};
 use futures::Stream;
 use pyo3::{
@@ -110,13 +114,35 @@ impl Responder for StreamingResponse {
             .append_header(("X-Accel-Buffering", "no")) // Disable nginx buffering
             .append_header(("Cache-Control", "no-cache, no-store, must-revalidate"))
             .append_header(("Pragma", "no-cache"))
-            .append_header(("Expires", "0"));
+            .insert_header(("Expires", "0"));
 
         // Create the optimized stream from the Python generator
         let stream = create_python_stream(self.content_generator);
 
         // Build streaming response with optimized settings
-        response_builder.streaming(stream)
+        let mut response = response_builder.streaming(stream);
+
+        // Opt out of ROBYN_COMPRESSION, which would buffer chunks, unless the handler emitted its
+        // own encoding; `strip_compression_opt_out` removes this header before it reaches the client.
+        if !response.headers().contains_key(CONTENT_ENCODING) {
+            response
+                .headers_mut()
+                .insert(CONTENT_ENCODING, HeaderValue::from_static("identity"));
+            response.extensions_mut().insert(SkipCompression);
+        }
+
+        response
+    }
+}
+
+/// Marks a response whose `Content-Encoding: identity` was added only to bypass compression.
+struct SkipCompression;
+
+/// Removes the internal compression opt-out header, since some clients (e.g. Firefox on
+/// 206 responses, actix/actix-web#3191) reject `Content-Encoding: identity`.
+pub fn strip_compression_opt_out<B>(response: &mut HttpResponse<B>) {
+    if response.extensions().contains::<SkipCompression>() {
+        response.headers_mut().remove(CONTENT_ENCODING);
     }
 }
 
