@@ -53,7 +53,7 @@ def serve_file(file_path: str, file_name: str | None = None) -> FileResponse:
     """
     file_name = file_name or os.path.basename(file_path)
 
-    mime_type = mimetypes.guess_type(file_name)[0]
+    mime_type = mimetypes.guess_type(file_name)[0] or "application/octet-stream"
 
     headers = Headers({"Content-Type": mime_type})
     headers.append("Content-Disposition", f"attachment; filename={file_name}")
