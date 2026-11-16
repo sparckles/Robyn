@@ -6,7 +6,7 @@ from .file_api import static_router
 
 sub_router = SubRouter(prefix="/sub_router")
 
-__all__ = ["sub_router", "di_subrouter", "static_router", "async_auth_subrouter", "inherited_auth_subrouter"]
+__all__ = ["async_auth_subrouter", "di_subrouter", "inherited_auth_subrouter", "static_router", "sub_router"]
 
 
 @sub_router.websocket("/ws")
