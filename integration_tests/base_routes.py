@@ -727,15 +727,15 @@ async def async_template_render():
 
 
 @app.get("/sync/file/download")
-def sync_file_download():
+def sync_file_download(request: Request):
     file_path = os.path.join(current_file_path, "downloads", "test.txt")
-    return serve_file(file_path)
+    return serve_file(file_path, file_name=request.query_params.get("file_name", ""))
 
 
 @app.get("/async/file/download")
-async def file_download_async():
+async def file_download_async(request: Request):
     file_path = os.path.join(current_file_path, "downloads", "test.txt")
-    return serve_file(file_path)
+    return serve_file(file_path, file_name=request.query_params.get("file_name", ""))
 
 
 # Multipart file
