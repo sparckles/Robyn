@@ -10,8 +10,9 @@ import inspect
 import json
 import logging
 import re
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
-from typing import Any, Callable, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +98,7 @@ class MCPPrompt:
 
     name: str
     description: str
-    arguments: Optional[list[dict[str, Any]]] = None
+    arguments: list[dict[str, Any]] | None = None
 
 
 @dataclass
@@ -144,7 +145,7 @@ class MCPHandler:
         self.tools[name] = handler
         self.tool_metadata[name] = MCPTool(name=name, description=description, inputSchema=input_schema)
 
-    def register_prompt(self, name: str, handler: Callable, description: str, arguments: Optional[list[dict[str, Any]]] = None):
+    def register_prompt(self, name: str, handler: Callable, description: str, arguments: list[dict[str, Any]] | None = None):
         """Register a prompt handler"""
         self.prompts[name] = handler
         self.prompt_metadata[name] = MCPPrompt(name=name, description=description, arguments=arguments)
@@ -199,7 +200,7 @@ class MCPHandler:
             resources.append(asdict(metadata))
         return {"resources": resources}
 
-    def _match_uri_template(self, requested_uri: str) -> Optional[tuple[str, dict[str, str]]]:
+    def _match_uri_template(self, requested_uri: str) -> tuple[str, dict[str, str]] | None:
         """Match requested URI against registered URI templates"""
         for template_uri in self.resources.keys():
             # Extract parameter names from template
@@ -272,7 +273,7 @@ class MCPHandler:
                     content = handler()
         except TypeError as e:
             # Handle parameter mismatch errors
-            raise MCPError(-32603, f"Handler parameter error: {str(e)}")
+            raise MCPError(-32603, f"Handler parameter error: {e!s}")
 
         # Determine content type
         metadata = self.resource_metadata[template_uri]
@@ -434,7 +435,7 @@ class MCPApp:
 
         return decorator
 
-    def prompt(self, name: str = None, description: str = None, arguments: Optional[list[dict[str, Any]]] = None):
+    def prompt(self, name: str = None, description: str = None, arguments: list[dict[str, Any]] | None = None):
         """
         Decorator to register an MCP prompt
 

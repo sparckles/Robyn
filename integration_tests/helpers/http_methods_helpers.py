@@ -1,5 +1,3 @@
-from typing import Optional
-
 import requests
 
 BASE_URL = "http://127.0.0.1:8080"
@@ -39,7 +37,7 @@ def get(
 
 def post(
     endpoint: str,
-    data: Optional[dict] = None,
+    data: dict | None = None,
     expected_status_code: int = 200,
     headers: dict = {},
     should_check_response: bool = True,
@@ -135,7 +133,7 @@ def json_patch(
 
 def multipart_post(
     endpoint: str,
-    files: Optional[dict] = None,
+    files: dict | None = None,
     expected_status_code: int = 200,
     should_check_response: bool = True,
 ) -> requests.Response:
@@ -157,7 +155,7 @@ def multipart_post(
 
 def put(
     endpoint: str,
-    data: Optional[dict] = None,
+    data: dict | None = None,
     expected_status_code: int = 200,
     headers: dict = {},
     should_check_response: bool = True,
@@ -180,7 +178,7 @@ def put(
 
 def patch(
     endpoint: str,
-    data: Optional[dict] = None,
+    data: dict | None = None,
     expected_status_code: int = 200,
     headers: dict = {},
     should_check_response: bool = True,
@@ -203,7 +201,7 @@ def patch(
 
 def delete(
     endpoint: str,
-    data: Optional[dict] = None,
+    data: dict | None = None,
     expected_status_code: int = 200,
     headers: dict = {},
     should_check_response: bool = True,
@@ -226,7 +224,7 @@ def delete(
 
 def head(
     endpoint: str,
-    data: Optional[dict] = None,
+    data: dict | None = None,
     expected_status_code: int = 200,
     headers: dict = {},
     should_check_response: bool = True,
@@ -252,7 +250,7 @@ def head(
 def generic_http_helper(
     method: str,
     endpoint: str,
-    data: Optional[dict] = None,
+    data: dict | None = None,
     expected_status_code: int = 200,
     headers: dict = {},
     should_check_response: bool = True,
